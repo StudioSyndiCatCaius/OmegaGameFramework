@@ -11,7 +11,7 @@ Features:
 * Streamlined Save/Loading system.
 
 ## Documentation
-https://trello.com/b/oNbiSzcl/omega-game-framework-roadmap
+https://github.com/StudioSyndiCatCaius/OmegaRPGFramework/wiki
 
 ## Roadmap
 https://trello.com/b/oNbiSzcl/omega-game-framework-roadmap
