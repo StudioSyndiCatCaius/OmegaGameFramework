@@ -10,6 +10,9 @@ Features:
 * Data-Asset focused design
 * Streamlined Save/Loading system.
 
+
+**NOTE**: Omega is in a very VERY early development state. Expect numerous changes over time. Documentation will be filled out in the future.
+
 ## Documentation
 https://github.com/StudioSyndiCatCaius/OmegaRPGFramework/wiki
 
