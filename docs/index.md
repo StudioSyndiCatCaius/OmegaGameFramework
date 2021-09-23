@@ -1,37 +1,13 @@
-## Welcome to GitHub Pages
+## Overview
 
-You can use the [editor on GitHub](https://github.com/StudioSyndiCatCaius/OmegaGameFramework/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+![](https://static.wixstatic.com/media/6ed0a7_8bf9deca8931456e8aa1697d30e61780~mv2.png)
+**Omega Game Framework** is a free plugin for Unreal Engine that aims to streamline the process of creating systems, mechanics, and data for your game.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Features
+* Omega Game Manager (Game Instance)
+* Omega Save Subsystem (Game Instance)
+* Omega Gameplay Subsystem (World)
+* Omega Player Subsystem (Local PLayer)
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/StudioSyndiCatCaius/OmegaGameFramework/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+**NOTE:**
+With permission from the creator, Omega Game Framework natively implements Piperift's [Actions Extension](https://github.com/PipeRift/ActionsExtension) plguin.
