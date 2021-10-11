@@ -7,14 +7,8 @@ Features:
 * Attributes (Health, Stamina, Strength, etc.)
 * Modular Gameplay Systems
 * Easy Menus & HUD elements.
-* Data-Asset focused design
 * Streamlined Save/Loading system.
 
 
-**NOTE**: Omega is in a very VERY early development state. Expect numerous changes over time. Documentation will be filled out in the future.
-
-## Documentation
-https://github.com/StudioSyndiCatCaius/OmegaRPGFramework/wiki
-
-## Roadmap
-https://trello.com/b/oNbiSzcl/omega-game-framework-roadmap
+## Website
+https://www.studiosyndicat.com/omegagameframework
