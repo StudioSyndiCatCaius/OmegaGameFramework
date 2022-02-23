@@ -1,0 +1,197 @@
+// Copyright Studio Syndicat 2021. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
+#include "GameplayTagContainer.h"
+#include "WidgetInterface_Input.h"
+#include "Types/SlateEnums.h"
+#include "Components/SlateWrapperTypes.h"
+#include "Blueprint/UserWidget.h"
+#include "Widget/DataWidget.h"
+#include "Components/CanvasPanel.h"
+#include "Data/GeneralDataObject.h"
+
+#include "DataList.generated.h"
+
+class SConstraintCanvas;
+class UPanelWidget;
+class UPrimaryDataAsset;
+class UDataWidget;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntrySelected, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntryHovered, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntryUnhovered, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnEntryHighlighted, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index, bool, IsHighlighted);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDataListInputCancel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListInputPage, float, Axis);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListInputNavigate, FVector2D, Axis);
+
+UENUM()
+enum class EDataListFormat : uint8
+{
+	Format_Box				UMETA(DisplayName = "Box"),
+	Format_ScrollBox		UMETA(DisplayName = "Scroll Box"),
+	Format_UniformGrid		UMETA(DisplayName = "Uniform Grid"),
+};
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInterface_Input
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	EDataListFormat Format;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	TEnumAsByte<EOrientation> Orientation;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	TEnumAsByte<EHorizontalAlignment> EntryHorizontalAlignment;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	TEnumAsByte<EVerticalAlignment> EntryVerticalAlignment;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	FSlateChildSize EntrySize;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	bool bAutoSizeList;
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	TSubclassOf<UDataWidget> EntryClass;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	TArray<UPrimaryDataAsset*> DefaultAssets;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	bool bUseCustomEntries;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	TArray<FCustomAssetData> CustomEntries;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	int32 UniformGridMaxValue = 1;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	FString EntryLabel;
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	FGameplayTagContainer ListTags;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Entry")
+	TArray<UDataWidget*> Entries;
+
+	UPROPERTY(meta = (BindWidget))
+	UCanvasPanel* ParentPanel;
+
+	//Clears all ENTRIES from the list
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void ClearList();
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void RemoveEntryFromList(int32 Index);
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void RemoveEntryOfAsset(UObject* Asset, bool All);
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	class UDataWidget* AddAssetToList(UObject* Asset);
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	TArray<class UDataWidget*> AddAssetsToList(TArray<UObject*> Assets, bool ClearListFirst=true);
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	UDataWidget* AddedCustomEntryToList(FCustomAssetData EntryData);
+	
+	UPROPERTY()
+	UDataWidget* HoveredEntry;
+
+	//Access Entires
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void HoverEntry(int32 Index);
+	
+    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
+    UDataWidget* GetHoveredEntry();
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void SelectHoveredEntry();
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void CycleEntry(int32 Amount);
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
+	int32 GetEntryIndex(UDataWidget* Entry);
+	
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
+	UDataWidget* GetEntry(int32 Index);
+
+	//INPUT
+	virtual void InputNavigate_Implementation(FVector2D Axis) override;
+	virtual void InputPage_Implementation(float Axis ) override;
+	virtual void InputConfirm_Implementation() override;
+	virtual void InputCancel_Implementation() override;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Input")
+	bool CycleOnInputNavigate=true;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Input")
+	bool CycleOnInputPage=false;
+
+	//Owner
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void SetListOwner(UObject* NewOwner);
+
+	UPROPERTY(BlueprintReadOnly, Category="DataList")
+	UObject* ListOwner;
+	
+protected:
+
+	//virtual UClass* GetSlotClass() const override;
+	virtual void NativePreConstruct() override;
+
+	UFUNCTION()
+	void RebuildList();
+
+	UFUNCTION()
+	class UPanelWidget* BuildList(TSubclassOf<UPanelWidget> Class);
+
+	UPROPERTY()
+	class UPanelWidget* ListPanel;
+
+	UPROPERTY()
+	int32 CurrentA;
+	UPROPERTY()
+	int32 CurrentB;
+
+	UFUNCTION()
+	void NativeEntitySelect(UDataWidget* DataWidget);
+
+	UFUNCTION()
+	void NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered);
+
+	UFUNCTION()
+	void NativeEntityHighlight(UDataWidget* DataWidget, bool bIsHighlighted);
+
+	//Delegate Props
+
+	UPROPERTY(BlueprintAssignable)
+	FOnEntrySelected OnEntrySelected;
+	UPROPERTY(BlueprintAssignable)
+	FOnEntryHovered OnEntryHovered;
+	UPROPERTY(BlueprintAssignable)
+	FOnEntryUnhovered OnEntryUnhovered;
+	UPROPERTY(BlueprintAssignable)
+	FOnEntryHighlighted OnEntryHighlighted;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnDataListInputCancel OnInputCancel;
+	UPROPERTY(BlueprintAssignable)
+	FOnDataListInputNavigate OnInputNavigate;
+	UPROPERTY(BlueprintAssignable)
+	FOnDataListInputPage OnInputPage;
+};

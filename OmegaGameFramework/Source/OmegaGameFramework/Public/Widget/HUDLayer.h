@@ -1,0 +1,32 @@
+// Copyright Studio Syndicat 2021. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "GameplayTagContainer.h"
+
+#include "HUDLayer.generated.h"
+
+class UOmegaPlayerSubsystem;
+
+/**
+ * 
+ */
+UCLASS(HideFunctions = (Construct, Destruct))
+class OMEGAGAMEFRAMEWORK_API UHUDLayer : public UUserWidget
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
+	void LayerAdded(class APlayerController* OwningPlayer, UObject* Context);
+
+	//UFUNCTION(BlueprintImplementableEvent)
+	//void LayerRemoved();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Tags")
+	FGameplayTagContainer HUDTags;
+	
+};

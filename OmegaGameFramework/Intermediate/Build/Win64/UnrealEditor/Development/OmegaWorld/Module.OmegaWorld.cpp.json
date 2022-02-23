@@ -1,0 +1,24 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegaworld\\module.omegaworld.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\work\\ue5 dump\\omegabuild5\\intermediate\\build\\win64\\omegabuild5editor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegaworld\\definitions.omegaworld.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegaworld\\private\\omegaworld.cpp",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegaworld\\public\\omegaworld.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegaworld\\private\\omegaworldsettings.cpp",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegaworld\\public\\omegaworldsettings.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\gameplaytagcontainer.generated.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegaworld\\omegaworldsettings.generated.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegaworld\\private\\omegazonemanager.cpp",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegaworld\\public\\omegazonemanager.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegaworld\\omegazonemanager.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

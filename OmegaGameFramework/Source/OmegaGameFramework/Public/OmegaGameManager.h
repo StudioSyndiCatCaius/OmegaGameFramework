@@ -1,0 +1,55 @@
+// Copyright Studio Syndicat 2021. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+
+#include "OmegaSettings.h"
+#include "OmegaGameSettings.h"
+#include "Gameplay/OmegaGameMode.h"
+
+#include "OmegaGameManager.generated.h"
+
+class UOmegaSettings;
+class UOmegaGameSettings;
+class UOmegaGameplayModule;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGlobalEvent, FName, Event, UObject*, Instigator);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewLevel, FString, LevelName, AOmegaGameMode*, GameMode);
+/**
+ * 
+ */
+UCLASS(Category = "OmegaSubsystems|Instance")
+class OMEGAGAMEFRAMEWORK_API UOmegaGameManager : public UGameInstanceSubsystem
+{
+	GENERATED_BODY()
+
+protected:
+	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
+	virtual void Deinitialize() override;
+
+public:
+		UPROPERTY(BlueprintReadOnly, Category = "Ω|Settings")
+		class UOmegaGameSettings* CustomGameSettings;
+
+		// Temp class holder for settings
+		class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
+
+	///GAMEPLAY MODULES
+	///
+		UPROPERTY()
+		TArray<UOmegaGameplayModule*> ActiveModules;
+	
+		UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Ω|GameplayModules")
+		UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);
+
+	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Modules", DeterminesOutputType="Module"), Category="Ω|GameplayModules")
+		TArray<UOmegaGameplayModule*> GetGameplayModules();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGlobalEvent OnGlobalEvent;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnNewLevel OnNewLevel;
+};

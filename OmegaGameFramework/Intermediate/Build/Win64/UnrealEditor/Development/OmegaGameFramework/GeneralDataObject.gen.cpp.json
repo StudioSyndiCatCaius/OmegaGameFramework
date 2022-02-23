@@ -1,0 +1,23 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\generaldataobject.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\work\\ue5 dump\\omegabuild5\\intermediate\\build\\win64\\omegabuild5editor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegagameframework\\definitions.omegagameframework.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\data\\generaldataobject.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\coreuobject\\public\\uobject\\noexporttypes.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\coreuobject\\public\\uobject\\propertyaccessutil.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\core\\public\\math\\unitconversion.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\core\\public\\math\\unitconversion.inl",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\core\\public\\internationalization\\polyglottextdata.h",
+            "d:\\games\\epicgames\\ue_5.0\\engine\\source\\runtime\\coreuobject\\public\\assetregistry\\arfilter.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\datainterface_general.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\datainterface_general.generated.h",
+            "d:\\work\\ue5 dump\\omegabuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\generaldataobject.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
