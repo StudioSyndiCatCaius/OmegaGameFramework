@@ -10,10 +10,22 @@
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
-/*UOmegaGameplayModule::UOmegaGameplayModule()
+UOmegaGameplayModule::UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	
-}*/
+	if (const UObject* Owner = GetOuter())
+	{
+		WorldPrivate = Owner->GetWorld();
+	}
+}
+
+UWorld* UOmegaGameplayModule::GetWorld() const
+{
+	if(GetGameInstance())
+	{
+		return GetGameInstance()->GetWorld();
+	}
+	return nullptr;
+}
 
 void UOmegaGameplayModule::Native_Initialize()
 {
@@ -35,22 +47,7 @@ void UOmegaGameplayModule::Native_OnLevelOpened(FString LevelName, AOmegaGameMod
 	OnLevelOpened(LevelName, GameMode);
 }
 
-UOmegaGameplayModule::UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
-{
-	if (const UObject* Owner = GetOuter())
-	{
-		WorldPrivate = Owner->GetWorld();
-	}
-}
 
-UWorld* UOmegaGameplayModule::GetWorld() const
-{
-	if(GetGameInstance())
-	{
-		return GetGameInstance()->GetWorld();
-	}
-	return nullptr;
-}
 
 UGameInstance* UOmegaGameplayModule::GetGameInstance() const
 {

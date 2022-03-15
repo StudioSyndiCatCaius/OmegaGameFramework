@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/SaveGame.h"
+
+#include "Save/OmegaSaveBase.h"
 #include "GameplayTagContainer.h"
 #include "DataInterface_General.h"
+#include "Gameplay/GameplayTagsInterface.h"
 #include "UObject/SoftObjectPath.h"
 
 #include "OmegaSaveGame.generated.h"
@@ -17,7 +19,7 @@ class UGameInstance;
  * 
  */
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaSaveGame : public USaveGame, public IDataInterface_General
+class OMEGAGAMEFRAMEWORK_API UOmegaSaveGame : public UOmegaSaveBase
 {
 	GENERATED_BODY()
 
@@ -34,30 +36,15 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintPure, Category="Save")
 	FText GetDisplayName();
-	
 
-		//GamePreferences
-		UPROPERTY()
-			TMap<class UGamePreferenceBool*, bool> BoolPrefs;
-		UPROPERTY()
-			TMap<class UGamePreferenceFloat*, float> FloatPrefs;
-		UPROPERTY()
-			TMap<class UGamePreferenceString*, FString> StringPrefs;
-		UPROPERTY()
-			TMap<class UGamePreferenceTag*, FGameplayTag> TagPrefs;
-
-	//Tags
-		UPROPERTY(BlueprintReadWrite, Category="Tags")
-		FGameplayTag StoryState;
-	
-		UPROPERTY(BlueprintReadWrite, Category="Tags")
-		FGameplayTagContainer StoryTags;
-	
 		UPROPERTY(BlueprintReadWrite, Category="Tags")
 		TMap<TSoftObjectPtr<AActor>, FGameplayTag> ActorStates;
 	
 		UPROPERTY(BlueprintReadWrite, Category="Tags")
 		TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
+
+
+
 	
 	
 	

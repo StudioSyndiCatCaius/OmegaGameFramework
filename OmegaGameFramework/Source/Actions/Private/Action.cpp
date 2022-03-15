@@ -44,6 +44,7 @@ void UAction::Activate()
 
 	Subsystem->AddActionToTickGroup(this);
 
+
 	State = EActionState::Running;
 	OnActivation();
 }
@@ -74,11 +75,27 @@ void UAction::OnFinish(const EActionState Reason)
 
 	OnFinishedDelegate.Broadcast(Reason);
 
+	if(Reason==EActionState::Success)
+	{
+		OnSuccess.Broadcast();
+	}
+	if(Reason==EActionState::Failure)
+	{
+		OnFailure.Broadcast();
+	}
+	
 	const UObject* Parent = GetParent();
 	// If we're in the process of being garbage collected it is unsafe to call out to blueprints
 	if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
 	{
-		ReceiveFinished(Reason);
+		if(Reason==EActionState::Cancelled)
+		{
+			ReceiveCancel();
+		}
+		else
+		{
+			ReceiveFinished(Reason);
+		}
 	}
 }
 
@@ -87,6 +104,7 @@ void UAction::Finish(bool bSuccess) {
 		return;
 
 	State = bSuccess ? EActionState::Success : EActionState::Failure;
+	
 	OnFinish(State);
 
 	//Remove from parent action

@@ -35,11 +35,19 @@ void UTurnBasedManagerComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	// ...
 }
 
+//Get Active Member
 UCombatantComponent* UTurnBasedManagerComponent::GetActiveTurnMember()
 {
-	if(TurnOrder[0])
+	if(TurnOrder.IsValidIndex(0))
 	{
-		return TurnOrder[0];
+		if(TurnOrder[0] != nullptr)
+		{
+			return TurnOrder[0];
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 	else
 	{
@@ -47,23 +55,36 @@ UCombatantComponent* UTurnBasedManagerComponent::GetActiveTurnMember()
 	}
 }
 
-void UTurnBasedManagerComponent::AddToTurnOrder(UCombatantComponent* Combatant, int32 Index)
+//Add to Turn Order
+void UTurnBasedManagerComponent::AddToTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
 {
 
 	TurnOrder.Add(Combatant);	// NEEDS TO BE FINISHED!! Must add to appropriate Index
-
-	OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant));
+	OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant), Flag, Tags);
+	
+	if(DoesCombatantUseInterface(Combatant))
+	{
+		IActorInterface_TurnOrderCombatant::Execute_OnAddedToTurnOrder(GetActiveTurnMember()->GetOwner(), this, Flag, Tags);
+	}
 
 }
 
-void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combatant)
+//Remove From Turn Order
+void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
 {
-
+	if(!Combatant)
+	{
+		return;
+	}
 	TurnOrder.Remove(Combatant);
-	OnRemovedFromTurnOrder.Broadcast(Combatant);
-
+	OnRemovedFromTurnOrder.Broadcast(Combatant, Flag, Tags);
+	if(DoesCombatantUseInterface(Combatant))
+	{
+		IActorInterface_TurnOrderCombatant::Execute_OnRemovedFromTurnOrder(GetActiveTurnMember()->GetOwner(), this, Flag, Tags);
+	}
 }
 
+//Generate TurnOrder
 TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 {
 	TurnOrder.Empty();
@@ -98,33 +119,81 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 	return TurnOrder;
 }
 
-void UTurnBasedManagerComponent::NextTurn()
+// NEXT TURN
+bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags)
 {
-	if(GetActiveTurnMember())
+	//Remove current member
+	if(GetActiveTurnMember() != nullptr)
 	{
-		OnTurnEnd.Broadcast(GetActiveTurnMember());
-		RemoveFromTurnOrder(GetActiveTurnMember());
-	}
+		OnTurnEnd.Broadcast(GetActiveTurnMember(), Flag, Tags);
+		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
 
-	if(!TurnOrder.IsValidIndex(0))
+		//Function on Combatant Actor
+		if(DoesCombatantUseInterface(GetActiveTurnMember()))
+		{
+			IActorInterface_TurnOrderCombatant::Execute_OnTurnEnd(GetActiveTurnMember()->GetOwner(), this);
+		}
+	}
+	
+	//If Empty and should regenerator
+	if(!TurnOrder.IsValidIndex(0) && bGenerateIfEmpty)
 	{
 		GenerateTurnOrder();
 	}
 
-	if(GetActiveTurnMember())
+	if(GetActiveTurnMember() != nullptr)
 	{
-		OnTurnStart.Broadcast(GetActiveTurnMember());
+		OnTurnStart.Broadcast(GetActiveTurnMember(), Flag, Tags);
+
+		//Function on Combatant Actor
+		if(DoesCombatantUseInterface(GetActiveTurnMember()))
+		{
+			IActorInterface_TurnOrderCombatant::Execute_OnTurnBegin(GetActiveTurnMember()->GetOwner(), this);
+		}
+		
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
-void UTurnBasedManagerComponent::RegisterCombatant(UCombatantComponent* Combatant)
+void UTurnBasedManagerComponent::ClearTurnOrder(FString Flag, FGameplayTagContainer Tags)
+{
+	for(UCombatantComponent* TempCombatant : TurnOrder)
+	{
+		RemoveFromTurnOrder(TempCombatant, Flag, Tags);
+	}
+	TurnOrder.Empty();
+}
+
+// REGISTER
+void UTurnBasedManagerComponent::RegisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
 {
 	RegisteredCombatants.AddUnique(Combatant);
 }
 
-void UTurnBasedManagerComponent::UnregisterCombatant(UCombatantComponent* Combatant)
+
+// UNREGISTER
+void UTurnBasedManagerComponent::UnregisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
 {
 	RegisteredCombatants.Remove(Combatant);
+	if(TurnOrder.Contains(Combatant))
+	{
+		TurnOrder.Remove(Combatant);
+	}
+}
+
+void UTurnBasedManagerComponent::ClearRegisteredCombatants(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+{
+	for(UCombatantComponent* TempCombatant : RegisteredCombatants)
+	{
+		if(TempCombatant)
+		{
+			UnregisterCombatant(TempCombatant, Flag, Tags);
+		}
+	}
 }
 
 

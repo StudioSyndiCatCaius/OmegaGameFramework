@@ -36,14 +36,14 @@ protected:
 	
 public:
 	
-	UPROPERTY()
-	class UDataList* ParentList;
+	UPROPERTY(BlueprintReadOnly, Category="DataWidget")
+	UDataList* ParentList = nullptr;
 
 	UPROPERTY(EditInstanceOnly, Category="DataWidget")
 	FString AssetLabel;
 	
 	UPROPERTY(BlueprintReadOnly, meta=(ExposeOnSpawn = "true", DisplayName="Source Asset"), Category = "DataWidget")
-	class UObject* ReferencedAsset;
+	UObject* ReferencedAsset;
 
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "DataWidget")
 	int32 ListIndex;
@@ -54,14 +54,21 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
 	bool bIsHovered;
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "DataWidget")
-		void AddedToDataList(UDataList* DataList, int32 Index, const UObject* Asset, FGameplayTagContainer ListTags);
+	UFUNCTION(BlueprintImplementableEvent, Category = "DataWidget", meta=(AdvancedDisplay="ListTags, ListFlag"))
+		void AddedToDataList(UDataList* DataList, int32 Index, const UObject* Asset, FGameplayTagContainer ListTags, const FString& ListFlag);
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "DataWidget")
+	UFUNCTION(BlueprintImplementableEvent, Category = "DataWidget")
 		void OnNewListOwner(UObject* ListOwner);
 
 	UFUNCTION()
 		FString GetAssetLabel();
+		
+	//Tags
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataWidget")
+    TArray<FName> WidgetTags;
+
+	UFUNCTION(BlueprintPure, Category="DataWidget")
+	bool DataWidgetHasTag(FName Tag);
 
 //FUNCTIONS
 
@@ -77,9 +84,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void SetHighlighted(bool Highlighted);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
+	UFUNCTION(BlueprintImplementableEvent, DisplayName="Is Entity Unselectable", Category = "Ω|Widget|DataWidget")
 	bool IsEntityDisabled(UObject* Asset);
 
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataWidget")
+	bool GetIsEntitySelectable();
+	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
 	bool IsEntityHidden(UObject* Asset);
 

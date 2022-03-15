@@ -15,7 +15,8 @@ public class OmegaEditor : ModuleRules
 			"UnrealEd",
 			"InputCore",
 			"Actions",
-			"OmegaGameFramework"
+			"OmegaGameFramework", 
+			"UMGEditor"
 		});
 
 		PrivateDependencyModuleNames.AddRange(

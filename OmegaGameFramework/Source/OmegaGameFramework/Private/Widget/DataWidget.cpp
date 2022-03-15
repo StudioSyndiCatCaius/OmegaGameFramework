@@ -55,6 +55,11 @@ FString UDataWidget::GetAssetLabel()
 	return OutString;
 }
 
+bool UDataWidget::DataWidgetHasTag(FName Tag)
+{
+	return WidgetTags.Contains(Tag);
+}
+
 void UDataWidget::Select()
 {
 	if(bIsEnabled)
@@ -129,7 +134,7 @@ void UDataWidget::SetHighlighted(bool Highlighted)
 	if (bIsHighlighted != Highlighted)
 	{
 		//Set new State
-		bIsHighlighted = !Highlighted;
+		bIsHighlighted = Highlighted;
 		//Check if Valid Highlight Anim exists
 		if (GetHighlightAnimation())
 		{
@@ -144,6 +149,11 @@ void UDataWidget::SetHighlighted(bool Highlighted)
 			}
 		}
 	}
+}
+
+bool UDataWidget::GetIsEntitySelectable()
+{
+	return !IsEntityDisabled(ReferencedAsset);
 }
 
 void UDataWidget::SetSourceAsset(UObject* Asset)

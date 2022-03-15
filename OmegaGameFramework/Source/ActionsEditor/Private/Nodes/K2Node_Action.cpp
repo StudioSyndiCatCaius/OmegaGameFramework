@@ -583,7 +583,7 @@ bool UK2Node_Action::HasWorldContext() const
 
 FText UK2Node_Action::GetBaseNodeTitle() const
 {
-	return LOCTEXT("Action_BaseTitle", "Action");
+	return LOCTEXT("Action_BaseTitle", "GameplayAction");
 }
 
 FText UK2Node_Action::GetNodeTitleFormat() const

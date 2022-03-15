@@ -52,7 +52,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Ω|Ability")
 	bool bIsActive;
 
-	UFUNCTION(BlueprintCallable, Category="Ω|Ability")
+	UFUNCTION(BlueprintCallable, DisplayName="Activate", Category="Ω|Ability")
 	void Execute(UObject* Context);
 
 	UFUNCTION()
@@ -127,8 +127,8 @@ public:
 	UPROPERTY()
 	bool bIsKilling;
 	//Context Object//
-	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "Ability")
-	class UObject* ContextObject;
+	UPROPERTY(BlueprintReadOnly, DisplayName="Ability Context", meta = (ExposeOnSpawn = "true"), Category = "Ability")
+	UObject* ContextObject = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category="Owner")
 	class UCombatantComponent* CombatantOwner;

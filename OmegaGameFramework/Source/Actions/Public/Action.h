@@ -11,12 +11,14 @@
 
 #include "ActionsModule.h"
 #include "ActionsSubsystem.h"
+#include "GameplayTagContainer.h"
 #include "Action.generated.h"
 
 class UWorld;
 
 DECLARE_LOG_CATEGORY_EXTERN(ActionLog, Log, All);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSucess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailure);
 
 /**
  * Result of a node execution
@@ -28,7 +30,7 @@ enum class EActionState : uint8
 	Running   UMETA(Hidden),
 	Success,
 	Failure,
-	Cancelled
+	Cancelled UMETA(Hidden),
 };
 
 FORCEINLINE FString ToString(EActionState Value)
@@ -44,7 +46,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionFinishedDelegate, const EActi
 /**
  *
  */
-UCLASS(Blueprintable, EditInlineNew, meta = (ExposedAsyncProxy))
+UCLASS(Blueprintable, EditInlineNew, meta = (ExposedAsyncProxy, DisplayName="Gameplay Action"))
 class ACTIONS_API UAction : public UObject
 {
 	GENERATED_BODY()
@@ -56,9 +58,20 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Action)
 	bool bWantsToTick = false;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Action)
 	FColor NodeColor = { 40, 30, 240 };
+
+	//Tags
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTag CategoryTag;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer ActionTags;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnSucess OnSuccess;
+	UPROPERTY(BlueprintAssignable)
+	FOnFailure OnFailure;
+
 
 protected:
 
@@ -92,7 +105,7 @@ public:
 	/************************************************************************/
 
 	/** Called to active an action if not already. */
-	UFUNCTION(BlueprintCallable, Category = "Action", BlueprintInternalUseOnly)
+	UFUNCTION(BlueprintCallable, Category = "GameplayAction", BlueprintInternalUseOnly)
 	void Activate();
 
 	/** Internal Use Only. Called when the action is stopped from running by its owner */
@@ -137,7 +150,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
 	void Fail(FName Error = NAME_None)
 	{
-		UE_LOG(LogActions, Log, TEXT("Action '%s' failed: %s"), *GetName(), *Error.ToString());
+		UE_LOG(LogActions, Log, TEXT("Gameplay Action '%s' failed: %s"), *GetName(), *Error.ToString());
 		Finish(false);
 	}
 
@@ -160,6 +173,10 @@ protected:
 	/** Called when this action finishes */
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
 	void ReceiveFinished(const EActionState Reason);
+
+	/** Called when this action cancels */
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Cancelled"))
+	void ReceiveCancel();
 
 
 	/** Helpers */

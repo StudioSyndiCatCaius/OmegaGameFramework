@@ -78,14 +78,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Input")
 	void InputTag(FGameplayTag Tag);
 
-	bool CanInterfaceInput();
+	UFUNCTION()
+	bool CanInterfaceInput() const;
 	
 	////////////////////////
 	/////////HUD/////////
 	//////////////////////
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD", meta=(AdvancedDisplay = "LayerIndex, Context"))
-	class UHUDLayer* AddHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, UObject* Context, int32 LayerIndex);
+	UHUDLayer* AddHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, UObject* Context, int32 LayerIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD", meta = (AdvancedDisplay = "Flag"))
 	bool RemoveHUDLayer(class UHUDLayer* Layer, FString Flag);

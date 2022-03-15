@@ -8,6 +8,7 @@ float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGame
 
 	float FinalValue = MaxValue;
 
+	//Adjust along rank curve
 	if (RankValueCurves.IsValidIndex(Level))
 	{
 		float LevelFloat = float(Level);
@@ -25,7 +26,7 @@ float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGame
 	return FinalValue;
 }
 
-//DATA INTERFACE
+//Tags
 
 FGameplayTag UOmegaAttribute::GetObjectGameplayCategory_Implementation()
 {
@@ -37,6 +38,7 @@ FGameplayTagContainer UOmegaAttribute::GetObjectGameplayTags_Implementation()
 	return AttributeTags;
 }
 
+//General
 void UOmegaAttribute::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description)
 {
 	Name = AttributeName;

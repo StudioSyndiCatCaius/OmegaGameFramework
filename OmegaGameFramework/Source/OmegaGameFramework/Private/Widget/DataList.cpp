@@ -59,9 +59,10 @@ void UDataList::RemoveEntryOfAsset(UObject* Asset, bool All)
 		RemoveEntryFromList(GetEntryIndex(TempEntry));
 	}
 	
-}
+} 
 
-UDataWidget* UDataList::AddAssetToList(UObject* Asset)
+// ADD ENTRY BASE
+UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 {
 	//Is Entry Class Valid?
 	if (!EntryClass)
@@ -69,7 +70,16 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset)
 		return nullptr;
 		UE_LOG(LogTemp, Warning, TEXT("Failed to Add Asset. Invalid Widget Class."));
 	}
+
+	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
+
+	// Do not add if hidden
+	if(TempEntry->IsEntityHidden(Asset))
+	{
+		return nullptr;
+	}
+	
 	Entries.Add(TempEntry);
 	TempEntry->AssetLabel = EntryLabel;
 	TempEntry->ParentList = this;
@@ -87,6 +97,7 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset)
 	UVerticalBoxSlot* VSlotRef;
 	UUniformGridSlot* USlotRef;
 
+	//Put In List
 	switch (Format)
 	{
 	case EDataListFormat::Format_Box:
@@ -145,12 +156,12 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset)
 		break;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Added WidgetToList"));
-	TempEntry->AddedToDataList(this, Entries.Find(TempEntry), Asset, ListTags);
+	TempEntry->AddedToDataList(this, Entries.Find(TempEntry), Asset, ListTags, Flag);
 
 	return TempEntry;
 }
 
-TArray<UDataWidget*> UDataList::AddAssetsToList(TArray<UObject*> Assets, bool ClearListFirst)
+TArray<UDataWidget*> UDataList::AddAssetsToList(TArray<UObject*> Assets, FString Flag, bool ClearListFirst)
 {
 	if (ClearListFirst)
 	{
@@ -161,17 +172,17 @@ TArray<UDataWidget*> UDataList::AddAssetsToList(TArray<UObject*> Assets, bool Cl
 	for (UObject* TempAsset : Assets)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempted to add Widget To List"));
-		UDataWidget* LocalEntry = AddAssetToList(TempAsset);
+		UDataWidget* LocalEntry = AddAssetToList(TempAsset, Flag);
 		LocalEntryList.Add(LocalEntry);
 	}
 	return LocalEntryList;
 }
 
-UDataWidget* UDataList::AddedCustomEntryToList(FCustomAssetData EntryData)
+UDataWidget* UDataList::AddedCustomEntryToList(FCustomAssetData EntryData, FString Flag)
 {
 	UGeneralDataObject* TempDataObj = NewObject<UGeneralDataObject>(this, UGeneralDataObject::StaticClass());
 	TempDataObj->CustomData = EntryData;
-	return AddAssetToList(TempDataObj);
+	return AddAssetToList(TempDataObj, Flag);
 }
 
 void UDataList::HoverEntry(int32 Index)
@@ -252,6 +263,23 @@ UDataWidget* UDataList::GetEntry(int32 Index)
 		return Entries[Index];
 	}
 	return nullptr;
+}
+
+TArray<UDataWidget*> UDataList::GetEntiresWithTag(FName Tag, bool bInvertGet)
+{
+	TArray<UDataWidget*> OutWidgets;
+	for(auto* TempEntry : Entries)
+	{
+		if(TempEntry)
+		{
+			if(TempEntry->DataWidgetHasTag(Tag) != bInvertGet)
+			{
+				OutWidgets.Add(TempEntry);
+			}
+		}
+	}
+	
+	return OutWidgets;
 }
 
 
@@ -378,17 +406,16 @@ void UDataList::RebuildList()
 	{
 		for (const FCustomAssetData TempData : CustomEntries)
 		{
-			AddedCustomEntryToList(TempData);
+			AddedCustomEntryToList(TempData, DefaultListFlag);
 		}
 	}
 	else
 	{
 		for (UPrimaryDataAsset* TempAsset : DefaultAssets)
 		{
-			AddAssetToList(TempAsset);
+			AddAssetToList(TempAsset, DefaultListFlag);
 		}
 	}
-	
 }
 
 //UClass* UDataList::GetSlotClass() const

@@ -7,6 +7,7 @@
 
 #include "DamageFormula.generated.h"
 
+class UCombatantComponent;
 /**
  * 
  */
@@ -18,5 +19,5 @@ class OMEGAGAMEFRAMEWORK_API UDamageFormula : public UObject
 
 public:
 		UFUNCTION(BlueprintImplementableEvent)
-		void GetDamageAmount(class UObject* Instigator, class UObject* Target, float& DamageOut);
+		void GetDamageAmount(UCombatantComponent* Instigator, UCombatantComponent* Target, float& DamageOut);
 };

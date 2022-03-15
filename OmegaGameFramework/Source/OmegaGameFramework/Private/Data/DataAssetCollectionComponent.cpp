@@ -20,7 +20,7 @@ void UDataAssetCollectionComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UDataAssetCollectionComponent::AddAsset(UDataAsset* Asset, int32 Amount)
+void UDataAssetCollectionComponent::AddAsset(UPrimaryDataAsset* Asset, int32 Amount)
 {
 	bool bIsFull = false;
 	int32 AmountAdded = 0;
@@ -35,7 +35,7 @@ void UDataAssetCollectionComponent::AddAsset(UDataAsset* Asset, int32 Amount)
 	OnAssetAdded.Broadcast(Asset, AmountAdded, bIsFull);
 }
 
-void UDataAssetCollectionComponent::RemoveAsset(UDataAsset* Asset, int32 Amount)
+void UDataAssetCollectionComponent::RemoveAsset(UPrimaryDataAsset* Asset, int32 Amount)
 {
 	bool bIsEmpty = false;
 	int32 AmountRemoved = 0;
@@ -50,7 +50,7 @@ void UDataAssetCollectionComponent::RemoveAsset(UDataAsset* Asset, int32 Amount)
 	OnAssetRemoved.Broadcast(Asset, AmountRemoved, bIsEmpty);
 }
 
-int32 UDataAssetCollectionComponent::GetAssetNumberOfType(UDataAsset* Asset)
+int32 UDataAssetCollectionComponent::GetAssetNumberOfType(UPrimaryDataAsset* Asset)
 {
 	return CollectionMap.FindOrAdd(Asset);
 }
@@ -65,9 +65,9 @@ int32 UDataAssetCollectionComponent::GetAssetNumberTotal()
 	return TotalNumber;
 }
 
-TArray<UDataAsset*> UDataAssetCollectionComponent::GetCollectionAsArray(UDataAsset* Asset)
+TArray<UPrimaryDataAsset*> UDataAssetCollectionComponent::GetCollectionAsArray(UPrimaryDataAsset* Asset)
 {
-	TArray<UDataAsset*> OutList;
+	TArray<UPrimaryDataAsset*> OutList;
 	for (int i = 0; i < CollectionMap.FindOrAdd(Asset); ++i)
 	{
 		OutList.Add(Asset);
@@ -75,17 +75,17 @@ TArray<UDataAsset*> UDataAssetCollectionComponent::GetCollectionAsArray(UDataAss
 	return OutList;
 }
 
-void UDataAssetCollectionComponent::SetCollectionMap(TMap<UDataAsset*, int32> Map)
+void UDataAssetCollectionComponent::SetCollectionMap(TMap<UPrimaryDataAsset*, int32> Map)
 {
 	CollectionMap=Map;
 }
 
-TMap<UDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap()
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap()
 {
 	return CollectionMap;
 }
 
-bool UDataAssetCollectionComponent::NativeAddAsset(UDataAsset* Asset)
+bool UDataAssetCollectionComponent::NativeAddAsset(UPrimaryDataAsset* Asset)
 {
 	const int32 CurrentValue = CollectionMap.FindOrAdd(Asset);
 	const int32 MaxValue = IDataAssetCollectionInterface::Execute_GetMaxCollectionNumber(Asset);
@@ -97,7 +97,7 @@ bool UDataAssetCollectionComponent::NativeAddAsset(UDataAsset* Asset)
 	return true;
 }
 
-bool UDataAssetCollectionComponent::NativeRemoveAsset(UDataAsset* Asset)
+bool UDataAssetCollectionComponent::NativeRemoveAsset(UPrimaryDataAsset* Asset)
 {
 	const int32 CurrentValue = CollectionMap.FindOrAdd(Asset);
 	if(CurrentValue>0)

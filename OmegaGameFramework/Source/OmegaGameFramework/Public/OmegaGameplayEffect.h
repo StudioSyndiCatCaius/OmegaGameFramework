@@ -4,29 +4,47 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
+#include "Gameplay/GameplayTagsInterface.h"
 #include "GameplayTagContainer.h"
 #include "VolumeUtils.h"
 #include "DamageFormula.h"
-
 #include "OmegaGameplayEffect.generated.h"
+
+class AOmegaGameplayEffect;
+
+USTRUCT(BlueprintType)
+struct FOmegaEffectContainer
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
+	TSubclassOf<AOmegaGameplayEffect> EffectClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
+	float Power = 1.0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
+	FGameplayTagContainer AddedTags;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEffectTriggered, AOmegaGameplayEffect*, Effect, float, DamageValue);
 
 
 UENUM()
 enum class EEffectLifetime : uint8
 
 {
-	/** Description. */
+	// Effect is instantly triggered and destruct
 	EffectLifetime_Instant        UMETA(DisplayName = "Instant"),
-	/** Description. */
+	//Effect will trigger and destruct after a certain amount of timer has passed.
 	EffectLifetime_Timer        UMETA(DisplayName = "Timer"),
-	/** Description. */
+	// Effect remains until Trigger
 	EffectLifetime_OnTrigger        UMETA(DisplayName = "OnTrigger"),
+	// Effect remains until "Destroy Actor" is called.
+	EffectLifetime_OnDestroy       UMETA(DisplayName = "OnDestroy"),
 
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor
+class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
 	
@@ -42,24 +60,30 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
-		void EffectApplied();
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Effect Triggered", Category = "Ω|Gameplay|Effects")
+		void EffectApplied(float DamageValue);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Gameplay|Effects")
 		void TriggerEffect();
 
+	UPROPERTY(BlueprintAssignable)
+	FOnEffectTriggered OnEffectTriggered;
+	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
-		void EffectBeginPlay(class UCombatantComponent* EffectInstigator, class AActor* TargetedActor);
+		void EffectBeginPlay(UObject* Context);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
 		void LifetimeUpdated(float TimeElapsed, float TimeRemaining);
 
-	UPROPERTY()
-	class UCombatantComponent* CombatantInstigator;
+	UPROPERTY(BlueprintReadOnly, Category = "General")
+	UCombatantComponent* CombatantInstigator;
 
 	UPROPERTY(BlueprintReadOnly, Category = "General")
-	class AActor* TargetActor;
+	UCombatantComponent* TargetedCombatant;
 
+	UPROPERTY(BlueprintReadOnly, Category = "General")
+	UObject* EffectContext;
+	
 	//-----VOLUME-----//
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Volume")
 		bool bUseVolume = false;
@@ -73,7 +97,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lifetime")
 		float Lifetime = 1.0;
-
+	
+	
 	UFUNCTION()
 	void LifetimeEnd();
 
@@ -85,21 +110,30 @@ public:
 		float Power;
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Gameplay|Effects")
-		void CalculateDamageValue(float Multiplier, class UObject* DamageInstigator, class UObject* DamageTarget, float& Damage);
+	float CalculateDamageValue();
 
 	UPROPERTY(BlueprintReadOnly, Category = "Damage")
 		class UDamageFormula* LocalFormula;
 
 	//-----Tags-----//
-	UPROPERTY(EditAnywhere, Category = "Tags")
-		FGameplayTagContainer EffectTags;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
+	FGameplayTag EffectCategory;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer EffectTags;
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
+	FGameplayTag GetObjectGameplayCategory();
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation();
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
+	FGameplayTagContainer GetObjectGameplayTags();
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation();
+
+
+	//Misc
 	FTimerHandle LifetimeTimer;
 
 	float PastLifetime;
 	float RemainingLifetime;
-
-private:
-
-
+	
 };

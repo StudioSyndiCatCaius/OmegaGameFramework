@@ -16,7 +16,7 @@ class UOmegaSaveGame;
 /**
  * 
  */
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType, Blueprintable, EditInlineNew)
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject
 {
 	GENERATED_BODY()

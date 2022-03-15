@@ -38,5 +38,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
 	void GetAttributeProgressBar(class UOmegaAttribute* Attribute, class UProgressBar*& ProgressBar);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
+	void OnCombatantUpdated(UCombatantComponent* Combatant);
+
 	
 };

@@ -12,6 +12,7 @@ public class Actions : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
+			"GameplayTags",
 			"GameplayTasks",
 			"AIModule"
 		});

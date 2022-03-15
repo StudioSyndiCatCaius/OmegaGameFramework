@@ -2,6 +2,8 @@
 
 
 #include "Widget/Menu.h"
+
+#include "Kismet/KismetSystemLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef)
@@ -15,7 +17,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		PrivateInputBlocked = true;
 		
 		SetIsEnabled(true);
-		SetVisibility(ESlateVisibility::Visible);
+		SetVisibility(VisibilityOnOpen);
 		
 		OnOpened.Broadcast(Tags);
 		AddToPlayerScreen(200);
@@ -48,19 +50,21 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags)
 		PrivateInputBlocked = true;
 		
 		TempTags = Tags;
-		class UOmegaPlayerSubsystem* SubsystemRef = GetOwningPlayer()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+		MenuClosed(TempTags);
+		OnClosed.Broadcast(TempTags);
+
+		//Handle Subsystem
+		UOmegaPlayerSubsystem* SubsystemRef = GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
 		SubsystemRef->RemoveMenuFromActiveList(this);
 		const bool LastMenu = !SubsystemRef->OpenMenus.IsValidIndex(0);
 		SubsystemRef->OnMenuClosed.Broadcast(this, TempTags, LastMenu);
 
-		if(GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->FocusMenu==this)
+		if(SubsystemRef->FocusMenu && SubsystemRef->FocusMenu==this)
 		{
-			GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->ClearControlWidget();
+			SubsystemRef->ClearControlWidget();
 		}
 		
-		MenuClosed(TempTags);
-		OnClosed.Broadcast(TempTags);
-
+		
 		//ANIMATION
 		if(GetCloseAnimation())
 		{
@@ -99,7 +103,7 @@ void UMenu::NativeConstruct()
 	if(GetCloseAnimation())
 	{
 		CloseDelegate.BindUFunction(this, "Native_CompleteClose");
-		BindToAnimationFinished(GetOpenAnimation(), CloseDelegate);
+		BindToAnimationFinished(GetCloseAnimation(), CloseDelegate);
 	}
 	
 	//Try Set Open Anim
@@ -126,9 +130,13 @@ void UMenu::Native_CompleteClose()
 {
 	PrivateInputBlocked = true;
 	SetIsEnabled(false);
-	SetVisibility(ESlateVisibility::Hidden);
+	SetVisibility(VisibilityOnClose);
+	
+	//Prep for deletion
+	//FLatentActionInfo DumInfo;
+	//UKismetSystemLibrary::Delay(this, 0.01f, DumInfo);
 	RemoveFromParent();
-	CollectGarbage(EObjectFlags::RF_Public);
+	//CollectGarbage(EObjectFlags::RF_Public);
 }
 
 bool UMenu::InputBlocked_Implementation()

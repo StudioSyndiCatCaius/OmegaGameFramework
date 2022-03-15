@@ -41,6 +41,6 @@ public:
 	//UFUNCTION(BlueprintNativeEvent, Category="Attributes|Modifiers")
 	//UOmegaAttribute* GetModifiedAttribute();
 
-	UFUNCTION(BlueprintNativeEvent, Category="Attributes|Modifiers")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Attributes|Modifiers")
 	TArray<FOmegaAttributeModifier> GetModifierValues();
 };

@@ -2,6 +2,8 @@
 
 
 #include "Attributes/LevelingComponent.h"
+#include "GameFramework/Actor.h"
+#include "Attributes/ActorInterface_Leveling.h"
 
 
 // Sets default values for this component's properties
@@ -34,7 +36,8 @@ void ULevelingComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 }
 
-void ULevelingComponent::AddXP(float Amount)
+
+void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler)
 {
 	//Save current Level
 	const int32 LastLevel = GetCurrentLevel();
@@ -55,7 +58,7 @@ void ULevelingComponent::AddXP(float Amount)
 	OnXPUpdated.Broadcast(XP);
 }
 
-void ULevelingComponent::SetXP(float NewValue)
+void ULevelingComponent::SetXP(float NewValue, bool bUseRateMultipler)
 {
 	XP = NewValue;
 	OnXPUpdated.Broadcast(XP);
@@ -72,7 +75,7 @@ int32 ULevelingComponent::GetCurrentLevel() const
 
 float ULevelingComponent::GetPercentageToNextLevel()
 {
-	return XP/GetCurrentLevelMaxXP();
+	return (XP-GetCurrentLevelMinXP())/(GetCurrentLevelMaxXP()-GetCurrentLevelMinXP());
 }
 
 float ULevelingComponent::GetCurrentLevelMinXP()
@@ -99,3 +102,26 @@ float ULevelingComponent::GetCurrentLevelMaxXP()
 	return OutXP;
 }
 
+float ULevelingComponent::AdjustXPRate(float InXP, bool UseAdjust)
+{
+	if(UseAdjust)
+	{
+		return GetXPRate()*XP;
+	}
+	else
+	{
+		return InXP;
+	}
+}
+
+float ULevelingComponent::GetXPRate()
+{
+	if(GetOwner()->Implements<UActorInterface_Leveling>())
+	{
+		return XPGainRate+(IActorInterface_Leveling::Execute_GetXPRateOffset(GetOwner()));
+	}
+	else
+	{
+		return XPGainRate;
+	}
+}

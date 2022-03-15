@@ -139,24 +139,58 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, FGameplayTag
 
 }
 
-void UOmegaSaveSubsystem::SetStoryState(FGameplayTag StateTag)
+UOmegaSaveBase* UOmegaSaveSubsystem::GetSaveObject(bool Global)
 {
-	ActiveSaveData->StoryState = StateTag;
+	if(Global)
+	{
+		return GlobalSaveData;
+	}
+	else
+	{
+		return ActiveSaveData;
+	}
 }
 
-void UOmegaSaveSubsystem::AddStoryTags(FGameplayTagContainer Tags)
+void UOmegaSaveSubsystem::SetStoryState(FGameplayTag StateTag, bool Global)
 {
-	ActiveSaveData->StoryTags.AppendTags(Tags);
+	GetSaveObject(Global)->StoryState = StateTag;
 }
 
-void UOmegaSaveSubsystem::RemoveStoryTags(FGameplayTagContainer Tags)
+void UOmegaSaveSubsystem::AddStoryTags(FGameplayTagContainer Tags, bool Global)
 {
-	ActiveSaveData->StoryTags.RemoveTags(Tags);
+	GetSaveObject(Global)->StoryTags.AppendTags(Tags);
+}
+
+void UOmegaSaveSubsystem::RemoveStoryTags(FGameplayTagContainer Tags, bool Global)
+{
+	GetSaveObject(Global)->StoryTags.RemoveTags(Tags);
+}
+
+FGameplayTagContainer UOmegaSaveSubsystem::GetStoryTags(bool Global)
+{
+	FGameplayTagContainer FinalTags = GetSaveObject(Global)->StoryTags;
+
+	FinalTags.AppendTags(IGameplayTagsInterface::Execute_GetObjectGameplayTags(ActiveSaveData));
+
+	return FinalTags;
+	
+}
+
+bool UOmegaSaveSubsystem::SaveTagsMatchQuery(FGameplayTagQuery Query, bool Global)
+{
+	if(Query.IsEmpty())
+	{
+		return true;
+	}
+	else
+	{
+		return Query.Matches(GetStoryTags(Global));
+	}
 }
 
 void UOmegaSaveSubsystem::SetSavedActorState(AActor* Actor, FGameplayTag StateTag)
 {
-
+	
 }
 
 void UOmegaSaveSubsystem::AddSavedActorTags(AActor* Actor, FGameplayTagContainer Tags)
@@ -166,5 +200,21 @@ void UOmegaSaveSubsystem::AddSavedActorTags(AActor* Actor, FGameplayTagContainer
 
 void UOmegaSaveSubsystem::RemoveSavedActorTags(AActor* Actor, FGameplayTagContainer Tags)
 {
+	
+}
+
+void UOmegaSaveSubsystem::AddDataAssetToSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->CollectedDataAssets.AddUnique(Asset);
+}
+
+void UOmegaSaveSubsystem::RemoveDataAssetFromSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->CollectedDataAssets.Remove(Asset);
+}
+
+bool UOmegaSaveSubsystem::IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->CollectedDataAssets.Contains(Asset);
 }
 

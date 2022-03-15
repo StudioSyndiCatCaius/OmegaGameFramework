@@ -30,7 +30,6 @@ void FActionsEditorModule::ShutdownModule()
 	FKismetEditorUtilities::UnregisterAutoBlueprintNodeCreation(this);
 }
 
-
 void FActionsEditorModule::RegisterPropertyTypeCustomizations()
 {
 }

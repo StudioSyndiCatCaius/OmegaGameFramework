@@ -3,6 +3,8 @@
 
 #include "OmegaGameplayEffect.h"
 #include "TimerManager.h"
+#include "Kismet/KismetSystemLibrary.h"
+
 
 
 // Sets default values
@@ -34,11 +36,20 @@ void AOmegaGameplayEffect::BeginPlay()
 	case EEffectLifetime::EffectLifetime_OnTrigger:
 		//Do code
 		break;
-
+	case EEffectLifetime::EffectLifetime_OnDestroy:
+		//Do code
+		break;
 	default: break;
 	}
 
-	EffectBeginPlay(CombatantInstigator, TargetActor);
+	//CorrectContext
+	if(!EffectContext)
+	{
+		EffectContext = GetOwner();
+	}
+
+	
+	EffectBeginPlay(EffectContext);
 
 }
 
@@ -47,15 +58,17 @@ void AOmegaGameplayEffect::LifetimeEnd()
 {
 	
 	TriggerEffect();
-
+	K2_DestroyActor();
 }
 
+
 //Run Damage Calculation
-void AOmegaGameplayEffect::CalculateDamageValue(float Multiplier, class UObject* DamageInstigator, class UObject* DamageTarget, float& Damage)
+float AOmegaGameplayEffect::CalculateDamageValue()
 {
 	float LocalDamage;
-	LocalFormula->GetDamageAmount(DamageInstigator, DamageTarget, LocalDamage);
-	Damage = LocalDamage;
+	LocalFormula->GetDamageAmount(CombatantInstigator, TargetedCombatant, LocalDamage);
+	LocalDamage = LocalDamage * Power;
+	return LocalDamage;
 }
 
 // Called every frame
@@ -75,9 +88,25 @@ void AOmegaGameplayEffect::Tick(float DeltaTime)
 //Trigger the effects and destory this Effect Actor.
 void AOmegaGameplayEffect::TriggerEffect()
 {
-	EffectApplied();
-	K2_DestroyActor();
+	EffectApplied(CalculateDamageValue());
+	OnEffectTriggered.Broadcast(this, CalculateDamageValue());
+	UE_LOG(LogTemp, Display, TEXT("Applied Effect"));
+	
+	if(EffectLifetime == EEffectLifetime::EffectLifetime_OnTrigger)
+	{
+		K2_DestroyActor();
+	}
+	
 }
 
 
+//Tags
+FGameplayTag AOmegaGameplayEffect::GetObjectGameplayCategory_Implementation()
+{
+	return EffectCategory;
+}
 
+FGameplayTagContainer AOmegaGameplayEffect::GetObjectGameplayTags_Implementation()
+{
+	return EffectTags;
+}

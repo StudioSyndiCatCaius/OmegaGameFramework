@@ -7,6 +7,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "Gameplay/CombatantComponent.h"
 #include "EngineUtils.h"
 
 #include "OmegaGameplaySubsystem.generated.h"
@@ -36,6 +37,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Gameplay", meta=(DeterminesOutputType = "Class"))
 	class AOmegaGameplaySystem* GetGameplaySystem(class TSubclassOf<AOmegaGameplaySystem> Class, bool& bIsActive);
+
+	UPROPERTY()
+	TArray<UCombatantComponent*> ActiveCombatants;
+
+	UFUNCTION(BlueprintPure, Category="Combat")
+	TArray<UCombatantComponent*> GetAllCombatants();
 	
 	UFUNCTION()
 	void NativeRemoveSystem(AOmegaGameplaySystem* System);

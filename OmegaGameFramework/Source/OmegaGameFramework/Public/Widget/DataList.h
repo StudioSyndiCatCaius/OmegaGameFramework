@@ -44,6 +44,8 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 	GENERATED_BODY()
 
 public:
+
+	///
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
 	EDataListFormat Format;
 
@@ -83,6 +85,10 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
 	FGameplayTagContainer ListTags;
 
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	FString DefaultListFlag;
+
+	// Read Only
 	UPROPERTY(BlueprintReadOnly, Category = "Entry")
 	TArray<UDataWidget*> Entries;
 
@@ -99,14 +105,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
 	void RemoveEntryOfAsset(UObject* Asset, bool All);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
-	class UDataWidget* AddAssetToList(UObject* Asset);
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList", meta=(AdvancedDisplay="Flag"))
+	class UDataWidget* AddAssetToList(UObject* Asset, FString Flag);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
-	TArray<class UDataWidget*> AddAssetsToList(TArray<UObject*> Assets, bool ClearListFirst=true);
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList", meta=(AdvancedDisplay="Flag"))
+	TArray<UDataWidget*> AddAssetsToList(TArray<UObject*> Assets, FString Flag, bool ClearListFirst=true);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
-	UDataWidget* AddedCustomEntryToList(FCustomAssetData EntryData);
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList", meta=(AdvancedDisplay="Flag"))
+	UDataWidget* AddedCustomEntryToList(FCustomAssetData EntryData, FString Flag);
 	
 	UPROPERTY()
 	UDataWidget* HoveredEntry;
@@ -129,6 +135,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
 	UDataWidget* GetEntry(int32 Index);
+	
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
+	TArray<UDataWidget*> GetEntiresWithTag(FName Tag, bool bInvertGet);
 
 	//INPUT
 	virtual void InputNavigate_Implementation(FVector2D Axis) override;

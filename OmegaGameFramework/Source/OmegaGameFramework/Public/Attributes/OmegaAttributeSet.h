@@ -9,7 +9,7 @@
 #include "OmegaAttributeSet.generated.h"
 
 
-class UOmegaAttribtute;
+class UOmegaAttribute;
 
 UCLASS(BlueprintType, Blueprintable)
 class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
@@ -17,10 +17,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
 	GENERATED_BODY()
 
 public:
-		UPROPERTY(EditDefaultsOnly, Category = "Attributes")
+		UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 		TArray<class UOmegaAttribute*> Attributes;
 
-		UPROPERTY(EditDefaultsOnly, Category = "Tags")
+		UPROPERTY()
 		FGameplayTag ValueCategory;
 	
 };

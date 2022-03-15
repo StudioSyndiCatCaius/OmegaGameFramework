@@ -6,12 +6,13 @@
 #include "Components/ActorComponent.h"
 #include "Gameplay/CombatantComponent.h"
 #include "TurnManagerBase.h"
+#include "Gameplay/TurnBased/ActorInterface_TurnOrderCombatant.h"
 #include "TurnBasedManagerComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnStart, UCombatantComponent*, Combatant);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnEnd, UCombatantComponent*, Combatant);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAddedToTurnOrder, UCombatantComponent*, Combatant, int32, Index);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemovedFromTurnOrder, UCombatantComponent*, Combatant);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTurnStart, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTurnEnd, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAddedToTurnOrder, UCombatantComponent*, Combatant, int32, Index, FString, Flag, FGameplayTagContainer, Tags);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRemovedFromTurnOrder, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -32,7 +33,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-
+	
 	///////////////
 	///// Turn ////
 	//////////////
@@ -43,36 +44,46 @@ public:
 	UPROPERTY()
 	UTurnManagerBase* TurnManager;
 	
-	UPROPERTY(BlueprintReadOnly, Category="Turn")
+	UPROPERTY(BlueprintReadOnly, Category="TurnBased")
 	TArray<UCombatantComponent*> TurnOrder;
 
-	UFUNCTION(BlueprintPure, Category="Combatants")
+	UFUNCTION(BlueprintPure, Category="TurnBased")
 	UCombatantComponent* GetActiveTurnMember();
 
-	UFUNCTION(BlueprintCallable, Category="Combatants")
-	void AddToTurnOrder(UCombatantComponent* Combatant, int32 Index = -1);
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	void AddToTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintCallable, Category="Combatants")
-	void RemoveFromTurnOrder(UCombatantComponent* Combatant);
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	void RemoveFromTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
 	
-	UFUNCTION(BlueprintCallable, Category="Combatants")
+	UFUNCTION(BlueprintCallable, Category="TurnBased")
 	TArray<UCombatantComponent*> GenerateTurnOrder();
 	
-	UFUNCTION(BlueprintCallable, Category="Combatants")
-	void NextTurn();
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	bool NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags);
+	
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	void ClearTurnOrder(FString Flag, FGameplayTagContainer Tags);
 	
 	///////////////
 	///// Combatants ////
 	//////////////
-	UPROPERTY(BlueprintReadOnly, Category="Combatants")
+	UPROPERTY(BlueprintReadOnly, Category="TurnBased")
 	TArray<UCombatantComponent*> RegisteredCombatants;
 
-	UFUNCTION(BlueprintCallable, Category="Combatants")
-	void RegisterCombatant(UCombatantComponent* Combatant);
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	void RegisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintCallable, Category="Combatants")
-	void UnregisterCombatant(UCombatantComponent* Combatant);
+	//Removes from list of combatants. Also remove form turn order if in.
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	void UnregisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
 
+	//Empties all registered combatants from the list
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	void ClearRegisteredCombatants(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+
+	static bool DoesCombatantUseInterface(const UCombatantComponent* Combatant);
+	
 	///////////////
 	///// Delegates ////
 	//////////////
@@ -89,3 +100,16 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnRemovedFromTurnOrder OnRemovedFromTurnOrder;
 };
+
+inline bool UTurnBasedManagerComponent::DoesCombatantUseInterface(const UCombatantComponent* Combatant)
+{
+	if(Combatant)
+	{
+		return Combatant->GetClass()->ImplementsInterface(UActorInterface_TurnOrderCombatant::StaticClass());
+	}
+	else
+	{
+		return false;
+	}
+}
+

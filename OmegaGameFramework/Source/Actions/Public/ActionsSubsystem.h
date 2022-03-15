@@ -8,6 +8,7 @@
 #include <Subsystems/GameInstanceSubsystem.h>
 #include <Tickable.h>
 
+#include "GameplayTagContainer.h"
 #include "ActionsSubsystem.generated.h"
 
 
@@ -125,8 +126,13 @@ public:
 	/** Cancel all actions executing inside an object
 	 * @param Owner of the actions to cancel
 	 */
-	UFUNCTION(BlueprintCallable, Category = ActionSubsystem)
+	UFUNCTION(BlueprintCallable, Category = "GameplayActions|Subsystem")
 	void CancelAllByOwner(UObject* Object);
+
+	/*UFUNCTION(BlueprintCallable, Category = "GameplayActions|Subsystem")
+	void CancelActionsWithTags(FGameplayTagContainer Tags);
+	UFUNCTION(BlueprintCallable, Category = "GameplayActions|Subsystem")
+	void CancelActionsOfCategory(FGameplayTag CategoryTag);*/
 
 	/** Cancel all actions matching a predicate */
 	void CancelByPredicate(TFunctionRef<bool(const UAction*)> Predicate);

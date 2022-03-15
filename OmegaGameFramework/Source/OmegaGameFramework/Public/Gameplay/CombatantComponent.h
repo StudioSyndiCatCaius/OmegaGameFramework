@@ -17,20 +17,35 @@
 #include "Components/ActorComponent.h"
 #include "CombatantComponent.generated.h"
 
+class APawn;
+class ACharacter;
+class APlayerController;
+
 class UOmegaAttribute;
 class UOmegaAttributeSet;
 class AOmegaAbility;
 class AOmegaGameplayEffect;
+class UOmegaGameplaySubsystem;
 
 class UInputComponent;
 class UEnhancedInputComponent;
 class UInputAction;
+
+UENUM(Blueprintable, BlueprintType)
+enum EFactionAffinity
+{
+	NeutralAffinity			UMETA(DisplayName = "Neutral"),
+	FriendlyAffinity		UMETA(DisplayName = "Friendly"),
+	HostileAffinity			UMETA(DisplayName = "Hostile"),
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantLevelChange, int32, NewLevel);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetAdded, UCombatantComponent*, Target);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetRemoved, UCombatantComponent*, Target);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAddedAsTarget, UCombatantComponent*, Instigator);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemovedAsTarget, UCombatantComponent*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActiveTargetChanged, UCombatantComponent*, ActiveTarget, bool, Valid);
 
 
@@ -60,7 +75,7 @@ public:
 	////////// -- General -- //////////
 	///////////////////////////////////
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "General")
 	class UPrimaryDataAsset* CombatantDataAsset;
 
 	UPROPERTY(EditAnywhere, Category = "General", meta = (DisplayName = "Name"))
@@ -94,6 +109,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
 	TMap<class UOmegaAttribute*, int32> AttributeLevels;
 
+	UPROPERTY(EditAnywhere, Category = "Attributes")
+	FGameplayTag AttributeValueCategory;
+
+	UFUNCTION(BlueprintPure, Category="Modifiers")
+	int32 GetAttributeLevel(UOmegaAttribute* Attribute);
+
 	UPROPERTY()
 	TMap<class UOmegaAttribute*, float> CurrentAttributeValues;
 
@@ -103,11 +124,23 @@ public:
 	////////// -- Faction -- //////////
 	///////////////////////////////////
 
-	UPROPERTY(EditAnywhere, Category = "Faction")
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Faction")
 	class UPrimaryDataAsset* FactionDataAsset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction")
+	UPROPERTY(EditAnywhere, Category = "Faction")
 	FGameplayTag FactionTag;
+
+	UFUNCTION(BlueprintPure, Category="Faction")
+	FGameplayTag GetFactionTag();
+
+	UPROPERTY(EditAnywhere, Category = "Faction")
+	TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> FactionAffinities;
+
+	UFUNCTION(BlueprintPure, Category="Faction")
+	EFactionAffinity GetAffinityToCombatant(UCombatantComponent* CheckedCombatant);
+
+	UFUNCTION(BlueprintPure, Category="Faction")
+	TArray<UCombatantComponent*> FilterCombatantsByAffinity(TArray<UCombatantComponent*> Combatants, EFactionAffinity Affinity, bool bExclude);
 	
 	////////////////////////////////////
 	////////// -- Skills -- //////////
@@ -161,6 +194,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combatant")
 	void Update();
 
+	//Tries to get the owning actor as a Pawn.
+	UFUNCTION(BlueprintPure, Category="Combatant")
+	APawn* GetOwnerPawn();
+
+	//Tries to get the owning actor as a Character.
+	UFUNCTION(BlueprintPure, Category="Combatant")
+	ACharacter* GetOwnerCharacter();
+
+	//Tries to get the owning actor OR the owning actor's controller.
+	UFUNCTION(BlueprintPure, Category="Combatant")
+	AController* GetOwnerController();
+
+	//Tries to get the owning actor OR the owning actor's controller as a player controller.
+	UFUNCTION(BlueprintPure, Category="Combatant")
+	APlayerController* GetOwnerPlayerController();
+
 	////////////////////////////////////
 	////////// -- Ability -- ////////
 	///////////////////////////////////
@@ -199,6 +248,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
 	TArray<AOmegaAbility*> GetActiveAbilitiesWithTags(FGameplayTagContainer Tags);
 
+	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+		TArray<AOmegaAbility*> GetGrantedAbilities();
+
+	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	TArray<AOmegaAbility*> GetGrantedAbilitiesWithTags(FGameplayTagContainer Tags);
+	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
 	void CancelAbilitiesWithTags(FGameplayTagContainer Tags);
 
@@ -207,13 +262,20 @@ public:
 
 	////////////////////////////////////
 	////////// -- Attributes -- ////////
-	///////////////////////////////////
+	//////////////////////////////////
+
+	//Initializes the Combatants from an asset implementing "DataInterface_Combatant"
+	UFUNCTION(BlueprintCallable, Category="Combatant")
+	void InitializeFromAsset(UObject* Asset);
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes", meta = (AdvancedDisplay = "Instigator"))
 	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UObject* Instigator, UObject* DamageModifier);
 
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	void GetAttributeValue(class UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue);
+
+	UFUNCTION(BlueprintPure, Category = "Attributes")
+	float GetAttributeBaseValue(UOmegaAttribute* Attribute);
 
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	float GetAttributePercentage(class UOmegaAttribute* Attribute);
@@ -245,6 +307,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category= "Attributes|Modifiers")
 	void RemoveAttributeModifersWithTags(FGameplayTagContainer Tags);
 
+	UFUNCTION(BlueprintPure, Category= "Attributes|Modifiers")
+	float GetAttributeComparedValue(UOmegaAttribute* Attribute, TArray<UObject*> Modifiers);
+
 	UFUNCTION(BlueprintCallable, Category= "Attributes|Modifiers")
 	const TArray<UObject*> GetAttributeModifiers();
 
@@ -256,11 +321,32 @@ public:
 	UPROPERTY()
 	TArray<class AOmegaGameplayEffect*> ActiveEffects;
 
-	UFUNCTION(BlueprintCallable, Category = "Effects", meta=(AdvancedDisplay="AddedTags, Target"))
-	class AOmegaGameplayEffect* CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, float Power, FTransform Location, class AActor* Target, FGameplayTagContainer AddedTags);
+	UFUNCTION(BlueprintCallable, Category = "Effects", meta=(AdvancedDisplay="AddedTags, Location"))
+	class AOmegaGameplayEffect* CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, float Power, FTransform Location, UCombatantComponent* Target, FGameplayTagContainer AddedTags, UObject* Context);
 	
 	UFUNCTION(BlueprintCallable, Category = "Effects")
 	void TriggerEffectsWithTags(FGameplayTagContainer Tags);
+
+	UFUNCTION(BlueprintCallable, Category = "Effects")
+	void TriggerEffectsOfCategory(FGameplayTag CategoryTag);
+
+	UFUNCTION(BlueprintPure, Category = "Effects")
+	TArray<AOmegaGameplayEffect*> GetEffectsWithTags(FGameplayTagContainer Tags);
+
+	UFUNCTION(BlueprintPure, Category = "Effects")
+	TArray<AOmegaGameplayEffect*> GetEffectsOfCategory(FGameplayTag CategoryTag);
+
+	UFUNCTION(BlueprintPure, Category = "Effects")
+	AOmegaGameplayEffect* GetActiveEffectOfClass(TSubclassOf<AOmegaGameplayEffect> EffectClass, bool& bIsValid);
+	
+	UFUNCTION()
+	TArray<AOmegaGameplayEffect*> GetValidActiveEffects();
+	
+	UFUNCTION(BlueprintCallable, Category = "Effects")
+    void RemoveEffectsOfCategory(FGameplayTag CategoryTag);
+    
+    UFUNCTION(BlueprintCallable, Category = "Effects")
+	void RemoveEffectsWithTags(FGameplayTagContainer EffectTags);
 	
 	////////////////////////////////////
 	////////// -- Targeting -- //////////
@@ -279,6 +365,9 @@ public:
 	void AddTargetToList(UCombatantComponent* Combatant);
 	
 	UFUNCTION(BlueprintCallable, Category="Target")
+	void AddTargetsToList(TArray<UCombatantComponent*> Combatants, bool bClearListFirst);
+	
+	UFUNCTION(BlueprintCallable, Category="Target")
 	void RemoveTargetFromList(UCombatantComponent* Combatant);
 	
 	UFUNCTION(BlueprintCallable, Category="Target")
@@ -293,10 +382,14 @@ public:
 	//Delegates
 	UPROPERTY(BlueprintAssignable)
 	FOnTargetAdded OnTargetAdded;
-
 	UPROPERTY(BlueprintAssignable)
 	FOnTargetAdded OnTargetRemoved;
-
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnAddedAsTarget OnAddedAsTarget;
+	UPROPERTY(BlueprintAssignable)
+	FOnRemovedAsTarget OnRemovedAsTarget;
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnActiveTargetChanged OnActiveTargetChanged;
 	

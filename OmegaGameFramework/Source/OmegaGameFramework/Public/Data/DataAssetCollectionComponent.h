@@ -24,38 +24,38 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	bool NativeAddAsset(UDataAsset* Asset);
+	bool NativeAddAsset(UPrimaryDataAsset* Asset);
 
 	UFUNCTION()
-	bool NativeRemoveAsset(UDataAsset* Asset);
+	bool NativeRemoveAsset(UPrimaryDataAsset* Asset);
 
 	UPROPERTY()
-	TMap<UDataAsset*, int32> CollectionMap;
+	TMap<UPrimaryDataAsset*, int32> CollectionMap;
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Data")
-	void AddAsset(UDataAsset* Asset, int32 Amount=1);
+	void AddAsset(UPrimaryDataAsset* Asset, int32 Amount=1);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Data")
-	void RemoveAsset(UDataAsset* Asset, int32 Amount=1);
+	void RemoveAsset(UPrimaryDataAsset* Asset, int32 Amount=1);
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Data")
-	int32 GetAssetNumberOfType(UDataAsset* Asset);
+	int32 GetAssetNumberOfType(UPrimaryDataAsset* Asset);
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Data")
 	int32 GetAssetNumberTotal();
 
 	UFUNCTION(BlueprintPure, meta = (DeterminesOutputType="Asset"), Category = "Ω|Data")
-	TArray<UDataAsset*> GetCollectionAsArray(UDataAsset* Asset);
+	TArray<UPrimaryDataAsset*> GetCollectionAsArray(UPrimaryDataAsset* Asset);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Data")
-	void SetCollectionMap(TMap<UDataAsset*, int32> Map);
+	void SetCollectionMap(TMap<UPrimaryDataAsset*, int32> Map);
 	
 	UFUNCTION(BlueprintPure, Category = "Ω|Data")
-	TMap<UDataAsset*, int32> GetCollectionMap();
+	TMap<UPrimaryDataAsset*, int32> GetCollectionMap();
 
 	UPROPERTY(BlueprintAssignable)
 	FOnAssetAdded OnAssetAdded;

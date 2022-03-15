@@ -28,10 +28,17 @@ protected:
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+							   FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling", meta=(ExposeOnSpawn="true"))
 	UOmegaLevelingAsset* LevelingAsset;
+
+	//Multiplier used to offset xp when "Add XP" is called. E.G., a rate multiplier of "0.75" when using AddXP, 100 XP becomes 75 XP.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling", meta=(ExposeOnSpawn="true"))
+	float XPGainRate = 1.0;
+
+	UFUNCTION(BlueprintPure, Category="Leveling")
+	float GetXPRate();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Leveling")
 	float XP;
@@ -43,11 +50,11 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnXpUpdated OnXPUpdated;
 
-	UFUNCTION(BlueprintCallable, Category="Leveling")
-	void AddXP (float Amount);
+	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="bUseRateMultipler"))
+	void AddXP (float Amount, bool bUseRateMultipler = true);
 
-	UFUNCTION(BlueprintCallable, Category="Leveling")
-	void SetXP (float NewValue);
+	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="bUseRateMultipler"))
+	void SetXP (float NewValue, bool bUseRateMultipler = true);
 
 	UFUNCTION(BlueprintPure, Category="Leveling")
 	int32 GetCurrentLevel() const;
@@ -60,5 +67,8 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Leveling")
 	float GetCurrentLevelMaxXP();
+
+	UFUNCTION()
+	float AdjustXPRate(float InXP, bool UseAdjust);
 	
 };

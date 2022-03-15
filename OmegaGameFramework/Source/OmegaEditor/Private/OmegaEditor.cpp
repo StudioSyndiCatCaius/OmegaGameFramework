@@ -11,6 +11,7 @@
 #include "IAssetTools.h"
 
 #include "OmegaAbility.h"
+#include "OmegaGameplayEffect.h"
 
 #include "OmegaGameplaySystem.h"
 #include "Widget/DataWidget.h"
@@ -34,6 +35,10 @@ void FOmegaEditor::StartupModule()
 	RegisterDefaultEvent(AOmegaAbility, AbilityActivated);
 	RegisterDefaultEvent(AOmegaAbility, AbilityFinished);
 	RegisterDefaultEvent(AOmegaAbility, ActivatedTick);
+
+	//Effects
+	RegisterDefaultEvent(AOmegaGameplayEffect, EffectBeginPlay);
+	RegisterDefaultEvent(AOmegaGameplayEffect, EffectApplied);
 
 	//Menus
 	RegisterDefaultEvent(UMenu, MenuOpened);
@@ -73,10 +78,10 @@ void FOmegaEditor::StartupModule()
 	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_OmegaGlobalSave(OmegaAssetCategory)));
 	
 	// --- Menu
-	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_OmegaMenu(OmegaAssetCategory)));
+	//AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_OmegaMenu(OmegaAssetCategory)));
 
 	// --- HUD Layer
-	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_HudLayer(OmegaAssetCategory)));
+	//AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_HudLayer(OmegaAssetCategory)));
 
 	///////////////////////////////////////////////////////
 	//------SETUP ASSET THUMBNAILS-----//// 

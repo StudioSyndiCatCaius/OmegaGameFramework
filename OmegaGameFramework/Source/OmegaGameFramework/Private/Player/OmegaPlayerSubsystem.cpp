@@ -111,7 +111,11 @@ void UOmegaPlayerSubsystem::ClearControlWidget()
 
 void UOmegaPlayerSubsystem::RemoveMenuFromActiveList(UMenu* Menu)
 {
-	if (Menu && OpenMenus.Contains(Menu))
+	if(!Menu->IsValidLowLevel())
+	{
+		return;
+	}
+	if (OpenMenus.Contains(Menu))
 	{
 		OpenMenus.Remove(Menu);
 	}
@@ -140,18 +144,19 @@ void UOmegaPlayerSubsystem::InputTag(FGameplayTag Tag)
 	if (CanInterfaceInput()) {IWidgetInterface_Input::Execute_InputTag(FocusMenu, Tag);}
 }
 
-bool UOmegaPlayerSubsystem::CanInterfaceInput()
+bool UOmegaPlayerSubsystem::CanInterfaceInput() const
 {
-	if(!FocusMenu)
+	if(!FocusMenu->IsValidLowLevel())
 	{
 		return false;
 	}
-	if(IWidgetInterface_Input::Execute_InputBlocked(FocusMenu))
+	else if(IWidgetInterface_Input::Execute_InputBlocked(FocusMenu))
 	{
 		return false;
 	}
 	return true;
 }
+
 
 /// HUDS////
 UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass, UObject* Context, int32 LayerIndex)

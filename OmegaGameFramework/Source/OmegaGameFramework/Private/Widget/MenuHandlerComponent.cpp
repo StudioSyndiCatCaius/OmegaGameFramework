@@ -42,7 +42,7 @@ bool UMenuHandlerComponent::OpenMenu(FGameplayTagContainer Tags)
 	{
 		APlayerController* TempController = Cast<APlayerController>(GetOwner()->GetInstigatorController());
 		MenuObject = TempController->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OpenMenu(MenuClass, GetOwner(), Tags);
-		return true;
+		return true;	
 	}
 	return false;
 }

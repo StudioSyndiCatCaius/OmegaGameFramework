@@ -70,7 +70,12 @@
 				"Linux",
 				"Mac"
 			]
-		}
+		},
+		/*{
+			"name": "OmegaStory",
+			"type": "Runtime",
+			"loadingPhase": "Default"
+		}*/
 	],
 	"Plugins": [
 		{

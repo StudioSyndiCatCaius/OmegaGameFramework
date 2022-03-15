@@ -13,15 +13,15 @@ struct FCustomAssetData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category ="Data");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	FText DisplayName;
-	UPROPERTY(EditAnywhere, Category ="Data");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	FText Description;
-	UPROPERTY(EditAnywhere, Category ="Data");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	FString Label;
-	UPROPERTY(EditAnywhere, Category ="Data");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	UTexture2D* Texture;
-	UPROPERTY(EditAnywhere, Category ="Data");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	FLinearColor Color;
 };
 

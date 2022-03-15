@@ -36,7 +36,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 
 		if (!bSystemExists)
 		{
-			FTransform SpawnWorldPoint;
+			struct FTransform SpawnWorldPoint;
 			DummySystem = GetWorld()->SpawnActorDeferred<AOmegaGameplaySystem>(Class, SpawnWorldPoint, nullptr);
 			DummySystem->SubsysRef = this;
 			UGameplayStatics::FinishSpawningActor(DummySystem, SpawnWorldPoint);
@@ -83,6 +83,19 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::GetGameplaySystem(TSubclassOf<AOm
 		bIsActive = false;
 		return nullptr;
 	}
+}
+
+TArray<UCombatantComponent*> UOmegaGameplaySubsystem::GetAllCombatants()
+{
+	TArray<UCombatantComponent*> OutCombatants;
+	for(UCombatantComponent* TempCombatant : ActiveCombatants)
+	{
+		if(TempCombatant->IsValidLowLevel())
+		{
+			OutCombatants.Add(TempCombatant);
+		}
+	}
+	return OutCombatants;
 }
 
 void UOmegaGameplaySubsystem::NativeRemoveSystem(AOmegaGameplaySystem* System)

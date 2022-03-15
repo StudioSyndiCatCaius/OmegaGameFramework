@@ -48,7 +48,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
 		void MenuClosed(FGameplayTagContainer Tags);
 
-	//Anim
+	/////////////////////////
+	////////ANIMATIONS///////
+	////////////////////////
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
 	UWidgetAnimation* GetOpenAnimation();
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
@@ -56,9 +58,13 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animations")
 	bool ReverseOpenAnimation;
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animations")
 	bool ReverseCloseAnimation=true;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Animations", AdvancedDisplay)
+	ESlateVisibility VisibilityOnOpen = ESlateVisibility::SelfHitTestInvisible;
+	UPROPERTY(EditDefaultsOnly, Category = "Animations", AdvancedDisplay)
+	ESlateVisibility VisibilityOnClose = ESlateVisibility::Collapsed;
 
 	UPROPERTY()
 	FWidgetAnimationDynamicEvent OpenDelegate;
