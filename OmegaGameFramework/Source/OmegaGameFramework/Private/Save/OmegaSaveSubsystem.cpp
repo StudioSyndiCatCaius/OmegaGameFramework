@@ -99,6 +99,9 @@ void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, bool& Success)
 	{
 		LocalActiveData->SavedPlayerTransform = UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetActorTransform();
 	}
+
+	//Save Playtime
+	LocalActiveData->SavedPlaytime = GetGameInstance()->GetSubsystem<UOmegaGameManager>()->Playtime;
 	
 	UGameplayStatics::SaveGameToSlot(LocalActiveData, SlotName, 0);
 }

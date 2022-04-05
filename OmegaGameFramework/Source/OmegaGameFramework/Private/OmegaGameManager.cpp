@@ -4,6 +4,7 @@
 #include "OmegaGameManager.h"
 #include "Gameplay/OmegaGameplayModule.h"
 #include "Engine/GameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 {
@@ -17,6 +18,9 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 			NewModule->Native_Initialize();
 		}
 	}
+
+	//Setup timer
+	GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
 }
 
 void UOmegaGameManager::Deinitialize()
@@ -43,4 +47,44 @@ UOmegaGameplayModule* UOmegaGameManager::GetGameplayModule(TSubclassOf<UOmegaGam
 TArray<UOmegaGameplayModule*> UOmegaGameManager::GetGameplayModules()
 {
 	return ActiveModules;
+}
+
+//----------------------
+// Playtime
+//----------------------
+
+
+void UOmegaGameManager::SetPlaytimeActive(bool bActive)
+{
+	bIsPlaytimeActive = bActive;
+}
+
+void UOmegaGameManager::ResetPlaytime()
+{
+	Playtime.Frames = 0;
+	Playtime.Hours = 0;
+	Playtime.Minutes = 0;
+	Playtime.Seconds = 0;
+}
+
+void UOmegaGameManager::UpdatePlaytime()
+{
+	if(!bIsPlaytimeActive)
+	{
+		return;
+	}
+	
+	Playtime.Seconds = Playtime.Seconds+1;
+
+	if(Playtime.Seconds >= 60)
+	{
+		Playtime.Seconds = 0;
+		Playtime.Minutes = Playtime.Minutes+1;
+		
+		if(Playtime.Minutes >= 60)
+		{
+			Playtime.Minutes = 0;
+			Playtime.Hours = Playtime.Hours+1;
+		}
+	}
 }

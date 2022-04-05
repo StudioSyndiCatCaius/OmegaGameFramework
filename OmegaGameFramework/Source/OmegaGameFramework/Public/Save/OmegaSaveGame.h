@@ -25,11 +25,14 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveGame : public UOmegaSaveBase
 
 public:
 
-		UPROPERTY()
-		FString ActiveLevelName;
+	UPROPERTY(BlueprintReadOnly, Category="Playtime")
+	FTimecode SavedPlaytime;
+	
+	UPROPERTY()
+	FString ActiveLevelName;
 
-		UPROPERTY()
-		FTransform SavedPlayerTransform;
+	UPROPERTY()
+	FTransform SavedPlayerTransform;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Save")
 	void OnGameStarted(FGameplayTagContainer Tags);

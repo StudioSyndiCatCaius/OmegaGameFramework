@@ -52,4 +52,24 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnNewLevel OnNewLevel;
+	
+	// Playtime
+	UPROPERTY(BlueprintReadOnly, Category="Playtime")
+	FTimecode Playtime;
+
+	UFUNCTION(BlueprintCallable, Category="Playtime")
+	void SetPlaytimeActive(bool bActive);
+
+	UPROPERTY(BlueprintReadOnly, Category="Playtime")
+	bool bIsPlaytimeActive;
+
+	UFUNCTION(BlueprintCallable, Category="Playtime")
+	void ResetPlaytime();
+
+	UPROPERTY()
+	FTimerHandle PlaytimeUpdateHandle;
+	
+	UFUNCTION()
+	void UpdatePlaytime();
+	
 };

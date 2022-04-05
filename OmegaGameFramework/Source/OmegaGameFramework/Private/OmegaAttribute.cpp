@@ -9,7 +9,7 @@ float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGame
 	float FinalValue = MaxValue;
 
 	//Adjust along rank curve
-	if (RankValueCurves.IsValidIndex(Level))
+	if (RankValueCurves.IsValidIndex(AttributeRank))
 	{
 		float LevelFloat = float(Level);
 		//Get Appropriate curve by rank

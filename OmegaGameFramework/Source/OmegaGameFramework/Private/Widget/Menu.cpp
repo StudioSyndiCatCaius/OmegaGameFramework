@@ -128,15 +128,13 @@ void UMenu::Native_CompleteOpen()
 
 void UMenu::Native_CompleteClose()
 {
+	RemoveFromParent();
 	PrivateInputBlocked = true;
 	SetIsEnabled(false);
-	SetVisibility(VisibilityOnClose);
+	//SetVisibility(VisibilityOnClose);
 	
-	//Prep for deletion
-	//FLatentActionInfo DumInfo;
-	//UKismetSystemLibrary::Delay(this, 0.01f, DumInfo);
-	RemoveFromParent();
-	//CollectGarbage(EObjectFlags::RF_Public);
+	//Prep for deletio
+
 }
 
 bool UMenu::InputBlocked_Implementation()
