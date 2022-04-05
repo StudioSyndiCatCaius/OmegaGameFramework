@@ -36,7 +36,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 
 		if (!bSystemExists)
 		{
-			struct FTransform SpawnWorldPoint;
+			FTransform SpawnWorldPoint;
 			DummySystem = GetWorld()->SpawnActorDeferred<AOmegaGameplaySystem>(Class, SpawnWorldPoint, nullptr);
 			DummySystem->SubsysRef = this;
 			UGameplayStatics::FinishSpawningActor(DummySystem, SpawnWorldPoint);
