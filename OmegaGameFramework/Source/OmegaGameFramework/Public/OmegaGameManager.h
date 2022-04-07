@@ -65,10 +65,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Playtime")
 	void ResetPlaytime();
-
+/*
 	UPROPERTY()
 	FTimerHandle PlaytimeUpdateHandle;
-	
+*/
 	UFUNCTION()
 	void UpdatePlaytime();
 	

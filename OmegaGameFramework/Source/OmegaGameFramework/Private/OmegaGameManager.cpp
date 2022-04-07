@@ -20,7 +20,7 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	}
 
 	//Setup timer
-	GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
+	// GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
 }
 
 void UOmegaGameManager::Deinitialize()
@@ -53,7 +53,7 @@ TArray<UOmegaGameplayModule*> UOmegaGameManager::GetGameplayModules()
 // Playtime
 //----------------------
 
-
+/*
 void UOmegaGameManager::SetPlaytimeActive(bool bActive)
 {
 	bIsPlaytimeActive = bActive;
@@ -88,3 +88,4 @@ void UOmegaGameManager::UpdatePlaytime()
 		}
 	}
 }
+*/
