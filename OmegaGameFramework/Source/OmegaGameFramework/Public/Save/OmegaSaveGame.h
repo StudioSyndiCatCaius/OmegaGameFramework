@@ -25,8 +25,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveGame : public UOmegaSaveBase
 
 public:
 
-	UPROPERTY(BlueprintReadOnly, Category="Playtime")
-    
+	// UPROPERTY(BlueprintReadOnly, Category="Playtime")
 	// FTimecode SavedPlaytime;
 	
 	UPROPERTY()
