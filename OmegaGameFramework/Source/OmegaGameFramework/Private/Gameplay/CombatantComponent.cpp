@@ -439,13 +439,14 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 {
 	float CurrentValue;
 	float MaxVal;
-	GetAttributeValue(Attribute, CurrentValue, MaxVal);
+	GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
 	float FinalDamage;
 	
 	if(DamageModifier && DamageModifier->Implements<UDataInterface_DamageModifier>())		//Is there a valid damage modifier
 	{
 		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(DamageModifier, Attribute, this, Instigator, BaseDamage); //Apply Damage Modifier
 	}
+	
 	else
 	{
 		FinalDamage = BaseDamage;
@@ -505,10 +506,7 @@ void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& C
 {
 	//Get base value
 	float BaseValue = GetAttributeBaseValue(Attribute);
-
-	/*float TempInc = 0.0;
-	float TempMult = 0.0;
-*/
+	
 	//Gather All modifiers and apply them to final damage.
 	BaseValue = GatherAttributeModifiers(GetAttributeModifiers(),BaseValue, Attribute);
 	
@@ -589,15 +587,17 @@ void UCombatantComponent::InitializeAttributes()
 	//Initialize Attributes from Set
 	if (AttributeSet)
 	{
-		int32 DumRank = 0;
+		float CurrentVal = 0.0f;
 		float DumVal = 0.0f;
 		for (UOmegaAttribute* TempAtt : AttributeSet->Attributes)
 		{
 			if (AttributeLevels.Contains(TempAtt))
 			{
+				int32 DumRank = 0;
 				DumRank = AttributeLevels[TempAtt];
 			}
-			DumVal = GetAttributeBaseValue(TempAtt);
+			GetAttributeValue(TempAtt, CurrentVal, DumVal);	
+			//DumVal = GetAttributeBaseValue(TempAtt);
 			CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);
 		}
 	}
@@ -751,7 +751,7 @@ AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGamepl
 		//Add new tags to effect
 		TArray<FGameplayTag> LocalTags;
 		AddedTags.GetGameplayTagArray(LocalTags);
-		LocalEffect->EffectTags.GetGameplayTagArray(LocalTags);
+
 		for (FGameplayTag TempTag : LocalTags)
 		{
 			LocalEffect->EffectTags.AddTag(TempTag);
