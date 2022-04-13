@@ -1,0 +1,11 @@
+{
+	"BuildId": "19505902",
+	"Modules": 
+	{
+		"Actions": "UnrealEditor-Actions.dll",
+		"ActionsEditor": "UnrealEditor-ActionsEditor.dll",
+		"OmegaEditor": "UnrealEditor-OmegaEditor.dll",
+		"OmegaGameFramework": "UnrealEditor-OmegaGameFramework.dll",
+		"OmegaWorld": "UnrealEditor-OmegaWorld.dll"
+	}
+}

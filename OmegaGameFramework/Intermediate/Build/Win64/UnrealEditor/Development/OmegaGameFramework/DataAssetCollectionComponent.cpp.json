@@ -1,0 +1,17 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\private\\data\\dataassetcollectioncomponent.cpp",
+        "ProvidedModule": "",
+        "PCH": "e:\\unrealengine\\ue5 dump\\rebuild5\\intermediate\\build\\win64\\rebuild5editor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegagameframework\\definitions.omegagameframework.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\data\\dataassetcollectioncomponent.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\dataassetcollectioncomponent.generated.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\data\\dataassetcollectioninterface.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\dataassetcollectioninterface.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

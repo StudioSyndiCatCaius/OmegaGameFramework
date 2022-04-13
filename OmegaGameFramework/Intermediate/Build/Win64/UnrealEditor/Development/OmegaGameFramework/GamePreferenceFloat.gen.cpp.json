@@ -1,0 +1,24 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\gamepreferencefloat.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "e:\\unrealengine\\ue5 dump\\rebuild5\\intermediate\\build\\win64\\rebuild5editor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegagameframework\\definitions.omegagameframework.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\preferences\\asset\\gamepreferencefloat.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\preferences\\gamepreference.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\datainterface_general.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\datainterface_general.generated.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\gameplay\\gameplaytagsinterface.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\gameplaytagcontainer.generated.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\gameplaytagsinterface.generated.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\gamepreference.generated.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\gamepreferencefloat.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

@@ -1,0 +1,13 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-ActionsEditor.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Intermediate\Build\Win64\Rebuild5Editor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h.obj"
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\ActionsEditor\Module.ActionsEditor.cpp.obj"
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\ActionsEditor\Module.ActionsEditor.gen.cpp.obj"
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\ActionsEditor\Default.rc2.res"
+/OUT:"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\ActionsEditor\UnrealEditor-ActionsEditor.lib"

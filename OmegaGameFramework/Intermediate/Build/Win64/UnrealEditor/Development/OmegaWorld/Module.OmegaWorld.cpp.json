@@ -1,0 +1,24 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegaworld\\module.omegaworld.cpp",
+        "ProvidedModule": "",
+        "PCH": "e:\\unrealengine\\ue5 dump\\rebuild5\\intermediate\\build\\win64\\rebuild5editor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegaworld\\definitions.omegaworld.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegaworld\\private\\omegaworld.cpp",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegaworld\\public\\omegaworld.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegaworld\\private\\omegaworldsettings.cpp",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegaworld\\public\\omegaworldsettings.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\gameplaytagcontainer.generated.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegaworld\\omegaworldsettings.generated.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegaworld\\private\\omegazonemanager.cpp",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegaworld\\public\\omegazonemanager.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegaworld\\omegazonemanager.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

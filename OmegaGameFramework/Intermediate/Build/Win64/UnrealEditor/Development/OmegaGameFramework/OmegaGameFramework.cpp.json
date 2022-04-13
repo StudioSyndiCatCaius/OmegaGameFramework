@@ -1,0 +1,20 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\private\\omegagameframework.cpp",
+        "ProvidedModule": "",
+        "PCH": "e:\\unrealengine\\ue5 dump\\rebuild5\\intermediate\\build\\win64\\rebuild5editor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegagameframework\\definitions.omegagameframework.h",
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\source\\omegagameframework\\public\\omegagameframework.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\slatecore\\public\\styling\\slatestyle.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\slatecore\\public\\brushes\\slateborderbrush.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\slatecore\\public\\brushes\\slateboxbrush.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\slatecore\\public\\brushes\\slatecolorbrush.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\slatecore\\public\\brushes\\slateroundedboxbrush.h",
+            "e:\\games\\epicgames\\unrealengine\\ue_5.0\\engine\\source\\runtime\\slatecore\\public\\brushes\\slateimagebrush.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

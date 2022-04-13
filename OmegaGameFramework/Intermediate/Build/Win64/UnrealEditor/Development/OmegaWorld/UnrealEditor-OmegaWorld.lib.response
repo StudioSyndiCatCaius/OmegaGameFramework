@@ -1,0 +1,13 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-OmegaWorld.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Intermediate\Build\Win64\Rebuild5Editor\Development\Engine\SharedPCH.Engine.ShadowErrors.h.obj"
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\OmegaWorld\Module.OmegaWorld.cpp.obj"
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\OmegaWorld\Module.OmegaWorld.gen.cpp.obj"
+"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\OmegaWorld\Default.rc2.res"
+/OUT:"E:\UnrealEngine\UE5 Dump\Rebuild5\Plugins\OmegaGameFramework\Intermediate\Build\Win64\UnrealEditor\Development\OmegaWorld\UnrealEditor-OmegaWorld.lib"

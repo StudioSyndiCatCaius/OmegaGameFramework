@@ -1,0 +1,13 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\inc\\omegagameframework\\omegagameframework.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "e:\\unrealengine\\ue5 dump\\rebuild5\\intermediate\\build\\win64\\rebuild5editor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "e:\\unrealengine\\ue5 dump\\rebuild5\\plugins\\omegagameframework\\intermediate\\build\\win64\\unrealeditor\\development\\omegagameframework\\definitions.omegagameframework.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

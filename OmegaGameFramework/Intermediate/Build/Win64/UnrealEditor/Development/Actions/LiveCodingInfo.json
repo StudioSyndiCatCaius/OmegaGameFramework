@@ -1,0 +1,20 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.Actions.cpp.obj": [
+			"Action.cpp.obj",
+			"ActionLibrary.cpp.obj",
+			"ActionsModule.cpp.obj",
+			"ActionsSubsystem.cpp.obj",
+			"BTT_RunAction.cpp.obj",
+			"GameplayDebugger_Actions.cpp.obj"
+		],
+		"Module.Actions.gen.cpp.obj": [
+			"Action.gen.cpp.obj",
+			"ActionLibrary.gen.cpp.obj",
+			"Actions.init.gen.cpp.obj",
+			"ActionsSubsystem.gen.cpp.obj",
+			"BTT_RunAction.gen.cpp.obj"
+		]
+	}
+}
