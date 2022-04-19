@@ -44,6 +44,10 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintPure, Category = "Ω|Assets")
 	static TArray<UObject*> FilterObjectsByGameplayTags(TArray<UObject*> Assets, FGameplayTagContainer Category);*/
 
+	UFUNCTION(BlueprintPure, Category="Ω|GameplayTags")
+	static FGameplayTagContainer FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn);
+	
+
 	UFUNCTION(BlueprintCallable, Category="Ω|Widgets")
 	void SetWidgetVisibilityWithTags(FGameplayTagContainer Tags, ESlateVisibility Visibility);
 };

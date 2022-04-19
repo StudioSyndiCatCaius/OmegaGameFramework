@@ -25,8 +25,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveGame : public UOmegaSaveBase
 
 public:
 
-	UPROPERTY(BlueprintReadOnly, Category="Playtime")
-	FTimecode SavedPlaytime;
+	// UPROPERTY(BlueprintReadOnly, Category="Playtime")
+	// FTimecode SavedPlaytime;
 	
 	UPROPERTY()
 	FString ActiveLevelName;
@@ -46,9 +46,4 @@ public:
 		UPROPERTY(BlueprintReadWrite, Category="Tags")
 		TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
 
-
-
-	
-	
-	
 };
