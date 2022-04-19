@@ -23,6 +23,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInte
 
 public:
 	
+	
 	//GamePreferences
 	UPROPERTY()
 	TMap<class UGamePreferenceBool*, bool> BoolPrefs;
@@ -34,13 +35,27 @@ public:
 	TMap<class UGamePreferenceTag*, FGameplayTag> TagPrefs;
 
 	//Tags
-	UPROPERTY(BlueprintReadOnly, DisplayName="Save State", Category="Tags")
+	UPROPERTY(BlueprintReadOnly, DisplayName="Save State", Category="Ω|SaveGame")
 	FGameplayTag StoryState;
 	
-	UPROPERTY(BlueprintReadOnly, DisplayName="Save Tags", Category="Tags")
+	UPROPERTY(BlueprintReadOnly, DisplayName="Save Tags", Category="Ω|SaveGame")
 	FGameplayTagContainer StoryTags;
 
 	//DataAssets
-	UPROPERTY(BlueprintReadOnly, Category="Save")
+	UPROPERTY(BlueprintReadOnly, Category="Ω|SaveGame")
 	TArray<UPrimaryDataAsset*> CollectedDataAssets;
+
+	//Soft Property
+	UPROPERTY()
+	TMap<FName, bool> Prop_bool;
+	UPROPERTY()
+	TMap<FName, float> Prop_float;
+	UPROPERTY()
+	TMap<FName, int32> Prop_int;
+	UPROPERTY()
+	TMap<FName, FString> Prop_string;
+	UPROPERTY()
+	TMap<FName, FGameplayTag> Prop_Tag;
+
+	
 };
