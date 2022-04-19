@@ -101,7 +101,7 @@ void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, bool& Success)
 	}
 
 	//Save Playtime
-	LocalActiveData->SavedPlaytime = GetGameInstance()->GetSubsystem<UOmegaGameManager>()->Playtime;
+	//LocalActiveData->SavedPlaytime = GetGameInstance()->GetSubsystem<UOmegaGameManager>()->Playtime;
 	
 	UGameplayStatics::SaveGameToSlot(LocalActiveData, SlotName, 0);
 }
@@ -219,5 +219,101 @@ void UOmegaSaveSubsystem::RemoveDataAssetFromSaveCollection(UPrimaryDataAsset* A
 bool UOmegaSaveSubsystem::IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
 {
 	return GetSaveObject(bGlobal)->CollectedDataAssets.Contains(Asset);
+}
+
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssets(bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->CollectedDataAssets;
+}
+
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsOfCategory(FGameplayTag CategoryTag, bool bGlobal)
+{
+	TArray<UPrimaryDataAsset*> OutAssets;
+
+	for(auto* TempAsset : GetSaveObject(bGlobal)->CollectedDataAssets)
+	{
+		if(TempAsset->Implements<UGameplayTagsInterface>())
+		{
+			if(IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempAsset) == CategoryTag)
+			{
+				OutAssets.Add(TempAsset);
+			}
+		}
+	}
+
+	return OutAssets;
+}
+
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(FGameplayTagContainer Tags, bool bGlobal,
+	bool bExclude, bool bExact)
+{
+	TArray<UPrimaryDataAsset*> OutAssets;
+
+	for(auto* TempAsset : GetSaveObject(bGlobal)->CollectedDataAssets)
+	{
+		if(TempAsset->Implements<UGameplayTagsInterface>())
+		{
+			FGameplayTagContainer TempTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempAsset);
+			if(((TempTags.HasAnyExact(Tags) && bExact) || (TempTags.HasAny(Tags) && !bExact)) == !bExclude) 
+			{
+				OutAssets.Add(TempAsset);
+			}
+		}
+	}
+	return OutAssets;
+}
+
+//////////////
+// Soft Properties
+//////////////
+
+void UOmegaSaveSubsystem::SetSoftProperty_Bool(FName Property, bool Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_bool.Add(Property, Value);
+}
+
+bool UOmegaSaveSubsystem::GetSoftProperty_Bool(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_bool.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_Float(FName Property, float Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_float.Add(Property, Value);
+}
+
+float UOmegaSaveSubsystem::GetSoftProperty_Float(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_float.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_Int32(FName Property, int32 Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_int.Add(Property, Value);
+}
+
+int32 UOmegaSaveSubsystem::GetSoftProperty_Int32(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_int.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_String(FName Property, FString Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_string.Add(Property, Value);
+}
+
+FString UOmegaSaveSubsystem::GetSoftProperty_String(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_string.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_Tag(FName Property, FGameplayTag Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_Tag.Add(Property, Value);
+}
+
+FGameplayTag UOmegaSaveSubsystem::GetSoftProperty_Tag(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_Tag.FindOrAdd(Property);
 }
 

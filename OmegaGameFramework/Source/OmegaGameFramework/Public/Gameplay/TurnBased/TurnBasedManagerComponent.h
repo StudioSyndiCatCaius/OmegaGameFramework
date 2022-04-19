@@ -105,7 +105,7 @@ inline bool UTurnBasedManagerComponent::DoesCombatantUseInterface(const UCombata
 {
 	if(Combatant)
 	{
-		return Combatant->GetClass()->ImplementsInterface(UActorInterface_TurnOrderCombatant::StaticClass());
+		return Combatant->GetOwner()->GetClass()->ImplementsInterface(UActorInterface_TurnOrderCombatant::StaticClass());
 	}
 	else
 	{

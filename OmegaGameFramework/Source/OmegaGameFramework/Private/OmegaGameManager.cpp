@@ -20,7 +20,7 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	}
 
 	//Setup timer
-	GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
+	// GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
 }
 
 void UOmegaGameManager::Deinitialize()
@@ -49,11 +49,28 @@ TArray<UOmegaGameplayModule*> UOmegaGameManager::GetGameplayModules()
 	return ActiveModules;
 }
 
+void UOmegaGameManager::FireGlobalEvent(FName Event, UObject* Context)
+{
+	OnGlobalEvent.Broadcast(Event, Context);
+}
+
+void UOmegaGameManager::SetFlagActive(FString Flag, bool bActive)
+{
+	if(bActive)
+	{
+		Flags.AddUnique(Flag);
+	}
+	else
+	{
+		Flags.Remove(Flag);
+	}
+}
+
 //----------------------
 // Playtime
 //----------------------
 
-
+/*
 void UOmegaGameManager::SetPlaytimeActive(bool bActive)
 {
 	bIsPlaytimeActive = bActive;
@@ -88,3 +105,4 @@ void UOmegaGameManager::UpdatePlaytime()
 		}
 	}
 }
+*/

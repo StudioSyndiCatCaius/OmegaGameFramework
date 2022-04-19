@@ -33,28 +33,28 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
 
-	UFUNCTION(BlueprintPure, Category = "Ω|SaveLoad")
+	UFUNCTION(BlueprintPure, Category = "Ω|SaveSubsystem")
 	void GetSaveSlotName(int32 Slot, FString& OutName);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|SaveLoad")
+	UFUNCTION(BlueprintCallable, Category = "Ω|SaveSubsystem")
 	TArray<UOmegaSaveGame*> GetSaveSlotList(int32 FirstIndex, int32 LastIndex = 1);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|SaveLoad")
+	UFUNCTION(BlueprintCallable, Category = "Ω|SaveSubsystem")
 		UOmegaSaveGame* LoadGame(int32 Slot, bool& Success);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|SaveLoad")
+	UFUNCTION(BlueprintCallable, Category = "Ω|SaveSubsystem")
 		void SaveActiveGame(int32 Slot, bool& Success);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|SaveLoad")
+	UFUNCTION(BlueprintCallable, Category = "Ω|SaveSubsystem")
 		UOmegaSaveGame* CreateNewGame();
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|SaveLoad", meta = (AdvancedDisplay = "Tags"))
+	UFUNCTION(BlueprintCallable, Category = "Ω|SaveSubsystem", meta = (AdvancedDisplay = "Tags"))
 		void StartGame(class UOmegaSaveGame* GameData, FGameplayTagContainer Tags);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Save")
+	UPROPERTY(BlueprintReadOnly, Category = "Ω|SaveSubsystem")
 		class UOmegaSaveGame* ActiveSaveData;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Save")
+	UPROPERTY(BlueprintReadOnly, Category = "Ω|SaveSubsystem")
 		class UOmegaSaveGlobal* GlobalSaveData;
 
 
@@ -63,19 +63,19 @@ public:
 	
 	//GameplayTags
 
-	UFUNCTION(BlueprintCallable, Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|Tags")
 	void SetStoryState(FGameplayTag StateTag, bool Global);
 
-	UFUNCTION(BlueprintCallable, DisplayName="Add Save Tags", Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintCallable, DisplayName="Add Save Tags", Category="Ω|SaveSubsystem|Tags")
 	void AddStoryTags(FGameplayTagContainer Tags, bool Global);
 
-	UFUNCTION(BlueprintCallable, DisplayName="Remove Save Tags", Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintCallable, DisplayName="Remove Save Tags", Category="Ω|SaveSubsystem|Tags")
 	void RemoveStoryTags(FGameplayTagContainer Tags, bool Global);
 
-	UFUNCTION(BlueprintPure, DisplayName="Get Active Save Tags", Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintPure, DisplayName="Get Active Save Tags", Category="Ω|SaveSubsystem|Tags")
 	FGameplayTagContainer GetStoryTags(bool Global);
 
-	UFUNCTION(BlueprintPure, Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|Tags")
 	bool SaveTagsMatchQuery(FGameplayTagQuery Query, bool Global);
 
 	UFUNCTION()
@@ -89,12 +89,51 @@ public:
 
 	//DataAssets
 	
-	UFUNCTION(BlueprintCallable, Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|Assets")
 	void AddDataAssetToSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal);
 	
-	UFUNCTION(BlueprintCallable, Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|Assets")
 	void RemoveDataAssetFromSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal);
 
-	UFUNCTION(BlueprintPure, Category="Ω|SaveLoad|Tags")
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|Assets")
 	bool IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal);
+
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|Assets")
+	TArray<UPrimaryDataAsset*> GetCollectedDataAssets(bool bGlobal);
+
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|Assets")
+	TArray<UPrimaryDataAsset*> GetCollectedDataAssetsOfCategory(FGameplayTag CategoryTag, bool bGlobal);
+
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|Assets", meta=(AdvancedDisplay="bExclude, bExact"))
+	TArray<UPrimaryDataAsset*> GetCollectedDataAssetsWithTags(FGameplayTagContainer Tags, bool bGlobal, bool bExclude, bool bExact = true);
+	
+	//////////////
+	// Soft Properties
+	//////////////
+
+	//bool
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_Bool(FName Property, bool Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	bool GetSoftProperty_Bool(FName Property, bool bGlobal);
+	//float
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_Float(FName Property, float Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	float GetSoftProperty_Float(FName Property, bool bGlobal);
+	//int
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_Int32(FName Property, int32 Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	int32 GetSoftProperty_Int32(FName Property, bool bGlobal);
+	//string
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_String(FName Property, FString Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	FString GetSoftProperty_String(FName Property, bool bGlobal);
+	//tag
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_Tag(FName Property, FGameplayTag Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	FGameplayTag GetSoftProperty_Tag(FName Property, bool bGlobal);
 };

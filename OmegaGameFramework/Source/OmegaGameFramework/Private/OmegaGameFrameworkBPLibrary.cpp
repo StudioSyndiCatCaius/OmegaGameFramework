@@ -10,6 +10,21 @@
 #include "Gameplay/GameplayTagsInterface.h"
 
 
+FGameplayTagContainer UOmegaGameFrameworkBPLibrary::FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn)
+{
+	FGameplayTagContainer OutTags;
+	TArray<FGameplayTag> TempTags;
+	TagsIn.GetGameplayTagArray(TempTags);
+	for(FGameplayTag TempTag : TempTags)
+	{
+		if(TempTag.MatchesTag(TypeTag))
+		{
+			OutTags.AddTag(TempTag);
+		}
+	}
+	return OutTags;
+}
+
 /*AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, bool& bIsActive)
 {
 	bIsActive = false;
