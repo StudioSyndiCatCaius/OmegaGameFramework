@@ -46,9 +46,4 @@ public:
 		UPROPERTY(BlueprintReadWrite, Category="Tags")
 		TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
 
-
-
-	
-	
-	
 };
