@@ -49,6 +49,23 @@ TArray<UOmegaGameplayModule*> UOmegaGameManager::GetGameplayModules()
 	return ActiveModules;
 }
 
+void UOmegaGameManager::FireGlobalEvent(FName Event, UObject* Context)
+{
+	OnGlobalEvent.Broadcast(Event, Context);
+}
+
+void UOmegaGameManager::SetFlagActive(FString Flag, bool bActive)
+{
+	if(bActive)
+	{
+		Flags.AddUnique(Flag);
+	}
+	else
+	{
+		Flags.Remove(Flag);
+	}
+}
+
 //----------------------
 // Playtime
 //----------------------

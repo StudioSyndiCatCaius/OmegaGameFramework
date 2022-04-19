@@ -41,35 +41,45 @@ public:
 		UPROPERTY()
 		TArray<UOmegaGameplayModule*> ActiveModules;
 	
-		UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Ω|GameplayModules")
+		UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Ω|GameManager")
 		UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);
 
-	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Modules", DeterminesOutputType="Module"), Category="Ω|GameplayModules")
+	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Modules", DeterminesOutputType="Module"), Category="Ω|GameManager")
 		TArray<UOmegaGameplayModule*> GetGameplayModules();
 
+	UFUNCTION(BlueprintCallable, Category="Ω|GameManager", meta=(AdvancedDisplay="Context"))
+	void FireGlobalEvent(FName Event, UObject* Context);
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnGlobalEvent OnGlobalEvent;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnNewLevel OnNewLevel;
-	
+
+	//Flags
+	UPROPERTY(BlueprintReadOnly, Category="Ω|GameManager")
+	TArray<FString> Flags;
+
+	UFUNCTION(BlueprintCallable, Category="Ω|GameManager")
+	void SetFlagActive(FString Flag, bool bActive);
+	/*
 	// Playtime
-	UPROPERTY(BlueprintReadOnly, Category="Playtime")
+	UPROPERTY(BlueprintReadOnly, Category="Ω|Playtime")
 	FTimecode Playtime;
 
-	UFUNCTION(BlueprintCallable, Category="Playtime")
+	UFUNCTION(BlueprintCallable, Category="Ω|Playtime")
 	void SetPlaytimeActive(bool bActive);
 
-	UPROPERTY(BlueprintReadOnly, Category="Playtime")
+	UPROPERTY(BlueprintReadOnly, Category="Ω|Playtime")
 	bool bIsPlaytimeActive;
 
-	UFUNCTION(BlueprintCallable, Category="Playtime")
+	UFUNCTION(BlueprintCallable, Category="Ω|Playtime")
 	void ResetPlaytime();
-/*
+
 	UPROPERTY()
 	FTimerHandle PlaytimeUpdateHandle;
-*/
+
 	UFUNCTION()
 	void UpdatePlaytime();
-	
+*/
 };
