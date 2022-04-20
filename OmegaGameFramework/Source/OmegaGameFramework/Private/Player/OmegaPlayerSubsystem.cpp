@@ -27,10 +27,17 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 {
 	CollectGarbage(EObjectFlags::RF_Public);
 	bool bIsMenuOpen = false;
-	GetMenu(MenuClass, bIsMenuOpen);
+	UMenu* DumMenu = GetMenu(MenuClass, bIsMenuOpen);
+    
+    
 
 	if (!bIsMenuOpen)	//If menu is already open, don't open it again.
 	{
+        if(DumMenu)
+        {
+            DumMenu->RemoveFromParent(); //Remove Residual menu (just in case)
+        }
+        
 		class UMenu* LocalMenu = Cast<UMenu>(CreateWidget(GetWorld(), MenuClass));	//Create a new Menu Widget
 
 		if (LocalMenu != nullptr)

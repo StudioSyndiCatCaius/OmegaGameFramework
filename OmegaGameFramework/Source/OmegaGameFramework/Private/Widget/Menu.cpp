@@ -128,13 +128,13 @@ void UMenu::Native_CompleteOpen()
 
 void UMenu::Native_CompleteClose()
 {
-	RemoveFromParent();
+	
 	PrivateInputBlocked = true;
 	SetIsEnabled(false);
-	//SetVisibility(VisibilityOnClose);
+	SetVisibility(VisibilityOnClose);
 	
 	//Prep for deletio
-
+    RemoveFromParent();
 }
 
 bool UMenu::InputBlocked_Implementation()
