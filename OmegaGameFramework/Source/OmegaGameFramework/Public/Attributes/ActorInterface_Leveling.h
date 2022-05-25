@@ -26,4 +26,5 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Leveling
 	//Adds to the base XpRate value.
 	UFUNCTION(BlueprintNativeEvent, Category="Leveling")
 	float GetXPRateOffset();
+
 };

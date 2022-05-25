@@ -93,9 +93,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
 	bool IsEntityHidden(UObject* Asset);
 
+	//source asset
+	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void SetSourceAsset(UObject* Asset);
-
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
+	void OnSourceAssetChanged(UObject* Asset);
 	//Sounds
 	UPROPERTY(EditDefaultsOnly, Category="Audio")
 	USoundBase* SelectSound;
@@ -123,7 +127,7 @@ public:
 	UImage* GetMaterialImage();
 
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
-	UImage* GetBrushImage();
+	UImage* GetBrushImage(bool& bOverrideSize, FVector2D& Size);
 	
 //BINDABLE Anims
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")

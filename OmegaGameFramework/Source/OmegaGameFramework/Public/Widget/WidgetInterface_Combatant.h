@@ -36,7 +36,7 @@ public:
 	void GetAttributeTexts(class UOmegaAttribute* Attribute, class UTextBlock*& CurrentValue, class UTextBlock*& MaxValue);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
-	void GetAttributeProgressBar(class UOmegaAttribute* Attribute, class UProgressBar*& ProgressBar);
+	void GetAttributeProgressBar(class UOmegaAttribute* Attribute, class UProgressBar*& ProgressBar, bool& bUseAttributeColor);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
 	void OnCombatantUpdated(UCombatantComponent* Combatant);

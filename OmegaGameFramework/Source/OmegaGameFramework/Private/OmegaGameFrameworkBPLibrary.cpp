@@ -10,6 +10,72 @@
 #include "Gameplay/GameplayTagsInterface.h"
 
 
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray<UObject*> Assets,
+	FGameplayTag CategoryTag, bool bExact, bool bExclude, TSubclassOf<UObject> Class)
+{
+	TArray<UObject*> OutAssets;
+	
+	for(auto* TempAsset : Assets)
+	{
+		if(TempAsset)
+		{
+			if(!CategoryTag.IsValid() || (!Class || (TempAsset->GetClass()->IsChildOf(Class))) && TempAsset->Implements<UGameplayTagsInterface>())
+			{
+				FGameplayTag TempAssetTag = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempAsset);
+				bool bLocalIsValid;
+
+				if(bExact)
+				{
+					bLocalIsValid = TempAssetTag.MatchesTagExact(CategoryTag);
+				}
+				else
+				{
+					bLocalIsValid = TempAssetTag.MatchesTag(CategoryTag);
+				}
+			
+				if(bLocalIsValid != bExclude)
+				{
+					OutAssets.Add(TempAsset);
+				}
+			}
+		}
+	}
+	return OutAssets;
+}
+
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByGameplayTags(TArray<UObject*> Assets,
+	FGameplayTagContainer GameplayTags, bool bExact, bool bExclude, TSubclassOf<UObject> Class)
+{
+	TArray<UObject*> OutAssets;
+	
+	for(auto* TempAsset : Assets)
+	{
+		if(TempAsset)
+		{
+			if(GameplayTags.IsEmpty() || (!Class || (TempAsset->GetClass()->IsChildOf(Class))) && TempAsset->Implements<UGameplayTagsInterface>())
+			{
+				FGameplayTagContainer TempAssetTag = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempAsset);
+				bool bLocalIsValid;
+
+				if(bExact)
+				{
+					bLocalIsValid = TempAssetTag.HasAnyExact(GameplayTags);
+				}
+				else
+				{
+					bLocalIsValid = TempAssetTag.HasAny(GameplayTags);
+				}
+			
+				if(bLocalIsValid != bExclude)
+				{
+					OutAssets.Add(TempAsset);
+				}
+			}
+		}
+	}
+	return OutAssets;
+}
+
 FGameplayTagContainer UOmegaGameFrameworkBPLibrary::FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn)
 {
 	FGameplayTagContainer OutTags;
@@ -25,46 +91,29 @@ FGameplayTagContainer UOmegaGameFrameworkBPLibrary::FilterTagsByType(FGameplayTa
 	return OutTags;
 }
 
-/*AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, bool& bIsActive)
-{
-	bIsActive = false;
-	if(GEngine->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>())
-	{
-		UOmegaGameplaySubsystem* SubRef = GEngine->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
-		if(SubRef->GetGameplaySystem(Class, bIsActive))
-		{
-			return SubRef->GetGameplaySystem(Class, bIsActive);
-		}
-	}
-	return nullptr;
-}
-
-TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray<UObject*> Assets, FGameplayTag Category)
-{
-	TArray<UObject*> OutObjects;
-	for (UObject* TempObject : Assets)
-	{
-		if (TempObject->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass())&&Category.IsValid())
-		{
-			if (Category == IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempObject))
-			{
-				OutObjects.Add(TempObject);
-			}
-		}
-	}
-	return OutObjects;
-}
-
-TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByGameplayTags(TArray<UObject*> Assets, FGameplayTagContainer Category)
-{
-	return TArray<UObject*>();
-}*/
+/*
 void UOmegaGameFrameworkBPLibrary::SetWidgetVisibilityWithTags(FGameplayTagContainer Tags, ESlateVisibility Visibility)
 {
 	TArray<UUserWidget*> TempWidgets; 
-	UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(GetOuter(), TempWidgets, UGameplayTagsInterface::StaticClass(), true);
+	UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, TempWidgets, UGameplayTagsInterface::StaticClass(), true);
 	for(UUserWidget* TempWidget : TempWidgets)
 	{
 		TempWidget->SetVisibility(Visibility);
 	}
+}
+*/
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude)
+{
+	TArray<UObject*> OutObjects;
+	for(auto* TempObj : Objects)
+	{
+		if(TempObj)
+		{
+			if(TempObj->GetClass()->IsChildOf(Class) && !bExclude)
+			{
+				OutObjects.Add(TempObj);
+			}
+		}
+	}
+	return OutObjects;
 }

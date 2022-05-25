@@ -9,6 +9,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
+#include "Player/OmegaPlayerSubsystem.h"
 
 void UDataWidget::NativePreConstruct()
 {
@@ -90,15 +91,12 @@ void UDataWidget::Hover()
 	{
 		return;
 	}
-	TArray<UUserWidget*> TempWidgets;
-	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(this, TempWidgets, UDataWidget::StaticClass(), false);
-	for(UUserWidget* TempWidget : TempWidgets)
+	if(UUserWidget* TempWidget = GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->HoveredWidget)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempt Unhvover"));
 		Cast<UDataWidget>(TempWidget)->Unhover();
 	}
 	
-
 	UE_LOG(LogTemp, Warning, TEXT("Success Hover"));
 	if(HoverSound)
 	{
@@ -111,6 +109,7 @@ void UDataWidget::Hover()
 	}
 	OnHovered.Broadcast(this, true);
 	bIsHovered=true;
+	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->HoveredWidget = this;
 }
 
 void UDataWidget::Unhover()
@@ -188,10 +187,19 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 				
 				GetMaterialImage()->SetBrushFromMaterial(LocalMat);
 			}
-			if(GetBrushImage())
+			bool Local_OverrideSize;
+			struct FVector2D Local_NewSize;
+			if(GetBrushImage(Local_OverrideSize, Local_NewSize))
 			{
-				GetBrushImage()->SetBrush(LocalBrush);
+				
+				if(Local_OverrideSize)
+				{
+					LocalBrush.ImageSize = Local_NewSize;
+				}
+				GetBrushImage(Local_OverrideSize, Local_NewSize)->SetBrush(LocalBrush);
 			}
-		}
+		}//Finish widget setup
+	OnSourceAssetChanged(Asset);
 	}
+	
 }

@@ -3,3 +3,7 @@
 
 #include "Preferences/Asset/GamePreferenceTag.h"
 
+UGamePreferenceTag::UGamePreferenceTag()
+{
+	PreferenceType = EGamePreferenceType::PrefType_Tag;
+}

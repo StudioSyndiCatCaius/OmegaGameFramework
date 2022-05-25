@@ -17,7 +17,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaLevelingAsset : public UDataAsset
 	
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Leveling")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Leveling", DisplayName="Level Name")
 	FText RankName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Leveling")
@@ -34,4 +34,22 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Leveling")
 	void GetXPFromLevel(int32 Level, float& MinLevelXP, float& MaxLevelXP);
+
+	///Widget
+	UPROPERTY(EditAnywhere, Category="Widget")
+	TEnumAsByte<ERoundingMode> RoundingMode = ERoundingMode::HalfToEven;
+	
+	UPROPERTY(EditAnywhere, Category="Widget")
+	bool bAlwaysSign;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	bool bUseGrouping = true;
+	
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MinIntegralDigits = 1;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MaxIntegralDigits = 324;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MinFractionalDigits;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MaxFractionalDigits = 0;
 };

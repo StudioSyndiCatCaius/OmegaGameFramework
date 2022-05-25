@@ -18,12 +18,12 @@ void UOmegaPlayerSubsystem::CloseAllMenus(AActor* DestroyedActor)
 		if(TempMenu)
 		{
 			const FGameplayTagContainer NoTags;
-			TempMenu->CloseMenu(NoTags);		///Remove Menu
+			TempMenu->CloseMenu(NoTags, TEXT("CloseAll"));		///Remove Menu
 		}
 	}
 }
 
-UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, bool AutoFocus)
+UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus)
 {
 	CollectGarbage(EObjectFlags::RF_Public);
 	bool bIsMenuOpen = false;
@@ -43,7 +43,7 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 		if (LocalMenu != nullptr)
 		{
 			OpenMenus.Add(LocalMenu);
-			LocalMenu->OpenMenu(Tags, Context, ParentPlayerController);	//Set Menu Context, Tags, and Player Controller
+			LocalMenu->OpenMenu(Tags, Context, ParentPlayerController, Flag);	//Set Menu Context, Tags, and Player Controller
 			bool MultiMenu = OpenMenus.IsValidIndex(1);
 			OnMenuOpened.Broadcast(LocalMenu, Tags, MultiMenu);
 
@@ -64,14 +64,14 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 	}
 }
 
-bool UOmegaPlayerSubsystem::CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags)
+bool UOmegaPlayerSubsystem::CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, const FString& Flag)
 {
 	bool bLocalIsValid = false;
 	class UMenu* FoundMenu = GetMenu(MenuClass, bLocalIsValid);
 
 	if (bLocalIsValid)
 	{
-		FoundMenu->CloseMenu(Tags);
+		FoundMenu->CloseMenu(Tags, Flag);
 	}
 
 	return bLocalIsValid;
@@ -166,7 +166,7 @@ bool UOmegaPlayerSubsystem::CanInterfaceInput() const
 
 
 /// HUDS////
-UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass, UObject* Context, int32 LayerIndex)
+UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass, UObject* Context)
 {
 	CleanHUDLayers();
 	class UHUDLayer* LocalLayer = Cast<UHUDLayer>(CreateWidget(GetWorld(), LayerClass));
@@ -175,25 +175,22 @@ UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass,
 		ActiveHUDLayers.Add(LocalLayer);
 		
 		LocalLayer->SetOwningLocalPlayer(GetLocalPlayer());
-		LocalLayer->AddToPlayerScreen(100 + LayerIndex);
 		LocalLayer->LayerAdded(GetLocalPlayer()->GetPlayerController(GetWorld()), Context);
-		
+		LocalLayer->AddToPlayerScreen(LocalLayer->SlateLayerIndex);
 		return LocalLayer;
 	}
 	return nullptr;
 }
 
-bool UOmegaPlayerSubsystem::RemoveHUDLayer(class UHUDLayer* Layer, FString Flag)
+bool UOmegaPlayerSubsystem::RemoveHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, FString Flag)
 {
 	CleanHUDLayers();
-	bool bIsRemoved = false;
-	if (Layer)
+	if(GetHUDLayerByClass(LayerClass))
 	{
-		Layer->RemoveFromParent();
-		ActiveHUDLayers.Remove(Layer);
-		bIsRemoved = true;
+		GetHUDLayerByClass(LayerClass)->RemoveFromParent();
+		return true;
 	}
-	return bIsRemoved;
+	return false;
 }
 
 TArray<class UHUDLayer*> UOmegaPlayerSubsystem::GetHUDLayers()
@@ -202,7 +199,10 @@ TArray<class UHUDLayer*> UOmegaPlayerSubsystem::GetHUDLayers()
 	TArray<UHUDLayer*> TempLayers;
 	for (UHUDLayer*  TempLayer: ActiveHUDLayers)
 	{
+		if(TempLayer)
+		{
 			TempLayers.Add(TempLayer);
+		}
 	}
 
 	return TempLayers;
@@ -243,6 +243,18 @@ void UOmegaPlayerSubsystem::RemoveAllHudLayers()
 		TempLayer->RemoveFromParent();
 	}
 	ActiveHUDLayers.Empty();
+}
+
+UHUDLayer* UOmegaPlayerSubsystem::GetHUDLayerByClass(TSubclassOf<UHUDLayer> LayerClass)
+{
+	for(auto* TempLayer : GetHUDLayers())
+	{
+		if(TempLayer->GetClass() == LayerClass)
+		{
+			return TempLayer;
+		}
+	}
+	return nullptr;
 }
 
 void UOmegaPlayerSubsystem::SetHUDVisibilityWithTags(FGameplayTagContainer Tags, ESlateVisibility Visibility)

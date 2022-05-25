@@ -30,12 +30,12 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_LevelingComponent
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Leveling")
 	ULevelingComponent* GetLevelingComponent();
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
-	void GetLevelingTexts(UTextBlock*& CurrentValue, class UTextBlock*& MaxValue);
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Leveling")
+	void GetLevelingTexts(UTextBlock*& CurrentValue, class UTextBlock*& MaxValue, UTextBlock*& CurrentLevel);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Leveling")
 	void GetLevelingProgressBar(UProgressBar*& ProgressBar);
 };

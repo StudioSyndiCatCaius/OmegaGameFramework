@@ -9,9 +9,18 @@
 #include "GameplayTagContainer.h"
 #include "GamePreference.generated.h"
 
-/**
- * 
- */
+UENUM(BlueprintType)
+enum class EGamePreferenceType : uint8
+
+{
+	PrefType_Bool        UMETA(DisplayName = "Bool"),
+	PrefType_Float        UMETA(DisplayName = "Float"),
+	PrefType_Int        UMETA(DisplayName = "Int"),
+	PrefType_String        UMETA(DisplayName = "String"),
+	PrefType_Tag        UMETA(DisplayName = "Tag"),
+		
+};
+
 UCLASS(BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UGamePreference : public UDataAsset, public IGameplayTagsInterface, public IDataInterface_General
 {
@@ -23,6 +32,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
 	FText PrefernceName;
 
+	UPROPERTY(BlueprintReadOnly, Category="GamePreference")
+	EGamePreferenceType PreferenceType;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
 	FString PreferenceLabel;
 

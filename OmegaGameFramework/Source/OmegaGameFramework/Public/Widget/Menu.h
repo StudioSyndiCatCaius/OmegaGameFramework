@@ -12,8 +12,8 @@
 class APlayerController;
 class UWidgetAnimation;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOpened, FGameplayTagContainer, Tags);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FClosed, FGameplayTagContainer, Tags);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FClosed, FGameplayTagContainer, Tags, FString, Flag);
 
 UCLASS(HideFunctions=(Construct, RemoveFromParent))
 class OMEGAGAMEFRAMEWORK_API UMenu : public UUserWidget, public IWidgetInterface_Input
@@ -27,12 +27,12 @@ protected:
 public:
 
 	UFUNCTION()
-		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef);
+		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag);
 
 	void Native_CompleteOpen();
 	
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
-		void CloseMenu(FGameplayTagContainer Tags);
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Tags, Flag"))
+		void CloseMenu(FGameplayTagContainer Tags, const FString& Flag);
 
 	void Native_CompleteClose();
 
@@ -43,10 +43,10 @@ public:
 	FGameplayTagContainer TempTags;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
-		void MenuOpened(FGameplayTagContainer Tags, UObject* Context);
+		void MenuOpened(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
-		void MenuClosed(FGameplayTagContainer Tags);
+		void MenuClosed(FGameplayTagContainer Tags, const FString& Flag);
 
 	/////////////////////////
 	////////ANIMATIONS///////

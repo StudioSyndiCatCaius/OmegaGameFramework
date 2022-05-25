@@ -13,6 +13,7 @@
 #include "Preferences/Asset/GamePreferenceFloat.h"
 #include "OmegaSettings.h"
 #include "Gameplay/OmegaGameplayModule.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
@@ -100,6 +101,9 @@ void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, bool& Success)
 		LocalActiveData->SavedPlayerTransform = UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetActorTransform();
 	}
 
+	//SaveDate
+	LocalActiveData->SaveDate = UKismetMathLibrary::Now();
+	
 	//Save Playtime
 	//LocalActiveData->SavedPlaytime = GetGameInstance()->GetSubsystem<UOmegaGameManager>()->Playtime;
 	

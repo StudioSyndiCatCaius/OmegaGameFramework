@@ -16,6 +16,10 @@ class OMEGAGAMEFRAMEWORK_API UGamePreferenceString : public UGamePreference
 	
 public:
 
+	UGamePreferenceString();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Value")
-		FString DefaultValue;
+	FString DefaultValue;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Value")
+	TArray<FString> Options;
 };

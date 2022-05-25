@@ -16,6 +16,8 @@ class OMEGAGAMEFRAMEWORK_API UGamePreferenceBool : public UGamePreference
 
 public:
 
+	UGamePreferenceBool();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bool")
 	bool bDefaultValue;
 	
