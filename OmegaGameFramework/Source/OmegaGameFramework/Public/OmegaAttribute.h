@@ -65,6 +65,24 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
 	FGameplayTagContainer GetObjectGameplayTags();
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation();
+
+///Widget
+	UPROPERTY(EditAnywhere, Category="Widget")
+	TEnumAsByte<ERoundingMode> RoundingMode = ERoundingMode::HalfToEven;
+	
+	UPROPERTY(EditAnywhere, Category="Widget")
+	bool bAlwaysSign;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	bool bUseGrouping = true;
+	
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MinIntegralDigits = 1;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MaxIntegralDigits = 324;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MinFractionalDigits;
+	UPROPERTY(EditAnywhere, Category="Widget")
+	int32 MaxFractionalDigits = 0;
 	
 //DataInterface
 

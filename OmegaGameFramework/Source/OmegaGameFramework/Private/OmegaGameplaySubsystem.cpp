@@ -36,7 +36,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 
 		if (!bSystemExists)
 		{
-			struct FTransform SpawnWorldPoint;
+			FTransform SpawnWorldPoint;
 			DummySystem = GetWorld()->SpawnActorDeferred<AOmegaGameplaySystem>(Class, SpawnWorldPoint, nullptr);
 			DummySystem->SubsysRef = this;
 			UGameplayStatics::FinishSpawningActor(DummySystem, SpawnWorldPoint);
@@ -84,6 +84,27 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::GetGameplaySystem(TSubclassOf<AOm
 		return nullptr;
 	}
 }
+
+APlayerController* UOmegaGameplaySubsystem::GetPlayerController(int32 Index)
+{
+	return UGameplayStatics::GetPlayerController(this, Index);
+}
+
+void UOmegaGameplaySubsystem::Native_RegisterCombatant(UCombatantComponent* Combatant, bool bRegistered)
+{
+	if(bRegistered)
+	{
+		ActiveCombatants.AddUnique(Combatant);
+		OnCombatantRegistered.Broadcast(Combatant);
+	}
+	else
+	{
+		ActiveCombatants.Remove(Combatant);
+		OnCombatantUnegistered.Broadcast(Combatant);
+	}
+		
+}
+
 
 TArray<UCombatantComponent*> UOmegaGameplaySubsystem::GetAllCombatants()
 {

@@ -16,6 +16,10 @@ class OMEGAGAMEFRAMEWORK_API UGamePreferenceFloat : public UGamePreference
 	
 public:
 
+	UGamePreferenceFloat();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Float")
 	float DefaultValue;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Float")
+	float MaxValue = 1.0;
 };

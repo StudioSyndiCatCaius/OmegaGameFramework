@@ -62,6 +62,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Ω|GameManager")
 	void SetFlagActive(FString Flag, bool bActive);
+
+	UFUNCTION(BlueprintPure, Category="Ω|GameManager")
+	bool IsFlagActive(FString Flag);
+	
 	/*
 	// Playtime
 	UPROPERTY(BlueprintReadOnly, Category="Ω|Playtime")

@@ -3,3 +3,7 @@
 
 #include "Preferences/Asset/GamePreferenceFloat.h"
 
+UGamePreferenceFloat::UGamePreferenceFloat()
+{
+	PreferenceType = EGamePreferenceType::PrefType_Float;
+}

@@ -16,6 +16,7 @@ public class OmegaEditor : ModuleRules
 			"InputCore",
 			"Actions",
 			"OmegaGameFramework", 
+			"OmegaData",
 			"UMGEditor"
 		});
 

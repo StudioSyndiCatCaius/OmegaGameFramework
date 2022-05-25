@@ -66,6 +66,11 @@ void UOmegaGameManager::SetFlagActive(FString Flag, bool bActive)
 	}
 }
 
+bool UOmegaGameManager::IsFlagActive(FString Flag)
+{
+	return Flags.Contains(Flag);
+}
+
 //----------------------
 // Playtime
 //----------------------

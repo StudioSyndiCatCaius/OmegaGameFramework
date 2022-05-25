@@ -46,46 +46,46 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 public:
 
 	///
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	EDataListFormat Format;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TEnumAsByte<EOrientation> Orientation;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TEnumAsByte<EHorizontalAlignment> EntryHorizontalAlignment;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TEnumAsByte<EVerticalAlignment> EntryVerticalAlignment;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FSlateChildSize EntrySize;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	bool bAutoSizeList;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TArray<UPrimaryDataAsset*> DefaultAssets;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	bool bUseCustomEntries;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TArray<FCustomAssetData> CustomEntries;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	int32 UniformGridMaxValue = 1;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString EntryLabel;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FGameplayTagContainer ListTags;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString DefaultListFlag;
 
 	// Read Only

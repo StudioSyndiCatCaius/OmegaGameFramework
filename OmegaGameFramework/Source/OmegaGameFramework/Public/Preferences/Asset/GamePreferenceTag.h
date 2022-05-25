@@ -16,6 +16,8 @@ class OMEGAGAMEFRAMEWORK_API UGamePreferenceTag : public UGamePreference
 	
 public:
 
+	UGamePreferenceTag();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Value")
 		FGameplayTag DefaultValue;
 };
