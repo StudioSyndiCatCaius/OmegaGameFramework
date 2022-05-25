@@ -46,13 +46,13 @@ void AOmegaGameplaySystem::BeginPlay()
 		for (class TSubclassOf <UHUDLayer> TempWidgetClass : AddedPlayerWidgets)
 		{
 			UOmegaPlayerSubsystem* LocalSystem = TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
-			UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this, 0);
+			UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this);
 			ActivePlayerWidgets.Add(CreatedLayer);
 		}
 		// Add New Mapping Context
 		for(UInputMappingContext* TempMap : AddPlayerInputMapping)
 		{
-			Cast<APlayerController>(TempActor)->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(TempMap, 0);
+			Cast<APlayerController>(TempActor)->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(TempMap, InputPriority);
 		}
 	}
 
@@ -64,6 +64,12 @@ void AOmegaGameplaySystem::BeginPlay()
 	SubsysRef = GEngine->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 	*/
 	
+	//GRANT ABILITIES
+	for(auto* TempComb : GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+	{
+		Local_GrantAbilities(TempComb);
+	}
+	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->OnCombatantRegistered.AddDynamic(this, &AOmegaGameplaySystem::Local_GrantAbilities);
 	
 }
 
@@ -100,5 +106,31 @@ void AOmegaGameplaySystem::Shutdown(FString Flag)
 		}
 	}
 
+	//Remove Abilities
+	for(FGameplaySystemAbilityRules TempData : GrantedAbilities)
+	{
+		for(auto* TempComb : GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+		{
+			TempComb->UngrantAbility(TempData.AbilityClass);
+		}	
+	}
+	
 	K2_DestroyActor();
+}
+
+void AOmegaGameplaySystem::Local_GrantAbilities(UCombatantComponent* Combatant)
+{
+	if(Combatant)
+	{
+		for(FGameplaySystemAbilityRules TempData : GrantedAbilities)
+		{
+			const bool AcceptFaction = (TempData.AcceptedFactions.HasTag(Combatant->GetFactionTag()) || TempData.AcceptedFactions.IsEmpty());
+			const bool AcceptTags = (Combatant->GetCombatantTags().MatchesQuery(TempData.AcceptedCombatantTags)) || (TempData.AcceptedCombatantTags.IsEmpty());
+
+			if(AcceptFaction & AcceptTags)
+			{
+				Combatant->GrantAbility(TempData.AbilityClass);
+			}
+		}
+	}
 }

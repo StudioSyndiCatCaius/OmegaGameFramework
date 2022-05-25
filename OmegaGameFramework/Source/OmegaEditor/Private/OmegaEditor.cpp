@@ -18,9 +18,6 @@
 #include "Widget/Menu.h"
 #include "Widget/HUDLayer.h"
 
-
-
-
 #define LOCTEXT_NAMESPACE "FOmegaEditor"
 
 void FOmegaEditor::StartupModule()
@@ -49,8 +46,9 @@ void FOmegaEditor::StartupModule()
 	
 	//DataWidget
 	RegisterDefaultEvent(UDataWidget, AddedToDataList);
-
-
+	RegisterDefaultEvent(UDataWidget, OnSourceAssetChanged);
+	RegisterDefaultEvent(UDataWidget, OnNewListOwner);
+	
 	// ------- SETUP CATEGORY FACTORY ------- /////
 
 	IAssetTools &AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
@@ -58,6 +56,9 @@ void FOmegaEditor::StartupModule()
 
 	// --- Attribute
 	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_OmegaAttributes(OmegaAssetCategory)));
+	
+	// --- DataItem
+	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_OmegaDataItems(OmegaAssetCategory)));
 	
 	// --- Ability
 	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_OmegaAbility(OmegaAssetCategory)));
@@ -117,6 +118,12 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaLevelingAsset"));
 	ThumnbailNames.Add(TEXT("LevelingComponent"));
 
+	ThumnbailNames.Add(TEXT("OmegaDataItem"));
+	ThumnbailNames.Add(TEXT("OmegaDataTrait"));
+	
+	ThumnbailNames.Add(TEXT("InstanceActorComponent"));
+	ThumnbailNames.Add(TEXT("OmegaInstanceActor"));
+	
 	FSlateImageBrush* ThumbnailTemp;
 	FSlateImageBrush* IconTemp;
 

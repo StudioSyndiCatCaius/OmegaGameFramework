@@ -8,6 +8,7 @@
 
 #include "OmegaAttribute.h"
 #include "OmegaAbility.h"
+#include "OmegaDataItem.h"
 #include "OmegaGameplaySystem.h"
 #include "Attributes/OmegaAttributeSet.h"
 #include "Save/OmegaSaveGame.h"
@@ -49,6 +50,30 @@ public:
 	virtual FColor GetTypeColor() const override { return FColor(201, 29, 85); }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_InputContextDesc", "A collection of device input to action mappings."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaAttribute::StaticClass(); }
+private:
+	EAssetTypeCategories::Type OmegaAssetCategory;
+};
+
+//DataItems
+UCLASS()
+class OMEGAEDITOR_API UOmegaDataItems_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+public:
+
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+
+class FAssetTypeActions_OmegaDataItems : public FAssetTypeActions_Base
+{
+public:
+	FAssetTypeActions_OmegaDataItems(EAssetTypeCategories::Type InAssetCategory) : OmegaAssetCategory(InAssetCategory){};
+	
+	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegDataItem", "Data Item"); }
+	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
+	virtual FColor GetTypeColor() const override { return FColor(50, 255, 180); }
+	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegDataItemDesc", "An Item type."); }
+	virtual UClass* GetSupportedClass() const override { return UOmegaDataItem::StaticClass(); }
 private:
 	EAssetTypeCategories::Type OmegaAssetCategory;
 };

@@ -70,5 +70,9 @@ public:
 
 	UFUNCTION()
 	float AdjustXPRate(float InXP, bool UseAdjust);
+
+protected:
+	UFUNCTION()
+	void Native_Update();
 	
 };

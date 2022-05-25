@@ -39,6 +39,7 @@ enum EFactionAffinity
 	HostileAffinity			UMETA(DisplayName = "Hostile"),
 };
 
+/// DELEGATES
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantLevelChange, int32, NewLevel);
 
@@ -48,6 +49,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAddedAsTarget, UCombatantComponen
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemovedAsTarget, UCombatantComponent*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActiveTargetChanged, UCombatantComponent*, ActiveTarget, bool, Valid);
 
+
+#define PrintError(ErrorText) \
+	(GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, ErrorText))
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UActorComponent
@@ -228,7 +232,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
 	bool UngrantAbility(TSubclassOf<AOmegaAbility> AbilityClass);
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	UFUNCTION(BlueprintPure, Category = "Ω|Ability", meta=(DeterminesOutputType="AbilityClass"))
 	AOmegaAbility* GetAbility(TSubclassOf<AOmegaAbility> AbilityClass, bool& bSuccess);
 
 				///////Ability Activation
@@ -269,8 +273,8 @@ public:
 	void InitializeFromAsset(UObject* Asset);
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes", meta = (AdvancedDisplay = "Instigator"))
-	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UObject* Instigator, UObject* DamageModifier);
-
+	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UObject* Instigator, UObject* Context);
+	
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	void GetAttributeValue(class UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue);
 
@@ -290,6 +294,19 @@ public:
 	void SetCombatantLevel(int32 NewLevel, bool ReinitializeStats);
 
 	void InitializeAttributes();
+
+	/////////
+	/// Damage Mods
+	/// //////
+
+	UPROPERTY()
+	TArray<UObject*> DamageModifiers;
+
+	UFUNCTION(BlueprintCallable, Category="Combatant|DamageModifiers")
+	bool SetDamageModifierActive(UObject* Modifier, bool bActive);
+
+	UFUNCTION(BlueprintPure, Category="Combatant|DamageModifiers")
+	TArray<UObject*> GetDamageModifiers();
 	
 	///Attribute Modifiers
 	UPROPERTY()

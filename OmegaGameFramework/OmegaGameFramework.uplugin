@@ -52,7 +52,7 @@
 		{
 			"Name": "ActionsEditor",
 			"Type": "UncookedOnly",
-			"LoadingPhase": "PostEngineInit",
+			"LoadingPhase": "PreDefault",
 			"WhitelistPlatforms": [
 				"Win64",
 				"Win32",
@@ -61,7 +61,29 @@
 			]
 		},
 		{
-			"Name": "OmegaWorld",
+			"Name": "OmegaFlow",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "OmegaData",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "Omega5_GameFeatures",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"WhitelistPlatforms": [
@@ -75,6 +97,14 @@
 	"Plugins": [
 		{
 			"Name": "EnhancedInput",
+			"Enabled": true
+		},
+		{
+			"Name": "GameFeatures",
+			"Enabled": true
+		},
+		{
+			"Name": "ModularGameplay",
 			"Enabled": true
 		}
 	]

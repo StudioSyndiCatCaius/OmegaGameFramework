@@ -3,7 +3,13 @@
 
 #include "Attributes/LevelingComponent.h"
 #include "GameFramework/Actor.h"
+
 #include "Attributes/ActorInterface_Leveling.h"
+#include "Attributes/WidgetInterface_LevelingComponent.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
+#include "Kismet/KismetTextLibrary.h"
 
 
 // Sets default values for this component's properties
@@ -56,12 +62,14 @@ void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler)
 	}
 
 	OnXPUpdated.Broadcast(XP);
+	Native_Update();
 }
 
 void ULevelingComponent::SetXP(float NewValue, bool bUseRateMultipler)
 {
 	XP = NewValue;
 	OnXPUpdated.Broadcast(XP);
+	Native_Update();
 }
 
 int32 ULevelingComponent::GetCurrentLevel() const
@@ -112,6 +120,73 @@ float ULevelingComponent::AdjustXPRate(float InXP, bool UseAdjust)
 	{
 		return InXP;
 	}
+	Native_Update();
+}
+
+void ULevelingComponent::Native_Update()
+{
+	//Update Widgets
+	TArray<UUserWidget*> WidgetList;
+	UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, WidgetList, UWidgetInterface_LevelingComponent::StaticClass(), true);
+	for(auto* TempWidget : WidgetList)
+	{
+		if(IWidgetInterface_LevelingComponent::Execute_GetLevelingComponent(TempWidget) && (this == IWidgetInterface_LevelingComponent::Execute_GetLevelingComponent(TempWidget)))
+		{
+			// set progress bar
+			UProgressBar* LocalProgBar;
+			IWidgetInterface_LevelingComponent::Execute_GetLevelingProgressBar(TempWidget, LocalProgBar);
+			if(LocalProgBar)
+			{
+				LocalProgBar->SetPercent(GetPercentageToNextLevel());
+			}
+			// Set texts
+			UTextBlock* Local_CurText;
+			UTextBlock* Local_MaxText;
+			UTextBlock* Local_CurLev;
+			IWidgetInterface_LevelingComponent::Execute_GetLevelingTexts(TempWidget, Local_CurText, Local_MaxText, Local_CurLev);
+				//Set "Current XP" Widget
+			if(Local_CurText)
+			{
+				FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
+					(
+						XP,
+						LevelingAsset->RoundingMode,
+						LevelingAsset->bAlwaysSign,
+						LevelingAsset->bUseGrouping,
+						LevelingAsset->MinIntegralDigits,
+						LevelingAsset->MaxIntegralDigits,
+						LevelingAsset->MinFractionalDigits,
+						LevelingAsset->MaxFractionalDigits
+						);
+					
+				Local_CurText->SetText(LocalText_Val);
+			}
+			//Set "Max XP" Widget
+			if(Local_MaxText)
+			{
+				FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
+					(
+						GetCurrentLevelMaxXP(),
+						LevelingAsset->RoundingMode,
+						LevelingAsset->bAlwaysSign,
+						LevelingAsset->bUseGrouping,
+						LevelingAsset->MinIntegralDigits,
+						LevelingAsset->MaxIntegralDigits,
+						LevelingAsset->MinFractionalDigits,
+						LevelingAsset->MaxFractionalDigits
+						);
+					
+				Local_MaxText->SetText(LocalText_Val);
+			}
+				//Set "Level" Widget
+			if(Local_CurLev)
+			{
+				FText LocalText_Val = UKismetTextLibrary::Conv_IntToText(GetCurrentLevel());
+				Local_CurLev->SetText(LocalText_Val);
+			}
+		}
+	}
+	
 }
 
 float ULevelingComponent::GetXPRate()

@@ -21,6 +21,13 @@ void UInputReceiverComponent::BeginPlay()
 	Super::BeginPlay();
 
 	OverrideInputOwner(GetOwner());
+/*
+	if(Cast<APawn>(GetOwner()))
+	{
+		UE_LOG(LogTemp, Display, TEXT("Bound Input Reciever event on owner controller change") );
+		Cast<APawn>(GetOwner())->ReceiveControllerChangedDelegate.AddDynamic(this, &UInputReceiverComponent::OnOwningControllerChange);
+	}
+*/	
 	
 }
 
@@ -28,12 +35,13 @@ void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)
 {
 	if(!NewOwner || !InputAction)
 	{
+		UE_LOG(LogTemp, Display, TEXT("New Owner ot InputAction are invalid") );
 		return;
 	}
 	UEnhancedInputComponent* NewInputComp = Cast<UEnhancedInputComponent>(NewOwner->InputComponent);
 	if(NewInputComp)
 	{
-		
+		UE_LOG(LogTemp, Display, TEXT("Valid New INput Component") );
 		OwnerInputComp = NewInputComp;
 		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Started, this, &UInputReceiverComponent::Native_Started);
 		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Triggered, this, &UInputReceiverComponent::Native_Triggered);
@@ -56,27 +64,37 @@ FInputActionValue UInputReceiverComponent::GetInputActionValue()
 
 void UInputReceiverComponent::Native_Started()
 {
+	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Started") );
 	OnInputStarted.Broadcast();
 }
 
 void UInputReceiverComponent::Native_Triggered()
 {
+	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Triggered") );
 	OnInputTriggered.Broadcast();
 }
 
 void UInputReceiverComponent::Native_Complete()
 {
+	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Completed") );
 	OnInputCompleted.Broadcast();
 }
 
 void UInputReceiverComponent::Native_Cancel()
 {
+	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Canceled") );
 	OnInputCancel.Broadcast();
 }
 
 void UInputReceiverComponent::Native_Ongoing()
 {
 	
+}
+
+void UInputReceiverComponent::OnOwningControllerChange(APawn* Pawn, AController* OldController, AController* NewController)
+{
+	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Owner Change (on new controller)") );
+	OverrideInputOwner(Pawn);
 }
 
 
