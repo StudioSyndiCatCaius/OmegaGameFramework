@@ -34,6 +34,9 @@ public:
 	UPROPERTY()
 	FTransform SavedPlayerTransform;
 
+	UPROPERTY(BlueprintReadOnly)
+	FDateTime SaveDate;
+
 	UFUNCTION(BlueprintImplementableEvent, Category="Save")
 	void OnGameStarted(FGameplayTagContainer Tags);
 	

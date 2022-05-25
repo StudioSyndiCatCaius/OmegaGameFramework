@@ -10,6 +10,7 @@
 #include "Widget/HUDLayer.h"
 #include "GameplayTagContainer.h"
 #include "OmegaAbility.h"
+#include "Gameplay/CombatantComponent.h"
 #include "Save/OmegaSaveInterface.h"
 
 #include "OmegaGameplaySystem.generated.h"
@@ -26,16 +27,17 @@ USTRUCT(BlueprintType)
 struct FGameplaySystemAbilityRules
 {
 	GENERATED_BODY()
-	UPROPERTY(BlueprintReadWrite, Category="GameplaySystemRules")
-	TSubclassOf<AOmegaAbility> GrantedAbilities;
+	UPROPERTY(EditDefaultsOnly, Category="GameplaySystemRules")
+	TSubclassOf<AOmegaAbility> AbilityClass;
 	
-	UPROPERTY(BlueprintReadWrite, Category="GameplaySystemRules")
-	FGameplayTagContainer AcceptedCategories;
-
-	UPROPERTY(BlueprintReadWrite, Category="GameplaySystemRules")
-	FGameplayTagContainer AcceptedTags;
+	UPROPERTY(EditDefaultsOnly, Category="GameplaySystemRules")
+	FGameplayTagContainer AcceptedFactions;
+	//Tags required for this ability to be granted. (Blank will add to all)
+	UPROPERTY(EditDefaultsOnly, Category="GameplaySystemRules")
+	FGameplayTagQuery AcceptedCombatantTags;
 
 };
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShutdown, FString, Flag);
 
@@ -89,6 +91,14 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TArray<UInputMappingContext*> AddPlayerInputMapping;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	TArray<FGameplaySystemAbilityRules> GrantedAbilities;
+
+	UFUNCTION()
+	void Local_GrantAbilities(UCombatantComponent* Combatant);
+
+	
 	
 	//UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
 	//TArray<FGameplaySystemAbilityRules> GrantedAbilties;
@@ -113,3 +123,5 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|GamePreferences")
 	bool OnActiveGameSaved();
 };
+
+

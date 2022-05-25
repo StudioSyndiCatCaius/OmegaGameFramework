@@ -26,8 +26,20 @@ UOmegaAttributes_Factory::UOmegaAttributes_Factory(const class FObjectInitialize
 UObject* UOmegaAttributes_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
 {
 	check(Class->IsChildOf(UOmegaAttribute::StaticClass()));
-	//return NewObject<UOmegaAttribute>(InParent, Class, Name, Flags | RF_Transactional, Context);
 	return NewObject<UOmegaAttribute>(InParent, Class, Name, Flags | RF_Transactional);
+}
+
+//////// DataItem ////////
+UOmegaDataItems_Factory::UOmegaDataItems_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) {
+	SupportedClass = UOmegaDataItem::StaticClass();
+	bEditAfterNew = true;
+	bCreateNew = true;
+}
+
+UObject* UOmegaDataItems_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
+{
+	check(Class->IsChildOf(UOmegaDataItem::StaticClass()));
+	return NewObject<UOmegaDataItem>(InParent, Class, Name, Flags | RF_Transactional);
 }
 
 //////// AttributesSet ////////

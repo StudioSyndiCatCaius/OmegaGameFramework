@@ -43,6 +43,7 @@ void AOmegaAbility::BeginPlay()
 		DefaultInputReceiver->OnInputCancel.AddDynamic(this, &AOmegaAbility::CancelAbility);
 	}
 	
+	GetGameInstance()->GetOnPawnControllerChanged().AddDynamic(this, &AOmegaAbility::TryAssignControlInput);
 	
 	SetInputEnabledForOwner(true);
 }
@@ -51,6 +52,17 @@ void AOmegaAbility::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	RecieveFinish(true);
+}
+
+void AOmegaAbility::TryAssignControlInput(APawn* Pawn, AController* Controller)
+{
+	if(Pawn == GetAbilityOwnerCharacter())
+	{
+		if(Cast<APlayerController>(Controller))
+		{
+			EnableInput(Cast<APlayerController>(Controller));
+		}
+	}
 }
 
 // Called every frame

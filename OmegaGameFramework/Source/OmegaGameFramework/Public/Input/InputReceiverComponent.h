@@ -59,5 +59,8 @@ public:
 	FOnInputComplete OnInputCompleted;
 	UPROPERTY(BlueprintAssignable)
 	FOnInputCancel OnInputCancel;
+
+	UFUNCTION()
+	void OnOwningControllerChange(APawn* Pawn, AController* OldController, AController* NewController);
 	
 };

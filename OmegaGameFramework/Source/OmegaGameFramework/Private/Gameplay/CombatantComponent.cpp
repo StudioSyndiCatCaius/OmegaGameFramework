@@ -15,6 +15,7 @@
 #include "Gameplay/ActorInterface_Combatant.h"
 #include "Gameplay/DataInterface_Combatant.h"
 #include "Gameplay/DataInterface_DamageModifier.h"
+#include "Kismet/KismetTextLibrary.h"
 
 
 // Sets default values for this component's properties
@@ -34,7 +35,7 @@ void UCombatantComponent::BeginPlay()
 	Super::BeginPlay();
 
 	//AddToCombatantList
-	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActiveCombatants.Add(this);
+	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->Native_RegisterCombatant(this, true);
 	
 	///---Try Setup Input---//
 	OwnerPawn = Cast<APawn>(GetOwner());
@@ -53,7 +54,7 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if(EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::RemovedFromWorld)
 	{
-		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActiveCombatants.Remove(this);
+		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->Native_RegisterCombatant(this, false);
 	}
 	
 	
@@ -162,26 +163,53 @@ void UCombatantComponent::Update()
 				//Set Max Value Text
 				if (MaxText)
 				{
-					MaxText->SetText(FText::FromString(FString::SanitizeFloat(DumMax)));
+					FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
+					(
+						DumMax,
+						LocalAtb->RoundingMode,
+						LocalAtb->bAlwaysSign,
+						LocalAtb->bUseGrouping,
+						LocalAtb->MinIntegralDigits,
+						LocalAtb->MaxIntegralDigits,
+						LocalAtb->MinFractionalDigits,
+						LocalAtb->MaxFractionalDigits
+						);
+					
+					MaxText->SetText(LocalText_Val);
 				}
 				//Set Current Value Text
 				if (ValText)
 				{
-					ValText->SetText(FText::FromString(FString::SanitizeFloat(DumVal)));
+					FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
+					(
+						DumVal,
+						LocalAtb->RoundingMode,
+						LocalAtb->bAlwaysSign,
+						LocalAtb->bUseGrouping,
+						LocalAtb->MinIntegralDigits,
+						LocalAtb->MaxIntegralDigits,
+						LocalAtb->MinFractionalDigits,
+						LocalAtb->MaxFractionalDigits
+						);
+					
+					ValText->SetText(LocalText_Val);
 				}
 
 				class UProgressBar* AttProg;
-				IWidgetInterface_Combatant::Execute_GetAttributeProgressBar(TempWidget, LocalAtb, AttProg);
+				bool bLocal_BarToColor;
+				IWidgetInterface_Combatant::Execute_GetAttributeProgressBar(TempWidget, LocalAtb, AttProg, bLocal_BarToColor);
 				if (AttProg)
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 3.0F, FColor::Green, "ReachATT");
-					
 					AttProg->SetPercent(GetAttributePercentage(LocalAtb));
+					if(bLocal_BarToColor)
+					{
+						AttProg->SetFillColorAndOpacity(LocalAtb->AttributeColor);
+					}
 				}
-
+				
 			}
 		}
-	}
+	} //Widget Update END
 }
 
 APawn* UCombatantComponent::GetOwnerPawn()
@@ -435,21 +463,21 @@ TArray<AOmegaAbility*> UCombatantComponent::GetGrantedAbilitiesWithTags(FGamepla
 ////////////////////////////////////
 	////////// -- ATTRIBUTES -- //////////
 	///////////////////////////////////
-float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UObject* Instigator, UObject* DamageModifier)
+float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UObject* Instigator, UObject* Context)
 {
 	float CurrentValue;
 	float MaxVal;
-	GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
-	float FinalDamage;
-	
-	if(DamageModifier && DamageModifier->Implements<UDataInterface_DamageModifier>())		//Is there a valid damage modifier
+	UObject* LocalContext = nullptr;
+	if(Context)
 	{
-		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(DamageModifier, Attribute, this, Instigator, BaseDamage); //Apply Damage Modifier
+		LocalContext = Context;
 	}
+	GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
+	float FinalDamage = BaseDamage;
 	
-	else
+	for(auto* TempMod : GetAttributeModifiers())		//Is there a valid damage modifier
 	{
-		FinalDamage = BaseDamage;
+		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, Context); //Apply Damage Modifier
 	}
 	
 	CurrentValue = CurrentValue - FinalDamage;		//Deduct final damage value from current attribute value
@@ -500,6 +528,38 @@ void UCombatantComponent::RemoveSkill(UPrimaryDataAsset* Skill)
 }
 
 
+bool UCombatantComponent::SetDamageModifierActive(UObject* Modifier, bool bActive)
+{
+	if(!Modifier)
+	{
+		return false;
+	}
+	if(Modifier->Implements<UDataInterface_DamageModifier>())
+	{
+		if(bActive)
+		{
+			DamageModifiers.Add(Modifier);
+		}
+		else
+		{
+			DamageModifiers.Remove(Modifier);
+		}
+	}
+	return false;
+}
+
+TArray<UObject*> UCombatantComponent::GetDamageModifiers()
+{
+	TArray<UObject*> OutMods;
+	for(auto* TempMod : DamageModifiers)
+	{
+		if(TempMod)
+		{
+			OutMods.Add(TempMod);
+		}
+	}
+	return OutMods;
+}
 
 //// Get Attribute Values + Attribute Modifiers
 void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue)
@@ -600,6 +660,10 @@ void UCombatantComponent::InitializeAttributes()
 			//DumVal = GetAttributeBaseValue(TempAtt);
 			CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);
 		}
+	}
+	else
+	{
+		PrintError("CombatantError: No valid Attribute Set");
 	}
 }
 
@@ -880,6 +944,10 @@ void UCombatantComponent::RemoveEffectsWithTags(FGameplayTagContainer EffectTags
 /////////////////
 void UCombatantComponent::AddTargetToList(UCombatantComponent* Combatant)
 {
+	if(!Combatant)
+	{
+		return;
+	}
 	if(!TargetList.Contains(Combatant))
 	{
 		TargetList.AddUnique(Combatant);
@@ -904,6 +972,10 @@ void UCombatantComponent::AddTargetsToList(TArray<UCombatantComponent*> Combatan
 
 void UCombatantComponent::RemoveTargetFromList(UCombatantComponent* Combatant)
 {
+	if(!Combatant)
+	{
+		return;
+	}
 	if(TargetList.Contains(Combatant))
 	{
 		TargetList.Remove(Combatant);

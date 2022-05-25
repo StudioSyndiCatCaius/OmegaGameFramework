@@ -6,7 +6,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
-void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef)
+void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
 	
 	SetOwningPlayer(PlayerRef);
@@ -19,9 +19,9 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		SetIsEnabled(true);
 		SetVisibility(VisibilityOnOpen);
 		
-		OnOpened.Broadcast(Tags);
+		OnOpened.Broadcast(Tags, Flag);
 		AddToPlayerScreen(200);
-		MenuOpened(Tags, Context);
+		MenuOpened(Tags, Context, Flag);
 		//ANIMATION
 		
 		if(GetOpenAnimation())
@@ -42,7 +42,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	}
 }
 
-void UMenu::CloseMenu(FGameplayTagContainer Tags)
+void UMenu::CloseMenu(FGameplayTagContainer Tags, const FString& Flag)
 {
 	if (bIsOpen)
 	{
@@ -50,8 +50,8 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags)
 		PrivateInputBlocked = true;
 		
 		TempTags = Tags;
-		MenuClosed(TempTags);
-		OnClosed.Broadcast(TempTags);
+		MenuClosed(TempTags, Flag);
+		OnClosed.Broadcast(TempTags, Flag);
 
 		//Handle Subsystem
 		UOmegaPlayerSubsystem* SubsystemRef = GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
@@ -128,13 +128,13 @@ void UMenu::Native_CompleteOpen()
 
 void UMenu::Native_CompleteClose()
 {
-	RemoveFromParent();
+	
 	PrivateInputBlocked = true;
 	SetIsEnabled(false);
-	//SetVisibility(VisibilityOnClose);
+	SetVisibility(VisibilityOnClose);
 	
 	//Prep for deletio
-
+    RemoveFromParent();
 }
 
 bool UMenu::InputBlocked_Implementation()

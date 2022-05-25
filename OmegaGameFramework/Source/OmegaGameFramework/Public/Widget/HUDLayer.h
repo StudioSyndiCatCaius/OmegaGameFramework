@@ -26,7 +26,10 @@ public:
 	//UFUNCTION(BlueprintImplementableEvent)
 	//void LayerRemoved();
 
-	UPROPERTY(EditDefaultsOnly, Category = "Tags")
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	FGameplayTagContainer HUDTags;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
+	int32 SlateLayerIndex;
 	
 };

@@ -80,7 +80,7 @@ void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combat
 	OnRemovedFromTurnOrder.Broadcast(Combatant, Flag, Tags);
 	if(DoesCombatantUseInterface(Combatant))
 	{
-		IActorInterface_TurnOrderCombatant::Execute_OnRemovedFromTurnOrder(GetActiveTurnMember()->GetOwner(), this, Flag, Tags);
+		IActorInterface_TurnOrderCombatant::Execute_OnRemovedFromTurnOrder(Combatant->GetOwner(), this, Flag, Tags);
 	}
 }
 
@@ -127,12 +127,16 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 	{
 		OnTurnEnd.Broadcast(GetActiveTurnMember(), Flag, Tags);
 		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
-
-		//Function on Combatant Actor
-		if(DoesCombatantUseInterface(GetActiveTurnMember()))
-		{
-			IActorInterface_TurnOrderCombatant::Execute_OnTurnEnd(GetActiveTurnMember()->GetOwner(), this);
-		}
+        
+        /*if(GetActiveTurnMember()) // If new active member valid
+        {
+            //Function on Combatant Actor
+            if(DoesCombatantUseInterface(GetActiveTurnMember()))
+            {
+                IActorInterface_TurnOrderCombatant::Execute_OnTurnEnd(GetActiveTurnMember()->GetOwner(), this);
+            }
+        }*/
+		
 	}
 	
 	//If Empty and should regenerator

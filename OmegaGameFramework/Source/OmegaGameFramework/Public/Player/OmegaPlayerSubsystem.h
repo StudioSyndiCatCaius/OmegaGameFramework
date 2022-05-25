@@ -16,6 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FClearHoveredWidgets);
 
 class UUserWidget;
 class UHUDLayer;
+class UDataWidget;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsystem
@@ -28,11 +29,11 @@ public:
 	////////////////////////
 	/////////Menus/////////
 	//////////////////////
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta = (DeterminesOutputType = "MenuClass", AdvancedDisplay = "Context, Flag, AutoFocus"))
-	class UMenu* OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, bool AutoFocus=true);
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta = (DeterminesOutputType = "MenuClass", AdvancedDisplay = "Context, Flag, AutoFocus, Flag"))
+	class UMenu* OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus=true);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
-	bool CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags);
+	bool CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, const FString& Flag);
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|Menu", meta=(DeterminesOutputType = "MenuClass"))
 	class UMenu* GetMenu(class TSubclassOf<UMenu> MenuClass, bool& bIsValid);
@@ -86,16 +87,19 @@ public:
 	//////////////////////
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD", meta=(AdvancedDisplay = "LayerIndex, Context"))
-	UHUDLayer* AddHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, UObject* Context, int32 LayerIndex);
+	UHUDLayer* AddHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, UObject* Context);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD", meta = (AdvancedDisplay = "Flag"))
-	bool RemoveHUDLayer(class UHUDLayer* Layer, FString Flag);
+	bool RemoveHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, FString Flag);
 
 	TArray <class UHUDLayer*> ActiveHUDLayers;
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|HUD")
 	TArray <UHUDLayer*> GetHUDLayers();
 
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|HUD")
+	UHUDLayer* GetHUDLayerByClass(TSubclassOf<UHUDLayer> LayerClass);
+	
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|HUD")
 	TArray <UHUDLayer*> GetHUDLayersWithTags(FGameplayTagContainer Tags);
 
@@ -116,5 +120,14 @@ public:
 	UPROPERTY()
 	FClearHoveredWidgets ClearHoveredWidgets;
 
+	///////////////////
+	/// DATA WIDGETS ////
+	/// /////////
+
+	UPROPERTY()
+	UDataWidget* HoveredWidget = nullptr;
+
 };
+
+
 
