@@ -21,13 +21,13 @@ void UInputReceiverComponent::BeginPlay()
 	Super::BeginPlay();
 
 	OverrideInputOwner(GetOwner());
-/*
+
 	if(Cast<APawn>(GetOwner()))
 	{
 		UE_LOG(LogTemp, Display, TEXT("Bound Input Reciever event on owner controller change") );
 		Cast<APawn>(GetOwner())->ReceiveControllerChangedDelegate.AddDynamic(this, &UInputReceiverComponent::OnOwningControllerChange);
 	}
-*/	
+	
 	
 }
 
