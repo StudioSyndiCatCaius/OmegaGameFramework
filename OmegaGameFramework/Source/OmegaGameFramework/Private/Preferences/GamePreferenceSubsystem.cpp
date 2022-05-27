@@ -11,6 +11,7 @@
 
 #include "Preferences/Asset/GamePreferenceBool.h"
 #include "Preferences/Asset/GamePreferenceFloat.h"
+#include "Preferences/Asset/GamePreferenceInt.h"
 #include "Preferences/Asset/GamePreferenceString.h"
 #include "Preferences/Asset/GamePreferenceTag.h"
 
@@ -107,6 +108,49 @@ void UGamePreferenceSubsystem::SetGamePreferenceFloat(UGamePreferenceFloat* Pref
 			GetSaveSubsystem()->ActiveSaveData->FloatPrefs.Add(Preference, Value);
 		}
 		OnFloatPreferenceUpdated.Broadcast(Preference, Value);
+	}
+}
+
+//Int////////////////////////
+
+int32 UGamePreferenceSubsystem::GetGamePreferenceInt(UGamePreferenceInt* Preference)
+{
+	if(!Preference)
+	{
+		return 0;
+	}
+	
+	TMap<UGamePreferenceFloat*, float> IntPr;
+
+	if (Preference->bGlobal)
+	{
+		IntPrefsList = GetSaveSubsystem()->GlobalSaveData->IntPrefs;
+	}
+	else
+	{
+		IntPrefsList = GetSaveSubsystem()->ActiveSaveData->IntPrefs;
+	}
+
+	if (IntPrefsList.Contains(Preference))
+	{
+		return IntPrefsList[Preference];
+	}
+	return Preference->DefaultValue;
+}
+
+void UGamePreferenceSubsystem::SetGamePreferenceInt( UGamePreferenceInt* Preference, int32 Value)
+{
+	if (Preference)
+	{
+		if (Preference->bGlobal)
+		{
+			GetSaveSubsystem()->GlobalSaveData->IntPrefs.Add(Preference, Value);
+		}
+		else
+		{
+			GetSaveSubsystem()->ActiveSaveData->IntPrefs.Add(Preference, Value);
+		}
+		OnIntPreferenceUpdated.Broadcast(Preference, Value);
 	}
 }
 

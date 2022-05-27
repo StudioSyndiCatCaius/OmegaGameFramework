@@ -475,7 +475,7 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 	GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
 	float FinalDamage = BaseDamage;
 	
-	for(auto* TempMod : GetAttributeModifiers())		//Is there a valid damage modifier
+	for(auto* TempMod : GetDamageModifiers())		//Is there a valid damage modifier
 	{
 		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, Context); //Apply Damage Modifier
 	}

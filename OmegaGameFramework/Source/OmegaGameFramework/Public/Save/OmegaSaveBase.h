@@ -33,7 +33,9 @@ public:
 	TMap<class UGamePreferenceString*, FString> StringPrefs;
 	UPROPERTY()
 	TMap<class UGamePreferenceTag*, FGameplayTag> TagPrefs;
-
+	UPROPERTY()
+	TMap<class UGamePreferenceInt*, int32> IntPrefs;
+	
 	//Tags
 	UPROPERTY(BlueprintReadOnly, DisplayName="Save State", Category="Ω|SaveGame")
 	FGameplayTag StoryState;
@@ -56,6 +58,12 @@ public:
 	TMap<FName, FString> Prop_string;
 	UPROPERTY()
 	TMap<FName, FGameplayTag> Prop_Tag;
-
-	
+	UPROPERTY()
+	TMap<FName, UPrimaryDataAsset*> Prop_Asset;
+	UPROPERTY()
+	TMap<FName, FVector> Prop_Vector;
+	UPROPERTY()
+	TMap<FName, FRotator> Prop_Rotator;
+	UPROPERTY()
+	TMap<FName, FTransform> Prop_Transform;
 };

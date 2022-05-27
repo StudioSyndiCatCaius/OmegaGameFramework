@@ -22,7 +22,6 @@ class AOmegaAbility;
 class UOmegaSaveGame;
 
 
-
 USTRUCT(BlueprintType)
 struct FGameplaySystemAbilityRules
 {
