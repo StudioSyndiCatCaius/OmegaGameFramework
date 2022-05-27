@@ -63,9 +63,12 @@ public:
 	
 	//GameplayTags
 
-	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|Tags")
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|Tags", DisplayName="Set Save State")
 	void SetStoryState(FGameplayTag StateTag, bool Global);
-
+	
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|Tags")
+	FGameplayTag GetSaveState(bool Global);
+	
 	UFUNCTION(BlueprintCallable, DisplayName="Add Save Tags", Category="Ω|SaveSubsystem|Tags")
 	void AddStoryTags(FGameplayTagContainer Tags, bool Global);
 
@@ -111,29 +114,49 @@ public:
 	// Soft Properties
 	//////////////
 
-	//bool
+		//bool
 	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
 	void SetSoftProperty_Bool(FName Property, bool Value, bool bGlobal);
 	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
 	bool GetSoftProperty_Bool(FName Property, bool bGlobal);
-	//float
+		//float
 	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
 	void SetSoftProperty_Float(FName Property, float Value, bool bGlobal);
 	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
 	float GetSoftProperty_Float(FName Property, bool bGlobal);
-	//int
+		//int
 	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
 	void SetSoftProperty_Int32(FName Property, int32 Value, bool bGlobal);
 	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
 	int32 GetSoftProperty_Int32(FName Property, bool bGlobal);
-	//string
+		//string
 	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
 	void SetSoftProperty_String(FName Property, FString Value, bool bGlobal);
 	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
 	FString GetSoftProperty_String(FName Property, bool bGlobal);
-	//tag
+		//tag
 	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
 	void SetSoftProperty_Tag(FName Property, FGameplayTag Value, bool bGlobal);
 	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
 	FGameplayTag GetSoftProperty_Tag(FName Property, bool bGlobal);
+		//vec
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_Vector(FName Property, FVector Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	FVector GetSoftProperty_Vector(FName Property, bool bGlobal);
+		//rot
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_Rotator(FName Property, FRotator Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	FRotator GetSoftProperty_Rotator(FName Property, bool bGlobal);
+		//transform
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_Transform(FName Property, FTransform Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	FTransform GetSoftProperty_Transform(FName Property, bool bGlobal);
+		//transform
+	UFUNCTION(BlueprintCallable, Category="Ω|SaveSubsystem|SoftProperties")
+	void SetSoftProperty_DataAsset(FName Property, UPrimaryDataAsset* Value, bool bGlobal);
+	UFUNCTION(BlueprintPure, Category="Ω|SaveSubsystem|SoftProperties")
+	UPrimaryDataAsset* GetSoftProperty_DataAsset(FName Property, bool bGlobal);
 };
