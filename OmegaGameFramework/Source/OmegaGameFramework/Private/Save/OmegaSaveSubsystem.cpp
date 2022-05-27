@@ -163,6 +163,11 @@ void UOmegaSaveSubsystem::SetStoryState(FGameplayTag StateTag, bool Global)
 	GetSaveObject(Global)->StoryState = StateTag;
 }
 
+FGameplayTag UOmegaSaveSubsystem::GetSaveState(bool Global)
+{
+	return GetSaveObject(Global)->StoryState;
+}
+
 void UOmegaSaveSubsystem::AddStoryTags(FGameplayTagContainer Tags, bool Global)
 {
 	GetSaveObject(Global)->StoryTags.AppendTags(Tags);
@@ -319,5 +324,45 @@ void UOmegaSaveSubsystem::SetSoftProperty_Tag(FName Property, FGameplayTag Value
 FGameplayTag UOmegaSaveSubsystem::GetSoftProperty_Tag(FName Property, bool bGlobal)
 {
 	return GetSaveObject(bGlobal)->Prop_Tag.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_Vector(FName Property, FVector Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_Vector.Add(Property, Value);
+}
+
+FVector UOmegaSaveSubsystem::GetSoftProperty_Vector(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_Vector.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_Rotator(FName Property, FRotator Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_Rotator.Add(Property, Value);
+}
+
+FRotator UOmegaSaveSubsystem::GetSoftProperty_Rotator(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_Rotator.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_Transform(FName Property, FTransform Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_Transform.Add(Property, Value);
+}
+
+FTransform UOmegaSaveSubsystem::GetSoftProperty_Transform(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_Transform.FindOrAdd(Property);
+}
+
+void UOmegaSaveSubsystem::SetSoftProperty_DataAsset(FName Property, UPrimaryDataAsset* Value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->Prop_Asset.Add(Property, Value);
+}
+
+UPrimaryDataAsset* UOmegaSaveSubsystem::GetSoftProperty_DataAsset(FName Property, bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Prop_Asset.FindOrAdd(Property);
 }
 

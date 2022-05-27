@@ -19,5 +19,5 @@ public:
 	UGamePreferenceTag();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Value")
-		FGameplayTag DefaultValue;
+	FGameplayTag DefaultValue;
 };
