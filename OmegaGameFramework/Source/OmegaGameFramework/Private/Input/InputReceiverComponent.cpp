@@ -2,7 +2,7 @@
 
 
 #include "Input/InputReceiverComponent.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 
 // Sets default values for this component's properties
 UInputReceiverComponent::UInputReceiverComponent()

@@ -34,7 +34,7 @@ public:
 	UPROPERTY()
 	FTransform SavedPlayerTransform;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Save")
 	FDateTime SaveDate;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Save")
