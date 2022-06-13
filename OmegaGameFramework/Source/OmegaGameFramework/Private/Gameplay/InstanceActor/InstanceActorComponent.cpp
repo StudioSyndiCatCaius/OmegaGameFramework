@@ -2,7 +2,7 @@
 
 
 #include "Gameplay/InstanceActor/InstanceActorComponent.h"
-
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
 
