@@ -16,6 +16,7 @@ class AOmegaGameplaySystem;
 class UOmegaSettings;
 class UDamageFormula;
 
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantRegistered, UCombatantComponent*, Combatant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantUnegistered, UCombatantComponent*, Combatant);
 
@@ -64,4 +65,10 @@ public:
 	FOnCombatantRegistered OnCombatantRegistered;
 	UPROPERTY(BlueprintAssignable)
     FOnCombatantUnegistered OnCombatantUnegistered;
+
+	UFUNCTION(BlueprintPure, Category="OmegaGameplaySubsystem")
+	UPrimaryDataAsset* GetCombatantCategoryData(FGameplayTag CategoryTag);
+	
+	UFUNCTION(BlueprintPure, Category="OmegaGameplaySubsystem")
+	UPrimaryDataAsset* GetCombatantFactionData(FGameplayTag FactionTag);
 };
