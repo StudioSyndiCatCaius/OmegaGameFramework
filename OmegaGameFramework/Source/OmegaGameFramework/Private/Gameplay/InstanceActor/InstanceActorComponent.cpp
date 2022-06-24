@@ -1,8 +1,8 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Gameplay/InstanceActor/InstanceActorComponent.h"
-#include "Engine/World.h"
+
 #include "Kismet/GameplayStatics.h"
 
 
@@ -56,6 +56,8 @@ AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, c
 	LocalActor->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	LocalActor->SetActorRelativeTransform(LocalTransform);
 	LocalActor->OnInstanceCreated(LocalContext, Flag);
+    
+    PrivateInstances.Add(LocalActor);
 	return LocalActor;
 }
 
