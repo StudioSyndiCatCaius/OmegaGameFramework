@@ -6,12 +6,12 @@ DEFINE_LOG_CATEGORY(OmegaData);
 
 #define LOCTEXT_NAMESPACE "FOmegaWorld"
 
-void FOmegaWorld::StartupModule()
+void FOmegaData::StartupModule()
 {
 	UE_LOG(OmegaData, Warning, TEXT("OmegaData module has been loaded"));
 }
 
-void FOmegaWorld::ShutdownModule()
+void FOmegaData::ShutdownModule()
 {
 	UE_LOG(OmegaData, Warning, TEXT("OmegaData module has been unloaded"));
 }
