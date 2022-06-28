@@ -5,7 +5,7 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(OmegaData, All, All);
 
-class FOmegaWorld : public IModuleInterface
+class FOmegaData : public IModuleInterface
 {
 	public:
 
