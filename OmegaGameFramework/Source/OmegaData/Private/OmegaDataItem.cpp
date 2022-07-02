@@ -160,3 +160,92 @@ int32 UOmegaDataItem::GetMaxCollectionNumber_Implementation()
 	return MaxCollectionAmount;
 }
 
+
+//-------------------------------
+// PROPERTIES
+//-------------------------------
+/*
+bool UOmegaDataItem::GetItemProperty_Bool(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Bool(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Bool(Property, ValidProp);
+		}
+	}
+	return false;
+}
+
+int32 UOmegaDataItem::GetItemProperty_Int(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Int(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Int(Property, ValidProp);
+		}
+	}
+	return false;
+}
+
+float UOmegaDataItem::GetItemProperty_Float(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Float(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Float(Property, ValidProp);
+		}
+	}
+	return false;
+}
+
+FString UOmegaDataItem::GetItemProperty_String(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_String(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_String(Property, ValidProp);
+		}
+	}
+	return "";
+}
+
+UPrimaryDataAsset* UOmegaDataItem::GetItemProperty_Asset(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Asset(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Asset(Property, ValidProp);
+		}
+	}
+	return nullptr;
+}
+
+UOmegaDataItem* UOmegaDataItem::GetItemProperty_Item(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Item(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Item(Property, ValidProp);
+		}
+	}
+	return nullptr;
+}
+*/

@@ -103,5 +103,20 @@ FGameplayTag GetObjectGameplayCategory();
 	UFUNCTION(BlueprintNativeEvent)
 	int32 GetMaxCollectionNumber();
 	virtual int32 GetMaxCollectionNumber_Implementation() override;
-	
+
+	//Properties
+	/*
+	UFUNCTION(BlueprintPure,Category="DataItem|Property", DisplayName="Get Item Property (Bool)")
+	bool GetItemProperty_Bool(const FString& Property);
+	UFUNCTION(BlueprintPure,Category="DataItem|Property", DisplayName="Get Item Property (Int32)")
+	int32 GetItemProperty_Int(const FString& Property);
+	UFUNCTION(BlueprintPure,Category="DataItem|Property", DisplayName="Get Item Property (Float)")
+	float GetItemProperty_Float(const FString& Property);
+	UFUNCTION(BlueprintPure,Category="DataItem|Property", DisplayName="Get Item Property (String)")
+	FString GetItemProperty_String(const FString& Property);
+	UFUNCTION(BlueprintPure,Category="DataItem|Property", DisplayName="Get Item Property (DataAsset)")
+	UPrimaryDataAsset* GetItemProperty_Asset(const FString& Property);
+	UFUNCTION(BlueprintPure,Category="DataItem|Property", DisplayName="Get Item Property (DataItem)")
+	UOmegaDataItem* GetItemProperty_Item(const FString& Property);
+	*/
 };
