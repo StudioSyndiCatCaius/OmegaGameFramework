@@ -38,6 +38,7 @@ public class OmegaGameFramework : ModuleRules
 				"DeveloperSettings",
 				"UMG",
 				"InputCore",
+				"Json"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

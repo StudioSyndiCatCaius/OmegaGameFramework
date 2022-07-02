@@ -8,6 +8,7 @@
 #include "Save/OmegaSaveGlobal.h"
 #include "OmegaGameplaySystem.h"
 #include "Save/OmegaSaveInterface.h"
+#include "Dom/JsonObject.h"
 
 #include "Preferences/Asset/GamePreferenceBool.h"
 #include "Preferences/Asset/GamePreferenceFloat.h"
@@ -21,7 +22,8 @@ void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 	const TSubclassOf<UOmegaSaveGlobal> LocalGlobalSaveClass = GetMutableDefault<UOmegaSettings>()->GetOmegaGlobalSaveClass(); //Get Global Settings class
 
 	ActiveSaveData = CreateNewGame();
-
+	
+	
 	if (UGameplayStatics::DoesSaveGameExist(LocalGlSaveName, 0))		//Is there is already a Global Save File?
 	{
 		GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::LoadGameFromSlot(LocalGlSaveName, 0)); //If yes, load it
@@ -278,91 +280,91 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 
 void UOmegaSaveSubsystem::SetSoftProperty_Bool(FName Property, bool Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_bool.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Bool(Property, Value);
 }
 
 bool UOmegaSaveSubsystem::GetSoftProperty_Bool(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_bool.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Bool(Property);
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_Float(FName Property, float Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_float.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Float(Property, Value);
 }
 
 float UOmegaSaveSubsystem::GetSoftProperty_Float(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_float.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Float(Property);
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_Int32(FName Property, int32 Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_int.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Int(Property, Value);
 }
 
 int32 UOmegaSaveSubsystem::GetSoftProperty_Int32(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_int.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Int(Property);
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_String(FName Property, FString Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_string.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_String(Property, Value);
 }
 
 FString UOmegaSaveSubsystem::GetSoftProperty_String(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_string.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_String(Property);;
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_Tag(FName Property, FGameplayTag Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_Tag.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Tag(Property, Value);
 }
 
 FGameplayTag UOmegaSaveSubsystem::GetSoftProperty_Tag(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_Tag.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Tag(Property);;
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_Vector(FName Property, FVector Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_Vector.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Vector(Property, Value);
 }
 
 FVector UOmegaSaveSubsystem::GetSoftProperty_Vector(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_Vector.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Vector(Property);
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_Rotator(FName Property, FRotator Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_Rotator.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Rotator(Property, Value);
 }
 
 FRotator UOmegaSaveSubsystem::GetSoftProperty_Rotator(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_Rotator.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Rotator(Property);
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_Transform(FName Property, FTransform Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_Transform.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Transform(Property, Value);
 }
 
 FTransform UOmegaSaveSubsystem::GetSoftProperty_Transform(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_Transform.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Transform(Property);
 }
 
 void UOmegaSaveSubsystem::SetSoftProperty_DataAsset(FName Property, UPrimaryDataAsset* Value, bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Prop_Asset.Add(Property, Value);
+	GetSaveObject(bGlobal)->SetSaveProperty_Asset(Property, Value);
 }
 
 UPrimaryDataAsset* UOmegaSaveSubsystem::GetSoftProperty_DataAsset(FName Property, bool bGlobal)
 {
-	return GetSaveObject(bGlobal)->Prop_Asset.FindOrAdd(Property);
+	return GetSaveObject(bGlobal)->GetSaveProperty_Asset(Property);
 }
 

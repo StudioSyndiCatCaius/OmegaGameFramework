@@ -56,8 +56,8 @@ AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, c
 	LocalActor->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	LocalActor->SetActorRelativeTransform(LocalTransform);
 	LocalActor->OnInstanceCreated(LocalContext, Flag);
-	
-	PrivateInstances.Add(LocalActor);
+
+	PrivateInstances.AddUnique(LocalActor);
 	
 	return LocalActor;
 }

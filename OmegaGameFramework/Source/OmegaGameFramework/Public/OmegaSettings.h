@@ -53,8 +53,11 @@ public:
 	FSoftClassPath GlobalSaveClass;
 
 	UPROPERTY(EditAnywhere, config, Category = "Save")
-		FString GlobalSaveName = "global";
+	FString GlobalSaveName = "global";
 
+	//Writes save game properties to a Json String. If false, uses legacy method. NOTE: Seting this as 
+	
+	
 	//Widget
 
 	//Preferences
