@@ -1,11 +1,11 @@
-# OmegaRPGFramework
+# Omega Game Framework
 
-Omega Game Framework or "Omega RPG Framework" is a gameplay framework plugin for Unreal Engine designed to streamline the process of creating gameplay mechanics and features in your project.
+Omega is an extensive gameplay framework plugin for Unreal Engine 4 & 5 designed to streamline the process of creating gameplay mechanics and features in your project.
 
 Features:
-* Simple Blueprintable Abilities & Effects
-* Attributes (Health, Stamina, Strength, etc.)
-* Modular Gameplay Systems
+* Blueprint Abilites
+* Custom Attributes (Health, Stamina, Strength, etc.)
+* Blueprint World (Gameplay Systems) & Game Instance Subsytems (Gameplay Modules)
 * Easy Menus & HUD elements.
 * Streamlined Save/Loading system.
 
