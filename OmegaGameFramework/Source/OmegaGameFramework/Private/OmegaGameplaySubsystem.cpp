@@ -4,11 +4,9 @@
 #include "OmegaGameplaySubsystem.h"
 
 #include "OmegaGameplaySystem.h"
-#include "OmegaGameManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
-#include "Gameplay/OmegaGameplayModule.h"
 
 void UOmegaGameplaySubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
@@ -127,26 +125,4 @@ void UOmegaGameplaySubsystem::NativeRemoveSystem(AOmegaGameplaySystem* System)
 	{
 		ActiveSystems.Remove(System);
 	}
-}
-
-UPrimaryDataAsset* UOmegaGameplaySubsystem::GetCombatantCategoryData(FGameplayTag CategoryTag)
-{
-	UOmegaGameManager* OManagerRef = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
-	for(auto* TempMod : OManagerRef->GetGameplayModules())
-	{
-		if(TempMod->CombatantCategoryData.Contains(CategoryTag))
-		return TempMod->CombatantCategoryData.FindOrAdd(CategoryTag);
-	}
-	return nullptr;
-}
-
-UPrimaryDataAsset* UOmegaGameplaySubsystem::GetCombatantFactionData(FGameplayTag CategoryTag)
-{
-	UOmegaGameManager* OManagerRef = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
-	for(auto* TempMod : OManagerRef->GetGameplayModules())
-	{
-		if(TempMod->CombatantFactionData.Contains(CategoryTag))
-			return TempMod->CombatantFactionData.FindOrAdd(CategoryTag);
-	}
-	return nullptr;
 }

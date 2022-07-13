@@ -131,7 +131,7 @@ public:
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Faction")
 	class UPrimaryDataAsset* FactionDataAsset;
 
-	UPROPERTY(EditAnywhere, Category = "Faction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Faction")
 	FGameplayTag FactionTag;
 
 	UFUNCTION(BlueprintPure, Category="Faction")

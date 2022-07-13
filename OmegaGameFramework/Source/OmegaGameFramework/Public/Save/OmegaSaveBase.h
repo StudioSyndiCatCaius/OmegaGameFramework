@@ -22,6 +22,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInte
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY()
+	FString SaveJsonData;
 	
 	
 	//GamePreferences
@@ -50,20 +53,65 @@ public:
 	//Soft Property
 	UPROPERTY()
 	TMap<FName, bool> Prop_bool;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Bool(FName Name, bool Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	bool GetSaveProperty_Bool(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, float> Prop_float;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Float(FName Name, float Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	float GetSaveProperty_Float(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, int32> Prop_int;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Int(FName Name, int32 Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	int32 GetSaveProperty_Int(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, FString> Prop_string;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_String(FName Name, const FString& Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	FString GetSaveProperty_String(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, FGameplayTag> Prop_Tag;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Tag(FName Name, FGameplayTag Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	FGameplayTag GetSaveProperty_Tag(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, UPrimaryDataAsset*> Prop_Asset;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Asset(FName Name, UPrimaryDataAsset* Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	UPrimaryDataAsset* GetSaveProperty_Asset(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, FVector> Prop_Vector;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Vector(FName Name, FVector Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	FVector GetSaveProperty_Vector(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, FRotator> Prop_Rotator;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Rotator(FName Name, FRotator Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	FRotator GetSaveProperty_Rotator(FName Name);
+	
 	UPROPERTY()
 	TMap<FName, FTransform> Prop_Transform;
+	UFUNCTION(BlueprintCallable, Category="OmegaSave")
+	void SetSaveProperty_Transform(FName Name, FTransform Value);
+	UFUNCTION(BlueprintPure, Category="OmegaSave")
+	FTransform GetSaveProperty_Transform(FName Name);
+	
 };

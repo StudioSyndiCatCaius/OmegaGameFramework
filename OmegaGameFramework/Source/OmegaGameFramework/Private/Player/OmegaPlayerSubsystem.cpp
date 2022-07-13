@@ -28,8 +28,6 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 	CollectGarbage(EObjectFlags::RF_Public);
 	bool bIsMenuOpen = false;
 	UMenu* DumMenu = GetMenu(MenuClass, bIsMenuOpen);
-    
-    
 
 	if (!bIsMenuOpen)	//If menu is already open, don't open it again.
 	{
@@ -210,13 +208,14 @@ TArray<class UHUDLayer*> UOmegaPlayerSubsystem::GetHUDLayers()
 
 TArray<UHUDLayer*> UOmegaPlayerSubsystem::GetHUDLayersWithTags(FGameplayTagContainer Tags)
 {
-	
-	TArray<class UHUDLayer*> OutLayers;
-	for (UHUDLayer* TempLayer : GetHUDLayers())
+	TArray<UHUDLayer*> LocalLayers = GetHUDLayers();
+	TArray<UHUDLayer*> OutLayers;
+	for (UHUDLayer* TempLayer : LocalLayers)
 	{
-		if(TempLayer)
+		if(!(TempLayer==nullptr))
 		{
-			if (TempLayer->HUDTags.HasAnyExact(Tags))
+			FGameplayTagContainer TempTags = TempLayer->HUDTags;
+			if (TempTags.HasAnyExact(Tags))
 			{
 				OutLayers.Add(TempLayer);
 			}	

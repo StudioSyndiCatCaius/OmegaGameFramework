@@ -14,13 +14,14 @@
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
 #include "Data/DataAssetCollectionInterface.h"
+#include "Data/SoftPropertiesInterface.h"
 #include "OmegaDataItem.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface
+class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface, public ISoftPropertiesInterface
 {
 	GENERATED_BODY()
 
@@ -103,5 +104,18 @@ FGameplayTag GetObjectGameplayCategory();
 	UFUNCTION(BlueprintNativeEvent)
 	int32 GetMaxCollectionNumber();
 	virtual int32 GetMaxCollectionNumber_Implementation() override;
+
+	//Soft Propertoes
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="bool"))
+	bool GetSoftProperty_Bool(const FString& Property);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="int32"))
+	int32 GetSoftProperty_Int32(const FString& Property);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="float"))
+	float GetSoftProperty_Float(const FString& Property);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="string"))
+	FString GetSoftProperty_String(const FString& Property);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="object"))
+	UObject* GetSoftProperty_Object(const FString& Property);
 	
 };

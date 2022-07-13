@@ -63,12 +63,5 @@ public:
 	//Properties
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Gameplay")
 	TArray<TSubclassOf<AOmegaGameplaySystem>> AutoGameplaySystems;
-	
-	//Combatant
-	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
-    TMap<FGameplayTag, UPrimaryDataAsset*> CombatantFactionData;
 
-	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
-	TMap<FGameplayTag, UPrimaryDataAsset*> CombatantCategoryData;
-	
 };

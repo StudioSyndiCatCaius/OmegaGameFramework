@@ -57,7 +57,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Ω|SaveSubsystem")
 		class UOmegaSaveGlobal* GlobalSaveData;
 
-
+	UPROPERTY()
+	bool Local_JsonSave;
+	
 	UFUNCTION()
 	UOmegaSaveBase* GetSaveObject(bool Global);
 	

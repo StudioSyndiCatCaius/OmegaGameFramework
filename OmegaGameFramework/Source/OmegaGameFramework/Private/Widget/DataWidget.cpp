@@ -188,7 +188,7 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 				GetMaterialImage()->SetBrushFromMaterial(LocalMat);
 			}
 			bool Local_OverrideSize;
-			struct FVector2D Local_NewSize;
+			FVector2D Local_NewSize;
 			if(GetBrushImage(Local_OverrideSize, Local_NewSize))
 			{
 				

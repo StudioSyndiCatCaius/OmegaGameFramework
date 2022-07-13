@@ -110,8 +110,7 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("GamePreferenceBool"));
 	ThumnbailNames.Add(TEXT("GamePreferenceString"));
 	ThumnbailNames.Add(TEXT("GamePreferenceTag"));
-    ThumnbailNames.Add(TEXT("GamePreferenceInt"));
-    
+
 	ThumnbailNames.Add(TEXT("Menu"));
 	ThumnbailNames.Add(TEXT("HUDLayer"));
 	ThumnbailNames.Add(TEXT("DataWidget"));

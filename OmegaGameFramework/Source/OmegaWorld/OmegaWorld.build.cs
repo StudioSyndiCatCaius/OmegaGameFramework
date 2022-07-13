@@ -1,6 +1,5 @@
 using UnrealBuildTool;
-using System.IO;
-
+ 
 public class OmegaWorld : ModuleRules
 {
 	public OmegaWorld(ReadOnlyTargetRules Target) : base(Target)
@@ -9,7 +8,7 @@ public class OmegaWorld : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags"});
  
-		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
-		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
+		PublicIncludePaths.AddRange(new string[] {"OmegaWorld/Public"});
+		PrivateIncludePaths.AddRange(new string[] {"OmegaWorld/Private"});
 	}
 }

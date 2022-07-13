@@ -160,3 +160,78 @@ int32 UOmegaDataItem::GetMaxCollectionNumber_Implementation()
 	return MaxCollectionAmount;
 }
 
+//PROPETIES
+
+
+UObject* UOmegaDataItem::GetSoftProperty_Object_Implementation(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Object(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Object(Property, ValidProp);
+		}
+	}
+	return nullptr;
+}
+
+FString UOmegaDataItem::GetSoftProperty_String_Implementation(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_String(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_String(Property, ValidProp);
+		}
+	}
+	return "";
+}
+
+float UOmegaDataItem::GetSoftProperty_Float_Implementation(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Float(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Float(Property, ValidProp);
+		}
+	}
+	return false;
+}
+
+int32 UOmegaDataItem::GetSoftProperty_Int32_Implementation(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Int(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Int(Property, ValidProp);
+		}
+	}
+	return false;
+}
+
+bool UOmegaDataItem::GetSoftProperty_Bool_Implementation(const FString& Property)
+{
+	bool ValidProp = false;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		TempTrait->BindTraitProperty_Bool(Property, ValidProp);
+		if(ValidProp)
+		{
+			return TempTrait->BindTraitProperty_Bool(Property, ValidProp);
+		}
+	}
+	return false;
+}
+
+
+

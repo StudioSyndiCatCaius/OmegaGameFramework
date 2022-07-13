@@ -553,7 +553,7 @@ TArray<UObject*> UCombatantComponent::GetDamageModifiers()
 	TArray<UObject*> OutMods;
 	for(auto* TempMod : DamageModifiers)
 	{
-		if(TempMod)
+		if(TempMod && TempMod->Implements<UDataInterface_DamageModifier>())
 		{
 			OutMods.Add(TempMod);
 		}
@@ -742,7 +742,7 @@ const TArray<UObject*> UCombatantComponent::GetAttributeModifiers()
 		}
 		//LocalMods.Append();
 	}
-	
+
 	return LocalMods;
 }
 

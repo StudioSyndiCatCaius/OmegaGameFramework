@@ -10,19 +10,16 @@
 	"DocsURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/764b3140-7bc2-485d-80f7-15d9c4fa71cc/docs",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/2ca6202e55f44cfd82659fbca6591603",
 	"SupportURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/8f85af8b-d2bb-48cf-97d3-63c8c9993285/forums",
-	"EngineVersion": "4.26",
+	"EngineVersion": "5.0.0",
 	"CanContainContent": true,
-	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
-	"Installed": false,
+	"Installed": true,
 	"Modules": [
 		{
 			"Name": "OmegaGameFramework",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
+			"PlatformAllowList": [
 				"Win64",
-				"Win32",
 				"Linux",
 				"Mac"
 			]
@@ -31,9 +28,8 @@
 			"Name": "OmegaEditor",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit",
-			"WhitelistPlatforms": [
+			"PlatformAllowList": [
 				"Win64",
-				"Win32",
 				"Linux",
 				"Mac"
 			]
@@ -42,9 +38,8 @@
 			"Name": "Actions",
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault",
-			"WhitelistPlatforms": [
+			"PlatformAllowList": [
 				"Win64",
-				"Win32",
 				"Linux",
 				"Mac"
 			]
@@ -53,31 +48,8 @@
 			"Name": "ActionsEditor",
 			"Type": "UncookedOnly",
 			"LoadingPhase": "PreDefault",
-			"WhitelistPlatforms": [
+			"PlatformAllowList": [
 				"Win64",
-				"Win32",
-				"Linux",
-				"Mac"
-			]
-		},
-		{
-			"Name": "OmegaWorld",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
-				"Win64",
-				"Win32",
-				"Linux",
-				"Mac"
-			]
-		},
-		{
-			"Name": "OmegaData",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
-				"Win64",
-				"Win32",
 				"Linux",
 				"Mac"
 			]
@@ -86,9 +58,38 @@
 			"Name": "OmegaFlow",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
+			"PlatformAllowList": [
 				"Win64",
-				"Win32",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "OmegaData",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "Omega5_GameFeatures",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "OmegaSequence",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
 				"Linux",
 				"Mac"
 			]
@@ -97,6 +98,14 @@
 	"Plugins": [
 		{
 			"Name": "EnhancedInput",
+			"Enabled": true
+		},
+		{
+			"Name": "GameFeatures",
+			"Enabled": true
+		},
+		{
+			"Name": "ModularGameplay",
 			"Enabled": true
 		}
 	]
