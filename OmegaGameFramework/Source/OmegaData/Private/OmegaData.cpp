@@ -18,4 +18,4 @@ void FOmegaData::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_MODULE(FOmegaWorld, OmegaData)
+IMPLEMENT_MODULE(FOmegaData, OmegaData)
