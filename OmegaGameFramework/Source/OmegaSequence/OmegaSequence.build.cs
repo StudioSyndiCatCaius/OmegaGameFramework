@@ -6,7 +6,7 @@ public class OmegaSequence : ModuleRules
 	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", "OmegaGameFramework"});
  
 		PublicIncludePaths.AddRange(new string[] {"OmegaSequence/Public"});
 		PrivateIncludePaths.AddRange(new string[] {"OmegaSequence/Private"});

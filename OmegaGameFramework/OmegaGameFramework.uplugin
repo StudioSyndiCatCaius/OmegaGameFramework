@@ -93,6 +93,16 @@
 				"Linux",
 				"Mac"
 			]
+		},
+		{
+			"Name": "OmegaDemo",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
 		}
 	],
 	"Plugins": [

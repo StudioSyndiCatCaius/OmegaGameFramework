@@ -3,7 +3,7 @@
 
 #include "OmegaLinearEventSubsystem.h"
 
-#include "OmegaLinearEventInstance.h"
+#include "Event/OmegaLinearEventInstance.h"
 #include "Kismet/GameplayStatics.h"
 
 void UOmegaLinearEventSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -18,14 +18,49 @@ void UOmegaLinearEventSubsystem::Deinitialize()
 }
 
 
-UOmegaLinearEventInstance* UOmegaLinearEventSubsystem::PlayLinearEvent(FLinearEventSequence Sequence)
+UOmegaLinearEventInstance* UOmegaLinearEventSubsystem::PlayLinearEvent(FLinearEventSequence Sequence, int32 StartingEvent)
 {
 	
-	UOmegaLinearEventInstance* TempEvent = NewObject<UOmegaLinearEventInstance>(this, UOmegaLinearEventInstance::StaticClass());
+	UOmegaLinearEventInstance* TempEventInst = NewObject<UOmegaLinearEventInstance>(this, UOmegaLinearEventInstance::StaticClass());
 
-	TempEvent->SubsystemRef = this;
-	TempEvent->SequenceData = Sequence;
-	TempEvents.Add(TempEvent);
-	TempEvent->NextEvent();
-	return TempEvent;
+	TempEventInst->SubsystemRef = this;
+	TempEventInst->SequenceData = Sequence;
+	TempEventInst->ActiveIndex = StartingEvent-1;
+	TempEvents.Add(TempEventInst);
+	TempEventInst->NextEvent("Root");
+	return TempEventInst;
+}
+
+UOmegaLinearEventInstance* UOmegaLinearEventSubsystem::PlayLinearEventFromID(FLinearEventSequence Sequence, FName ID)
+{
+	for(UOmegaLinearEvent* TempEvent : Sequence.Events)
+	{
+		if(TempEvent->EventID == ID)
+		{
+			return PlayLinearEvent(Sequence, Sequence.Events.Find(TempEvent));
+		}
+	}
+	return nullptr;
+}
+
+AOmegaLinearChoiceInstance* UOmegaLinearEventSubsystem::PlayLinearChoice(FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass)
+{
+	TSubclassOf<AOmegaLinearChoiceInstance> LocalClass;
+	if(InstanceClass)
+	{
+		LocalClass = InstanceClass;
+	}
+	else
+	{
+		LocalClass = AOmegaLinearChoiceInstance::StaticClass();
+	}
+	
+	AOmegaLinearChoiceInstance* LocalInst;
+	FTransform SpawnWorldPoint;
+	LocalInst = GetWorld()->SpawnActorDeferred<AOmegaLinearChoiceInstance>(LocalClass, SpawnWorldPoint, nullptr);
+	LocalInst->ChoiceData = Choices;
+	LocalInst->FinishSpawning(SpawnWorldPoint);
+	
+	
+	return LocalInst;
 }

@@ -9,20 +9,18 @@
 class UWorld;
 class UOmegaLinearEventSubsystem;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEventEnded);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEventEnded, const FString&, Flag);
 
 UCLASS(BlueprintType, Blueprintable, abstract, editinlinenew, hidecategories=Object, CollapseCategories)
 class OMEGASEQUENCE_API UOmegaLinearEvent : public UObject
 {
 	GENERATED_BODY()
-private:
-	UPROPERTY(Transient)
-	UWorld* WorldPrivate = nullptr;
-	
 public:
 	UOmegaLinearEvent(const FObjectInitializer& ObjectInitializer);
 	virtual UWorld* GetWorld() const override;
+
+	UPROPERTY()
+	UWorld* WorldPrivate = nullptr;
 	UPROPERTY()
 	UGameInstance* GameInstanceRef = nullptr;
 	UFUNCTION()
@@ -32,18 +30,25 @@ public:
 	
 	UPROPERTY()
 	FOnEventEnded EventEnded;
+
+	UPROPERTY(EditInstanceOnly, Category="LinearEvent", AdvancedDisplay)
+	FName EventID;
 	
 	///FUNCTIONS
+	///
+	UFUNCTION()
+	void Native_Begin();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnEventBegin();
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnEventEnd();
+	void OnEventEnd(const FString& Flag);
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")
-	void Finish();
+	void Finish(const FString& Flag);
 
-	
+	UFUNCTION(BlueprintImplementableEvent, Category="LinearEvent")
+	FString GetLogString() const;
 	
 };

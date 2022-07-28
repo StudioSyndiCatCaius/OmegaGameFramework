@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "OmegaLinearEvent.h"
+#include "Event/OmegaLinearEvent.h"
+#include "Choice/OmegaLinearChoiceInstance.h"
 #include "OmegaLinearEventSubsystem.generated.h"
 
 class UOmegaLinearEventInstance;
@@ -19,7 +20,9 @@ struct FLinearEventSequence
 
 };
 
-UCLASS()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLinearEventBegin, const UOmegaLinearEvent*, Event);
+
+UCLASS(DisplayName="Omega Sequence Subsystem")
 class OMEGASEQUENCE_API UOmegaLinearEventSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
@@ -32,9 +35,20 @@ public:
 	UPROPERTY()
 	UGameInstance* GameInstanceReference;
 	
-	UFUNCTION(BlueprintCallable, Category="LinearEvent")
-	UOmegaLinearEventInstance* PlayLinearEvent(FLinearEventSequence Sequence);
+	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="StartingEvent"))
+	UOmegaLinearEventInstance* PlayLinearEvent(FLinearEventSequence Sequence, int32 StartingEvent);
+
+	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="StartingEvent"))
+	UOmegaLinearEventInstance* PlayLinearEventFromID(FLinearEventSequence Sequence, FName ID);
 	
 	UPROPERTY()
 	TArray<UOmegaLinearEventInstance*> TempEvents;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnLinearEventBegin OnLinearEventBegin;
+
+
+	///CHOICE
+	UFUNCTION(BlueprintCallable, Category="LinearEvent")
+	AOmegaLinearChoiceInstance* PlayLinearChoice(FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass);
 };

@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "OmegaLinearEvent.h"
+#include "Event/OmegaLinearEvent.h"
+
 
 UOmegaLinearEvent::UOmegaLinearEvent(const FObjectInitializer& ObjectInitializer)
 {
@@ -13,7 +14,11 @@ UOmegaLinearEvent::UOmegaLinearEvent(const FObjectInitializer& ObjectInitializer
 
 UWorld* UOmegaLinearEvent::GetWorld() const
 {
-	if(GetGameInstance())
+	if(WorldPrivate)
+	{
+		return WorldPrivate;
+	}
+	else if(GetGameInstance())
 	{
 		return GetGameInstance()->GetWorld();
 	}
@@ -25,9 +30,17 @@ UGameInstance* UOmegaLinearEvent::GetGameInstance() const
 	return GameInstanceRef;
 }
 
-void UOmegaLinearEvent::Finish()
+void UOmegaLinearEvent::Native_Begin()
 {
-	OnEventEnd();
-	EventEnded.Broadcast();
+	/*
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->AddGameplayLog(GetLogString(), "Event");
+	*/
+	OnEventBegin();
+}
+
+void UOmegaLinearEvent::Finish(const FString& Flag)
+{
+	OnEventEnd(Flag);
+	EventEnded.Broadcast(Flag);
 	
 }
