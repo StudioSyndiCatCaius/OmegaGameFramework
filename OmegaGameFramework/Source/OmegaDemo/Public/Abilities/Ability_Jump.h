@@ -6,7 +6,7 @@
 #include "OmegaGameFramework/Public/OmegaAbility.h"
 #include "Ability_Jump.generated.h"
 
-UCLASS()
+UCLASS(Abstract)
 class OMEGADEMO_API AAbility_Jump : public AOmegaAbility
 {
 	GENERATED_BODY()

@@ -7,7 +7,10 @@
 
 #include "GameplayTagContainer.h"
 #include "InputAction.h"
+#include "Gameplay/CombatantComponent.h"
+
 #include "Input/InputReceiverComponent.h"
+#include "Widget/HUDLayer.h"
 
 #include "OmegaAbility.generated.h"
 //
@@ -20,6 +23,8 @@ class UCombatantComponent;
 class ACharacter;
 class UCharacterMovementComponent;
 class UEnhancedInputComponent;
+class UHUDLayer;
+class UTimelineComponent;
 
 UENUM()
 enum class EAbilityActivateInput
@@ -44,11 +49,20 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	
 	UFUNCTION()
 	void TryAssignControlInput(APawn* Pawn, AController* Controller);
 	
-public:	
+	
+	
+public:
+	UFUNCTION()
+	virtual void Native_AbilityActivated(class UObject* Context);
+	UFUNCTION()
+	virtual void Native_AbilityFinished(bool Cancelled);
+	UFUNCTION()
+	virtual void Native_ActivatedTick(float DeltaTime);
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -62,18 +76,18 @@ public:
 	void Native_Execute();
 
 	UFUNCTION()
-	void Native_Trigger();
+	void Native_InputTrigger();
 	
 	//**Start & End***//
 	UFUNCTION(BlueprintImplementableEvent)
 	void AbilityActivated(class UObject* Context);
-
+	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ability")
 	void AbilityFinished(bool Cancelled);
-
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void ActivatedTick(float DeltaTime);
-
+	
 	UFUNCTION(BlueprintNativeEvent, Category = "Ability")
 	bool CanActivate();
 	
@@ -112,6 +126,10 @@ public:
 	UPROPERTY(VisibleAnywhere, Category="Input")
 	class UInputReceiverComponent* DefaultInputReceiver;
 
+	//FlipFlops the input
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	bool FlipFlopInput;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	bool bActivateOnStarted;
 
@@ -127,6 +145,10 @@ public:
 //### Properties ###//
 // 
 
+	//### HUD ###//
+	UPROPERTY(EditDefaultsOnly, Category="HUD")
+	TSubclassOf<UHUDLayer> HudClass = UHUDLayer::StaticClass();
+	
 	UPROPERTY()
 	bool bIsKilling;
 	//Context Object//
@@ -167,6 +189,31 @@ public:
 	class ACharacter* CachedCharacter;
 	class UPawnMovementComponent* TempMoveComp;
 
+	UFUNCTION(BlueprintImplementableEvent, Category="Ability")
+	UTimelineComponent* GetAbilityActivationTimeline();
+	
+	//NAME Tags given to the owning actor upon ability GRANTED and removed upon Ability UNGRANTED
+	UPROPERTY(EditDefaultsOnly, Category="Tags")
+	TArray<FName> GrantedActorOwnerTags;
+	//NAME Tags given to the owning actor upon ability Activation and removed upon Ability Finish
+	UPROPERTY(EditDefaultsOnly, Category="Tags")
+	TArray<FName> ActiveActorOwnerTags;
+
+	void Private_SetSoftTagsOnActor(TArray<FName> TagList, bool Active)
+	{
+		for(FName TempTag : TagList)
+		{
+			if(Active)
+			{
+				CombatantOwner->GetOwner()->Tags.Add(TempTag);
+			}
+			else
+			{
+				int32 TempIndex = CombatantOwner->GetOwner()->Tags.Find(TempTag);
+				CombatantOwner->GetOwner()->Tags.RemoveAt(TempIndex);
+			}
+		}
+	}
 private:
 
 	UFUNCTION()

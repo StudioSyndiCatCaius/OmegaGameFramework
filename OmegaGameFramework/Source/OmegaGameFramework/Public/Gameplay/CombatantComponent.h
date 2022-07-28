@@ -369,30 +369,42 @@ public:
 	////////// -- Targeting -- //////////
 	///////////////////////////////////
 
-	UPROPERTY(BlueprintReadOnly, Category="Target")
+	UPROPERTY()
 	TArray<UCombatantComponent*> TargetList;
 
-	UPROPERTY(BlueprintReadOnly, Category="Target")
+	UPROPERTY()
 	UCombatantComponent* ActiveTarget;
 	
-	UPROPERTY(BlueprintReadOnly, Category="Target")
+	UPROPERTY()
 	int32 ActiveTargetIndex;
 
-	UFUNCTION(BlueprintCallable, Category="Target")
+	UFUNCTION(BlueprintCallable, Category="Target", DisplayName="Register Target")
 	void AddTargetToList(UCombatantComponent* Combatant);
 	
 	UFUNCTION(BlueprintCallable, Category="Target")
 	void AddTargetsToList(TArray<UCombatantComponent*> Combatants, bool bClearListFirst);
 	
-	UFUNCTION(BlueprintCallable, Category="Target")
+	UFUNCTION(BlueprintCallable, Category="Target", DisplayName="Unregister Target")
 	void RemoveTargetFromList(UCombatantComponent* Combatant);
 	
 	UFUNCTION(BlueprintCallable, Category="Target")
 	void ClearTargetList();
 
+	UFUNCTION(BlueprintPure, Category="Target")
+	TArray<UCombatantComponent*> GetRegisteredTargetList();
+	
 	UFUNCTION(BlueprintCallable, Category="Target")
 	void SetActiveTarget(UCombatantComponent* Combatant);
 
+	UFUNCTION(BlueprintPure, Category="Target")
+	UCombatantComponent* GetActiveTarget();
+
+	UFUNCTION(BlueprintPure, Category="Target")
+	int32 GetActiveTargetIndex();
+
+	UFUNCTION(BlueprintCallable, Category="Target")
+	UCombatantComponent* CycleActiveTarget(int32 Amount);
+	
 	UFUNCTION(BlueprintCallable, Category="Target")
 	void ClearActiveTarget();
 	

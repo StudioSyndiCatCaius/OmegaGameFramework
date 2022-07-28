@@ -8,6 +8,8 @@
 #include "Input/InputReceiverComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
+#include "Components/TimelineComponent.h"
+#include "Player/OmegaPlayerSubsystem.h"
 
 // Sets default values
 AOmegaAbility::AOmegaAbility()
@@ -24,15 +26,17 @@ void AOmegaAbility::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Private_SetSoftTagsOnActor(GrantedActorOwnerTags, true);
+
 	DefaultInputReceiver->OverrideInputOwner(CombatantOwner->GetOwner());
 	//Bind Default Inputs
 	if(bActivateOnStarted)
 	{
-		DefaultInputReceiver->OnInputStarted.AddDynamic(this, &AOmegaAbility::Native_Execute);
+		DefaultInputReceiver->OnInputStarted.AddDynamic(this, &AOmegaAbility::Native_InputTrigger);
 	}
 	if(bActivateOnTriggered)
 	{
-		DefaultInputReceiver->OnInputTriggered.AddDynamic(this, &AOmegaAbility::Native_Execute);
+		DefaultInputReceiver->OnInputTriggered.AddDynamic(this, &AOmegaAbility::Native_InputTrigger);
 	}
 	if(bFinishOnInputComplete)
 	{
@@ -44,12 +48,26 @@ void AOmegaAbility::BeginPlay()
 	}
 	
 	GetGameInstance()->GetOnPawnControllerChanged().AddDynamic(this, &AOmegaAbility::TryAssignControlInput);
+
+
+	if(CombatantOwner->GetOwnerPlayerController() && HudClass)
+	{
+		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->AddHUDLayer(HudClass, this);
+	}
+
 	
 	SetInputEnabledForOwner(true);
 }
 
 void AOmegaAbility::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Private_SetSoftTagsOnActor(GrantedActorOwnerTags, false);
+	
+	if(CombatantOwner->GetOwnerPlayerController() && HudClass)
+	{
+		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->RemoveHUDLayer(HudClass, "AbilityUngranted");
+	}
+	
 	Super::EndPlay(EndPlayReason);
 	RecieveFinish(true);
 }
@@ -65,13 +83,38 @@ void AOmegaAbility::TryAssignControlInput(APawn* Pawn, AController* Controller)
 	}
 }
 
+void AOmegaAbility::Native_AbilityActivated(UObject* Context)
+{
+	if(GetAbilityActivationTimeline())
+	{
+		GetAbilityActivationTimeline()->Play();
+	}
+	Private_SetSoftTagsOnActor(ActiveActorOwnerTags, true);
+	AbilityActivated(Context);
+}
+
+void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
+{
+	if(GetAbilityActivationTimeline())
+	{
+		GetAbilityActivationTimeline()->Reverse();
+	}
+	Private_SetSoftTagsOnActor(ActiveActorOwnerTags, false);
+	AbilityFinished(Cancelled);
+}
+
+void AOmegaAbility::Native_ActivatedTick(float DeltaTime)
+{
+	ActivatedTick(DeltaTime);
+}
+
 // Called every frame
 void AOmegaAbility::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if(bIsActive)
 	{
-		ActivatedTick(DeltaTime);
+		Native_ActivatedTick(DeltaTime);
 	}
 }
 
@@ -88,7 +131,7 @@ void AOmegaAbility::Execute(UObject* Context)
 			bIsActive = true;
 			CombatantOwner->CancelAbilitiesWithTags(CancelAbilities);
 			CombatantOwner->SetAbilityActive(true, this);
-			AbilityActivated(Context);
+			Native_AbilityActivated(Context);
 	}
 }
 
@@ -98,10 +141,20 @@ void AOmegaAbility::Native_Execute()
 	Execute(ContextObject);
 }
 
-void AOmegaAbility::Native_Trigger()
+void AOmegaAbility::Native_InputTrigger()
 {
-
+	if(FlipFlopInput && bIsActive)
+	{
+		CompleteAbility();
+	}
+	else
+	{
+		Native_Execute();
+	}
 }
+
+
+
 
 ////Local Activate / Deactivate
 
@@ -109,6 +162,7 @@ bool AOmegaAbility::CanActivate_Implementation()
 {
 	return true;
 }
+
 
 bool AOmegaAbility::SetInputEnabledForOwner(bool Enabled)
 {
@@ -205,7 +259,7 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 	{
 		bIsActive = false;
 		CombatantOwner->SetAbilityActive(false, this);
-		AbilityFinished(bCancel);
+		Native_AbilityFinished(bCancel);
 		OnAbilityFinished.Broadcast(bCancel);
 		
 	}

@@ -30,3 +30,7 @@ void AAbility_Sprint::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+float AAbility_Sprint::GetSprintSpeedMultiplier_Implementation()
+{
+	return DefaultSpeedMultiplier;
+}

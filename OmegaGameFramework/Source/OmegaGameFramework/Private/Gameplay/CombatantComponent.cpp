@@ -996,11 +996,66 @@ void UCombatantComponent::ClearTargetList()
 	}
 	TargetList.Empty();
 }
-	
+
+TArray<UCombatantComponent*> UCombatantComponent::GetRegisteredTargetList()
+{
+	TArray<UCombatantComponent*> LocalTargets;
+	for(UCombatantComponent* TempEntry : TargetList)
+	{
+		if(TempEntry)
+		{
+			LocalTargets.AddUnique(TempEntry);
+		}
+	}
+	return LocalTargets;
+}
+
 void UCombatantComponent::SetActiveTarget(UCombatantComponent* Combatant)
 {
 	ActiveTarget = Combatant;
 	OnActiveTargetChanged.Broadcast(ActiveTarget, true);
+}
+
+UCombatantComponent* UCombatantComponent::GetActiveTarget()
+{
+	return ActiveTarget;
+}
+
+int32 UCombatantComponent::GetActiveTargetIndex()
+{
+	return 0;
+}
+
+UCombatantComponent* UCombatantComponent::CycleActiveTarget(int32 Amount)
+{
+	UCombatantComponent* TempCombatant;
+	
+	int32 MaxSize = GetRegisteredTargetList().Num();
+	if(GetActiveTarget())
+	{
+		TempCombatant = GetActiveTarget();
+	}
+	else if(GetRegisteredTargetList().IsValidIndex(0))
+	{
+		TempCombatant = GetRegisteredTargetList()[0];
+	}
+	else
+	{
+		return nullptr;
+	}
+
+	int Tempindex = GetActiveTargetIndex()+Amount;
+
+	if(Tempindex < 0)
+	{
+		Tempindex = MaxSize;
+	}
+	else if(Tempindex > MaxSize)
+	{
+		Tempindex = 0;
+	}
+
+	return TempCombatant;
 }
 
 void UCombatantComponent::ClearActiveTarget()

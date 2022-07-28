@@ -7,7 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "Ability_Dodge.generated.h"
 
-UCLASS()
+UCLASS(Abstract)
 class OMEGADEMO_API AAbility_Dodge : public AOmegaAbility
 {
 	GENERATED_BODY()
@@ -23,4 +23,7 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Targeting")
+	UAnimMontage* GetDodgeMontage();
 };

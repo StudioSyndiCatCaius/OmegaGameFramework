@@ -7,7 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "Ability_Sprint.generated.h"
 
-UCLASS()
+UCLASS(Abstract)
 class OMEGADEMO_API AAbility_Sprint : public AOmegaAbility
 {
 	GENERATED_BODY()
@@ -34,7 +34,3 @@ public:
 	float GetSprintSpeedMultiplier();
 };
 
-float AAbility_Sprint::GetSprintSpeedMultiplier_Implementation()
-{
-	return DefaultSpeedMultiplier;
-}

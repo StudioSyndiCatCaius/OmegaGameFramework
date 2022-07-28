@@ -6,7 +6,7 @@ public class OmegaDemo : ModuleRules
 	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", 
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", "UMG",
 			"OmegaGameFramework",
 			"OmegaSequence",
 			"OmegaData"
