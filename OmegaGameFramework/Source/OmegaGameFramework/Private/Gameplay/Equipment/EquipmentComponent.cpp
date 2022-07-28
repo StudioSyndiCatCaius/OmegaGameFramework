@@ -3,6 +3,7 @@
 
 #include "Gameplay/Equipment/EquipmentComponent.h"
 #include "Engine/DataAsset.h"
+#include "Gameplay/CombatantComponent.h"
 #include "Gameplay/GameplayTagsInterface.h"
 
 
@@ -13,17 +14,29 @@ UEquipmentComponent::UEquipmentComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	
 }
 
 
 // Called when the game starts
 void UEquipmentComponent::BeginPlay()
 {
-	Super::BeginPlay();
-
-	// ...
+	if(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
+	{
+		Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->AddAttrbuteModifier(this);
+	}
 	
+	Super::BeginPlay();
+}
+
+void UEquipmentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
+	{
+		Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->RemoveAttributeModifier(this);
+	}
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 
@@ -114,5 +127,22 @@ UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot(FString Slot, bool& b
 	}
 	bValidItem = false;
 	return nullptr;
+}
+
+TArray<FOmegaAttributeModifier> UEquipmentComponent::GetModifierValues_Implementation()
+{
+	TArray<FOmegaAttributeModifier> OutMods;
+	
+	TArray<UPrimaryDataAsset*> LocalItems;
+	EquippedItems.GenerateValueArray(LocalItems);
+
+	for(auto* TempAsset : LocalItems)
+	{
+		if(TempAsset && TempAsset->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempAsset));
+		}
+	}
+	return OutMods;
 }
 

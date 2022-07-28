@@ -21,6 +21,7 @@ void UTurnBasedManagerComponent::BeginPlay()
 	Super::BeginPlay();
 
 	TurnManager = NewObject<UTurnManagerBase>(this, TurnManagerClass);
+	TurnManager->TurnManagerRef = this;
 	// ...
 	
 }
@@ -120,7 +121,7 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 }
 
 // NEXT TURN
-bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags)
+bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags, FString& FailReason)
 {
 	//Remove current member
 	if(GetActiveTurnMember() != nullptr)
@@ -147,8 +148,15 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 
 	if(GetActiveTurnMember() != nullptr)
 	{
+		FString LocalFailReason;
+		if(TurnManager->FailBeingTurn(FailReason))
+		{
+			return false;
+		}
+		FailReason = "";
 		OnTurnStart.Broadcast(GetActiveTurnMember(), Flag, Tags);
 
+		
 		//Function on Combatant Actor
 		if(DoesCombatantUseInterface(GetActiveTurnMember()))
 		{

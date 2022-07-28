@@ -2,11 +2,11 @@
 
 
 #include "Abilities/Ability_Targeting.h"
-
-#include "Gameplay/CombatantComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/SphereComponent.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values
 AAbility_Targeting::AAbility_Targeting()

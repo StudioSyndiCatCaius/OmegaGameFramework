@@ -60,7 +60,7 @@ public:
 	TArray<UCombatantComponent*> GenerateTurnOrder();
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	bool NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags);
+	bool NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags, FString& FailReason);
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
 	void ClearTurnOrder(FString Flag, FGameplayTagContainer Tags);

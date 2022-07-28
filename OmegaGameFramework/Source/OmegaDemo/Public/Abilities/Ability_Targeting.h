@@ -4,17 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "OmegaAbility.h"
-#include "Camera/CameraComponent.h"
-#include "Components/SphereComponent.h"
-#include "Components/WidgetComponent.h"
-#include "GameFramework/Actor.h"
 #include "Ability_Targeting.generated.h"
+
+class USphereComponent;
+class UWidgetComponent;
+class UCameraComponent;
 
 UCLASS(Abstract)
 class OMEGADEMO_API AAbility_Targeting : public AOmegaAbility
 {
 	GENERATED_BODY()
 
+		
 public:
 	// Sets default values for this actor's properties
 	AAbility_Targeting();

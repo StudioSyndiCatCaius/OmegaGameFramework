@@ -13,13 +13,15 @@
 #include "Widget/HUDLayer.h"
 
 #include "OmegaAbility.generated.h"
-//
-// 
+
+
+
+
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbilityEnd, bool, bCancelled);
 
 // Forward Declarations
-class UCombatantComponent;
+
 class ACharacter;
 class UCharacterMovementComponent;
 class UEnhancedInputComponent;
@@ -193,10 +195,10 @@ public:
 	UTimelineComponent* GetAbilityActivationTimeline();
 	
 	//NAME Tags given to the owning actor upon ability GRANTED and removed upon Ability UNGRANTED
-	UPROPERTY(EditDefaultsOnly, Category="Tags")
+	UPROPERTY(EditDefaultsOnly, Category="Ability")
 	TArray<FName> GrantedActorOwnerTags;
 	//NAME Tags given to the owning actor upon ability Activation and removed upon Ability Finish
-	UPROPERTY(EditDefaultsOnly, Category="Tags")
+	UPROPERTY(EditDefaultsOnly, Category="Ability")
 	TArray<FName> ActiveActorOwnerTags;
 
 	void Private_SetSoftTagsOnActor(TArray<FName> TagList, bool Active)

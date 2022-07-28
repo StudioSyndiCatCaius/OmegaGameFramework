@@ -6,6 +6,8 @@
 
 void UCombatInputUtility::Execute()
 {
+	/*
 	bool bDumSuc;
 	CombatOwner->ExecuteAbility(BoundAblityClass, CombatOwner, bDumSuc);
+	*/
 }

@@ -8,15 +8,27 @@
 
 #include "TurnManagerBase.generated.h"
 
-/**
-* 
-*/
+class UTurnBasedManagerComponent;
+
 UCLASS(BlueprintType, Blueprintable)
 class OMEGAGAMEFRAMEWORK_API UTurnManagerBase : public UObject
 {
 	GENERATED_BODY()
 	
-	public:
+public:
+
+	UPROPERTY()
+	UTurnBasedManagerComponent* TurnManagerRef;
+	
+	UFUNCTION(BlueprintPure, Category="TurnManager")
+	UTurnBasedManagerComponent* GetOwningTurnManager() const
+	{
+		return TurnManagerRef;
+	}
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	bool ShouldTargetActFirst(UCombatantComponent* TargetCombatant, UCombatantComponent* ComparedCombatant);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	bool FailBeingTurn(FString& FailReason);
 };

@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
+#include "Gameplay/DataInterface_AttributeModifier.h"
 #include "EquipmentComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipped, UPrimaryDataAsset*, Item, FString, Slot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUnequipped, UPrimaryDataAsset*, Item, FString, Slot);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UEquipmentComponent : public UActorComponent
+class OMEGAGAMEFRAMEWORK_API UEquipmentComponent : public UActorComponent, public IDataInterface_AttributeModifier
 {
 	GENERATED_BODY()
 
@@ -22,7 +23,8 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
@@ -62,4 +64,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnItemUnequipped OnItemUnequipped;
+
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 };

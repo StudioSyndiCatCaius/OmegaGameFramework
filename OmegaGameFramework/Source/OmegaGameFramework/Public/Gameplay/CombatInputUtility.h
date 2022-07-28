@@ -6,14 +6,14 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "OmegaAbility.h"
+
 #include "CombatInputUtility.generated.h"
 
 class UCombatantComponent;
 class UInputComponent;
 class UEnhancedInputComponent;
 class UInputAction;
-
+class UOmegaAbility;
 class AOmegAbility;
 
 /**
@@ -28,10 +28,11 @@ public:
 
 	UFUNCTION()
 	void Execute();
-
+/*
 	UPROPERTY()
 	class UCombatantComponent* CombatOwner;
 
 	UPROPERTY()
 	TSubclassOf<AOmegaAbility> BoundAblityClass;
+	*/
 };

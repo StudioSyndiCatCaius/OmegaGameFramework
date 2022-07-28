@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "OmegaAbility.h"
-#include "GameFramework/Actor.h"
 #include "Ability_Sprint.generated.h"
 
 UCLASS(Abstract)
@@ -23,6 +22,8 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void Native_AbilityActivated(UObject* Context) override;
+	virtual void Native_AbilityFinished(bool Cancelled) override;
 	
 	UPROPERTY()
 	float DefaultMoveSpeed;
@@ -32,5 +33,7 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, Category="Sprint")
 	float GetSprintSpeedMultiplier();
-};
 
+	UFUNCTION()
+	void Private_TryAdjustMoveSpeed(float Multi);
+};

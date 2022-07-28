@@ -4,6 +4,7 @@
 #include "Gameplay/CombatantComponent.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "OmegaAbility.h"
 #include "OmegaGameplayEffect.h"
 #include "OmegaGameplaySubsystem.h"
 #include "Widget/WidgetInterface_Combatant.h"

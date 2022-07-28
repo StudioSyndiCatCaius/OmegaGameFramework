@@ -4,14 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "AttributeModifierContainer.h"
-
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
-#include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
-#include "Engine/EngineTypes.h"
-#include "Engine/World.h"
-
 #include "Gameplay/CombatInputUtility.h"
 
 #include "Components/ActorComponent.h"
