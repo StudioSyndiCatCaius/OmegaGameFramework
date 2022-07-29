@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataTooltip.h"
 #include "GameplayTagContainer.h"
 #include "WidgetInterface_Input.h"
 #include "Blueprint/UserWidget.h"
@@ -107,6 +108,19 @@ public:
 	USoundBase* HoverSound;
 	UPROPERTY(EditDefaultsOnly, Category="Audio")
 	USoundBase* ErrorSound;
+
+	//------------------------
+	// TOOLTIP
+	//------------------------
+
+	UPROPERTY(EditDefaultsOnly, Category="Tooltip")
+	TSubclassOf<UDataTooltip> DefaultTooltipWidget;
+
+	UPROPERTY()
+	UDataTooltip* DefaultCreatedTooltip;
+	
+	UFUNCTION(BlueprintPure, Category="Tooltip")
+	UDataTooltip* GetDataTooltipWidget();
 	
 	
 //BINDABLE WIDGETS

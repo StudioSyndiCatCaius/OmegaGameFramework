@@ -36,6 +36,8 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 	Unhover();
 }
 
+//----------------------NATIVE CONSTRUCT-------------------------------------------//
+
 void UDataWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -44,6 +46,19 @@ void UDataWidget::NativeConstruct()
 		GetButtonWidget()->OnClicked.AddDynamic(this, &UDataWidget::Select);
 		GetButtonWidget()->OnHovered.AddDynamic(this, &UDataWidget::Hover);
 	}
+
+	TSubclassOf<UDataTooltip> LocalTooltipClass;
+	if(DefaultTooltipWidget)
+	{
+		LocalTooltipClass = DefaultTooltipWidget;
+	}
+	else
+	{
+		LocalTooltipClass = UDataTooltip::StaticClass();
+	}
+
+	DefaultCreatedTooltip = CreateWidget<UDataTooltip>(this, LocalTooltipClass);
+	DefaultCreatedTooltip->SetOwningWidget(this);
 }
 
 FString UDataWidget::GetAssetLabel()
@@ -202,4 +217,9 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 	OnSourceAssetChanged(Asset);
 	}
 	
+}
+
+UDataTooltip* UDataWidget::GetDataTooltipWidget()
+{
+	return DefaultCreatedTooltip;
 }
