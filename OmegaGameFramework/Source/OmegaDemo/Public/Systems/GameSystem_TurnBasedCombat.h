@@ -36,7 +36,8 @@ public:
 	TSubclassOf<AOmegaAbility> TurnAbility;
 	
 	UFUNCTION()
-	void OnTurnBegin(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void OnTurnBegin(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer GameplayTags);
+
 	UFUNCTION()
 	void TurnAbilityFinish(bool Cancelled);
 	UFUNCTION()

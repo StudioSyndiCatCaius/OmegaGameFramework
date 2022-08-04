@@ -11,7 +11,7 @@ AGameSystem_TurnBasedCombat::AGameSystem_TurnBasedCombat()
 {
 	//COMPONENTS
 	CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	TurnManager = CreateDefaultSubobject<UTurnBasedManagerComponent>(TEXT("Root"));
+	TurnManager = CreateDefaultSubobject<UTurnBasedManagerComponent>(TEXT("Turn Manager"));
 	
 	
 	PrimaryActorTick.bCanEverTick = true;
@@ -32,7 +32,7 @@ void AGameSystem_TurnBasedCombat::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AGameSystem_TurnBasedCombat::OnTurnBegin(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+void AGameSystem_TurnBasedCombat::OnTurnBegin(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer GameplayTags)
 {
 	Combatant->GrantAbility(TurnAbility);
 	bool LocalSuccess;
@@ -47,5 +47,9 @@ void AGameSystem_TurnBasedCombat::OnTurnBegin(UCombatantComponent* Combatant, FS
 void AGameSystem_TurnBasedCombat::TurnAbilityFinish(bool Cancelled)
 {
 	
+}
+
+void AGameSystem_TurnBasedCombat::TryAdvanceTurn()
+{
 }
 
