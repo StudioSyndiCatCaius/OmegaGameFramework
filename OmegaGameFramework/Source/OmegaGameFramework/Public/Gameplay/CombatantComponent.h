@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AttributeModifierContainer.h"
+#include "DataInterface_General.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
 #include "Kismet/GameplayStatics.h"
@@ -51,7 +52,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActiveTargetChanged, UCombatantC
 	(GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, ErrorText))
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UActorComponent
+class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UActorComponent, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -75,12 +76,6 @@ public:
 	////////////////////////////////////
 	////////// -- General -- //////////
 	///////////////////////////////////
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "General")
-	class UPrimaryDataAsset* CombatantDataAsset;
-
-	UPROPERTY(EditAnywhere, Category = "General", meta = (DisplayName = "Name"))
-	FText DisplayName;
 
 	UPROPERTY()
 	class UEnhancedInputComponent* OwnerInputComp;
@@ -211,6 +206,29 @@ public:
 	UFUNCTION(BlueprintPure, Category="Combatant")
 	APlayerController* GetOwnerPlayerController();
 
+	////////////////////////////////////
+	////////// -- General Data Interface -- ////////
+	///////////////////////////////////
+
+	bool CombatantDataAssetIsValidData() const
+	{
+		return CombatantDataAsset && CombatantDataAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass());
+	}
+	
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "General")
+	class UPrimaryDataAsset* CombatantDataAsset;
+
+	UPROPERTY(EditAnywhere, Category = "General", meta = (DisplayName = "Name"))
+	FText DisplayName;
+	UPROPERTY(EditAnywhere, Category = "General", meta = (DisplayName = "Description"))
+	FText CombatantDescription;
+	UPROPERTY(EditAnywhere, Category = "General", meta = (DisplayName = "Icon"))
+	FSlateBrush CombatantIcon;
+	
 	////////////////////////////////////
 	////////// -- Ability -- ////////
 	///////////////////////////////////

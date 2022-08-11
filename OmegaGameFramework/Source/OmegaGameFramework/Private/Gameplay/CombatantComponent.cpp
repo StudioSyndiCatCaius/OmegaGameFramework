@@ -271,6 +271,44 @@ APlayerController* UCombatantComponent::GetOwnerPlayerController()
 	}
 }
 
+
+//--------------------------//
+//General Overrides
+//--------------------------//
+void UCombatantComponent::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	if(CombatantDataAssetIsValidData())
+	{
+		IDataInterface_General::Execute_GetGeneralDataText(CombatantDataAsset, Label, Context, Name, Description);
+	}
+	else
+	{
+		Name = DisplayName;
+		Description = CombatantDescription;
+	}
+}
+
+void UCombatantComponent::GetGeneralAssetColor_Implementation(FLinearColor& Color)
+{
+	
+	//IDataInterface_General::GetGeneralAssetColor_Implementation(Color);
+}
+
+void UCombatantComponent::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+                                                              UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	if(CombatantDataAssetIsValidData())
+	{
+		IDataInterface_General::Execute_GetGeneralDataImages(CombatantDataAsset, Label, Context, Texture, Material, Brush);
+	}
+	else
+	{
+		Brush = CombatantIcon;
+	}
+	//IDataInterface_General::GetGeneralDataImages_Implementation(Label, Context, Texture, Material, Brush);
+}
+
 /////GRANT ABILITY
 	///
 bool UCombatantComponent::GrantAbility(TSubclassOf<AOmegaAbility> AbilityClass)

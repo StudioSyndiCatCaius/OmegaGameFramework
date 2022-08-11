@@ -157,6 +157,10 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category="DataList")
 	UObject* ListOwner;
+
+	//DESCRIPTION
+	UPROPERTY(EditInstanceOnly, Category="DataList")
+	UTextBlock* DescriptionTextBlock;
 	
 protected:
 

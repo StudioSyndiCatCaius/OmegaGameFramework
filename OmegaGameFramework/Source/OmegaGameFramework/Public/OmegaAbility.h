@@ -91,7 +91,7 @@ public:
 	void ActivatedTick(float DeltaTime);
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Ability")
-	bool CanActivate();
+	bool CanActivate(const UObject* Context);
 	
 	UFUNCTION(BlueprintCallable, Category="Ability")
 	bool SetInputEnabledForOwner(bool Enabled);
@@ -144,6 +144,24 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	bool bFinishOnInputCancel;
 
+	//-----------------------//
+	// Cooldown
+	//----------------------//
+	UFUNCTION(BlueprintImplementableEvent, Category="Cooldown")
+	float GetCooldownTime();
+
+	UFUNCTION(BlueprintPure, Category="Cooldown")
+	bool IsAbilityInCooldown() const;
+
+	UFUNCTION(BlueprintPure, Category="Cooldown")
+	void GetRemainingCooldownValues(float& Normalized, float& Seconds);
+	
+	UPROPERTY()
+	float CooldownLerp;
+
+	UPROPERTY(EditDefaultsOnly, Category="Cooldown")
+	bool BeginInCooldown;
+	
 //### Properties ###//
 // 
 

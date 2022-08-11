@@ -9,7 +9,7 @@
 #include "Gameplay/DataInterface_OmegaEffect.h"
 #include "Ability_AutoAttack.generated.h"
 
-UCLASS()
+UCLASS(Abstract)
 class OMEGADEMO_API AAbility_AutoAttack : public AOmegaAbility, public IDataInterface_OmegaEffect
 {
 	GENERATED_BODY()

@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
 // Sets default values
@@ -19,6 +20,8 @@ AOmegaAbility::AOmegaAbility()
 	SetActorHiddenInGame(true);
 	DefaultInputReceiver = CreateDefaultSubobject<UInputReceiverComponent>(TEXT("Default Input Reciever"));
 	bActivateOnStarted = true;
+
+	
 }
 
 // Called when the game starts or when spawned
@@ -55,6 +58,15 @@ void AOmegaAbility::BeginPlay()
 		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->AddHUDLayer(HudClass, this);
 	}
 
+	//COOLDOWN
+	if(BeginInCooldown)
+	{
+		CooldownLerp = 0;
+	}
+	else
+	{
+		CooldownLerp = 1;
+	}
 	
 	SetInputEnabledForOwner(true);
 }
@@ -116,6 +128,12 @@ void AOmegaAbility::Tick(float DeltaTime)
 	{
 		Native_ActivatedTick(DeltaTime);
 	}
+
+	//COOLDOWN TICk
+	if(!bIsActive && !IsAbilityInCooldown())
+	{
+		CooldownLerp  = UKismetMathLibrary::FInterpTo_Constant(CooldownLerp, 1.0, DeltaTime, 1/GetCooldownTime());
+	}
 }
 
 void AOmegaAbility::Execute(UObject* Context)
@@ -123,15 +141,23 @@ void AOmegaAbility::Execute(UObject* Context)
 	// Success if:
 	if(!bIsActive																							// Ability is not already active
 		&& !CombatantOwner->IsAbilityTagBlocked(AbilityTags)												// Ability tags are not blocked
-		&& CanActivate() && !CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags)						// Combatant does not have any restricted tags
+		&& CanActivate(Context) && !CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags)				// Combatant does not have any restricted tags
 		&& (CombatantOwner->CombatantHasAllTag(RequiredOwnerTags) || RequiredOwnerTags.IsEmpty())			// Combatant has all required tags.
+		&& !IsAbilityInCooldown()																			// Is Ability In Cooldown?
 		)
 	{
-			UE_LOG(LogTemp, Warning, TEXT("Valid Execute"));
-			bIsActive = true;
-			CombatantOwner->CancelAbilitiesWithTags(CancelAbilities);
-			CombatantOwner->SetAbilityActive(true, this);
-			Native_AbilityActivated(Context);
+		UE_LOG(LogTemp, Warning, TEXT("Valid Execute"));
+		bIsActive = true;
+		CombatantOwner->CancelAbilitiesWithTags(CancelAbilities);
+		CombatantOwner->SetAbilityActive(true, this);
+
+		// TIMLEINE
+		if(GetAbilityActivationTimeline())
+		{
+			GetAbilityActivationTimeline()->Play();
+		}
+
+		Native_AbilityActivated(Context);
 	}
 }
 
@@ -158,7 +184,7 @@ void AOmegaAbility::Native_InputTrigger()
 
 ////Local Activate / Deactivate
 
-bool AOmegaAbility::CanActivate_Implementation()
+bool AOmegaAbility::CanActivate_Implementation(const UObject* Context)
 {
 	return true;
 }
@@ -248,6 +274,20 @@ void AOmegaAbility::RemoveBlockedAbilityTags(FGameplayTagContainer RemovedTags)
 	}
 }
 
+//------------------//
+/// COOLDOWN
+//------------------//
+bool AOmegaAbility::IsAbilityInCooldown() const
+{
+	return CooldownLerp < 1;
+}
+
+void AOmegaAbility::GetRemainingCooldownValues(float& Normalized, float& Seconds)
+{
+	Normalized = CooldownLerp;
+	Seconds = GetCooldownTime()/CooldownLerp;
+}
+
 /////////////////////
 ///Input
 /////////////////////
@@ -261,7 +301,11 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 		CombatantOwner->SetAbilityActive(false, this);
 		Native_AbilityFinished(bCancel);
 		OnAbilityFinished.Broadcast(bCancel);
-		
+		// TIMLEINE
+		if(GetAbilityActivationTimeline())
+		{
+			GetAbilityActivationTimeline()->Reverse();
+		}
 	}
 }
 	

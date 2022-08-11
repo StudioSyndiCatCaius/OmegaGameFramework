@@ -16,6 +16,7 @@
 
 #include "Widgets/Layout/Anchors.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/TextBlock.h"
 #include "Engine/DataAsset.h"
 
 
@@ -445,10 +446,22 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 		{
 			Cast<UScrollBox>(ListPanel)->ScrollWidgetIntoView(DataWidget);
 		}
+
+		if(DescriptionTextBlock)
+		{
+			FText DumText;
+			FText DumDesc;
+			IDataInterface_General::Execute_GetGeneralDataText(DataWidget->ReferencedAsset, "DumLabel", this, DumText, DumDesc);
+			DescriptionTextBlock->SetText(DumDesc);
+		}
 	}
 	else
 	{
 		OnEntryUnhovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget));
+		if(DescriptionTextBlock)
+		{
+			DescriptionTextBlock->SetText(FText::FromString(""));
+		}
 	}
 }
 
