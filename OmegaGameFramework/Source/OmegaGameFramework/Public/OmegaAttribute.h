@@ -35,7 +35,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "General")
 	FLinearColor AttributeColor;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "General")
+	FLinearColor DamageColor;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
 	float StartValuePercentage;
 

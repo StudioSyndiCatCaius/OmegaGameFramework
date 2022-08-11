@@ -6,6 +6,7 @@
 #include "DataTooltip.h"
 #include "GameplayTagContainer.h"
 #include "WidgetInterface_Input.h"
+#include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
 #include "DataWidget.generated.h"
 
@@ -24,7 +25,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlight, UDataWidget*, DataWid
  * 
  */
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget
+class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
 	

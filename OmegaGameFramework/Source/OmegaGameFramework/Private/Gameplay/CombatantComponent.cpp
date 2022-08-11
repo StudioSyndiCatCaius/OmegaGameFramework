@@ -16,6 +16,7 @@
 #include "Gameplay/ActorInterface_Combatant.h"
 #include "Gameplay/DataInterface_Combatant.h"
 #include "Gameplay/DataInterface_DamageModifier.h"
+#include "Gameplay/Combatant/AttributeDamagePopup.h"
 #include "Kismet/KismetTextLibrary.h"
 
 
@@ -488,6 +489,15 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 	CurrentAttributeValues.Add(Attribute, CurrentValue);				
 	OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator);
 
+	//DamagePopup
+	if(DamagePopupClass)
+	{
+		UAttributeDamagePopup* LocalPopup = Cast<UAttributeDamagePopup>(CreateWidget(GetWorld(), DamagePopupClass));
+		LocalPopup->Native_OnDamagePopup(this, Attribute, FinalDamage, Instigator);
+
+		LocalPopup->AddToViewport();
+	}
+	
 	Update();
 	return FinalDamage;
 }

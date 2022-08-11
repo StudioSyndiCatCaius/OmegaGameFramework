@@ -4,6 +4,25 @@
 #include "OmegaDataItem.h"
 
 
+bool UOmegaDataItem::AreTagsAccepted(const FString& Query, FGameplayTagContainer Tags)
+{
+	if(TagQueries.Contains(Query))
+	{
+		return Tags.MatchesQuery(TagQueries.FindOrAdd(Query));
+	}
+	return true;
+}
+
+bool UOmegaDataItem::IsObjectAccepted(const FString& Query, UObject* Object)
+{
+	FGameplayTagContainer TagsToCheck;
+	if(Object && Object->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+	{
+		TagsToCheck = IGameplayTagsInterface::Execute_GetObjectGameplayTags(Object);
+	}
+	return AreTagsAccepted(Query, TagsToCheck);
+}
+
 TArray<UOmegaDataTrait*> UOmegaDataItem::GetAllValidTraits()
 {
 	TArray<UOmegaDataTrait*> OutTraits;
@@ -121,7 +140,12 @@ FGameplayTag UOmegaDataItem::GetObjectGameplayCategory_Implementation()
 
 FGameplayTagContainer UOmegaDataItem::GetObjectGameplayTags_Implementation()
 {
-	return GameplayTags;
+	FGameplayTagContainer OutTags = GameplayTags;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		OutTags.AppendTags(TempTrait->AppendedItemTags());
+	}
+	return OutTags;
 }
 
 //General
@@ -158,6 +182,19 @@ void UOmegaDataItem::GetGeneralDataImages_Implementation(const FString& Label, c
 int32 UOmegaDataItem::GetMaxCollectionNumber_Implementation()
 {
 	return MaxCollectionAmount;
+}
+
+TArray<FOmegaAttributeModifier> UOmegaDataItem::GetModifierValues_Implementation()
+{
+	TArray<FOmegaAttributeModifier> OutMods;
+	for(auto* TempTrait : GetAllValidTraits())
+	{
+		if(TempTrait->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempTrait));
+		}
+	}
+	return OutMods;
 }
 
 //PROPETIES

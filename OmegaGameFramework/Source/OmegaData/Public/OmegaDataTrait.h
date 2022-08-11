@@ -33,7 +33,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait", meta=(AdvancedDisplay="Flag, Tags"))
 	FText AppendedItemDescription() const;
 
-	
+	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait", meta=(AdvancedDisplay="Flag, Tags"))
+	FGameplayTagContainer AppendedItemTags() const;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (Bool)")
 	bool BindTraitProperty_Bool(const FString& Property, bool& ValidProperty) const;

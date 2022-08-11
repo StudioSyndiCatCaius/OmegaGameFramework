@@ -6,8 +6,22 @@ public class OmegaData : ModuleRules
 	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", "OmegaGameFramework", "SlateCore", "UMG"});
- 
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core", 
+			"CoreUObject", 
+			"Engine", 
+			"DeveloperSettings", 
+			"GameplayTags",
+			"OmegaGameFramework", 
+			"SlateCore", 
+			"UMG"
+		});
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"AssetRegistry"
+		});
+		
 		PublicIncludePaths.AddRange(new string[] {"OmegaData/Public"});
 		PrivateIncludePaths.AddRange(new string[] {"OmegaData/Private"});
 	}

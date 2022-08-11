@@ -105,3 +105,15 @@ void UCombatantFunctions::ApplyEffectFromAsset(UCombatantComponent* Combatant, U
 		UE_LOG(LogTemp, Display, TEXT("Does not implement interface"));
 	}
 }
+
+UCombatantComponent* UCombatantFunctions::GetPlayerCombatant(const UObject* WorldContextObject, int32 Index)
+{
+	if(APawn* TempPawn = UGameplayStatics::GetPlayerPawn(WorldContextObject, Index))
+	{
+		if(TempPawn->GetComponentByClass(UCombatantComponent::StaticClass()))
+		{
+			return Cast<UCombatantComponent>(TempPawn->GetComponentByClass(UCombatantComponent::StaticClass()));
+		}
+	}
+	return nullptr;
+}

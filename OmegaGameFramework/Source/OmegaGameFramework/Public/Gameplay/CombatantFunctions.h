@@ -31,5 +31,8 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 	//NOTE: Asset must implement "DataInterface_OmegaEffect".
 	UFUNCTION(BlueprintCallable, Category="Combat")
 	static void ApplyEffectFromAsset(UCombatantComponent* Combatant, UCombatantComponent* Instigator, UObject* Asset);
+
+	UFUNCTION(BlueprintPure, Category="Combat", meta = (WorldContext = "WorldContextObject")) 
+	static UCombatantComponent* GetPlayerCombatant(const UObject* WorldContextObject, int32 Index);
 		
 };

@@ -204,7 +204,7 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 			}
 			bool Local_OverrideSize;
 			FVector2D Local_NewSize;
-			if(GetBrushImage(Local_OverrideSize, Local_NewSize))
+			if(GetBrushImage(Local_OverrideSize, Local_NewSize) && LocalBrush.GetResourceObject())
 			{
 				
 				if(Local_OverrideSize)

@@ -15,13 +15,15 @@
 #include "OmegaDataTraitCollection.h"
 #include "Data/DataAssetCollectionInterface.h"
 #include "Data/SoftPropertiesInterface.h"
+#include "Gameplay/DataInterface_AttributeModifier.h"
 #include "OmegaDataItem.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface, public ISoftPropertiesInterface
+class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
+																public ISoftPropertiesInterface, public IDataInterface_AttributeModifier
 {
 	GENERATED_BODY()
 
@@ -48,8 +50,17 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Tags")
 	FGameplayTagContainer GameplayTags;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Tags", AdvancedDisplay)
+	TMap<FString, FGameplayTagQuery> TagQueries;
+
+	UFUNCTION(BlueprintPure, Category="OmegaDataItem|Tags", meta=(Keywords="Gameplay, Tag"))
+	bool AreTagsAccepted(const FString& Query, FGameplayTagContainer Tags);
+
+	UFUNCTION(BlueprintPure, Category="OmegaDataItem|Tags", meta=(Keywords="Gameplay, Tag"))
+	bool IsObjectAccepted(const FString& Query, UObject* Object);
+	
 	//Traits
-	UPROPERTY(EditAnywhere, Category="Traits")
+	UPROPERTY(EditAnywhere, Category="Traits", AdvancedDisplay)
 	TArray<UOmegaDataTraitCollection*> TraitCollections;
 	
 	UPROPERTY(BlueprintReadOnly, Category="Traits", instanced, EditAnywhere)
@@ -105,6 +116,9 @@ FGameplayTag GetObjectGameplayCategory();
 	int32 GetMaxCollectionNumber();
 	virtual int32 GetMaxCollectionNumber_Implementation() override;
 
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+
+	
 	//Soft Propertoes
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="bool"))

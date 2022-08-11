@@ -26,6 +26,8 @@ class UInputComponent;
 class UEnhancedInputComponent;
 class UInputAction;
 
+class UAttributeDamagePopup;
+
 UENUM(Blueprintable, BlueprintType)
 enum EFactionAffinity
 {
@@ -290,6 +292,12 @@ public:
 
 	void InitializeAttributes();
 
+	////////////////////////////////////
+	////////// -- Damage -- ////////
+	//////////////////////////////////
+	UPROPERTY(EditDefaultsOnly, Category="Attributes")
+	TSubclassOf<UAttributeDamagePopup> DamagePopupClass;
+	
 	/////////
 	/// Damage Mods
 	/// //////

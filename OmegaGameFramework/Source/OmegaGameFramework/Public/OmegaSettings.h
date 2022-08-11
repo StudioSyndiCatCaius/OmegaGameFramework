@@ -10,7 +10,6 @@
 #include "Engine/DeveloperSettings.h"
 
 #include "GameFramework/SaveGame.h"
-#include "OmegaGameSettings.h"
 #include "Save/OmegaSaveGame.h"
 #include "Save/OmegaSaveGlobal.h"
 #include "Preferences/GamePreference.h"
@@ -21,7 +20,7 @@
 class AOmegaGameplaySystem;
 class UOmegaGameplayModule;
 
-UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Omega Game Framework"))
+UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Omega: Framework"))
 class OMEGAGAMEFRAMEWORK_API UOmegaSettings : public UDeveloperSettings
 {
 
@@ -37,6 +36,9 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FSoftClassPath> RegisteredGameplayModules;
 
+	UPROPERTY(EditAnywhere, config, Category = "DataItems")
+	TArray<FName> SystemScansPath;
+	
 	//SAVE
 
 	UClass* GetOmegaGameSaveClass() const;
