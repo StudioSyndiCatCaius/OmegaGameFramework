@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS(BlueprintType, Blueprintable)
+UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaGameSettings : public UObject
 {
 	GENERATED_BODY()

@@ -19,6 +19,6 @@ class OMEGADATA_API UOmegaDataSettings : public UDeveloperSettings
 public:
 
 	UPROPERTY(EditAnywhere, config, Category = "DataItems")
-	TArray<FName> DataItemScansPath;
+	TArray<FDirectoryPath> DataItemScansPath;
 	
 };

@@ -8,18 +8,17 @@
 #include "OmegaGameFrameworkBPLibrary.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 
-
 void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;
 	FARFilter Filter;
 	Filter.ClassNames.Add("OmegaDataItem");
 	
-	for(FName NewPath : GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath)
+	for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath)
 	{
-		Filter.PackagePaths.Add(NewPath);
+		FString LocalString = NewPath.Path;
+		Filter.PackagePaths.Add(FName(*LocalString));
 	}
 	
 	Filter.bRecursiveClasses = true;
@@ -119,4 +118,16 @@ TArray<UOmegaDataItem*> UOmegaDataSubsystem::GetAllDataItemsWithTrait(TSubclassO
 		}
 	}
 	return LocalItems;
+}
+
+UOmegaDataItem* UOmegaDataSubsystem::GetDataItemFromName(const FString& Name)
+{
+	for(auto* TempItem : GetAllDataItems())
+	{
+		if(TempItem->GetName() == Name)
+		{
+			return TempItem;
+		}
+	}
+	return nullptr;
 }

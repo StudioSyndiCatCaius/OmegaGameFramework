@@ -40,4 +40,7 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 */
 	UFUNCTION(BlueprintPure, Category="Ω|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
 	static TArray<UObject*> FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude);
+
+	UFUNCTION(BlueprintPure, Category="Ω|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
+	static UObject* SelectObectByName(TArray<UObject*> Objects, const FString& Name);
 };

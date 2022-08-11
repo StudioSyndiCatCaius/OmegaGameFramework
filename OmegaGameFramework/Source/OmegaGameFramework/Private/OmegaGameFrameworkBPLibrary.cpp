@@ -117,3 +117,15 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByClass(TArray<UObje
 	}
 	return OutObjects;
 }
+
+UObject* UOmegaGameFrameworkBPLibrary::SelectObectByName(TArray<UObject*> Objects, const FString& Name)
+{
+	for(auto* TempObj : Objects)
+	{
+		if(TempObj && TempObj->GetName() == Name)
+		{
+			return TempObj;
+		}
+	}
+	return nullptr;
+}

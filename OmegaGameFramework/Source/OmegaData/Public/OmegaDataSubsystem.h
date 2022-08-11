@@ -37,4 +37,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="OmegaDataSubsytem")
 	TArray<UOmegaDataItem*> GetAllDataItemsWithTrait(TSubclassOf<UOmegaDataTrait> Trait);
+
+	UFUNCTION(BlueprintPure, Category="OmegaDataSubsytem")
+	UOmegaDataItem* GetDataItemFromName(const FString& Name);
 };

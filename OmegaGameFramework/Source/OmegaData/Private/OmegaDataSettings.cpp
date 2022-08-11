@@ -5,6 +5,7 @@
 
 UOmegaDataSettings::UOmegaDataSettings()
 {
-	DataItemScansPath.Add("/Game/");
-	DataItemScansPath.Add("/Plugins/");
+	FDirectoryPath LocalPath;
+	LocalPath.Path = "/Game/";
+	DataItemScansPath.Add(LocalPath);
 }
