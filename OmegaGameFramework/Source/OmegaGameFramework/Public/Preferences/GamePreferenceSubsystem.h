@@ -6,9 +6,11 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "GameplayTagContainer.h"
 
+
 #include "GamePreferenceSubsystem.generated.h"
 
 class UOmegaSaveSubsystem;
+class UGamePreference;
 class UGamePreferenceFloat;
 class UGamePreferenceBool;
 class UGamePreferenceString;
@@ -25,27 +27,39 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPrefernceTagUpdated, class UGame
  * 
  */
 
-UCLASS()
+UCLASS(DisplayName="Omega Subsystem: Preferences")
 class OMEGAGAMEFRAMEWORK_API UGamePreferenceSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
-	
+
+protected:
+
+	void PreloadPrefs();
+
 public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	//virtual void Deinitialize() override;
 
-	//UPROPERTY()
-	//UOmegaSaveSubsystem* SaveSubsystemRef;
-
+	UPROPERTY()
+	TArray<UGamePreference*> PreloadedPreferences;
+	
+	UFUNCTION(BlueprintPure, Category="Omega|GamePreferences|Subsystem")
+	TArray<UGamePreference*> GetAllGamePreferences();
+	
 	UFUNCTION()
 	UOmegaSaveSubsystem* GetSaveSubsystem();
 
+	UFUNCTION()
+	void Local_PreferenceUpdate(class UGamePreference* Preference);
+	UFUNCTION()
+	void Local_PreferenceUpdateAll();
+	
 	//Bool
-	UFUNCTION(BlueprintPure, Category = "Omega|GamePreferences")
+	UFUNCTION(BlueprintPure, Category = "Omega|GamePreferences|Subsystem")
 		bool GetGamePreferenceBool(class UGamePreferenceBool* Preference);
 
-	UFUNCTION(BlueprintCallable, Category = "Omega|GamePreferences")
+	UFUNCTION(BlueprintCallable, Category = "Omega|GamePreferences|Subsystem")
 		void SetGamePreferenceBool(class UGamePreferenceBool* Preference, bool bValue);
 
 	UPROPERTY()

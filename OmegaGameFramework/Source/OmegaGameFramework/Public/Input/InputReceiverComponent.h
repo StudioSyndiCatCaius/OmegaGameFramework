@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnhancedActionKeyMapping.h"
 #include "Components/ActorComponent.h"
 #include "EnhancedInputComponent.h"
+#include "InputMappingContext.h"
 #include "InputReceiverComponent.generated.h"
+
+class APlayerController;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputStart);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputTrigger);
@@ -13,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputComplete);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputCancel);
 
 
-UCLASS( ClassGroup=("Input"), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=("Input"), meta=(BlueprintSpawnableComponent), DisplayName="Local Input Component" )
 class OMEGAGAMEFRAMEWORK_API UInputReceiverComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -38,7 +42,11 @@ public:
 	class UInputAction* InputAction;
 	
 	UPROPERTY()
+	TArray<FEnhancedActionKeyMapping> KeyMappings;
+	
+	UPROPERTY()
 	class UEnhancedInputComponent* OwnerInputComp;
+	
 
 	UFUNCTION()
 	void Native_Started();
@@ -64,3 +72,4 @@ public:
 	void OnOwningControllerChange(APawn* Pawn, AController* OldController, AController* NewController);
 	
 };
+

@@ -17,10 +17,17 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
 	GENERATED_BODY()
 
 public:
-		UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
-		TArray<class UOmegaAttribute*> Attributes;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	TArray<class UOmegaAttribute*> Attributes;
 
-		UPROPERTY()
-		FGameplayTag ValueCategory;
+	UPROPERTY()
+	FGameplayTag ValueCategory;
+
+	UFUNCTION(BlueprintPure, Category="Attributes")
+	TArray<UOmegaAttribute*> GetMetricAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes")
+	TArray<UOmegaAttribute*> GetStaticAttributes();
 	
+	UFUNCTION()
+	TArray<UOmegaAttribute*> Local_GetAtt(bool bStatic);
 };

@@ -3,6 +3,8 @@
 
 #include "Preferences/GamePreference.h"
 
+
+
 FGameplayTag UGamePreference::GetObjectGameplayCategory_Implementation()
 {
 	return PreferenceCategory;

@@ -71,6 +71,49 @@ bool UOmegaGameManager::IsFlagActive(FString Flag)
 	return Flags.Contains(Flag);
 }
 
+void UOmegaGameManager::ClearAllFlags()
+{
+	Flags.Empty();
+}
+
+void UOmegaGameManager::AddGameplayLog(const FString& String, const FString& LogCategory)
+{
+	FGameplayLogEntry TempEntry;
+	TempEntry.Log = String;
+	TempEntry.LogCategory = LogCategory;
+	LocalLog.Add(TempEntry);
+}
+
+void UOmegaGameManager::ClearLog()
+{
+	LocalLog.Empty();
+}
+
+TArray<FString> UOmegaGameManager::GetGameplayLog()
+{
+	TArray<FString> LocalStrings;
+	for(FGameplayLogEntry TempEntry : LocalLog)
+	{
+		LocalStrings.Add(TempEntry.Log);
+	}
+	LocalStrings.SetNum(MaxLogEntry);
+	return LocalStrings;
+}
+
+TArray<FString> UOmegaGameManager::GetGameplayLogOfCategory(const FString& LogCategory)
+{TArray<FString> LocalStrings;
+	for(FGameplayLogEntry TempEntry : LocalLog)
+	{
+		if(TempEntry.LogCategory == LogCategory)
+		{
+			LocalStrings.Add(TempEntry.Log);
+		}
+	}
+	LocalStrings.SetNum(MaxLogEntry);
+	return LocalStrings;
+	
+}
+
 //----------------------
 // Playtime
 //----------------------

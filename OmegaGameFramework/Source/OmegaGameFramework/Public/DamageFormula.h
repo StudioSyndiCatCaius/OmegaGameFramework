@@ -11,13 +11,14 @@ class UCombatantComponent;
 /**
  * 
  */
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType, Blueprintable, editinlinenew)
 class OMEGAGAMEFRAMEWORK_API UDamageFormula : public UObject
 {
 	GENERATED_BODY()
 
 
 public:
-		UFUNCTION(BlueprintImplementableEvent)
+		UFUNCTION(BlueprintNativeEvent, Category="Damage")
 		void GetDamageAmount(UCombatantComponent* Instigator, UCombatantComponent* Target, float& DamageOut);
+	
 };

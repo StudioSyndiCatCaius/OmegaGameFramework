@@ -22,7 +22,7 @@ struct FLinearEventSequence
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLinearEventBegin, const UOmegaLinearEvent*, Event);
 
-UCLASS(DisplayName="Omega Sequence Subsystem")
+UCLASS(DisplayName="Omega Subsystem: Linear Events")
 class OMEGASEQUENCE_API UOmegaLinearEventSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()

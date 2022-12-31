@@ -23,10 +23,42 @@ float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGame
 		FinalValue = FinalValue * ValueCategoryAdjustments[ValueCategory];
 	}
 
+	FinalValue = LocalFloor(FinalValue, MaxDecimals);
+	
 	return FinalValue;
 }
 
 //Tags
+
+int32 UOmegaAttribute::LocalFloor(float Number, int32 Decimals)
+{
+	if (Number == 0)
+	{
+		return Number;
+	}
+	Decimals = FMath::Min(18, Decimals);
+	if (Decimals > 0)
+	{
+		int64 Multiplier = 1;
+		for (int32 i = 1; i <= Decimals; i++)
+		{
+			Multiplier *= 10;
+		}
+		double MultiplierFloat = static_cast<double>(Multiplier);
+		return FMath::FloorToFloat(Number * MultiplierFloat) / MultiplierFloat;
+	}
+	if (Decimals < 0)
+	{
+		int64 Divider = 1;
+		for (int32 i = -1; i >= Decimals; i--)
+		{
+			Divider *= 10;
+		}
+		double DividerFloat = static_cast<double>(Divider);
+		return FMath::FloorToFloat(Number / DividerFloat) * DividerFloat;
+	}
+	return FMath::FloorToFloat(Number);
+}
 
 FGameplayTag UOmegaAttribute::GetObjectGameplayCategory_Implementation()
 {
@@ -42,6 +74,7 @@ FGameplayTagContainer UOmegaAttribute::GetObjectGameplayTags_Implementation()
 void UOmegaAttribute::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description)
 {
 	Name = AttributeName;
+	Description = AttributeDescription;
 }
 
 void UOmegaAttribute::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,

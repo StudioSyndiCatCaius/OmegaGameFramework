@@ -8,6 +8,7 @@
 #include "Input/InputReceiverComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
+#include "OmegaGameManager.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
@@ -20,7 +21,6 @@ AOmegaAbility::AOmegaAbility()
 	SetActorHiddenInGame(true);
 	DefaultInputReceiver = CreateDefaultSubobject<UInputReceiverComponent>(TEXT("Default Input Reciever"));
 	bActivateOnStarted = true;
-
 	
 }
 
@@ -69,19 +69,30 @@ void AOmegaAbility::BeginPlay()
 	}
 	
 	SetInputEnabledForOwner(true);
+
+	CombatantOwner->OnCombatantNotify.AddDynamic(this, &AOmegaAbility::OnCombatantNotify);
+	CombatantOwner->OnTargetAdded.AddDynamic(this, &AOmegaAbility::OnRegisteredTarget);
+	CombatantOwner->OnTargetRemoved.AddDynamic(this, &AOmegaAbility::OnUnregisteredTarget);
+	//CombatantOwner->OnDamaged.AddDynamic(this, &AOmegaAbility::OnDamaged);
+	CombatantOwner->OnActiveTargetChanged.AddDynamic(this, &AOmegaAbility::OnActiveTargetChanged);
 }
+
+
 
 void AOmegaAbility::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Private_SetSoftTagsOnActor(GrantedActorOwnerTags, false);
-	
-	if(CombatantOwner->GetOwnerPlayerController() && HudClass)
+	if(EndPlayReason == EEndPlayReason::Destroyed && !GetWorld()->bIsTearingDown)
 	{
-		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->RemoveHUDLayer(HudClass, "AbilityUngranted");
-	}
+		Private_SetSoftTagsOnActor(GrantedActorOwnerTags, false);
 	
+		if(CombatantOwner->GetOwnerPlayerController() && HudClass)
+		{
+			CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->RemoveHUDLayer(HudClass, "AbilityUngranted");
+		}
+	
+		RecieveFinish(true);
+	}
 	Super::EndPlay(EndPlayReason);
-	RecieveFinish(true);
 }
 
 void AOmegaAbility::TryAssignControlInput(APawn* Pawn, AController* Controller)
@@ -97,27 +108,57 @@ void AOmegaAbility::TryAssignControlInput(APawn* Pawn, AController* Controller)
 
 void AOmegaAbility::Native_AbilityActivated(UObject* Context)
 {
+	Local_TriggerEvents(EventsOnActivate);
 	if(GetAbilityActivationTimeline())
 	{
 		GetAbilityActivationTimeline()->Play();
 	}
 	Private_SetSoftTagsOnActor(ActiveActorOwnerTags, true);
+
+	if(bEnableInputOnActivation && GetAbilityOwnerPlayer())
+	{
+		EnableInput(GetAbilityOwnerPlayer());
+	}
 	AbilityActivated(Context);
 }
 
 void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
 {
+	//EVENTS
+	Local_TriggerEvents(EventsOnFinish);
+	if(Cancelled)
+	{
+		Local_TriggerEvents(EventsOnCancel);
+	}
+	else
+	{
+		Local_TriggerEvents(EventsOnComplete);
+	}
+	
 	if(GetAbilityActivationTimeline())
 	{
 		GetAbilityActivationTimeline()->Reverse();
 	}
+	
 	Private_SetSoftTagsOnActor(ActiveActorOwnerTags, false);
+	
+	if(bEnableInputOnActivation && GetAbilityOwnerPlayer())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Some warning message") );
+		DisableInput(GetAbilityOwnerPlayer());
+	}
+	
 	AbilityFinished(Cancelled);
 }
 
 void AOmegaAbility::Native_ActivatedTick(float DeltaTime)
 {
 	ActivatedTick(DeltaTime);
+}
+
+bool AOmegaAbility::Native_CanActivate(UObject* Context)
+{
+	return CanActivate(Context);
 }
 
 // Called every frame
@@ -141,7 +182,7 @@ void AOmegaAbility::Execute(UObject* Context)
 	// Success if:
 	if(!bIsActive																							// Ability is not already active
 		&& !CombatantOwner->IsAbilityTagBlocked(AbilityTags)												// Ability tags are not blocked
-		&& CanActivate(Context) && !CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags)				// Combatant does not have any restricted tags
+		&& Native_CanActivate(Context) && !CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags)				// Combatant does not have any restricted tags
 		&& (CombatantOwner->CombatantHasAllTag(RequiredOwnerTags) || RequiredOwnerTags.IsEmpty())			// Combatant has all required tags.
 		&& !IsAbilityInCooldown()																			// Is Ability In Cooldown?
 		)
@@ -156,7 +197,10 @@ void AOmegaAbility::Execute(UObject* Context)
 		{
 			GetAbilityActivationTimeline()->Play();
 		}
-
+		if(!Context)
+		{
+			Context = nullptr;
+		}
 		Native_AbilityActivated(Context);
 	}
 }
@@ -178,9 +222,6 @@ void AOmegaAbility::Native_InputTrigger()
 		Native_Execute();
 	}
 }
-
-
-
 
 ////Local Activate / Deactivate
 
@@ -226,6 +267,11 @@ void AOmegaAbility::CancelAbility()
 ACharacter* AOmegaAbility::GetAbilityOwnerCharacter()
 {
 	return CachedCharacter;
+}
+
+APlayerController* AOmegaAbility::GetAbilityOwnerPlayer()
+{
+	return CombatantOwner->GetOwnerPlayerController();
 }
 
 UCharacterMovementComponent* AOmegaAbility::GetAbilityOwnerCharacterMoveComponent()
@@ -295,7 +341,7 @@ void AOmegaAbility::GetRemainingCooldownValues(float& Normalized, float& Seconds
 //Finish Ability
 void AOmegaAbility::RecieveFinish(bool bCancel)
 {
-	if (bIsActive)
+	if (bIsActive && !GetWorld()->bIsTearingDown)
 	{
 		bIsActive = false;
 		CombatantOwner->SetAbilityActive(false, this);
@@ -306,6 +352,14 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 		{
 			GetAbilityActivationTimeline()->Reverse();
 		}
+	}
+}
+
+void AOmegaAbility::Local_TriggerEvents(TArray<FName> Events)
+{
+	for(FName TempEv : Events)
+	{
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(TempEv, this);
 	}
 }
 	

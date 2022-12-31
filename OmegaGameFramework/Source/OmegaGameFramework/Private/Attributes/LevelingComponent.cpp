@@ -127,7 +127,7 @@ void ULevelingComponent::Native_Update()
 {
 	//Update Widgets
 	TArray<UUserWidget*> WidgetList;
-	UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, WidgetList, UWidgetInterface_LevelingComponent::StaticClass(), true);
+	UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, WidgetList, UWidgetInterface_LevelingComponent::StaticClass(), false);
 	for(auto* TempWidget : WidgetList)
 	{
 		if(IWidgetInterface_LevelingComponent::Execute_GetLevelingComponent(TempWidget) && (this == IWidgetInterface_LevelingComponent::Execute_GetLevelingComponent(TempWidget)))

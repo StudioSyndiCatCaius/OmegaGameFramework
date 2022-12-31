@@ -3,6 +3,7 @@
 
 #include "Data/DataAssetCollectionComponent.h"
 #include "Data/DataAssetCollectionInterface.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values for this component's properties
 UDataAssetCollectionComponent::UDataAssetCollectionComponent()
@@ -85,6 +86,7 @@ TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap(
 	return CollectionMap;
 }
 
+
 bool UDataAssetCollectionComponent::NativeAddAsset(UPrimaryDataAsset* Asset)
 {
 	const int32 CurrentValue = CollectionMap.FindOrAdd(Asset);
@@ -108,3 +110,39 @@ bool UDataAssetCollectionComponent::NativeRemoveAsset(UPrimaryDataAsset* Asset)
 	return true;
 }
 
+//TRANSFER
+
+void UDataAssetCollectionComponent::TransferAssetToCollection(UDataAssetCollectionComponent* To,
+	UPrimaryDataAsset* Asset, int32 Amount, bool bTransferAll)
+{
+	if(!Asset || !To)
+	{
+		return;
+	}
+	int32 AmountToRemove = Amount;
+	if(bTransferAll)
+	{
+		AmountToRemove = GetAssetNumberOfType(Asset);
+	}
+	else
+	{
+		AmountToRemove = UKismetMathLibrary::Clamp(AmountToRemove, 0, GetAssetNumberOfType(Asset));
+	}
+
+	//Transfer
+	RemoveAsset(Asset, AmountToRemove);
+
+	To->AddAsset(Asset, AmountToRemove);
+	
+}
+
+void UDataAssetCollectionComponent::TransferAllAssetsToCollection(UDataAssetCollectionComponent* To)
+{
+	TArray<UPrimaryDataAsset*> AssetListLocal;
+	CollectionMap.GetKeys(AssetListLocal);
+
+	for(auto* TempAsset : AssetListLocal)
+	{
+		TransferAssetToCollection(To, TempAsset, 0, true);
+	}
+}

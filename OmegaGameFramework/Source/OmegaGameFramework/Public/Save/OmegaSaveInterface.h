@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "JsonObjectWrapper.h"
 #include "UObject/Interface.h"
 #include "OmegaSaveInterface.generated.h"
 
@@ -27,7 +28,22 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save")
 	bool OnGameFileSaved(UOmegaSaveGame* SaveFile);
+
 	
 	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save")
     void OnGameFileStarted(UOmegaSaveGame* SaveFile);
+
+
+	// JSON
+	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save|Json")
+	bool UseJsonSaveData();
+	
+	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save|Json")
+	FString GetJsonPropertyName();
+	
+	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save|Json")
+	FJsonObjectWrapper SaveJsonData();
+	
+	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save|Json")
+	bool LoadJsonData(FJsonObjectWrapper SaveFile);
 };

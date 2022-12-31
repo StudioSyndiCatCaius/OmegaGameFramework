@@ -7,6 +7,7 @@
 
 #include "OmegaGameplaySubsystem.h"
 #include "EnhancedInputSubsystems.h"
+#include "OmegaGameManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
@@ -19,6 +20,7 @@ AOmegaGameplaySystem::AOmegaGameplaySystem()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorHiddenInGame(true);
+	bIsSpatiallyLoaded = false;
 	
 }
 
@@ -35,7 +37,7 @@ void AOmegaGameplaySystem::BeginPlay()
 	TArray <AActor*> FoundPlayers;
 	UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
 
-
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnGlobalEvent);
 	
 	for (AActor* TempActor : FoundPlayers)
 	{
@@ -70,7 +72,18 @@ void AOmegaGameplaySystem::BeginPlay()
 		Local_GrantAbilities(TempComb);
 	}
 	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->OnCombatantRegistered.AddDynamic(this, &AOmegaGameplaySystem::Local_GrantAbilities);
+
+	//FLAGS
+	Local_SetFlagsActive(true);
 	
+}
+
+void AOmegaGameplaySystem::Local_SetFlagsActive(bool State)
+{
+	for(const auto LocalFlag : ActiveFlags)
+	{
+		GetGameInstance()->GetSubsystem<UOmegaGameManager>()->SetFlagActive(LocalFlag, State);
+	}
 }
 
 // Called every frame
@@ -82,13 +95,21 @@ void AOmegaGameplaySystem::Tick(float DeltaTime)
 
 void AOmegaGameplaySystem::Shutdown(FString Flag)
 {
+	if(bIsInShutdown)
+	{
+		return;
+	}
+	bIsInShutdown = true;
 	TArray <AActor*> FoundPlayers;
 	UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
 	
 	// Remove Player Widgets
 	for (class UHUDLayer* TempWidget : ActivePlayerWidgets)
 	{
-		TempWidget->RemoveFromParent();
+		if(TempWidget)
+		{
+			TempWidget->RemoveFromParent();
+		}
 	}
 	OnSystemShutdown.Broadcast(Flag);
 	SystemShutdown(Flag);
@@ -114,6 +135,9 @@ void AOmegaGameplaySystem::Shutdown(FString Flag)
 			TempComb->UngrantAbility(TempData.AbilityClass);
 		}	
 	}
+
+	//FLAGS
+	Local_SetFlagsActive(false);
 	
 	K2_DestroyActor();
 }

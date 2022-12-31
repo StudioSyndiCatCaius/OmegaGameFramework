@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "DataInterface_General.h"
+#include "GameplayTagContainer.h"
 
 #include "GeneralDataObject.generated.h"
 
@@ -23,6 +24,8 @@ struct FCustomAssetData
 	UTexture2D* Texture;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	FLinearColor Color;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
+	FGameplayTagContainer Tags;
 };
 
 

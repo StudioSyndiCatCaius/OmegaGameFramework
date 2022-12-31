@@ -28,7 +28,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="InstanceActor")
 	void OnInstanceCreated(UObject* Context, const FString& Flag);
 	
-	UPROPERTY(BlueprintReadOnly, Category="InstanceActor")
+	UPROPERTY(BlueprintReadOnly, Category="InstanceActor", VisibleInstanceOnly)
 	UObject* ContextObject = nullptr;
 	UPROPERTY(BlueprintReadOnly, Category="InstanceActor")
 	UInstanceActorComponent* OwningComponent;

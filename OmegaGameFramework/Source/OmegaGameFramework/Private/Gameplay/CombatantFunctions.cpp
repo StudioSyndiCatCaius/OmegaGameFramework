@@ -3,6 +3,8 @@
 
 #include "Gameplay/CombatantFunctions.h"
 
+#include "OmegaGameplaySubsystem.h"
+#include "OmegaSettings.h"
 #include "Gameplay/DataInterface_OmegaEffect.h"
 
 TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByTags(
@@ -92,7 +94,7 @@ void UCombatantFunctions::ApplyEffectFromAsset(UCombatantComponent* Combatant, U
 		UE_LOG(LogTemp, Display, TEXT("Invalid Asset"));
 		return;
 	}
-	if(Asset->Implements<UDataInterface_OmegaEffect>())
+	if(Asset->GetClass()->ImplementsInterface(UDataInterface_OmegaEffect::StaticClass()))
 	{
 		UE_LOG(LogTemp, Display, TEXT("Applied Effects from asset"));
 		for(const FOmegaEffectContainer TempEffect : IDataInterface_OmegaEffect::Execute_GetOmegaEffects(Asset))
@@ -114,6 +116,30 @@ UCombatantComponent* UCombatantFunctions::GetPlayerCombatant(const UObject* Worl
 		{
 			return Cast<UCombatantComponent>(TempPawn->GetComponentByClass(UCombatantComponent::StaticClass()));
 		}
+	}
+	return nullptr;
+}
+
+void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObject, FGameplayTag Faction, FName Notify)
+{
+	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants();
+
+	for(auto* TempComb : LocalList)
+	{
+		if(TempComb->GetFactionTag() == Faction)
+		{
+			TempComb->CombatantNotify(Notify,"");
+		}
+	}
+}
+
+UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
+{
+	TMap<FString, FSoftObjectPath> LocalAID = GetMutableDefault<UOmegaSettings>()->AttributeIDs;
+	FSoftObjectPath LocalAttributePath = LocalAID.FindOrAdd(ID);
+	if(LocalAttributePath.IsValid())
+	{
+		return LoadObject<UOmegaAttribute>(NULL, *LocalAttributePath.ToString());
 	}
 	return nullptr;
 }

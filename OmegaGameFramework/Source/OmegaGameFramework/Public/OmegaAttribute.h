@@ -26,7 +26,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name", Category = "General")
 	FText AttributeName;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Description", Category = "General")
+	FText AttributeDescription;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Label", Category = "General")
 	FString AttributeLabel;
 
@@ -44,7 +47,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
 	float MaxValue;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
 	bool bIsValueStatic;
 
@@ -54,6 +57,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
 	TMap<FGameplayTag, float> ValueCategoryAdjustments;
 
+	int32 LocalFloor(float Number, int32 Decimals);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value", AdvancedDisplay)
+	int32 MaxDecimals = 2;
+	
 	//Tags
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
 	FGameplayTag AttributeCategory;

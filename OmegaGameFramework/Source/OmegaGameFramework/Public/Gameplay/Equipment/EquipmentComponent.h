@@ -11,7 +11,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipped, UPrimaryDataAsset*, Item, FString, Slot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUnequipped, UPrimaryDataAsset*, Item, FString, Slot);
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UEquipmentComponent : public UActorComponent, public IDataInterface_AttributeModifier
 {
 	GENERATED_BODY()
@@ -30,7 +30,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category="Equipment")
 	TMap<FString, UPrimaryDataAsset*> EquippedItems;
 
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))

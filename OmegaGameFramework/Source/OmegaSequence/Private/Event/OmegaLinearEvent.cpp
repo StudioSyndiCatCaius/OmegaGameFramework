@@ -2,7 +2,7 @@
 
 
 #include "Event/OmegaLinearEvent.h"
-
+#include "Engine/GameInstance.h"
 
 UOmegaLinearEvent::UOmegaLinearEvent(const FObjectInitializer& ObjectInitializer)
 {
@@ -43,4 +43,9 @@ void UOmegaLinearEvent::Finish(const FString& Flag)
 	OnEventEnd(Flag);
 	EventEnded.Broadcast(Flag);
 	
+}
+
+FString UOmegaLinearEvent::GetLogString_Implementation() const
+{
+	return "";
 }

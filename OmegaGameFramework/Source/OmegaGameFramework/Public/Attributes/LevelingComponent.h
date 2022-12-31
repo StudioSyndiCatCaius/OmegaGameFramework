@@ -12,7 +12,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, int32, NewLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelDown, int32, NewLevel);
 
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API ULevelingComponent : public UActorComponent
 {
 	GENERATED_BODY()

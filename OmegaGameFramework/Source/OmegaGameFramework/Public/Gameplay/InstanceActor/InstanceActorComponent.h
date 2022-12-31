@@ -10,7 +10,7 @@
 #include "InstanceActorComponent.generated.h"
 
 // Create several instances of single actor class
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UInstanceActorComponent : public UActorComponent, public IDataInterface_General, public IGameplayTagsInterface
 {
 	GENERATED_BODY()

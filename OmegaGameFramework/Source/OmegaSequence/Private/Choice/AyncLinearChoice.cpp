@@ -2,7 +2,7 @@
 
 
 #include "Choice/AyncLinearChoice.h"
-
+#include "Engine/GameInstance.h"
 #include "OmegaLinearEventSubsystem.h"
 
 UOmegaLinearChoice::UOmegaLinearChoice(const FObjectInitializer& ObjectInitializer)
@@ -15,13 +15,13 @@ UOmegaLinearChoice::UOmegaLinearChoice(const FObjectInitializer& ObjectInitializ
 
 UWorld* UOmegaLinearChoice::GetWorld() const
 {
+	if(GetGameInstance())
+	{
+		return GetGameInstance()->GetWorld();
+	}
 	if(WorldPrivate)
 	{
 		return WorldPrivate;
-	}
-	else if(GetGameInstance())
-	{
-		return GetGameInstance()->GetWorld();
 	}
 	return nullptr;
 }

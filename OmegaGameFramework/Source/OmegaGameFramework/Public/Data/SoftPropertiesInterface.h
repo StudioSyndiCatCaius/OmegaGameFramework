@@ -6,11 +6,15 @@
 #include "UObject/Interface.h"
 #include "SoftPropertiesInterface.generated.h"
 
+
+
 // This class does not need to be modified.
 UINTERFACE()
 class USoftPropertiesInterface : public UInterface
 {
 	GENERATED_BODY()
+
+	
 };
 
 /**
@@ -35,5 +39,8 @@ public:
 	FString GetSoftProperty_String(const FString& Property);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="object"))
 	UObject* GetSoftProperty_Object(const FString& Property);
+
+	///====================//
+
 	
 };

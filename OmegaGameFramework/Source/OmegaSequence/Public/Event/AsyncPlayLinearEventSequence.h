@@ -30,8 +30,8 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="OmegaSequence", DisplayName="Play Linear Event Sequence")
-	static UAsyncPlayLinearEventSequence* PlayLinearEventSequence(UOmegaLinearEventSubsystem* Subsystem, FLinearEventSequence Events, int32 StartingIndex);
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category="OmegaSequence", DisplayName="Play Linear Event Sequence")
+	static UAsyncPlayLinearEventSequence* PlayLinearEventSequence(UObject* WorldContextObject, FLinearEventSequence Events, int32 StartingIndex);
 
 };
 

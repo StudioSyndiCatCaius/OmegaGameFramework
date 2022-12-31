@@ -10,7 +10,7 @@
 
 class UTurnBasedManagerComponent;
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UTurnManagerBase : public UObject
 {
 	GENERATED_BODY()
@@ -31,4 +31,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	bool FailBeingTurn(FString& FailReason);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	bool BlockFromTurnOrder(UCombatantComponent* Combatant);
 };

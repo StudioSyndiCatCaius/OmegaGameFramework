@@ -17,7 +17,7 @@ class OMEGAFLOW_API UAsyncAction_ActivateAbility : public UBlueprintAsyncActionB
 	GENERATED_BODY()
 
 public:
-
+	
 	UPROPERTY(BlueprintAssignable)
 	FAbilityCompleted Completed;
 	UPROPERTY(BlueprintAssignable)

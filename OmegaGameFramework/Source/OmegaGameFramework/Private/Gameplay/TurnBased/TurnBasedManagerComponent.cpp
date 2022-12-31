@@ -36,24 +36,36 @@ void UTurnBasedManagerComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	// ...
 }
 
+TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetTurnOrder()
+{
+	TArray<UCombatantComponent*> OutCombs;
+	for(auto* TempComb : TurnOrder)
+	{
+		if(TempComb)
+		{
+			OutCombs.Add(TempComb);
+		}
+	}
+	return OutCombs;
+}
+
 //Get Active Member
 UCombatantComponent* UTurnBasedManagerComponent::GetActiveTurnMember()
 {
-	if(TurnOrder.IsValidIndex(0))
+	if(ActiveTurnMember)
 	{
-		if(TurnOrder[0] != nullptr)
-		{
-			return TurnOrder[0];
-		}
-		else
-		{
-			return nullptr;
-		}
+		return ActiveTurnMember;
 	}
-	else
+	return nullptr;
+}
+
+UCombatantComponent* UTurnBasedManagerComponent::GetTurnMemberAtIndex(int32 Index)
+{
+	if(GetTurnOrder().IsValidIndex(Index))
 	{
-		return nullptr;
+		return GetTurnOrder()[Index];
 	}
+	return nullptr;
 }
 
 //Add to Turn Order
@@ -117,45 +129,41 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 			}
 		}
 	}
+	OnTurnOrderGenerated.Broadcast(this);
 	return TurnOrder;
 }
+
 
 // NEXT TURN
 bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags, FString& FailReason)
 {
-	//Remove current member
-	if(GetActiveTurnMember() != nullptr)
+	//END CURRENT TURN
+	if(GetActiveTurnMember() != nullptr)		//If active turn member is valid
 	{
 		OnTurnEnd.Broadcast(GetActiveTurnMember(), Flag, Tags);
 		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
-        
-        /*if(GetActiveTurnMember()) // If new active member valid
-        {
-            //Function on Combatant Actor
-            if(DoesCombatantUseInterface(GetActiveTurnMember()))
-            {
-                IActorInterface_TurnOrderCombatant::Execute_OnTurnEnd(GetActiveTurnMember()->GetOwner(), this);
-            }
-        }*/
-		
 	}
 	
 	//If Empty and should regenerator
-	if(!TurnOrder.IsValidIndex(0) && bGenerateIfEmpty)
+	if(!GetTurnMemberAtIndex(0) && bGenerateIfEmpty)
 	{
 		GenerateTurnOrder();
 	}
 
-	if(GetActiveTurnMember() != nullptr)
+	//sELECT Member for turn
+	
+	if(GetTurnMemberAtIndex(0))
 	{
 		FString LocalFailReason;
-		if(TurnManager->FailBeingTurn(FailReason))
+		if(TurnManager->FailBeingTurn(FailReason))	//When Failed to Start Turn
 		{
+			OnTurnFail.Broadcast(FailReason);
 			return false;
 		}
 		FailReason = "";
-		OnTurnStart.Broadcast(GetActiveTurnMember(), Flag, Tags);
 
+		ActiveTurnMember = GetTurnMemberAtIndex(0);
+		BeginTurn(GetActiveTurnMember(), Flag, Tags);
 		
 		//Function on Combatant Actor
 		if(DoesCombatantUseInterface(GetActiveTurnMember()))
@@ -171,6 +179,40 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 	}
 }
 
+void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+{
+	OnTurnStart.Broadcast(Combatant, Flag, Tags);
+	bool LocalSuccess;
+	Combatant->GrantAbility(Local_GetTurnAbility());
+	LocalTurnAbility = Combatant->ExecuteAbility(Local_GetTurnAbility(), this,LocalSuccess);
+	if(LocalSuccess && LocalTurnAbility)
+	{
+		LocalTurnAbility->OnAbilityFinished.AddDynamic(this, &UTurnBasedManagerComponent::Local_TurnAbilityFinish);
+	}
+}
+
+void UTurnBasedManagerComponent::Local_TurnAbilityFinish(bool Cancelled)
+{
+	if(LocalTurnAbility)
+	{
+		LocalTurnAbility->OnAbilityFinished.RemoveDynamic(this, &UTurnBasedManagerComponent::Local_TurnAbilityFinish);
+	}
+	
+
+	///Should Repeat Turn?
+	if(bRepeatTurnOnAbilityCancel && Cancelled)			
+	{
+		BeginTurn(GetActiveTurnMember(), "Repeat", RepeatedTurnTags);
+	}
+	else //Try Start Turn
+	{
+		
+		FString TurnFailReason;
+		NextTurn(bGenerateTurnOrderIfEmpty, "NextTurn", NextTurnTags, TurnFailReason);
+	}
+	
+}
+
 void UTurnBasedManagerComponent::ClearTurnOrder(FString Flag, FGameplayTagContainer Tags)
 {
 	for(UCombatantComponent* TempCombatant : TurnOrder)
@@ -178,6 +220,20 @@ void UTurnBasedManagerComponent::ClearTurnOrder(FString Flag, FGameplayTagContai
 		RemoveFromTurnOrder(TempCombatant, Flag, Tags);
 	}
 	TurnOrder.Empty();
+}
+
+
+TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetRegisteredCombatants()
+{
+	TArray<UCombatantComponent*> OutComs;
+	for(auto* TempCom : RegisteredCombatants)
+	{
+		if(TempCom)
+		{
+			OutComs.Add(TempCom);
+		}
+	}
+	return OutComs;
 }
 
 // REGISTER

@@ -64,11 +64,16 @@ public:
 
 	UFUNCTION()
 		FString GetAssetLabel();
-		
-	//Tags
+
+	//---------------------------------------------------------------------------------------------//
+	//	Tags
+	//---------------------------------------------------------------------------------------------//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataWidget")
     TArray<FName> WidgetTags;
-
+	
+	UFUNCTION(BlueprintCallable, Category="DataWidget")
+	void SetWidgetTagActive(FName Tag, bool bActive);
+	
 	UFUNCTION(BlueprintPure, Category="DataWidget")
 	bool DataWidgetHasTag(FName Tag);
 
@@ -122,6 +127,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Tooltip")
 	UDataTooltip* GetDataTooltipWidget();
+
+	UFUNCTION()
+	void Local_UpdateTooltip(UObject* AssetRef);
 	
 	
 //BINDABLE WIDGETS

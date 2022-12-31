@@ -5,6 +5,7 @@
 
 #include "Kismet/KismetSystemLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
+#include "OmegaGameManager.h"
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
@@ -12,6 +13,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	SetOwningPlayer(PlayerRef);
 	if (!bIsOpen)
 	{
+		Local_BindGlobalEvent();
 		bIsOpen = true;
 		TempTags = Tags;
 		PrivateInputBlocked = true;
@@ -23,6 +25,11 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		AddToPlayerScreen(200);
 		MenuOpened(Tags, Context, Flag);
 		//ANIMATION
+
+		if(OpenSound)
+		{
+			PlaySound(OpenSound);
+		}
 		
 		if(GetOpenAnimation())
 		{
@@ -63,9 +70,18 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, const FString& Flag)
 		{
 			SubsystemRef->ClearControlWidget();
 		}
-		
+
+		SetVisibility(ESlateVisibility::HitTestInvisible);
+
+		if(CloseSound)
+		{
+			PlaySound(CloseSound);
+		}
 		
 		//ANIMATION
+
+		bIsClosing = true;
+		
 		if(GetCloseAnimation())
 		{
 			if(ReverseCloseAnimation)
@@ -86,19 +102,23 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, const FString& Flag)
 
 void UMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* MovieSceneBlends)
 {
-	Super::OnAnimationFinished_Implementation(MovieSceneBlends);
-	if(MovieSceneBlends==GetOpenAnimation())
+	
+	if(MovieSceneBlends==GetOpenAnimation() && !bIsClosing)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Menu CLOSE Complete") );
 		Native_CompleteOpen();
 	}
-	else if (MovieSceneBlends==GetCloseAnimation())
+	else if (MovieSceneBlends==GetCloseAnimation() && bIsClosing)
 	{
 		Native_CompleteClose();
 	}
+	Super::OnAnimationFinished_Implementation(MovieSceneBlends);
 }
+
 
 void UMenu::NativeConstruct()
 {
+	/*
 	//Try Set Close Anim
 	if(GetCloseAnimation())
 	{
@@ -112,11 +132,7 @@ void UMenu::NativeConstruct()
 		OpenDelegate.BindUFunction(this, "Native_CompleteOpen");
 		BindToAnimationFinished(GetOpenAnimation(), OpenDelegate);
 		
-	}
-	else
-	{
-		Native_CompleteOpen();
-	}
+	}*/
 	
 	Super::NativeConstruct();
 }
@@ -128,16 +144,20 @@ void UMenu::Native_CompleteOpen()
 
 void UMenu::Native_CompleteClose()
 {
-	
 	PrivateInputBlocked = true;
 	SetIsEnabled(false);
-	SetVisibility(VisibilityOnClose);
-	
-	//Prep for deletio
+	bIsClosing = false;
+	SetVisibility(ESlateVisibility::Collapsed);
+	UE_LOG(LogTemp, Warning, TEXT("Menu CLOSE Complete") );
     RemoveFromParent();
 }
 
 bool UMenu::InputBlocked_Implementation()
 {
 	return PrivateInputBlocked;
+}
+
+void UMenu::Local_BindGlobalEvent()
+{
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UMenu::OnGlobalEvent);
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "GameplayTagContainer.h"
+#include "OmegaInputMode.h"
 #include "Widget/Menu.h"
 #include "Components/SlateWrapperTypes.h"
 
@@ -13,12 +14,14 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuOpened, UMenu*, Menu, FGameplayTagContainer, Tags, bool, FirstMenu);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuClosed, UMenu*, Menu, FGameplayTagContainer, Tags, bool, LastMenu);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FClearHoveredWidgets);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputModeChanged, UOmegaInputMode*, NewMode);
+
 
 class UUserWidget;
 class UHUDLayer;
 class UDataWidget;
 
-UCLASS()
+UCLASS(DisplayName="Omega Subsystem: Player")
 class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsystem
 {
 	GENERATED_BODY()
@@ -58,10 +61,10 @@ public:
 	class UUserWidget* FocusMenu;
 
 	UPROPERTY(BlueprintAssignable)
-		FMenuOpened OnMenuOpened;
+	FMenuOpened OnMenuOpened;
 
 	UPROPERTY(BlueprintAssignable)
-		FMenuClosed OnMenuClosed;
+	FMenuClosed OnMenuClosed;
 
 	//Menu Input
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Input")
@@ -81,6 +84,8 @@ public:
 
 	UFUNCTION()
 	bool CanInterfaceInput() const;
+
+
 	
 	////////////////////////
 	/////////HUD/////////
@@ -113,6 +118,9 @@ public:
 	void SetHUDVisibilityWithTags(FGameplayTagContainer Tags, ESlateVisibility Visibility);
 
 	void CleanHUDLayers();
+
+	UFUNCTION()
+	APlayerController* Local_GetPlayerController();
 	
 	UPROPERTY()
 	class APlayerController* ParentPlayerController;
@@ -126,7 +134,20 @@ public:
 
 	UPROPERTY()
 	UDataWidget* HoveredWidget = nullptr;
+	
+	///////////////////
+	/// Input ////
+	/// /////////
+	///
+	///
+	UPROPERTY(BlueprintReadOnly, Category="Input")
+	UOmegaInputMode* CurrentInputMode;
+	
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Input")
+	void SetCustomInputMode(UOmegaInputMode* InputMode);
 
+	UPROPERTY(BlueprintAssignable)
+	FOnInputModeChanged OnInputModeChanged;
 };
 
 

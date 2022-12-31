@@ -3,3 +3,8 @@
 
 #include "DamageFormula.h"
 
+void UDamageFormula::GetDamageAmount_Implementation(UCombatantComponent* Instigator, UCombatantComponent* Target,
+	float& DamageOut)
+{
+	return;
+}

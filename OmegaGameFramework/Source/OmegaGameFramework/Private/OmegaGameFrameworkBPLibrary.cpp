@@ -5,13 +5,15 @@
 #include "OmegaGameFramework.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "OmegaGameManager.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gameplay/GameplayTagsInterface.h"
+#include "Player/OmegaPlayerSubsystem.h"
 
 
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray<UObject*> Assets,
-	FGameplayTag CategoryTag, bool bExact, bool bExclude, TSubclassOf<UObject> Class)
+                                                                          FGameplayTag CategoryTag, bool bExact, bool bExclude, TSubclassOf<UObject> Class)
 {
 	TArray<UObject*> OutAssets;
 	
@@ -91,6 +93,20 @@ FGameplayTagContainer UOmegaGameFrameworkBPLibrary::FilterTagsByType(FGameplayTa
 	return OutTags;
 }
 
+void UOmegaGameFrameworkBPLibrary::SetGameplaySystemActive(const UObject* WorldContextObject, TSubclassOf<AOmegaGameplaySystem>
+	SystemClass, bool bActive, const FString Flag, UObject* Context)
+{
+	UOmegaGameplaySubsystem* SubystemRef = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	if(bActive)
+	{
+		SubystemRef->ActivateGameplaySystem(SystemClass, Context, Flag);
+	}
+	else
+	{
+		SubystemRef->ShutdownGameplaySystem(SystemClass, Flag);
+	}
+}
+
 /*
 void UOmegaGameFrameworkBPLibrary::SetWidgetVisibilityWithTags(FGameplayTagContainer Tags, ESlateVisibility Visibility)
 {
@@ -129,3 +145,142 @@ UObject* UOmegaGameFrameworkBPLibrary::SelectObjectByName(TArray<UObject*> Objec
 	}
 	return nullptr;
 }
+
+AActor* UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius)
+{
+	FVector LocalStart;
+	FVector LocalEnd;
+	Player->DeprojectMousePositionToWorld(LocalStart, LocalEnd);
+	LocalEnd = LocalEnd*Player->HitResultTraceDistance;
+
+	FHitResult LocalHitResult;
+	const TArray<AActor*> LocalIgnoreActors;
+	if(UKismetSystemLibrary::SphereTraceSingle(Player, LocalStart, LocalEnd, TraceSphereRadius, TraceChannel, false, LocalIgnoreActors, EDrawDebugTrace::None, LocalHitResult, true))
+	{
+		if(LocalHitResult.GetActor())
+		{
+			return LocalHitResult.GetActor();
+		}
+	}
+	
+	return nullptr;
+}
+
+void UOmegaGameFrameworkBPLibrary::SetPlayerCustomInputMode(const UObject* WorldContextObject,
+	APlayerController* Player, UOmegaInputMode* InputMode)
+{
+	if(!InputMode)
+	{
+		return;
+	}
+	const APlayerController* TempPlayer = UGameplayStatics::GetPlayerController(WorldContextObject, 0);
+	if(Player)
+	{
+		TempPlayer = Player;
+	}
+	TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(InputMode);
+}
+
+void UOmegaGameFrameworkBPLibrary::SetGlobalActorBinding(const UObject* WorldContextObject, FName Binding,
+                                                         AActor* Actor)
+{
+	WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->SetGlobalActorBinding(Binding, Actor);
+}
+
+void UOmegaGameFrameworkBPLibrary::ClearGlobalActorBinding(const UObject* WorldContextObject, FName Binding)
+{
+	WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ClearGlobalActorBinding(Binding);
+}
+
+AActor* UOmegaGameFrameworkBPLibrary::GetGlobalActorBinding(const UObject* WorldContextObject, FName Binding)
+{
+	return WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGlobalActorBinding(Binding);
+}
+
+// QUICK ACCESS
+AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetActiveGameplaySystem(const UObject* WorldContextObject,
+	TSubclassOf<AOmegaGameplaySystem> SystemClass)
+{
+	bool LocalIsActive;
+	if(WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGameplaySystem(SystemClass, LocalIsActive))
+	{
+		return WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGameplaySystem(SystemClass, LocalIsActive);
+	}
+	return nullptr;
+}
+
+UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObject* WorldContextObject,
+	TSubclassOf<UOmegaGameplayModule> ModuleClass)
+{
+	if(WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
+	{
+		return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass);
+	}
+	return nullptr;
+}
+
+void UOmegaGameFrameworkBPLibrary::FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context)
+{
+	WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(Event, Context);
+}
+
+void UOmegaGameFrameworkBPLibrary::OnFlagActiveReset(const UObject* WorldContextObject, const FString& Flag, bool bDeactivateFlagOnActive, TEnumAsByte<EOmegaFlagResult>& Outcome)
+{
+	UOmegaGameManager* LocalMod = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
+	if(LocalMod->IsFlagActive(Flag))
+	{
+		Outcome = EOmegaFlagResult::Flag_Active;
+		if(bDeactivateFlagOnActive)
+		{
+			LocalMod->SetFlagActive(Flag, false);
+		}
+	}
+	else
+	{
+		Outcome = EOmegaFlagResult::Flag_Inactive;
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::SetActorTagActive(AActor* Actor, FName Tag, bool bIsActive)
+{
+	if(Actor)
+	{
+		if(bIsActive)
+		{
+			Actor->Tags.AddUnique(Tag);
+		}
+		else
+		{
+			Actor->Tags.Remove(Tag);
+		}
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::SetComponentTagActive(UActorComponent* Component, FName Tag, bool bIsActive)
+{
+	if(Component)
+	{
+		if(bIsActive)
+		{
+			Component->ComponentTags.AddUnique(Tag);
+		}
+		else
+		{
+			Component->ComponentTags.Remove(Tag);
+		}
+	}
+}
+
+TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromComponents(TArray<UActorComponent*> Components)
+{
+	TArray<AActor*> OutActors;
+	for(const auto* TempComp : Components)
+	{
+		if(TempComp)
+		{
+			OutActors.AddUnique(TempComp->GetOwner());
+		}
+	}
+	return OutActors;
+}
+

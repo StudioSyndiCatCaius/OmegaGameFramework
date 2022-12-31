@@ -46,22 +46,22 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 public:
 
 	///
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
 	EDataListFormat Format;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
 	TEnumAsByte<EOrientation> Orientation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
 	TEnumAsByte<EHorizontalAlignment> EntryHorizontalAlignment;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
 	TEnumAsByte<EVerticalAlignment> EntryVerticalAlignment;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
 	FSlateChildSize EntrySize;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
 	bool bAutoSizeList;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
@@ -88,8 +88,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString DefaultListFlag;
 
+	UPROPERTY(EditDefaultsOnly, Category="Tooltip")
+	TSubclassOf<UDataTooltip> OverrideEntryTooltip;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	bool HighlightOnSelect;
+	
 	// Read Only
-	UPROPERTY(BlueprintReadOnly, Category = "Entry")
+	UPROPERTY()
 	TArray<UDataWidget*> Entries;
 
 	UPROPERTY(meta = (BindWidget))
@@ -117,6 +123,9 @@ public:
 	UPROPERTY()
 	UDataWidget* HoveredEntry;
 
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
+	TArray<UDataWidget*> GetEntries();
+	
 	//Access Entires
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
 	void HoverEntry(int32 Index);
@@ -128,6 +137,9 @@ public:
 	void SelectHoveredEntry();
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void SelectEntry(int32 Index);
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
 	void CycleEntry(int32 Amount);
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
@@ -136,8 +148,7 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
 	UDataWidget* GetEntry(int32 Index);
 	
-	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
-	TArray<UDataWidget*> GetEntiresWithTag(FName Tag, bool bInvertGet);
+
 
 	//INPUT
 	virtual void InputNavigate_Implementation(FVector2D Axis) override;
@@ -190,6 +201,16 @@ protected:
 	UFUNCTION()
 	void NativeEntityHighlight(UDataWidget* DataWidget, bool bIsHighlighted);
 
+	//#####################################################
+	// HIGHLIGHT
+	//#####################################################
+
+	UFUNCTION(BlueprintCallable, Category="DataWidget|Entity")
+	void SetEntryHighlighted(int32 Index, bool bHighlighted);
+
+	UFUNCTION(BlueprintCallable, Category="DataWidget|Entity")
+	void SetAllEntriesHighlighted(bool bHighlighted);
+	
 	//Delegate Props
 
 	UPROPERTY(BlueprintAssignable)
@@ -207,4 +228,13 @@ protected:
 	FOnDataListInputNavigate OnInputNavigate;
 	UPROPERTY(BlueprintAssignable)
 	FOnDataListInputPage OnInputPage;
+
+	//---------------------------------------------------------------------------------------------//
+	//	Tags
+	//---------------------------------------------------------------------------------------------//
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
+	TArray<UDataWidget*> GetEntiresWithTag(FName Tag, bool bInvertGet);
+
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
+	bool AnyEntryHasTag(FName Tag);
 };

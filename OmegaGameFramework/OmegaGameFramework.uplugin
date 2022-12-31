@@ -10,7 +10,7 @@
 	"DocsURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/764b3140-7bc2-485d-80f7-15d9c4fa71cc/docs",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/2ca6202e55f44cfd82659fbca6591603",
 	"SupportURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/8f85af8b-d2bb-48cf-97d3-63c8c9993285/forums",
-	"EngineVersion": "4.27",
+	"EngineVersion": "5.0",
 	"CanContainContent": true,
 	"Installed": true,
 	"Modules": [
@@ -95,6 +95,16 @@
 			]
 		},
 		{
+			"Name": "Flow",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "FlowEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+		{
 			"Name": "OmegaDemo",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
@@ -103,6 +113,36 @@
 				"Linux",
 				"Mac"
 			]
+		},
+		{
+			"Name": "OmegaVisual",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaUI",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaParser",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaSignal",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaSignalEditor",
+			"Type": "UncookedOnly",
+			"loadingPhase": "PreDefault"
+		},
+		{
+			"Name": "OmegaInput",
+			"Type": "Runtime",
+			"loadingPhase": "PreDefault"
 		}
 	],
 	"Plugins": [
@@ -116,6 +156,14 @@
 		},
 		{
 			"Name": "ModularGameplay",
+			"Enabled": true
+		},
+		{
+			"Name": "AssetSearch",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonUI",
 			"Enabled": true
 		}
 	]

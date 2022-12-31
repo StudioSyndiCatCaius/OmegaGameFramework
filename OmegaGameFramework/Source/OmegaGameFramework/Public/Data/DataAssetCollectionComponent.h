@@ -10,7 +10,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UDataAsset*, Asset, int32, Amount, bool, IsFull);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetRemoved, UDataAsset*, Asset, int32, Amount, bool, IsEmpty);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent) )
 class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -29,7 +29,7 @@ protected:
 	UFUNCTION()
 	bool NativeRemoveAsset(UPrimaryDataAsset* Asset);
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category="Equipment", DisplayName="Collected Assets")
 	TMap<UPrimaryDataAsset*, int32> CollectionMap;
 
 public:	
@@ -61,5 +61,12 @@ public:
 	FOnAssetAdded OnAssetAdded;
 	UPROPERTY(BlueprintAssignable)
 	FOnAssetRemoved OnAssetRemoved;
+
+	//TRANSFEr
+	UFUNCTION(BlueprintCallable, Category="Data Asset Collection")
+	void TransferAssetToCollection(UDataAssetCollectionComponent* To, UPrimaryDataAsset* Asset, int32 Amount, bool bTransferAll);
+
+	UFUNCTION(BlueprintCallable, Category="Data Asset Collection")
+	void TransferAllAssetsToCollection(UDataAssetCollectionComponent* To);
 		
 };

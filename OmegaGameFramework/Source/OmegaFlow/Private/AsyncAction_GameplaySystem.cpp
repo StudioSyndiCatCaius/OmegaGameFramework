@@ -7,13 +7,13 @@
 
 
 UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
-	(UOmegaGameplaySubsystem* Subsystem, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag)
+	(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag)
 {
 	UAsyncAction_GameplaySystem* NewSysNode = NewObject<UAsyncAction_GameplaySystem>();
-
-	NewSysNode->SubSysRef = Subsystem;
+	
 	NewSysNode->LocalSystemClass = SystemClass;
 	NewSysNode->LocalOpenFlag = Flag;
+	NewSysNode->Local_WorldContext = WorldContextObject;
 	if(Context)
 	{
 		NewSysNode->LocalContext = Context;
@@ -29,17 +29,27 @@ void UAsyncAction_GameplaySystem::NativeShutdown(const FString Flag)
 
 void UAsyncAction_GameplaySystem::Activate()
 {
-	bool IsAlreadyActiveSystem;
-	SubSysRef->GetGameplaySystem(LocalSystemClass, IsAlreadyActiveSystem);
-	
-	if(!IsAlreadyActiveSystem)
+	if(Local_WorldContext->GetWorld())
 	{
-		AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag);
-		NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
+		bool IsAlreadyActiveSystem;
+		SubSysRef = Local_WorldContext->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+		SubSysRef->GetGameplaySystem(LocalSystemClass, IsAlreadyActiveSystem);
+		
+		if(!IsAlreadyActiveSystem)
+		{
+			AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag);
+			NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
+		}
+		else
+		{
+			Failed.Broadcast();
+			SetReadyToDestroy();
+		}
 	}
 	else
 	{
 		Failed.Broadcast();
 		SetReadyToDestroy();
 	}
+	
 }

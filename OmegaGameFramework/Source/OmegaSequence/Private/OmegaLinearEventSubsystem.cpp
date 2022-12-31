@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "OmegaLinearEventSubsystem.h"
 
+#include "Engine/World.h"
 #include "Event/OmegaLinearEventInstance.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -20,9 +20,8 @@ void UOmegaLinearEventSubsystem::Deinitialize()
 
 UOmegaLinearEventInstance* UOmegaLinearEventSubsystem::PlayLinearEvent(FLinearEventSequence Sequence, int32 StartingEvent)
 {
-	
 	UOmegaLinearEventInstance* TempEventInst = NewObject<UOmegaLinearEventInstance>(this, UOmegaLinearEventInstance::StaticClass());
-
+	
 	TempEventInst->SubsystemRef = this;
 	TempEventInst->SequenceData = Sequence;
 	TempEventInst->ActiveIndex = StartingEvent-1;
@@ -54,13 +53,15 @@ AOmegaLinearChoiceInstance* UOmegaLinearEventSubsystem::PlayLinearChoice(FOmegaL
 	{
 		LocalClass = AOmegaLinearChoiceInstance::StaticClass();
 	}
-	
-	AOmegaLinearChoiceInstance* LocalInst;
-	FTransform SpawnWorldPoint;
-	LocalInst = GetWorld()->SpawnActorDeferred<AOmegaLinearChoiceInstance>(LocalClass, SpawnWorldPoint, nullptr);
+
+	const FTransform SpawnWorldPoint;
+	AOmegaLinearChoiceInstance* LocalInst = GetWorld()->SpawnActorDeferred<AOmegaLinearChoiceInstance>(LocalClass, SpawnWorldPoint, nullptr);
 	LocalInst->ChoiceData = Choices;
+	for(auto* TempChoice : LocalInst->ChoiceData.Choices)
+	{
+		TempChoice->GameInstanceRef = GetWorld()->GetGameInstance();
+	}
 	LocalInst->FinishSpawning(SpawnWorldPoint);
-	
 	
 	return LocalInst;
 }

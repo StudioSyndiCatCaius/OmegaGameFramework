@@ -37,18 +37,17 @@ public:
 	///FUNCTIONS
 	///
 	UFUNCTION()
-	void Native_Begin();
-
+	virtual void Native_Begin();
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnEventBegin();
-	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnEventEnd(const FString& Flag);
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")
 	void Finish(const FString& Flag);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="LinearEvent")
+	UFUNCTION(BlueprintNativeEvent, Category="LinearEvent")
 	FString GetLogString() const;
 	
 };

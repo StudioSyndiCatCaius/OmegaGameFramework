@@ -16,13 +16,14 @@
 #include "Gameplay/ActorInterface_Combatant.h"
 #include "Gameplay/DataInterface_Combatant.h"
 #include "Gameplay/DataInterface_DamageModifier.h"
-#include "Gameplay/Combatant/AttributeDamagePopup.h"
+#include "Gameplay/Combatant/CombatantTargetIndicator.h"
 #include "Kismet/KismetTextLibrary.h"
 
 
 // Sets default values for this component's properties
 UCombatantComponent::UCombatantComponent()
 {
+	
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
@@ -35,19 +36,29 @@ UCombatantComponent::UCombatantComponent()
 void UCombatantComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
+	
 	//AddToCombatantList
 	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->Native_RegisterCombatant(this, true);
-	
 	///---Try Setup Input---//
 	OwnerPawn = Cast<APawn>(GetOwner());
-
 	//Grant StarterAbilities
 	for(const TSubclassOf<AOmegaAbility> TempAbClass : GrantedAbilities)
 	{
 		GrantAbility(TempAbClass);
 	}
 
+	if(TargetIndicatorClass)
+	{
+		
+		TargetIndicator = GetWorld()->SpawnActorDeferred<ACombatantTargetIndicator>(TargetIndicatorClass, GetOwner()->GetTransform(), nullptr);
+		TargetIndicator->CombatantOwner = this;
+		
+	
+		UGameplayStatics::FinishSpawningActor(TargetIndicator, GetOwner()->GetTransform());
+		TargetIndicator->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+
+	}
 	
 	InitializeAttributes();
 }
@@ -73,6 +84,13 @@ void UCombatantComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UCombatantComponent::SetMasterDataSourceActive(UObject* Source, bool bActive)
+{
+	SetSkillSourceActive(Source, bActive);
+	SetAttributeModifierActive(Source, bActive);
+	SetDamageModifierActive(Source, bActive);
 }
 
 void UCombatantComponent::SetAbilityActive(bool bActive, AOmegaAbility* Ability)
@@ -261,10 +279,12 @@ APlayerController* UCombatantComponent::GetOwnerPlayerController()
 	{
 		return Cast<APlayerController>(GetOwnerPawn()->GetController());
 	}
+	
 	else if(Cast<APlayerController>(GetOwner()))
 	{
 		return Cast<APlayerController>(GetOwner());
 	}
+	
 	else
 	{
 		return nullptr;
@@ -326,6 +346,11 @@ bool UCombatantComponent::GrantAbility(TSubclassOf<AOmegaAbility> AbilityClass)
 		{
 			LocalAbility->CachedCharacter = Cast<ACharacter>(GetOwner());
 		}
+		if (Cast<APawn>(GetOwner()))
+		{
+			LocalAbility->SetInstigator(Cast<APawn>(GetOwner()));
+		}
+		
 		UGameplayStatics::FinishSpawningActor(LocalAbility, SpawnWorldPoint);
 		LocalAbility->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 		//Add to AbilitiesList
@@ -505,6 +530,10 @@ TArray<AOmegaAbility*> UCombatantComponent::GetGrantedAbilitiesWithTags(FGamepla
 	///////////////////////////////////
 float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UObject* Instigator, UObject* Context)
 {
+	if(!bCanDamageAttributes)
+	{
+		return 0;
+	}
 	float CurrentValue;
 	float MaxVal;
 	UObject* LocalContext = nullptr;
@@ -526,15 +555,6 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 	//UPDATE NEW CURRENT VALUE
 	CurrentAttributeValues.Add(Attribute, CurrentValue);				
 	OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator);
-
-	//DamagePopup
-	if(DamagePopupClass)
-	{
-		UAttributeDamagePopup* LocalPopup = Cast<UAttributeDamagePopup>(CreateWidget(GetWorld(), DamagePopupClass));
-		LocalPopup->Native_OnDamagePopup(this, Attribute, FinalDamage, Instigator);
-
-		LocalPopup->AddToViewport();
-	}
 	
 	Update();
 	return FinalDamage;
@@ -558,13 +578,24 @@ int32 UCombatantComponent::GetAttributeLevel(UOmegaAttribute* Attribute)
 	return AttributeLevels.FindOrAdd(Attribute);
 }
 
-
-
-///////////////////
-/// Skills ////
-/////////////////
-
-
+//////////////////
+/// Skills //////
+////////////////
+TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
+{
+	TArray<UPrimaryDataAsset*> OutSkills = Skills;
+	for(auto* TempSource : Local_GetSkillSources())
+	{
+		for(auto* TempSkill : IDataInterface_SkillSource::Execute_GetSkills(TempSource))
+		{
+			if(TempSkill)
+			{
+				OutSkills.Add(TempSkill);
+			}
+		}
+	}
+	return OutSkills;
+}
 
 void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill)
 {
@@ -574,6 +605,26 @@ void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill)
 void UCombatantComponent::RemoveSkill(UPrimaryDataAsset* Skill)
 {
 	Skills.Remove(Skill);
+}
+
+bool UCombatantComponent::SetSkillSourceActive(UObject* SkillSource, bool bActive)
+{
+	if(!SkillSource )
+	{
+		return false;
+	}
+	if(SkillSource->Implements<UDataInterface_SkillSource>())
+	{
+		if(bActive)
+		{
+			Local_SkillSources.AddUnique(SkillSource);
+		}
+		else
+		{
+			Local_SkillSources.Remove(SkillSource);
+		}
+	}
+	return true;
 }
 
 
@@ -727,6 +778,19 @@ UAttributeModifierContainer* UCombatantComponent::CreateAttributeModifier(UOmega
 	return NewMod;
 }
 
+void UCombatantComponent::SetAttributeModifierActive(UObject* Modifier, bool bActive)
+{
+	if(bActive)
+	{
+		AddAttrbuteModifier(Modifier);
+	}
+	else
+	{
+		RemoveAttributeModifier(Modifier);
+	}
+	
+}
+
 bool UCombatantComponent::AddAttrbuteModifier(UObject* Modifier)
 {
 	if(Modifier->Implements<UDataInterface_AttributeModifier>())
@@ -800,18 +864,19 @@ float UCombatantComponent::GatherAttributeModifiers(TArray<UObject*> Modifiers, 
 {
 	//Set Init Value
 	float OutValue = BaseValue;
-	
+	TArray<FOmegaAttributeModifier> TempModList;
 	for(UObject* TempObject : Modifiers)
 	{
-		
 		// Makesute this object uses a Attribute Modifier Interface
 		if(TempObject)
 		{
 			if(TempObject->Implements<UDataInterface_AttributeModifier>())
 			{
 				//Gather Attributes from Object
-				TArray<FOmegaAttributeModifier> TempModList;
-				TempModList.Empty();
+				TArray<FOmegaAttributeModifier> NewMods = IDataInterface_AttributeModifier::Execute_GetModifierValues(TempObject);
+				TempModList.Append(NewMods);
+				
+				/*
 				for(FOmegaAttributeModifier TempModVal : IDataInterface_AttributeModifier::Execute_GetModifierValues(TempObject))
 				{
 					if(TempModVal.Attribute==Attribute)
@@ -820,11 +885,37 @@ float UCombatantComponent::GatherAttributeModifiers(TArray<UObject*> Modifiers, 
 						OutValue = OutValue+MultipliedValue+TempModVal.Incrementer;
 					}
 				}
+				*/
 			}
 		}
 	}
-	
+	OutValue = AdjustAttributeValueByModifiers(Attribute, TempModList);
 	return OutValue;
+}
+
+float UCombatantComponent::AdjustAttributeValueByModifiers(UOmegaAttribute* Attribute,
+	TArray<FOmegaAttributeModifier> Modifiers)
+{
+	float StartVal = GetAttributeBaseValue(Attribute);
+	for(FOmegaAttributeModifier Mod : Modifiers)
+	{
+		if(Mod.Attribute == Attribute)
+		{
+			StartVal = StartVal+Mod.Incrementer+(Mod.Multiplier*GetAttributeBaseValue(Attribute));
+		}
+	}
+	return StartVal;
+}
+
+TArray<FOmegaAttributeModifier> UCombatantComponent::GetAllModifierValues()
+{
+	TArray<FOmegaAttributeModifier> OutModVals;
+	TArray<UObject*> ModsLocal = GetAttributeModifiers();
+	for(auto* TempMod: ModsLocal)
+	{
+		OutModVals.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempMod));
+	}
+	return OutModVals;
 }
 
 ////////////////////////////////////
@@ -1029,7 +1120,7 @@ void UCombatantComponent::RemoveTargetFromList(UCombatantComponent* Combatant)
 	{
 		TargetList.Remove(Combatant);
 		OnTargetRemoved.Broadcast(Combatant);
-		//Combatant->OnRemovedAsTarget.Broadcast(this);
+		Combatant->OnRemovedAsTarget.Broadcast(this);
 	}
 }
 
@@ -1038,10 +1129,7 @@ void UCombatantComponent::ClearTargetList()
 	TArray<UCombatantComponent*> LocalCombatants = TargetList;
 	for(UCombatantComponent* TempTarget : LocalCombatants)
 	{
-		if(TempTarget != nullptr)
-		{
-			RemoveTargetFromList(TempTarget);
-		}
+		RemoveTargetFromList(TempTarget);
 	}
 	TargetList.Empty();
 }
@@ -1072,6 +1160,10 @@ UCombatantComponent* UCombatantComponent::GetActiveTarget()
 
 int32 UCombatantComponent::GetActiveTargetIndex()
 {
+	if(GetActiveTarget() && GetRegisteredTargetList().Contains(GetActiveTarget()))
+	{
+		return GetRegisteredTargetList().Find(GetActiveTarget());
+	}
 	return 0;
 }
 
@@ -1109,9 +1201,23 @@ UCombatantComponent* UCombatantComponent::CycleActiveTarget(int32 Amount)
 
 void UCombatantComponent::ClearActiveTarget()
 {
-	ActiveTarget = nullptr;
-	OnActiveTargetChanged.Broadcast(nullptr, false);
+	if(IsActiveTargetValid())
+	{
+		ActiveTarget = nullptr;
+		OnActiveTargetChanged.Broadcast(nullptr, false);
+	}
 }
+
+bool UCombatantComponent::IsActiveTargetValid()
+{
+	return ActiveTarget->IsValidLowLevel();
+}
+
+void UCombatantComponent::CombatantNotify(FName Notify, const FString& Payload)
+{
+	OnCombatantNotify.Broadcast(this, Notify, Payload);
+}
+
 
 ///////////////////
 /// Faction ////
@@ -1162,3 +1268,20 @@ TArray<UCombatantComponent*> UCombatantComponent::FilterCombatantsByAffinity(TAr
 	}
 	return OutCombatants;
 }
+
+///////////////////////////////////
+////////// -- REDIRECT DATA -- //////////
+///////////////////////////////////
+
+TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implementation()
+{
+	return GetAllModifierValues();
+}
+
+TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation()
+{
+	return GetAllSkills();
+}
+
+
+

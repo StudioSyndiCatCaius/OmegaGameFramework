@@ -40,7 +40,7 @@ struct FGameplaySystemAbilityRules
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShutdown, FString, Flag);
 
-UCLASS(config = Game, notplaceable, BlueprintType, Blueprintable, Transient, hideCategories = (Info, Rendering, MovementReplication, Actor, Collision), meta = (ShortTooltip = ""))
+UCLASS(config = Game, notplaceable, BlueprintType, Blueprintable, Transient, hideCategories = (Info, Rendering, MovementReplication, Collision, HLOD, WorldPartition), meta = (ShortTooltip = ""))
 class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AActor, public IOmegaSaveInterface
 {
 	GENERATED_BODY()
@@ -78,9 +78,21 @@ public:
 	UPROPERTY()
 		FString TempFlag;
 
+	UPROPERTY()
+	bool bIsInShutdown;
 	UPROPERTY(BlueprintAssignable)
 	FOnShutdown OnSystemShutdown;
 
+	////////////////////////////////////
+	////////////--Tags--/////////////
+	////////////////////////////////////
+	UPROPERTY(EditDefaultsOnly, Category="GamepalyTags")
+	FGameplayTagContainer SystemTags;
+	//With Shutdown and block any systems from activating that use these tags.
+	UPROPERTY(EditDefaultsOnly, Category="GamepalyTags")
+	FGameplayTagContainer BlockSystemTags;
+	UPROPERTY(EditDefaultsOnly, Category="GamepalyTags")
+	FGameplayTagContainer BlockedOnSystemTags;
 	////////////////////////////////////
 	////////////--PLAYER--/////////////
 	////////////////////////////////////
@@ -97,11 +109,14 @@ public:
 	UFUNCTION()
 	void Local_GrantAbilities(UCombatantComponent* Combatant);
 
-	
-	
-	//UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
-	//TArray<FGameplaySystemAbilityRules> GrantedAbilties;
+	//#####################################################################################################################
+	//------FLAGS
+	//#####################################################################################################################
+	UPROPERTY(EditAnywhere, Category="Default")
+	TArray<FString> ActiveFlags;
 
+	void Local_SetFlagsActive(bool State);
+	
 	UPROPERTY()
 	TArray<class UHUDLayer*> ActivePlayerWidgets;
 
@@ -121,6 +136,11 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|GamePreferences")
 	bool OnActiveGameSaved();
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega Gameplay System")
+	void OnGlobalEvent(FName Event, UObject* Context);
+	
 };
+
 
 

@@ -75,6 +75,11 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
 
+	if(OverrideEntryTooltip)
+	{
+		TempEntry->DefaultTooltipWidget = OverrideEntryTooltip;
+	}
+	
 	// Do not add if hidden
 	if(TempEntry->IsEntityHidden(Asset))
 	{
@@ -186,6 +191,19 @@ UDataWidget* UDataList::AddedCustomEntryToList(FCustomAssetData EntryData, FStri
 	return AddAssetToList(TempDataObj, Flag);
 }
 
+TArray<UDataWidget*> UDataList::GetEntries()
+{
+	TArray<UDataWidget*> OutEntries;
+	for(auto* TempEntry : Entries)
+	{
+		if(TempEntry)
+		{
+			OutEntries.Add(TempEntry);
+		}
+	}
+	return OutEntries;
+}
+
 void UDataList::HoverEntry(int32 Index)
 {
 	if(GetEntry(Index))
@@ -209,6 +227,12 @@ void UDataList::SelectHoveredEntry()
 	{
 		HoveredEntry->Select();
 	}
+}
+
+void UDataList::SelectEntry(int32 Index)
+{
+	HoverEntry(Index);
+	SelectHoveredEntry();
 }
 
 void UDataList::CycleEntry(int32 Amount)
@@ -281,6 +305,18 @@ TArray<UDataWidget*> UDataList::GetEntiresWithTag(FName Tag, bool bInvertGet)
 	}
 	
 	return OutWidgets;
+}
+
+bool UDataList::AnyEntryHasTag(FName Tag)
+{
+	for(auto TempEntry : GetEntries())
+	{
+		if(TempEntry->DataWidgetHasTag(Tag))
+		{
+			return false;
+		}
+	}
+	return false;
 }
 
 
@@ -433,6 +469,20 @@ UPanelWidget* UDataList::BuildList(TSubclassOf<UPanelWidget> Class)
 
 void UDataList::NativeEntitySelect(UDataWidget* DataWidget)
 {
+	if(HighlightOnSelect)
+	{
+		for(auto* TempEntry : Entries)
+		{
+			if(TempEntry)
+			{
+				TempEntry->SetHighlighted(false);
+			}
+		}
+		if(DataWidget)
+		{
+			DataWidget->SetHighlighted(true);
+		}
+	}
 	OnEntrySelected.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget));
 }
 
@@ -467,5 +517,26 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 
 void UDataList::NativeEntityHighlight(UDataWidget* DataWidget, bool bIsHighlighted)
 {
+	
 	OnEntryHighlighted.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget), bIsHighlighted);
 }
+
+void UDataList::SetEntryHighlighted(int32 Index, bool bHighlighted)
+{
+	if(GetEntries()[Index])
+	{
+		GetEntries()[Index]->SetHighlighted(bHighlighted);
+	}
+}
+
+void UDataList::SetAllEntriesHighlighted(bool bHighlighted)
+{
+	for(auto* TempEntry : GetEntries())
+	{
+		if(TempEntry)
+		{
+			TempEntry->SetHighlighted(bHighlighted);
+		}
+	}
+}
+

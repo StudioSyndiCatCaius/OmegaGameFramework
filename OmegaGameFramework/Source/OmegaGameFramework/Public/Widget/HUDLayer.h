@@ -19,7 +19,8 @@ class OMEGAGAMEFRAMEWORK_API UHUDLayer : public UUserWidget
 	GENERATED_BODY()
 
 public:
-
+	virtual void NativeConstruct() override;
+	
 	UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
 	void LayerAdded(class APlayerController* OwningPlayer, UObject* Context);
 
@@ -31,5 +32,11 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	int32 SlateLayerIndex;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGlobalEvent(FName Event, UObject* Context);
+	
+	UFUNCTION()
+	void Local_BindGlobalEvent();
 	
 };

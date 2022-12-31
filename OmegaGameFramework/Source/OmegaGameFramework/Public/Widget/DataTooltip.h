@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
 #include "DataTooltip.generated.h"
 
 class UDataWidget;
@@ -22,11 +23,20 @@ public:
 	UFUNCTION()
 	void SetOwningWidget(UDataWidget* NewOwner);
 	
-	UFUNCTION(BlueprintPure, Category="DataTooltip")
+	UFUNCTION(BlueprintPure, Category="Data Tooltip")
 	UDataWidget* GetOwningDataWidget();
 
-	UFUNCTION(BlueprintPure, Category="DataTooltip")
+	UFUNCTION(BlueprintPure, Category="Data Tooltip")
 	UObject* GetOwningSourceAsset();
 
+	UFUNCTION(BlueprintImplementableEvent, Category="Data Tooltip")
+	void OnOwnerSourceAssetChanged(const UObject* Asset);
+
+	//Overrides
+	UFUNCTION(BlueprintImplementableEvent, Category="Data Tooltip")
+	UTextBlock* GetAssetNameWidget();
+	UFUNCTION(BlueprintImplementableEvent, Category="Data Tooltip")
+	UTextBlock* GetAssetDescriptionWidget();
+	
 	//--Getters
 };

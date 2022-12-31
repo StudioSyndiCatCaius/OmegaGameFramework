@@ -26,7 +26,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_General
 public:
 
 	//Texts
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Texts"))
 	void GetGeneralDataText
 		(
 			const FString& Label, const class UObject* Context, 
@@ -35,7 +35,7 @@ public:
 		);
 
 	//Images
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Images"))
 		void GetGeneralDataImages
 		(
 			const FString& Label, const class UObject* Context,
@@ -45,14 +45,14 @@ public:
 		);
 
 	//Color
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(CompactNodeTitle="Color"))
 		void GetGeneralAssetColor
 		(
 			FLinearColor& Color
 		);
 
 	//AssetLabel
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(CompactNodeTitle="General Label"))
 		void GetGeneralAssetLabel
 		(
 			FString& Label

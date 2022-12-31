@@ -8,9 +8,12 @@
 #include "GameplayTagContainer.h"
 #include "VolumeUtils.h"
 #include "DamageFormula.h"
+#include "Gameplay/CombatantComponent.h"
+#include "Gameplay/Combatant/OmegaEffectPopup.h"
 #include "OmegaGameplayEffect.generated.h"
 
 class AOmegaGameplayEffect;
+
 
 USTRUCT(BlueprintType)
 struct FOmegaEffectContainer
@@ -43,11 +46,19 @@ enum class EEffectLifetime : uint8
 
 };
 
+UENUM()
+enum class EOmegaEffectType : uint8
+{
+	OET_Damage        UMETA(DisplayName = "Damage"),
+	OET_Heal        UMETA(DisplayName = "Heal"),
+};
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
-	
+
+
 public:	
 	// Sets default values for this actor's properties
 	AOmegaGameplayEffect();
@@ -103,23 +114,52 @@ public:
 	void LifetimeEnd();
 
 	//-----Damage-----//
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	TSubclassOf<UDamageFormula> DamageFormula = UDamageFormula::StaticClass();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Damage")
+	UOmegaAttribute* EffectedAttribute;
+	
+	UPROPERTY(EditAnywhere, Category="Damage")
+	EOmegaEffectType AttrbuteEffectType;
 
+	//DEPRICATED. TO BE RE<MOVED IN FUTURE
+	UPROPERTY()
+	TSubclassOf<UDamageFormula> DamageFormula = UDamageFormula::StaticClass();
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, instanced, Category = "Damage", DisplayName="Damage Formula")
+	class UDamageFormula* LocalFormula;
+	
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "Damage")
 		float Power;
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Gameplay|Effects")
 	float CalculateDamageValue();
 
-	UPROPERTY(BlueprintReadOnly, Category = "Damage")
-		class UDamageFormula* LocalFormula;
-
+	
+	//####################################//####################################//####################################
 	//-----Tags-----//
+	//####################################//####################################//####################################
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
 	FGameplayTag EffectCategory;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
 	FGameplayTagContainer EffectTags;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer RemoveEffectsOnApplied;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer RemoveEffectsOnTrigger;
+
+	void Local_RemoveEffects(FGameplayTagContainer Effects)
+	{
+		if(TargetedCombatant)
+		{
+			for(auto* TempEffect: TargetedCombatant->GetEffectsWithTags(Effects))
+			{
+				if(TempEffect != this)
+				{
+					TempEffect->Destroy();
+				}
+			};
+		}
+	}
+	
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
 	FGameplayTag GetObjectGameplayCategory();
@@ -129,11 +169,38 @@ public:
 	FGameplayTagContainer GetObjectGameplayTags();
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation();
 
+	//###############################################################################################################
+	// POPUP
+	//###############################################################################################################
+	UPROPERTY(EditDefaultsOnly, Category="Popup")
+	bool bShowPopupOnTrigger;
+	UPROPERTY(EditDefaultsOnly, Category="Popup")
+	TSubclassOf<UOmegaEffectPopup> PopupClass;
+	UPROPERTY(EditDefaultsOnly, Category="Popup")
+	bool UseCustomPopupText;
+	
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Popup")
+	FText GetTriggeredPopupText();
+	UFUNCTION(BlueprintNativeEvent, Category="Popup")
+	FSlateColor GetTriggeredPopupColor();
 
+	
 	//Misc
 	FTimerHandle LifetimeTimer;
 
 	float PastLifetime;
 	float RemainingLifetime;
-	
+
+	TSubclassOf<UOmegaEffectPopup> Local_GetPopupClass()
+	{
+		if(PopupClass)
+		{
+			return PopupClass;
+		}
+		else
+		{
+			return UOmegaEffectPopup::StaticClass();
+		}
+	}
 };

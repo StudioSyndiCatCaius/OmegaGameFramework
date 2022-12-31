@@ -7,6 +7,7 @@
 #include "Engine/DataAsset.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "GameplayTagContainer.h"
+#include "GamePreferenceScript.h"
 #include "GamePreference.generated.h"
 
 UENUM(BlueprintType)
@@ -41,12 +42,20 @@ public:
 	//Is this preference saved globally save file?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
 	bool bGlobal;
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
 	FGameplayTag PreferenceCategory;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
 	FGameplayTagContainer PreferenceTags;
+
+	//#############################################
+	// SCRIPT
+	//#############################################
+	UPROPERTY(EditDefaultsOnly, Instanced, Category = "General")
+	UGamePreferenceScript* PreferenceScript;
+
+	
 
 //Interface
 

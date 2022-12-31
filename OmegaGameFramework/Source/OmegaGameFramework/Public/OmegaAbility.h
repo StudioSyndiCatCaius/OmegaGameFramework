@@ -16,7 +16,6 @@
 
 
 
-
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbilityEnd, bool, bCancelled);
 
@@ -27,6 +26,7 @@ class UCharacterMovementComponent;
 class UEnhancedInputComponent;
 class UHUDLayer;
 class UTimelineComponent;
+class UOmegaGameManager;
 
 UENUM()
 enum class EAbilityActivateInput
@@ -51,6 +51,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	
 	UFUNCTION()
 	void TryAssignControlInput(APawn* Pawn, AController* Controller);
@@ -64,6 +65,8 @@ public:
 	virtual void Native_AbilityFinished(bool Cancelled);
 	UFUNCTION()
 	virtual void Native_ActivatedTick(float DeltaTime);
+	UFUNCTION()
+	virtual bool Native_CanActivate(UObject* Context);
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -105,11 +108,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
 	void CancelAbility();
 
-	//Owner Gets//
-	
+	//-###########################################################################################################-//
+	//---- OWNER GETS
+	//-###########################################################################################################-//
 	UFUNCTION(BlueprintPure, Category = "Ω|Ability|Owner")
 	class ACharacter* GetAbilityOwnerCharacter();
 
+	UFUNCTION(BlueprintPure, Category = "Ω|Ability|Owner")
+	APlayerController* GetAbilityOwnerPlayer();
+	
 	UFUNCTION(BlueprintPure, Category = "Ω|Ability|Owner")
 	class UCharacterMovementComponent* GetAbilityOwnerCharacterMoveComponent();
 
@@ -124,12 +131,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Ability|Tags")
 	void RemoveBlockedAbilityTags(FGameplayTagContainer RemovedTags);
 
-	//### Input ###//
+	//-###########################################################################################################-//
+	//---- INPUT
+	//-###########################################################################################################-//
 	UPROPERTY(VisibleAnywhere, Category="Input")
 	class UInputReceiverComponent* DefaultInputReceiver;
 
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	bool bEnableInputOnActivation;
+
+protected:
+	UFUNCTION()
+	void Local_SetInputEnabled(bool Enabled)
+	{
+		if(GetAbilityOwnerPlayer())
+		{
+			if(Enabled)
+			{
+				EnableInput(GetAbilityOwnerPlayer());
+			}
+			else
+			{
+				DisableInput(GetAbilityOwnerPlayer());
+			}
+		}
+	}
+
+public:
 	//FlipFlops the input
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input", DisplayName="Toggle Active on Input")
 	bool FlipFlopInput;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -238,4 +268,42 @@ private:
 
 	UFUNCTION()
 	void RecieveFinish(bool bCancel);
+
+public:
+
+	//---------------------------------------------------------------------------------------------------------------//
+	// NOTIFY //
+	//---------------------------------------------------------------------------------------------------------------//
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnCombatantNotify(UCombatantComponent* OwningCombatant, FName Notify, const FString& Flag);
+
+	//---------------------------------------------------------------------------------------------------------------//
+	// Combatant Owner Overrides //
+	//---------------------------------------------------------------------------------------------------------------//
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	void OnActiveTargetChanged(UCombatantComponent* ActiveTarget, bool Valid);
+	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	void OnRegisteredTarget(UCombatantComponent* Target);
+	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	void OnUnregisteredTarget(UCombatantComponent* Target);
+/*
+	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	void OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, UObject* Instigator);
+*/	
+
+	//-###########################################################################################################-//
+	//---- EVENTS
+	//-###########################################################################################################-//
+	void Local_TriggerEvents(TArray<FName> Events);
+
+	UPROPERTY(EditDefaultsOnly, Category="GlobalEvents")
+	TArray<FName> EventsOnActivate;
+	UPROPERTY(EditDefaultsOnly, Category="GlobalEvents")
+	TArray<FName> EventsOnFinish;
+	UPROPERTY(EditDefaultsOnly, Category="GlobalEvents")
+	TArray<FName> EventsOnComplete;
+	UPROPERTY(EditDefaultsOnly, Category="GlobalEvents")
+	TArray<FName> EventsOnCancel;
 };

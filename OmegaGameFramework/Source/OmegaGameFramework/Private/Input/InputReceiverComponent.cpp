@@ -2,6 +2,9 @@
 
 
 #include "Input/InputReceiverComponent.h"
+
+#include "InputMappingContext.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 
 // Sets default values for this component's properties
@@ -19,30 +22,32 @@ UInputReceiverComponent::UInputReceiverComponent()
 void UInputReceiverComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	OverrideInputOwner(GetOwner());
 
-	/*
+	//Local_InputAction = NewObject<UInputAction>(this, UInputAction::StaticClass());
+	
 	if(Cast<APawn>(GetOwner()))
 	{
 		UE_LOG(LogTemp, Display, TEXT("Bound Input Reciever event on owner controller change") );
 		Cast<APawn>(GetOwner())->ReceiveControllerChangedDelegate.AddDynamic(this, &UInputReceiverComponent::OnOwningControllerChange);
 	}
-	*/
-	
 }
 
 void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)
 {
+	
 	if(!NewOwner || !InputAction)
 	{
 		UE_LOG(LogTemp, Display, TEXT("New Owner ot InputAction are invalid") );
 		return;
 	}
+	
 	UEnhancedInputComponent* NewInputComp = Cast<UEnhancedInputComponent>(NewOwner->InputComponent);
+	
 	if(NewInputComp)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Valid New INput Component") );
+		UE_LOG(LogTemp, Display, TEXT("Valid New Input Component") );
 		OwnerInputComp = NewInputComp;
 		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Started, this, &UInputReceiverComponent::Native_Started);
 		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Triggered, this, &UInputReceiverComponent::Native_Triggered);
@@ -51,6 +56,8 @@ void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)
 		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Ongoing, this, &UInputReceiverComponent::Native_Ongoing);
 		OwnerInputComp->BindActionValue(InputAction);
 	}
+
+	
 }
 
 FInputActionValue UInputReceiverComponent::GetInputActionValue()
@@ -65,6 +72,7 @@ FInputActionValue UInputReceiverComponent::GetInputActionValue()
 
 void UInputReceiverComponent::Native_Started()
 {
+	
 	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Started") );
 	OnInputStarted.Broadcast();
 }
@@ -95,7 +103,20 @@ void UInputReceiverComponent::Native_Ongoing()
 void UInputReceiverComponent::OnOwningControllerChange(APawn* Pawn, AController* OldController, AController* NewController)
 {
 	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Owner Change (on new controller)") );
-	OverrideInputOwner(Pawn);
+	AActor* LocalActorRef = Pawn;
+	OverrideInputOwner(LocalActorRef);
+
+	if(Cast<APlayerController>(OldController))
+	{
+		GetOwner()->DisableInput(Cast<APlayerController>(OldController));
+	}
+	
+	if(Cast<APlayerController>(NewController))
+	{
+		GetOwner()->EnableInput(Cast<APlayerController>(NewController));
+	}
+	
 }
+
 
 
