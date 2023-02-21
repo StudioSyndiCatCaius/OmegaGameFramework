@@ -7,7 +7,7 @@
 #include "Components/ActorComponent.h"
 #include "LevelingComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnXpUpdated, float, XP);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXpUpdated, float, XP, float, AmountChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, int32, NewLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelDown, int32, NewLevel);
 

@@ -8,7 +8,7 @@
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "AsyncAction_GameplaySystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FShutdown, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShutdown, UObject*, Context, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailedActivateSystem);
 
 UCLASS()
@@ -36,7 +36,7 @@ public:
 	const UObject* Local_WorldContext;
 	
 	UFUNCTION()
-	void NativeShutdown(const FString Flag);
+	void NativeShutdown(UObject* Context, const FString Flag);
 	
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject")) 

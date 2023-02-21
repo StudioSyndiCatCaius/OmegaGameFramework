@@ -133,6 +133,34 @@ void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObje
 	}
 }
 
+UCombatantComponent* UCombatantFunctions::TryGetCombatantFromObject(UObject* Object)
+{
+	AActor* TempActor;
+	
+	if(Cast<UCombatantComponent>(Object))
+	{
+		return Cast<UCombatantComponent>(Object);
+	}
+	if(Cast<AActor>(Object))
+	{
+		TempActor = Cast<AActor>(Object);
+		if(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()))
+		{
+			return Cast<UCombatantComponent>(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()));
+		}
+	}
+	if(Cast<UActorComponent>(Object))
+	{
+		TempActor = Cast<UActorComponent>(Object)->GetOwner();
+		if(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()))
+		{
+			return Cast<UCombatantComponent>(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()));
+		}
+	}
+	return nullptr;
+}
+	
+
 UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
 {
 	TMap<FString, FSoftObjectPath> LocalAID = GetMutableDefault<UOmegaSettings>()->AttributeIDs;

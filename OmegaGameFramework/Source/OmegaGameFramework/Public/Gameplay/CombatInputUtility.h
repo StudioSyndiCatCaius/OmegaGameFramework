@@ -6,7 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-
+#include "Animation/AnimNotifies/AnimNotify.h"
 #include "CombatInputUtility.generated.h"
 
 class UCombatantComponent;
@@ -28,11 +28,6 @@ public:
 
 	UFUNCTION()
 	void Execute();
-/*
-	UPROPERTY()
-	class UCombatantComponent* CombatOwner;
 
-	UPROPERTY()
-	TSubclassOf<AOmegaAbility> BoundAblityClass;
-	*/
 };
+

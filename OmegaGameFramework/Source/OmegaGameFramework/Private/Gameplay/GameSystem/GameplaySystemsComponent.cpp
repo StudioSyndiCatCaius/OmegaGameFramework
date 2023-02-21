@@ -46,7 +46,10 @@ void UGameplaySystemsComponent::Local_ShutdownSystems()
 {
 	for(const auto TempSys : GameplaySystems)
 	{
-		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys, ActivationFlag);
+		if(TempSys)
+		{
+			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys, GetOwner(), ActivationFlag);
+		}
 	}
 }
 

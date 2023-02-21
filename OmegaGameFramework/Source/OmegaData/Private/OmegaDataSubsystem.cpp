@@ -192,6 +192,43 @@ UDataItemComponent* UOmegaDataSubsystem::GetComponentByDataItem(UOmegaDataItem* 
 	return nullptr;
 }
 
+TArray<UDataItemComponent*> UOmegaDataSubsystem::GetComponentsByDataItem(UOmegaDataItem* DataItem)
+{
+	TArray<UDataItemComponent*> OutComps;
+	for(auto* TempComp : GetActiveDataItemComponents())
+	{
+		if(TempComp->DataItem == DataItem)
+		{
+			OutComps.Add(TempComp);
+		}
+	}
+	return OutComps;
+}
+
+TArray<UDataItemComponent*> UOmegaDataSubsystem::GetComponentsOfDataItemWithTags(UOmegaDataItem* DataItem,
+	FGameplayTagContainer EntityTags, bool Exact)
+{
+	TArray<UDataItemComponent*> OutComps;
+	for(auto* TempComp: GetComponentsByDataItem(DataItem))
+	{
+		bool LocalValid;
+		if(Exact)
+		{
+			LocalValid = TempComp->EntityTags.HasAnyExact(EntityTags);
+		}
+		else
+		{
+			LocalValid = TempComp->EntityTags.HasAny(EntityTags);
+		}
+
+		if(LocalValid)
+		{
+			OutComps.Add(TempComp);
+		}
+	}
+	return OutComps;
+}
+
 AActor* UOmegaDataSubsystem::GetActorByDataItem(UOmegaDataItem* DataItem)
 {
 	if(GetComponentByDataItem(DataItem))
@@ -200,3 +237,18 @@ AActor* UOmegaDataSubsystem::GetActorByDataItem(UOmegaDataItem* DataItem)
 	}
 	return nullptr;
 }
+
+TArray<AActor*> UOmegaDataSubsystem::GetActorsByDataItem(UOmegaDataItem* DataItem)
+{
+	TArray<AActor*> OutActors;
+	for (const auto* TempComp : GetComponentsByDataItem(DataItem))
+	{
+		if(TempComp)
+		{
+			OutActors.Add(TempComp->GetOwner());
+		}
+	}
+	return OutActors;
+}
+
+

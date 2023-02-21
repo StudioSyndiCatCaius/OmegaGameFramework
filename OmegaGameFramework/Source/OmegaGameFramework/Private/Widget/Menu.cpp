@@ -49,7 +49,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	}
 }
 
-void UMenu::CloseMenu(FGameplayTagContainer Tags, const FString& Flag)
+void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
 {
 	if (bIsOpen)
 	{
@@ -58,7 +58,7 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, const FString& Flag)
 		
 		TempTags = Tags;
 		MenuClosed(TempTags, Flag);
-		OnClosed.Broadcast(TempTags, Flag);
+		OnClosed.Broadcast(TempTags, Context, Flag);
 
 		//Handle Subsystem
 		UOmegaPlayerSubsystem* SubsystemRef = GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();

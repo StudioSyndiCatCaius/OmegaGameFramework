@@ -33,6 +33,7 @@ public class OmegaGameFramework : ModuleRules
 			{
 				"Core",
 				"CoreUObject",
+				"CommonUI",
 				"EnhancedInput",
 				"Engine",
 				"DeveloperSettings",
@@ -53,6 +54,7 @@ public class OmegaGameFramework : ModuleRules
 				"Slate",
 				"SlateCore",
 				"Projects",
+				"AssetRegistry",
 				"GameplayTags",
 				"PropertyPath",
 				"DeveloperSettings"

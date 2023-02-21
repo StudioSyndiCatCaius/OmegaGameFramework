@@ -6,6 +6,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "DataInterface_General.h"
+#include "CommonUILibrary.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
@@ -60,6 +61,14 @@ void UDataWidget::NativeConstruct()
 	DefaultCreatedTooltip = CreateWidget<UDataTooltip>(this, LocalTooltipClass);
 	DefaultCreatedTooltip->SetOwningWidget(this);
 
+	if(UpdateSourceAssetFromParent)
+	{
+		if(Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass())))
+		{
+			OwnerDataWidget = Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass()));
+			OwnerDataWidget->SourceAssetChanged.AddDynamic(this, &UDataWidget::SetSourceAsset);
+		}
+	}
 	Local_UpdateTooltip(ReferencedAsset);
 }
 
@@ -71,6 +80,15 @@ FString UDataWidget::GetAssetLabel()
 		IDataInterface_General::Execute_GetGeneralAssetLabel(ReferencedAsset, OutString);
 	}
 	return OutString;
+}
+
+UDataList* UDataWidget::GetOwningList() const
+{
+	if(ParentList)
+	{
+		return ParentList;
+	}
+	return nullptr;
 }
 
 void UDataWidget::SetWidgetTagActive(FName Tag, bool bActive)
@@ -228,12 +246,15 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 				}
 				GetBrushImage(Local_OverrideSize, Local_NewSize)->SetBrush(LocalBrush);
 			}
-
-			//Set Tooltip Asset
-			Local_UpdateTooltip(Asset);
 			
 		}//Finish widget setup
-	OnSourceAssetChanged(Asset);
+		
+		//Set Tooltip Asset
+		Local_UpdateTooltip(Asset);
+			
+		ReferencedAsset = Asset;
+		SourceAssetChanged.Broadcast(Asset);
+		OnSourceAssetChanged(Asset);
 	}
 	
 }
@@ -252,21 +273,25 @@ void UDataWidget::Local_UpdateTooltip(UObject* AssetRef)
 	if(DefaultCreatedTooltip)
 	{
 		DefaultCreatedTooltip->OnOwnerSourceAssetChanged(AssetRef);
-		
-		FText LocalDesc;
-		FText LocalName;
-			
-		IDataInterface_General::Execute_GetGeneralDataText(AssetRef, AssetLabel, this, LocalName, LocalDesc);
-		
-		//update name widget
-		if(DefaultCreatedTooltip->GetAssetNameWidget())
+
+		if(AssetRef->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 		{
-			DefaultCreatedTooltip->GetAssetNameWidget()->SetText(LocalName);
+			FText LocalDesc;
+			FText LocalName;
+		
+			IDataInterface_General::Execute_GetGeneralDataText(AssetRef, AssetLabel, this, LocalName, LocalDesc);
+		
+			//update name widget
+			if(DefaultCreatedTooltip->GetAssetNameWidget())
+			{
+				DefaultCreatedTooltip->GetAssetNameWidget()->SetText(LocalName);
+			}
+			//update description widget
+			if(DefaultCreatedTooltip->GetAssetNameWidget())
+			{
+				DefaultCreatedTooltip->GetAssetDescriptionWidget()->SetText(LocalDesc);
+			}
 		}
-		//update description widget
-		if(DefaultCreatedTooltip->GetAssetNameWidget())
-		{
-			DefaultCreatedTooltip->GetAssetDescriptionWidget()->SetText(LocalDesc);
-		}
+		
 	}
 }

@@ -190,6 +190,7 @@ void AOmegaAbility::Execute(UObject* Context)
 		UE_LOG(LogTemp, Warning, TEXT("Valid Execute"));
 		bIsActive = true;
 		CombatantOwner->CancelAbilitiesWithTags(CancelAbilities);
+		CombatantOwner->CancelAbilitiesWithTags(BlockAbilities);
 		CombatantOwner->SetAbilityActive(true, this);
 
 		// TIMLEINE

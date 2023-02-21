@@ -29,6 +29,7 @@ AAdvancedVolume::AAdvancedVolume()
 	{
 		Volume->SetupAttachment(RootRef);
 		Volume->SetHiddenInGame(true);
+		Volume->SetCanEverAffectNavigation(false);
 	}
 	
 	// Text
@@ -38,6 +39,7 @@ AAdvancedVolume::AAdvancedVolume()
 		TextDisplay->SetupAttachment(RootRef);
 		static ConstructorHelpers::FObjectFinder<UMaterialInterface> TextMatRef(TEXT("/Engine/EngineMaterials/UnlitText.UnlitText"));
 		TextDisplay->SetTextMaterial(TextMatRef.Object);
+		TextDisplay->SetHiddenInGame(true);
 	}
 	
 	// Icon
@@ -60,6 +62,7 @@ AAdvancedVolume::AAdvancedVolume()
 void AAdvancedVolume::BeginPlay()
 {
 	Super::BeginPlay();
+	Volume->SetCanEverAffectNavigation(false);
 	Volume->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 }
 

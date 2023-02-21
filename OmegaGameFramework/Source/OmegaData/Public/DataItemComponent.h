@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "OmegaDataItem.h"
 #include "Components/ActorComponent.h"
+#include "Delegates/DelegateCombinations.h"
 #include "DataItemComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataItemChanged, UOmegaDataItem*, Item);
 
 UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent) )
 class OMEGADATA_API UDataItemComponent : public UActorComponent, public IDataInterface_AttributeModifier, public IDataInterface_SkillSource
@@ -27,12 +29,20 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="DataItem")
 	UOmegaDataItem* DataItem;
-
+	
 	UPROPERTY(EditAnywhere, Category="DataItem")
+	FGameplayTagContainer EntityTags;
+	
+	UPROPERTY(EditAnywhere, Category="Applied")
 	FString FlagOnApplied;
-
-	UPROPERTY(EditAnywhere, Category="DataItem")
+	
+	UPROPERTY(EditAnywhere, Category="Applied")
 	FGameplayTagContainer TagsOnApplied;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnDataItemChanged OnDataItemChanged;
+
+	
 	
 	UFUNCTION(BlueprintCallable, Category="DataItem")
 	void SetDataItem(UOmegaDataItem* NewDataItem);

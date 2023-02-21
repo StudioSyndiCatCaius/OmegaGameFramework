@@ -10,7 +10,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UDataAsset*, Asset, int32, Amount, bool, IsFull);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetRemoved, UDataAsset*, Asset, int32, Amount, bool, IsEmpty);
 
-UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Inventory (Data Asset Collection)", meta=(BlueprintSpawnableComponent) )
 class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionComponent : public UActorComponent
 {
 	GENERATED_BODY()

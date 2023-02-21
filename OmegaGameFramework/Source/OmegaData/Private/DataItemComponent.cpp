@@ -29,6 +29,11 @@ void UDataItemComponent::BeginPlay()
 		LocalCombatant->AddAttrbuteModifier(this);
 		LocalCombatant->SetSkillSourceActive(this, true);
 	}
+
+	if(DataItem)
+	{
+		OnDataItemChanged.Broadcast(DataItem);
+	}
 	
 	// ...
 	
@@ -52,6 +57,7 @@ void UDataItemComponent::SetDataItem(UOmegaDataItem* NewDataItem)
 	}
 	DataItem = NewDataItem;
 	DataItem->ApplyTraitsToActor(GetOwner(), FlagOnApplied, TagsOnApplied);
+	OnDataItemChanged.Broadcast(NewDataItem);
 }
 
 UOmegaDataItem* UDataItemComponent::GetDataItem()

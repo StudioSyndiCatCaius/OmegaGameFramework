@@ -9,6 +9,8 @@
 #include "Gameplay/GameplayTagsInterface.h"
 #include "InstanceActorComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInstanceNotify, AOmegaInstanceActor*, Instance, FName, Notify);
+
 // Create several instances of single actor class
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UInstanceActorComponent : public UActorComponent, public IDataInterface_General, public IGameplayTagsInterface
@@ -18,7 +20,7 @@ class OMEGAGAMEFRAMEWORK_API UInstanceActorComponent : public UActorComponent, p
 public:
 	// Sets default values for this component's properties
 	UInstanceActorComponent();
-
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -54,4 +56,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component")
 	bool SwapInstanceIndecies(int32 A, int32 B);
+
+	UPROPERTY(BlueprintAssignable)
+	FOnInstanceNotify OnInstanceNotify;
 };

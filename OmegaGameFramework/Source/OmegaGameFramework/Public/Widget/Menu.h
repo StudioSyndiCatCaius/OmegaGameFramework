@@ -13,7 +13,7 @@ class APlayerController;
 class UWidgetAnimation;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FClosed, FGameplayTagContainer, Tags, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
 
 UCLASS(HideFunctions=(Construct, RemoveFromParent))
 class OMEGAGAMEFRAMEWORK_API UMenu : public UUserWidget, public IWidgetInterface_Input
@@ -33,7 +33,7 @@ public:
 	void Native_CompleteOpen();
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Tags, Flag"))
-		void CloseMenu(FGameplayTagContainer Tags, const FString& Flag);
+		void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 
 	UPROPERTY()
 	bool bIsClosing;

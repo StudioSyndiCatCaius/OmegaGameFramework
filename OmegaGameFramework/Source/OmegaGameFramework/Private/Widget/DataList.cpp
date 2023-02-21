@@ -20,6 +20,24 @@
 #include "Engine/DataAsset.h"
 
 
+void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
+{
+	if(NewClass)
+	{
+		EntryClass = NewClass;
+		TArray<UDataWidget*> SavedEntryWidgets;
+
+		ClearList();
+		if(KeepEntries)
+		{
+			for(const auto* OldEntry : SavedEntryWidgets)
+			{
+				AddAssetToList(OldEntry->ReferencedAsset, "NewEntryClass");
+			}
+		}
+	}
+}
+
 void UDataList::ClearList()
 {
 	if (ListPanel)

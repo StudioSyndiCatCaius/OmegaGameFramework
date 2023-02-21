@@ -49,7 +49,7 @@ void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler)
 	const int32 LastLevel = GetCurrentLevel();
 	//Add XP
 	XP = XP+Amount;
-
+	
 	//If new level is greater than last level
 	if(GetCurrentLevel()>LastLevel)
 	{
@@ -61,14 +61,14 @@ void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler)
 		OnLevelDown.Broadcast(GetCurrentLevel());
 	}
 
-	OnXPUpdated.Broadcast(XP);
+	OnXPUpdated.Broadcast(XP, Amount);
 	Native_Update();
 }
 
 void ULevelingComponent::SetXP(float NewValue, bool bUseRateMultipler)
 {
 	XP = NewValue;
-	OnXPUpdated.Broadcast(XP);
+	OnXPUpdated.Broadcast(XP, XP);
 	Native_Update();
 }
 

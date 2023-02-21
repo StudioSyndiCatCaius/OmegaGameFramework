@@ -9,7 +9,7 @@
 class UWorld;
 class UGameInstance;
 
-UCLASS(Blueprintable, BlueprintType, Abstract, EditInlineNew, CollapseCategories)
+UCLASS(Blueprintable, BlueprintType, Abstract, EditInlineNew)
 class FLOW_API UFlowAssetTrait : public UObject
 {
 	GENERATED_BODY()

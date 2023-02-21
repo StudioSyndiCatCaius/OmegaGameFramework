@@ -20,9 +20,9 @@ void UTurnBasedManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TurnManager = NewObject<UTurnManagerBase>(this, TurnManagerClass);
-	TurnManager->TurnManagerRef = this;
-	// ...
+	SetTurnManagerClass(TurnManagerClass);
+	
+	
 	
 }
 
@@ -34,6 +34,23 @@ void UTurnBasedManagerComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UTurnBasedManagerComponent::SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass)
+{
+	if(NewClass)
+	{
+		TurnManager = NewObject<UTurnManagerBase>(this, NewClass);
+		TurnManager->TurnManagerRef = this;
+	}
+}
+
+void UTurnBasedManagerComponent::SetTurnAbilityClass(TSubclassOf<AOmegaAbility> AbilityClass)
+{
+	if(AbilityClass)
+	{
+		TurnAbility = AbilityClass;
+	}
 }
 
 TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetTurnOrder()

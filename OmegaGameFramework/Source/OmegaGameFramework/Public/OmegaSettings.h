@@ -42,8 +42,12 @@ public:
 	TArray<TSubclassOf<AOmegaGameplaySystem>> AutoActivatedGameplaySystems;
 
 	TArray<TSubclassOf<UOmegaGameplayModule>> GetGameplayModuleClasses() const;
+
+	//Will automatically scan these directories at startup to try and load and actiavate modules from them. NOTE: This can be a slow process. Try and only set these paths to folders containing GameplayModules.
+	UPROPERTY(EditAnywhere, config, Category = "Modules", meta = (MetaClass = "OmegaGameplayModule"))
+	TArray<FDirectoryPath> AutoModuleScanPaths;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
+	UPROPERTY(EditAnywhere, config, Category = "Modules", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FSoftClassPath> RegisteredGameplayModules;
 
 	UPROPERTY()

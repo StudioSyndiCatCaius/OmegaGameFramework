@@ -2,25 +2,84 @@
 
 
 #include "OmegaGameManager.h"
+
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "DSP/PassiveFilter.h"
 #include "Gameplay/OmegaGameplayModule.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
 void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 {
+	/*
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	TArray<FAssetData> AssetData;
+	FARFilter Filter;
+	Filter.ClassNames.Add("Blueprint");
+	Filter.ClassNames.Add("OmegaGameplayModule");
+	
+	for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaSettings>()->AutoModuleScanPaths)
+	{
+		FString LocalString = NewPath.Path;
+		Filter.PackagePaths.Add(FName(*LocalString));
+	}
+	
+	TSet<FName> LocalExcludedClasses;
+	LocalExcludedClasses.Add("Actor");
+	LocalExcludedClasses.Add("Widget");
+	Filter.RecursiveClassesExclusionSet = LocalExcludedClasses;
+	
+	Filter.bRecursiveClasses = true;
+	Filter.bRecursivePaths = true;
+	Filter.bIncludeOnlyOnDiskAssets = true;
+	
+	AssetRegistryModule.Get().GetAssetsByClass(UOmegaGameplayModule::StaticClass()->GetFName(),AssetData, true);
+	//AssetRegistryModule.Get().GetAssets(Filter, AssetData);
+
+	for(FAssetData TempAssetData : AssetData)
+	{
+		if(TempAssetData.GetClass())
+		{
+			UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"ModuleClassLoaded: ", TempAssetData.GetAsset());
+			TSubclassOf<UOmegaGameplayModule> TempModClass = TempAssetData.GetClass();
+			if(TempModClass && Cast<UOmegaGameplayModule>(TempModClass->GetDefaultObject())->AutoRegisterModule)
+			{
+			ActivateModuleFromClass(TempModClass);
+			}
+			
+		}
+	}
+
+	*/
+	
 	for(TSubclassOf<UOmegaGameplayModule> TempModule : GetMutableDefault<UOmegaSettings>()->GetGameplayModuleClasses())
 	{
 		if(TempModule)
 		{
 			//UObject* TempOuter = GetGameInstance();
-			UOmegaGameplayModule* NewModule = NewObject<UOmegaGameplayModule>(GetGameInstance(), TempModule);
-			ActiveModules.Add(NewModule);
-			NewModule->Native_Initialize();
+			ActivateModuleFromClass(TempModule);
 		}
 	}
 
 	//Setup timer
 	// GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
+}
+
+void UOmegaGameManager::ActivateModuleFromClass(const UClass* ModuleClass)
+{
+	for (const auto* TempMod : ActiveModules)
+	{
+		if(TempMod->GetClass()==ModuleClass)
+		{
+			return;
+		}
+	}
+	
+	UOmegaGameplayModule* NewModule = NewObject<UOmegaGameplayModule>(GetGameInstance(), ModuleClass);
+	ActiveModules.Add(NewModule);
+	NewModule->Native_Initialize();
+	
+	UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"Gameplay Module Activated: ", NewModule->GetClass());
 }
 
 void UOmegaGameManager::Deinitialize()
@@ -32,8 +91,12 @@ void UOmegaGameManager::Deinitialize()
 	Super::Deinitialize();
 }
 
+
+
 UOmegaGameplayModule* UOmegaGameManager::GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module)
 {
+	
+	
 	for(UOmegaGameplayModule* TempModule : ActiveModules)
 	{
 		if(TempModule->GetClass() == Module)

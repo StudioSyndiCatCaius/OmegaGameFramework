@@ -17,6 +17,9 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Buff,"Combat.Effect.Buff");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Debuff,"Combat.Effect.Debuff");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Ailment,"Combat.Effect.Ailment");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_One,"Combat.Target.One");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_All,"Combat.Target.All");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_Self,"Combat.Target.Self");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Consumable,"Item.Consumable");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Key,"Item.Key");

@@ -26,6 +26,7 @@ class AOmegaAbility;
 class AOmegaGameplayEffect;
 class UOmegaGameplaySubsystem;
 class ACombatantTargetIndicator;
+class UOmegaFaction;
 
 class UInputComponent;
 class UEnhancedInputComponent;
@@ -82,6 +83,13 @@ public:
 	////////// -- General -- //////////
 	///////////////////////////////////
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Name"))
+	FText DisplayName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Description", MultiLine))
+	FText CombatantDescription;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Icon"))
+	FSlateBrush CombatantIcon;
+
 	UPROPERTY()
 	class UEnhancedInputComponent* OwnerInputComp;
 
@@ -111,10 +119,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
 	int32 Level = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", AdvancedDisplay)
 	TMap<class UOmegaAttribute*, int32> AttributeLevels;
 
-	UPROPERTY(EditAnywhere, Category = "Attributes")
+	UPROPERTY(EditAnywhere, Category = "Attributes", AdvancedDisplay)
 	FGameplayTag AttributeValueCategory;
 
 	UFUNCTION(BlueprintPure, Category="Modifiers")
@@ -135,18 +143,27 @@ public:
 	////////// -- Faction -- //////////
 	///////////////////////////////////
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Faction")
-	class UPrimaryDataAsset* FactionDataAsset;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Faction")
+	UOmegaFaction* FactionDataAsset;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Faction", AdvancedDisplay)
 	FGameplayTag FactionTag;
-
-	UFUNCTION(BlueprintPure, Category="Faction")
-	FGameplayTag GetFactionTag();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Faction")
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Faction", AdvancedDisplay)
 	TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> FactionAffinities;
-
+	
+	UFUNCTION(BlueprintPure, Category="Faction", meta=(CompactNodeTitle="Faction Name"))
+	FText GetFactionName();
+	
+	UFUNCTION(BlueprintPure, Category="Faction", meta=(CompactNodeTitle="Faction Color"))
+	FLinearColor GetFactionColor();
+	
+	UFUNCTION(BlueprintPure, Category="Faction", meta=(CompactNodeTitle="Faction Tag"))
+	FGameplayTag GetFactionTag();
+	
+	UFUNCTION(BlueprintPure, Category="Faction")
+	TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> GetFactionAffinities();
+	
 	UFUNCTION(BlueprintPure, Category="Faction")
 	EFactionAffinity GetAffinityToCombatant(UCombatantComponent* CheckedCombatant);
 
@@ -260,12 +277,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "General")
 	class UPrimaryDataAsset* CombatantDataAsset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Name"))
-	FText DisplayName;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Description"))
-	FText CombatantDescription;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Icon"))
-	FSlateBrush CombatantIcon;
+	
 	
 	////////////////////////////////////
 	////////// -- Ability -- ////////
@@ -314,6 +326,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
 	void CancelAbilitiesWithTags(FGameplayTagContainer Tags);
 
+	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
+	void CancelAllAbilities();
+
 	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
 	bool IsAbilityTagBlocked(FGameplayTagContainer Tags);
 
@@ -325,7 +340,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Combatant")
 	void InitializeFromAsset(UObject* Asset);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes", AdvancedDisplay)
 	bool bCanDamageAttributes = true;
 	
 	UFUNCTION(BlueprintCallable, Category = "Attributes", meta = (AdvancedDisplay = "Instigator"))

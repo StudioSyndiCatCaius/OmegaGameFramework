@@ -20,6 +20,7 @@ class UWidgetAnimation;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelected, UDataWidget*, DataWidget);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHovered, UDataWidget*, DataWidget, bool, bIsHovered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlight, UDataWidget*, DataWidget, bool, bIsHighlighted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSourceAssetChanged, UObject*, SourceAsset);
 
 /**
  * 
@@ -38,7 +39,7 @@ protected:
 	
 public:
 	
-	UPROPERTY(BlueprintReadOnly, Category="DataWidget")
+	UPROPERTY()
 	UDataList* ParentList = nullptr;
 
 	UPROPERTY(EditInstanceOnly, Category="DataWidget")
@@ -64,6 +65,13 @@ public:
 
 	UFUNCTION()
 		FString GetAssetLabel();
+
+	//---------------------------------------------------------------------------------------------//
+	//	ListOwner
+	//---------------------------------------------------------------------------------------------//
+	
+	UFUNCTION(BlueprintPure, Category="DataWidget")
+	UDataList* GetOwningList() const;
 
 	//---------------------------------------------------------------------------------------------//
 	//	Tags
@@ -101,9 +109,18 @@ public:
 	bool IsEntityHidden(UObject* Asset);
 
 	//source asset
+
+	UPROPERTY()
+	UDataWidget* OwnerDataWidget;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "DataWidget")
+	bool UpdateSourceAssetFromParent;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void SetSourceAsset(UObject* Asset);
+
+	UPROPERTY()
+	FOnSourceAssetChanged SourceAssetChanged;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
 	void OnSourceAssetChanged(UObject* Asset);

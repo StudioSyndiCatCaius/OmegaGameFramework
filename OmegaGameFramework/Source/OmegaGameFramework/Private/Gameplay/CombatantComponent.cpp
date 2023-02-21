@@ -17,6 +17,7 @@
 #include "Gameplay/DataInterface_Combatant.h"
 #include "Gameplay/DataInterface_DamageModifier.h"
 #include "Gameplay/Combatant/CombatantTargetIndicator.h"
+#include "Gameplay/Combatant/OmegaFaction.h"
 #include "Kismet/KismetTextLibrary.h"
 
 
@@ -333,6 +334,10 @@ void UCombatantComponent::GetGeneralDataImages_Implementation(const FString& Lab
 	///
 bool UCombatantComponent::GrantAbility(TSubclassOf<AOmegaAbility> AbilityClass)
 {
+	if(!AbilityClass)
+	{
+		return false;
+	}
 	bool bTempSuccess;
 	if(!GetAbility(AbilityClass, bTempSuccess))
 	{
@@ -569,6 +574,14 @@ void UCombatantComponent::CancelAbilitiesWithTags(FGameplayTagContainer Tags)
 	}
 }
 
+void UCombatantComponent::CancelAllAbilities()
+{
+	for(auto* TempAb : GetActiveAbilities())
+	{
+		TempAb->CancelAbility();
+	}
+}
+
 int32 UCombatantComponent::GetAttributeLevel(UOmegaAttribute* Attribute)
 {
 	if(!Attribute)
@@ -763,7 +776,7 @@ void UCombatantComponent::InitializeAttributes()
 	}
 	else
 	{
-		PrintError("CombatantError: No valid Attribute Set");
+		//PrintError("CombatantError: No valid Attribute Set");
 	}
 }
 
@@ -1169,34 +1182,30 @@ int32 UCombatantComponent::GetActiveTargetIndex()
 
 UCombatantComponent* UCombatantComponent::CycleActiveTarget(int32 Amount)
 {
-	UCombatantComponent* TempCombatant;
-	
-	int32 MaxSize = GetRegisteredTargetList().Num();
-	if(GetActiveTarget())
+	//Get Start Index
+	int32 StartIndex = 0;
+	if(GetRegisteredTargetList().Contains(GetActiveTarget()))
 	{
-		TempCombatant = GetActiveTarget();
-	}
-	else if(GetRegisteredTargetList().IsValidIndex(0))
-	{
-		TempCombatant = GetRegisteredTargetList()[0];
-	}
-	else
-	{
-		return nullptr;
+		StartIndex = GetRegisteredTargetList().Find(GetActiveTarget());
 	}
 
-	int Tempindex = GetActiveTargetIndex()+Amount;
+	int32 NewIndex = StartIndex+Amount;
 
-	if(Tempindex < 0)
+	if(NewIndex < 0)
 	{
-		Tempindex = MaxSize;
+		NewIndex = GetRegisteredTargetList().Num()-1;
 	}
-	else if(Tempindex > MaxSize)
+	else if(NewIndex > GetRegisteredTargetList().Num()-1)
 	{
-		Tempindex = 0;
+		NewIndex = 0;
 	}
 
-	return TempCombatant;
+	if(GetRegisteredTargetList()[NewIndex])
+	{
+		SetActiveTarget(GetRegisteredTargetList()[NewIndex]);
+		return GetRegisteredTargetList()[NewIndex];
+	}
+	return nullptr;
 }
 
 void UCombatantComponent::ClearActiveTarget()
@@ -1223,9 +1232,43 @@ void UCombatantComponent::CombatantNotify(FName Notify, const FString& Payload)
 /// Faction ////
 /////////////////
 
+FText UCombatantComponent::GetFactionName()
+{
+	if(FactionDataAsset)
+	{
+		return FactionDataAsset->Name;
+	}
+	FText DumText;
+	return DumText;
+}
+
+FLinearColor UCombatantComponent::GetFactionColor()
+{
+	
+	if(FactionDataAsset)
+	{
+		return FactionDataAsset->FactionColor;
+	}
+	const FLinearColor DumColor;
+	return DumColor;
+}
+
 FGameplayTag UCombatantComponent::GetFactionTag()
 {
+	if(FactionDataAsset)
+	{
+		return FactionDataAsset->FactionTag;
+	}
 	return FactionTag;
+}
+
+TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> UCombatantComponent::GetFactionAffinities()
+{
+	if(FactionDataAsset)
+	{
+		return FactionDataAsset->FactionAffinities;
+	}
+	return FactionAffinities;
 }
 
 EFactionAffinity UCombatantComponent::GetAffinityToCombatant(UCombatantComponent* CheckedCombatant)
@@ -1237,12 +1280,12 @@ EFactionAffinity UCombatantComponent::GetAffinityToCombatant(UCombatantComponent
 	}
 	
 	// If valid tag, return that
-	if(FactionAffinities.Contains(CheckedCombatant->FactionTag))
+	if(GetFactionAffinities().Contains(CheckedCombatant->GetFactionTag()))
 	{
-		return FactionAffinities.FindOrAdd(CheckedCombatant->FactionTag);
+		return GetFactionAffinities().FindOrAdd(CheckedCombatant->GetFactionTag());
 	}
 	//If same tag as me, they are friendly (unless specified differently above.)
-	else if (CheckedCombatant->FactionTag==FactionTag)
+	else if (CheckedCombatant->GetFactionTag()==GetFactionTag())
 	{
 		return EFactionAffinity::FriendlyAffinity;
 	}
@@ -1261,7 +1304,7 @@ TArray<UCombatantComponent*> UCombatantComponent::FilterCombatantsByAffinity(TAr
 	for(UCombatantComponent* TempCombatant : Combatants)
 	{
 		//Fitler out mismatched combatants
-		if((GetAffinityToCombatant(TempCombatant) == Affinity) == !bExclude)
+		if((GetAffinityToCombatant(TempCombatant) == Affinity) == bExclude)
 		{
 			OutCombatants.Add(TempCombatant);
 		}

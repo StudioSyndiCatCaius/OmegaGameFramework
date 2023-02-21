@@ -9,8 +9,38 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gameplay/GameplayTagsInterface.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
+
+bool UOmegaGameFrameworkBPLibrary::IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+	{
+		const FGameplayTag LocalCategory = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(Object);
+		if(bExact)
+		{
+			return LocalCategory.MatchesTagExact(CategoryTag);
+		}
+		return LocalCategory.MatchesTag(CategoryTag);
+		
+	}
+	return false;
+}
+
+bool UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTag(UObject* Object, FGameplayTag GameplayTag, bool bExact)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+	{
+		const FGameplayTagContainer LocalTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(Object);
+		if(bExact)
+		{
+			return LocalTags.HasTagExact(GameplayTag);
+		}
+		return LocalTags.HasTag(GameplayTag);
+	}
+	return false;
+}
 
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray<UObject*> Assets,
                                                                           FGameplayTag CategoryTag, bool bExact, bool bExclude, TSubclassOf<UObject> Class)
@@ -96,14 +126,31 @@ FGameplayTagContainer UOmegaGameFrameworkBPLibrary::FilterTagsByType(FGameplayTa
 void UOmegaGameFrameworkBPLibrary::SetGameplaySystemActive(const UObject* WorldContextObject, TSubclassOf<AOmegaGameplaySystem>
 	SystemClass, bool bActive, const FString Flag, UObject* Context)
 {
+	UObject* LocalContext = nullptr;
+	if(Context)
+	{
+		LocalContext = Context;
+	}
 	UOmegaGameplaySubsystem* SubystemRef = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 	if(bActive)
 	{
-		SubystemRef->ActivateGameplaySystem(SystemClass, Context, Flag);
+		SubystemRef->ActivateGameplaySystem(SystemClass, LocalContext, Flag);
 	}
 	else
 	{
-		SubystemRef->ShutdownGameplaySystem(SystemClass, Flag);
+		SubystemRef->ShutdownGameplaySystem(SystemClass, LocalContext, Flag);
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(const UObject* WorldContextObject,
+	TArray<TSubclassOf<AOmegaGameplaySystem>> SystemClasses, bool bActive, const FString Flag, UObject* Context)
+{
+	for(auto TempClass : SystemClasses)
+	{
+		if(TempClass)
+		{
+			SetGameplaySystemActive(WorldContextObject, TempClass, bActive, Flag, Context);
+		}
 	}
 }
 
@@ -282,5 +329,38 @@ TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromComponents(TArray<UAc
 		}
 	}
 	return OutActors;
+}
+
+AActor* UOmegaGameFrameworkBPLibrary::GetClosestActorToPoint(TArray<AActor*> Actors, FVector Point)
+{
+	AActor* OutActor = nullptr;
+	
+	for(auto* TempActor : Actors)
+	{
+		if(OutActor)
+		{
+			const float CheckedActor_Point = UKismetMathLibrary::Vector_Distance(Point, TempActor->GetActorLocation());
+			const float OutActor_Point = UKismetMathLibrary::Vector_Distance(Point, OutActor->GetActorLocation());
+			if(CheckedActor_Point<OutActor_Point)	//Checked actor distance is less than last actopr
+			{
+				OutActor = TempActor;
+			}
+		}
+		else
+		{
+			OutActor = TempActor;
+		}
+	}
+	return OutActor;
+}
+
+void UOmegaGameFrameworkBPLibrary::SetActorActive(AActor* Actor, bool bIsActive)
+{
+	if(Actor)
+	{
+		Actor->SetActorHiddenInGame(!bIsActive);
+		Actor->CustomTimeDilation=bIsActive;
+		Actor->SetActorEnableCollision(bIsActive);
+	}
 }
 

@@ -4,7 +4,7 @@
 #include "FlowNodes/FlowNode_LinearEvents.h"
 
 #include "Event/OmegaLinearEventInstance.h"
-
+#include "Save/OmegaSaveSubsystem.h"
 
 
 UFlowNode_LinearEvents::UFlowNode_LinearEvents()
@@ -44,5 +44,35 @@ FString UFlowNode_LinearEvents::GetNodeDescription() const
 
 void UFlowNode_LinearEvents::LocalFinish(const FString& Flag)
 {
+	TriggerFirstOutput(true);
+}
+
+
+
+//-----------------------------------------
+// Edit Save Tags
+//-----------------------------------------
+
+UFlowNode_EditSaveTags::UFlowNode_EditSaveTags()
+{
+#if WITH_EDITOR
+	Category = TEXT("GameFlow");
+#endif
+}
+
+void UFlowNode_EditSaveTags::ExecuteInput(const FName& PinName)
+{
+	UOmegaSaveSubsystem* SubsysRef = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+	
+	switch (Action)
+	{
+	case EAddRemove::Add:
+		SubsysRef->AddStoryTags(Tags, GlobalSave);
+		break;
+	case EAddRemove::Remove:
+		SubsysRef->RemoveStoryTags(Tags, GlobalSave);
+		break;
+	default: ;
+	}
 	TriggerFirstOutput(true);
 }

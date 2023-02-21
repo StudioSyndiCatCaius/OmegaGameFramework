@@ -40,10 +40,13 @@ public:
 	///////////////
 	///// Turn ////
 	//////////////
-
+	
 	UPROPERTY(EditDefaultsOnly, Category="Turn")
 	TSubclassOf<UTurnManagerBase> TurnManagerClass = UTurnManagerBase::StaticClass();
-
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|TurnBased")
+	void SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass);
+	
 	UPROPERTY()
 	UTurnManagerBase* TurnManager;
 	
@@ -93,6 +96,9 @@ public:
 	//////////////
 	UPROPERTY(EditDefaultsOnly, Category="Turn")
 	TSubclassOf<AOmegaAbility> TurnAbility;
+
+	UFUNCTION(BlueprintCallable, Category="Omega|TurnBased")
+	void SetTurnAbilityClass(TSubclassOf<AOmegaAbility> AbilityClass);
 
 	UPROPERTY(EditDefaultsOnly, Category="Turn")
 	bool bRepeatTurnOnAbilityCancel;

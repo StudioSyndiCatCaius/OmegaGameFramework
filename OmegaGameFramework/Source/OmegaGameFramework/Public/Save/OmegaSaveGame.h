@@ -50,3 +50,4 @@ public:
 		TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
 
 };
+

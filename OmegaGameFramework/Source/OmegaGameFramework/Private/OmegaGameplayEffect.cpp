@@ -53,7 +53,30 @@ void AOmegaGameplayEffect::BeginPlay()
 
 	Local_RemoveEffects(RemoveEffectsOnApplied);
 	
+	if(TargetedCombatant)
+	{
+		for(FName TempTag : ActorsTagsGranted)
+		{
+			TargetedCombatant->GetOwner()->Tags.Add(TempTag);
+		}
+	}
+	
 	EffectBeginPlay(EffectContext);
+}
+
+void AOmegaGameplayEffect::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if(EndPlayReason == EEndPlayReason::Destroyed)
+	{
+		if(TargetedCombatant)
+		{
+			for(FName TempTag : ActorsTagsGranted)
+			{
+				TargetedCombatant->GetOwner()->Tags.Remove(TempTag);
+			}
+		}
+	}
 }
 
 //Trigger the Effect

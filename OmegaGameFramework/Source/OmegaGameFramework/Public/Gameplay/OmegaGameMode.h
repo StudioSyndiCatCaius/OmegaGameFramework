@@ -19,7 +19,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaGameMode : public AGameModeBase
 protected:
 
 	UFUNCTION()
-	void Local_LoadSystemShutdown(FString Flag);
+	void Local_LoadSystemShutdown(UObject* Context, FString Flag);
 	
 public:
 	

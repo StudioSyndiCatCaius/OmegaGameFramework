@@ -7,7 +7,7 @@
 #include "OmegaGameplaySubsystem.h"
 #include "OmegaGameplaySystem.h"
 
-void AOmegaGameMode::Local_LoadSystemShutdown(FString Flag)
+void AOmegaGameMode::Local_LoadSystemShutdown(UObject* Context, FString Flag)
 {
 	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 	
@@ -40,7 +40,7 @@ void AOmegaGameMode::BeginPlay()
 	}
 	else
 	{
-		Local_LoadSystemShutdown("NONE");
+		Local_LoadSystemShutdown(this, "NONE");
 	}
 	
 }

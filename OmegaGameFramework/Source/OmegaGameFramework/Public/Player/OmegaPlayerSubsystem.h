@@ -36,7 +36,7 @@ public:
 	class UMenu* OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus=true);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
-	bool CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, const FString& Flag);
+	bool CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|Menu", meta=(DeterminesOutputType = "MenuClass"))
 	class UMenu* GetMenu(class TSubclassOf<UMenu> MenuClass, bool& bIsValid);

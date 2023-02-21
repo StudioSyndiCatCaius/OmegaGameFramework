@@ -5,9 +5,9 @@
 
 #include "Player/OmegaPlayerSubsystem.h"
 
-void UAsyncAction_Menu::NativeShutdown(FGameplayTagContainer CloseTags, const FString OutFlag)
+void UAsyncAction_Menu::NativeShutdown(FGameplayTagContainer CloseTags, UObject* Context, const FString OutFlag)
 {
-	Closed.Broadcast(CloseTags, OutFlag);
+	Closed.Broadcast(CloseTags, Context, OutFlag);
 	SetReadyToDestroy();
 }
 
@@ -19,7 +19,16 @@ void UAsyncAction_Menu::Activate()
 	if(!IsMenuOpen)
 	{
 		UMenu* LocalMenu = SubsystemRef->OpenMenu(MenuRef, ContextRef, TagsRef, FlagRef);
-		LocalMenu->OnClosed.AddDynamic(this, &UAsyncAction_Menu::UAsyncAction_Menu::NativeShutdown);
+		if(LocalMenu)
+		{
+			LocalMenu->OnClosed.AddDynamic(this, &UAsyncAction_Menu::UAsyncAction_Menu::NativeShutdown);
+		}
+		else
+		{
+			Failed.Broadcast();
+			SetReadyToDestroy();
+		}
+		
 	}
 	else
 	{

@@ -70,11 +70,11 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success)
 	const bool ValidSave = UGameplayStatics::DoesSaveGameExist(SlotName, 0);
 	Success = ValidSave;
 	
-	if (ValidSave == true)
+	if (ValidSave)
 	{
-		
 		return Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
 	}
+	
 	return nullptr;
 }
 
@@ -85,6 +85,8 @@ void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, bool& Success)
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
 	//UOmegaSaveGame* LocalActiveData = Cast<UOmegaSaveGame>(ActiveSaveData);
+	
+	
 	
 	Success = Local_SaveGame(SlotName);
 }
@@ -113,7 +115,12 @@ bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
 
 	TArray<AActor*> ActorsForSaving;
 	UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UOmegaSaveInterface::StaticClass(), ActorsForSaving);
-	
+
+	//Save Json Sources
+	for(auto* TempSource : GetSaveSources())
+	{
+		SaveObjectJsonData(TempSource);
+	}
 	//SaveFileFromActorsWithSaveData
 	for(AActor* TempActor : ActorsForSaving)
 	{
@@ -163,7 +170,12 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, FGameplayTag
 	
 	TArray<AActor*> ActorsForSaving;
 	UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UOmegaSaveInterface::StaticClass(), ActorsForSaving);
-	
+
+	//Load Json Data
+	for(auto* TempSource : GetSaveSources())
+	{
+		LoadObjectJsonData(TempSource);
+	}
 	//SaveFileFromActorsWithSaveData
 	for(AActor* TempActor : ActorsForSaving)
 	{
@@ -173,7 +185,7 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, FGameplayTag
 	
 	for(UOmegaGameplayModule* TempModule : GetGameInstance()->GetSubsystem<UOmegaGameManager>()->ActiveModules)
 	{
-		TempModule->GameFileStarted(ActiveSaveData);
+		TempModule->GameFileStarted(ActiveSaveData, Tags);
 	}
 	
 	//GetGameInstance()->GetSubsystem<UGamePreferenceSubsystem>()->Local_PreferenceUpdateAll();
@@ -407,9 +419,24 @@ UPrimaryDataAsset* UOmegaSaveSubsystem::GetSoftProperty_DataAsset(const FString&
 
 bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Conditions)
 {
+	TArray<UOmegaSaveCondition*> LocalConditionList = Conditions.Conditions;
+
+	for(const auto* TempCol : Conditions.ConditionCollections)
+	{
+		LocalConditionList.Append(TempCol->Conditions);
+	}
+	
+	for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
+	{
+		if(TempCondition)
+		{
+			TempCondition->WorldPrivate = GetWorld();
+		}
+	}
+	
 	if(Conditions.CheckType == EBoolType::BoolType_And)
 	{
-		for(UOmegaSaveCondition* TempCondition : Conditions.Conditions)
+		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
 		{
 			if(!TempCondition || !TempCondition->CheckSaveCondition(this))
 			{
@@ -419,7 +446,7 @@ bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Condition
 	}
 	else
 	{
-		for(UOmegaSaveCondition* TempCondition : Conditions.Conditions)
+		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
 		{
 			if(TempCondition && TempCondition->CheckSaveCondition(this))
 			{
@@ -457,5 +484,26 @@ void UOmegaSaveSubsystem::LoadObjectJsonData(UObject* Object)
 			
 		}
 	}
+}
+
+void UOmegaSaveSubsystem::SetSaveSourceRegistered(UObject* Source, bool Registered)
+{
+	if(Source && Source->GetClass()->ImplementsInterface(UOmegaSaveInterface::StaticClass()))
+	{
+		JsonSaveSources.Add(Source);
+	}
+}
+
+TArray<UObject*> UOmegaSaveSubsystem::GetSaveSources()
+{
+	TArray<UObject*> OutSources;
+	for(auto* TempSource : JsonSaveSources)
+	{
+		if(TempSource)
+		{
+			OutSources.Add(TempSource);
+		}
+	}
+	return OutSources;
 }
 

@@ -215,7 +215,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability")
 		bool Singleton;
 
-	//GameplayTags//
+	//-###########################################################################################################-//
+	//---- Gameplay Tags
+	//-###########################################################################################################-//
+	
 	//Tags assosiated with this ability.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayTags")
 	struct FGameplayTagContainer AbilityTags;
@@ -224,7 +227,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayTags")
 	struct FGameplayTagContainer CancelAbilities;
 
-	//Prevent any abilites with any of these tags from being activated by the owner until this ability finishes.
+	//Cancels and Prevent any abilites with any of these tags from being activated by the owner until this ability finishes.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayTags")
 	struct FGameplayTagContainer BlockAbilities;
 

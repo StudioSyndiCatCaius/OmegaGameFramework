@@ -46,8 +46,13 @@ public:
 
 	///GAMEPLAY MODULES
 	///
+
+		UFUNCTION()
+		void ActivateModuleFromClass(const UClass* ModuleClass);
 		UPROPERTY()
 		TArray<UOmegaGameplayModule*> ActiveModules;
+
+
 	
 		UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Omega|Game Manager")
 		UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);

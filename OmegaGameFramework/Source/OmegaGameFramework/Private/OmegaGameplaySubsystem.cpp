@@ -62,7 +62,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 			//Shutdown Blocked Systems
 			for(auto* TempSys : GetActiveSystemsWithTags(DummySystem->BlockSystemTags))
 			{
-				TempSys->Shutdown("Canceled");
+				TempSys->Shutdown(DummySystem, "Canceled");
 			}
 			
 			//Finish & Activate
@@ -75,13 +75,13 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 	return nullptr;
 }
 
-bool UOmegaGameplaySubsystem::ShutdownGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, FString Flag)
+bool UOmegaGameplaySubsystem::ShutdownGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag)
 {
 	bool bIsActive = false;
 	AOmegaGameplaySystem* TempSystem = GetGameplaySystem(Class, bIsActive);
 	if (TempSystem)
 	{
-		TempSystem->Shutdown(Flag);
+		TempSystem->Shutdown(Context, Flag);
 		return true;
 	}
 	return false;
@@ -250,3 +250,45 @@ AActor* UOmegaGameplaySubsystem::GetGlobalActorBinding(FName Binding)
 	}
 	return nullptr;
 }
+
+TArray<UObject*> UOmegaGameplaySubsystem::GetValidGameplayStateObjects()
+{
+	TArray<UObject*> OutObjects;
+	for(auto* TempObject : GameplayStateObjects)
+	{
+		if(TempObject)
+		{
+			OutObjects.AddUnique(TempObject);
+		}
+	}
+	return OutObjects;
+}
+
+void UOmegaGameplaySubsystem::RegisterGameplayStateSource(UObject* Object, bool bRegistered)
+{
+	if(Object)
+	{
+		if(bRegistered && Object->GetClass()->ImplementsInterface(UOmegaGameplayStateInterface::StaticClass()))
+		{
+			GameplayStateObjects.AddUnique(Object);
+		}
+		else if(!bRegistered)
+		{
+			GameplayStateObjects.Remove(Object);
+		}
+	}
+}
+
+bool UOmegaGameplaySubsystem::IsGameplayStateActive(FGameplayTag StateTag)
+{
+	for(auto* TempState: GetValidGameplayStateObjects())
+	{
+		if(IOmegaGameplayStateInterface::Execute_IsGameplayStateTagActive(TempState))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+

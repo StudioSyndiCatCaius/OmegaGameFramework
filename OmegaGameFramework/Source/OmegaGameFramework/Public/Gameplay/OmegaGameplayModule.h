@@ -49,7 +49,7 @@ public:
 	void Shutdown();
 
 	UFUNCTION(BlueprintImplementableEvent, Category="GameplayModule")
-	void GameFileStarted(UOmegaSaveGame* SaveFile);
+	void GameFileStarted(UOmegaSaveGame* SaveFile, FGameplayTagContainer Tags);
 
 	UFUNCTION(BlueprintNativeEvent, Category="GameplayModule")
 	bool GameFileSaved(UOmegaSaveGame* SaveFile);
@@ -61,7 +61,14 @@ public:
 	void OnLevelOpened(const FString& LevelName, AOmegaGameMode* GameMode);
 
 	//Properties
+	//True = This module will automatically be registered and activated on game start.
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
+	bool AutoRegisterModule;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Gameplay")
 	TArray<TSubclassOf<AOmegaGameplaySystem>> AutoGameplaySystems;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Gameplay")
+	FGameplayTagContainer ModuleTags;
 
 };

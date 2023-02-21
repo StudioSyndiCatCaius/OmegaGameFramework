@@ -16,6 +16,7 @@
 #include "Data/SoftPropertiesInterface.h"
 #include "Gameplay/DataInterface_AttributeModifier.h"
 #include "Gameplay/DataInterface_OmegaEffect.h"
+#include "Gameplay/Combatant/DataInterface_Skill.h"
 #include "Gameplay/Combatant/DataInterface_SkillSource.h"
 
 #include "OmegaDataItem.generated.h"
@@ -25,14 +26,14 @@
  */
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
-																public ISoftPropertiesInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect, public IDataInterface_SkillSource
+																public ISoftPropertiesInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
+																public IDataInterface_SkillSource, public IDataInterface_Skill
 {
 	GENERATED_BODY()
 
 public:
 
 	//General
-	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", DisplayName="Name")
 	FText DisplayName;
 	
@@ -163,5 +164,11 @@ FGameplayTag GetObjectGameplayCategory();
 	//////////////////////
 	/// DATA INTERFACE
 	/////////////////////
+
+	//###############################################################################
+	// Skill
+	//###############################################################################
+
+	
 	
 };

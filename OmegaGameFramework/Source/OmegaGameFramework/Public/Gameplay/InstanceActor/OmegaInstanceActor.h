@@ -3,13 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataInterface_General.h"
 #include "GameFramework/Actor.h"
+#include "Gameplay/GameplayTagsInterface.h"
 #include "OmegaInstanceActor.generated.h"
 
 class UInstanceActorComponent;
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaInstanceActor : public AActor
+class OMEGAGAMEFRAMEWORK_API AOmegaInstanceActor : public AActor, public IDataInterface_General, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
 
@@ -32,4 +34,20 @@ public:
 	UObject* ContextObject = nullptr;
 	UPROPERTY(BlueprintReadOnly, Category="InstanceActor")
 	UInstanceActorComponent* OwningComponent;
+
+	// INTERFACES
+	bool Local_SourceHasInterface() const;
+	
+	
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+
+	//NOTIFY
+	UFUNCTION(BlueprintCallable, Category="InstanceActor")
+	void TriggerNotify(FName Notify);
 };

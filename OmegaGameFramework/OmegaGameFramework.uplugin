@@ -128,21 +128,6 @@
 			"Name": "OmegaParser",
 			"Type": "Runtime",
 			"loadingPhase": "Default"
-		},
-		{
-			"Name": "OmegaSignal",
-			"Type": "Runtime",
-			"loadingPhase": "Default"
-		},
-		{
-			"Name": "OmegaSignalEditor",
-			"Type": "UncookedOnly",
-			"loadingPhase": "PreDefault"
-		},
-		{
-			"Name": "OmegaInput",
-			"Type": "Runtime",
-			"loadingPhase": "PreDefault"
 		}
 	],
 	"Plugins": [

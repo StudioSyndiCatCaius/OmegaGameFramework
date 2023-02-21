@@ -45,28 +45,34 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 
 public:
 
-	///
+	//###########################################
+	// Entry
+	//###########################################
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
 	EDataListFormat Format;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
 	TEnumAsByte<EOrientation> Orientation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
 	TEnumAsByte<EHorizontalAlignment> EntryHorizontalAlignment;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
 	TEnumAsByte<EVerticalAlignment> EntryVerticalAlignment;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
 	FSlateChildSize EntrySize;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
 	bool bAutoSizeList;
-	
+
+	//##### ENTRY CLASS #####//
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
 
+	UFUNCTION(BlueprintCallable, Category="Entry", meta=(AdvancedDisplay="KeepEntires"))
+	void SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries=true);
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TArray<UPrimaryDataAsset*> DefaultAssets;
 
@@ -82,7 +88,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString EntryLabel;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry")
 	FGameplayTagContainer ListTags;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")

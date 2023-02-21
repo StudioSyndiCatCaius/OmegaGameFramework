@@ -22,7 +22,7 @@ void UOmegaPlayerSubsystem::CloseAllMenus(AActor* DestroyedActor)
 		if(TempMenu)
 		{
 			const FGameplayTagContainer NoTags;
-			TempMenu->CloseMenu(NoTags, TEXT("CloseAll"));		///Remove Menu
+			TempMenu->CloseMenu(NoTags, this, TEXT("CloseAll"));		///Remove Menu
 		}
 	}
 }
@@ -66,14 +66,14 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 	}
 }
 
-bool UOmegaPlayerSubsystem::CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, const FString& Flag)
+bool UOmegaPlayerSubsystem::CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
 {
 	bool bLocalIsValid = false;
 	class UMenu* FoundMenu = GetMenu(MenuClass, bLocalIsValid);
 
 	if (bLocalIsValid)
 	{
-		FoundMenu->CloseMenu(Tags, Flag);
+		FoundMenu->CloseMenu(Tags, Context, Flag);
 	}
 
 	return bLocalIsValid;
