@@ -79,3 +79,15 @@ public:
 	TArray<AActor*> GetActorsByDataItem(UOmegaDataItem* DataItem);
 	
 };
+
+UCLASS()
+class OMEGADATA_API UOmegaDataItemFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Data Items")
+	static UOmegaDataTrait* TryGetDataTraitByClass(UObject* Source, TSubclassOf<UOmegaDataTrait> Class);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Data Items")
+	static UOmegaDataTrait* TryGetDataTraitByInterface(UObject* Source, TSubclassOf<UInterface> Class);
+};

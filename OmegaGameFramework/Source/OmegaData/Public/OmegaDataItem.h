@@ -110,6 +110,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="DataItem")
 	TArray<UOmegaDataTrait*> GetTraitsWithInterface(const UClass* Interface);
+
+	//###############################################################################
+	// Contextual Data
+	//###############################################################################
+
+	
 	
 //////////////////////
 /// DATA INTERFACE

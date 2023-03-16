@@ -114,6 +114,13 @@ void UOmegaDataItem::ApplyTraitsToActor(AActor* Actor, FString Flag, FGameplayTa
 	for(auto* TempTrait : GetAllValidTraits())
 	{
 		TempTrait->AppliedToActor(Actor, Flag, Tags);
+		for(auto* TempComp : Actor->GetComponents())
+		{
+			if(TempComp)
+			{
+				TempTrait->AppliedToComponent(TempComp, Flag, Tags);
+			}
+		}
 	}
 	
 }

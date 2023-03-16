@@ -235,7 +235,7 @@ bool AOmegaAbility::CanActivate_Implementation(const UObject* Context)
 bool AOmegaAbility::SetInputEnabledForOwner(bool Enabled)
 {
 	APlayerController* TempController;
-	if(Cast<APlayerController>(GetAbilityOwnerCharacter()->GetController()))
+	if(GetAbilityOwnerCharacter() && Cast<APlayerController>(GetAbilityOwnerCharacter()->GetController()))
 	{
 		TempController = Cast<APlayerController>(GetAbilityOwnerCharacter()->GetController());
 		if(Enabled)

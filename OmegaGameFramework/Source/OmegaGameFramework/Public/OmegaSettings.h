@@ -21,6 +21,7 @@
 
 class AOmegaGameplaySystem;
 class UOmegaGameplayModule;
+class UGamePreferenceFloat;
 
 UENUM(BlueprintType)
 enum class EOmegaInputModeType : uint8
@@ -87,4 +88,19 @@ public:
 	//Gives unique IDs to Attributes for quick access
 	UPROPERTY(EditAnywhere, config, Category = "Combatant", meta=(MetaClass="OmegaAttribute"))
 	TMap<FString, FSoftObjectPath> AttributeIDs;
+
+	//########################################################
+	//BGM
+	//########################################################
+	UPROPERTY(EditAnywhere, config, Category = "BGM")
+	float BGM_FadeDuration = 0.5;
+
+	UPROPERTY(EditAnywhere, config, Category = "BGM", meta=(MetaClass="GamePreferenceFloat"))
+	FSoftObjectPath BGM_VolumePreference;
+
+	//########################################################
+	//Dyna Cam
+	//########################################################
+	UPROPERTY(EditAnywhere, config, Category = "Dynamic Camera", meta = (MetaClass = "CameraActor"))
+	FSoftClassPath DynamicCameraClass;
 };

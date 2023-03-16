@@ -20,6 +20,9 @@ class UCombatantFilter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantRegistered, UCombatantComponent*, Combatant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantUnegistered, UCombatantComponent*, Combatant);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnCombatantDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, FHitResult, Hit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameplayStateChange, FGameplayTag, NewState);
+
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameplayStateChange, FGameplayTag, StateTag, bool, bNewState);
 
 UCLASS(DisplayName="Omega Subsystem: Gameplay")
@@ -69,6 +72,25 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	APlayerController* GetPlayerController(int32 Index);
+
+	//////////////////
+	/// Gameplay States
+	/////////////////
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGameplayStateChange OnGameplayStateChange;
+	
+	UPROPERTY()
+	FGameplayTag GameplayState;
+
+	UFUNCTION(BlueprintCallable, Category="OmegaGameplaySubsystem|State")
+	void SetGameplayState(FGameplayTag State);
+	
+	UFUNCTION(BlueprintPure, Category="OmegaGameplaySubsystem|State")
+	FGameplayTag GetGameplayState() const
+	{
+		return GameplayState;	
+	};
 	
 	//////////////////
 	/// Combatants
@@ -87,6 +109,11 @@ public:
 	FOnCombatantRegistered OnCombatantRegistered;
 	UPROPERTY(BlueprintAssignable)
     FOnCombatantUnegistered OnCombatantUnegistered;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnCombatantDamaged OnCombatantDamaged;
+	UFUNCTION()
+	void Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, FHitResult Hit);
 
 	UFUNCTION(BlueprintCallable, Category="OmegaGameplaySubsystem")
 	TArray<UCombatantComponent*> RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass, UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);
@@ -105,53 +132,7 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega Gameplay Subsystem|Actors")
 	AActor* GetGlobalActorBinding(FName Binding);
 
-	//##################################################################################
-	/// Gameplay State
-	//##################################################################################
-
-private:
-
-	UPROPERTY()
-	TArray<UObject*> GameplayStateObjects;
-	
-	UFUNCTION()
-	TArray<UObject*> GetValidGameplayStateObjects();
-
-public:
-	
-	UFUNCTION(BlueprintCallable, Category="Omega Gameplay Subsystem|Gameplay State")
-	void RegisterGameplayStateSource(UObject* Object, bool bRegistered);
-
-	UFUNCTION(BlueprintPure, Category="Omega Gameplay Subsystem|Gameplay State")
-	bool IsGameplayStateActive(FGameplayTag StateTag);
 
 
-};
 
-
-//##################################################################################
-/// Gameplay State INTERFACE
-//##################################################################################
-
-UINTERFACE(MinimalAPI)
-class UOmegaGameplayStateInterface : public UInterface
-{
-	GENERATED_BODY()
-};
-
-/**
- * 
- */
-class OMEGAGAMEFRAMEWORK_API IOmegaGameplayStateInterface
-{
-	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-	public:
-
-	UFUNCTION(BlueprintImplementableEvent, Category="GameplayState")
-	FGameplayTag GetGameplayStateTag();
-
-	UFUNCTION(BlueprintImplementableEvent, Category="GameplayState")
-	bool IsGameplayStateTagActive();
 };

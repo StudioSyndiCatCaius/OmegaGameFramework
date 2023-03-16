@@ -24,6 +24,15 @@ enum EOmegaFlagResult
 };
 
 
+UENUM(Blueprintable)
+enum EOmegaFunctionResult
+{
+	Success	UMETA(DisplayName = "Success"),
+	Fail		UMETA(DisplayName = "Fail"),
+};
+
+
+
 UCLASS()
 class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -36,7 +45,7 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static bool IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact);
 
-	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"))
 	static bool DoesObjectHaveGameplayTag(UObject* Object, FGameplayTag GameplayTag, bool bExact);
 	
 	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
@@ -115,7 +124,6 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	// Actor
 	//###############################################################################
 	
-	
 	UFUNCTION(BlueprintCallable, Category="Omega|Tags")
 	static void SetActorTagActive(AActor* Actor, FName Tag, bool bIsActive);
 	
@@ -125,11 +133,31 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors")
 	static TArray<AActor*> GetActorsFromComponents(TArray<UActorComponent*> Components);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="ComponentClass"))
+	static TArray<UActorComponent*> GetComponentsFromActors(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Actors")
 	static AActor* GetClosestActorToPoint(TArray<AActor*> Actors, FVector Point);
 
 	// True = (ActorHiddenInGame=false, Collision=Enabled, TimeDilation=1 | False = (ActorHiddenInGame=true, Collision=Disabled, TimeDilation=0)
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors")
 	static void SetActorActive(AActor* Actor, bool bIsActive);
-	
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="ExcludedActors"))
+	static TArray<AActor*> FilterActorsWithComponents(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass, TArray<AActor*> ExcludedActors);
+
+	//Will attempt to get a component, casting the object as component, and actor, or a sibling component.
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
+	static UActorComponent* TryGetComponentFromObject(UObject* Object, TSubclassOf<UActorComponent> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	//###############################################################################
+	// InterpActor
+	//###############################################################################
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors|Interp")
+	static void InterpActorLocation(AActor* Actor, FVector TargetLocation, float InterpSpeed);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors|Interp", meta=(AdvancedDisplay="X,Y,Z"))
+	static void InterpActorRotation(AActor* Actor, FRotator TargetRotation, float InterpSpeed, bool X=true, bool Y=true, bool Z=true);
 };
+

@@ -133,6 +133,12 @@ void FOmegaEditor::StartupModule()
 	
 	ThumnbailNames.Add(TEXT("InstanceActorComponent"));
 	ThumnbailNames.Add(TEXT("OmegaInstanceActor"));
+
+	ThumnbailNames.Add(TEXT("OmegaFaction"));
+	ThumnbailNames.Add(TEXT("OmegaInputMode"));
+	ThumnbailNames.Add(TEXT("OmegaBGM"));
+	ThumnbailNames.Add(TEXT("OmegaDamageType"));
+	ThumnbailNames.Add(TEXT("DynamicCameraState"));
 	
 	FSlateImageBrush* ThumbnailTemp;
 	FSlateImageBrush* IconTemp;

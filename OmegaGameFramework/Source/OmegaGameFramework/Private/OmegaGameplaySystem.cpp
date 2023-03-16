@@ -11,9 +11,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
-
-
-
 // Sets default values
 AOmegaGameplaySystem::AOmegaGameplaySystem()
 {
@@ -51,6 +48,13 @@ void AOmegaGameplaySystem::BeginPlay()
 			UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this);
 			ActivePlayerWidgets.Add(CreatedLayer);
 		}
+		//Set Input Mode
+		{
+			if(PlayerInputMode)
+			{
+				UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(PlayerInputMode);
+			}
+		}
 		// Add New Mapping Context
 		for(UInputMappingContext* TempMap : AddPlayerInputMapping)
 		{
@@ -65,9 +69,13 @@ void AOmegaGameplaySystem::BeginPlay()
 	GamePrefSystemRef->OnFloatPreferenceUpdated.AddDynamic(this, &AOmegaGameplaySystem::GamePreferenceUpdatedFloat);
 	SubsysRef = GEngine->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 	*/
+
+	UOmegaGameplaySubsystem* GameplaySubsys = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+
+	GameplaySubsys->OnGameplayStateChange.AddDynamic(this, &AOmegaGameplaySystem::OnGameplayStateChange);
 	
 	//GRANT ABILITIES
-	for(auto* TempComb : GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+	for(auto* TempComb : GameplaySubsys->GetAllCombatants())
 	{
 		Local_GrantAbilities(TempComb);
 	}

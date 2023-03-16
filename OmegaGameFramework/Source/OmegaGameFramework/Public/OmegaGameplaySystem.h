@@ -20,7 +20,7 @@ class UGamePreferenceBool;
 class UGamePreferenceFloat;
 class AOmegaAbility;
 class UOmegaSaveGame;
-
+class UOmegaInputMode;
 
 USTRUCT(BlueprintType)
 struct FGameplaySystemAbilityRules
@@ -62,13 +62,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	//**Start & End***//
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Activated")
 		void SystemActivated(class UObject* Context, const FString& Flag);
 
 	//-----------------------
 	// SHUTDOWN
 	//-----------------------
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Finish Shutdown")
 		void SystemShutdown(UObject* Context, const FString& Flag);
 
 	UPROPERTY()
@@ -78,7 +78,7 @@ public:
 
 	
 	//Will shut down this gameplay system//
-	UFUNCTION(BlueprintCallable, Category = "Omega|GameplaySystem")
+	UFUNCTION(BlueprintCallable, Category = "Omega|GameplaySystem", meta=(AdvancedDisplay="Context, Flag"))
 		void Shutdown(UObject* Context, FString Flag);
 
 	UFUNCTION(BlueprintNativeEvent, Category="Omega|GameplaySystem")
@@ -88,6 +88,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Omega|GameplaySystem")
 	void CompleteShutdown();
 	
+	//-----------------------
+	// Gameplay State
+	//-----------------------
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGameplayStateChange(FGameplayTag NewState);
 	
 	//Context Object//
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "Omega|GameplaySystem")
@@ -113,7 +119,9 @@ public:
 	////////////////////////////////////
 	////////////--PLAYER--/////////////
 	////////////////////////////////////
-
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	UOmegaInputMode* PlayerInputMode;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TArray<class TSubclassOf<UHUDLayer>> AddedPlayerWidgets;
 	

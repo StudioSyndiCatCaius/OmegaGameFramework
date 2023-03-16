@@ -27,6 +27,7 @@ struct FGameplayLogEntry
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGlobalEvent, FName, Event, UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewLevel, FString, LevelName, AOmegaGameMode*, GameMode);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFlagStateChange, FString, Flag, bool, NewState);
 /**
  * 
  */
@@ -47,15 +48,15 @@ public:
 	///GAMEPLAY MODULES
 	///
 
-		UFUNCTION()
-		void ActivateModuleFromClass(const UClass* ModuleClass);
-		UPROPERTY()
-		TArray<UOmegaGameplayModule*> ActiveModules;
+	UFUNCTION()
+	void ActivateModuleFromClass(const UClass* ModuleClass);
+	UPROPERTY()
+	TArray<UOmegaGameplayModule*> ActiveModules;
 
 
 	
-		UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Omega|Game Manager")
-		UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);
+	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Omega|Game Manager")
+	UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);
 
 	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Modules", DeterminesOutputType="Module"), Category="Omega|Game Manager")
 		TArray<UOmegaGameplayModule*> GetGameplayModules();
@@ -74,7 +75,6 @@ public:
 	//################################################################
 	UPROPERTY(BlueprintReadOnly, Category="Omega|Game Manager")
 	TArray<FString> Flags;
-
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager")
 	void SetFlagActive(FString Flag, bool bActive);
@@ -84,6 +84,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager")
 	void ClearAllFlags();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnFlagStateChange OnFlagStateChange;
 	
 	/*
 	// Playtime

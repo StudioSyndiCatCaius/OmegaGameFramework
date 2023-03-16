@@ -37,18 +37,41 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CombatantGroup")
 	int32 MaxGroupMembers;
 
-	UFUNCTION(BlueprintPure, Category="Combatant|Gr0oup")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CombatantGroup")
+	bool ReplaceIfAtMaxCapacity;
+
+	UFUNCTION(BlueprintPure, Category="Omega|Combatant|Gr0oup")
 	bool IsGroupFull();
+
+	UFUNCTION(BlueprintPure, Category="Omega|Combatant|Gr0oup")
+	UCombatantComponent* GetCombatantOfIndex(int32 Index);
 	
-	UFUNCTION(BlueprintCallable, Category="Combatant|Group")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Group")
 	bool SetCombatantInGroup(UCombatantComponent* Combatant, bool InGroup);
 
 	UPROPERTY(BlueprintAssignable)
 	FOnCombatantSetInGroup OnCombatantSetInGroup;
 	
-	UFUNCTION(BlueprintPure, Category="Combatant|Gr0oup")
+	UFUNCTION(BlueprintPure, Category="Omega|Combatant|Gr0oup")
 	TArray<UCombatantComponent*> GetCombatants();
 
+	//#############################
+	// Linked Primitive
+	//#############################
+
+	//Sets a primitive component to automatiacly add an overlapping combatants to this group.
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Group")
+	void SetPrimitiveComponentRegister(UPrimitiveComponent* Component, bool bActive);
+
+	UPROPERTY()
+	UPrimitiveComponent* LinkedPrimitiveComponent;
+
+	void Local_BreakLinkedComp();
+	
+	void Local_Overlap(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	void Local_OverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };
+
 
  

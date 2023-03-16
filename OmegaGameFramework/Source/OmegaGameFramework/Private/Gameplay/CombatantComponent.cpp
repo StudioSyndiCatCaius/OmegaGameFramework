@@ -533,7 +533,7 @@ TArray<AOmegaAbility*> UCombatantComponent::GetGrantedAbilitiesWithTags(FGamepla
 ////////////////////////////////////
 	////////// -- ATTRIBUTES -- //////////
 	///////////////////////////////////
-float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UObject* Instigator, UObject* Context)
+float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, FHitResult Hit)
 {
 	if(!bCanDamageAttributes)
 	{
@@ -558,8 +558,8 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 	CurrentValue = FMath::Clamp(CurrentValue, 0.0f, MaxVal);		//Make sure the value does not go under 0 or exceed the max allowed value
 
 	//UPDATE NEW CURRENT VALUE
-	CurrentAttributeValues.Add(Attribute, CurrentValue);				
-	OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator);
+	CurrentAttributeValues.Add(Attribute, CurrentValue);
+	OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, Hit);
 	
 	Update();
 	return FinalDamage;
@@ -1304,7 +1304,7 @@ TArray<UCombatantComponent*> UCombatantComponent::FilterCombatantsByAffinity(TAr
 	for(UCombatantComponent* TempCombatant : Combatants)
 	{
 		//Fitler out mismatched combatants
-		if((GetAffinityToCombatant(TempCombatant) == Affinity) == bExclude)
+		if((GetAffinityToCombatant(TempCombatant) == Affinity) == !bExclude)
 		{
 			OutCombatants.Add(TempCombatant);
 		}

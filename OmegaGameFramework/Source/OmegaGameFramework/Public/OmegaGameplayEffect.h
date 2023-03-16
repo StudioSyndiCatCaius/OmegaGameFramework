@@ -84,6 +84,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnEffectTriggered OnEffectTriggered;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
+		FHitResult GetImpactHitResult();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
 		void EffectBeginPlay(UObject* Context);
@@ -97,7 +100,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "General")
 	UCombatantComponent* TargetedCombatant;
 
-	UPROPERTY(BlueprintReadOnly, Category = "General")
+	UPROPERTY(BlueprintReadOnly, Category = "General", VisibleInstanceOnly)
 	UObject* EffectContext;
 	
 	//-----VOLUME-----//

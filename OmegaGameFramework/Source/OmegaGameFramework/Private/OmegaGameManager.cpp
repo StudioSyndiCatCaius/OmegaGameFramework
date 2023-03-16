@@ -119,13 +119,17 @@ void UOmegaGameManager::FireGlobalEvent(FName Event, UObject* Context)
 
 void UOmegaGameManager::SetFlagActive(FString Flag, bool bActive)
 {
-	if(bActive)
+	if(IsFlagActive(Flag) != bActive)
 	{
-		Flags.AddUnique(Flag);
-	}
-	else
-	{
-		Flags.Remove(Flag);
+		if(bActive)
+		{
+			Flags.AddUnique(Flag);
+		}
+		else
+		{
+			Flags.Remove(Flag);
+		}
+		OnFlagStateChange.Broadcast(Flag, bActive);
 	}
 }
 
@@ -136,6 +140,11 @@ bool UOmegaGameManager::IsFlagActive(FString Flag)
 
 void UOmegaGameManager::ClearAllFlags()
 {
+	TArray<FString> LocalFlags = Flags;
+	for(FString TempFlag : LocalFlags)
+	{
+		SetFlagActive(TempFlag, false);	
+	}
 	Flags.Empty();
 }
 

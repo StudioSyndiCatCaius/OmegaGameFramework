@@ -36,23 +36,30 @@ void UAsyncAction_LevelSequence::Activate()
 		OnFailed.Broadcast();
 		SetReadyToDestroy();
 	}
-	
-	if(Local_OverrideInstanceData)
+	if(LocalSeqActor)
 	{
-		LocalSeqActor->bOverrideInstanceData = Local_OverrideInstanceData;
-		UDefaultLevelSequenceInstanceData* TempSeqData = Cast<UDefaultLevelSequenceInstanceData>(LocalSeqActor->DefaultInstanceData);
-
-		if(LocalSeqActor)
+		if(Local_OverrideInstanceData)
 		{
-			TempSeqData->TransformOriginActor = Local_OriginActor;
-		}
-		TempSeqData->TransformOrigin = Local_OriginTransform;
-	}
-	
-	LocalPlayer->OnFinished.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Finish);
-	LocalPlayer->OnStop.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Stop);
+			LocalSeqActor->bOverrideInstanceData = Local_OverrideInstanceData;
+			UDefaultLevelSequenceInstanceData* TempSeqData = Cast<UDefaultLevelSequenceInstanceData>(LocalSeqActor->DefaultInstanceData);
 
-	Local_Play();
+			if(LocalSeqActor)
+			{
+				TempSeqData->TransformOriginActor = Local_OriginActor;
+			}
+			TempSeqData->TransformOrigin = Local_OriginTransform;
+		}
+	
+		LocalPlayer->OnFinished.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Finish);
+		LocalPlayer->OnStop.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Stop);
+
+		Local_Play();
+	}
+	else
+	{
+		OnFailed.Broadcast();
+		SetReadyToDestroy();
+	}
 }
 
 UAsyncAction_LevelSequence* UAsyncAction_LevelSequence::PlayLevelSequence(UObject* WorldContextObject,

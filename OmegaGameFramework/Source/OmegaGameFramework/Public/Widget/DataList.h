@@ -125,7 +125,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList", meta=(AdvancedDisplay="Flag"))
 	UDataWidget* AddedCustomEntryToList(FCustomAssetData EntryData, FString Flag);
+
+	UFUNCTION()
+	UGeneralDataObject* Native_CreateCustomDataObject(FCustomAssetData EntryData);
 	
+
 	UPROPERTY()
 	UDataWidget* HoveredEntry;
 
@@ -154,7 +158,15 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
 	UDataWidget* GetEntry(int32 Index);
 	
+	//###########################################
+	// Linked Widgets
+	//###########################################
 
+	UPROPERTY(EditInstanceOnly, Category="Linked Widgets")
+	TArray<UDataWidget*> LinkedSelectedWidgets;
+	
+	UPROPERTY(EditInstanceOnly, Category="Linked Widgets")
+	TArray<UDataWidget*> LinkedHoverWidgets;
 
 	//INPUT
 	virtual void InputNavigate_Implementation(FVector2D Axis) override;

@@ -3,6 +3,7 @@
 #include "Gameplay/Combatant/CombatantGroupComponent.h"
 
 #include "JsonObjectWrapper.h"
+#include "Gameplay/CombatantComponent.h"
 
 // Sets default values for this component's properties
 UCombatantGroupComponent::UCombatantGroupComponent()
@@ -39,9 +40,18 @@ bool UCombatantGroupComponent::IsGroupFull()
 	return MaxGroupMembers>0 && GetCombatants().Num() >= MaxGroupMembers;
 }
 
+UCombatantComponent* UCombatantGroupComponent::GetCombatantOfIndex(int32 Index)
+{
+	if(Local_CombatantList[0])
+	{
+		return Local_CombatantList[0];
+	}
+	return nullptr;
+}
+
 bool UCombatantGroupComponent::SetCombatantInGroup(UCombatantComponent* Combatant, bool InGroup)
 {
-	if(IsGroupFull())
+	if(IsGroupFull() && !ReplaceIfAtMaxCapacity)
 	{
 		return false;
 	}
@@ -49,8 +59,12 @@ bool UCombatantGroupComponent::SetCombatantInGroup(UCombatantComponent* Combatan
 	{
 		if(InGroup)
 		{
+			if(IsGroupFull() && ReplaceIfAtMaxCapacity)
+			{
+				Local_CombatantList.RemoveAt(0);
+				
+			}
 			Local_CombatantList.AddUnique(Combatant);
-			
 		}
 		else
 		{
@@ -73,4 +87,53 @@ TArray<UCombatantComponent*> UCombatantGroupComponent::GetCombatants()
 		}
 	}
 	return OutList;
+}
+
+void UCombatantGroupComponent::SetPrimitiveComponentRegister(UPrimitiveComponent* Component, bool bActive)
+{
+	if(Component)
+	{
+		if(bActive)
+		{
+			Local_BreakLinkedComp();
+			
+			Component->OnComponentBeginOverlap.AddDynamic(this, &UCombatantGroupComponent::Local_Overlap);
+			Component->OnComponentEndOverlap.AddDynamic(this, &UCombatantGroupComponent::Local_OverlapEnd);
+			LinkedPrimitiveComponent = Component;
+		}
+		else
+		{
+			Local_BreakLinkedComp();	
+		}
+	}
+}
+
+void UCombatantGroupComponent::Local_Overlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if(OtherActor && OtherActor->GetComponentByClass(UCombatantComponent::StaticClass()))
+	{
+		UCombatantComponent* LocalComb = Cast<UCombatantComponent>(OtherActor->GetComponentByClass(UCombatantComponent::StaticClass()));
+		SetCombatantInGroup(LocalComb, true);
+	}
+}
+
+void UCombatantGroupComponent::Local_OverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if(OtherActor && OtherActor->GetComponentByClass(UCombatantComponent::StaticClass()))
+	{
+		UCombatantComponent* LocalComb = Cast<UCombatantComponent>(OtherActor->GetComponentByClass(UCombatantComponent::StaticClass()));
+		SetCombatantInGroup(LocalComb, false);
+	}
+}
+
+void UCombatantGroupComponent::Local_BreakLinkedComp()
+{
+	if(LinkedPrimitiveComponent)
+	{
+		LinkedPrimitiveComponent->OnComponentBeginOverlap.RemoveDynamic(this, &UCombatantGroupComponent::Local_Overlap);
+		LinkedPrimitiveComponent->OnComponentEndOverlap.RemoveDynamic(this, &UCombatantGroupComponent::Local_OverlapEnd);
+		LinkedPrimitiveComponent = nullptr;
+	}
 }

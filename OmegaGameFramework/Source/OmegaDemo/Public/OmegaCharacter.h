@@ -8,7 +8,7 @@
 #include "Data/DataAssetCollectionComponent.h"
 #include "GameFramework/Character.h"
 #include "Gameplay/CombatantComponent.h"
-#include "Gameplay/Equipment/EquipmentComponent.h"
+#include "Gameplay/Components/EquipmentComponent.h"
 #include "OmegaCharacter.generated.h"
 
 UCLASS()

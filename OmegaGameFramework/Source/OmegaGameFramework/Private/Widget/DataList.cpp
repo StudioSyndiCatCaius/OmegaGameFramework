@@ -204,9 +204,14 @@ TArray<UDataWidget*> UDataList::AddAssetsToList(TArray<UObject*> Assets, FString
 
 UDataWidget* UDataList::AddedCustomEntryToList(FCustomAssetData EntryData, FString Flag)
 {
+	return AddAssetToList(Native_CreateCustomDataObject(EntryData), Flag);
+}
+
+UGeneralDataObject* UDataList::Native_CreateCustomDataObject(FCustomAssetData EntryData)
+{
 	UGeneralDataObject* TempDataObj = NewObject<UGeneralDataObject>(this, UGeneralDataObject::StaticClass());
 	TempDataObj->CustomData = EntryData;
-	return AddAssetToList(TempDataObj, Flag);
+	return TempDataObj;
 }
 
 TArray<UDataWidget*> UDataList::GetEntries()
@@ -501,6 +506,16 @@ void UDataList::NativeEntitySelect(UDataWidget* DataWidget)
 			DataWidget->SetHighlighted(true);
 		}
 	}
+	
+	// Set Source Assets on Linked Select Widgets
+	for(auto* TempWig : LinkedSelectedWidgets)
+	{
+		if(TempWig)
+		{
+			TempWig->SetSourceAsset(DataWidget->ReferencedAsset);
+		}
+	}
+	
 	OnEntrySelected.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget));
 }
 
@@ -509,6 +524,16 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 	if (bIsHovered)
 	{
 		HoveredEntry = DataWidget;
+		
+		// Set Source Assets on Linked Hover Widgets
+		for(auto* TempWig : LinkedHoverWidgets)
+		{
+			if(TempWig)
+			{
+				TempWig->SetSourceAsset(DataWidget->ReferencedAsset);
+			}
+		}
+		
 		OnEntryHovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget));
 		if(Format==EDataListFormat::Format_ScrollBox)
 		{
@@ -525,6 +550,19 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 	}
 	else
 	{
+		
+		FCustomAssetData LocalTempData;
+		LocalTempData.Texture = nullptr;
+		UGeneralDataObject* TempObject = Native_CreateCustomDataObject(LocalTempData);
+		// Clear Unhovered Entry Widgets
+		for(auto* TempWig : LinkedHoverWidgets)
+		{
+			if(TempWig)
+			{
+				TempWig->SetSourceAsset(TempObject);
+			}
+		}
+		
 		OnEntryUnhovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget));
 		if(DescriptionTextBlock)
 		{

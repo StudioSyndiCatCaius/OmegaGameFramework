@@ -20,6 +20,7 @@ public:
 
 protected:
 	// Called when the game starts
+	
 	virtual void BeginPlay() override;
 	virtual void BeginDestroy() override;
 
@@ -38,7 +39,7 @@ public:
 	UCombatantComponent* CombatantRef = nullptr;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UObject* Instigator);
+	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, FHitResult Hit);
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnCombatantNotify(UCombatantComponent* OwningCombatant, FName Notify, const FString& Flag);

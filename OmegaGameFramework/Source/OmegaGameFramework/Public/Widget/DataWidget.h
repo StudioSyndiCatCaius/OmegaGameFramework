@@ -42,10 +42,12 @@ public:
 	UPROPERTY()
 	UDataList* ParentList = nullptr;
 
+	
+
 	UPROPERTY(EditInstanceOnly, Category="DataWidget")
 	FString AssetLabel;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(ExposeOnSpawn = "true", DisplayName="Source Asset"), Category = "DataWidget")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, meta=(ExposeOnSpawn = "true", DisplayName="Source Asset"), Category = "DataWidget")
 	UObject* ReferencedAsset;
 
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "DataWidget")

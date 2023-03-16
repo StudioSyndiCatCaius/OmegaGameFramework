@@ -93,7 +93,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::GetGameplaySystem(TSubclassOf<AOm
 
 	for (class AOmegaGameplaySystem* TempSystem : ActiveSystems)
 	{
-		if (TempSystem->GetClass() == Class && !DummyObject)
+		if (TempSystem->GetClass()->IsChildOf(Class) && !DummyObject)
 		{
 			DummyObject = TempSystem;
 		}
@@ -180,11 +180,21 @@ APlayerController* UOmegaGameplaySubsystem::GetPlayerController(int32 Index)
 	return UGameplayStatics::GetPlayerController(this, Index);
 }
 
+void UOmegaGameplaySubsystem::SetGameplayState(FGameplayTag State)
+{
+	if(State != GameplayState)
+	{
+		GameplayState = State;
+		OnGameplayStateChange.Broadcast(GameplayState);
+	}
+}
+
 void UOmegaGameplaySubsystem::Native_RegisterCombatant(UCombatantComponent* Combatant, bool bRegistered)
 {
 	if(bRegistered)
 	{
 		ActiveCombatants.AddUnique(Combatant);
+		Combatant->OnDamaged.AddDynamic(this, &UOmegaGameplaySubsystem::UOmegaGameplaySubsystem::Native_OnDamaged);
 		OnCombatantRegistered.Broadcast(Combatant);
 	}
 	else
@@ -195,6 +205,11 @@ void UOmegaGameplaySubsystem::Native_RegisterCombatant(UCombatantComponent* Comb
 		
 }
 
+void UOmegaGameplaySubsystem::Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
+	float FinalDamage, UCombatantComponent* Instigator, FHitResult Hit)
+{
+	OnCombatantDamaged.Broadcast(Combatant, Attribute, FinalDamage, Instigator, Hit);
+}
 
 TArray<UCombatantComponent*> UOmegaGameplaySubsystem::GetAllCombatants()
 {
@@ -250,45 +265,3 @@ AActor* UOmegaGameplaySubsystem::GetGlobalActorBinding(FName Binding)
 	}
 	return nullptr;
 }
-
-TArray<UObject*> UOmegaGameplaySubsystem::GetValidGameplayStateObjects()
-{
-	TArray<UObject*> OutObjects;
-	for(auto* TempObject : GameplayStateObjects)
-	{
-		if(TempObject)
-		{
-			OutObjects.AddUnique(TempObject);
-		}
-	}
-	return OutObjects;
-}
-
-void UOmegaGameplaySubsystem::RegisterGameplayStateSource(UObject* Object, bool bRegistered)
-{
-	if(Object)
-	{
-		if(bRegistered && Object->GetClass()->ImplementsInterface(UOmegaGameplayStateInterface::StaticClass()))
-		{
-			GameplayStateObjects.AddUnique(Object);
-		}
-		else if(!bRegistered)
-		{
-			GameplayStateObjects.Remove(Object);
-		}
-	}
-}
-
-bool UOmegaGameplaySubsystem::IsGameplayStateActive(FGameplayTag StateTag)
-{
-	for(auto* TempState: GetValidGameplayStateObjects())
-	{
-		if(IOmegaGameplayStateInterface::Execute_IsGameplayStateTagActive(TempState))
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-

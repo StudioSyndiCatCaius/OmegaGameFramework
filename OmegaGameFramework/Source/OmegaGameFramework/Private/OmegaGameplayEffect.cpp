@@ -129,7 +129,7 @@ void AOmegaGameplayEffect::TriggerEffect()
 		}
 		if(TargetedCombatant)
 		{
-			 DamageFinal = TargetedCombatant->ApplyAttributeDamage(EffectedAttribute, DamageVal, CombatantInstigator, EffectContext);
+			 DamageFinal = TargetedCombatant->ApplyAttributeDamage(EffectedAttribute, DamageVal, CombatantInstigator, EffectContext, GetImpactHitResult());
 		}
 	}
 	

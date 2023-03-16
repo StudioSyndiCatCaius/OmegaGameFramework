@@ -18,6 +18,8 @@ struct FLinearEventSequence
 	UPROPERTY(BlueprintReadOnly, Category="LinearEvents", instanced, EditAnywhere)
 	TArray<class UOmegaLinearEvent*> Events;
 
+	
+
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLinearEventBegin, const UOmegaLinearEvent*, Event);

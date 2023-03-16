@@ -331,6 +331,19 @@ TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromComponents(TArray<UAc
 	return OutActors;
 }
 
+TArray<UActorComponent*> UOmegaGameFrameworkBPLibrary::GetComponentsFromActors(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass)
+{
+	TArray<UActorComponent*> OutComps;
+	for(const auto* TempComp : Actors)
+	{
+		if(TempComp && TempComp->GetComponentByClass(ComponentClass))
+		{
+			OutComps.AddUnique(TempComp->GetComponentByClass(ComponentClass));
+		}
+	}
+	return OutComps;
+}
+
 AActor* UOmegaGameFrameworkBPLibrary::GetClosestActorToPoint(TArray<AActor*> Actors, FVector Point)
 {
 	AActor* OutActor = nullptr;
@@ -362,5 +375,89 @@ void UOmegaGameFrameworkBPLibrary::SetActorActive(AActor* Actor, bool bIsActive)
 		Actor->CustomTimeDilation=bIsActive;
 		Actor->SetActorEnableCollision(bIsActive);
 	}
+}
+
+TArray<AActor*> UOmegaGameFrameworkBPLibrary::FilterActorsWithComponents(TArray<AActor*> Actors,
+	TSubclassOf<UActorComponent> ComponentClass, TArray<AActor*> ExcludedActors)
+{
+	TArray<AActor*> OutActors;
+	for(auto* TempActor : Actors)
+	{
+		if(TempActor && TempActor->GetComponentByClass(ComponentClass) && !ExcludedActors.Contains(TempActor))
+		{
+			OutActors.Add(TempActor);
+		}
+	}
+	return OutActors;
+}
+
+UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(UObject* Object,
+	TSubclassOf<UActorComponent> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(!Object || !Class)
+	{
+		Outcome = EOmegaFunctionResult::Fail;
+		return nullptr;
+	}
+	
+	if (Cast<AActor>(Object) && Cast<AActor>(Object)->GetComponentByClass(Class))
+	{
+		Outcome = EOmegaFunctionResult::Success;
+		return Cast<AActor>(Object)->GetComponentByClass(Class);
+	}
+	
+	if (Cast<UActorComponent>(Object))
+	{
+		UActorComponent* TempComp = Cast<UActorComponent>(Object);
+		
+		if(TempComp->GetClass()->IsChildOf(Class))
+		{
+			Outcome = EOmegaFunctionResult::Success;
+			return TempComp;
+		}
+		
+		if (TempComp->GetOwner()->GetComponentByClass(Class))
+		{
+			Outcome = EOmegaFunctionResult::Success;
+			return TempComp->GetOwner()->GetComponentByClass(Class);
+		}
+	}
+	Outcome = EOmegaFunctionResult::Fail;
+	return  nullptr;
+}
+
+//###############################################################################
+// InterpActor
+//###############################################################################
+
+void UOmegaGameFrameworkBPLibrary::InterpActorLocation(AActor* Actor, FVector TargetLocation, float InterpSpeed)
+{
+	if(Actor)
+	{
+		Actor->SetActorLocation(UKismetMathLibrary::VInterpTo(Actor->GetActorLocation(), TargetLocation, UGameplayStatics::GetWorldDeltaSeconds(Actor), InterpSpeed));
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::InterpActorRotation(AActor* Actor, FRotator TargetRotation, float InterpSpeed, bool X,
+	bool Y, bool Z)
+{
+	FRotator LocalRot = TargetRotation;
+	if(!X)
+	{
+		LocalRot.Roll = 0;
+	}
+	if(!Y)
+	{
+		LocalRot.Pitch = 0;
+	}
+	if(!Z)
+	{
+		LocalRot.Yaw = 0;
+	}
+	if(Actor)
+	{
+		Actor->SetActorRotation(UKismetMathLibrary::RInterpTo(Actor->GetActorRotation(), LocalRot, UGameplayStatics::GetWorldDeltaSeconds(Actor), InterpSpeed));
+	}
+	
 }
 

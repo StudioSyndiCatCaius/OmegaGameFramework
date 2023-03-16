@@ -251,4 +251,26 @@ TArray<AActor*> UOmegaDataSubsystem::GetActorsByDataItem(UOmegaDataItem* DataIte
 	return OutActors;
 }
 
+//########################//########################
+// FUNCTION LIBRARY
+//########################//########################
+
+UOmegaDataTrait* UOmegaDataItemFunctions::TryGetDataTraitByClass(UObject* Source, TSubclassOf<UOmegaDataTrait> Class)
+{
+	if(Source && Cast<UOmegaDataItem>(Source))
+	{
+		return Cast<UOmegaDataItem>(Source)->GetTraitByType(Class);
+	}
+	return nullptr;
+}
+
+UOmegaDataTrait* UOmegaDataItemFunctions::TryGetDataTraitByInterface(UObject* Source, TSubclassOf<UInterface> Class)
+{
+	if(Source && Cast<UOmegaDataItem>(Source))
+	{
+		return Cast<UOmegaDataItem>(Source)->GetTraitWithInterface(Class);
+	}
+	return nullptr;
+}
+
 
