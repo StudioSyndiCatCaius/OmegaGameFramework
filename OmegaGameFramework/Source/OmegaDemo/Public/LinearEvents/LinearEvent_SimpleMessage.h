@@ -14,7 +14,7 @@
 class UOmegaDataItem;
 
 // Fires the GlobalEvent "SimpleMessage" with this event as the context. Uses GetGeneralDataTexts to get event text. Finishes on GlobalEvent "EndMessage";
-UCLASS(DisplayName="Event (Simple Message)")
+UCLASS(DisplayName="Event | Simple Message")
 class OMEGADEMO_API ULinearEvent_SimpleMessage : public UOmegaLinearEvent, public IDataInterface_General
 {
 	GENERATED_BODY()

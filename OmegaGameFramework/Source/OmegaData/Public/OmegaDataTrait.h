@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataInterface_ContextAV.h"
 #include "DataInterface_General.h"
 #include "GameFramework/Actor.h"
+#include "LevelSequence.h"
 #include "GameplayTagContainer.h"
 #include "Data/SoftPropertiesInterface.h"
 #include "OmegaDataTrait.generated.h"
@@ -12,9 +14,11 @@
 class AActor;
 class UUserWidget;
 class UOmegaDataItem;
+class USoundBase;
+class UNiagaraSystem;
 
 UCLASS(Blueprintable, abstract, const, editinlinenew, hidecategories=Object, CollapseCategories)
-class OMEGADATA_API UOmegaDataTrait : public UObject, public IDataInterface_General
+class OMEGADATA_API UOmegaDataTrait : public UObject, public IDataInterface_General, public IDataInterface_ContextAV
 {
 	GENERATED_BODY()
 
@@ -41,15 +45,26 @@ public:
 	FGameplayTagContainer AppendedItemTags() const;
 
 	// SOFT PROPERTIES
-	UFUNCTION(BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (Bool)")
+	//BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (Bool)"
+	/*
+	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Bool)")
 	bool BindTraitProperty_Bool(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (Int32)")
+	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Int32)")
 	int32 BindTraitProperty_Int(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (Float)")
+	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Float)")
 	float BindTraitProperty_Float(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (String)")
+	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (String)")
 	FString BindTraitProperty_String(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (Object)")
+	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Object)")
 	UObject* BindTraitProperty_Object(const FString& Property, bool& ValidProperty) const;
+	*/
+	
+	//###############################################################################
+	// Contextual Data
+	//###############################################################################
+
+	virtual TMap<FGameplayTag, ULevelSequence*> GetContextAVSequences_Implementation() override;
+	virtual TMap<FGameplayTag, USoundBase*> GetContextAVSounds_Implementation() override;
+	virtual TMap<FGameplayTag, UNiagaraSystem*> GetContextAVNiagara_Implementation() override;
 	
 };

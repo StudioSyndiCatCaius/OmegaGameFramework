@@ -27,7 +27,7 @@
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
 																public ISoftPropertiesInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
-																public IDataInterface_SkillSource, public IDataInterface_Skill
+																public IDataInterface_SkillSource, public IDataInterface_Skill, public IDataInterface_ContextAV
 {
 	GENERATED_BODY()
 
@@ -114,37 +114,28 @@ public:
 	//###############################################################################
 	// Contextual Data
 	//###############################################################################
-
+	virtual TMap<FGameplayTag, ULevelSequence*> GetContextAVSequences_Implementation() override;
+	virtual TMap<FGameplayTag, USoundBase*> GetContextAVSounds_Implementation() override;
+	virtual TMap<FGameplayTag, UNiagaraSystem*> GetContextAVNiagara_Implementation() override;
 	
-	
-//////////////////////
-/// DATA INTERFACE
-/////////////////////
+	//###############################################################################
+	// Gameplay Tags
+	//###############################################################################
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
-FGameplayTag GetObjectGameplayCategory();
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
-	FGameplayTagContainer GetObjectGameplayTags();
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation();
-	
-	//DataInterface
-
-	//Texts
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
-	void GetGeneralDataText(const FString& Label, const class UObject* Context,	FText& Name, FText& Description);
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const class UObject* Context, FText& Name, FText& Description);
-	
+	//###############################################################################
+	// General TExt
+	//###############################################################################
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const class UObject* Context, FText& Name, FText& Description) override;
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
-	//Images
-	//UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const class UObject* Context, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush);
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const class UObject* Context, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
 
-	UFUNCTION(BlueprintNativeEvent)
-	int32 GetMaxCollectionNumber();
 	virtual int32 GetMaxCollectionNumber_Implementation() override;
 
+	//###############################################################################
+	// Combatant
+	//###############################################################################
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 	virtual TArray<FOmegaEffectContainer> GetOmegaEffects_Implementation() override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation() override;
@@ -158,23 +149,6 @@ FGameplayTag GetObjectGameplayCategory();
 
 	UFUNCTION()
 	FString GetItemProperty_String(const FString& Property);
-	/*
-	UFUNCTION(BlueprintPure, Category="DataItem|Properties")
-	int32 GetItemProperty_Int32(const FString& Property);
-	UFUNCTION(BlueprintPure, Category="DataItem|Properties")
-	float GetItemProperty_Float(const FString& Property);
-	UFUNCTION(BlueprintPure, Category="DataItem|Properties")
-	bool GetItemProperty_Bool(const FString& Property);
-	*/
-	
-	//////////////////////
-	/// DATA INTERFACE
-	/////////////////////
-
-	//###############################################################################
-	// Skill
-	//###############################################################################
-
 	
 	
 };

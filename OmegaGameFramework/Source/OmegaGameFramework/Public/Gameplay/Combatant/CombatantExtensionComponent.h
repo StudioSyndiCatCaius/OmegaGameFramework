@@ -39,7 +39,7 @@ public:
 	UCombatantComponent* CombatantRef = nullptr;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, FHitResult Hit);
+	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnCombatantNotify(UCombatantComponent* OwningCombatant, FName Notify, const FString& Flag);

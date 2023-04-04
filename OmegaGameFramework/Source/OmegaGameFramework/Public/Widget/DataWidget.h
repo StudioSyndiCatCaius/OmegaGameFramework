@@ -8,6 +8,7 @@
 #include "WidgetInterface_Input.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
+#include "Player/OmegaPlayerSubsystem.h"
 #include "DataWidget.generated.h"
 
 class UDataList;
@@ -36,13 +37,12 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent) override;
 	virtual void NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent) override;
-	
+
+	UOmegaPlayerSubsystem* GetPlayerSubsystem() const;
 public:
 	
 	UPROPERTY()
 	UDataList* ParentList = nullptr;
-
-	
 
 	UPROPERTY(EditInstanceOnly, Category="DataWidget")
 	FString AssetLabel;

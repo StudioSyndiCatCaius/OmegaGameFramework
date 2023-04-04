@@ -16,8 +16,10 @@ public class OmegaData : ModuleRules
 			"DeveloperSettings", 
 			"GameplayTags",
 			"OmegaGameFramework", 
+			"Slate",
 			"SlateCore", 
-			"UMG"
+			"UMG",
+			"FileSDK"
 		});
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{

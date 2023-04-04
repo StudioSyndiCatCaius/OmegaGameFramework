@@ -20,9 +20,9 @@
 
 class FOmegaEditor : public IModuleInterface
 {
-	public:
+public:
 
-TSharedPtr<FSlateStyleSet> StyleSet;
+	TSharedPtr<FSlateStyleSet> StyleSet;
 
 	EAssetTypeCategories::Type OmegaAssetCategory;
 	

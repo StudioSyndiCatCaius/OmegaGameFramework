@@ -9,7 +9,7 @@ class FAssetTypeActions_FlowNodeBlueprint final : public FAssetTypeActions_Bluep
 public:
 	virtual FText GetName() const override;
 	virtual uint32 GetCategories() override;
-	virtual FColor GetTypeColor() const override { return FColor(255, 196, 128); }
+	virtual FColor GetTypeColor() const override { return FColor(153, 51, 255); }
 
 	virtual UClass* GetSupportedClass() const override;
 

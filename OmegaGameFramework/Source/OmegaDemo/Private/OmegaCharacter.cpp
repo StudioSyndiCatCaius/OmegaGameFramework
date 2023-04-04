@@ -17,6 +17,7 @@ AOmegaCharacter::AOmegaCharacter()
 	Equipment = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
 	Inventory = CreateDefaultSubobject<UDataAssetCollectionComponent>(TEXT("Inventory"));
 	Leveling = CreateDefaultSubobject<ULevelingComponent>(TEXT("Leveling"));
+	ActorState = CreateDefaultSubobject<UActorStateComponent>(TEXT("ActorState"));
 }
 
 // Called when the game starts or when spawned
@@ -25,6 +26,7 @@ void AOmegaCharacter::BeginPlay()
 	Super::BeginPlay();
 	Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
 	Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
+	DataItem->OnDataItemChanged.AddDynamic(this, &AOmegaCharacter::Local_UpdateDataItem);
 }
 
 void AOmegaCharacter::Local_AddCombatantSource(UObject* Source)

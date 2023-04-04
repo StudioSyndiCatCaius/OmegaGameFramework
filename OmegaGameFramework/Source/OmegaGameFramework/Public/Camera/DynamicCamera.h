@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "OmegaGameplaySubsystem.h"
+#include "Subsystems/LocalPlayerSubsystem.h"
 #include "Camera/CameraActor.h"
-#include "Camera/CameraComponent.h"
 #include "Components/ActorComponent.h"
 #include "DynamicCamera.generated.h"
 
@@ -16,12 +15,9 @@ UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UDynamicCameraState : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
-
 public:
-
 	UPROPERTY(EditAnywhere, Instanced, Category="Dynamic Camera")
 	UDynamicCameraType* Type;
-	
 };
 
 UCLASS(EditInlineNew, Abstract, Blueprintable, BlueprintType, CollapseCategories, Const)
@@ -30,7 +26,6 @@ class OMEGAGAMEFRAMEWORK_API UDynamicCameraType : public UObject
 	GENERATED_BODY()
 	
 public:
-
 	UFUNCTION(BlueprintImplementableEvent, Category="Dynamic Camera")
 	void GetTargetData(UOmegaDynamicCameraSubsystem* Subsystem, FVector& TargetLocation, FRotator& TargetRotation, float& FOV, float& InterpSpeed, float& TrackingRotationLerp) const;
 };
@@ -130,7 +125,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void SetCameraState (UDynamicCameraState* NewState, bool SnapToView);
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	UDynamicCameraState* CameraState;
 
 	UPROPERTY()

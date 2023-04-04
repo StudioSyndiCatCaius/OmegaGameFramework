@@ -27,6 +27,7 @@ class AOmegaGameplayEffect;
 class UOmegaGameplaySubsystem;
 class ACombatantTargetIndicator;
 class UOmegaFaction;
+class UOmegaDamageType;
 
 class UInputComponent;
 class UEnhancedInputComponent;
@@ -42,7 +43,7 @@ enum EFactionAffinity
 };
 
 /// DELEGATES
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, FHitResult, Hit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantLevelChange, int32, NewLevel);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetAdded, UCombatantComponent*, Target);
@@ -343,8 +344,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes", AdvancedDisplay)
 	bool bCanDamageAttributes = true;
 	
-	UFUNCTION(BlueprintCallable, Category = "Attributes", meta = (AdvancedDisplay = "Instigator, Context, Hit"))
-	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, FHitResult Hit);
+	UFUNCTION(BlueprintCallable, Category = "Attributes", meta = (AdvancedDisplay = "Instigator, Context, DamageType, Hit"))
+	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, UOmegaDamageType* DamageType, FHitResult Hit);
 	
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	void GetAttributeValue(class UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue);
@@ -364,6 +365,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	void SetCombatantLevel(int32 NewLevel, bool ReinitializeStats);
 
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	void InitializeAttributes();
 	
 	/////////

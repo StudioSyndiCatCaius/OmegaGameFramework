@@ -1,11 +1,10 @@
-// Copyright Studio Syndicat 2021. All Rights Reserved.
 #pragma once
 
 #include "Modules/ModuleManager.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(OmegaWorld, All, All);
+DECLARE_LOG_CATEGORY_EXTERN(OmegaMod, All, All);
 
-class FOmegaWorld : public IModuleInterface
+class FOmegaMod : public IModuleInterface
 {
 	public:
 

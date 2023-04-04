@@ -103,4 +103,9 @@ public:
 	//########################################################
 	UPROPERTY(EditAnywhere, config, Category = "Dynamic Camera", meta = (MetaClass = "CameraActor"))
 	FSoftClassPath DynamicCameraClass;
+
+	//########################################################
+	//Zones
+	//########################################################
+	
 };

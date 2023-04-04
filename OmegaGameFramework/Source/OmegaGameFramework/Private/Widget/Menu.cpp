@@ -13,7 +13,11 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	SetOwningPlayer(PlayerRef);
 	if (!bIsOpen)
 	{
+		//BIND EVENTS
+		GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UMenu::OnGameplayMessage);
 		Local_BindGlobalEvent();
+
+		
 		bIsOpen = true;
 		TempTags = Tags;
 		PrivateInputBlocked = true;

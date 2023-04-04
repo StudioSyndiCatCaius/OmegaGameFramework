@@ -60,6 +60,9 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static FGameplayTagContainer FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn);
+
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
+	static FGameplayTag GetFirstTagOfType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
 	static TArray<UObject*> FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude);
@@ -86,6 +89,12 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay|Player", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Player"))
 	static void SetPlayerCustomInputMode(const UObject* WorldContextObject, APlayerController* Player,  UOmegaInputMode* InputMode);
 
+	UFUNCTION(BlueprintPure, Category="Omega|Gameplay|Player")
+	static float  GetPlayerCameraFadeAmount(APlayerController* Player);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Gameplay|Player")
+	static FLinearColor  GetPlayerCameraFadeColor(APlayerController* Player);
+	
 	//###############################################################################
 	// Actor Binding
 	//###############################################################################

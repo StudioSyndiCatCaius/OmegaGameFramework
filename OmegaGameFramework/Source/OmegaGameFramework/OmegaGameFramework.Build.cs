@@ -1,4 +1,4 @@
-// Some copyright should be here...
+// Copyright Studio Syndicat 2021. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -37,8 +37,10 @@ public class OmegaGameFramework : ModuleRules
 				"EnhancedInput",
 				"Engine",
 				"DeveloperSettings",
+				"LevelSequence",
 				"UMG",
 				"InputCore",
+				"Niagara",
 				"Json",
 				"JsonUtilities"
 				// ... add other public dependencies that you statically link with here ...

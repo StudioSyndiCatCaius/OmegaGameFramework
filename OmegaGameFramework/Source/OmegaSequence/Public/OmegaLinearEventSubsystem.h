@@ -17,10 +17,21 @@ struct FLinearEventSequence
 
 	UPROPERTY(BlueprintReadOnly, Category="LinearEvents", instanced, EditAnywhere)
 	TArray<class UOmegaLinearEvent*> Events;
-
-	
-
 };
+
+USTRUCT(BlueprintType)
+struct FOmegaLinearEventScriptData
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Script")
+	FString Event_Type;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Script")
+	FString Event_Data;
+};
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLinearEventBegin, const UOmegaLinearEvent*, Event);
 
@@ -48,9 +59,29 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnLinearEventBegin OnLinearEventBegin;
-
-
+	
 	///CHOICE
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")
 	AOmegaLinearChoiceInstance* PlayLinearChoice(FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass);
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class OMEGASEQUENCE_API UOmegaLinearEventScriptReader : public UObject
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Script")
+	TSubclassOf<UOmegaDataParserReader> GetParserClass();
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Script")
+	TArray<FOmegaLinearEventScriptData> ConvertScriptToEventData(const FString& Script);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Script")
+	TSubclassOf<UOmegaLinearEvent> GetEventClassFromString(const FString& Script);
+
+	UFUNCTION(BlueprintCallable, Category="Script")
+	FLinearEventSequence ConvertToLinearEventSequence(const FString& Script, TSubclassOf<UOmegaDataParserReader> ReaderClass, bool ScriptIsPath);
+	
 };

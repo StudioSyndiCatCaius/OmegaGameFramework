@@ -39,12 +39,21 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 	static void NotifyCombatantFaction(const UObject* WorldContextObject, FGameplayTag Faction, FName Notify);
 
 	//Will attempt to get a combatant component, casting the object as a combatant, and actor, or a sibling component.
-	UFUNCTION(BlueprintPure, Category="Combat")
-	static UCombatantComponent* TryGetCombatantFromObject(UObject* Object);
+	
 
 	//-----------------------------------------------------------------------------------
 	// ATTRIBUTES
 	//-----------------------------------------------------------------------------------
 	UFUNCTION(BlueprintPure, Category="Attributes", meta=(CompactNodeTitle="Attribute ID"))
 	static UOmegaAttribute* GetAttributeByUniqueID(const FString& ID);
+
+	//-----------------------------------------------------------------------------------
+	// Targets
+	//-----------------------------------------------------------------------------------
+
+	UFUNCTION(BlueprintPure, Category="Omega|Combat|Targeting")
+	static float GetCombatantDistantToActiveTarget(UCombatantComponent* Combatant);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Combat|Targeting")
+	static bool IsCombatantActiveTargetInRange(UCombatantComponent* Combatant, float Range);
 };

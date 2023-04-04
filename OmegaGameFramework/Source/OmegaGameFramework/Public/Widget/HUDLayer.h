@@ -35,8 +35,9 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnGlobalEvent(FName Event, UObject* Context);
-	
 	UFUNCTION()
 	void Local_BindGlobalEvent();
-	
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory);
 };

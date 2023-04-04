@@ -15,6 +15,12 @@
 	"Installed": true,
 	"Modules": [
 		{
+			"Name": "FileSDK",
+			"Type": "Runtime",
+			"LoadingPhase": "PreLoadingScreen",
+			"WhitelistPlatforms": [ "Win64", "Mac", "Linux"]
+		},
+		{
 			"Name": "OmegaGameFramework",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
@@ -25,7 +31,7 @@
 			]
 		},
 		{
-			"Name": "OmegaEditor",
+			"Name": "Actions",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit",
 			"PlatformAllowList": [
@@ -35,9 +41,9 @@
 			]
 		},
 		{
-			"Name": "Actions",
-			"Type": "Runtime",
-			"LoadingPhase": "PreDefault",
+			"Name": "ActionsEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
 			"PlatformAllowList": [
 				"Win64",
 				"Linux",
@@ -45,9 +51,9 @@
 			]
 		},
 		{
-			"Name": "ActionsEditor",
-			"Type": "UncookedOnly",
-			"LoadingPhase": "PreDefault",
+			"Name": "OmegaEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
 			"PlatformAllowList": [
 				"Win64",
 				"Linux",
@@ -126,6 +132,11 @@
 		},
 		{
 			"Name": "OmegaParser",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaMod",
 			"Type": "Runtime",
 			"loadingPhase": "Default"
 		}

@@ -6,6 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "OmegaSettings.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "Widget/WidgetInterface_Input.h"
 #include "Widget/HUDLayer.h"
 
@@ -128,6 +129,27 @@ void UOmegaPlayerSubsystem::RemoveMenuFromActiveList(UMenu* Menu)
 	{
 		OpenMenus.Remove(Menu);
 	}
+}
+
+void UOmegaPlayerSubsystem::PlayUiSound(USoundBase* Sound)
+{
+	/*
+	if(Sound)
+	{
+		GetLocalAudioComp()->SetSound(Sound);
+		GetLocalAudioComp()->Play();
+	}
+	*/
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(SoundCooldownTimer))
+	{
+		if (Sound)
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), Sound);
+			GetWorld()->GetTimerManager().SetTimer(SoundCooldownTimer, [this](){}, 0.1, false);
+		}
+	}
+	
 }
 
 ////INPUT HANDLING

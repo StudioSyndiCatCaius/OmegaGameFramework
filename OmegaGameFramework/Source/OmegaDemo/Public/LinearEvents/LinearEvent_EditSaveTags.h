@@ -12,7 +12,7 @@
 /**
  * 
  */
-UCLASS(DisplayName="Event (Modify Save Tags)")
+UCLASS(DisplayName="Event | Edit Save Tags")
 class OMEGADEMO_API ULinearEvent_EditSaveTags : public UOmegaLinearEvent
 {
 	GENERATED_BODY()

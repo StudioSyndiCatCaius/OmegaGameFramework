@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DataInterface_General.h"
-#include "Subsystems/WorldSubsystem.h"
+#include "Subsystems/GameInstanceSubsystem.h"
 #include "EngineUtils.h"
 #include "GameplayTagContainer.h"
 #include "OmegaMessageSubsystem.generated.h"
@@ -19,13 +19,12 @@ struct FOmegaGameplayMessageData
 
 	UPROPERTY()
 	FText MessageLog_Text;
-
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameplayMessage, UOmegaGameplayMessage*, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameplayMessage, UOmegaGameplayMessage*, Message, FGameplayTag, MessageCategory);
 
 UCLASS(DisplayName="Omega Subsystem: Message")
-class OMEGAGAMEFRAMEWORK_API UOmegaMessageSubsystem : public UWorldSubsystem
+class OMEGAGAMEFRAMEWORK_API UOmegaMessageSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 

@@ -37,6 +37,11 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 	Unhover();
 }
 
+UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
+{
+	return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();	
+}
+
 //----------------------NATIVE CONSTRUCT-------------------------------------------//
 
 void UDataWidget::NativeConstruct()
@@ -121,14 +126,14 @@ void UDataWidget::Select()
 		
 		if(SelectSound)
 		{
-			UGameplayStatics::PlaySound2D(this, SelectSound);
+				GetPlayerSubsystem()->PlayUiSound(SelectSound);
 		}
 	}
 	else
 	{
 		if(ErrorSound)
 		{
-			UGameplayStatics::PlaySound2D(this, ErrorSound);
+				GetPlayerSubsystem()->PlayUiSound(ErrorSound);
 		}
 	}
 }
@@ -148,7 +153,7 @@ void UDataWidget::Hover()
 	UE_LOG(LogTemp, Warning, TEXT("Success Hover"));
 	if(HoverSound)
 	{
-		UGameplayStatics::PlaySound2D(this, HoverSound);
+		GetPlayerSubsystem()->PlayUiSound(HoverSound);
 	}
 	
 	if (GetHoverAnimation())

@@ -3,6 +3,7 @@
 
 #include "OmegaDataSubsystem.h"
 
+#include "FileSDKBPLibrary.h"
 #include "OmegaDataItem.h"
 #include "OmegaDataSettings.h"
 #include "OmegaGameFrameworkBPLibrary.h"
@@ -249,6 +250,23 @@ TArray<AActor*> UOmegaDataSubsystem::GetActorsByDataItem(UOmegaDataItem* DataIte
 		}
 	}
 	return OutActors;
+}
+
+TArray<FString> UOmegaDataSubsystem::LoadGameDataFiles(const FString& Extension)
+{
+
+	TArray<FString> LoadedFiles;
+	FString LocalExt =Extension;
+	/*
+	if(!Extension.IsEmpty())
+	{
+		TArray<FString> TempLoadedFiles = UFileSDKBPLibrary::GetFilesFromDirectory(FPaths::ProjectPluginsDir(), "csv");
+		LoadedFiles.Append(TempLoadedFiles);
+		TempLoadedFiles = UFileSDKBPLibrary::GetFilesFromDirectory(FPaths::ProjectPluginsDir(), "csv");
+		LoadedFiles.Append(TempLoadedFiles);
+	}
+	*/
+	return LoadedFiles;
 }
 
 //########################//########################

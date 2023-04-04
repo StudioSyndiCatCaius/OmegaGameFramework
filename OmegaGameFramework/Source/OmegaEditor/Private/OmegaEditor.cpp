@@ -3,17 +3,21 @@
 #include "OmegaEditor.h"
 #include "Modules/ModuleManager.h"
 #include "Modules/ModuleInterface.h"
-#include "Interfaces/IPluginManager.h"
 #include "Styling/SlateStyleRegistry.h"
 
+#include "PlacementMode/Public/IPlacementModeModule.h"
+#include "Interfaces/IPluginManager.h"
+#include "Runtime/Launch/Resources/Version.h"
+
+#include "OmegaCharacter.h"
+
 #include "AssetTypeActions_Base.h"
-
 #include "IAssetTools.h"
-
 #include "OmegaAbility.h"
 #include "OmegaGameplayEffect.h"
 
 #include "OmegaGameplaySystem.h"
+
 #include "Widget/DataWidget.h"
 #include "Widget/Menu.h"
 #include "Widget/HUDLayer.h"
@@ -130,6 +134,8 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("DataItemComponent"));
 	
 	ThumnbailNames.Add(TEXT("FlowComponent"));
+	ThumnbailNames.Add(TEXT("FlowNode"));
+	ThumnbailNames.Add(TEXT("OmegaGameplayMessage"));
 	
 	ThumnbailNames.Add(TEXT("InstanceActorComponent"));
 	ThumnbailNames.Add(TEXT("OmegaInstanceActor"));
@@ -177,10 +183,35 @@ void FOmegaEditor::StartupModule()
 		IcoName = FName(*IconPrefex);
 		StyleSet->Set(IcoName, IconTemp);
 	};
-
+	
 	//Reguster the created style
 	FSlateStyleRegistry::RegisterSlateStyle(*StyleSet);
 	//_______________________
+
+	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+
+	// Register editor category
+	int Priority = 42;
+	FPlacementCategoryInfo OmegaGameFramework( LOCTEXT("OmegaGameFramework", "Omega Game Framework"), "OmegaGameFramework", TEXT("PMOmegaGameFramework"), Priority);
+	IPlacementModeModule::Get().RegisterPlacementCategory(OmegaGameFramework);
+	
+	// Find and register actors to category
+	UBlueprint* OmegaCharacter = Cast<UBlueprint>(FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/OmegaDemoCharacter.OmegaDemoCharacter")).TryLoad());
+	if (OmegaCharacter) {
+		IPlacementModeModule::Get().RegisterPlaceableItem(OmegaGameFramework.UniqueHandle, MakeShareable(new FPlaceableItem(
+			*UActorFactory::StaticClass(),
+			FAssetData(OmegaCharacter, true),
+			FName("OmegaCharacter.Thumbnail"),
+#if ENGINE_MAJOR_VERSION == 5
+			FName("OmegaCharacter.Icon"),
+#endif
+			TOptional<FLinearColor>(),
+			TOptional<int32>(),
+			NSLOCTEXT("PlacementMode", "OmegaCharacter", "OmegaCharacter")
+		)));
+	}
+	
+	
 }
 
 void FOmegaEditor::ShutdownModule()
@@ -188,57 +219,7 @@ void FOmegaEditor::ShutdownModule()
 	FSlateStyleRegistry::UnRegisterSlateStyle(StyleSet->GetStyleSetName());
 }
 
-
-//static EAssetTypeCategories::Type GetOmegaAssetCategory()
-//{
-	//return OmegaAssetsCategory;
-//}
-
-//static EAssetTypeCategories::Type OmegaAssetsCategory;
-
-//EAssetTypeCategories::Type FOmegaEditor::OmegaAssetsCategory;
-
 #undef LOCTEXT_NAMESPACE
 
 IMPLEMENT_MODULE(FOmegaEditor, OmegaEditor)
 
-////////////////////////////////////
-////////---ABILITY---//////////////
-///////////////////////////////////
-//UOmegaAbility_Factory::UOmegaAbility_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) {
-	//SupportedClass = AOmegaAbility::StaticClass();
-	//bEditAfterNew = true;
-	//bCreateNew = true;
-//}
-
-//UObject* UOmegaAbility_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
-//{
-	//check(Class->IsChildOf(AOmegaAbility::StaticClass()));
-	//return NewObject<AOmegaAbility>(InParent, Class, Name, Flags | RF_Transactional, Context);
-//}
-
-////////////////////////////////////
-////////---GAMEPLAY SYSTEM---//////////////
-///////////////////////////////////
-//UOmegaGameplaySystem_Factory::UOmegaGameplaySystem_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) {
-	//SupportedClass = AOmegaGameplaySystem::StaticClass();
-	//bEditAfterNew = true;
-	//bCreateNew = true;
-//}
-
-//UObject* UOmegaGameplaySystem_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
-//{
-	//check(Class->IsChildOf(AOmegaGameplaySystem::StaticClass()));
-	//return NewObject<AOmegaGameplaySystem>(InParent, Class, Name, Flags | RF_Transactional, Context);
-//}
-
-// Asset type actions
-
-//class FAssetTypeActions_InputContext : public FAssetTypeActions_Base {
-//public:
-	//virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_InputMappingContext", "Ability"); }
-	//virtual uint32 GetCategories() override { return FOmegaEditor::GetOmegaAssetCategory(); }
-	//virtual FColor GetTypeColor() const override { return FColor(255, 255, 127); }
-	//virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_InputContextDesc", "A collection of device input to action mappings."); }
-	//virtual UClass* GetSupportedClass() const override { return AOmegaAbility::StaticClass(); }
-//};

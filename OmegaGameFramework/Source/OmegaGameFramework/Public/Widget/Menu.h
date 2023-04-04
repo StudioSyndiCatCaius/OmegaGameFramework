@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
+#include "Message/OmegaMessageSubsystem.h"
 #include "Widget/WidgetInterface_Input.h"
 
 #include "Menu.generated.h"
@@ -98,5 +99,8 @@ public:
 	void OnGlobalEvent(FName Event, UObject* Context);
 	UFUNCTION()
 	void Local_BindGlobalEvent();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory);
 	
 };

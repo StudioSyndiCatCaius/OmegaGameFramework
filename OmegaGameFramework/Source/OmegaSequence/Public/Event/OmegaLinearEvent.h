@@ -50,4 +50,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category="LinearEvent")
 	FString GetLogString() const;
 	
+	UFUNCTION(BlueprintImplementableEvent, Category="LinearEvent")
+	bool ReadParsedData(UOmegaDataParserReader* ParsedData);
+	
 };

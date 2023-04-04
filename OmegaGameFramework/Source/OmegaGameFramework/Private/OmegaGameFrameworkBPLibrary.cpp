@@ -123,8 +123,20 @@ FGameplayTagContainer UOmegaGameFrameworkBPLibrary::FilterTagsByType(FGameplayTa
 	return OutTags;
 }
 
+FGameplayTag UOmegaGameFrameworkBPLibrary::GetFirstTagOfType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn)
+{
+	TArray<FGameplayTag> LocalTags;
+	FilterTagsByType(TypeTag, TagsIn).GetGameplayTagArray(LocalTags);
+	FGameplayTag OutTag;
+	if(LocalTags.IsValidIndex(0))
+	{
+		OutTag = LocalTags[0];
+	}
+	return OutTag;
+}
+
 void UOmegaGameFrameworkBPLibrary::SetGameplaySystemActive(const UObject* WorldContextObject, TSubclassOf<AOmegaGameplaySystem>
-	SystemClass, bool bActive, const FString Flag, UObject* Context)
+                                                           SystemClass, bool bActive, const FString Flag, UObject* Context)
 {
 	UObject* LocalContext = nullptr;
 	if(Context)
@@ -226,6 +238,25 @@ void UOmegaGameFrameworkBPLibrary::SetPlayerCustomInputMode(const UObject* World
 		TempPlayer = Player;
 	}
 	TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(InputMode);
+}
+
+float UOmegaGameFrameworkBPLibrary::GetPlayerCameraFadeAmount(APlayerController* Player)
+{
+	if(Player)
+	{
+		return Player->PlayerCameraManager->FadeAmount;
+	}
+	return 0;
+}
+
+FLinearColor UOmegaGameFrameworkBPLibrary::GetPlayerCameraFadeColor(APlayerController* Player)
+{
+	FLinearColor LocalColor;
+	if(Player)
+	{
+		LocalColor = Player->PlayerCameraManager->FadeColor;
+	}
+	return LocalColor;
 }
 
 void UOmegaGameFrameworkBPLibrary::SetGlobalActorBinding(const UObject* WorldContextObject, FName Binding,

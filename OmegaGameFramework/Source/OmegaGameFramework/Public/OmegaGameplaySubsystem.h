@@ -6,10 +6,10 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "Components/ActorComponent.h"
 #include "UObject/Interface.h"
-#include "Kismet/GameplayStatics.h"
+#include "Tickable.h"
 #include "Engine/World.h"
 #include "Gameplay/CombatantComponent.h"
-#include "EngineUtils.h"
+
 
 #include "OmegaGameplaySubsystem.generated.h"
 
@@ -20,10 +20,9 @@ class UCombatantFilter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantRegistered, UCombatantComponent*, Combatant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantUnegistered, UCombatantComponent*, Combatant);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnCombatantDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, FHitResult, Hit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCombatantDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameplayStateChange, FGameplayTag, NewState);
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameplayStateChange, FGameplayTag, StateTag, bool, bNewState);
 
 UCLASS(DisplayName="Omega Subsystem: Gameplay")
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplaySubsystem : public UWorldSubsystem
@@ -34,6 +33,8 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 
+	
+	
 	//////////////////
 	/// Gameplay Systems
 	/////////////////
@@ -113,7 +114,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnCombatantDamaged OnCombatantDamaged;
 	UFUNCTION()
-	void Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, FHitResult Hit);
+	void Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
 
 	UFUNCTION(BlueprintCallable, Category="OmegaGameplaySubsystem")
 	TArray<UCombatantComponent*> RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass, UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);

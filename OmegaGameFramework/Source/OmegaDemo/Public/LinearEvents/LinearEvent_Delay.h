@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS(DisplayName="Event (Delay)")
+UCLASS(DisplayName="Event | Delay")
 class OMEGADEMO_API ULinearEvent_Delay : public UOmegaLinearEvent
 {
 	GENERATED_BODY()

@@ -109,12 +109,12 @@ public:
 	////////////////////////////////////
 	////////////--Tags--/////////////
 	////////////////////////////////////
-	UPROPERTY(EditDefaultsOnly, Category="GamepalyTags")
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags")
 	FGameplayTagContainer SystemTags;
 	//With Shutdown and block any systems from activating that use these tags.
-	UPROPERTY(EditDefaultsOnly, Category="GamepalyTags")
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags")
 	FGameplayTagContainer BlockSystemTags;
-	UPROPERTY(EditDefaultsOnly, Category="GamepalyTags")
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags")
 	FGameplayTagContainer BlockedOnSystemTags;
 	////////////////////////////////////
 	////////////--PLAYER--/////////////

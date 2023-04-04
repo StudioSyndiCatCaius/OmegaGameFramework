@@ -7,7 +7,11 @@ public class OmegaFlow : ModuleRules
 	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", "OmegaGameFramework", "LevelSequence", "MovieScene"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", 
+			"OmegaGameFramework", 
+			"Flow", 
+			"LevelSequence", 
+			"MovieScene"});
  
 		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
 		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});

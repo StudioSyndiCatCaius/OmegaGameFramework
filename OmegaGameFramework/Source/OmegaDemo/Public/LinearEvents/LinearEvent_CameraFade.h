@@ -7,7 +7,7 @@
 #include "Nodes/FlowNode.h"
 #include "LinearEvent_CameraFade.generated.h"
 
-UCLASS(DisplayName="Event (Camera Fade)")
+UCLASS(DisplayName="Event | Camera Fade")
 class OMEGADEMO_API ULinearEvent_CameraFade : public UOmegaLinearEvent
 {
 	GENERATED_BODY()

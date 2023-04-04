@@ -23,5 +23,5 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_DamageModifier
 public:
 
 	UFUNCTION(BlueprintNativeEvent, Category="Attributes")
-	float ModifyDamage(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UObject* Context);
+	float ModifyDamage(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context);
 };

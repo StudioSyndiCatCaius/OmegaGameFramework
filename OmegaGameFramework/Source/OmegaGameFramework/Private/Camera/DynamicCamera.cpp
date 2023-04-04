@@ -2,7 +2,7 @@
 
 
 #include "Camera/DynamicCamera.h"
-
+#include "Camera/CameraComponent.h"
 #include "OmegaSettings.h"
 #include "Kismet/KismetMathLibrary.h"
 

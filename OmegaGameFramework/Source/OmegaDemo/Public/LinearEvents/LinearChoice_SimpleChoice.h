@@ -12,7 +12,7 @@
 /**
  * 
  */
-UCLASS(DisplayName="Simple Choice")
+UCLASS(DisplayName="Choice | Simple")
 class OMEGADEMO_API ULinearChoice_SimpleChoice : public UOmegaLinearChoice
 {
 	GENERATED_BODY()

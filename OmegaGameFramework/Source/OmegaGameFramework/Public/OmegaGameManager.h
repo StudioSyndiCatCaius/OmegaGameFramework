@@ -28,9 +28,7 @@ struct FGameplayLogEntry
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGlobalEvent, FName, Event, UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewLevel, FString, LevelName, AOmegaGameMode*, GameMode);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFlagStateChange, FString, Flag, bool, NewState);
-/**
- * 
- */
+
 UCLASS(Category = "OmegaSubsystems|Instance")
 class OMEGAGAMEFRAMEWORK_API UOmegaGameManager : public UGameInstanceSubsystem
 {
@@ -53,7 +51,7 @@ public:
 	UPROPERTY()
 	TArray<UOmegaGameplayModule*> ActiveModules;
 
-
+	
 	
 	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Omega|Game Manager")
 	UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);

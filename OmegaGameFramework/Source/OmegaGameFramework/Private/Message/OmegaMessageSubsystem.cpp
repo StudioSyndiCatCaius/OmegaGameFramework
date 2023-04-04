@@ -11,7 +11,7 @@ void UOmegaMessageSubsystem::FireGameplayMessage(FOmegaGameplayMessageData Messa
 	MessageLog.Add(LoggedMessage);
 	
 	//Fire message delegate
-	OnGameplayMessage.Broadcast(Message.Message);
+	OnGameplayMessage.Broadcast(Message.Message, Message.Message->GetMessageCategory());
 	
 }
 

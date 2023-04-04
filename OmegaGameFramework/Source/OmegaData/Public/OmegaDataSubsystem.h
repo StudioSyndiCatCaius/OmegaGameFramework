@@ -77,6 +77,13 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="OmegaDataSubsytem|Data Item Component")
 	TArray<AActor*> GetActorsByDataItem(UOmegaDataItem* DataItem);
+
+	//###########################################################################################
+	// EXTERNALL FILES
+	//###########################################################################################
+
+	UFUNCTION(BlueprintPure, Category="OmegaDataSubsytem|Data Item Component")
+	TArray<FString> LoadGameDataFiles(const FString& Extension);
 	
 };
 

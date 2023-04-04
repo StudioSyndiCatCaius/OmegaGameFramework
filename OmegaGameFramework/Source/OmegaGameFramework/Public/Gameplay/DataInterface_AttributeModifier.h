@@ -37,10 +37,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_AttributeModifier
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-
-	//UFUNCTION(BlueprintNativeEvent, Category="Attributes|Modifiers")
-	//UOmegaAttribute* GetModifiedAttribute();
-
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Attributes|Modifiers")
 	TArray<FOmegaAttributeModifier> GetModifierValues();
 };

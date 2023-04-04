@@ -14,9 +14,9 @@ public class OmegaEditor : ModuleRules
 			"AssetTools",
 			"UnrealEd",
 			"InputCore",
-			"Actions",
 			"OmegaGameFramework", 
 			"OmegaData",
+			"OmegaDemo",
 			"UMGEditor"
 		});
 
@@ -28,6 +28,7 @@ public class OmegaEditor : ModuleRules
 				"EditorStyle",
 				"Slate",
 				"SlateCore",
+				"PlacementMode",
 				"Projects",
 				"UnrealEd",
 				"BlueprintGraph",

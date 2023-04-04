@@ -9,7 +9,7 @@
 #include "OmegaGameplaySubsystem.h"
 #include "Widget/WidgetInterface_Combatant.h"
 #include "Attributes/OmegaAttributeSet.h"
-
+#include "Gameplay/OmegaDamageType.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 
@@ -533,34 +533,50 @@ TArray<AOmegaAbility*> UCombatantComponent::GetGrantedAbilitiesWithTags(FGamepla
 ////////////////////////////////////
 	////////// -- ATTRIBUTES -- //////////
 	///////////////////////////////////
-float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, FHitResult Hit)
+float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, UOmegaDamageType* DamageType, FHitResult Hit)
 {
+	
 	if(!bCanDamageAttributes)
 	{
 		return 0;
 	}
 	float CurrentValue;
 	float MaxVal;
+
+	// INIT Contextual Values
+	UOmegaDamageType* LocalDamageType = nullptr;
+	if(DamageType)
+	{
+		LocalDamageType = DamageType;
+	}
+	
 	UObject* LocalContext = nullptr;
 	if(Context)
 	{
 		LocalContext = Context;
 	}
+
+	
 	GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
 	float FinalDamage = BaseDamage;
 	
 	for(auto* TempMod : GetDamageModifiers())		//Is there a valid damage modifier
 	{
-		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, Context); //Apply Damage Modifier
+		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, LocalDamageType, Context); //Apply Damage Modifier
+	}
+	
+	//Damage Type modification
+	if(LocalDamageType && LocalDamageType->DamageScript)
+	{
+		FinalDamage = LocalDamageType->DamageScript->OnDamageApplied(FinalDamage);
 	}
 	
 	CurrentValue = CurrentValue - FinalDamage;		//Deduct final damage value from current attribute value
 	CurrentValue = FMath::Clamp(CurrentValue, 0.0f, MaxVal);		//Make sure the value does not go under 0 or exceed the max allowed value
 
-	//UPDATE NEW CURRENT VALUE
+	//FINALIZE
 	CurrentAttributeValues.Add(Attribute, CurrentValue);
-	OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, Hit);
-	
+	OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, LocalDamageType, Hit);
 	Update();
 	return FinalDamage;
 }

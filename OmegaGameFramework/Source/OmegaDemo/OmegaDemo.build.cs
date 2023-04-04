@@ -12,6 +12,7 @@ public class OmegaDemo : ModuleRules
 			"Engine", 
 			"GameplayTags", 
 			"UMG",
+			"JsonUtilities",
 			"AnimGraphRuntime",
 			"OmegaGameFramework",
 			"OmegaSequence",

@@ -266,6 +266,29 @@ void UOmegaSaveSubsystem::RemoveSavedActorTags(AActor* Actor, FGameplayTagContai
 	
 }
 
+void UOmegaSaveSubsystem::SetDataAssetCollected(UPrimaryDataAsset* Asset, bool bGlobal, bool Collected)
+{
+	if(Collected)
+	{
+		AddDataAssetToSaveCollection(Asset, bGlobal);
+	}
+	else
+	{
+		RemoveDataAssetFromSaveCollection(Asset, bGlobal);
+	}
+}
+
+void UOmegaSaveSubsystem::SetDataAssetsCollected(TArray<UPrimaryDataAsset*> Assets, bool bGlobal, bool Collected)
+{
+	for (auto* TempAsset: Assets)
+	{
+		if(TempAsset)
+		{
+			SetDataAssetCollected(TempAsset, bGlobal, Collected);
+		}
+	}
+}
+
 void UOmegaSaveSubsystem::AddDataAssetToSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
 {
 	GetSaveObject(bGlobal)->CollectedDataAssets.AddUnique(Asset);

@@ -4,6 +4,7 @@
 
 #include "Engine/World.h"
 #include "Event/OmegaLinearEventInstance.h"
+#include "Parser/OmegaDataParserSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 
 void UOmegaLinearEventSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -65,3 +66,31 @@ AOmegaLinearChoiceInstance* UOmegaLinearEventSubsystem::PlayLinearChoice(FOmegaL
 	
 	return LocalInst;
 }
+
+FLinearEventSequence UOmegaLinearEventScriptReader::ConvertToLinearEventSequence(const FString& Script, TSubclassOf<UOmegaDataParserReader> ReaderClass, bool ScriptIsPath)
+{
+	FLinearEventSequence OutEventList;
+	TArray<FOmegaLinearEventScriptData> ScriptEventList = ConvertScriptToEventData(Script);
+	UOmegaDataParserReader* ReaderObject;
+	
+	if(ScriptIsPath)
+	{
+		ReaderObject = GEngine->GetEngineSubsystem<UOmegaDataParserSubsystem>()->ParseDataFromPath(ReaderClass, Script);
+	}
+	else
+	{
+		ReaderObject = GEngine->GetEngineSubsystem<UOmegaDataParserSubsystem>()->ParseDataFromString(ReaderClass, Script);
+	}
+	
+	for (FOmegaLinearEventScriptData TempEvent : ScriptEventList)
+	{
+		ReaderObject->LoadedString = TempEvent.Event_Data;
+		TSubclassOf<UOmegaLinearEvent> LocalEventClass = GetEventClassFromString(TempEvent.Event_Type);
+		UOmegaLinearEvent* NewEvent = NewObject<UOmegaLinearEvent>(this, LocalEventClass);
+		NewEvent->ReadParsedData(ReaderObject);
+		OutEventList.Events.Add(NewEvent);
+	}
+	
+	return OutEventList;
+}
+

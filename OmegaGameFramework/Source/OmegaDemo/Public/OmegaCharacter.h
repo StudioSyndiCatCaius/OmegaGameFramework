@@ -8,6 +8,7 @@
 #include "Data/DataAssetCollectionComponent.h"
 #include "GameFramework/Character.h"
 #include "Gameplay/CombatantComponent.h"
+#include "Gameplay/Components/ActorStateComponent.h"
 #include "Gameplay/Components/EquipmentComponent.h"
 #include "OmegaCharacter.generated.h"
 
@@ -19,17 +20,19 @@ class OMEGADEMO_API AOmegaCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AOmegaCharacter();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter")
-	UCombatantComponent* Combatant;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter")
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="OmegaCharacter")
 	UDataItemComponent* DataItem;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="OmegaCharacter")
+	UCombatantComponent* Combatant;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="OmegaCharacter")
 	UEquipmentComponent* Equipment;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="OmegaCharacter")
 	UDataAssetCollectionComponent* Inventory;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="OmegaCharacter")
 	ULevelingComponent* Leveling;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="OmegaCharacter")
+	UActorStateComponent* ActorState;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -39,7 +42,14 @@ protected:
 
 	UFUNCTION()
 	void Local_LevelUpdate(int32 NewLevel);
-
+	
+	UFUNCTION()
+	void Local_UpdateDataItem(UOmegaDataItem* NewItem)
+	{
+		Combatant->CombatantDataAsset = NewItem;
+		Combatant->Update();
+	}
+	
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -47,4 +57,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };
+
+
 

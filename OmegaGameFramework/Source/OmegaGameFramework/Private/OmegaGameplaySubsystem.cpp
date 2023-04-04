@@ -206,9 +206,9 @@ void UOmegaGameplaySubsystem::Native_RegisterCombatant(UCombatantComponent* Comb
 }
 
 void UOmegaGameplaySubsystem::Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-	float FinalDamage, UCombatantComponent* Instigator, FHitResult Hit)
+	float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
 {
-	OnCombatantDamaged.Broadcast(Combatant, Attribute, FinalDamage, Instigator, Hit);
+	OnCombatantDamaged.Broadcast(Combatant, Attribute, FinalDamage, Instigator, DamageType, Hit);
 }
 
 TArray<UCombatantComponent*> UOmegaGameplaySubsystem::GetAllCombatants()

@@ -15,9 +15,6 @@ class UDataInterface_General : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class OMEGAGAMEFRAMEWORK_API IDataInterface_General
 {
 	GENERATED_BODY()

@@ -52,7 +52,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="OmegaSaveConditions", instanced, EditAnywhere)
 	TArray<class UOmegaSaveCondition*> Conditions;
 	
-	UPROPERTY(BlueprintReadOnly, Category="OmegaSaveConditions", instanced, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, Category="OmegaSaveConditions", EditAnywhere)
 	TArray<class UOmegaSaveConditionCollection*> ConditionCollections;
 };
 
@@ -140,6 +140,12 @@ public:
 	//###############################################################################################
 	// Data Assets
 	//###############################################################################################
+
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	void SetDataAssetCollected(UPrimaryDataAsset* Asset, bool bGlobal, bool Collected);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	void SetDataAssetsCollected(TArray<UPrimaryDataAsset*> Assets, bool bGlobal, bool Collected);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
 	void AddDataAssetToSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal);

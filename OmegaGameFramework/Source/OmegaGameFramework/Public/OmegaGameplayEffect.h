@@ -89,10 +89,13 @@ public:
 		FHitResult GetImpactHitResult();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
-		void EffectBeginPlay(UObject* Context);
+	void EffectBeginPlay(UObject* Context);
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Gameplay|Effects")
+	UOmegaDamageType* GetDamageType(UObject* Context);
+	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
-		void LifetimeUpdated(float TimeElapsed, float TimeRemaining);
+	void LifetimeUpdated(float TimeElapsed, float TimeRemaining);
 
 	UPROPERTY(BlueprintReadOnly, Category = "General")
 	UCombatantComponent* CombatantInstigator;

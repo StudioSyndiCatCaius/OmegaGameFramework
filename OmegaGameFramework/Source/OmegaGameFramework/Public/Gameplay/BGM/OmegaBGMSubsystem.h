@@ -5,9 +5,14 @@
 #include "CoreMinimal.h"
 #include "DataInterface_General.h"
 #include "GameplayTagContainer.h"
-
+#include "Engine/DataAsset.h"
+#include "Subsystems/WorldSubsystem.h"
+#include "Sound/SoundBase.h"
+#include "Engine/EngineTypes.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "OmegaBGMSubsystem.generated.h"
+
+
 
 USTRUCT()
 struct FOmegaBGMData
@@ -42,13 +47,10 @@ struct FOmegaBGMData_Incoming
 	
 };
 
-
-
 UCLASS(DisplayName="Omega Subsystem: BGM")
 class OMEGAGAMEFRAMEWORK_API UOmegaBGMSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
-
 
 protected:
 
@@ -97,7 +99,7 @@ public:
 	
 	UFUNCTION()
 	UAudioComponent* GetComponentBySlot(FGameplayTag Slot);
-	UFUNCTION(BlueprintPure)
+	UFUNCTION()
 	float GetSavedPlaybackPosition(FGameplayTag Slot);
 	
 	UPROPERTY()

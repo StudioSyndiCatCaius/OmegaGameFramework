@@ -6,6 +6,7 @@
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "GameplayTagContainer.h"
 #include "OmegaInputMode.h"
+#include "Components/AudioComponent.h"
 #include "Widget/Menu.h"
 #include "Components/SlateWrapperTypes.h"
 
@@ -15,7 +16,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuOpened, UMenu*, Menu, FGamep
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuClosed, UMenu*, Menu, FGameplayTagContainer, Tags, bool, LastMenu);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FClearHoveredWidgets);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputModeChanged, UOmegaInputMode*, NewMode);
-
 
 class UUserWidget;
 class UHUDLayer;
@@ -27,8 +27,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsyste
 	GENERATED_BODY()
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
-
+	
 public:
+	
+	
 	////////////////////////
 	/////////Menus/////////
 	//////////////////////
@@ -66,6 +68,27 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FMenuClosed OnMenuClosed;
 
+	//SOUND
+	UPROPERTY()
+	bool Local_UiSoundCooldown;
+
+	UPROPERTY()
+	FTimerHandle SoundCooldownTimer;
+
+	void PlayUiSound(USoundBase* Sound);
+protected:
+	UPROPERTY()
+	UAudioComponent* UiAudioComp;
+	UAudioComponent* GetLocalAudioComp()
+	{
+		if(!UiAudioComp)
+		{
+			UiAudioComp = Cast<UAudioComponent>(Local_GetPlayerController()->AddComponentByClass(UAudioComponent::StaticClass(), false, FTransform(), false));
+		}
+		return UiAudioComp;
+	}
+	
+public:
 	//Menu Input
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Input")
 	void InputConfirm();
@@ -84,8 +107,6 @@ public:
 
 	UFUNCTION()
 	bool CanInterfaceInput() const;
-
-
 	
 	////////////////////////
 	/////////HUD/////////
@@ -138,8 +159,6 @@ public:
 	///////////////////
 	/// Input ////
 	/// /////////
-	///
-	///
 	UPROPERTY(BlueprintReadOnly, Category="Input")
 	UOmegaInputMode* CurrentInputMode;
 	

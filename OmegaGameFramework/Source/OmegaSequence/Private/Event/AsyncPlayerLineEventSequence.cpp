@@ -11,6 +11,11 @@ void UAsyncPlayLinearEventSequence::Local_Finish(const FString& Flag)
 	SetReadyToDestroy();
 }
 
+void UAsyncPlayLinearEventSequence::Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef)
+{
+	NewEvent.Broadcast(Index,EventRef);
+}
+
 void UAsyncPlayLinearEventSequence::Activate()
 {
 	if(EventData.Events.Num()<=0)
@@ -18,7 +23,8 @@ void UAsyncPlayLinearEventSequence::Activate()
 		Local_Finish("Empty");
 	}
 	UOmegaLinearEventInstance* TempInst = SubsystemRef->PlayLinearEvent(EventData, Local_StartingIndex);
-	TempInst->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventSequence::UAsyncPlayLinearEventSequence::Local_Finish);
+	TempInst->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_Finish);
+	TempInst->OnEventUpdated.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_NewEvent);
 }
 
 UAsyncPlayLinearEventSequence* UAsyncPlayLinearEventSequence::PlayLinearEventSequence(UObject* WorldContextObject, FLinearEventSequence Events, int32 StartingIndex)

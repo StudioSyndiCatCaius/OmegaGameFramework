@@ -65,6 +65,19 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	// GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
 }
 
+void UOmegaGameManager::Deinitialize()
+{
+	for(UOmegaGameplayModule* TempModule : ActiveModules)
+	{
+		TempModule->Shutdown();
+	}
+	Super::Deinitialize();
+}
+
+//############################################################################
+// Gameplay Modules
+//############################################################################
+
 void UOmegaGameManager::ActivateModuleFromClass(const UClass* ModuleClass)
 {
 	for (const auto* TempMod : ActiveModules)
@@ -80,15 +93,6 @@ void UOmegaGameManager::ActivateModuleFromClass(const UClass* ModuleClass)
 	NewModule->Native_Initialize();
 	
 	UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"Gameplay Module Activated: ", NewModule->GetClass());
-}
-
-void UOmegaGameManager::Deinitialize()
-{
-	for(UOmegaGameplayModule* TempModule : ActiveModules)
-	{
-		TempModule->Shutdown();
-	}
-	Super::Deinitialize();
 }
 
 

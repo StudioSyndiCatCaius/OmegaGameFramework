@@ -129,7 +129,7 @@ void AOmegaGameplayEffect::TriggerEffect()
 		}
 		if(TargetedCombatant)
 		{
-			 DamageFinal = TargetedCombatant->ApplyAttributeDamage(EffectedAttribute, DamageVal, CombatantInstigator, EffectContext, GetImpactHitResult());
+			 DamageFinal = TargetedCombatant->ApplyAttributeDamage(EffectedAttribute, DamageVal, CombatantInstigator, EffectContext, GetDamageType(EffectContext), GetImpactHitResult());
 		}
 	}
 	
@@ -170,6 +170,11 @@ void AOmegaGameplayEffect::TriggerEffect()
 		K2_DestroyActor();
 	}
 	
+}
+
+UOmegaDamageType* AOmegaGameplayEffect::GetDamageType_Implementation(UObject* Context)
+{
+	return nullptr;
 }
 
 

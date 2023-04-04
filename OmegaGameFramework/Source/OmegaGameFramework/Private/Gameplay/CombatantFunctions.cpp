@@ -133,33 +133,7 @@ void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObje
 	}
 }
 
-UCombatantComponent* UCombatantFunctions::TryGetCombatantFromObject(UObject* Object)
-{
-	AActor* TempActor;
-	
-	if(Cast<UCombatantComponent>(Object))
-	{
-		return Cast<UCombatantComponent>(Object);
-	}
-	if(Cast<AActor>(Object))
-	{
-		TempActor = Cast<AActor>(Object);
-		if(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()))
-		{
-			return Cast<UCombatantComponent>(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()));
-		}
-	}
-	if(Cast<UActorComponent>(Object))
-	{
-		TempActor = Cast<UActorComponent>(Object)->GetOwner();
-		if(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()))
-		{
-			return Cast<UCombatantComponent>(TempActor->GetComponentByClass(UCombatantComponent::StaticClass()));
-		}
-	}
-	return nullptr;
-}
-	
+
 
 UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
 {
@@ -170,4 +144,22 @@ UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
 		return LoadObject<UOmegaAttribute>(NULL, *LocalAttributePath.ToString());
 	}
 	return nullptr;
+}
+
+float UCombatantFunctions::GetCombatantDistantToActiveTarget(UCombatantComponent* Combatant)
+{
+	if(Combatant && Combatant->GetActiveTarget())
+	{
+		return Combatant->GetActiveTarget()->GetOwner()->GetDistanceTo(Combatant->GetOwner());
+	}
+	return 0;
+}
+
+bool UCombatantFunctions::IsCombatantActiveTargetInRange(UCombatantComponent* Combatant, float Range)
+{
+	if (Combatant && GetCombatantDistantToActiveTarget(Combatant)<=Range)
+	{
+		return true;
+	}
+	return false;
 }

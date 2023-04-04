@@ -11,7 +11,7 @@
 class UOmegaLinearEventSubsystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEventSequenceFinish, const FString&, Flag);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEventUpdated, int32, EventIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEventUpdated, int32, EventIndex, UOmegaLinearEvent*, Event);
 
 UCLASS()
 class OMEGASEQUENCE_API UOmegaLinearEventInstance : public UObject
@@ -87,7 +87,7 @@ inline void UOmegaLinearEventInstance::StartEvent(UOmegaLinearEvent* Event)
 	Event->EventEnded.AddDynamic(this, &UOmegaLinearEventInstance::NextEvent);
 	Event->GameInstanceRef = SubsystemRef->GameInstanceReference;
 	Event->WorldPrivate = SubsystemRef->GetWorld();
-	OnEventUpdated.Broadcast(ActiveIndex);
+	OnEventUpdated.Broadcast(ActiveIndex,Event);
 	SubsystemRef->OnLinearEventBegin.Broadcast(Event);
 	Event->Native_Begin();
 }
