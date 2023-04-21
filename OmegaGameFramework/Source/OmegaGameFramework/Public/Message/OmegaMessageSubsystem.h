@@ -36,7 +36,7 @@ public:
 	void FireGameplayMessage(FOmegaGameplayMessageData Message);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message")
-	void FireCustomGameplayMessage(FText Text, FGameplayTag MessageCategory);
+	void FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnGameplayMessage OnGameplayMessage;
@@ -56,7 +56,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMessage : public UObject, public IDat
 	GENERATED_BODY()
 
 public:
-
+	
+	UPROPERTY()
+	UObject* Temp_Instigator = nullptr;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	UObject* GetMessageInstigator();
 
@@ -69,5 +71,10 @@ public:
 	FGameplayTag Temp_Tag;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	FGameplayTag GetMessageCategory();
+
+	UPROPERTY()
+	FGameplayTagContainer Temp_Tags;
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
+	FGameplayTagContainer GetMessageTags();
 	
 };

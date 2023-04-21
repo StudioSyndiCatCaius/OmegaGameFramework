@@ -177,6 +177,16 @@ void AOmegaGameplaySystem::CompleteShutdown()
 			}	
 		}
 
+		//Activate New Systems
+		for(auto TempSys : SystemsActivatedOnShutdown)
+		{
+			if(TempSys)
+			{
+				GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys, this, this->GetFName().ToString());
+			}
+		}
+
+		
 		//FLAGS
 		Local_SetFlagsActive(false);
 	

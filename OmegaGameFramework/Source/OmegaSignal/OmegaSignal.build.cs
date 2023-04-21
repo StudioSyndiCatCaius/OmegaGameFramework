@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaSignal : ModuleRules
 {
 	public OmegaSignal(ReadOnlyTargetRules Target) : base(Target)
@@ -8,7 +9,7 @@ public class OmegaSignal : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags"});
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaSignal/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaSignal/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }

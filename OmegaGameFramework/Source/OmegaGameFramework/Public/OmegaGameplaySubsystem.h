@@ -118,7 +118,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="OmegaGameplaySubsystem")
 	TArray<UCombatantComponent*> RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass, UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);
-
+	
 	////////////////////////////////////
 	////////////--Actor Binding--/////////////
 	////////////////////////////////////
@@ -133,7 +133,50 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega Gameplay Subsystem|Actors")
 	AActor* GetGlobalActorBinding(FName Binding);
 
+	//--------------------------
+	// Gameplay Pause
+	//--------------------------
 
+	UPROPERTY()
+	TArray<UGameplayPauseComponent*> PauseComps;
 
+	//Sets all actors with the pause component and the included category tag to the set pause state. Blank Tags will apply to all.
+	UFUNCTION(BlueprintCallable, Category="Pause")
+	void SetActorsPaused(FGameplayTagContainer Tags, bool bIsPaused);
 
+};
+
+//------------------------------------------------------------------------------
+// GAMEPLAY PAUSE COMPONENT
+//------------------------------------------------------------------------------
+
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
+class OMEGAGAMEFRAMEWORK_API UGameplayPauseComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+	
+	virtual void BeginPlay() override;
+	virtual void BeginDestroy() override;
+
+	UPROPERTY(EditAnywhere, Category="Pause")
+	FGameplayTag PauseCategory;
+
+protected:
+	UPROPERTY()
+	UOmegaGameplaySubsystem* SubsysRef;
+
+	UFUNCTION()
+	UOmegaGameplaySubsystem* GetSubsys();
+	
+public:
+	void SetPausedActor(bool Paused)
+	{
+		if(GetOwner())
+		{
+			GetOwner()->CustomTimeDilation = !Paused;
+		}
+	}
+	
 };

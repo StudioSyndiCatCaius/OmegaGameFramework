@@ -47,9 +47,12 @@ inline void UActorTagEventFunctions::FireActorTagEvents(TMap<AActor*, FGameplayT
 	Events.GetKeys(TempActorList);
 	for(AActor* TempActor : TempActorList)
 	{
-		if(TempActor && TempActor->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))
+		if(TempActor)
 		{
-			IActorTagEventInterface::Execute_OnTagEvent(TempActor, Events[TempActor]);
+			if(TempActor->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))
+			{
+				IActorTagEventInterface::Execute_OnTagEvent(TempActor, Events[TempActor]);
+			}
 			for(UActorComponent* TempComp : TempActor->GetComponents())
 			{
 				if(TempComp && TempComp->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))

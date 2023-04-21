@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaMod : ModuleRules
 {
 	public OmegaMod(ReadOnlyTargetRules Target) : base(Target)
@@ -17,7 +18,7 @@ public class OmegaMod : ModuleRules
 			"SlateCore",
 			"OmegaData"});
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaMod/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaMod/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }

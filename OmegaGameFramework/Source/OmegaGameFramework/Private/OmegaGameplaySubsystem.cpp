@@ -265,3 +265,49 @@ AActor* UOmegaGameplaySubsystem::GetGlobalActorBinding(FName Binding)
 	}
 	return nullptr;
 }
+
+void UOmegaGameplaySubsystem::SetActorsPaused(FGameplayTagContainer Tags, bool bIsPaused)
+{
+	for(auto* TempComp : PauseComps)
+	{
+		if(TempComp && (Tags.HasTag(TempComp->PauseCategory) || Tags.IsEmpty()))
+		{
+			TempComp->SetPausedActor(bIsPaused);
+		}
+	}
+}
+
+
+//############################################################################################################################################################
+//------------------------------------------------------------------------------
+// GAMEPLAY PAUSE COMPONENT
+//------------------------------------------------------------------------------
+//############################################################################################################################################################
+
+void UGameplayPauseComponent::BeginPlay()
+{
+	if(GetSubsys())
+	{
+		GetSubsys()->PauseComps.AddUnique(this);
+		Super::BeginPlay();
+	}
+}
+
+void UGameplayPauseComponent::BeginDestroy()
+{
+	if(GetSubsys())
+	{
+		GetSubsys()->PauseComps.Remove(this);
+		Super::BeginDestroy();
+	}
+}
+
+UOmegaGameplaySubsystem* UGameplayPauseComponent::GetSubsys()
+{
+	if(!SubsysRef)
+	{
+		SubsysRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	}
+	return  SubsysRef;
+}
+

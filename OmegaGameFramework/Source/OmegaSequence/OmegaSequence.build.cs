@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaSequence : ModuleRules
 {
 	public OmegaSequence(ReadOnlyTargetRules Target) : base(Target)
@@ -13,7 +14,7 @@ public class OmegaSequence : ModuleRules
 			"GameplayTags", 
 			"OmegaGameFramework"});
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaSequence/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaSequence/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }

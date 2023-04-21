@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaAnim : ModuleRules
 {
 	public OmegaAnim(ReadOnlyTargetRules Target) : base(Target)
@@ -24,7 +25,7 @@ public class OmegaAnim : ModuleRules
 			"AssetRegistry"
 		});
 		
-		PublicIncludePaths.AddRange(new string[] {"OmegaAnim/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaAnim/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }

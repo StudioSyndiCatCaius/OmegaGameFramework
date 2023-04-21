@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaUI : ModuleRules
 {
 	public OmegaUI(ReadOnlyTargetRules Target) : base(Target)
@@ -17,7 +18,7 @@ public class OmegaUI : ModuleRules
 			}
 		);
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaUI/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaUI/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }

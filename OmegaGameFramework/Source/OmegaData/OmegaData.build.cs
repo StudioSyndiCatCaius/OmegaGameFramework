@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaData : ModuleRules
 {
 	public OmegaData(ReadOnlyTargetRules Target) : base(Target)
@@ -26,7 +27,7 @@ public class OmegaData : ModuleRules
 			"AssetRegistry"
 		});
 		
-		PublicIncludePaths.AddRange(new string[] {"OmegaData/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaData/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }

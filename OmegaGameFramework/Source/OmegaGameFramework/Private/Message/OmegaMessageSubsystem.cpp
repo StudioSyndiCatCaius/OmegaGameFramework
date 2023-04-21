@@ -15,15 +15,20 @@ void UOmegaMessageSubsystem::FireGameplayMessage(FOmegaGameplayMessageData Messa
 	
 }
 
-void UOmegaMessageSubsystem::FireCustomGameplayMessage(FText Text, FGameplayTag MessageCategory)
+void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory)
 {
 	FOmegaGameplayMessageData LocalMessageData;
 	LocalMessageData.Message = NewObject<UOmegaGameplayMessage>(UOmegaGameplayMessage::StaticClass());
+	if(Instigator)
+	{
+		LocalMessageData.Message->Temp_Instigator = Instigator;
+	}
 	LocalMessageData.Message->Temp_Text = Text;
 	LocalMessageData.Message->Temp_Tag = MessageCategory;
 
 	FireGameplayMessage(LocalMessageData);
 }
+
 
 
 //##################################################################################
@@ -32,7 +37,7 @@ void UOmegaMessageSubsystem::FireCustomGameplayMessage(FText Text, FGameplayTag 
 
 UObject* UOmegaGameplayMessage::GetMessageInstigator_Implementation()
 {
-	return nullptr;
+	return Temp_Instigator;
 }
 
 FText UOmegaGameplayMessage::GetMessageText_Implementation()
@@ -43,4 +48,9 @@ FText UOmegaGameplayMessage::GetMessageText_Implementation()
 FGameplayTag UOmegaGameplayMessage::GetMessageCategory_Implementation()
 {
 	return Temp_Tag;
+}
+
+FGameplayTagContainer UOmegaGameplayMessage::GetMessageTags_Implementation()
+{
+	return Temp_Tags;	
 }

@@ -45,6 +45,12 @@ void UOmegaLinearEvent::Finish(const FString& Flag)
 	
 }
 
+void UOmegaLinearEvent::JumpToEvent(FName Event, bool EndSequenceIfFail)
+{
+	//SetJumpPoint
+	Finish("");
+}
+
 FString UOmegaLinearEvent::GetLogString_Implementation() const
 {
 	return "";

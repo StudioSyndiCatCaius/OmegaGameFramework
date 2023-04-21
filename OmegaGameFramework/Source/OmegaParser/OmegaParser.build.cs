@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaParser : ModuleRules
 {
 	public OmegaParser(ReadOnlyTargetRules Target) : base(Target)
@@ -8,7 +9,7 @@ public class OmegaParser : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags"});
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaParser/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaParser/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }

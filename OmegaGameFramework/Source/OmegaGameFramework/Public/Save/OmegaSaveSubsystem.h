@@ -128,6 +128,10 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Tags")
 	bool SaveTagsMatchQuery(FGameplayTagQuery Query, bool Global);
 
+	//###############################################################################################
+	// Actor
+	//###############################################################################################
+
 	UFUNCTION()
 	void SetSavedActorState(AActor* Actor, FGameplayTag StateTag);
 
@@ -136,6 +140,10 @@ public:
 
 	UFUNCTION()
 	void RemoveSavedActorTags(AActor* Actor, FGameplayTagContainer Tags);
+
+	//Clears the state tag from any actors with the given state.
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Actor", meta=(Keywords="remove"))
+	void ClearSavedStateFromActors(FGameplayTag SavedState);
 
 	//###############################################################################################
 	// Data Assets

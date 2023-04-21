@@ -1,5 +1,6 @@
 using UnrealBuildTool;
- 
+using System.IO;
+
 public class OmegaSignalEditor : ModuleRules
 {
 	public OmegaSignalEditor(ReadOnlyTargetRules Target) : base(Target)
@@ -19,8 +20,8 @@ public class OmegaSignalEditor : ModuleRules
 			"OmegaSignal"
 		});
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaSignalEditor/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaSignalEditor/Private"});
+		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});
+		PrivateIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Private")});
 	}
 }
 

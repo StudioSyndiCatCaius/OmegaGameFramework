@@ -266,6 +266,21 @@ void UOmegaSaveSubsystem::RemoveSavedActorTags(AActor* Actor, FGameplayTagContai
 	
 }
 
+void UOmegaSaveSubsystem::ClearSavedStateFromActors(FGameplayTag SavedState)
+{
+	TArray<TSoftObjectPtr<AActor>> ActorList;
+
+	ActiveSaveData->ActorStates.GetKeys(ActorList);
+	
+	for(TSoftObjectPtr<AActor> TempActor : ActorList)
+	{
+		if(ActiveSaveData->ActorStates.FindOrAdd(TempActor).MatchesTag(SavedState))
+		{
+			ActiveSaveData->ActorStates.Add(TempActor, FGameplayTag());
+		}
+	}
+}
+
 void UOmegaSaveSubsystem::SetDataAssetCollected(UPrimaryDataAsset* Asset, bool bGlobal, bool Collected)
 {
 	if(Collected)

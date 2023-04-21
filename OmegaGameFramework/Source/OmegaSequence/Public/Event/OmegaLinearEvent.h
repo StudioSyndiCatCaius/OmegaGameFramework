@@ -46,7 +46,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")
 	void Finish(const FString& Flag);
-
+	
+	UFUNCTION(BlueprintCallable, Category="LinearEvent")
+	void JumpToEvent(FName Event, bool EndSequenceIfFail);
+	
 	UFUNCTION(BlueprintNativeEvent, Category="LinearEvent")
 	FString GetLogString() const;
 	

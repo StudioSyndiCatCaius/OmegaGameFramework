@@ -137,9 +137,12 @@ public:
 	//#####################################################################################################################
 	//------FLAGS
 	//#####################################################################################################################
-	UPROPERTY(EditAnywhere, Category="Default")
+	UPROPERTY(EditAnywhere, Category="Default", DisplayName="Flags Active on System")
 	TArray<FString> ActiveFlags;
-
+	
+	UPROPERTY(EditAnywhere, Category="Default")
+	TArray<TSubclassOf<AOmegaGameplaySystem>> SystemsActivatedOnShutdown;
+	
 	void Local_SetFlagsActive(bool State);
 	
 	UPROPERTY()
