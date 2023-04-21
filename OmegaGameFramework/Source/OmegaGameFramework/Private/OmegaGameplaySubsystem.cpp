@@ -298,15 +298,19 @@ void UGameplayPauseComponent::BeginDestroy()
 	if(GetSubsys())
 	{
 		GetSubsys()->PauseComps.Remove(this);
-		Super::BeginDestroy();
+		
 	}
+	Super::BeginDestroy();
 }
 
 UOmegaGameplaySubsystem* UGameplayPauseComponent::GetSubsys()
 {
 	if(!SubsysRef)
 	{
-		SubsysRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+		if(GetWorld())
+		{
+			SubsysRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+		}
 	}
 	return  SubsysRef;
 }
