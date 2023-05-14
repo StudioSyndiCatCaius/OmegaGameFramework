@@ -86,6 +86,19 @@ AOmegaInstanceActor* UInstanceActorComponent::GetInstanceByContext(UObject* Cont
 	return nullptr;
 }
 
+TArray<UObject*> UInstanceActorComponent::GetAllInstanceContexts()
+{
+	TArray<UObject*> OutObjs;
+	for(auto* TempObj : GetInstances())
+	{
+		if(TempObj)
+		{
+			OutObjs.Add(TempObj->ContextObject);
+		}
+	}
+	return OutObjs;
+}
+
 TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstances()
 {
 	TArray<AOmegaInstanceActor*> OutInstances;

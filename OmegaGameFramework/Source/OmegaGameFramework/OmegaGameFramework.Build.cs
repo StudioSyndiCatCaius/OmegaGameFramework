@@ -38,11 +38,13 @@ public class OmegaGameFramework : ModuleRules
 				"Engine",
 				"DeveloperSettings",
 				"LevelSequence",
+				"MovieScene",
 				"UMG",
 				"InputCore",
 				"Niagara",
 				"Json",
-				"JsonUtilities"
+				"JsonUtilities",
+				"JsonBlueprintUtilities",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

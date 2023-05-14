@@ -3,45 +3,59 @@
 
 #include "Data/OmegaSoftPropertyInterface.h"
 
-
-// Add default functionality here for any IOmegaSoftPropertyInterface functions that are not pure virtual.
-bool IOmegaSoftPropertyInterface::NativeGetSoftProperty_Bool(const FString& Property)
+//#####################################################################################################
+// PROPERTY FUNCTIONS
+//#####################################################################################################
+FString UOmegaSoftPropertyFunctions::GetSoftProperty_String(UObject* Object, const FString& PropertyName)
 {
-	FSoftPropertyCollection LocalProps = Native_GetSoftProperties();
-	return LocalProps.SoftProp_bool.FindOrAdd(Property);
+	FString OutVal;
+	if(Object && Object->GetClass()->ImplementsInterface(UOmegaSoftPropertyInterface::StaticClass()))
+	{
+		TMap<FString, FString> SoftPropertyMap = IOmegaSoftPropertyInterface::Execute_GetSoftPropertyMap(Object);
+        
+		if(SoftPropertyMap.Contains(PropertyName))
+		{
+			OutVal = SoftPropertyMap.FindOrAdd(PropertyName);
+		}
+		else
+		{
+			OutVal = IOmegaSoftPropertyInterface::Execute_GetSoftProperty(Object, PropertyName);
+		}
+	}
+
+	return OutVal;
 }
 
-int32 IOmegaSoftPropertyInterface::NativeGetSoftProperty_Int32(const FString& Property)
+bool UOmegaSoftPropertyFunctions::GetSoftProperty_bool(UObject* Object, const FString& PropertyName)
 {
-	FSoftPropertyCollection LocalProps = Native_GetSoftProperties();
-	return LocalProps.SoftProp_int.FindOrAdd(Property);
+	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
+	return LocalVal.ToBool();
 }
 
-float IOmegaSoftPropertyInterface::NativeGetSoftProperty_Float(const FString& Property)
+float UOmegaSoftPropertyFunctions::GetSoftProperty_float(UObject* Object, const FString& PropertyName)
 {
-	FSoftPropertyCollection LocalProps = Native_GetSoftProperties();
-	return LocalProps.SoftProp_float.FindOrAdd(Property);
+	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
+	return FCString::Atof(*LocalVal);
 }
 
-FString IOmegaSoftPropertyInterface::NativeGetSoftProperty_String(const FString& Property)
+int32 UOmegaSoftPropertyFunctions::GetSoftProperty_int32(UObject* Object, const FString& PropertyName)
 {
-	FSoftPropertyCollection LocalProps = Native_GetSoftProperties();
-	return LocalProps.SoftProp_string.FindOrAdd(Property);
+	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
+	return FCString::Atoi(*LocalVal);
 }
 
-UObject* IOmegaSoftPropertyInterface::NativeGetSoftProperty_Object(const FString& Property)
+FVector UOmegaSoftPropertyFunctions::GetSoftProperty_Vector(UObject* Object, const FString& PropertyName)
 {
-	FSoftPropertyCollection LocalProps = Native_GetSoftProperties();
-	return LocalProps.SoftProp_object.FindOrAdd(Property);
+	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
+	FVector VectorValue;
+	VectorValue.InitFromString(LocalVal);
+	return VectorValue;
 }
 
-FSoftPropertyCollection IOmegaSoftPropertyInterface::Native_GetSoftProperties()
+FRotator UOmegaSoftPropertyFunctions::GetSoftProperty_Rotator(UObject* Object, const FString& PropertyName)
 {
-	FSoftPropertyCollection EmptyProps = {};
-	return EmptyProps;
-}
-
-void IOmegaSoftPropertyInterface::Native_SetSoftProperties(FSoftPropertyCollection Properties)
-{
-	
+	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
+	FRotator  VectorValue;
+	VectorValue.InitFromString(LocalVal);
+	return VectorValue;
 }

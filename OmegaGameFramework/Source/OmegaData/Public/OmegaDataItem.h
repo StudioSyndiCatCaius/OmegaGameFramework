@@ -13,7 +13,7 @@
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
 #include "Data/DataAssetCollectionInterface.h"
-#include "Data/SoftPropertiesInterface.h"
+#include "Data/OmegaSoftPropertyInterface.h"
 #include "Gameplay/DataInterface_AttributeModifier.h"
 #include "Gameplay/DataInterface_OmegaEffect.h"
 #include "Gameplay/Combatant/DataInterface_Skill.h"
@@ -26,7 +26,7 @@
  */
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
-																public ISoftPropertiesInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
+																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
 																public IDataInterface_SkillSource, public IDataInterface_Skill, public IDataInterface_ContextAV
 {
 	GENERATED_BODY()
@@ -139,16 +139,11 @@ public:
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 	virtual TArray<FOmegaEffectContainer> GetOmegaEffects_Implementation() override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation() override;
-
-	UFUNCTION()
-	TMap<FString, FString> DEBUG_GetProperties();
 	
-	//Item Properties
-	FString Local_GetItemProperty(const FString& Property);
-	TArray<FString> Local_GetItemPropertyList(const FString& Property);
-
-	UFUNCTION()
-	FString GetItemProperty_String(const FString& Property);
-	
+	//###############################################################################
+	// Soft Properties
+	//###############################################################################
+	virtual FString GetSoftProperty_Implementation(const FString& Property) override;
+	virtual TMap<FString, FString> GetSoftPropertyMap_Implementation() override;
 	
 };

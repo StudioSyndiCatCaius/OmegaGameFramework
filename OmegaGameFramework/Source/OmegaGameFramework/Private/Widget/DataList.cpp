@@ -83,6 +83,10 @@ void UDataList::RemoveEntryOfAsset(UObject* Asset, bool All)
 // ADD ENTRY BASE
 UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 {
+	if(!Asset)
+	{
+		return nullptr;
+	}
 	//Is Entry Class Valid?
 	if (!EntryClass)
 	{

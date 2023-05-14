@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "InputMappingContext.h"
+#include "LevelSequence.h"
 #include "OmegaAttribute.h"
 #include "Engine/DeveloperSettings.h"
 
@@ -107,5 +108,13 @@ public:
 	//########################################################
 	//Zones
 	//########################################################
+
+	UPROPERTY(EditAnywhere, config, Category = "Zones", meta = (MetaClass = "OmegaGameplaySystem"))
+	FSoftClassPath ZoneTransitSystem;
+
+	UPROPERTY(EditAnywhere, config, Category = "Zones", meta = (MetaClass = "LevelSequence"))
+	FSoftObjectPath TransitSequence;
 	
+	UPROPERTY(EditAnywhere, config, Category = "Zones")
+	FGameplayTag ZoneBGMSlot;
 };

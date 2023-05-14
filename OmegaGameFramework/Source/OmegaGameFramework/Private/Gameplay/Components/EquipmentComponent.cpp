@@ -2,6 +2,8 @@
 
 
 #include "Gameplay/Components/EquipmentComponent.h"
+
+#include "Data/DataAssetCollectionComponent.h"
 #include "Engine/DataAsset.h"
 #include "Gameplay/CombatantComponent.h"
 #include "Gameplay/GameplayTagsInterface.h"
@@ -114,6 +116,13 @@ bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, FString Slot)
 		UnequipSlot(Slot);
 		EquippedItems.Add(Slot, Item);
 		OnItemEquipped.Broadcast(Item, Slot);
+		
+		//Modify Linked Collection Component
+		if(LinkedCollectionComp)
+		{
+			LinkedCollectionComp->RemoveAsset(Item,1);
+		}
+		
 		return true;
 	}
 	return false;
@@ -126,6 +135,13 @@ bool UEquipmentComponent::UnequipSlot(FString Slot)
 		UPrimaryDataAsset* RemovedItem = EquippedItems.FindOrAdd(Slot);
 		EquippedItems.Remove(Slot);
 		OnItemUnequipped.Broadcast(RemovedItem, Slot);
+		
+		//Modify Linked Collection Component
+		if(LinkedCollectionComp)
+		{
+			LinkedCollectionComp->AddAsset(RemovedItem,1);
+		}
+		
 		return true;
 	}
 	return false;
@@ -159,5 +175,18 @@ TArray<FOmegaAttributeModifier> UEquipmentComponent::GetModifierValues_Implement
 		}
 	}
 	return OutMods;
+}
+
+void UEquipmentComponent::LinkAssetCollectionComponent(UDataAssetCollectionComponent* Component)
+{
+	if(Component)
+	{
+		LinkedCollectionComp = Component;
+	}
+}
+
+void UEquipmentComponent::ClearLinkedAssetCollectionComponent(UDataAssetCollectionComponent* Component)
+{
+	LinkedCollectionComp = nullptr;
 }
 

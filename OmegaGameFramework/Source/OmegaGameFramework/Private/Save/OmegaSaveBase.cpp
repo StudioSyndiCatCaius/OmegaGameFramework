@@ -3,6 +3,17 @@
 
 #include "Save/OmegaSaveBase.h"
 
+FString UOmegaSaveBase::GetPlaytimeString(bool bIncludeMilliseconds)
+{
+	FString TempString = Playtime.ToString(TEXT("%h:%m:%s"));
+	if(bIncludeMilliseconds)
+	{
+		TempString = Playtime.ToString(TEXT("%h:%m:%s:%f"));
+	}
+	
+	return TempString.Replace(TEXT("+"), TEXT(""));
+}
+
 void UOmegaSaveBase::Local_OnLoaded()
 {
 	

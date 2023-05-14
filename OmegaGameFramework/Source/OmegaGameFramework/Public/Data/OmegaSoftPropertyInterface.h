@@ -6,29 +6,8 @@
 #include "UObject/Interface.h"
 #include "OmegaSoftPropertyInterface.generated.h"
 
-USTRUCT()
-struct FSoftPropertyCollection
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TMap<FString, float> SoftProp_float;
-	UPROPERTY()
-	TMap<FString, int32> SoftProp_int;
-	UPROPERTY()
-	TMap<FString, FString> SoftProp_string;
-	UPROPERTY()
-	TMap<FString, bool> SoftProp_bool;
-	UPROPERTY()
-	TMap<FString, UObject*> SoftProp_object;
-	UPROPERTY()
-	TMap<FString, FVector> SoftProp_Vector;
-	UPROPERTY()
-	TMap<FString, FRotator> SoftProp_Rotator;
-};
-
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
+UINTERFACE(MinimalAPI)
 class UOmegaSoftPropertyInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -44,17 +23,31 @@ class OMEGAGAMEFRAMEWORK_API IOmegaSoftPropertyInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	
-	UFUNCTION(BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="bool"), DisplayName="Get Soft Property (Bool)")
-	virtual bool NativeGetSoftProperty_Bool(const FString& Property);
-	UFUNCTION(BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="int32"), DisplayName="Get Soft Property (Int32)")
-	virtual int32 NativeGetSoftProperty_Int32(const FString& Property);
-	UFUNCTION(BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="float"), DisplayName="Get Soft Property (Float)")
-	virtual float NativeGetSoftProperty_Float(const FString& Property);
-	UFUNCTION(BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="string"), DisplayName="Get Soft Property (String)")
-	virtual FString NativeGetSoftProperty_String(const FString& Property);
-	UFUNCTION(BlueprintCallable, Category="SoftPropertries", meta=(CompactNodeTitle="object"), DisplayName="Get Soft Property (Object)")
-	virtual UObject* NativeGetSoftProperty_Object(const FString& Property);
+	UFUNCTION(BlueprintNativeEvent, Category="SoftPropertries")
+	FString GetSoftProperty(const FString& Property);
+
+	UFUNCTION(BlueprintNativeEvent, Category="SoftPropertries")
+	TMap<FString, FString> GetSoftPropertyMap();
+};
+
+//#####################################################################################################
+// PROPERTY FUNCTIONS
+//#####################################################################################################
+UCLASS()
+class UOmegaSoftPropertyFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
 	
-	virtual FSoftPropertyCollection Native_GetSoftProperties();
-	virtual void Native_SetSoftProperties(FSoftPropertyCollection Properties);
+	UFUNCTION(BlueprintPure, Category="Omega|Utilities|PropertyAccess", meta=(CompactNodeTitle="Soft String"))
+	static FString GetSoftProperty_String(UObject* Object, const FString& PropertyName);
+	UFUNCTION(BlueprintPure, Category="Omega|Utilities|PropertyAccess", meta=(CompactNodeTitle="Soft Bool"))
+	static bool GetSoftProperty_bool(UObject* Object, const FString& PropertyName);
+	UFUNCTION(BlueprintPure, Category="Omega|Utilities|PropertyAccess", meta=(CompactNodeTitle="Soft Float"))
+	static float GetSoftProperty_float(UObject* Object, const FString& PropertyName);
+	UFUNCTION(BlueprintPure, Category="Omega|Utilities|PropertyAccess", meta=(CompactNodeTitle="Soft Int32"))
+	static int32 GetSoftProperty_int32(UObject* Object, const FString& PropertyName);
+	UFUNCTION(BlueprintPure, Category="Omega|Utilities|PropertyAccess", meta=(CompactNodeTitle="Soft Vector"))
+	static FVector GetSoftProperty_Vector(UObject* Object, const FString& PropertyName);
+	UFUNCTION(BlueprintPure, Category="Omega|Utilities|PropertyAccess", meta=(CompactNodeTitle="Soft Rotator"))
+	static FRotator GetSoftProperty_Rotator(UObject* Object, const FString& PropertyName);
 };

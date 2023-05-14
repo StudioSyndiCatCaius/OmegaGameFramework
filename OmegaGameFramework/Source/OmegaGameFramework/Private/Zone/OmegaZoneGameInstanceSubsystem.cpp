@@ -21,7 +21,7 @@ void UOmegaZoneGameInstanceSubsystem::OnLevelChanged(UWorld* World, const UWorld
 {
 	if(IsInlevelTransit)
 	{
-		IsInlevelTransit=false;
-		World->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToPointID(TargetSpawnPointTag, UGameplayStatics::GetPlayerController(this, 0));
+		//IsInlevelTransit=false;
+		//World->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToPointID(TargetSpawnPointTag, UGameplayStatics::GetPlayerController(this, 0));
 	}
 }

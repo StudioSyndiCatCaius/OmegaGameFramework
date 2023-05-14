@@ -8,8 +8,8 @@
 #include "GameplayTagContainer.h"
 #include "DataInterface_General.h"
 #include "JsonObjectWrapper.h"
+#include "Misc/Timespan.h"
 #include "Gameplay/GameplayTagsInterface.h"
-#include "Preferences/GamePreference.h"
 #include "UObject/SoftObjectPath.h"
 
 #include "OmegaSaveBase.generated.h"
@@ -33,9 +33,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInte
 
 public:
 
-	UPROPERTY()
-	FString SaveJsonData;
+	UPROPERTY(BlueprintReadOnly, Category="Playtime")
+	FTimespan Playtime;
 
+	UFUNCTION(BlueprintPure, Category="Playtime")
+	FString GetPlaytimeString(bool bIncludeMilliseconds);
 
 	UFUNCTION()
 	void Local_OnLoaded();
@@ -52,18 +54,24 @@ public:
 	TMap<class UGamePreferenceTag*, FGameplayTag> TagPrefs;
 	UPROPERTY()
 	TMap<class UGamePreferenceInt*, int32> IntPrefs;
-	
+
+	//
+	UPROPERTY(BlueprintReadWrite, Category="Omega|Save")
+	FJsonObjectWrapper JsonSaveObject;
 	
 	//Tags
-	UPROPERTY(BlueprintReadOnly, DisplayName="Save State", Category="Ω|SaveGame")
+	UPROPERTY(BlueprintReadOnly, DisplayName="Save State", Category="Omega|Save")
 	FGameplayTag StoryState;
 	
-	UPROPERTY(BlueprintReadOnly, DisplayName="Save Tags", Category="Ω|SaveGame")
+	UPROPERTY(BlueprintReadOnly, DisplayName="Save Tags", Category="Omega|Save")
 	FGameplayTagContainer StoryTags;
 
 	//DataAssets
-	UPROPERTY(BlueprintReadOnly, Category="Ω|SaveGame")
+	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
 	TArray<UPrimaryDataAsset*> CollectedDataAssets;
+
+	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	TMap<UPrimaryDataAsset*, FGameplayTagContainer> SaveAssetTags;
 
 	//Soft Property
 	UPROPERTY()

@@ -331,40 +331,27 @@ TArray<UPrimaryDataAsset*> UOmegaDataItem::GetSkills_Implementation()
 	return OutSkills;
 }
 
-
-TMap<FString, FString> UOmegaDataItem::DEBUG_GetProperties()
+FString UOmegaDataItem::GetSoftProperty_Implementation(const FString& Property)
 {
-	TMap<FString, FString> LocalStrings;
-	GetNativePropertyValues(LocalStrings, EPropertyPortFlags::PPF_DebugDump);
-	return LocalStrings;
-}
-
-FString UOmegaDataItem::Local_GetItemProperty(const FString& Property)
-{
-	TMap<FString, FString> LocalStrings;
-	for(const auto* TempTrait : GetAllValidTraits())
+	FString OutVal;
+	
+	for(auto* TempTrait : GetTraitsWithInterface(UOmegaSoftPropertyInterface::StaticClass()))
 	{
-		TempTrait->GetNativePropertyValues(LocalStrings, 0x00000800);
-		if(LocalStrings.Contains(Property))
+		FString TempVal = IOmegaSoftPropertyInterface::Execute_GetSoftProperty(TempTrait, Property);
+		if(!TempVal.IsEmpty())
 		{
-			return LocalStrings.FindOrAdd(Property);
+			OutVal = TempVal;
 		}
 	}
-	return "";
+	return OutVal;
 }
 
-TArray<FString> UOmegaDataItem::Local_GetItemPropertyList(const FString& Property)
+TMap<FString, FString> UOmegaDataItem::GetSoftPropertyMap_Implementation()
 {
-	TArray<FString> OutProps;
-
-	return OutProps;
+	TMap<FString, FString> OutVal;
+	for(auto* TempTrait : GetTraitsWithInterface(UOmegaSoftPropertyInterface::StaticClass()))
+	{
+		OutVal.Append(IOmegaSoftPropertyInterface::Execute_GetSoftPropertyMap(TempTrait));
+	}
+	return OutVal;
 }
-
-FString UOmegaDataItem::GetItemProperty_String(const FString& Property)
-{
-	return Local_GetItemProperty(Property);
-}
-
-
-
-

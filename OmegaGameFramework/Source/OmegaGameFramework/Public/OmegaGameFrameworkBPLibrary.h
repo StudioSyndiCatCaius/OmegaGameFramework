@@ -67,6 +67,14 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintPure, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
 	static TArray<UObject*> FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude);
 
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
+	static FGameplayTag MakeGameplayTagFromString(const FString& String);
+
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
+	static FGameplayTagContainer MakeGameplayTagContainerFromStrings(TArray<FString> Strings);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
+	static FString GetLastGameplayTagString(const FGameplayTag& GameplayTag);
 	//###############################################################################
 	// System
 	//###############################################################################
@@ -76,10 +84,16 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context")) 
 	static void SetGameplaySystemsActive(const UObject* WorldContextObject, TArray<TSubclassOf<AOmegaGameplaySystem>> SystemClasses, bool bActive, const FString Flag, UObject* Context);
-	
-	UFUNCTION(BlueprintPure, Category="Ω|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
+
+	//###############################################################################
+	// Object
+	//###############################################################################
+	UFUNCTION(BlueprintPure, Category="Omega|Object")
 	static UObject* SelectObjectByName(TArray<UObject*> Objects, const FString& Name);
 
+	UFUNCTION(BlueprintPure, Category="Omega|Object")
+	static const TArray<FString> GetDisplayNamesFromObjects(TArray<UObject*> Objects);
+	
 	//###############################################################################
 	// Player
 	//###############################################################################
@@ -126,7 +140,7 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	//###############################################################################
 
 	//Reutrns "Inactive" until game flag is Active, then sets the flag back to "Inactive"
-	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", DisplayName="Switch on Flag Active", meta=(WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
 	static void OnFlagActiveReset(const UObject* WorldContextObject, const FString& Flag, bool bDeactivateFlagOnActive, TEnumAsByte<EOmegaFlagResult>& Outcome);
 
 	//###############################################################################
@@ -168,5 +182,15 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors|Interp", meta=(AdvancedDisplay="X,Y,Z"))
 	static void InterpActorRotation(AActor* Actor, FRotator TargetRotation, float InterpSpeed, bool X=true, bool Y=true, bool Z=true);
+	
+	//###############################################################################
+	// Save
+	//###############################################################################
+	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta=(WorldContext = "WorldContextObject"))
+	static void SetTagsAddedToSaveGame(const UObject* WorldContextObject, FGameplayTagContainer Tags, bool Saved, bool bGlobal);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta=(WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
+	static void SwitchOnSaveTagQuery(const UObject* WorldContextObject, FGameplayTagQuery TagQuery, bool bGlobal, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
 };
 

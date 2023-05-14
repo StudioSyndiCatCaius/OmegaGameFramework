@@ -10,12 +10,13 @@
 #include "Save/OmegaSaveInterface.h"
 #include "Dom/JsonObject.h"
 
-#include "Preferences/Asset/GamePreferenceBool.h"
-#include "Preferences/Asset/GamePreferenceFloat.h"
+#include "JsonObjectWrapper.h"
+#include "JsonBlueprintFunctionLibrary.h"
+#include "Engine/EngineTypes.h"
 #include "OmegaSettings.h"
 #include "Gameplay/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Preferences/GamePreferenceSubsystem.h"
+
 #include "Save/OmegaSaveCondition.h"
 
 
@@ -26,7 +27,6 @@ void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 
 	ActiveSaveData = CreateNewGame();
 	
-	
 	if (UGameplayStatics::DoesSaveGameExist(LocalGlSaveName, 0))		//Is there is already a Global Save File?
 	{
 		GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::LoadGameFromSlot(LocalGlSaveName, 0)); //If yes, load it
@@ -35,7 +35,29 @@ void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 	{
 		GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::CreateSaveGameObject(LocalGlobalSaveClass)); //If no, create a new one.
 	}
+
+	//Setup play timer
+	FTimerHandle GameTimeHandle;
+	GetWorld()->GetTimerManager().SetTimer(GameTimeHandle, this, &UOmegaSaveSubsystem::OnPlaytimeUpdate, 0.001f, true);
+
 }
+
+void UOmegaSaveSubsystem::OnPlaytimeUpdate()
+{
+	ActiveSaveData->Playtime += FTimespan::FromMilliseconds(1);
+	GlobalSaveData->Playtime += FTimespan::FromMilliseconds(1);
+}
+
+FTimespan UOmegaSaveSubsystem::GetSavePlaytime(bool bGlobal)
+{
+	return GetSaveObject(bGlobal)->Playtime;
+}
+
+FString UOmegaSaveSubsystem::GetSavePlaytimeString(bool bGlobal, bool bIncludeMilliseconds)
+{
+	return GetSaveObject(bGlobal)->GetPlaytimeString(bIncludeMilliseconds);
+}
+
 
 void UOmegaSaveSubsystem::Deinitialize()
 {
@@ -79,15 +101,13 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success)
 }
 
 
+
 //ON SAVE
 void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, bool& Success)
 {
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
-	//UOmegaSaveGame* LocalActiveData = Cast<UOmegaSaveGame>(ActiveSaveData);
-	
-	
-	
+
 	Success = Local_SaveGame(SlotName);
 }
 
@@ -119,13 +139,13 @@ bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
 	//Save Json Sources
 	for(auto* TempSource : GetSaveSources())
 	{
-		SaveObjectJsonData(TempSource);
+		SaveObjectJsonData(TempSource,false);
 	}
 	//SaveFileFromActorsWithSaveData
 	for(AActor* TempActor : ActorsForSaving)
 	{
 		IOmegaSaveInterface::Execute_OnGameFileSaved(TempActor, ActiveSaveData);
-		SaveObjectJsonData(TempActor);
+		SaveObjectJsonData(TempActor,false);
 	}
 	//SaveGameplayModuleData
 	for(UOmegaGameplayModule* TempModule : GetGameInstance()->GetSubsystem<UOmegaGameManager>()->ActiveModules)
@@ -174,13 +194,13 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, FGameplayTag
 	//Load Json Data
 	for(auto* TempSource : GetSaveSources())
 	{
-		LoadObjectJsonData(TempSource);
+		LoadObjectJsonData(TempSource,false);
 	}
 	//SaveFileFromActorsWithSaveData
 	for(AActor* TempActor : ActorsForSaving)
 	{
 		IOmegaSaveInterface::Execute_OnGameFileStarted(TempActor, ActiveSaveData);
-		LoadObjectJsonData(TempActor);
+		LoadObjectJsonData(TempActor,false);
 	}
 	
 	for(UOmegaGameplayModule* TempModule : GetGameInstance()->GetSubsystem<UOmegaGameManager>()->ActiveModules)
@@ -208,7 +228,20 @@ void UOmegaSaveSubsystem::SaveGlobalGame()
 	const FString LocalGlSaveName = GetMutableDefault<UOmegaSettings>()->GlobalSaveName;
 	UGameplayStatics::SaveGameToSlot(GlobalSaveData, LocalGlSaveName, 0);
 }
+/*
+bool UOmegaSaveSubsystem::SetJsonSaveProperty(const FString& Property, const int32& Value, bool Global)
+{
+	FJsonObjectWrapper TempWraper = GetSaveObject(Global)->JsonSaveObject;
+	const bool IsSuccess = UJsonBlueprintFunctionLibrary::SetField(TempWraper,Property,Value);
+	GetSaveObject(Global)->JsonSaveObject = TempWraper;
+	return IsSuccess;
+}
 
+bool UOmegaSaveSubsystem::GetJsonSaveProperty(const FString& Property, int32& Value, bool Global)
+{
+	return UJsonBlueprintFunctionLibrary::GetField(GetSaveObject(Global)->JsonSaveObject,Property,Value);
+}
+*/
 void UOmegaSaveSubsystem::SetStoryState(FGameplayTag StateTag, bool Global)
 {
 	GetSaveObject(Global)->StoryState = StateTag;
@@ -361,6 +394,43 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 	return OutAssets;
 }
 
+void UOmegaSaveSubsystem::AddSaveTagsToDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal)
+{
+	if(GetSaveObject(bGlobal)->SaveAssetTags.Contains(Asset))
+	{
+		FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
+		TempTags.AppendTags(Tags);
+		GetSaveObject(bGlobal)->SaveAssetTags.Add(Asset, TempTags);
+	}
+}
+
+void UOmegaSaveSubsystem::RemoveSaveTagsFromDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal)
+{
+	if(GetSaveObject(bGlobal)->SaveAssetTags.Contains(Asset))
+	{
+		FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
+		TempTags.RemoveTags(Tags);
+		GetSaveObject(bGlobal)->SaveAssetTags.Add(Asset, TempTags);
+	}
+}
+
+bool UOmegaSaveSubsystem::DoesDataAssetHaveSaveTags(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bExact, bool bGlobal)
+{
+	if(GetSaveObject(bGlobal)->SaveAssetTags.Contains(Asset))
+	{
+		FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
+		if(bExact)
+		{
+			return TempTags.HasAnyExact(Tags);
+		}
+		else
+		{
+			return TempTags.HasAny(Tags);
+		}
+	}
+	return false;
+}
+
 //////////////
 // Soft Properties
 //////////////
@@ -497,7 +567,7 @@ bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Condition
 	return true;
 }
 
-void UOmegaSaveSubsystem::SaveObjectJsonData(UObject* Object)
+void UOmegaSaveSubsystem::SaveObjectJsonData(UObject* Object, bool Global)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UOmegaSaveInterface::StaticClass()))
 	{
@@ -505,19 +575,20 @@ void UOmegaSaveSubsystem::SaveObjectJsonData(UObject* Object)
 		{
 			const FString LocalPropName = IOmegaSaveInterface::Execute_GetJsonPropertyName(Object);
 			const FJsonObjectWrapper LocalJsonData = IOmegaSaveInterface::Execute_SaveJsonData(Object);
-			GetSaveObject(false)->SetSaveProperty_Json(LocalPropName, LocalJsonData);
+			
+			GetSaveObject(Global)->SetSaveProperty_Json(LocalPropName, LocalJsonData);
 		}
 	}
 }
 
-void UOmegaSaveSubsystem::LoadObjectJsonData(UObject* Object)
+void UOmegaSaveSubsystem::LoadObjectJsonData(UObject* Object, bool Global)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UOmegaSaveInterface::StaticClass()))
 	{
 		if(IOmegaSaveInterface::Execute_UseJsonSaveData(Object))
 		{
 			const FString LocalPropName = IOmegaSaveInterface::Execute_GetJsonPropertyName(Object);
-			const FJsonObjectWrapper LocalJsonData = GetSaveObject(false)->GetSaveProperty_Json(LocalPropName);
+			const FJsonObjectWrapper LocalJsonData = GetSaveObject(Global)->GetSaveProperty_Json(LocalPropName);
 			IOmegaSaveInterface::Execute_LoadJsonData(Object, LocalJsonData);
 			
 		}

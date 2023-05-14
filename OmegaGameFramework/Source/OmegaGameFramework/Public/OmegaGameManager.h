@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-
 #include "OmegaSettings.h"
+#include "JsonObjectWrapper.h"
 #include "Gameplay/OmegaGameMode.h"
-
 #include "OmegaGameManager.generated.h"
 
 class UOmegaSettings;
@@ -50,8 +49,6 @@ public:
 	void ActivateModuleFromClass(const UClass* ModuleClass);
 	UPROPERTY()
 	TArray<UOmegaGameplayModule*> ActiveModules;
-
-	
 	
 	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Omega|Game Manager")
 	UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);
@@ -107,6 +104,19 @@ public:
 	void UpdatePlaytime();
 */
 
+	//################################################################
+	// GlobalJson
+	//################################################################
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|GlobalJson")
+	FJsonObjectWrapper GlobalJsonObject;
+
+	//UFUNCTION(BlueprintCallable, Category="OmegaGameManager|GlobalJson", meta = (CustomStructureParam = "Value", AutoCreateRefTerm = "Value"))
+	//bool SetGlobalJsonProperty(const FString& Property, const int32& Value);
+
+	//UFUNCTION(BlueprintCallable, Category="OmegaGameManager|GlobalJson", meta = (CustomStructureParam = "OutValue", AutoCreateRefTerm = "OutValue"))
+	//bool GetGlobalJsonProperty(const FString& Property, int32& OutValue);
+	
 	//##################################################################################################################
 	// LOG
 	//##################################################################################################################

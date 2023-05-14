@@ -2,12 +2,9 @@
 
 
 #include "OmegaGameManager.h"
-
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "DSP/PassiveFilter.h"
 #include "Gameplay/OmegaGameplayModule.h"
+#include "JsonBlueprintFunctionLibrary.h"
 #include "Engine/GameInstance.h"
-#include "Kismet/GameplayStatics.h"
 
 void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 {
@@ -151,6 +148,8 @@ void UOmegaGameManager::ClearAllFlags()
 	}
 	Flags.Empty();
 }
+
+
 
 void UOmegaGameManager::AddGameplayLog(const FString& String, const FString& LogCategory)
 {

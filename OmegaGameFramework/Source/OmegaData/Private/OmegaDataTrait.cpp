@@ -3,6 +3,7 @@
 
 #include "OmegaDataTrait.h"
 
+
 TMap<FGameplayTag, ULevelSequence*> UOmegaDataTrait::GetContextAVSequences_Implementation()
 {
 	return IDataInterface_ContextAV::GetContextAVSequences_Implementation();

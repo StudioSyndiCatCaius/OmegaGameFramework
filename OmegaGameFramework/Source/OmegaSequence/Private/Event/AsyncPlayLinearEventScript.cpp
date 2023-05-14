@@ -19,11 +19,13 @@ void UAsyncPlayLinearEventScript::Local_Finish(const FString& Flag)
 
 void UAsyncPlayLinearEventScript::Activate()
 {
+	if(!Local_ReaderClass)
+	{
+		Local_ReaderClass = UOmegaLinearEventScriptReader::StaticClass();
+	}
 	if(Local_ReaderClass)
 	{
-		// GEngine->GetEngineSubsystem<UOmegaDataParserSubsystem>()->ParseDataFromString(Local_ReaderClass, ScriptData);
-
-		UOmegaLinearEventScriptReader* EventReader = NewObject<UOmegaLinearEventScriptReader>(SubsystemRef, Local_ReaderClass);
+		UOmegaLinearEventScriptReader* EventReader = NewObject<UOmegaLinearEventScriptReader>(GetOuter(), Local_ReaderClass);
 		const FLinearEventSequence EventData = EventReader->ConvertToLinearEventSequence(ScriptData,EventReader->GetParserClass(),bIsScriptPath);
 		
 		UE_LOG(LogTemp, Log, TEXT("Class Name: %s"), *EventReader->GetName());
@@ -35,7 +37,6 @@ void UAsyncPlayLinearEventScript::Activate()
 		
 		UOmegaLinearEventInstance* TempInst = SubsystemRef->PlayLinearEvent(EventData, LocStartIndex);
 	
-		TempInst->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventScript::Local_Finish);
 		TempInst->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventScript::Local_Finish);
 	}
 	else

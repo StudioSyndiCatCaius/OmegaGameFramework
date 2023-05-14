@@ -153,12 +153,35 @@ TArray<UOmegaDataItem*> UOmegaDataSubsystem::GetAllDataItemsWithInterface(TSubcl
 
 UOmegaDataItem* UOmegaDataSubsystem::GetDataItemFromName(const FString& Name)
 {
+	if(NamedItems.Contains(Name))
+	{
+		return NamedItems.FindOrAdd(Name);
+	}
+	
 	for(auto* TempItem : GetAllDataItems())
 	{
 		if(TempItem->GetName() == Name)
 		{
+			NamedItems.Add(Name, TempItem);
 			return TempItem;
 		}
+	}
+	return nullptr;
+}
+
+UOmegaDataItem* UOmegaDataSubsystem::CreateDataItemFromString(FString StringData,
+	TSubclassOf<UOmegaDataItemConstructor> ConstructorClass, FString ItemName)
+{
+	if(ConstructorClass)
+	{
+		UOmegaDataItemConstructor* TempConstructor = NewObject<UOmegaDataItemConstructor>(this, ConstructorClass);
+		UOmegaDataItem* NewItem = NewObject<UOmegaDataItem>(this, UOmegaDataItem::StaticClass());
+	
+		TempConstructor->OnItemCreated(StringData, NewItem->DisplayName,NewItem->DisplayDescription,NewItem->Icon,NewItem->GameplayCategory,NewItem->GameplayTags);
+
+		NamedItems.Add(ItemName, NewItem);
+	
+		return NewItem;
 	}
 	return nullptr;
 }
@@ -289,6 +312,23 @@ UOmegaDataTrait* UOmegaDataItemFunctions::TryGetDataTraitByInterface(UObject* So
 		return Cast<UOmegaDataItem>(Source)->GetTraitWithInterface(Class);
 	}
 	return nullptr;
+}
+
+UOmegaDataItemConstructor::UOmegaDataItemConstructor(const FObjectInitializer& ObjectInitializer)
+{
+	if (const UObject* Owner = GetOuter())
+	{
+		WorldPrivate = Owner->GetWorld();
+	}
+}
+
+UWorld* UOmegaDataItemConstructor::GetWorld() const
+{
+	if(WorldPrivate)
+	{
+		return WorldPrivate;
+	}
+	return UObject::GetWorld();
 }
 
 

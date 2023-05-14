@@ -11,6 +11,7 @@
 #include "Gameplay/GameplayTagsInterface.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
+#include "Save/OmegaSaveSubsystem.h"
 
 
 bool UOmegaGameFrameworkBPLibrary::IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact)
@@ -193,6 +194,29 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByClass(TArray<UObje
 	return OutObjects;
 }
 
+FGameplayTag UOmegaGameFrameworkBPLibrary::MakeGameplayTagFromString(const FString& String)
+{
+	return FGameplayTag::RequestGameplayTag(FName(*String));
+}
+
+FGameplayTagContainer UOmegaGameFrameworkBPLibrary::MakeGameplayTagContainerFromStrings(TArray<FString> Strings)
+{
+	FGameplayTagContainer OutTags;
+	for(FString TempString : Strings)
+	{
+		OutTags.AddTag(MakeGameplayTagFromString(TempString));
+	}
+	return OutTags;
+}
+
+FString UOmegaGameFrameworkBPLibrary::GetLastGameplayTagString(const FGameplayTag& GameplayTag)
+{
+	const FString TagString = GameplayTag.ToString();
+	FString OutString;
+	TagString.Split(".", nullptr, &OutString, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+	return OutString;
+}
+
 UObject* UOmegaGameFrameworkBPLibrary::SelectObjectByName(TArray<UObject*> Objects, const FString& Name)
 {
 	for(auto* TempObj : Objects)
@@ -204,6 +228,21 @@ UObject* UOmegaGameFrameworkBPLibrary::SelectObjectByName(TArray<UObject*> Objec
 	}
 	return nullptr;
 }
+
+const TArray<FString> UOmegaGameFrameworkBPLibrary::GetDisplayNamesFromObjects(TArray<UObject*> Objects)
+{
+	TArray<FString> StringsOut;
+	for(auto* TempObj : Objects)
+	{
+		if(TempObj)
+		{
+			StringsOut.Add(TempObj->GetName());
+		}
+	}
+	return StringsOut;
+}
+
+
 
 AActor* UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius)
 {
@@ -490,5 +529,38 @@ void UOmegaGameFrameworkBPLibrary::InterpActorRotation(AActor* Actor, FRotator T
 		Actor->SetActorRotation(UKismetMathLibrary::RInterpTo(Actor->GetActorRotation(), LocalRot, UGameplayStatics::GetWorldDeltaSeconds(Actor), InterpSpeed));
 	}
 	
+}
+//###############################################################################
+// Save
+//###############################################################################
+void UOmegaGameFrameworkBPLibrary::SetTagsAddedToSaveGame(const UObject* WorldContextObject, FGameplayTagContainer Tags,
+	bool Saved, bool bGlobal)
+{
+	if(WorldContextObject)
+	{
+		UOmegaSaveSubsystem* SubsysRef = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+		if(Saved)
+		{
+			SubsysRef->AddStoryTags(Tags, bGlobal);
+		}
+		else
+		{
+			SubsysRef->RemoveStoryTags(Tags, bGlobal);
+		}
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::SwitchOnSaveTagQuery(const UObject* WorldContextObject, FGameplayTagQuery TagQuery, bool bGlobal,
+	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	UOmegaSaveSubsystem* SubsysRef = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+	if(SubsysRef->SaveTagsMatchQuery(TagQuery, bGlobal))
+	{
+		Outcome = EOmegaFunctionResult::Success;
+	}
+	else
+	{
+		Outcome = EOmegaFunctionResult::Fail;
+	}
 }
 

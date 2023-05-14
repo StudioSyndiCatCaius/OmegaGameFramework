@@ -147,6 +147,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "JsonBlueprintUtilities",
+			"Enabled": true
+		},
+		{
 			"Name": "GameFeatures",
 			"Enabled": true
 		},

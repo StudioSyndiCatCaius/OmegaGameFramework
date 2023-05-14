@@ -10,6 +10,7 @@
 #include "OmegaGameManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/OmegaPlayerSubsystem.h"
+#include "Save/OmegaSaveSubsystem.h"
 
 // Sets default values
 AOmegaGameplaySystem::AOmegaGameplaySystem()
@@ -27,8 +28,11 @@ void AOmegaGameplaySystem::BeginPlay()
 	Super::BeginPlay();
 	
 	///ATTACH TO GAME MODE
-	//SetOwner(UGameplayStatics::GetGameMode(this));
-	//AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+	if(!GetAttachParentActor())
+	{
+		SetOwner(UGameplayStatics::GetGameMode(this));
+		AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+	}
 	
 	//Get Players
 	TArray <AActor*> FoundPlayers;
@@ -42,7 +46,7 @@ void AOmegaGameplaySystem::BeginPlay()
 		const APlayerController* TempPlayer = Cast<APlayerController>(TempActor);
 		
 		//Add New Widgets To Player Screen
-		for (class TSubclassOf <UHUDLayer> TempWidgetClass : AddedPlayerWidgets)
+		for (const class TSubclassOf <UHUDLayer> TempWidgetClass : AddedPlayerWidgets)
 		{
 			UOmegaPlayerSubsystem* LocalSystem = TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
 			UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this);
@@ -83,7 +87,15 @@ void AOmegaGameplaySystem::BeginPlay()
 
 	//FLAGS
 	Local_SetFlagsActive(true);
+
+	//SetupSave
+	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSaveSourceRegistered(this,true);
 	
+}
+
+void AOmegaGameplaySystem::Destroyed()
+{
+	Super::Destroyed();
 }
 
 void AOmegaGameplaySystem::Local_SetFlagsActive(bool State)
@@ -143,7 +155,9 @@ void AOmegaGameplaySystem::CompleteShutdown()
 	{
 		TArray <AActor*> FoundPlayers;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
-	
+
+		GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSaveSourceRegistered(this,false);
+		
 		// Remove Player Widgets
 		for (class UHUDLayer* TempWidget : ActivePlayerWidgets)
 		{

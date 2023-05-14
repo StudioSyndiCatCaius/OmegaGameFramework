@@ -8,7 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "LevelSequence.h"
 #include "GameplayTagContainer.h"
-#include "Data/SoftPropertiesInterface.h"
+#include "Data/OmegaSoftPropertyInterface.h"
 #include "OmegaDataTrait.generated.h"
 
 class AActor;
@@ -45,19 +45,6 @@ public:
 	FGameplayTagContainer AppendedItemTags() const;
 
 	// SOFT PROPERTIES
-	//BlueprintImplementableEvent, Category="Properties", DisplayName="Get Trait Property (Bool)"
-	/*
-	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Bool)")
-	bool BindTraitProperty_Bool(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Int32)")
-	int32 BindTraitProperty_Int(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Float)")
-	float BindTraitProperty_Float(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (String)")
-	FString BindTraitProperty_String(const FString& Property, bool& ValidProperty) const;
-	UFUNCTION(Category="Properties", DisplayName="Get Trait Property (Object)")
-	UObject* BindTraitProperty_Object(const FString& Property, bool& ValidProperty) const;
-	*/
 	
 	//###############################################################################
 	// Contextual Data

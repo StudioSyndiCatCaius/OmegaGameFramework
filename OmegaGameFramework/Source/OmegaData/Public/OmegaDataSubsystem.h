@@ -10,6 +10,7 @@
 #include "OmegaDataSubsystem.generated.h"
 
 class UOmegaDataItem;
+class UWorld;
 
 UCLASS(DisplayName="Omega Subsystem: Data Items")
 class OMEGADATA_API UOmegaDataSubsystem : public UGameInstanceSubsystem
@@ -20,6 +21,9 @@ class OMEGADATA_API UOmegaDataSubsystem : public UGameInstanceSubsystem
 
 	UPROPERTY()
 	TArray<UOmegaDataItem*> PrivateDataItems;
+
+	UPROPERTY()
+	TMap<FString,UOmegaDataItem*> NamedItems;
 
 	UPROPERTY()
 	TMap<FGameplayTag, UOmegaDataItem*> DataItemIDs;
@@ -50,6 +54,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="OmegaDataSubsytem")
 	UOmegaDataItem* GetDataItemFromName(const FString& Name);
+
+	UFUNCTION(BlueprintCallable, Category="OmegaDataSubsytem")
+	UOmegaDataItem* CreateDataItemFromString(FString StringData,TSubclassOf<UOmegaDataItemConstructor> ConstructorClass, FString ItemName);
 	
 	//###########################################################################################
 	// DATA Component
@@ -97,4 +104,22 @@ class OMEGADATA_API UOmegaDataItemFunctions : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Data Items")
 	static UOmegaDataTrait* TryGetDataTraitByInterface(UObject* Source, TSubclassOf<UInterface> Class);
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class OMEGADATA_API UOmegaDataItemConstructor : public UObject
+{
+	GENERATED_BODY()
+	
+protected:
+	
+	UOmegaDataItemConstructor(const FObjectInitializer& ObjectInitializer);
+	
+	UPROPERTY(Transient)
+	UWorld* WorldPrivate = nullptr;
+	virtual UWorld* GetWorld() const override;
+
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category="OmegaDataItem")
+	void OnItemCreated(const FString& StringData, FText& Name, FText& Description, FSlateBrush& Icon, FGameplayTag& CategoryTag, FGameplayTagContainer& GameplayTags);
 };

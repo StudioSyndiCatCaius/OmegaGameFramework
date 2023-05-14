@@ -8,6 +8,8 @@
 #include "Gameplay/DataInterface_AttributeModifier.h"
 #include "EquipmentComponent.generated.h"
 
+class UDataAssetCollectionComponent;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipped, UPrimaryDataAsset*, Item, FString, Slot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUnequipped, UPrimaryDataAsset*, Item, FString, Slot);
 
@@ -69,4 +71,16 @@ public:
 	FOnItemUnequipped OnItemUnequipped;
 
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+
+	//##############################################################################################
+	// Data Collect
+	//##############################################################################################
+	UPROPERTY()
+	UDataAssetCollectionComponent* LinkedCollectionComp;
+	
+	UFUNCTION(BlueprintCallable, Category="Equipment", meta=(Keywords="set, get"))
+	void LinkAssetCollectionComponent(UDataAssetCollectionComponent* Component);
+
+	UFUNCTION(BlueprintCallable, Category="Equipment", meta=(Keywords="set, get"))
+	void ClearLinkedAssetCollectionComponent(UDataAssetCollectionComponent* Component);
 };
