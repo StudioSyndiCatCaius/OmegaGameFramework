@@ -59,9 +59,23 @@ void UFlowNode_ComponentObserver::StartObserving()
 {
 	if (UFlowSubsystem* FlowSubsystem = GetFlowSubsystem())
 	{
-		for (const TWeakObjectPtr<UFlowComponent>& FoundComponent : FlowSubsystem->GetComponents<UFlowComponent>(IdentityTags, EGameplayContainerMatchType::Any))
+		// translate Flow name into engine types
+		const EGameplayContainerMatchType ContainerMatchType = (IdentityMatchType == EFlowTagContainerMatchType::HasAny || IdentityMatchType == EFlowTagContainerMatchType::HasAnyExact) ? EGameplayContainerMatchType::Any : EGameplayContainerMatchType::All;
+		const bool bExactMatch = (IdentityMatchType == EFlowTagContainerMatchType::HasAnyExact || IdentityMatchType == EFlowTagContainerMatchType::HasAllExact);
+
+		// collect already registered components
+		for (const TWeakObjectPtr<UFlowComponent>& FoundComponent : FlowSubsystem->GetComponents<UFlowComponent>(IdentityTags, ContainerMatchType, bExactMatch))
 		{
-			ObserveActor(FoundComponent->GetOwner(), FoundComponent);
+			if (GetActivationState() == EFlowNodeState::Active)
+			{
+				ObserveActor(FoundComponent->GetOwner(), FoundComponent);
+			}
+			else
+			{
+				// node might finish work as the effect of triggering event on the found actor
+				// we should terminate iteration in this case
+				return;
+			}
 		}
 
 		// clear old bindings before binding again, which might happen while loading a SaveGame

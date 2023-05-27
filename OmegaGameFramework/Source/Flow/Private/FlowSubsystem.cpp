@@ -107,6 +107,7 @@ void UFlowSubsystem::FinishRootFlow(UObject* Owner, const EFlowFinishPolicy Fini
 
 void UFlowSubsystem::Native_EndFlow(UFlowAsset* Asset, FName Output, const FString& Flag)
 {
+	/*
 	for(auto* TempTrait: Asset->Traits)
 	{
 		if(TempTrait)
@@ -114,6 +115,7 @@ void UFlowSubsystem::Native_EndFlow(UFlowAsset* Asset, FName Output, const FStri
 			TempTrait->Native_FlowEnd(Output, Flag);
 		}
 	}
+	*/
 	OnFlowEventFinish.Broadcast(Asset, Output, Flag);
 }
 

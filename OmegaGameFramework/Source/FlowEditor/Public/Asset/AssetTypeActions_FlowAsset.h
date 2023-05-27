@@ -5,7 +5,7 @@
 #include "AssetTypeActions_Base.h"
 #include "Toolkits/IToolkitHost.h"
 
-class FAssetTypeActions_FlowAsset : public FAssetTypeActions_Base
+class FLOWEDITOR_API FAssetTypeActions_FlowAsset : public FAssetTypeActions_Base
 {
 public:
 	virtual FText GetName() const override;
@@ -14,4 +14,6 @@ public:
 
 	virtual UClass* GetSupportedClass() const override;
 	virtual void OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<class IToolkitHost> EditWithinLevelEditor = TSharedPtr<IToolkitHost>()) override;
+
+	virtual void PerformAssetDiff(UObject* OldAsset, UObject* NewAsset, const FRevisionInfo& OldRevision, const FRevisionInfo& NewRevision) const override;
 };

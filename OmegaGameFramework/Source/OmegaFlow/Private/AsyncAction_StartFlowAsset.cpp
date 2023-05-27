@@ -11,7 +11,7 @@
 
 void UAsyncAction_StartFlowAsset::Native_OnFinishFlow(UFlowAsset* FlowAsset, FName Output, const FString& Flag)
 {
-	UFlowSubsystem* SubsystemRef = LocalWorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UFlowSubsystem>();
+	const UFlowSubsystem* SubsystemRef = LocalWorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UFlowSubsystem>();
 	
 	if(SubsystemRef->GetRootFlow(this) == FlowAsset)
 	{

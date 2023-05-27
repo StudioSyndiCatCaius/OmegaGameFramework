@@ -14,7 +14,7 @@ void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;
 	FARFilter Filter;
-	Filter.ClassNames.Add("OmegaDataItem");
+	Filter.ClassPaths.Add(UOmegaDataItem::StaticClass()->GetClassPathName());
 	
 	for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath)
 	{

@@ -11,6 +11,8 @@
 
 #include "OmegaZone.generated.h"
 
+class AOmegaGameplaySystem;
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaLevelData : public UPrimaryDataAsset
 {
@@ -52,4 +54,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone")
 	UOmegaBGM* ZoneBGM;
+
+	//Gameplay Systems will be activated when this zone is loaded and shutdown when it is unloaded. The Zone will be sued as the context.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone")
+    TArray<TSubclassOf<AOmegaGameplaySystem>> SystemsActivatedInZone;
 };

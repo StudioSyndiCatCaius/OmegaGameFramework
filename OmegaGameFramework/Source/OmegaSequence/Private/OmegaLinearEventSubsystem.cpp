@@ -25,7 +25,7 @@ UOmegaLinearEventInstance* UOmegaLinearEventSubsystem::PlayLinearEvent(FLinearEv
 	
 	TempEventInst->SubsystemRef = this;
 	TempEventInst->SequenceData = Sequence;
-	TempEventInst->ActiveIndex = StartingEvent-1;
+	//TempEventInst->GetCurrentEventIndex() = StartingEvent-1;
 	TempEvents.Add(TempEventInst);
 	TempEventInst->NextEvent("Root");
 	return TempEventInst;

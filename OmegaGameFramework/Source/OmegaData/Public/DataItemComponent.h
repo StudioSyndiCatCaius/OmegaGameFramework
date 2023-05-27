@@ -6,12 +6,13 @@
 #include "OmegaDataItem.h"
 #include "Components/ActorComponent.h"
 #include "Delegates/DelegateCombinations.h"
+#include "Gameplay/ActorTagEvent/ActorTagEvent.h"
 #include "DataItemComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataItemChanged, UOmegaDataItem*, Item);
 
 UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent) )
-class OMEGADATA_API UDataItemComponent : public UActorComponent, public IDataInterface_AttributeModifier, public IDataInterface_SkillSource
+class OMEGADATA_API UDataItemComponent : public UActorComponent, public IDataInterface_AttributeModifier, public IDataInterface_SkillSource, public IActorTagEventInterface
 {
 	GENERATED_BODY()
 
@@ -41,7 +42,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnDataItemChanged OnDataItemChanged;
-
 	
 	
 	UFUNCTION(BlueprintCallable, Category="DataItem")
@@ -52,5 +52,7 @@ public:
 
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation() override;
+
+	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;
 		
 };

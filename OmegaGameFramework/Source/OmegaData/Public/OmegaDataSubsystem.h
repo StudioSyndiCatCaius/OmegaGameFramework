@@ -99,7 +99,7 @@ class OMEGADATA_API UOmegaDataItemFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Data Items")
+	UFUNCTION(BlueprintCallable, Category="Omega|Data Items", meta=(DeterminesOutputType="Class"))
 	static UOmegaDataTrait* TryGetDataTraitByClass(UObject* Source, TSubclassOf<UOmegaDataTrait> Class);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Data Items")

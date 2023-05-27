@@ -31,8 +31,11 @@ public:
 	UPROPERTY()
 	FOnEventEnded EventEnded;
 
-	UPROPERTY(EditInstanceOnly, Category="LinearEvent", AdvancedDisplay)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="LinearEvent", AdvancedDisplay)
 	FName EventID;
+
+	UPROPERTY()
+	FName IncomingEventID;
 	
 	///FUNCTIONS
 	///
@@ -44,8 +47,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnEventEnd(const FString& Flag);
 	
-	UFUNCTION(BlueprintCallable, Category="LinearEvent")
-	void Finish(const FString& Flag);
+	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="JumpToID"))
+	void Finish(const FString& Flag, const FName JumpToID = FName(""));
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")
 	void JumpToEvent(FName Event, bool EndSequenceIfFail);

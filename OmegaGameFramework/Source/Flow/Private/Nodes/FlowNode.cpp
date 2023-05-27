@@ -31,6 +31,8 @@ UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
 	, bCanDuplicate(true)
 	, bNodeDeprecated(false)
 #endif
+	, AllowedSignalModes({EFlowSignalMode::Enabled, EFlowSignalMode::Disabled, EFlowSignalMode::PassThrough})
+	, SignalMode(EFlowSignalMode::Enabled)
 	, bPreloaded(false)
 	, ActivationState(EFlowNodeState::NeverActivated)
 {
@@ -63,12 +65,12 @@ void UFlowNode::PostLoad()
 	FixNode(nullptr);
 }
 
-void UFlowNode::FixNode(UEdGraphNode* NewGraph)
+void UFlowNode::FixNode(UEdGraphNode* NewGraphNode)
 {
 	// Fix any node pointers that may be out of date
-	if (NewGraph)
+	if (NewGraphNode)
 	{
-		GraphNode = NewGraph;
+		GraphNode = NewGraphNode;
 	}
 
 	// v1.1 upgraded pins to be defined as structs
@@ -139,8 +141,6 @@ FString UFlowNode::GetNodeDescription() const
 {
 	return K2_GetNodeDescription();
 }
-
-
 #endif
 
 UFlowAsset* UFlowNode::GetFlowAsset() const
@@ -184,6 +184,32 @@ void UFlowNode::SetNumberedOutputPins(const uint8 FirstNumber /*= 0*/, const uin
 	}
 }
 
+uint8 UFlowNode::CountNumberedInputs() const
+{
+	uint8 Result = 0;
+	for (const FFlowPin& Pin : InputPins)
+	{
+		if (Pin.PinName.ToString().IsNumeric())
+		{
+			Result++;
+		}
+	}
+	return Result;
+}
+
+uint8 UFlowNode::CountNumberedOutputs() const
+{
+	uint8 Result = 0;
+	for (const FFlowPin& Pin : OutputPins)
+	{
+		if (Pin.PinName.ToString().IsNumeric())
+		{
+			Result++;
+		}
+	}
+	return Result;
+}
+
 TArray<FName> UFlowNode::GetInputNames() const
 {
 	TArray<FName> Result;
@@ -221,18 +247,33 @@ bool UFlowNode::CanUserAddOutput() const
 	return K2_CanUserAddOutput();
 }
 
-void UFlowNode::RemoveUserInput()
+void UFlowNode::RemoveUserInput(const FName& PinName)
 {
 	Modify();
-	InputPins.RemoveAt(InputPins.Num() - 1);
+
+	for (int32 i = 0; i < InputPins.Num(); i++)
+	{
+		if (InputPins[i].PinName == PinName)
+		{
+			InputPins.RemoveAt(i);
+			break;
+		}
+	}
 }
 
-void UFlowNode::RemoveUserOutput()
+void UFlowNode::RemoveUserOutput(const FName& PinName)
 {
 	Modify();
-	OutputPins.RemoveAt(OutputPins.Num() - 1);
-}
 
+	for (int32 i = 0; i < OutputPins.Num(); i++)
+	{
+		if (OutputPins[i].PinName == PinName)
+		{
+			OutputPins.RemoveAt(i);
+			break;
+		}
+	}
+}
 #endif
 
 TSet<UFlowNode*> UFlowNode::GetConnectedNodes() const
@@ -337,16 +378,35 @@ void UFlowNode::FlushContent()
 	K2_FlushContent();
 }
 
-void UFlowNode::TriggerInput(const FName& PinName, const bool bForcedActivation /*= false*/)
+void UFlowNode::OnActivate()
 {
+	K2_OnActivate();
+}
+
+void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType /*= Default*/)
+{
+	if (SignalMode == EFlowSignalMode::Disabled)
+	{
+		// entirely ignore any Input activation
+	}
+
 	if (InputPins.Contains(PinName))
 	{
-		ActivationState = EFlowNodeState::Active;
+		if (SignalMode == EFlowSignalMode::Enabled)
+		{
+			const EFlowNodeState PreviousActivationState = ActivationState;
+			if (PreviousActivationState != EFlowNodeState::Active)
+			{
+				OnActivate();
+			}
+
+			ActivationState = EFlowNodeState::Active;
+		}
 
 #if !UE_BUILD_SHIPPING
 		// record for debugging
 		TArray<FPinRecord>& Records = InputRecords.FindOrAdd(PinName);
-		Records.Add(FPinRecord(FApp::GetCurrentTime(), bForcedActivation));
+		Records.Add(FPinRecord(FApp::GetCurrentTime(), ActivationType));
 #endif // UE_BUILD_SHIPPING
 
 #if WITH_EDITOR
@@ -363,9 +423,15 @@ void UFlowNode::TriggerInput(const FName& PinName, const bool bForcedActivation 
 #endif // UE_BUILD_SHIPPING
 		return;
 	}
-	
-	GetFlowSubsystem()->OnFlowNodeEntered.Broadcast(GetFlowAsset(), this, PinName);
-	ExecuteInput(PinName);
+
+	if (SignalMode == EFlowSignalMode::Enabled)
+	{
+		ExecuteInput(PinName);
+	}
+	else if (SignalMode == EFlowSignalMode::PassThrough)
+	{
+		OnPassThrough();
+	}
 }
 
 void UFlowNode::ExecuteInput(const FName& PinName)
@@ -381,9 +447,8 @@ void UFlowNode::TriggerFirstOutput(const bool bFinish)
 	}
 }
 
-void UFlowNode::TriggerOutput(FName PinName, const bool bFinish /*= false*/, const bool bForcedActivation /*= false*/)
+void UFlowNode::TriggerOutput(FName PinName, const bool bFinish /*= false*/, const EFlowPinActivationType ActivationType /*= Default*/)
 {
-	const FName Local_PinName = PinName;
 	// clean up node, if needed
 	if (bFinish)
 	{
@@ -391,31 +456,36 @@ void UFlowNode::TriggerOutput(FName PinName, const bool bFinish /*= false*/, con
 	}
 
 #if !UE_BUILD_SHIPPING
-	if (OutputPins.Contains(Local_PinName))
+	if (OutputPins.Contains(PinName))
 	{
 		// record for debugging, even if nothing is connected to this pin
-		TArray<FPinRecord>& Records = OutputRecords.FindOrAdd(Local_PinName);
-		Records.Add(FPinRecord(FApp::GetCurrentTime(), bForcedActivation));
+		TArray<FPinRecord>& Records = OutputRecords.FindOrAdd(PinName);
+		Records.Add(FPinRecord(FApp::GetCurrentTime(), ActivationType));
 
 #if WITH_EDITOR
 		if (GetWorld()->WorldType == EWorldType::PIE && UFlowAsset::GetFlowGraphInterface().IsValid())
 		{
-			UFlowAsset::GetFlowGraphInterface()->OnOutputTriggered(GraphNode, OutputPins.IndexOfByKey(Local_PinName));
+			UFlowAsset::GetFlowGraphInterface()->OnOutputTriggered(GraphNode, OutputPins.IndexOfByKey(PinName));
 		}
 #endif // WITH_EDITOR
 	}
 	else
 	{
-		LogError(FString::Printf(TEXT("Output Pin name %s invalid"), *Local_PinName.ToString()));
+		LogError(FString::Printf(TEXT("Output Pin name %s invalid"), *PinName.ToString()));
 	}
 #endif // UE_BUILD_SHIPPING
 
 	// call the next node
-	if (OutputPins.Contains(Local_PinName) && Connections.Contains(Local_PinName))
+	if (OutputPins.Contains(PinName) && Connections.Contains(PinName))
 	{
-		const FConnectedPin FlowPin = GetConnection(Local_PinName);
+		const FConnectedPin FlowPin = GetConnection(PinName);
 		GetFlowAsset()->TriggerInput(FlowPin.NodeGuid, FlowPin.PinName);
 	}
+}
+
+void UFlowNode::TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish, const EFlowPinActivationType ActivationType /*= Default*/)
+{
+	TriggerOutput(Pin.PinName, bFinish, ActivationType);
 }
 
 void UFlowNode::TriggerOutput(const FString& PinName, const bool bFinish)
@@ -510,6 +580,11 @@ TArray<FPinRecord> UFlowNode::GetPinRecords(const FName& PinName, const EEdGraph
 FString UFlowNode::GetStatusString() const
 {
 	return K2_GetStatusString();
+}
+
+bool UFlowNode::GetStatusBackgroundColor(FLinearColor& OutColor) const
+{
+	return K2_GetStatusBackgroundColor(OutColor);
 }
 
 FString UFlowNode::GetAssetPath()
@@ -633,7 +708,20 @@ void UFlowNode::LoadInstance(const FFlowNodeSaveData& NodeRecord)
 		FlowAsset->OnActivationStateLoaded(this);
 	}
 
-	OnLoad();
+	switch (SignalMode)
+	{
+		case EFlowSignalMode::Enabled:
+			OnLoad();
+			break;
+		case EFlowSignalMode::Disabled:
+			// designer doesn't want to execute this node's logic at all, so we kill it
+			Finish();
+			break;
+		case EFlowSignalMode::PassThrough:
+			OnPassThrough();
+			break;
+		default: ;
+	}
 }
 
 void UFlowNode::OnSave_Implementation()
@@ -642,4 +730,20 @@ void UFlowNode::OnSave_Implementation()
 
 void UFlowNode::OnLoad_Implementation()
 {
+}
+
+void UFlowNode::OnPassThrough_Implementation()
+{
+	// trigger all connected outputs
+	// pin connections aren't serialized to the SaveGame, so users can safely change connections post game release
+	for (const FFlowPin& OutputPin : OutputPins)
+	{
+		if (Connections.Contains(OutputPin.PinName))
+		{
+			TriggerOutput(OutputPin.PinName, false, EFlowPinActivationType::PassThrough);
+		}
+	}
+
+	// deactivate node, so it doesn't get saved to a new SaveGame
+	Finish();
 }

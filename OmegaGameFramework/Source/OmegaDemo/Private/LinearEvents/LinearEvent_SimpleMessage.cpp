@@ -2,7 +2,7 @@
 
 
 #include "LinearEvents/LinearEvent_SimpleMessage.h"
-#include "Message/OmegaMessageSubsystem.h"
+
 #include "OmegaDataItem.h"
 #include "OmegaGameManager.h"
 #include "OmegaLinearEventSubsystem.h"
@@ -30,16 +30,8 @@ void ULinearEvent_SimpleMessage::GetGeneralDataText_Implementation(const FString
 void ULinearEvent_SimpleMessage::Native_Begin()
 {
 	Super::Native_Begin();
-
-	UOmegaGameplayMessage* NewMessage = NewObject<UOmegaGameplayMessage>(GetWorld()->GetGameInstance(), UOmegaGameplayMessage::StaticClass());
-	NewMessage->Temp_Text = Message;
-	NewMessage->Temp_Instigator = Instigator;
-	NewMessage->Temp_Tags = Tags;
 	
-	FOmegaGameplayMessageData LocalMessageData;
-	LocalMessageData.Message = NewMessage;
-	
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->FireGameplayMessage(LocalMessageData);
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(FName("SimpleMessage"), this);
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
 	
 }
@@ -79,10 +71,8 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	LocalMessage->EventEnded.AddDynamic(this, &UFlowNode_SimpleMessage::LocalFinish);
 	LocalMessage->Instigator = Instigator;
 	LocalMessage->Message = Message;
-	LocalMessage->Tags = Tags;
-	
 	LocalMessage->Native_Begin();
-	TriggerOutput("Begin", true, false);
+	TriggerOutput("Begin", true,  EFlowPinActivationType::Default);
 }
 
 #if WITH_EDITOR
@@ -102,5 +92,5 @@ FString UFlowNode_SimpleMessage::GetNodeDescription() const
 
 void UFlowNode_SimpleMessage::LocalFinish(const FString& Flag)
 {
-	TriggerOutput("Finish", true, false);
+	TriggerOutput("Finish", true, EFlowPinActivationType::Default);
 }

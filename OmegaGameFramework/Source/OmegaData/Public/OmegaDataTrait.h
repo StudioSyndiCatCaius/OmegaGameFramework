@@ -44,6 +44,15 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait")
 	FGameplayTagContainer AppendedItemTags() const;
 
+	//###############################################################################
+	// Actor Events
+	//###############################################################################
+
+	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait")
+	void OnActorTagEvent(AActor* Actor, FGameplayTag Event) const;
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait")
+	void OnActorTick(AActor* Actor, float DeltaTime) const;
 	// SOFT PROPERTIES
 	
 	//###############################################################################

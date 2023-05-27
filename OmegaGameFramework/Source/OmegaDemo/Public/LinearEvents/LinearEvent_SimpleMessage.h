@@ -6,7 +6,9 @@
 #include "DataInterface_General.h"
 #include "GameplayTagContainer.h"
 #include "Event/OmegaLinearEvent.h"
+#include "Gameplay/GameplayTagsInterface.h"
 #include "Nodes/FlowNode.h"
+#include "UObject/Object.h"
 #include "LinearEvent_SimpleMessage.generated.h"
 
 class UOmegaDataItem;
@@ -24,8 +26,7 @@ public:
 	UOmegaDataItem* Instigator;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn="true"))
 	FText Message;
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn="true"))
-	FGameplayTagContainer Tags;
+
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void Native_Begin() override;
@@ -34,7 +35,7 @@ public:
 	void LocalGEvent(FName Event, UObject* Context);
 };
 
-UCLASS(DisplayName="Gameplay Message")
+UCLASS(DisplayName="Simple Message")
 class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode
 {
 	GENERATED_BODY()
@@ -52,10 +53,8 @@ public:
 	UOmegaDataItem* Instigator;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
 	FText Message;
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
-	FGameplayTagContainer Tags;
+
 	
 	UFUNCTION()
 	void LocalFinish(const FString& Flag);
 };
-

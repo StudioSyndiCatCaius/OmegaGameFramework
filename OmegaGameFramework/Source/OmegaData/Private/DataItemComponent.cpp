@@ -44,8 +44,14 @@ void UDataItemComponent::BeginPlay()
 void UDataItemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	
+	if(GetDataItem())
+	{
+		for(auto* TempTrait : GetDataItem()->GetAllValidTraits())
+		{
+			TempTrait->OnActorTick(GetOwner(),DeltaTime);
+		}
+	}
 }
 
 void UDataItemComponent::SetDataItem(UOmegaDataItem* NewDataItem)
@@ -85,5 +91,16 @@ TArray<UPrimaryDataAsset*> UDataItemComponent::GetSkills_Implementation()
 		return IDataInterface_SkillSource::Execute_GetSkills(DataItem);
 	}
 	return IDataInterface_SkillSource::GetSkills_Implementation();
+}
+
+void UDataItemComponent::OnTagEvent_Implementation(FGameplayTag Event)
+{
+	if(GetDataItem())
+	{
+		for(auto* TempTrait : GetDataItem()->GetAllValidTraits())
+		{
+			TempTrait->OnActorTagEvent(GetOwner(),Event);
+		}
+	}
 }
 

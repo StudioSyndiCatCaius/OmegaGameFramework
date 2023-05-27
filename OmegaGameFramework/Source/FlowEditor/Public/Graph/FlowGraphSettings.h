@@ -15,25 +15,30 @@ UCLASS(Config = Editor, defaultconfig, meta = (DisplayName = "Flow Graph"))
 class UFlowGraphSettings final : public UDeveloperSettings
 {
 	GENERATED_UCLASS_BODY()
+
 	static UFlowGraphSettings* Get() { return StaticClass()->GetDefaultObject<UFlowGraphSettings>(); }
 
 	/** Show Flow Asset in Flow category of "Create Asset" menu?
 	* Requires restart after making a change. */
-	UPROPERTY(EditAnywhere, config, Category = "Default UI")
+	UPROPERTY(EditAnywhere, config, Category = "Default UI", meta = (ConfigRestartRequired = true))
 	bool bExposeFlowAssetCreation;
 
 	/** Show Flow Node blueprint in Flow category of "Create Asset" menu?
 	* Requires restart after making a change. */
-	UPROPERTY(EditAnywhere, config, Category = "Default UI")
+	UPROPERTY(EditAnywhere, config, Category = "Default UI", meta = (ConfigRestartRequired = true))
 	bool bExposeFlowNodeCreation;
 	
 	/** Show Flow Asset toolbar?
 	* Requires restart after making a change. */
-	UPROPERTY(EditAnywhere, config, Category = "Default UI")
+	UPROPERTY(EditAnywhere, config, Category = "Default UI", meta = (ConfigRestartRequired = true))
 	bool bShowAssetToolbarAboveLevelEditor;
 
-	UPROPERTY(EditAnywhere, config, Category = "Default UI")
+	UPROPERTY(EditAnywhere, config, Category = "Default UI", meta = (ConfigRestartRequired = true))
 	FText FlowAssetCategoryName;
+
+	/** Use this class to create new assets. Class picker will show up if None */
+	UPROPERTY(EditAnywhere, config, Category = "Default UI")
+	TSubclassOf<class UFlowAsset> DefaultFlowAssetClass;
 
 	/** Flow Asset class allowed to be assigned via Level Editor toolbar*/
 	UPROPERTY(EditAnywhere, config, Category = "Default UI", meta = (EditCondition = "bShowAssetToolbarAboveLevelEditor"))

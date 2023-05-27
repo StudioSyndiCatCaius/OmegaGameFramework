@@ -15,7 +15,7 @@ class UEdGraphSchema;
 class UFlowNode;
 
 USTRUCT()
-struct FFlowBreakpoint
+struct FLOWEDITOR_API FFlowBreakpoint
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -44,6 +44,8 @@ struct FFlowBreakpoint
 
 	void ToggleBreakpoint();
 };
+
+DECLARE_DELEGATE(FFlowGraphNodeEvent);
 
 /**
  * Graph representation of the Flow Node
@@ -152,6 +154,7 @@ public:
 
 	// Information displayed while node is active
 	FString GetStatusString() const;
+	FLinearColor GetStatusBackgroundColor() const;
 
 	// Check this to display information while node is preloaded
 	bool IsContentPreloaded() const;
@@ -190,7 +193,7 @@ public:
 	void AddUserOutput();
 
 	// Add pin only on this instance of node, under default pins
-	void AddInstancePin(const EEdGraphPinDirection Direction, const FName& PinName);
+	void AddInstancePin(const EEdGraphPinDirection Direction, const uint8 NumberedPinsAmount);
 
 	// Call node and graph updates manually, if using bBatchRemoval
 	void RemoveInstancePin(UEdGraphPin* Pin);
@@ -220,6 +223,14 @@ private:
 // Execution Override
 
 public:
+	FFlowGraphNodeEvent OnSignalModeChanged;
+	
 	// Pin activation forced by user during PIE
-	void ForcePinActivation(const FEdGraphPinReference PinReference) const;
+	virtual void ForcePinActivation(const FEdGraphPinReference PinReference) const;
+
+	// Pass-through forced by designer, set per node instance
+	virtual void SetSignalMode(const EFlowSignalMode Mode);
+
+	virtual EFlowSignalMode GetSignalMode() const;
+	virtual bool CanSetSignalMode(const EFlowSignalMode Mode) const;
 };

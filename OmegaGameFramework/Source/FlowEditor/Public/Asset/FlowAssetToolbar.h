@@ -8,11 +8,12 @@
 #include "FlowAsset.h"
 
 class FFlowAssetEditor;
+class UToolMenu;
 
 //////////////////////////////////////////////////////////////////////////
 // Flow Asset Instance List
 
-class SFlowAssetInstanceList final : public SCompoundWidget
+class FLOWEDITOR_API SFlowAssetInstanceList final : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SFlowAssetInstanceList) {}
@@ -43,7 +44,7 @@ private:
 /**
  * The kind of breadcrumbs that Flow Debugger uses
  */
-struct FFlowBreadcrumb
+struct FLOWEDITOR_API FFlowBreadcrumb
 {
 	FString AssetPathName;
 	FName InstanceName;
@@ -59,7 +60,7 @@ struct FFlowBreadcrumb
 	{}
 };
 
-class SFlowAssetBreadcrumb final : public SCompoundWidget
+class FLOWEDITOR_API SFlowAssetBreadcrumb final : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SFlowAssetInstanceList) {}
@@ -78,16 +79,18 @@ private:
 //////////////////////////////////////////////////////////////////////////
 // Flow Asset Toolbar
 
-class FFlowAssetToolbar final : public TSharedFromThis<FFlowAssetToolbar>
+class FLOWEDITOR_API FFlowAssetToolbar final : public TSharedFromThis<FFlowAssetToolbar>
 {
 public:
 	explicit FFlowAssetToolbar(const TSharedPtr<FFlowAssetEditor> InAssetEditor, UToolMenu* ToolbarMenu);
 
 private:
 	void BuildAssetToolbar(UToolMenu* ToolbarMenu) const;
+	TSharedRef<SWidget> MakeDiffMenu() const;
+	
 	void BuildDebuggerToolbar(UToolMenu* ToolbarMenu);
 
-public:	
+public:
 	TSharedPtr<SFlowAssetInstanceList> GetAssetInstanceList() const { return AssetInstanceList; }
 
 private:

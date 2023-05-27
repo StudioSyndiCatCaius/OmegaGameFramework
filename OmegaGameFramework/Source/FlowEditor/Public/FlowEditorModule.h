@@ -5,6 +5,8 @@
 #include "AssetTypeCategories.h"
 #include "IAssetTypeActions.h"
 #include "Modules/ModuleInterface.h"
+#include "PropertyEditorDelegates.h"
+#include "Toolkits/IToolkit.h"
 
 class FSlateStyleSet;
 struct FGraphPanelPinConnectionFactory;
@@ -22,7 +24,6 @@ public:
 private:
 	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetActions;
 	TSet<FName> CustomClassLayouts;
-	TSharedPtr<FGraphPanelPinConnectionFactory> FlowGraphConnectionFactory;
 
 public:
 	virtual void StartupModule() override;

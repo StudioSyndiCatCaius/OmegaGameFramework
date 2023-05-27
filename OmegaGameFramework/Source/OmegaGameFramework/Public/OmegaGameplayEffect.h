@@ -33,7 +33,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEffectTriggered, AOmegaGameplayE
 
 UENUM()
 enum class EEffectLifetime : uint8
-
 {
 	// Effect is instantly triggered and destruct
 	EffectLifetime_Instant        UMETA(DisplayName = "Instant"),

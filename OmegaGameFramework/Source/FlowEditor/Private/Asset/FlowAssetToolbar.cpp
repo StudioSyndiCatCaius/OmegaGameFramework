@@ -1,7 +1,9 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
 
 #include "Asset/FlowAssetToolbar.h"
+
 #include "Asset/FlowAssetEditor.h"
+#include "Asset/SAssetRevisionMenu.h"
 #include "FlowEditorCommands.h"
 
 #include "FlowAsset.h"
@@ -15,6 +17,12 @@
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
+
+#include "AssetToolsModule.h"
+#include "IAssetTypeActions.h"
+#include "ISourceControlModule.h"
+#include "ISourceControlProvider.h"
+#include "SourceControlHelpers.h"
 
 #define LOCTEXT_NAMESPACE "FlowDebuggerToolbar"
 
@@ -38,10 +46,10 @@ void SFlowAssetInstanceList::Construct(const FArguments& InArgs, const TWeakObje
 		.OnGenerateWidget(this, &SFlowAssetInstanceList::OnGenerateWidget)
 		.OnSelectionChanged(this, &SFlowAssetInstanceList::OnSelectionChanged)
 		.Visibility_Static(&FFlowAssetEditor::GetDebuggerVisibility)
-		[
-			SNew(STextBlock)
-			.Text(this, &SFlowAssetInstanceList::GetSelectedInstanceName)
-		];
+	[
+		SNew(STextBlock)
+		.Text(this, &SFlowAssetInstanceList::GetSelectedInstanceName)
+	];
 
 	ChildSlot
 	[
@@ -118,10 +126,10 @@ void SFlowAssetBreadcrumb::Construct(const FArguments& InArgs, const TWeakObject
 	SAssignNew(BreadcrumbTrail, SBreadcrumbTrail<FFlowBreadcrumb>)
 		.OnCrumbClicked(this, &SFlowAssetBreadcrumb::OnCrumbClicked)
 		.Visibility_Static(&FFlowAssetEditor::GetDebuggerVisibility)
-		.ButtonStyle(FEditorStyle::Get(), "FlatButton")
-		.DelimiterImage(FEditorStyle::GetBrush("Sequencer.BreadcrumbIcon"))
+		.ButtonStyle(FAppStyle::Get(), "FlatButton")
+		.DelimiterImage(FAppStyle::GetBrush("Sequencer.BreadcrumbIcon"))
 		.PersistentBreadcrumbs(true)
-		.TextStyle(FEditorStyle::Get(), "Sequencer.BreadcrumbText");
+		.TextStyle(FAppStyle::Get(), "Sequencer.BreadcrumbText");
 
 	ChildSlot
 	[
@@ -143,10 +151,10 @@ void SFlowAssetBreadcrumb::Construct(const FArguments& InArgs, const TWeakObject
 		TArray<UFlowAsset*> InstancesFromRoot = {InspectedInstance};
 
 		const UFlowAsset* CheckedInstance = InspectedInstance;
-		while (UFlowAsset* MasterInstance = CheckedInstance->GetMasterInstance())
+		while (UFlowAsset* ParentInstance = CheckedInstance->GetParentInstance())
 		{
-			InstancesFromRoot.Insert(MasterInstance, 0);
-			CheckedInstance = MasterInstance;
+			InstancesFromRoot.Insert(ParentInstance, 0);
+			CheckedInstance = ParentInstance;
 		}
 
 		for (UFlowAsset* Instance : InstancesFromRoot)
@@ -186,23 +194,115 @@ void FFlowAssetToolbar::BuildAssetToolbar(UToolMenu* ToolbarMenu) const
 {
 	FToolMenuSection& Section = ToolbarMenu->AddSection("Editing");
 	Section.InsertPosition = FToolMenuInsert("Asset", EToolMenuInsertType::After);
-	
+
 	Section.AddEntry(FToolMenuEntry::InitToolBarButton(FFlowToolbarCommands::Get().RefreshAsset));
+
+	// visual diff: menu to choose asset revision compared with the current one 
+	FToolMenuSection& DiffSection = ToolbarMenu->AddSection("SourceControl");
+	DiffSection.InsertPosition = FToolMenuInsert("Asset", EToolMenuInsertType::After);
+	DiffSection.AddDynamicEntry("SourceControlCommands", FNewToolMenuSectionDelegate::CreateLambda([this](FToolMenuSection& InSection)
+	{
+		InSection.InsertPosition = FToolMenuInsert();
+		FToolMenuEntry DiffEntry = FToolMenuEntry::InitComboButton(
+			"Diff",
+			FUIAction(),
+			FOnGetContent::CreateRaw(this, &FFlowAssetToolbar::MakeDiffMenu),
+			LOCTEXT("Diff", "Diff"),
+			LOCTEXT("FlowAssetEditorDiffToolTip", "Diff against previous revisions"),
+			FSlateIcon(FAppStyle::Get().GetStyleSetName(), "BlueprintDiff.ToolbarIcon")
+		);
+		DiffEntry.StyleNameOverride = "CalloutToolbar";
+		InSection.AddEntry(DiffEntry);
+	}));
+}
+
+/** Delegate called to diff a specific revision with the current */
+// Copy from FBlueprintEditorToolbar::OnDiffRevisionPicked
+static void OnDiffRevisionPicked(FRevisionInfo const& RevisionInfo, const FString& Filename, TWeakObjectPtr<UObject> CurrentAsset)
+{
+	ISourceControlProvider& SourceControlProvider = ISourceControlModule::Get().GetProvider();
+
+	// Get the SCC state
+	const FSourceControlStatePtr SourceControlState = SourceControlProvider.GetState(Filename, EStateCacheUsage::Use);
+	if (SourceControlState.IsValid())
+	{
+		for (int32 HistoryIndex = 0; HistoryIndex < SourceControlState->GetHistorySize(); HistoryIndex++)
+		{
+			TSharedPtr<ISourceControlRevision, ESPMode::ThreadSafe> Revision = SourceControlState->GetHistoryItem(HistoryIndex);
+			check(Revision.IsValid());
+			if (Revision->GetRevision() == RevisionInfo.Revision)
+			{
+				// Get the revision of this package from source control
+				FString PreviousTempPkgName;
+				if (Revision->Get(PreviousTempPkgName))
+				{
+					// Try and load that package
+					UPackage* PreviousTempPkg = LoadPackage(nullptr, *PreviousTempPkgName, LOAD_ForDiff | LOAD_DisableCompileOnLoad);
+					if (PreviousTempPkg)
+					{
+						const FString PreviousAssetName = FPaths::GetBaseFilename(Filename, true);
+						UObject* PreviousAsset = FindObject<UObject>(PreviousTempPkg, *PreviousAssetName);
+						if (PreviousAsset)
+						{
+							const FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+							const FRevisionInfo OldRevision = {Revision->GetRevision(), Revision->GetCheckInIdentifier(), Revision->GetDate()};
+							const FRevisionInfo CurrentRevision = {TEXT(""), Revision->GetCheckInIdentifier(), Revision->GetDate()};
+							AssetToolsModule.Get().DiffAssets(PreviousAsset, CurrentAsset.Get(), OldRevision, CurrentRevision);
+						}
+					}
+					else
+					{
+						FMessageDialog::Open(EAppMsgType::Ok, NSLOCTEXT("SourceControl.HistoryWindow", "UnableToLoadAssets", "Unable to load assets to diff. Content may no longer be supported?"));
+					}
+				}
+				break;
+			}
+		}
+	}
+}
+
+// Variant of FBlueprintEditorToolbar::MakeDiffMenu
+TSharedRef<SWidget> FFlowAssetToolbar::MakeDiffMenu() const
+{
+	if (ISourceControlModule::Get().IsEnabled() && ISourceControlModule::Get().GetProvider().IsAvailable())
+	{
+		UFlowAsset* FlowAsset = FlowAssetEditor.Pin()->GetFlowAsset();
+		if (FlowAsset)
+		{
+			FString Filename = SourceControlHelpers::PackageFilename(FlowAsset->GetPathName());
+			TWeakObjectPtr<UObject> AssetPtr = FlowAsset;
+
+			// Add our async SCC task widget
+			return SNew(SAssetRevisionMenu, Filename)
+				.OnRevisionSelected_Static(&OnDiffRevisionPicked, AssetPtr);
+		}
+		else
+		{
+			// if asset is null then this means that multiple assets are selected
+			FMenuBuilder MenuBuilder(true, nullptr);
+			MenuBuilder.AddMenuEntry(LOCTEXT("NoRevisionsForMultipleFlowAssets", "Multiple Flow Assets selected"), FText(), FSlateIcon(), FUIAction());
+			return MenuBuilder.MakeWidget();
+		}
+	}
+
+	FMenuBuilder MenuBuilder(true, nullptr);
+	MenuBuilder.AddMenuEntry(LOCTEXT("SourceControlDisabled", "Source control is disabled"), FText(), FSlateIcon(), FUIAction());
+	return MenuBuilder.MakeWidget();
 }
 
 void FFlowAssetToolbar::BuildDebuggerToolbar(UToolMenu* ToolbarMenu)
 {
 	FToolMenuSection& Section = ToolbarMenu->AddSection("Debugging");
 	Section.InsertPosition = FToolMenuInsert("Asset", EToolMenuInsertType::After);
-	
+
 	FPlayWorldCommands::BuildToolbar(Section);
 
 	TWeakObjectPtr<UFlowAsset> TemplateAsset = FlowAssetEditor.Pin()->GetFlowAsset();
-	
+
 	AssetInstanceList = SNew(SFlowAssetInstanceList, TemplateAsset);
 	Section.AddEntry(FToolMenuEntry::InitWidget("AssetInstances", AssetInstanceList.ToSharedRef(), FText(), true));
 
-	Section.AddEntry(FToolMenuEntry::InitToolBarButton(FFlowToolbarCommands::Get().GoToMasterInstance));
+	Section.AddEntry(FToolMenuEntry::InitToolBarButton(FFlowToolbarCommands::Get().GoToParentInstance));
 
 	Breadcrumb = SNew(SFlowAssetBreadcrumb, TemplateAsset);
 	Section.AddEntry(FToolMenuEntry::InitWidget("AssetBreadcrumb", Breadcrumb.ToSharedRef(), FText(), true));

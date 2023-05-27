@@ -23,9 +23,6 @@ public:
 	
 	UPROPERTY()
 	FLinearEventSequence SequenceData;
-	
-	UPROPERTY()
-	int32 ActiveIndex = -1;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnEventSequenceFinish OnEventSequenceFinish;
@@ -37,7 +34,19 @@ public:
 	UFUNCTION()
 	void EndInstance(const FString& Flag);
 
-	const UOmegaLinearEvent* GetEventFromID(FName ID);
+	UOmegaLinearEvent* GetEventFromID(FName ID);
+
+	UPROPERTY()
+	UOmegaLinearEvent* CurrentEvent;
+
+	int32 GetCurrentEventIndex() const
+	{
+		if(CurrentEvent)
+		{
+			return SequenceData.Events.Find(CurrentEvent);
+		}
+		return -1;
+	}
 
 	UFUNCTION()
 	void StartEvent(UOmegaLinearEvent* Event);
@@ -45,17 +54,31 @@ public:
 
 inline void UOmegaLinearEventInstance::NextEvent(const FString& Flag)
 {
-	if(SequenceData.Events.IsValidIndex(ActiveIndex))
+	if(SequenceData.Events.IsValidIndex(GetCurrentEventIndex()))
 	{
-		SequenceData.Events[ActiveIndex]->EventEnded.RemoveDynamic(this, &UOmegaLinearEventInstance::NextEvent);
+		SequenceData.Events[GetCurrentEventIndex()]->EventEnded.RemoveDynamic(this, &UOmegaLinearEventInstance::NextEvent);
 	}
+
+	const int32 NextIndex = GetCurrentEventIndex() +1;
 	
-	ActiveIndex = ActiveIndex +1;
-	
-	if(SequenceData.Events.IsValidIndex(ActiveIndex))
+	UOmegaLinearEvent* IncomingEvent = nullptr;
+
+	// Try to get event from id.
+	if(CurrentEvent && !CurrentEvent->IncomingEventID.IsNone())
 	{
-		UOmegaLinearEvent* TempEvent = SequenceData.Events[ActiveIndex];
-		StartEvent(TempEvent);
+		IncomingEvent = GetEventFromID(CurrentEvent->IncomingEventID);
+	}
+	//Try and get next event
+	else if (SequenceData.Events.IsValidIndex(NextIndex))
+	{
+		IncomingEvent = SequenceData.Events[NextIndex];
+	}
+
+	// Try run incoming event
+	if(IncomingEvent)
+	{
+		CurrentEvent = IncomingEvent;
+		StartEvent(IncomingEvent);
 	}
 	else
 	{
@@ -70,7 +93,7 @@ inline void UOmegaLinearEventInstance::EndInstance(const FString& Flag)
 	SubsystemRef->TempEvents.Remove(this);
 }
 
-inline const UOmegaLinearEvent* UOmegaLinearEventInstance::GetEventFromID(FName ID)
+inline UOmegaLinearEvent* UOmegaLinearEventInstance::GetEventFromID(FName ID)
 {
 	for(UOmegaLinearEvent* TempEvent : SequenceData.Events)
 	{
@@ -87,7 +110,7 @@ inline void UOmegaLinearEventInstance::StartEvent(UOmegaLinearEvent* Event)
 	Event->EventEnded.AddDynamic(this, &UOmegaLinearEventInstance::NextEvent);
 	Event->GameInstanceRef = SubsystemRef->GameInstanceReference;
 	Event->WorldPrivate = SubsystemRef->GetWorld();
-	OnEventUpdated.Broadcast(ActiveIndex,Event);
+	OnEventUpdated.Broadcast(GetCurrentEventIndex(),Event);
 	SubsystemRef->OnLinearEventBegin.Broadcast(Event);
 	Event->Native_Begin();
 }

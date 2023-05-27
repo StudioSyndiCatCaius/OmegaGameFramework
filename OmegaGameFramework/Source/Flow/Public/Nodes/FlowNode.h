@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "EdGraph/EdGraphNode.h"
 #include "Engine/StreamableManager.h"
 #include "GameplayTagContainer.h"
 #include "VisualLogger/VisualLoggerDebugSnapshotInterface.h"
+#include "Templates/SubclassOf.h"
 
 #include "FlowTypes.h"
 #include "Nodes/FlowPin.h"
@@ -31,6 +31,8 @@ class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInte
 	friend class UFlowAsset;
 	friend class UFlowGraphNode;
 	friend class UFlowGraphSchema;
+	friend class SFlowInputPinHandle;
+	friend class SFlowOutputPinHandle;
 
 //////////////////////////////////////////////////////////////////////////
 // Node
@@ -41,6 +43,9 @@ private:
 
 #if WITH_EDITORONLY_DATA
 protected:
+	TArray<TSubclassOf<UFlowAsset>> AllowedAssetClasses;
+	TArray<TSubclassOf<UFlowAsset>> DeniedAssetClasses;
+	
 	UPROPERTY()
 	FString Category;
 
@@ -69,7 +74,7 @@ public:
 	// --
 
 	// Opportunity to update node's data before UFlowGraphNode would call ReconstructNode()
-	virtual void FixNode(UEdGraphNode* NewGraph);
+	virtual void FixNode(UEdGraphNode* NewGraphNode);
 #endif
 
 	UEdGraphNode* GetGraphNode() const { return GraphNode; }
@@ -92,7 +97,7 @@ public:
 
 protected:
 	// Short summary of node's content - displayed over node as NodeInfoPopup
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "GetNodeDescription"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Node Description"))
 	FString K2_GetNodeDescription() const;
 
 	// Inherits Guid after graph node
@@ -101,13 +106,24 @@ protected:
 
 public:
 	void SetGuid(const FGuid NewGuid) { NodeGuid = NewGuid; }
-	
-	UFUNCTION(BlueprintPure, Category="FlowNode")
+	UFUNCTION(BlueprintPure, Category="Flow Node")
 	FGuid GetGuid() const { return NodeGuid; }
 
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowAsset* GetFlowAsset() const;
 
+protected:
+	virtual bool CanFinishGraph() const { return false; }
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "FlowNode")
+	TArray<EFlowSignalMode> AllowedSignalModes;
+	
+	// If enabled, signal will pass through node without calling ExecuteInput()
+	// Designed to handle patching
+	UPROPERTY()
+	EFlowSignalMode SignalMode;
+	
 //////////////////////////////////////////////////////////////////////////
 // All created pins (default, class-specific and added by user)
 
@@ -131,6 +147,9 @@ protected:
 	void SetNumberedInputPins(const uint8 FirstNumber = 0, const uint8 LastNumber = 1);
 	void SetNumberedOutputPins(const uint8 FirstNumber = 0, const uint8 LastNumber = 1);
 
+	uint8 CountNumberedInputs() const;
+	uint8 CountNumberedOutputs() const;
+	
 	TArray<FFlowPin> GetInputPins() const { return InputPins; }
 	TArray<FFlowPin> GetOutputPins() const { return OutputPins; }
 
@@ -153,15 +172,15 @@ public:
 	virtual bool CanUserAddInput() const;
 	virtual bool CanUserAddOutput() const;
 
-	void RemoveUserInput();
-	void RemoveUserOutput();
+	void RemoveUserInput(const FName& PinName);
+	void RemoveUserOutput(const FName& PinName);
 #endif
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "CanUserAddInput"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Can User Add Input"))
 	bool K2_CanUserAddInput() const;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "CanUserAddOutput"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Can User Add Output"))
 	bool K2_CanUserAddOutput() const;
 
 //////////////////////////////////////////////////////////////////////////
@@ -204,6 +223,9 @@ protected:
 
 	UPROPERTY(SaveGame)
 	EFlowNodeState ActivationState;
+
+public:	
+	EFlowNodeState GetActivationState() const { return ActivationState; }
 	
 #if !UE_BUILD_SHIPPING
 private:
@@ -224,7 +246,7 @@ protected:
 
 	// Event called just after creating the node instance, while initializing the Flow Asset instance
 	// This happens before executing graph, only called during gameplay
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "InitInstance"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Init Instance"))
 	void K2_InitializeInstance();
 
 public:
@@ -235,33 +257,40 @@ protected:
 	virtual void PreloadContent();
 	virtual void FlushContent();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "PreloadContent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Preload Content"))
 	void K2_PreloadContent();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "FlushContent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Flush Content"))
 	void K2_FlushContent();
 
+	virtual void OnActivate();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "On Activate"))
+	void K2_OnActivate();
+	
 	// Trigger execution of input pin
-	void TriggerInput(const FName& PinName, const bool bForcedActivation = false);
+	void TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
 
 	// Method reacting on triggering Input pin
 	virtual void ExecuteInput(const FName& PinName);
 
 	// Event reacting on triggering Input pin
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "ExecuteInput"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Execute Input"))
 	void K2_ExecuteInput(const FName& PinName);
 
 	// Simply trigger the first Output Pin, convenient to use if node has only one output
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
 	void TriggerFirstOutput(const bool bFinish);
 
-	// Trigger Output Pin
 	UFUNCTION(BlueprintCallable, Category = "FlowNode", meta = (HidePin = "bForcedActivation"))
-	void TriggerOutput(FName PinName, const bool bFinish = false, const bool bForcedActivation = false);
+	void TriggerOutput(FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
 
 	void TriggerOutput(const FString& PinName, const bool bFinish = false);
 	void TriggerOutput(const FText& PinName, const bool bFinish = false);
 	void TriggerOutput(const TCHAR* PinName, const bool bFinish = false);
+
+	UFUNCTION(BlueprintCallable, Category = "FlowNode", meta = (HidePin = "ActivationType"))
+	void TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
 
 	// Finish execution of node, it will call Cleanup
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
@@ -282,7 +311,7 @@ public:
 
 protected:
 	// Define what happens when node is terminated from the outside
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "ForceFinishNode"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Force Finish Node"))
 	void K2_ForceFinishNode();
 
 private:
@@ -291,13 +320,13 @@ private:
 #if WITH_EDITOR
 public:
 	UFlowNode* GetInspectedInstance() const;
-	EFlowNodeState GetActivationState() const { return ActivationState; }
 
 	TMap<uint8, FPinRecord> GetWireRecords() const;
 	TArray<FPinRecord> GetPinRecords(const FName& PinName, const EEdGraphPinDirection PinDirection) const;
 
 	// Information displayed while node is working - displayed over node as NodeInfoPopup
 	virtual FString GetStatusString() const;
+	virtual bool GetStatusBackgroundColor(FLinearColor& OutColor) const;
 
 	virtual FString GetAssetPath();
 	virtual UObject* GetAssetToEdit();
@@ -306,16 +335,19 @@ public:
 
 protected:
 	// Information displayed while node is working - displayed over node as NodeInfoPopup
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "GetStatusString"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Status String"))
 	FString K2_GetStatusString() const;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "GetAssetPath"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Status Background Color"))
+	bool K2_GetStatusBackgroundColor(FLinearColor& OutColor) const;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Asset Path"))
 	FString K2_GetAssetPath();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "GetAssetToEdit"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Asset To Edit"))
 	UObject* K2_GetAssetToEdit();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "GetActorToFocus"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Actor To Focus"))
 	AActor* K2_GetActorToFocus();
 
 	template <typename T>
@@ -364,6 +396,9 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "FlowNode")
 	void OnLoad();
 
+	UFUNCTION(BlueprintNativeEvent, Category = "FlowNode")
+	void OnPassThrough();
+	
 private:
 	UPROPERTY()
 	TArray<FName> InputNames_DEPRECATED;

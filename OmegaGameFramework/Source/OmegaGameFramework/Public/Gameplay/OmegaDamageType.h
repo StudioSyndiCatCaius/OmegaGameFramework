@@ -78,3 +78,17 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
 	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
 };
+
+UCLASS(Blueprintable, BlueprintType)
+class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject
+{
+	GENERATED_BODY()
+
+public: 
+
+	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
+	float OnDamageApplied(float BaseDamage) const;
+
+	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
+	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
+};

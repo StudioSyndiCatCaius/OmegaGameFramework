@@ -38,28 +38,33 @@ class OMEGAGAMEFRAMEWORK_API UActorTagEventFunctions : public UBlueprintFunction
 public: 
 	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
 	static void FireActorTagEvents(TMap<AActor*, FGameplayTag> Events);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
+	static void FireTagEventOnActors(TArray<AActor*> Actors, FGameplayTag Event);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
+	static void FireTagEventOnActor(AActor* Actor, FGameplayTag Event);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
+	static void FireTagEventsOnActors(TArray<AActor*> Actors, FGameplayTagContainer Events);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
+	static void FireTagEventsOnActor(AActor* Actor, FGameplayTagContainer Events);
 	
 };
 
-inline void UActorTagEventFunctions::FireActorTagEvents(TMap<AActor*, FGameplayTag> Events)
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API ATagEventDisperser : public AActor, public IActorTagEventInterface
 {
-	TArray<AActor*> TempActorList;
-	Events.GetKeys(TempActorList);
-	for(AActor* TempActor : TempActorList)
-	{
-		if(TempActor)
-		{
-			if(TempActor->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))
-			{
-				IActorTagEventInterface::Execute_OnTagEvent(TempActor, Events[TempActor]);
-			}
-			for(UActorComponent* TempComp : TempActor->GetComponents())
-			{
-				if(TempComp && TempComp->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))
-				{
-					IActorTagEventInterface::Execute_OnTagEvent(TempComp, Events[TempActor]);
-				}
-			}
-		}
-	}
-}
+	GENERATED_BODY()
+
+public:
+
+	ATagEventDisperser();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Actors")
+	TArray<AActor*> TargetActors;
+	
+	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;
+};

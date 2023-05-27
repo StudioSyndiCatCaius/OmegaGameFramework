@@ -38,8 +38,9 @@ void UOmegaLinearEvent::Native_Begin()
 	OnEventBegin();
 }
 
-void UOmegaLinearEvent::Finish(const FString& Flag)
+void UOmegaLinearEvent::Finish(const FString& Flag, const FName JumpToID)
 {
+	IncomingEventID = JumpToID;
 	OnEventEnd(Flag);
 	EventEnded.Broadcast(Flag);
 	

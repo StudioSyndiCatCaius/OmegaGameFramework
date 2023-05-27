@@ -7,6 +7,8 @@
 #include "Player/OmegaPlayerSubsystem.h"
 #include "OmegaGameManager.h"
 
+#include "OmegaGameplaySubsystem.h"
+
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
 	
@@ -30,6 +32,12 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		MenuOpened(Tags, Context, Flag);
 		//ANIMATION
 
+		if(ParallelGameplaySystem)
+		{
+			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(ParallelGameplaySystem, this);
+		}
+
+		
 		if(OpenSound)
 		{
 			PlaySound(OpenSound);
@@ -85,6 +93,7 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		//ANIMATION
 
 		bIsClosing = true;
+		
 		
 		if(GetCloseAnimation())
 		{
@@ -153,6 +162,12 @@ void UMenu::Native_CompleteClose()
 	bIsClosing = false;
 	SetVisibility(ESlateVisibility::Collapsed);
 	UE_LOG(LogTemp, Warning, TEXT("Menu CLOSE Complete") );
+	
+	if(ParallelGameplaySystem)
+	{
+		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(ParallelGameplaySystem, this);
+	}
+	
     RemoveFromParent();
 }
 

@@ -46,11 +46,11 @@ void UFlowNode_Camera_Fade::ExecuteInput(const FName& PinName)
 	LocalEvent->EndAlpha = EndAlpha;
 	
 	LocalEvent->Native_Begin();
-	TriggerOutput("Begin", true, false);
+	TriggerOutput("Begin", true,  EFlowPinActivationType::Default);
 }
 
 
 void UFlowNode_Camera_Fade::LocalFinish(const FString& Flag)
 {
-	TriggerOutput("Finish", true, false);
+	TriggerOutput("Finish", true,  EFlowPinActivationType::Default);
 }

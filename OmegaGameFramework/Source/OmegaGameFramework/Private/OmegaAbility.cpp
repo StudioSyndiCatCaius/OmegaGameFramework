@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "OmegaGameManager.h"
 #include "Components/TimelineComponent.h"
+#include "Gameplay/ActorTagEvent/ActorTagEvent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
@@ -193,6 +194,8 @@ void AOmegaAbility::Execute(UObject* Context)
 		CombatantOwner->CancelAbilitiesWithTags(BlockAbilities);
 		CombatantOwner->SetAbilityActive(true, this);
 
+		UActorTagEventFunctions::FireTagEventsOnActor(CombatantOwner->GetOwner(),OwnerEventsOnActivate);
+		
 		// TIMLEINE
 		if(GetAbilityActivationTimeline())
 		{
@@ -348,6 +351,8 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 		CombatantOwner->SetAbilityActive(false, this);
 		Native_AbilityFinished(bCancel);
 		OnAbilityFinished.Broadcast(bCancel);
+
+		UActorTagEventFunctions::FireTagEventsOnActor(CombatantOwner->GetOwner(),OwnerEventsOnFinish);
 		// TIMLEINE
 		if(GetAbilityActivationTimeline())
 		{

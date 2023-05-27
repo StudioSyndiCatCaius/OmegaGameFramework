@@ -12,6 +12,7 @@
 
 class APlayerController;
 class UWidgetAnimation;
+class AOmegaGameplaySystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
@@ -33,7 +34,7 @@ public:
 
 	void Native_CompleteOpen();
 	
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Tags, Flag"))
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Context, Tags, Flag"))
 		void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 
 	UPROPERTY()
@@ -80,6 +81,10 @@ public:
 	USoundBase* OpenSound;
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase* CloseSound;
+
+	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
+	UPROPERTY(EditAnywhere, Category = "Menu")
+	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
 	
 	//Input
 	virtual bool InputBlocked_Implementation() override;

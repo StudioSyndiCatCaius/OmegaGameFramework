@@ -8,7 +8,7 @@
 
 struct FAssetData;
 
-class SLevelEditorFlow : public SCompoundWidget
+class FLOWEDITOR_API SLevelEditorFlow : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SLevelEditorFlow) {}
@@ -16,14 +16,14 @@ public:
 
 	void Construct(const FArguments& InArgs);
 
-private:
+protected:
 	void OnMapOpened(const FString& Filename, bool bAsTemplate);
 	void CreateFlowWidget();
 
+	FString GetFlowAssetPath() const;
 	void OnFlowChanged(const FAssetData& NewAsset);
-	FString GetFlowPath() const;
-
+	
 	class UFlowComponent* FindFlowComponent() const;
 	
-	FName FlowPath;
+	FString FlowAssetPath;
 };

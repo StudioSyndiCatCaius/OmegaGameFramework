@@ -70,7 +70,7 @@ public class OmegaGameFramework : ModuleRules
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
-				"Actions"
+			
 				
 				// ... add any modules that your module loads dynamically here ...
 			}

@@ -7,11 +7,11 @@
 
 UFlowNode_Timer::UFlowNode_Timer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	  , CompletionTime(1.0f)
-	  , StepTime(0.0f)
-	  , SumOfSteps(0.0f)
-	  , RemainingCompletionTime(0.0f)
-	  , RemainingStepTime(0.0f)
+	, CompletionTime(1.0f)
+	, StepTime(0.0f)
+	, SumOfSteps(0.0f)
+	, RemainingCompletionTime(0.0f)
+	, RemainingStepTime(0.0f)
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
@@ -138,17 +138,18 @@ void UFlowNode_Timer::OnSave_Implementation()
 
 void UFlowNode_Timer::OnLoad_Implementation()
 {
-	if (RemainingStepTime > 0.0f)
+	if (RemainingStepTime > 0.0f || RemainingCompletionTime > 0.0f)
 	{
-		GetWorld()->GetTimerManager().SetTimer(StepTimerHandle, this, &UFlowNode_Timer::OnStep, StepTime, true,
-		                                       RemainingStepTime);
+		if (RemainingStepTime > 0.0f)
+		{
+			GetWorld()->GetTimerManager().SetTimer(StepTimerHandle, this, &UFlowNode_Timer::OnStep, StepTime, true, RemainingStepTime);
+		}
+
+		GetWorld()->GetTimerManager().SetTimer(CompletionTimerHandle, this, &UFlowNode_Timer::OnCompletion, RemainingCompletionTime, false);
+
+		RemainingStepTime = 0.0f;
+		RemainingCompletionTime = 0.0f;
 	}
-
-	GetWorld()->GetTimerManager().SetTimer(CompletionTimerHandle, this, &UFlowNode_Timer::OnCompletion,
-	                                       RemainingCompletionTime, false);
-
-	RemainingStepTime = 0.0f;
-	RemainingCompletionTime = 0.0f;
 }
 
 #if WITH_EDITOR
@@ -158,8 +159,7 @@ FString UFlowNode_Timer::GetNodeDescription() const
 	{
 		if (StepTime > 0.0f)
 		{
-			return FString::SanitizeFloat(CompletionTime, 2).Append(TEXT(", step by ")).Append(
-				FString::SanitizeFloat(StepTime, 2));
+			return FString::SanitizeFloat(CompletionTime, 2).Append(TEXT(", step by ")).Append(FString::SanitizeFloat(StepTime, 2));
 		}
 
 		return FString::SanitizeFloat(CompletionTime, 2);
@@ -177,8 +177,7 @@ FString UFlowNode_Timer::GetStatusString() const
 
 	if (CompletionTimerHandle.IsValid() && GetWorld())
 	{
-		return TEXT("Progress: ") + GetProgressAsString(
-			GetWorld()->GetTimerManager().GetTimerElapsed(CompletionTimerHandle));
+		return TEXT("Progress: ") + GetProgressAsString(GetWorld()->GetTimerManager().GetTimerElapsed(CompletionTimerHandle));
 	}
 
 	return FString();

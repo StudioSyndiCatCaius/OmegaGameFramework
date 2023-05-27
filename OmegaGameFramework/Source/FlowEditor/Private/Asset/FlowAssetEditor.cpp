@@ -111,17 +111,17 @@ void FFlowAssetEditor::RegisterTabSpawners(const TSharedRef<class FTabManager>& 
 	InTabManager->RegisterTabSpawner(GraphTab, FOnSpawnTab::CreateSP(this, &FFlowAssetEditor::SpawnTab_GraphCanvas))
 				.SetDisplayName(LOCTEXT("GraphTab", "Viewport"))
 				.SetGroup(WorkspaceMenuCategoryRef)
-				.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "GraphEditor.EventGraph_16x"));
+				.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
 
 	InTabManager->RegisterTabSpawner(DetailsTab, FOnSpawnTab::CreateSP(this, &FFlowAssetEditor::SpawnTab_Details))
 				.SetDisplayName(LOCTEXT("DetailsTab", "Details"))
 				.SetGroup(WorkspaceMenuCategoryRef)
-				.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Details"));
+				.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
 
 	InTabManager->RegisterTabSpawner(PaletteTab, FOnSpawnTab::CreateSP(this, &FFlowAssetEditor::SpawnTab_Palette))
 				.SetDisplayName(LOCTEXT("PaletteTab", "Palette"))
 				.SetGroup(WorkspaceMenuCategoryRef)
-				.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "Kismet.Tabs.Palette"));
+				.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "Kismet.Tabs.Palette"));
 }
 
 void FFlowAssetEditor::UnregisterTabSpawners(const TSharedRef<class FTabManager>& InTabManager)
@@ -250,11 +250,11 @@ void FFlowAssetEditor::BindToolbarCommands()
 	ToolkitCommands->Append(FPlayWorldCommands::GlobalPlayWorldActions.ToSharedRef());
 
 	// Debugging
-	ToolkitCommands->MapAction(ToolbarCommands.GoToMasterInstance,
-		FExecuteAction::CreateSP(this, &FFlowAssetEditor::GoToMasterInstance),
-		FCanExecuteAction::CreateSP(this, &FFlowAssetEditor::CanGoToMasterInstance),
+	ToolkitCommands->MapAction(ToolbarCommands.GoToParentInstance,
+		FExecuteAction::CreateSP(this, &FFlowAssetEditor::GoToParentInstance),
+		FCanExecuteAction::CreateSP(this, &FFlowAssetEditor::CanGoToParentInstance),
 		FIsActionChecked(),
-		FIsActionButtonVisible::CreateStatic(&FFlowAssetEditor::IsPIE));
+		FIsActionButtonVisible::CreateSP(this, &FFlowAssetEditor::CanGoToParentInstance));
 }
 
 void FFlowAssetEditor::RefreshAsset()
@@ -268,15 +268,15 @@ void FFlowAssetEditor::RefreshAsset()
 	}
 }
 
-void FFlowAssetEditor::GoToMasterInstance()
+void FFlowAssetEditor::GoToParentInstance()
 {
-	const UFlowAsset* AssetThatInstancedThisAsset = FlowAsset->GetInspectedInstance()->GetMasterInstance();
+	const UFlowAsset* AssetThatInstancedThisAsset = FlowAsset->GetInspectedInstance()->GetParentInstance();
 
 	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset(AssetThatInstancedThisAsset->GetTemplateAsset());
 	AssetThatInstancedThisAsset->GetTemplateAsset()->SetInspectedInstance(AssetThatInstancedThisAsset->GetDisplayName());
 }
 
-bool FFlowAssetEditor::CanGoToMasterInstance()
+bool FFlowAssetEditor::CanGoToParentInstance()
 {
 	return FlowAsset->GetInspectedInstance() && FlowAsset->GetInspectedInstance()->GetNodeOwningThisAssetInstance() != nullptr;
 }
@@ -476,13 +476,34 @@ void FFlowAssetEditor::BindGraphCommands()
 	);
 
 	// Execution Override commands
+	ToolkitCommands->MapAction(FlowGraphCommands.EnableNode,
+		FExecuteAction::CreateSP(this, &FFlowAssetEditor::SetSignalMode, EFlowSignalMode::Enabled),
+		FCanExecuteAction::CreateSP(this, &FFlowAssetEditor::CanSetSignalMode, EFlowSignalMode::Enabled),
+		FIsActionChecked(),
+		FIsActionButtonVisible::CreateSP(this, &FFlowAssetEditor::CanSetSignalMode, EFlowSignalMode::Enabled)
+	);
+
+	ToolkitCommands->MapAction(FlowGraphCommands.DisableNode,
+	FExecuteAction::CreateSP(this, &FFlowAssetEditor::SetSignalMode, EFlowSignalMode::Disabled),
+	FCanExecuteAction::CreateSP(this, &FFlowAssetEditor::CanSetSignalMode, EFlowSignalMode::Disabled),
+	FIsActionChecked(),
+	FIsActionButtonVisible::CreateSP(this, &FFlowAssetEditor::CanSetSignalMode, EFlowSignalMode::Disabled)
+	);
+	
+	ToolkitCommands->MapAction(FlowGraphCommands.SetPassThrough,
+	FExecuteAction::CreateSP(this, &FFlowAssetEditor::SetSignalMode, EFlowSignalMode::PassThrough),
+	FCanExecuteAction::CreateSP(this, &FFlowAssetEditor::CanSetSignalMode, EFlowSignalMode::PassThrough),
+	FIsActionChecked(),
+	FIsActionButtonVisible::CreateSP(this, &FFlowAssetEditor::CanSetSignalMode, EFlowSignalMode::PassThrough)
+	);
+
 	ToolkitCommands->MapAction(FlowGraphCommands.ForcePinActivation,
 		FExecuteAction::CreateSP(this, &FFlowAssetEditor::OnForcePinActivation),
 		FCanExecuteAction::CreateStatic(&FFlowAssetEditor::IsPIE),
 		FIsActionChecked(),
 		FIsActionButtonVisible::CreateStatic(&FFlowAssetEditor::IsPIE)
 	);
-
+	
 	// Jump commands
 	ToolkitCommands->MapAction(FlowGraphCommands.FocusViewport,
 		FExecuteAction::CreateSP(this, &FFlowAssetEditor::FocusViewport),
@@ -1238,11 +1259,36 @@ bool FFlowAssetEditor::CanTogglePinBreakpoint() const
 	return FocusedGraphEditor->GetGraphPinForMenu() != nullptr;
 }
 
+void FFlowAssetEditor::SetSignalMode(const EFlowSignalMode Mode) const
+{
+	for (UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
+	{
+		SelectedNode->SetSignalMode(Mode);
+	}
+
+	FlowAsset->Modify();
+}
+
+bool FFlowAssetEditor::CanSetSignalMode(const EFlowSignalMode Mode) const
+{
+	if (IsPIE())
+	{
+		return false;
+	}
+	
+	for (const UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
+	{
+		return SelectedNode->CanSetSignalMode(Mode);
+	}
+
+	return false;
+}
+
 void FFlowAssetEditor::OnForcePinActivation() const
 {
 	if (UEdGraphPin* Pin = FocusedGraphEditor->GetGraphPinForMenu())
 	{
-		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
+		if (const UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
 			GraphNode->ForcePinActivation(Pin);
 		}

@@ -248,6 +248,15 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 	{
 		// LOAD FINISH
 		OnZoneLoaded.Broadcast(Incoming_LoadTaskZone);
+
+		//ACTIVATE SYSTEMS
+		for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+		{
+			if(TempSys)
+			{
+				GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys);
+			}
+		}
 		
 		//Teleport Player to spawn point
 		if(Incoming_SpawnPoint)
@@ -267,6 +276,15 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 			LoadedZones.Remove(IncomingZone_Unload);
 		}
 		OnZoneUnloaded.Broadcast(Incoming_LoadTaskZone);
+
+		//SHUTDOWN SYSTEMS
+		for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+		{
+			if(TempSys)
+			{
+				GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys);
+			}
+		}
 	}
 
 	if(Local_IsWaitForLoad)

@@ -28,6 +28,7 @@ class UOmegaGameplaySubsystem;
 class ACombatantTargetIndicator;
 class UOmegaFaction;
 class UOmegaDamageType;
+class UOmegaDamageTypeReaction;
 
 class UInputComponent;
 class UEnhancedInputComponent;
@@ -120,6 +121,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
 	int32 Level = 1;
 
+	UPROPERTY(EditAnywhere, Category = "Attributes", AdvancedDisplay)
+	TMap<UOmegaDamageType*,TSubclassOf<UOmegaDamageTypeReaction>> DamageTypeReactions;
+
+	UPROPERTY()
+	TMap<UOmegaDamageType*,UOmegaDamageTypeReaction*> DamageReactionsInstances;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", AdvancedDisplay)
 	TMap<class UOmegaAttribute*, int32> AttributeLevels;
 

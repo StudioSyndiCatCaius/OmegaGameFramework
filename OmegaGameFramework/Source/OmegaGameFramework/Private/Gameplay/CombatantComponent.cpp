@@ -60,6 +60,7 @@ void UCombatantComponent::BeginPlay()
 		TargetIndicator->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 
 	}
+	}
 	
 	InitializeAttributes();
 }

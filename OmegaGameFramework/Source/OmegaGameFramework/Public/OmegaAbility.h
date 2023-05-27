@@ -239,8 +239,19 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayTags")
 	struct FGameplayTagContainer RestrictedOwnerTags;
 
-	class ACharacter* CachedCharacter;
-	class UPawnMovementComponent* TempMoveComp;
+	//Fires these Actor Tag Events on the owner when the ability is ACTIVATED
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayTags")
+	FGameplayTagContainer OwnerEventsOnActivate;
+
+	//Fires these Actor Tag Events on the owner when the ability is FINISHED
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayTags")
+	FGameplayTagContainer OwnerEventsOnFinish;
+
+	UPROPERTY()
+	ACharacter* CachedCharacter;
+	
+	UPROPERTY()
+	UPawnMovementComponent* TempMoveComp;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Ability")
 	UTimelineComponent* GetAbilityActivationTimeline();

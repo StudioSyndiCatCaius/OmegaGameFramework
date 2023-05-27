@@ -11,14 +11,13 @@
 
 #include "FlowAsset.h"
 #include "Nodes/FlowNode.h"
+#include "Nodes/FlowNodeBlueprint.h"
 #include "Nodes/Route/FlowNode_Start.h"
 #include "Nodes/Route/FlowNode_Reroute.h"
 
-#include "AssetRegistryModule.h"
-#include "Developer/ToolMenus/Public/ToolMenus.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "EdGraph/EdGraph.h"
 #include "ScopedTransaction.h"
-#include "UObject/UObjectIterator.h"
 
 #define LOCTEXT_NAMESPACE "FlowGraphSchema"
 
@@ -245,17 +244,72 @@ UClass* UFlowGraphSchema::GetAssignedGraphNodeClass(const UClass* FlowNodeClass)
 	return UFlowGraphNode::StaticClass();
 }
 
-bool UFlowGraphSchema::IsClassContained(const TArray<TSubclassOf<UFlowNode>> Classes, const UClass* Class)
+void UFlowGraphSchema::ApplyNodeFilter(const UFlowAsset* AssetClassDefaults, const UClass* FlowNodeClass, TArray<UFlowNode*>& FilteredNodes)
 {
-	for (const UClass* CurrentClass : Classes)
+	if (FlowNodeClass == nullptr)
 	{
-		if (Class->IsChildOf(CurrentClass))
+		return;
+	}
+
+	UFlowNode* NodeDefaults = FlowNodeClass->GetDefaultObject<UFlowNode>();
+
+	// UFlowNode class limits which UFlowAsset class can use it
+	{
+		for (const UClass* DeniedAssetClass : NodeDefaults->DeniedAssetClasses)
 		{
-			return true;
+			if (DeniedAssetClass && AssetClassDefaults->GetClass()->IsChildOf(DeniedAssetClass))
+			{
+				return;
+			}
+		}
+
+		if (NodeDefaults->AllowedAssetClasses.Num() > 0)
+		{
+			bool bAllowedInAsset = false;
+			for (const UClass* AllowedAssetClass : NodeDefaults->AllowedAssetClasses)
+			{
+				if (AllowedAssetClass && AssetClassDefaults->GetClass()->IsChildOf(AllowedAssetClass))
+				{
+					bAllowedInAsset = true;
+					break;
+				}
+			}
+			if (!bAllowedInAsset)
+			{
+				return;
+			}
 		}
 	}
 
-	return false;
+	// UFlowAsset class can limit which UFlowNode classes can be used
+	{
+		for (const UClass* DeniedNodeClass : AssetClassDefaults->DeniedNodeClasses)
+		{
+			if (DeniedNodeClass && FlowNodeClass->IsChildOf(DeniedNodeClass))
+			{
+				return;
+			}
+		}
+
+		if (AssetClassDefaults->AllowedNodeClasses.Num() > 0)
+		{
+			bool bAllowedInAsset = false;
+			for (const UClass* AllowedNodeClass : AssetClassDefaults->AllowedNodeClasses)
+			{
+				if (AllowedNodeClass && FlowNodeClass->IsChildOf(AllowedNodeClass))
+				{
+					bAllowedInAsset = true;
+					break;
+				}
+			}
+			if (!bAllowedInAsset)
+			{
+				return;
+			}
+		}
+	}
+
+	FilteredNodes.Emplace(NodeDefaults);
 }
 
 void UFlowGraphSchema::GetFlowNodeActions(FGraphActionMenuBuilder& ActionMenuBuilder, const UFlowAsset* AssetClassDefaults, const FString& CategoryName)
@@ -265,38 +319,28 @@ void UFlowGraphSchema::GetFlowNodeActions(FGraphActionMenuBuilder& ActionMenuBui
 		GatherFlowNodes();
 	}
 
-	TArray<UFlowNode*> FlowNodes;
-	FlowNodes.Reserve(NativeFlowNodes.Num() + BlueprintFlowNodes.Num());
-
-	for (const UClass* FlowNodeClass : NativeFlowNodes)
+	// Flow Asset type might limit which nodes are placeable 
+	TArray<UFlowNode*> FilteredNodes;
 	{
-		// Flow Asset type might limit which nodes are placeable 
-		if (IsClassContained(AssetClassDefaults->DeniedNodeClasses, FlowNodeClass))
+		FilteredNodes.Reserve(NativeFlowNodes.Num() + BlueprintFlowNodes.Num());
+
+		for (const UClass* FlowNodeClass : NativeFlowNodes)
 		{
-			continue;
+			ApplyNodeFilter(AssetClassDefaults, FlowNodeClass, FilteredNodes);
 		}
 
-		if (IsClassContained(AssetClassDefaults->AllowedNodeClasses, FlowNodeClass))
+		for (const TPair<FName, FAssetData>& AssetData : BlueprintFlowNodes)
 		{
-			FlowNodes.Emplace(FlowNodeClass->GetDefaultObject<UFlowNode>());
-		}
-	}
-	for (const TPair<FName, FAssetData>& AssetData : BlueprintFlowNodes)
-	{
-		if (const UBlueprint* Blueprint = GetPlaceableNodeBlueprint(AssetData.Value))
-		{
-			for (const UClass* AllowedClass : AssetClassDefaults->AllowedNodeClasses)
+			if (const UBlueprint* Blueprint = GetPlaceableNodeBlueprint(AssetData.Value))
 			{
-				if (Blueprint->GeneratedClass->IsChildOf(AllowedClass))
-				{
-					FlowNodes.Emplace(Blueprint->GeneratedClass->GetDefaultObject<UFlowNode>());
-				}
+				ApplyNodeFilter(AssetClassDefaults, Blueprint->GeneratedClass, FilteredNodes);
 			}
 		}
-	}
-	FlowNodes.Shrink();
 
-	for (const UFlowNode* FlowNode : FlowNodes)
+		FilteredNodes.Shrink();
+	}
+
+	for (const UFlowNode* FlowNode : FilteredNodes)
 	{
 		if ((CategoryName.IsEmpty() || CategoryName.Equals(FlowNode->GetNodeCategory())) && !UFlowGraphSettings::Get()->NodesHiddenFromPalette.Contains(FlowNode->GetClass()))
 		{
@@ -321,7 +365,7 @@ void UFlowGraphSchema::GetCommentAction(FGraphActionMenuBuilder& ActionMenuBuild
 
 bool UFlowGraphSchema::IsFlowNodePlaceable(const UClass* Class)
 {
-	if (Class->HasAnyClassFlags(CLASS_Abstract) || Class->HasAnyClassFlags(CLASS_NotPlaceable) || Class->HasAnyClassFlags(CLASS_Deprecated))
+	if (Class->HasAnyClassFlags(CLASS_Abstract | CLASS_NotPlaceable | CLASS_Deprecated))
 	{
 		return false;
 	}
@@ -392,8 +436,8 @@ void UFlowGraphSchema::GatherFlowNodes()
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
 
 	FARFilter Filter;
-	Filter.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
-	Filter.ClassNames.Add(UBlueprintGeneratedClass::StaticClass()->GetFName());
+	Filter.ClassPaths.Add(UBlueprint::StaticClass()->GetClassPathName());
+	Filter.ClassPaths.Add(UBlueprintGeneratedClass::StaticClass()->GetClassPathName());
 	Filter.bRecursiveClasses = true;
 
 	TArray<FAssetData> FoundAssets;
@@ -426,30 +470,13 @@ void UFlowGraphSchema::AddAsset(const FAssetData& AssetData, const bool bBatch)
 			return;
 		}
 
-		TArray<FName> AncestorClassNames;
-		AssetRegistryModule.Get().GetAncestorClassNames(AssetData.AssetClass, AncestorClassNames);
-		if (!AncestorClassNames.Contains(UBlueprintCore::StaticClass()->GetFName()))
+		if (AssetData.GetClass()->IsChildOf(UFlowNodeBlueprint::StaticClass()))
 		{
-			return;
-		}
+			BlueprintFlowNodes.Emplace(AssetData.PackageName, AssetData);
 
-		FString NativeParentClassPath;
-		AssetData.GetTagValue(FBlueprintTags::NativeParentClassPath, NativeParentClassPath);
-		if (!NativeParentClassPath.IsEmpty())
-		{
-			UObject* Outer = nullptr;
-			ResolveName(Outer, NativeParentClassPath, false, false);
-			const UClass* NativeParentClass = FindObject<UClass>(ANY_PACKAGE, *NativeParentClassPath);
-
-			// accept only Flow Node blueprints
-			if (NativeParentClass && NativeParentClass->IsChildOf(UFlowNode::StaticClass()))
+			if (!bBatch)
 			{
-				BlueprintFlowNodes.Emplace(AssetData.PackageName, AssetData);
-
-				if (!bBatch)
-				{
-					OnNodeListChanged.Broadcast();
-				}
+				OnNodeListChanged.Broadcast();
 			}
 		}
 	}

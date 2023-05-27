@@ -24,7 +24,7 @@ void UGamePreferenceSubsystem::PreloadPrefs()
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;
 	FARFilter Filter;
-	Filter.ClassNames.Add("GamePreferences");
+	Filter.ClassPaths.Add(UGamePreference::StaticClass()->GetClassPathName());
 	
 	for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaSettings>()->Preferences_ScanPaths)
 	{
