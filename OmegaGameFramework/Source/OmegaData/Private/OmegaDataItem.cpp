@@ -5,6 +5,7 @@
 #include "Gameplay/Combatant/DataInterface_SkillSource.h"
 #include "OmegaGameplayEffect.h"
 
+
 bool UOmegaDataItem::AreTagsAccepted(const FString& Query, FGameplayTagContainer Tags)
 {
 	if(TagQueries.Contains(Query))
@@ -311,7 +312,7 @@ TArray<FOmegaAttributeModifier> UOmegaDataItem::GetModifierValues_Implementation
 
 TArray<FOmegaEffectContainer> UOmegaDataItem::GetOmegaEffects_Implementation()
 {
-	TArray<FOmegaEffectContainer> OutEffects;
+	TArray<FOmegaEffectContainer> OutEffects = Effects;
 	
 	for(auto* TempTrait : GetTraitsWithInterface(UDataInterface_OmegaEffect::StaticClass()))
 	{
@@ -330,6 +331,10 @@ TArray<UPrimaryDataAsset*> UOmegaDataItem::GetSkills_Implementation()
 	}
 	return OutSkills;
 }
+
+//############################################################################################################
+// Soft properties
+//############################################################################################################
 
 FString UOmegaDataItem::GetSoftProperty_Implementation(const FString& Property)
 {
@@ -355,3 +360,8 @@ TMap<FString, FString> UOmegaDataItem::GetSoftPropertyMap_Implementation()
 	}
 	return OutVal;
 }
+
+//############################################################################################################
+// ASSET DISPLAY
+//############################################################################################################
+

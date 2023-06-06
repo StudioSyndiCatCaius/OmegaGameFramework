@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "UObject/Interface.h"
+#include "Animation/AnimNotifies/AnimNotify.h"
 #include "ActorTagEvent.generated.h"
 
 // This class does not need to be modified.
@@ -67,4 +68,19 @@ public:
 	TArray<AActor*> TargetActors;
 	
 	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;
+};
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UAnimNotify_TagEvent : public UAnimNotify
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
+
+	UPROPERTY(EditAnywhere, Category="Events")
+	FGameplayTagContainer Events;
+	
 };

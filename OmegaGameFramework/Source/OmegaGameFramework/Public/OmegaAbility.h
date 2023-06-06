@@ -84,6 +84,7 @@ public:
 	void Native_InputTrigger();
 	
 	//**Start & End***//
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void AbilityActivated(class UObject* Context);
 	

@@ -20,7 +20,7 @@ struct FCombatantGambit
 	
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitCondition : public UObject
 {
 	GENERATED_BODY()
@@ -28,11 +28,11 @@ class OMEGAGAMEFRAMEWORK_API UCombatantGambitCondition : public UObject
 public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Combat|Gambit")
-	bool RunGambitCheck(UCombatantComponent* Combatant) const;
+	bool RunGambitCheck(const UCombatantComponent* Combatant) const;
 
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitAction : public UObject
 {
 	GENERATED_BODY()
@@ -40,7 +40,7 @@ class OMEGAGAMEFRAMEWORK_API UCombatantGambitAction : public UObject
 public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Combat|Gambit")
-	void RunGambitAction(UCombatantComponent* Combatant, TSubclassOf<AOmegaAbility>& AbilityClass, UObject*& AbilityContext) const;
+	void RunGambitAction(const UCombatantComponent* Combatant, TSubclassOf<AOmegaAbility>& AbilityClass, UObject*& AbilityContext) const;
 
 };
 

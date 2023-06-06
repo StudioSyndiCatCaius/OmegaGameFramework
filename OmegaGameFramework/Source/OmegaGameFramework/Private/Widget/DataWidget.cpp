@@ -10,6 +10,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 
 void UDataWidget::NativePreConstruct()
@@ -22,6 +23,12 @@ void UDataWidget::NativePreConstruct()
 
 	//TryEnabled/Disable
 		SetIsEnabled(!IsEntityDisabled(ReferencedAsset));
+
+	if(GetHoveredMaterialInstance())
+	{
+		GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,0);
+		GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,0);
+	}
 	
 }
 
@@ -35,6 +42,30 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 {
 	Super::OnRemovedFromFocusPath(InFocusEvent);
 	Unhover();
+}
+
+void UDataWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	if(GetHoveredMaterialInstance() && IsRendered())
+	{
+		float OutVal;
+		
+		const float HoverVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HoverWidgetPropertyName);
+		if(bIsHovered != static_cast<bool>(HoverVal))
+		{
+			OutVal = UKismetMathLibrary::FInterpTo_Constant(HoverVal, bIsHovered, InDeltaTime, HoverWidgetSpeed);
+			GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,OutVal);
+		}
+		
+		const float HighlightVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HighlightWidgetPropertyName);
+		if(bIsHighlighted != static_cast<bool>(HighlightVal))
+		{
+			OutVal = UKismetMathLibrary::FInterpTo_Constant(HighlightVal, bIsHovered, InDeltaTime, HighlightWidgetSpeed);
+			GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,OutVal);
+		}
+	}
+
+	Super::NativeTick(MyGeometry, InDeltaTime);
 }
 
 UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const

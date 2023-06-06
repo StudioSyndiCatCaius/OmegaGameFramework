@@ -2,12 +2,17 @@
 
 
 #include "OmegaUtilityFunctions.h"
+#include "ShaderCompiler.h"
 
-/*
-float UOmegaUtilityFunctions::GetHardVariable_Float(UObject* Object, const FString& VariableName, bool bValid)
+bool UOmegaUtilityFunctions::AreShadersCompiling()
 {
-	
-	bValid = false;
-	return 0.0f;
+	// Create an instance of FShaderCompilingManager
+	return GShaderCompilingManager->IsCompiling();
 }
-*/
+
+int32 UOmegaUtilityFunctions::GetShaderCompilationRemaining()
+{
+	// Get the number of remaining shader jobs
+	return GShaderCompilingManager->GetNumRemainingJobs();
+
+}

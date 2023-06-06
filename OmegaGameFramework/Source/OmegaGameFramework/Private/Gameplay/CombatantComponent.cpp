@@ -12,7 +12,7 @@
 #include "Gameplay/OmegaDamageType.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
-
+#include "Gameplay/Combatant/CombatantGambits.h"
 #include "Gameplay/ActorInterface_Combatant.h"
 #include "Gameplay/DataInterface_Combatant.h"
 #include "Gameplay/DataInterface_DamageModifier.h"
@@ -60,7 +60,7 @@ void UCombatantComponent::BeginPlay()
 		TargetIndicator->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 
 	}
-	}
+	
 	
 	InitializeAttributes();
 }
@@ -1341,6 +1341,34 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implement
 TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation()
 {
 	return GetAllSkills();
+}
+
+bool UCombatantComponent::RunGambit(UCombatantGambitAsset* Gambit)
+{
+	if(Gambit)
+	{
+		for(const FCombatantGambit TempGambit : Gambit->GambitActions)
+		{
+			if(TempGambit.Gambit_IF && TempGambit.Gambit_THEN && TempGambit.Gambit_IF->RunGambitCheck(this))
+			{
+				TSubclassOf<AOmegaAbility> IncomingAbility;
+				UObject* IncomingContext;
+				TempGambit.Gambit_THEN->RunGambitAction(this, IncomingAbility,IncomingContext);
+				AOmegaAbility* TempAbility;
+				if(IncomingAbility && IsAbilityActive(IncomingAbility,TempAbility))
+				{
+					bool WasSuccess;
+					ExecuteAbility(IncomingAbility, IncomingContext,WasSuccess);
+					if(WasSuccess)
+					{
+						return true;
+					}
+					
+				}
+			}
+		}
+	}
+	return false;
 }
 
 

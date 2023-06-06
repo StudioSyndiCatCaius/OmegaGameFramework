@@ -35,6 +35,13 @@ void UActorTagEventFunctions::FireTagEventOnActors(TArray<AActor*> Actors, FGame
 					IActorTagEventInterface::Execute_OnTagEvent(TempComp, Event);
 				}
 			}
+			
+			TArray<AActor*> ChildActorsList;
+			TempActor->GetAllChildActors(ChildActorsList);
+			for(auto* TempChildActor : ChildActorsList)
+			{
+				FireTagEventOnActor(TempChildActor,Event);
+			}
 		}
 	}
 }
@@ -80,4 +87,9 @@ ATagEventDisperser::ATagEventDisperser()
 void ATagEventDisperser::OnTagEvent_Implementation(FGameplayTag Event)
 {
 	UActorTagEventFunctions::FireTagEventOnActors(TargetActors,Event);
+}
+
+void UAnimNotify_TagEvent::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+{
+	UActorTagEventFunctions::FireTagEventsOnActor(MeshComp->GetOwner(),Events);
 }

@@ -56,6 +56,15 @@ TMap<FGameplayTag, UNiagaraSystem*> UOmegaDamageType::GetContextAVNiagara_Implem
 	return ContextNiagara;
 }
 
+void UOmegaDamageTypeReaction::OnEffectApplied_Implementation(AOmegaGameplayEffect* Effect) const
+{
+}
+
+float UOmegaDamageTypeReaction::OnDamageApplied_Implementation(float BaseDamage) const
+{
+	return 0;
+}
+
 //################################################################
 // DAMAGE SCRIPT
 //################################################################

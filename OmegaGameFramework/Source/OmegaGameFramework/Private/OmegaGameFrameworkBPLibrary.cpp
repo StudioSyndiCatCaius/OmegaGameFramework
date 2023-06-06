@@ -7,6 +7,7 @@
 #include "EngineUtils.h"
 #include "OmegaGameManager.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -563,4 +564,6 @@ void UOmegaGameFrameworkBPLibrary::SwitchOnSaveTagQuery(const UObject* WorldCont
 		Outcome = EOmegaFunctionResult::Fail;
 	}
 }
+
+
 

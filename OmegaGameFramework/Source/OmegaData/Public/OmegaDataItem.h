@@ -19,11 +19,14 @@
 #include "Gameplay/Combatant/DataInterface_Skill.h"
 #include "Gameplay/Combatant/DataInterface_SkillSource.h"
 
+
 #include "OmegaDataItem.generated.h"
 
-/**
- * 
- */
+class UAnimMontage;
+class UOmegaDamageType;
+class UNiagaraSystem;
+class ULevelSequence;
+
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
 																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
@@ -114,6 +117,24 @@ public:
 	//###############################################################################
 	// Contextual Data
 	//###############################################################################
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
+	UAnimMontage* Montage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
+	USoundBase* Sound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
+	TMap<UOmegaAttribute*, float> AttributeValues;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
+	TArray<FOmegaAttributeModifier> AttributeModifiers;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
+	UOmegaDamageType* DamageType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
+	TArray<FOmegaEffectContainer> Effects;
+	
 	virtual TMap<FGameplayTag, ULevelSequence*> GetContextAVSequences_Implementation() override;
 	virtual TMap<FGameplayTag, USoundBase*> GetContextAVSounds_Implementation() override;
 	virtual TMap<FGameplayTag, UNiagaraSystem*> GetContextAVNiagara_Implementation() override;
@@ -145,5 +166,10 @@ public:
 	//###############################################################################
 	virtual FString GetSoftProperty_Implementation(const FString& Property) override;
 	virtual TMap<FString, FString> GetSoftPropertyMap_Implementation() override;
-	
+
+	//###############################################################################
+	// Asset Actions
+	//###############################################################################
+
+
 };

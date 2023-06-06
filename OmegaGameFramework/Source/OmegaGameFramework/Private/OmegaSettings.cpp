@@ -88,6 +88,26 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_18,"Story.Chapter.18");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_19,"Story.Chapter.19");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_20,"Story.Chapter.20");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_00,"Flag.Power.0%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_10,"Flag.Power.10%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_20,"Flag.Power.20%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_30,"Flag.Power.30%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_40,"Flag.Power.40%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_50,"Flag.Power.50%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_60,"Flag.Power.60%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_70,"Flag.Power.70%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_80,"Flag.Power.80%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_90,"Flag.Power.90%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_100,"Flag.Power.100%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_200,"Flag.Power.200%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_300,"Flag.Power.300%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_400,"Flag.Power.400%");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_500,"Flag.Power.500%");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_Begin,"Event.Ability.Begin");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_End,"Event.Ability.End");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Turn_Start,"Event.Combat.Turn.Start");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Turn_End,"Event.Combat.Turn.End");
 
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

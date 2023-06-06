@@ -57,6 +57,7 @@ public class OmegaGameFramework : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"AssetTools",
 				"Projects",
 				"AssetRegistry",
 				"GameplayTags",

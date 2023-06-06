@@ -3,6 +3,8 @@
 
 #include "Gameplay/TurnBased/TurnBasedManagerComponent.h"
 
+#include "Gameplay/ActorTagEvent/ActorTagEvent.h"
+
 
 // Sets default values for this component's properties
 UTurnBasedManagerComponent::UTurnBasedManagerComponent()
@@ -159,6 +161,8 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 	{
 		OnTurnEnd.Broadcast(GetActiveTurnMember(), Flag, Tags);
 		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
+		GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnEnd);
+		UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnEnd);
 	}
 	
 	//If Empty and should regenerator
@@ -180,6 +184,8 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 		FailReason = "";
 
 		ActiveTurnMember = GetTurnMemberAtIndex(0);
+		
+
 		BeginTurn(GetActiveTurnMember(), Flag, Tags);
 		
 		//Function on Combatant Actor
@@ -201,6 +207,8 @@ void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FStri
 	OnTurnStart.Broadcast(Combatant, Flag, Tags);
 	bool LocalSuccess;
 	Combatant->GrantAbility(Local_GetTurnAbility());
+	GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnStart);
+	UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnBegin);
 	LocalTurnAbility = Combatant->ExecuteAbility(Local_GetTurnAbility(), this,LocalSuccess);
 	if(LocalSuccess && LocalTurnAbility)
 	{

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "DataTooltip.h"
 #include "GameplayTagContainer.h"
+#include "ToolContextInterfaces.h"
 #include "WidgetInterface_Input.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
@@ -37,9 +38,12 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent) override;
 	virtual void NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent) override;
-
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	
 	UOmegaPlayerSubsystem* GetPlayerSubsystem() const;
 public:
+	
+
 	
 	UPROPERTY()
 	UDataList* ParentList = nullptr;
@@ -52,13 +56,34 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "DataWidget")
 	int32 ListIndex;
-
+	
+	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget")
+	UMaterialInstanceDynamic* GetHoveredMaterialInstance();
+	
+	//---------------------------------------------------------------------------------------------//
+	//	Highlight
+	//---------------------------------------------------------------------------------------------//
 	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
 	bool bIsHighlighted;
-
+	
+	UPROPERTY(EditAnywhere, Category="Display")
+	float HighlightWidgetSpeed = 10;
+	UPROPERTY(EditAnywhere, Category="Display", AdvancedDisplay)
+	FName HighlightWidgetPropertyName = "Highlight";
+	//---------------------------------------------------------------------------------------------//
+	//	Hover
+	//---------------------------------------------------------------------------------------------//
 	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
 	bool bIsHovered;
-
+	
+	UPROPERTY(EditAnywhere, Category="Display")
+	float HoverWidgetSpeed = 10;
+	UPROPERTY(EditAnywhere, Category="Display", AdvancedDisplay)
+	FName HoverWidgetPropertyName = "Hover";
+	
+	//---------------------------------------------------------------------------------------------//
+	//	Data List
+	//---------------------------------------------------------------------------------------------//
 	UFUNCTION(BlueprintImplementableEvent, Category = "DataWidget", meta=(AdvancedDisplay="ListTags, ListFlag"))
 		void AddedToDataList(UDataList* DataList, int32 Index, const UObject* Asset, FGameplayTagContainer ListTags, const FString& ListFlag);
 

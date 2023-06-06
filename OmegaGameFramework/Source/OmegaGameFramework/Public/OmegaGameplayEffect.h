@@ -52,7 +52,7 @@ enum class EOmegaEffectType : uint8
 	OET_Heal        UMETA(DisplayName = "Heal"),
 };
 
-UCLASS()
+UCLASS(hideCategories = (Input, HLOD, WorldPartition, Physics, Collision, Volume, Replication, Rendering))
 class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IGameplayTagsInterface
 {
 	GENERATED_BODY()

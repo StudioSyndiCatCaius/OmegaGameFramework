@@ -29,6 +29,7 @@ class ACombatantTargetIndicator;
 class UOmegaFaction;
 class UOmegaDamageType;
 class UOmegaDamageTypeReaction;
+class UCombatantGambitAsset;
 
 class UInputComponent;
 class UEnhancedInputComponent;
@@ -528,6 +529,7 @@ public:
 	////////// -- NOTIFIES -- //////////
 	///////////////////////////////////
 
+	//Fires an agonist notify across the combatant that can be recieved in abilities and the parent actor.
 	UFUNCTION(BlueprintCallable, Category="Combatant|Notify", meta=(AdvancedDisplay="Flag"))
 	void CombatantNotify(FName Notify, const FString& Flag);
 
@@ -542,6 +544,13 @@ public:
 	
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation() override;
+
+	//##################################################################################################################
+	// Gambits
+	//##################################################################################################################
+
+	UFUNCTION(BlueprintCallable, Category="Combatant|Gambit")
+	bool RunGambit(UCombatantGambitAsset* Gambit);
 };
 
 
