@@ -8,7 +8,7 @@
 #include "AsyncPlayLinearEventSequence.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFinished, const FString&, Flag);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAsynLinEventUpdated, int32, NewEventIndex, UOmegaLinearEvent*, NewEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAsynLinEventUpdated, int32, NewEventIndex, UOmegaLinearEvent*, NewEvent, UOmegaLinearEventInstance*, Instance);
 
 UCLASS()
 class OMEGASEQUENCE_API UAsyncPlayLinearEventSequence : public UBlueprintAsyncActionBase
@@ -25,7 +25,9 @@ public:
 	int32 Local_StartingIndex;
 	UFUNCTION()
 	void Local_Finish(const FString& Flag);
-
+	UPROPERTY()
+	UOmegaLinearEventInstance* EventInstance;
+	
 	UFUNCTION()
 	void Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef);
 	UPROPERTY(BlueprintAssignable)

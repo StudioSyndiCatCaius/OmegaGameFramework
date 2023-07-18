@@ -14,11 +14,11 @@ struct FOmegaAttributeModifier
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
-	UOmegaAttribute* Attribute;
+	UOmegaAttribute* Attribute = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
-	float Incrementer;
+	float Incrementer = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
-	float Multiplier;
+	float Multiplier = 0;
 };
 
 // This class does not need to be modified.

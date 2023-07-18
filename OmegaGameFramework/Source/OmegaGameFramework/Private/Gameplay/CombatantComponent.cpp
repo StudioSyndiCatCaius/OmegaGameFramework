@@ -9,7 +9,9 @@
 #include "OmegaGameplaySubsystem.h"
 #include "Widget/WidgetInterface_Combatant.h"
 #include "Attributes/OmegaAttributeSet.h"
+#include "Kismet/GameplayStatics.h"
 #include "Gameplay/OmegaDamageType.h"
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Gameplay/Combatant/CombatantGambits.h"
@@ -28,7 +30,6 @@ UCombatantComponent::UCombatantComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
 	// ...
 }
 
@@ -72,7 +73,15 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->Native_RegisterCombatant(this, false);
 	}
 	
+
 	
+	//Destroy Effects
+	for(auto* TempActor : GetAllEffects())
+	{
+		TempActor->K2_DestroyActor();
+	}
+	
+	//Destroy abilities
 	Super::EndPlay(EndPlayReason);
 	for(AOmegaAbility* TempAb : AbilityList)
 	{
@@ -556,21 +565,28 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 	{
 		LocalContext = Context;
 	}
-
 	
 	GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
 	float FinalDamage = BaseDamage;
-	
-	for(auto* TempMod : GetDamageModifiers())		//Is there a valid damage modifier
+
+	//Aply Damage Modifiers
+	for(auto* TempMod : GetDamageModifiers())
 	{
 		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, LocalDamageType, Context); //Apply Damage Modifier
 	}
 	
-	//Damage Type modification
-	if(LocalDamageType && LocalDamageType->DamageScript)
+	// DAMAGE TYPE REACTIONS
+	if(DamageType && DamageTypeReactions.Contains(DamageType))
 	{
-		FinalDamage = LocalDamageType->DamageScript->OnDamageApplied(FinalDamage);
+		const TSubclassOf<UOmegaDamageTypeReaction> ReactClass = DamageTypeReactions.FindOrAdd(DamageType);
+		if(GetDamageReactionObject(ReactClass))
+		{
+			UE_LOG(LogTemp, Display, TEXT("Apply reaction damage for %s"), *ReactClass->GetName());
+			FinalDamage = GetDamageReactionObject(ReactClass)->OnDamageApplied(Attribute, FinalDamage);
+		}
 	}
+	
+	//--------------------- FINISH AND APPLY ---------------------///
 	
 	CurrentValue = CurrentValue - FinalDamage;		//Deduct final damage value from current attribute value
 	CurrentValue = FMath::Clamp(CurrentValue, 0.0f, MaxVal);		//Make sure the value does not go under 0 or exceed the max allowed value
@@ -889,7 +905,7 @@ const TArray<UObject*> UCombatantComponent::GetAttributeModifiers()
 	return LocalMods;
 }
 
-///Gather Modifier Values
+///Applies Modifier Values
 float UCombatantComponent::GatherAttributeModifiers(TArray<UObject*> Modifiers, float BaseValue, UOmegaAttribute* Attribute)
 {
 	//Set Init Value
@@ -948,40 +964,41 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetAllModifierValues()
 	return OutModVals;
 }
 
+UOmegaDamageTypeReaction* UCombatantComponent::GetDamageReactionObject(TSubclassOf<UOmegaDamageTypeReaction> Class)
+{
+	for (auto* TempReact : LocalDamageReactions)
+	{
+		if(TempReact && TempReact->GetClass()==Class)
+		{
+			return TempReact;
+		}
+	}
+	UOmegaDamageTypeReaction* NewLocalReaction = NewObject<UOmegaDamageTypeReaction>(this, Class);
+	LocalDamageReactions.Add(NewLocalReaction);
+	return NewLocalReaction;
+}
+
 ////////////////////////////////////
 ////////// -- Effects -- /////////
 ///////////////////////////////////
 
-AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, float Power, FTransform Location, UCombatantComponent* Target, FGameplayTagContainer AddedTags, UObject* Context)
+FGameplayTagContainer UCombatantComponent::GetBlockedEffectTags()
 {
-	if (EffectClass)
+	return BlockEffectWithTags;
+}
+
+AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, float Power, UCombatantComponent* Target, FGameplayTagContainer AddedTags, UObject* Context)
+{
+	if (EffectClass && Target && !Target->GetBlockedEffectTags().HasAny(GetMutableDefault<AOmegaGameplayEffect>(EffectClass)->EffectTags))
 	{
-		FTransform SpawnWorldPoint;
-		if (Target)
-		{
-			//IfActorValid, use their location.
-			SpawnWorldPoint = Target->GetOwner()->GetActorTransform();
-		}
-		else
-		{
-			//If Actor is not valid, spawn at location.
-			SpawnWorldPoint = Location;
-		}
+		const FTransform SpawnWorldPoint = Target->GetOwner()->GetActorTransform();
 		
 		class AOmegaGameplayEffect* LocalEffect = GetWorld()->SpawnActorDeferred<AOmegaGameplayEffect>(EffectClass, SpawnWorldPoint, nullptr);
-		if(Target)
-			
-		{
-			LocalEffect->SetOwner(Target->GetOwner());
-			LocalEffect->TargetedCombatant = Target;
-		}
-		if(Context->IsValidLowLevel())
-		{
-			LocalEffect->EffectContext = Context;
-		}
+		LocalEffect->SetOwner(Target->GetOwner());
+		LocalEffect->TargetedCombatant = Target;
+		LocalEffect->EffectContext = Context;
 		LocalEffect->CombatantInstigator = this;
 		LocalEffect->Power = Power;
-
 		//Add new tags to effect
 		TArray<FGameplayTag> LocalTags;
 		AddedTags.GetGameplayTagArray(LocalTags);
@@ -990,26 +1007,17 @@ AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGamepl
 		{
 			LocalEffect->EffectTags.AddTag(TempTag);
 		}
-
 		UGameplayStatics::FinishSpawningActor(LocalEffect, SpawnWorldPoint);
-		ActiveEffects.Add(LocalEffect);
 
-		//Attach to target's owning Actor
-		if (Target)
-		{
-			LocalEffect->AttachToActor(Target->GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-		}
-
+		LocalEffect->AttachToActor(Target->GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+		
 		Update();
-
 		return LocalEffect;
-	}
-	else
-	{
-		Update();
 
-		return nullptr;
 	}
+	
+	Update();
+	return nullptr;
 }
 
 void UCombatantComponent::TriggerEffectsWithTags(FGameplayTagContainer Tags)
@@ -1031,11 +1039,35 @@ void UCombatantComponent::TriggerEffectsOfCategory(FGameplayTag CategoryTag)
 	Update();
 }
 
+bool UCombatantComponent::HasEffectWithTags(FGameplayTagContainer Tags)
+{
+	return GetEffectsWithTags(Tags).IsValidIndex(0);
+}
+
+TArray<AOmegaGameplayEffect*> UCombatantComponent::GetAllEffects()
+{
+	TArray<AOmegaGameplayEffect*> OutEffects;
+	
+	TArray<AActor*> TempActors;
+	GetOwner()->GetAttachedActors(TempActors);
+	
+	//Destroy Effects
+	for(auto* TempActor : TempActors)
+	{
+		if(TempActor && TempActor->GetClass()->IsChildOf(AOmegaGameplayEffect::StaticClass()))
+		{
+			OutEffects.Add(Cast<AOmegaGameplayEffect>(TempActor));
+		}
+	}
+	
+	return OutEffects;
+}
+
 TArray<AOmegaGameplayEffect*> UCombatantComponent::GetEffectsWithTags(FGameplayTagContainer Tags)
 {
 	TArray<AOmegaGameplayEffect*> OutEffects;
 	
-	for (class AOmegaGameplayEffect* TempEffect : ActiveEffects)
+	for (class AOmegaGameplayEffect* TempEffect : GetAllEffects())
 	{
 		if(TempEffect->IsValidLowLevel())
 		{
@@ -1053,7 +1085,7 @@ TArray<AOmegaGameplayEffect*> UCombatantComponent::GetEffectsOfCategory(FGamepla
 {
 	TArray<AOmegaGameplayEffect*> OutEffects;
 	
-	for (class AOmegaGameplayEffect* TempEffect : ActiveEffects)
+	for (class AOmegaGameplayEffect* TempEffect : GetAllEffects())
 	{
 		if(TempEffect->IsValidLowLevel())
 		{
@@ -1083,20 +1115,14 @@ AOmegaGameplayEffect* UCombatantComponent::GetActiveEffectOfClass(TSubclassOf<AO
 
 TArray<AOmegaGameplayEffect*> UCombatantComponent::GetValidActiveEffects()
 {
-	TArray<AOmegaGameplayEffect*> OutEffects;
-	for(AOmegaGameplayEffect* TempEffect : ActiveEffects)
-	{
-		if(TempEffect != nullptr) {OutEffects.Add(TempEffect);}
-		else {ActiveEffects.Remove(TempEffect);}
-	}
-	return OutEffects;
+	return GetAllEffects();
 }
 
 void UCombatantComponent::RemoveEffectsOfCategory(FGameplayTag CategoryTag)
 {
 	for(auto* TempEffect : GetEffectsOfCategory(CategoryTag))
 	{
-		TempEffect->Destroy();
+		TempEffect->K2_DestroyActor();
 	}
 }
 
@@ -1104,7 +1130,7 @@ void UCombatantComponent::RemoveEffectsWithTags(FGameplayTagContainer EffectTags
 {
 	for(auto* TempEffect : GetEffectsWithTags(EffectTags))
 	{
-		TempEffect->Destroy();
+		TempEffect->K2_DestroyActor();
 	}
 }
 

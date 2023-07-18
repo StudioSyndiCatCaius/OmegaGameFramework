@@ -13,7 +13,7 @@ void UAsyncPlayLinearEventSequence::Local_Finish(const FString& Flag)
 
 void UAsyncPlayLinearEventSequence::Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef)
 {
-	NewEvent.Broadcast(Index,EventRef);
+	NewEvent.Broadcast(Index,EventRef,EventInstance);
 }
 
 void UAsyncPlayLinearEventSequence::Activate()
@@ -22,9 +22,16 @@ void UAsyncPlayLinearEventSequence::Activate()
 	{
 		Local_Finish("Empty");
 	}
-	UOmegaLinearEventInstance* TempInst = SubsystemRef->PlayLinearEvent(EventData, Local_StartingIndex);
-	TempInst->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_Finish);
-	TempInst->OnEventUpdated.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_NewEvent);
+	EventInstance = SubsystemRef->PlayLinearEvent(EventData, Local_StartingIndex);
+	if(EventInstance)
+	{
+		EventInstance->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_Finish);
+		EventInstance->OnEventUpdated.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_NewEvent);
+	}
+	else
+	{
+		SetReadyToDestroy();
+	}
 }
 
 UAsyncPlayLinearEventSequence* UAsyncPlayLinearEventSequence::PlayLinearEventSequence(UObject* WorldContextObject, FLinearEventSequence Events, int32 StartingIndex)

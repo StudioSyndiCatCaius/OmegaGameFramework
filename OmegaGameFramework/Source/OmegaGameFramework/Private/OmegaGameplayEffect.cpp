@@ -79,6 +79,11 @@ void AOmegaGameplayEffect::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+void AOmegaGameplayEffect::ApplyAdditionalDamage(UOmegaAttribute* Attribute, float Amount)
+{
+	TargetedCombatant->ApplyAttributeDamage(Attribute, Amount, CombatantInstigator, EffectContext, GetDamageType(EffectContext), GetImpactHitResult());
+}
+
 //Trigger the Effect
 void AOmegaGameplayEffect::LifetimeEnd()
 {

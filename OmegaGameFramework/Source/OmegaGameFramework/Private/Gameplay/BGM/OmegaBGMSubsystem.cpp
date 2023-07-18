@@ -31,7 +31,7 @@ float UOmegaBGMSubsystem::GetBGMVolume()
 	
 }
 
-void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeLastPosition, bool FadePrevious)
+void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeLastPosition, bool FadePrevious, float FadeDuration)
 {
 	if(BGM)
 	{
@@ -42,6 +42,7 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 		IncomingData.Slot = Slot;
 		IncomingData.Sound = BGM->Sound;
 		IncomingData.ResumePos = ResumeLastPosition;
+		IncomingData.FadeTime = FadeDuration;
 
 		float Local_StopPos;
 		if(BGM != PlayingBGM)
@@ -53,7 +54,7 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 				//Lock this function until play is complete
 				Local_HasIncomingBGM = true;
 			
-				StopBGM(true,Local_StopPos);
+				StopBGM(true,Local_StopPos, FadeDuration);
 				GetWorld()->GetTimerManager().SetTimer(IncomingData.PlayBGMHandle, this, &UOmegaBGMSubsystem::Local_FinishPlayBGM, GetFadeDuration(), false);
 				}
 			else
@@ -75,7 +76,7 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 	}
 }
 
-void UOmegaBGMSubsystem::StopBGM(bool Fade, float& StoppedPosition)
+void UOmegaBGMSubsystem::StopBGM(bool Fade, float& StoppedPosition, float FadeDuration)
 {
 	FOmegaBGMData TempSlotData = SlotData.FindOrAdd(PlayingSlot);
 	TempSlotData.SavedPlaybackPosition = LocalSavedPosition;
@@ -84,7 +85,7 @@ void UOmegaBGMSubsystem::StopBGM(bool Fade, float& StoppedPosition)
 	
 	if(Fade)
 	{
-		GetComponentBySlot(PlayingSlot)->FadeOut(GetFadeDuration(),0);
+		GetComponentBySlot(PlayingSlot)->FadeOut(FadeDuration,0);
 	}
 	else
 	{
@@ -157,14 +158,20 @@ UAudioComponent* UOmegaBGMSubsystem::GetComponentBySlot(FGameplayTag Slot)
 	{
 		const FTransform DumTransform;
 		UAudioComponent* LocalComp = Cast<UAudioComponent>(GameMode->AddComponentByClass(UAudioComponent::StaticClass(),false,DumTransform, false));
-		LocalComp->VolumeMultiplier = GetBGMVolume();
-		LocalComp->OnAudioPlaybackPercent.AddDynamic(this, &UOmegaBGMSubsystem::Local_OnPlayerbackPercent);
-		
-		FOmegaBGMData LocalNewData;
-		LocalNewData.SlotComponent = LocalComp;
-		SlotData.Add(Slot, LocalNewData);
 
-		return LocalComp;
+		if(LocalComp)
+		{
+			LocalComp->VolumeMultiplier = GetBGMVolume();
+			LocalComp->OnAudioPlaybackPercent.AddDynamic(this, &UOmegaBGMSubsystem::Local_OnPlayerbackPercent);
+			
+			FOmegaBGMData LocalNewData;
+			LocalNewData.SlotComponent = LocalComp;
+			SlotData.Add(Slot, LocalNewData);
+
+			return LocalComp;
+		}
+		
+		return nullptr;
 	}
 	return nullptr;
 }

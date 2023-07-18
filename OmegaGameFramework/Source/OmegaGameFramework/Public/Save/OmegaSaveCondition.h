@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "OmegaSaveSubsystem.h"
 #include "Engine/DataAsset.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
 #include "UObject/Object.h"
 #include "OmegaSaveCondition.generated.h"
 

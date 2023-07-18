@@ -27,6 +27,9 @@ public:
 	virtual UGameInstance* GetGameInstance() const;
 	UPROPERTY()
 	UOmegaLinearEventSubsystem* SubsystemRef;
+
+	UFUNCTION(BlueprintNativeEvent, Category="LinearEvent")
+	bool CanPlayEvent();
 	
 	UPROPERTY()
 	FOnEventEnded EventEnded;
@@ -49,6 +52,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="JumpToID"))
 	void Finish(const FString& Flag, const FName JumpToID = FName(""));
+
+	UFUNCTION(BlueprintCallable, Category="LinearEvent")
+	void StopEventSequence();
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")
 	void JumpToEvent(FName Event, bool EndSequenceIfFail);

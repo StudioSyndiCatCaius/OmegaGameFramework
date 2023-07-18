@@ -44,6 +44,8 @@ struct FOmegaBGMData_Incoming
 	bool DoesForcePlaybackPos = false;
 	UPROPERTY()
 	float ForcePlaybackPos;
+	UPROPERTY()
+	float FadeTime;
 	
 };
 
@@ -84,11 +86,11 @@ public:
 	UFUNCTION()
 	float GetBGMVolume();
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|BGM", meta=(AdvancedDisplay="ResumeLastPosition, FadePrevious"))
-	void PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeLastPosition, bool FadePrevious);
+	UFUNCTION(BlueprintCallable, Category="Omega|BGM", meta=(AdvancedDisplay="ResumeLastPosition, FadeDuration, FadePrevious"))
+	void PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeLastPosition, bool FadePrevious, float FadeDuration=0.5);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|BGM")
-	void StopBGM(bool Fade, float& StoppedPosition);
+	void StopBGM(bool Fade, float& StoppedPosition, float FadeDuration=0.5);
 
 	UFUNCTION(BlueprintPure, Category="Omega|BGM")
 	bool IsSlotPlayingBGM(FGameplayTag Slot);

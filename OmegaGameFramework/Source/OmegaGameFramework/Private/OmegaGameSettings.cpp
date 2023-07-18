@@ -3,11 +3,13 @@
 
 #include "OmegaGameSettings.h"
 #include "JsonBlueprintFunctionLibrary.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
 #include "JsonObjectConverter.h"
 
 FJsonObject UOmegaConfigFunctions::GetOmegaConfigJsonObject()
 {
-	TSharedPtr<FJsonObject> JsonObject;
+	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
 	const FString FilePath = FPaths::ProjectDir() + TEXT("OmegaConfig.json");
 	FString FileContent;
 	if (!FFileHelper::LoadFileToString(FileContent, *FilePath))
@@ -15,8 +17,8 @@ FJsonObject UOmegaConfigFunctions::GetOmegaConfigJsonObject()
 		UE_LOG(LogTemp, Error, TEXT("Failed to load file: %s"), *FilePath);
 	}
 
-	
-	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileContent);
+
+	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileContent);
     
 	if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
 	{

@@ -56,13 +56,25 @@ TMap<FGameplayTag, UNiagaraSystem*> UOmegaDamageType::GetContextAVNiagara_Implem
 	return ContextNiagara;
 }
 
+void UOmegaDamageTypeReaction::GetGeneralAssetColor_Implementation(FLinearColor& Color)
+{
+	Color = ReactionColor;
+}
+
+void UOmegaDamageTypeReaction::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
+	FText& Name, FText& Description)
+{
+	Name = ReactionName;
+	Description = ReactionDescription;
+}
+
 void UOmegaDamageTypeReaction::OnEffectApplied_Implementation(AOmegaGameplayEffect* Effect) const
 {
 }
 
-float UOmegaDamageTypeReaction::OnDamageApplied_Implementation(float BaseDamage) const
+float UOmegaDamageTypeReaction::OnDamageApplied_Implementation(UOmegaAttribute* Attribute, float BaseDamage) const
 {
-	return 0;
+	return BaseDamage;
 }
 
 //################################################################

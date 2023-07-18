@@ -123,28 +123,31 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 	
 	for(UCombatantComponent* TargetCombatant : RegisteredCombatants)
 	{
-		const int32 TargetIndex = RegisteredCombatants.Find(TargetCombatant);
-		TurnOrder.Add(TargetCombatant);
-		bool bComparing = true;
-
-		TArray<UCombatantComponent*> FlippedTurnOrder = TurnOrder;
-		Algo::Reverse(FlippedTurnOrder);
-		
-		for(UCombatantComponent* ComparedCombatant : FlippedTurnOrder)
+		if(TargetCombatant && !BlockCombatantTagsFromTurnOrder.HasAny(TargetCombatant->GetCombatantTags()))
 		{
-			
-			if(bComparing && ComparedCombatant != TargetCombatant)		// If still comparing and NOT comparing self
+			const int32 TargetIndex = RegisteredCombatants.Find(TargetCombatant);
+			TurnOrder.Add(TargetCombatant);
+			bool bComparing = true;
+
+			TArray<UCombatantComponent*> FlippedTurnOrder = TurnOrder;
+			Algo::Reverse(FlippedTurnOrder);
+		
+			for(UCombatantComponent* ComparedCombatant : FlippedTurnOrder)
 			{
-				const int32 ComparedIndex = TurnOrder.Find(ComparedCombatant);
+			
+				if(bComparing && ComparedCombatant != TargetCombatant)		// If still comparing and NOT comparing self
+					{
+					const int32 ComparedIndex = TurnOrder.Find(ComparedCombatant);
 				
-				if(TurnManager->ShouldTargetActFirst(TargetCombatant, ComparedCombatant)) //Checks if Target should go first.
-				{
-					TurnOrder.Swap(ComparedIndex, TargetIndex);
-				}
-				else
-				{
-					bComparing = false;
-				}
+					if(TurnManager->ShouldTargetActFirst(TargetCombatant, ComparedCombatant)) //Checks if Target should go first.
+						{
+						TurnOrder.Swap(ComparedIndex, TargetIndex);
+						}
+					else
+					{
+						bComparing = false;
+					}
+					}
 			}
 		}
 	}
@@ -247,6 +250,28 @@ void UTurnBasedManagerComponent::ClearTurnOrder(FString Flag, FGameplayTagContai
 	TurnOrder.Empty();
 }
 
+void UTurnBasedManagerComponent::FireEventsOnCombatants(FGameplayTagContainer Events)
+{
+	for (const auto* TempComb :GetRegisteredCombatants())
+	{
+		if(TempComb)
+		{
+			UActorTagEventFunctions::FireTagEventsOnActor(TempComb->GetOwner(),Events);
+		}
+	}
+}
+
+void UTurnBasedManagerComponent::FireEventsOnFaction(FGameplayTagContainer Events, FGameplayTag Faction)
+{
+	for (auto* TempComb :GetRegisteredCombatants())
+	{
+		if(TempComb && TempComb->GetFactionTag().MatchesTag(Faction))
+		{
+			UActorTagEventFunctions::FireTagEventsOnActor(TempComb->GetOwner(),Events);
+		}
+	}
+}
+
 
 TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetRegisteredCombatants()
 {
@@ -264,7 +289,10 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetRegisteredCombatants
 // REGISTER
 void UTurnBasedManagerComponent::RegisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
 {
-	RegisteredCombatants.AddUnique(Combatant);
+	if(Combatant && !BlockCombatantTagsFromRegister.HasAny(Combatant->GetCombatantTags()))
+	{
+		RegisteredCombatants.AddUnique(Combatant);
+	}
 }
 
 

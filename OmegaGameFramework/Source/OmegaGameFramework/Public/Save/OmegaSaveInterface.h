@@ -42,7 +42,7 @@ public:
 	FString GetJsonPropertyName();
 	
 	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save|Json")
-	FJsonObjectWrapper SaveJsonData();
+	FJsonObjectWrapper SaveJsonData(FJsonObjectWrapper CurrentData);
 	
 	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save|Json")
 	bool LoadJsonData(FJsonObjectWrapper SaveFile);

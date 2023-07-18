@@ -27,7 +27,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void Destroyed() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//virtual void OnConstruction(const FTransform& Transform) override;
 
 	virtual void OnConstruction(const FTransform& Transform) override;
@@ -92,16 +92,19 @@ class OMEGAGAMEFRAMEWORK_API AOmegaZonePoint : public AActor, public IDataInterf
 
 public:
 	virtual void BeginPlay() override;
-	virtual void Destroyed() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	AOmegaZonePoint();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
 	FText PointName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zone")
+	TSoftObjectPtr<UWorld> FromLevel;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
 	FGameplayTag ZonePointID;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
 	UOmegaZoneData* ZoneToLoad;
 
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;

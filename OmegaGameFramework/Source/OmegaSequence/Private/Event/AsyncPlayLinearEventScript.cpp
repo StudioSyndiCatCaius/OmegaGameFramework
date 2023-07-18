@@ -6,9 +6,9 @@
 #include "Engine/World.h"
 #include "Parser/OmegaDataParserSubsystem.h"
 
-void UAsyncPlayLinearEventScript::Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef) const
+void UAsyncPlayLinearEventScript::Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef)
 {
-	NewEvent.Broadcast(Index,EventRef);
+	NewEvent.Broadcast(Index,EventRef,EventInstance);
 }
 
 void UAsyncPlayLinearEventScript::Local_Finish(const FString& Flag)
@@ -33,9 +33,9 @@ void UAsyncPlayLinearEventScript::Activate()
 			Local_Finish("Empty");
 		}
 		
-		UOmegaLinearEventInstance* TempInst = SubsystemRef->PlayLinearEvent(EventData, LocStartIndex);
-		
-		TempInst->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventScript::Local_Finish);
+		EventInstance = SubsystemRef->PlayLinearEvent(EventData, LocStartIndex);
+		EventInstance->OnEventUpdated.AddDynamic(this, &UAsyncPlayLinearEventScript::Local_NewEvent);
+		EventInstance->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventScript::Local_Finish);
 	}
 	else
 	{

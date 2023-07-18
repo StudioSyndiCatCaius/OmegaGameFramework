@@ -2,6 +2,7 @@
 
 
 #include "OmegaModSubsystem.h"
+#include "Misc/FileHelper.h"
 #include "Dom/JsonObject.h"
 
 

@@ -14,6 +14,17 @@
 
 class AOmegaGameplayEffect;
 
+UENUM()
+enum class ECombatantEffectTargets : uint8
+{
+	// Effect is instantly triggered and destruct
+	EffectTargets_Self				UMETA(DisplayName = "Self"),
+	//Effect will trigger and destruct after a certain amount of timer has passed.
+	EffectTargets_ActiveTarget      UMETA(DisplayName = "Active Target"),
+	// Effect remains until Trigger
+	EffectTargets_AllTargets		UMETA(DisplayName = "Registered Targets"),
+
+};
 
 USTRUCT(BlueprintType)
 struct FOmegaEffectContainer
@@ -101,6 +112,10 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "General")
 	UCombatantComponent* TargetedCombatant;
+	
+	//Applys Additional Attribute Damage with the same parameters as the formula damage.
+	UFUNCTION(BlueprintCallable, Category="Effect")
+	void ApplyAdditionalDamage(UOmegaAttribute* Attribute, float Amount);
 
 	UPROPERTY(BlueprintReadOnly, Category = "General", VisibleInstanceOnly)
 	UObject* EffectContext;

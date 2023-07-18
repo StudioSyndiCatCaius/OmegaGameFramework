@@ -13,7 +13,7 @@ class UOmegaLinearEventSubsystem;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEventSequenceFinish, const FString&, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEventUpdated, int32, EventIndex, UOmegaLinearEvent*, Event);
 
-UCLASS()
+UCLASS(BlueprintType)
 class OMEGASEQUENCE_API UOmegaLinearEventInstance : public UObject
 {
 	GENERATED_BODY()
@@ -31,13 +31,23 @@ public:
 	
 	UFUNCTION()
 	void NextEvent(const FString& Flag);
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable,Category="LinearEvent")
 	void EndInstance(const FString& Flag);
 
 	UOmegaLinearEvent* GetEventFromID(FName ID);
 
 	UPROPERTY()
 	UOmegaLinearEvent* CurrentEvent;
+
+	UFUNCTION(BlueprintPure, Category="LinearEvents")
+	UOmegaLinearEvent* GetCurrentEvent() const
+	{
+		if(CurrentEvent)
+		{
+			return CurrentEvent;
+		}
+		return nullptr;
+	}
 
 	int32 GetCurrentEventIndex() const
 	{
@@ -59,6 +69,14 @@ inline void UOmegaLinearEventInstance::NextEvent(const FString& Flag)
 		SequenceData.Events[GetCurrentEventIndex()]->EventEnded.RemoveDynamic(this, &UOmegaLinearEventInstance::NextEvent);
 	}
 
+	//CHECK IF SHOULD STOP EVENT SEQUENCE
+	if(Flag=="@@InternalFinish_STOP@@")
+	{
+		EndInstance("STOPPED");
+		return;
+	}
+
+	
 	const int32 NextIndex = GetCurrentEventIndex() +1;
 	
 	UOmegaLinearEvent* IncomingEvent = nullptr;
@@ -89,8 +107,14 @@ inline void UOmegaLinearEventInstance::NextEvent(const FString& Flag)
 
 inline void UOmegaLinearEventInstance::EndInstance(const FString& Flag)
 {
+	if(CurrentEvent)
+	{
+		CurrentEvent->EventEnded.RemoveAll(this);
+		CurrentEvent->Finish("PrematureStop");
+	}
 	OnEventSequenceFinish.Broadcast(Flag);
 	SubsystemRef->TempEvents.Remove(this);
+	
 }
 
 inline UOmegaLinearEvent* UOmegaLinearEventInstance::GetEventFromID(FName ID)
@@ -107,10 +131,17 @@ inline UOmegaLinearEvent* UOmegaLinearEventInstance::GetEventFromID(FName ID)
 
 inline void UOmegaLinearEventInstance::StartEvent(UOmegaLinearEvent* Event)
 {
-	Event->EventEnded.AddDynamic(this, &UOmegaLinearEventInstance::NextEvent);
-	Event->GameInstanceRef = SubsystemRef->GameInstanceReference;
-	Event->WorldPrivate = SubsystemRef->GetWorld();
-	OnEventUpdated.Broadcast(GetCurrentEventIndex(),Event);
-	SubsystemRef->OnLinearEventBegin.Broadcast(Event);
-	Event->Native_Begin();
+	if(Event->CanPlayEvent())
+	{
+		Event->EventEnded.AddDynamic(this, &UOmegaLinearEventInstance::NextEvent);
+		Event->GameInstanceRef = SubsystemRef->GameInstanceReference;
+		Event->WorldPrivate = SubsystemRef->GetWorld();
+		OnEventUpdated.Broadcast(GetCurrentEventIndex(),Event);
+		SubsystemRef->OnLinearEventBegin.Broadcast(Event);
+		Event->Native_Begin();
+	}
+	else
+	{
+		NextEvent("Skipped");
+	}
 }

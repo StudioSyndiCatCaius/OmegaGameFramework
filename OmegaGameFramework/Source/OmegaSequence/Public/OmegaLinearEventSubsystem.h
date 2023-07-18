@@ -57,6 +57,12 @@ public:
 	UPROPERTY()
 	TArray<UOmegaLinearEventInstance*> TempEvents;
 
+	UFUNCTION(BlueprintPure, Category="LinearEvent")
+	TArray<UOmegaLinearEventInstance*> GetActiveEventInstances() const
+	{
+		return TempEvents;
+	}
+
 	UPROPERTY(BlueprintAssignable)
 	FOnLinearEventBegin OnLinearEventBegin;
 	

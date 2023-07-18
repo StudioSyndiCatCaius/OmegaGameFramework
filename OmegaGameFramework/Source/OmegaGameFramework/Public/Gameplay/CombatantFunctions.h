@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "CombatantComponent.h"
+#include "FunctionalTest.h"
 #include "OmegaGameplayEffect.h"
+#include "OmegaGeneralEnums.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "CombatantFunctions.generated.h"
 
@@ -25,6 +27,11 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 	UFUNCTION(BlueprintPure, Category="Combat")
 	static UCombatantComponent* GetCombatantWithHighestAttributeValue(TArray<UCombatantComponent*> Combatants, UOmegaAttribute* Attribute, bool bUseCurrentValue);
 	
+	//-----------------------------------------------------------------------------------
+	// Effects
+	//-----------------------------------------------------------------------------------
+	
+	// Applies an Effect From a Container struct
 	UFUNCTION(BlueprintCallable, Category="Combat", meta=(AdvancedDisplay = "Context"))
 	static void ApplyEffectFromContainer(UCombatantComponent* Combatant, UCombatantComponent* Instigator, FOmegaEffectContainer Effect, UObject* Context);
 
@@ -56,4 +63,24 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 
 	UFUNCTION(BlueprintPure, Category="Omega|Combat|Targeting")
 	static bool IsCombatantActiveTargetInRange(UCombatantComponent* Combatant, float Range);
+
+	//-----------------------------------------------------------------------------------
+	// Branches
+	//-----------------------------------------------------------------------------------
+
+	//Checks if the Current Attribute Value is at given value
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
+	static void IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Value, EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome);
+
+	//Checks if the Current Attribute Value is at a given percentage
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
+	static void IsAttributeAtPercentage(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Percentage, EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome);
+
+	//Checks if the Attribute is at 100%.
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
+	static void DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag, TEnumAsByte<EOmegaBranch>& Outcome);
+	
+	//Checks if the Attribute is at 100%.
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
+	static void DoesCombatantHaveEffectWithTag(UCombatantComponent* Combatant, FGameplayTagContainer Tags, TEnumAsByte<EOmegaBranch>& Outcome);
 };

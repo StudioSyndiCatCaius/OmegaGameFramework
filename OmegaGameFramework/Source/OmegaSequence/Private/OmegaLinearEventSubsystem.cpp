@@ -2,6 +2,7 @@
 
 #include "OmegaLinearEventSubsystem.h"
 
+#include "Engine.h"
 #include "Engine/World.h"
 #include "Event/OmegaLinearEventInstance.h"
 #include "Parser/OmegaDataParserSubsystem.h"

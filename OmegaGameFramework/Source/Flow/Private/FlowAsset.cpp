@@ -1,6 +1,8 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
 
 #include "FlowAsset.h"
+
+#include "FlowAssetTrait.h"
 #include "FlowSettings.h"
 #include "FlowSubsystem.h"
 
@@ -356,15 +358,15 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, const bool Override, con
 	PreStartFlow();
 
 	//Run Traits
-	/*
-	for(auto* TempTrait : Traits)
+	
+	for(UFlowAssetTrait* TempTrait : Traits)
 	{
 		if(TempTrait)
 		{
 			TempTrait->Native_FlowBegin(GameInstance);
 		}
 	}
-	*/
+	
 	ensureAlways(StartNode);
 	RecordedNodes.Add(StartNode);
 	StartNode->TriggerFirstOutput(true);
@@ -384,6 +386,14 @@ void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool b
 {
 	FinishPolicy = InFinishPolicy;
 
+	for(UFlowAssetTrait* TempTrait : Traits)
+	{
+		if(TempTrait)
+		{
+			TempTrait->Native_FlowEnd("Finish","");
+		}
+	}
+	
 	// end execution of this asset and all of its nodes
 	for (UFlowNode* Node : ActiveNodes)
 	{
@@ -431,7 +441,7 @@ void UFlowAsset::TriggerCustomOutput(const FName& EventName) const
 	NodeOwningThisAssetInstance->TriggerOutput(EventName);
 }
 
-void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName)
+void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, bool bForce)
 {
 	if (UFlowNode* Node = Nodes.FindRef(NodeGuid))
 	{
@@ -587,6 +597,31 @@ bool UFlowAsset::IsBoundToWorld_Implementation()
 // Omega Additions
 //######################################################################################################
 
+void UFlowAsset::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	Name = DisplayName;
+	Description = AssetDescription;
+}
+
+void UFlowAsset::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture,
+	UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	Brush = Icon;
+}
+
+void UFlowAsset::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	if(CustomLabel.IsEmpty())
+	{
+		Label = this->GetName();
+	}
+	else
+	{
+		Label = CustomLabel;
+	}
+}
+
 FGameplayTag UFlowAsset::GetObjectGameplayCategory_Implementation()
 {
 	return GameplayCategory;
@@ -635,4 +670,22 @@ TArray<FGuid> UFlowAsset::GetActiveNodeGuids()
 void UFlowAsset::ForceActivateNode(FGuid NodeGuid, FName InputName)
 {
 	TriggerInput(NodeGuid, InputName);
+}
+
+void UFlowAsset::NotifyFlow(FName Notify, UObject* Context)
+{
+	for(auto* TempTrait : Traits)
+	{
+		if(TempTrait)
+		{
+			TempTrait->FlowNotified(Notify,Context);
+		}
+	}
+	for(auto* TempNode : GetAllNodes())
+	{
+		if(TempNode)
+		{
+			TempNode->FlowNotified(Notify,Context);
+		}
+	}
 }

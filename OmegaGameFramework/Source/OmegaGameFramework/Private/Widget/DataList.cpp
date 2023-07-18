@@ -399,6 +399,7 @@ void UDataList::SetListOwner(UObject* NewOwner)
 		for(UDataWidget* TempEntry: Entries)
 		{
 			TempEntry->OnNewListOwner(ListOwner);
+			TempEntry->Refresh();
 		}
 	}
 }

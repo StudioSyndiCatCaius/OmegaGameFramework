@@ -20,5 +20,8 @@ public:
 
 	UPROPERTY(EditAnywhere, config, Category = "DataItems")
 	TArray<FDirectoryPath> DataItemScansPath;
+
+	UPROPERTY(EditAnywhere, config, Category = "DataItems")
+	bool ScanPathsRecursively;
 	
 };

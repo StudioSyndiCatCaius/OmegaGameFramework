@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "DataInterface_General.h"
 #include "FlowSave.h"
 #include "FlowTypes.h"
 #include "Gameplay/GameplayTagsInterface.h"
@@ -11,12 +12,14 @@
 class UFlowNode;
 class UFlowNode_CustomInput;
 class UFlowNode_Start;
+class UFlowAssetTrait;
 class UFlowNode_SubGraph;
 class UFlowSubsystem;
 
 class UEdGraph;
 class UEdGraphNode;
 class UFlowAsset;
+class UGameInstance;
 
 #if WITH_EDITOR
 
@@ -38,7 +41,7 @@ DECLARE_DELEGATE(FFlowAssetEvent);
  * Single asset containing flow nodes.
  */
 UCLASS(BlueprintType, hideCategories = Object)
-class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface
+class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, public IDataInterface_General
 {
 	GENERATED_UCLASS_BODY()
 
@@ -251,9 +254,11 @@ private:
 	void TriggerCustomEvent(UFlowNode_SubGraph* Node, const FName& EventName) const;
 	void TriggerCustomOutput(const FName& EventName) const;
 
-	void TriggerInput(const FGuid& NodeGuid, const FName& PinName);
-
+public:
+	void TriggerInput(const FGuid& NodeGuid, const FName& PinName, bool bForce = false);
 	void FinishNode(UFlowNode* Node);
+	
+private:
 	void ResetNodes();
 
 public:
@@ -308,7 +313,22 @@ protected:
 public:	
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	bool IsBoundToWorld();
-	
+
+	//--------------------------------------------------------//
+	// General
+	//--------------------------------------------------------//
+	UPROPERTY(EditAnywhere, Category="General", DisplayName="Name")
+	FText DisplayName;
+	UPROPERTY(EditAnywhere, Category="General", DisplayName="Description")
+	FText AssetDescription;
+	UPROPERTY(EditAnywhere, Category="General")
+	FSlateBrush Icon;
+	UPROPERTY(EditAnywhere, Category="General", AdvancedDisplay)
+	FString CustomLabel;
+
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	
 	//--------------------------------------------------------//
 	// Gameplay Tags
@@ -325,6 +345,12 @@ public:
 	//--------------------------------------------------------//
 	// TRAITS
 	//--------------------------------------------------------//
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Traits")
-	//TArray<UFlowAssetTrait*> Traits;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Traits")
+	TArray<UFlowAssetTrait*> Traits;
+	
+	//--------------------------------------------------------//
+	// NOTIFY
+	//--------------------------------------------------------//
+	UFUNCTION(BlueprintCallable, Category="FlowAsset")
+	void NotifyFlow(FName Notify, UObject* Context = nullptr);
 };

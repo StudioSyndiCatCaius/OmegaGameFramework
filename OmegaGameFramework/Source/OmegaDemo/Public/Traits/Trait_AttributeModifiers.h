@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS(DisplayName="Trait (Attribute Modifiers)")
+UCLASS(DisplayName="Trait | Attribute Modifiers")
 class OMEGADEMO_API UTrait_AttributeModifiers : public UOmegaDataTrait, public IDataInterface_AttributeModifier
 {
 	GENERATED_BODY()

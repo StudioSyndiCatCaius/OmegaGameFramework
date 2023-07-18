@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Engine/EngineTypes.h"
+#include "Components/PrimitiveComponent.h"
+
 #include "CombatantGroupComponent.generated.h"
 
 class UCombatantComponent;

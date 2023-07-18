@@ -21,9 +21,9 @@ struct FCustomAssetData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	FString Label;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
-	UTexture2D* Texture;
+	UTexture2D* Texture = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
-	FLinearColor Color;
+	FLinearColor Color = FLinearColor();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Data");
 	FGameplayTagContainer Tags;
 };

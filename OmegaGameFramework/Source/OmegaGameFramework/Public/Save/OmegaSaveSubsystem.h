@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Components/ActorComponent.h"
 #include "Misc/Timespan.h"
 #include "OmegaSaveSubsystem.generated.h"
 
@@ -52,6 +53,8 @@ public:
 	TArray<class UOmegaSaveConditionCollection*> ConditionCollections;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSaveStateChanged, FGameplayTag, NewState, bool, bGlobal);
+
 
 UCLASS(DisplayName = "Omega Subsystem: Save")
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveSubsystem : public UGameInstanceSubsystem
@@ -98,7 +101,7 @@ public:
 		UOmegaSaveGame* CreateNewGame();
 
 	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem", meta = (AdvancedDisplay = "Tags"))
-		void StartGame(class UOmegaSaveGame* GameData, FGameplayTagContainer Tags);
+		void StartGame(class UOmegaSaveGame* GameData, bool LoadSavedLevel, FGameplayTagContainer Tags);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
 		class UOmegaSaveGame* ActiveSaveData;
@@ -128,6 +131,9 @@ public:
 	
 	//GameplayTags
 
+	UPROPERTY(BlueprintAssignable)
+	FOnSaveStateChanged OnSaveStateChanged;
+	
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Tags", DisplayName="Set Save State")
 	void SetStoryState(FGameplayTag StateTag, bool Global);
 	
@@ -167,19 +173,19 @@ public:
 	// Data Assets
 	//###############################################################################################
 
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"))
 	void SetDataAssetCollected(UPrimaryDataAsset* Asset, bool bGlobal, bool Collected);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"))
 	void SetDataAssetsCollected(TArray<UPrimaryDataAsset*> Assets, bool bGlobal, bool Collected);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"))
 	void AddDataAssetToSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"))
 	void RemoveDataAssetFromSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal);
 
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets")
+	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"))
 	bool IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal);
 
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets")
@@ -199,11 +205,27 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets")
 	bool DoesDataAssetHaveSaveTags(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bExact, bool bGlobal);
-	
-	//////////////
-	// Soft Properties
-	//////////////
 
+	//###############################################################################################
+	// Guids
+	//###############################################################################################
+
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"))
+	void SetGuidCollected(FGuid Guid, bool Collected, bool bGlobal);
+
+	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"))
+	bool GetIsGuidCollected(FGuid Guid, bool bGlobal);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"))
+	void SetGuidHasTags(FGuid Guid, FGameplayTagContainer Tags, bool HasTags, bool bGlobal);
+
+	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"))
+	bool GetDoesGuidHaveTags(FGuid Guid, FGameplayTagContainer Tags, bool bGlobal);
+	
+	//###############################################################################################
+	// Soft Properties
+	//###############################################################################################
+	
 		//bool
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Bool")
 	void SetSoftProperty_Bool(const FString& Property, bool Value, bool bGlobal);
@@ -249,7 +271,8 @@ public:
 	void SetSoftProperty_DataAsset(const FString& Property, UPrimaryDataAsset* Value, bool bGlobal);
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | DataAsset")
 	UPrimaryDataAsset* GetSoftProperty_DataAsset(const FString& Property, bool bGlobal);
-
+		//guid
+	
 	///MESSAGE LOGGING
 	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem")
 	bool CustomSaveConditionsMet(FOmegaSaveConditions Conditions);
@@ -271,4 +294,25 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem")
 	TArray<UObject*> GetSaveSources();
+};
+
+
+UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Save State Manager", meta=(BlueprintSpawnableComponent) )
+class OMEGAGAMEFRAMEWORK_API UOmegaSaveStateComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void LocalStateChanged(FGameplayTag TagState, bool bGlobal);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags")
+	bool bGlobalSave;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags")
+	FGameplayTagContainer VisibleOnStateTags;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags")
+	FGameplayTagContainer HiddenOnStateTags;
 };

@@ -73,50 +73,60 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
 	TMap<UPrimaryDataAsset*, FGameplayTagContainer> SaveAssetTags;
 
+	//DataAssets
+	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	TArray<FGuid> CollectedGuids;
+
+	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	TMap<FGuid, FGameplayTagContainer> GuidTags;
+
+	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	TMap<FGuid, FJsonObjectWrapper> GuidJson;
+	
 	//Soft Property
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Save")
 	TMap<FName, bool> Prop_bool;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Bool(const FString& Name, bool Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	bool GetSaveProperty_Bool(const FString& Name);
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Save")
 	TMap<FName, float> Prop_float;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Float(const FString& Name, float Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	float GetSaveProperty_Float(const FString& Name);
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Save")
 	TMap<FName, int32> Prop_int;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Int(const FString& Name, int32 Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	int32 GetSaveProperty_Int(const FString& Name);
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Save")
 	TMap<FName, FString> Prop_string;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_String(const FString& Name, const FString& Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FString GetSaveProperty_String(const FString& Name);
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Save")
 	TMap<FName, FGameplayTag> Prop_Tag;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Tag(const FString& Name, FGameplayTag Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FGameplayTag GetSaveProperty_Tag(const FString& Name);
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Save")
 	TMap<FName, FGameplayTagContainer> Prop_Tags;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Tags(const FString& Name, FGameplayTagContainer Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FGameplayTagContainer GetSaveProperty_Tags(const FString& Name);
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Save")
 	TMap<FName, UPrimaryDataAsset*> Prop_Asset;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Asset(const FString& Name, UPrimaryDataAsset* Value);

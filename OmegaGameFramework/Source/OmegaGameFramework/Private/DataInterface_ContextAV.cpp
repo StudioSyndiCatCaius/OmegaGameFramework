@@ -2,6 +2,7 @@
 
 
 #include "DataInterface_ContextAV.h"
+#include "GameplayTagContainer.h"
 
 // Add default functionality here for any IDataInterface_General functions that are not pure virtual.
 ULevelSequence* UOmegaContextAVFunctions::TryGetObjectContext_Seqeunce(UObject* Object, FGameplayTag ID)

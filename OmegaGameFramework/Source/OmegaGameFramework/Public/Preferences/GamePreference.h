@@ -23,7 +23,7 @@ enum class EGamePreferenceType : uint8
 };
 
 UCLASS(BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UGamePreference : public UDataAsset, public IGameplayTagsInterface, public IDataInterface_General
+class OMEGAGAMEFRAMEWORK_API UGamePreference : public UPrimaryDataAsset, public IGameplayTagsInterface, public IDataInterface_General
 {
 	GENERATED_BODY()
 	

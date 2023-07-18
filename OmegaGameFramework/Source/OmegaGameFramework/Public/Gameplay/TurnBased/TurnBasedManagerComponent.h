@@ -40,15 +40,31 @@ public:
 	///////////////
 	///// Turn ////
 	//////////////
+
+	//###########################################
+	// Turn Manager
+	//###########################################
 	
-	UPROPERTY(EditDefaultsOnly, Category="Turn")
+	UPROPERTY(EditDefaultsOnly, Category="Turn Manager")
 	TSubclassOf<UTurnManagerBase> TurnManagerClass = UTurnManagerBase::StaticClass();
-	
+
 	UFUNCTION(BlueprintCallable, Category="Omega|TurnBased")
 	void SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass);
 	
 	UPROPERTY()
 	UTurnManagerBase* TurnManager;
+
+	//Prevents Combatants with these tags from being allowed to have a turn.
+	UPROPERTY(EditDefaultsOnly, Category="Turn Manager")
+	FGameplayTagContainer BlockCombatantTagsFromTurnOrder;
+
+	//Prevents Combatants with these tags from being registered into the turn order.
+	UPROPERTY(EditDefaultsOnly, Category="Turn Manager")
+	FGameplayTagContainer BlockCombatantTagsFromRegister;
+	
+	//###########################################
+	// Turn 
+	//###########################################
 	
 	UPROPERTY()
 	TArray<UCombatantComponent*> TurnOrder;
@@ -108,6 +124,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="TagEvents")
 	FGameplayTagContainer TagEventsOnTurnEnd;
+
+	UFUNCTION(BlueprintCallable, Category="TurnBased|Event")
+	void FireEventsOnCombatants(FGameplayTagContainer Events);
+	
+	UFUNCTION(BlueprintCallable, Category="TurnBased|Event")
+	void FireEventsOnFaction(FGameplayTagContainer Events, FGameplayTag Faction);
 	
 	///////////////
 	///// Ability ////

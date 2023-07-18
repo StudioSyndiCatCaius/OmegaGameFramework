@@ -2,9 +2,10 @@
 
 
 #include "Gameplay/CombatantFunctions.h"
-
+#include "Kismet/GameplayStatics.h"
 #include "OmegaGameplaySubsystem.h"
 #include "OmegaSettings.h"
+#include "OmegaUtilityFunctions.h"
 #include "Gameplay/DataInterface_OmegaEffect.h"
 
 TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByTags(
@@ -82,7 +83,7 @@ void UCombatantFunctions::ApplyEffectFromContainer(UCombatantComponent* Combatan
 			LocalContext = Instigator;
 		}
 		const FTransform EmptyLoc;
-		Instigator->CreateEffect(Effect.EffectClass, Effect.Power, EmptyLoc, Combatant, Effect.AddedTags, LocalContext);
+		Instigator->CreateEffect(Effect.EffectClass, Effect.Power, Combatant, Effect.AddedTags, LocalContext);
 	}
 }
 
@@ -162,4 +163,66 @@ bool UCombatantFunctions::IsCombatantActiveTargetInRange(UCombatantComponent* Co
 		return true;
 	}
 	return false;
+}
+
+void UCombatantFunctions::IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,  float Value,
+	EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome)
+{
+	if(Combatant)
+	{
+		float CurVal;
+		float MaxVal;
+		Combatant->GetAttributeValue(Attribute,CurVal,MaxVal);
+
+		if(const bool OutVal = UOmegaUtilityFunctions::CompareFloatValues(CurVal,Value,Method))
+		{
+			Outcome = EOmegaBranch::Yes;
+		}
+		else
+		{
+			Outcome = EOmegaBranch::No;
+		}
+	}
+}
+
+void UCombatantFunctions::IsAttributeAtPercentage(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
+	float Percentage, EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome)
+{
+	if(Combatant)
+	{
+		if(const bool OutVal = UOmegaUtilityFunctions::CompareFloatValues(Combatant->GetAttributePercentage(Attribute),Percentage,Method))
+		{
+			Outcome = EOmegaBranch::Yes;
+		}
+		else
+		{
+			Outcome = EOmegaBranch::No;
+		}
+	}
+}
+
+void UCombatantFunctions::DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag,
+                                               TEnumAsByte<EOmegaBranch>& Outcome)
+{
+	if(Combatant && Combatant->CombatantHasTag(Tag))
+	{
+		Outcome = EOmegaBranch::Yes;
+	}
+	else
+	{
+		Outcome = EOmegaBranch::No;
+	}
+}
+
+void UCombatantFunctions::DoesCombatantHaveEffectWithTag(UCombatantComponent* Combatant, FGameplayTagContainer Tags,
+	TEnumAsByte<EOmegaBranch>& Outcome)
+{
+	if(Combatant && Combatant->HasEffectWithTags(Tags))
+	{
+		Outcome = EOmegaBranch::Yes;
+	}
+	else
+	{
+		Outcome = EOmegaBranch::No;
+	}
 }

@@ -13,10 +13,10 @@ struct FCombatantGambit
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit", Instanced, DisplayName="IF")
-	UCombatantGambitCondition* Gambit_IF;
+	UCombatantGambitCondition* Gambit_IF = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit", Instanced, DisplayName="THEN")
-	UCombatantGambitAction* Gambit_THEN;
+	UCombatantGambitAction* Gambit_THEN = nullptr;
 	
 };
 

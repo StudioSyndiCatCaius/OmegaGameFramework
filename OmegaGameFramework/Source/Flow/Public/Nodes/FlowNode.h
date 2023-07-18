@@ -267,15 +267,15 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "On Activate"))
 	void K2_OnActivate();
-	
+public:
 	// Trigger execution of input pin
 	void TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
-
+protected:
 	// Method reacting on triggering Input pin
 	virtual void ExecuteInput(const FName& PinName);
 
 	// Event reacting on triggering Input pin
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Execute Input"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "On Input"))
 	void K2_ExecuteInput(const FName& PinName);
 
 	// Simply trigger the first Output Pin, convenient to use if node has only one output
@@ -302,7 +302,7 @@ protected:
 	virtual void Cleanup();
 
 	// Event called after node finished the work
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Cleanup"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "On Finish"))
 	void K2_Cleanup();
 
 public:
@@ -365,6 +365,10 @@ protected:
 	}
 
 public:
+	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
+	void FlowNotified(FName Notify, UObject* Context);
+
+	
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	static FString GetIdentityTagDescription(const FGameplayTag& Tag);
 

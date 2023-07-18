@@ -30,6 +30,11 @@ UGameInstance* UOmegaLinearEvent::GetGameInstance() const
 	return GameInstanceRef;
 }
 
+bool UOmegaLinearEvent::CanPlayEvent_Implementation()
+{
+	return true;
+}
+
 void UOmegaLinearEvent::Native_Begin()
 {
 	/*
@@ -44,6 +49,11 @@ void UOmegaLinearEvent::Finish(const FString& Flag, const FName JumpToID)
 	OnEventEnd(Flag);
 	EventEnded.Broadcast(Flag);
 	
+}
+
+void UOmegaLinearEvent::StopEventSequence()
+{
+	Finish("@@InternalFinish_STOP@@");
 }
 
 void UOmegaLinearEvent::JumpToEvent(FName Event, bool EndSequenceIfFail)

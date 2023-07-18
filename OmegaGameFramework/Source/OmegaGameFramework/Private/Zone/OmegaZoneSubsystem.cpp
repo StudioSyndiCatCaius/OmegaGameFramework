@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "MovieSceneSequencePlayer.h"
 #include "OmegaGameFrameworkBPLibrary.h"
+#include "TimerManager.h"
 #include "Engine/LevelStreaming.h"
 #include "OmegaGameplaySystem.h"
 #include "Zone/OmegaZoneGameInstanceSubsystem.h"
@@ -21,6 +22,7 @@ void UOmegaZoneSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UOmegaZoneSubsystem::Tick(float DeltaTime)
 {
+	/*
 	if(GamInstSubsys && GamInstSubsys->IsInlevelTransit && !bIsInLevelTransit)
 	{
 		if(UGameplayStatics::GetPlayerCharacter(this,0))
@@ -30,32 +32,80 @@ void UOmegaZoneSubsystem::Tick(float DeltaTime)
 			GetWorld()->GetTimerManager().SetTimer(LocalTimer, this, &UOmegaZoneSubsystem::OnLoadFromLevelComplete, 0.1f, false);
 		}
 	}
+	*/
 }
 
 void UOmegaZoneSubsystem::OnLoadFromLevelComplete()
 {
-	TransitPlayerToPointID(GamInstSubsys->TargetSpawnPointTag, UGameplayStatics::GetPlayerController(this,0));
+	AOmegaZonePoint* OutPoint = nullptr;
+	for(auto* TempPoint : ZonePoints)
+	{
+		if(TempPoint
+			&& TempPoint->FromLevel==GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->PreviousLevel
+			&& TempPoint->ZonePointID==GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->TargetSpawnPointTag)
+		{
+			OutPoint = TempPoint;
+			break;
+		}
+	}
+	if(OutPoint)
+	{
+		TransitPlayerToPoint(OutPoint, UGameplayStatics::GetPlayerController(this,0));
+	}
+	
 }
+
 
 void UOmegaZoneSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
 	GamInstSubsys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>();
+
+	FTimerHandle LocalTimer;
+	GetWorld()->GetTimerManager().SetTimer(LocalTimer, this, &UOmegaZoneSubsystem::SpawnFromStartingPoint, 0.1f, false);
+	
 }
+
+void UOmegaZoneSubsystem::SpawnFromStartingPoint()
+{
+	if(GamInstSubsys->IsInlevelTransit)
+	{
+		TArray<AActor*> TempPoints;
+		UGameplayStatics::GetAllActorsOfClass(this,AOmegaZonePoint::StaticClass(),TempPoints);
+		for (auto* TempActor: TempPoints)
+		{
+			AOmegaZonePoint* TempPoint = Cast<AOmegaZonePoint>(TempActor);
+			if(TempPoint->FromLevel==GamInstSubsys->PreviousLevel && GamInstSubsys->TargetSpawnPointTag==TempPoint->ZonePointID)
+			{
+				UE_LOG(LogTemp, Display, TEXT("Begining Level Spawn Transit: %s"), *TempPoint->GetName());
+				TransitPlayerToPoint(TempPoint, UGameplayStatics::GetPlayerController(this,0));
+				break;
+			}
+		}
+	}
+	GamInstSubsys->IsInlevelTransit = false;
+}
+
 
 // Begins the a transition event
 void UOmegaZoneSubsystem::LoadZone(UOmegaZoneData* Zone, bool UnloadPreviousZones)
 {
-	if(Zone && !IsMidPlayerTransit)
+	if(!IsMidPlayerTransit)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Begin Zone Load: %s"), *Zone->GetName());
-		IncomingZone_Load = Zone;
+		if(Zone)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Begin Zone Load: %s"), *Zone->GetName());
+			IncomingZone_Load = Zone;
+		}
 		bUnloadPreviousZones = UnloadPreviousZones;
 		IsMidPlayerTransit = true;		//marks the transition event as active
-
+		
 		Local_PreBeginTransitActions();
 		Local_OnBeginTransitSequence(true);
-		
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot changes zones, Player is mid-transit"));
 	}
 }
 
@@ -113,25 +163,36 @@ void UOmegaZoneSubsystem::TransitPlayerToPointID(FGameplayTag PointID, APlayerCo
 	TransitPlayerToPoint(GetZonePointFromID(PointID), Player);
 }
 
-void UOmegaZoneSubsystem::TransitPlayerToLevel(TSoftObjectPtr<UWorld> Level, FGameplayTag SpawnID)
+void UOmegaZoneSubsystem::TransitPlayerToLevel_Name(FName Level, FGameplayTag SpawnID)
 {
 	UOmegaZoneGameInstanceSubsystem* InstSubsys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>();
 	bIsInLevelTransit = true;
 	InstSubsys->IsInlevelTransit = true;
 	InstSubsys->TargetSpawnPointTag = SpawnID;
+	
+	
+	const UWorld* CurrentWorld = GetWorld();
+	const ULevel* CurrentLevel = CurrentWorld->GetCurrentLevel();
+	const TSoftObjectPtr<UWorld> LevelAssetPtr(CurrentLevel->GetOuter());
+	
+	InstSubsys->PreviousLevel=LevelAssetPtr;
+	
+	IncomingLevelName = Level;
 
+	UE_LOG(LogTemp, Warning, TEXT("BEGINING Level Transit: %s"), *IncomingLevelName.ToString());
+	Local_PreBeginTransitActions();
+	Local_OnBeginTransitSequence(true);
+}
+
+void UOmegaZoneSubsystem::TransitPlayerToLevel(TSoftObjectPtr<UWorld> Level, FGameplayTag SpawnID)
+{
 	const FString StartPath = Level.ToString();
 	FString EmptyPath;
 	FString targetLevel;
 
 	StartPath.Split(TEXT("."),&EmptyPath,&targetLevel);
-	UE_LOG(LogTemp, Warning, TEXT("BEGINING Level Transit: %s"), *targetLevel);
-	IncomingLevelName = FName(targetLevel);
 	
-	Local_PreBeginTransitActions();
-	Local_OnBeginTransitSequence(true);
-	
-	//UGameplayStatics::OpenLevelBySoftObjectPtr(this, Level);
+	TransitPlayerToLevel_Name(FName(targetLevel),SpawnID);
 	
 }
 
@@ -140,17 +201,24 @@ void UOmegaZoneSubsystem::TransitPlayerToPoint(AOmegaZonePoint* Point, APlayerCo
 	if(Point)
 	{
 		Incoming_SpawnPoint = Point;
-		APlayerController* TargetPlayer = UGameplayStatics::GetPlayerController(this, 0);
+		const APlayerController* TargetPlayer = UGameplayStatics::GetPlayerController(this, 0);
 		if(Player)
 		{
 			TargetPlayer = Player;
 		}
 
-		if(Point->ZoneToLoad)
-		{
-			LoadZone(Point->ZoneToLoad);
-		}
+		LoadZone(Point->ZoneToLoad);
+
+		//if(Point->ZoneToLoad)
+		//{
+			
+		//}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tried to transit but POINT was invalid"));
+	}
+	
 }
 
 //------------------------------------
@@ -246,15 +314,20 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 {
 	if(LoadState)
 	{
-		// LOAD FINISH
-		OnZoneLoaded.Broadcast(Incoming_LoadTaskZone);
-
-		//ACTIVATE SYSTEMS
-		for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+		UE_LOG(LogTemp, Display, TEXT("Finish Zone LOAD"));
+		
+		if(Incoming_LoadTaskZone)
 		{
-			if(TempSys)
+			// LOAD FINISH
+			OnZoneLoaded.Broadcast(Incoming_LoadTaskZone);
+		
+			//ACTIVATE SYSTEMS
+			for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
 			{
-				GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys);
+				if(TempSys)
+				{
+					GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys);
+				}
 			}
 		}
 		
@@ -264,25 +337,31 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 			APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this,0);
 			PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
 			UGameplayStatics::GetPlayerController(this,0)->SetControlRotation(PawnRef->GetActorRotation());
+			OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this,0),Incoming_SpawnPoint);
 		}
 		
 		Local_OnBeginTransitSequence(false);
 	}
 	else
 	{
+		UE_LOG(LogTemp, Display, TEXT("Finish Zone UNLOAD"));
 		// UNLOAD FINISH
 		if(LoadedZones.Contains(IncomingZone_Unload))
 		{
 			LoadedZones.Remove(IncomingZone_Unload);
 		}
-		OnZoneUnloaded.Broadcast(Incoming_LoadTaskZone);
-
-		//SHUTDOWN SYSTEMS
-		for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+		
+		if(Incoming_LoadTaskZone)
 		{
-			if(TempSys)
+			OnZoneUnloaded.Broadcast(Incoming_LoadTaskZone);
+
+			//SHUTDOWN SYSTEMS
+			for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
 			{
-				GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys);
+				if(TempSys)
+				{
+					GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys);
+				}
 			}
 		}
 	}
@@ -310,8 +389,10 @@ ULevelSequencePlayer* UOmegaZoneSubsystem::GetTransitSequencePlayer()
 {
 	if(!LocalSeqPlayer)
 	{
-		ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), GetTransitSequence(), FMovieSceneSequencePlaybackSettings(), LocalSeqPlayer);
-		LocalSeqPlayer->SequencePlayer->OnStop.AddDynamic(this, &UOmegaZoneSubsystem::Local_OnFinishTransitSequence);
+		UE_LOG(LogTemp, Warning, TEXT("Initialized SequencePlayer"));
+		FMovieSceneSequencePlaybackSettings Settings;
+		ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), GetTransitSequence(), Settings, LocalSeqPlayer);
+		LocalSeqPlayer->SequencePlayer->OnFinished.AddDynamic(this, &UOmegaZoneSubsystem::Local_OnFinishTransitSequence);
 	}
 	return LocalSeqPlayer->SequencePlayer;
 }
@@ -335,6 +416,8 @@ void UOmegaZoneSubsystem::Local_OnBeginTransitSequence(bool bForward)
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("ATTEMPT PLAYER TRNASIT SEQUENCE: Reverse"));
+				//GetTransitSequencePlayer()->RestoreState();
+				GetTransitSequencePlayer()->ChangePlaybackDirection();
 				GetTransitSequencePlayer()->PlayReverse();
 			}
 		}
@@ -361,6 +444,7 @@ void UOmegaZoneSubsystem::Local_OnFinishTransitSequence()
 		bSequenceTransit_IsPlaying = false;
 		if(bSequenceTransit_IsForward)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Sequence Finished: Fade Out"));
 			//SEQUENCE FINISHED: Fade Out 
 			if(GetTopLoadedZones() && bUnloadPreviousZones)
 			{
@@ -374,6 +458,7 @@ void UOmegaZoneSubsystem::Local_OnFinishTransitSequence()
 		}
 		else
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Sequence Finished: Fade In"));
 			//SEQUENCE FINISHED: Fade In
 			Local_CompleteTransit();
 		}

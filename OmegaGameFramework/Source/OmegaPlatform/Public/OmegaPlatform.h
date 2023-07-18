@@ -3,9 +3,9 @@
 
 #include "Modules/ModuleManager.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(OmegaWorld, All, All);
+DECLARE_LOG_CATEGORY_EXTERN(OmegaPlatform, All, All);
 
-class FOmegaWorld : public IModuleInterface
+class FOmegaPlatform : public IModuleInterface
 {
 	public:
 

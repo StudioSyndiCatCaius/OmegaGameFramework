@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Engine/World.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "OmegaZoneGameInstanceSubsystem.generated.h"
 
@@ -29,5 +30,7 @@ public:
 	bool IsInlevelTransit;
 	UPROPERTY();
 	FGameplayTag TargetSpawnPointTag;
+	UPROPERTY()
+	TSoftObjectPtr<UWorld> PreviousLevel;
 	
 };

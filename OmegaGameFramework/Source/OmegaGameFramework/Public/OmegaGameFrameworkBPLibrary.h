@@ -8,12 +8,15 @@
 #include "GameplayTagContainer.h"
 #include "Gameplay/OmegaGameplayModule.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/OmegaInputMode.h"
+#include "JsonObjectWrapper.h"
+#include "OmegaGeneralEnums.h"
+#include "AssetRegistry/AssetData.h"
 #include "OmegaGameFrameworkBPLibrary.generated.h"
 
 class APlayerController;
 class UEnhancedInputLocalPlayerSubsystem;
 class UOmegaPlayerSubsystem;
+class UOmegaInputMode;
 
 
 UENUM(Blueprintable)
@@ -24,19 +27,13 @@ enum EOmegaFlagResult
 };
 
 
-UENUM(Blueprintable)
-enum EOmegaFunctionResult
-{
-	Success	UMETA(DisplayName = "Success"),
-	Fail		UMETA(DisplayName = "Fail"),
-};
-
-
 
 UCLASS()
 class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
+
+public:
 
 	//###############################################################################
 	// Gameplay tags
@@ -173,6 +170,15 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
 	static UActorComponent* TryGetComponentFromObject(UObject* Object, TSubclassOf<UActorComponent> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
+	static UActorComponent* TryGetFirstComponentWithTag(UObject* Object, TSubclassOf<UActorComponent> Class, FName Tag, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Actors", meta=(DeterminesOutputType="Class", AdvancedDisplay="ExcludedActors"))
+	static TArray<AActor*> FilterActorsWithTag(TArray<AActor*> Actors, FName Tag, bool bExclude,TSubclassOf<AActor> Class);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Actors", meta=(DeterminesOutputType="Class", AdvancedDisplay="ExcludedActors"))
+	static TArray<UActorComponent*> FilterComponentsWithTag(TArray<UActorComponent*> Components, FName Tag, bool bExclude,TSubclassOf<UActorComponent> Class);
+	
 	//###############################################################################
 	// InterpActor
 	//###############################################################################
@@ -191,6 +197,17 @@ class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta=(WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
 	static void SwitchOnSaveTagQuery(const UObject* WorldContextObject, FGameplayTagQuery TagQuery, bool bGlobal, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	//###############################################################################
+	// Json
+	//###############################################################################
+	
+	UFUNCTION(BlueprintPure, Category = "Json")
+	static void CombineJsonObjects(const TArray<FJsonObjectWrapper>& JsonObjects, FJsonObjectWrapper& CombinedObject);
+
+	UFUNCTION(BlueprintPure, Category = "Json", meta = (CustomStructureParam = "Value", AutoCreateRefTerm = "Value"))
+	static FJsonObjectWrapper CreateJsonField(const FString& FieldName, const int32& Value);
+
 
 };
 

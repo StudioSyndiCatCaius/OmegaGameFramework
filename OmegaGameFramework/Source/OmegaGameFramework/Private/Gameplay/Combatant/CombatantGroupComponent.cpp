@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Gameplay/Combatant/CombatantGroupComponent.h"
-
+#include "Components/PrimitiveComponent.h"
 #include "JsonObjectWrapper.h"
 #include "Gameplay/CombatantComponent.h"
 

@@ -15,6 +15,7 @@
 class AOmegaGameplaySystem;
 class UOmegaZoneGameInstanceSubsystem;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlaySpawnedAtPoint, APlayerController*, Player, AOmegaZonePoint*, Point);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnZoneLoaded, UOmegaZoneData*, Zone);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnZoneUnloaded, UOmegaZoneData*, Zone);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnZoneTransitInRange, AOmegaZoneTransit*, ZoneTransit, bool, bInRange);
@@ -77,6 +78,8 @@ public:
 	FOnZoneLoaded OnZoneLoaded;
 	UPROPERTY(BlueprintAssignable)
 	FOnZoneUnloaded OnZoneUnloaded;
+	UPROPERTY(BlueprintAssignable)
+	FOnPlaySpawnedAtPoint OnPlaySpawnedAtPoint;
 	
 protected:
 	UPROPERTY()
@@ -84,6 +87,8 @@ protected:
 
 	UFUNCTION()
 	void OnLoadFromLevelComplete();
+
+	void SpawnFromStartingPoint();
 	
 public:
 	//#########################################################################################################
@@ -92,6 +97,8 @@ public:
 	UPROPERTY()
 	TArray<AOmegaZonePoint*> ZonePoints;
 
+	
+	
 	UFUNCTION()
 	AOmegaZonePoint* GetZonePointFromID(FGameplayTag ID);
 	
@@ -100,6 +107,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Zone", meta=(AdvancedDisplay="Player"))
 	void TransitPlayerToPointID(FGameplayTag PointID, APlayerController* Player);
+
+	UFUNCTION(BlueprintCallable, Category="Zone", meta=(MetaClass="World"), DisplayName="Transit Player to Level (Name)")
+	void TransitPlayerToLevel_Name(FName Level, FGameplayTag SpawnID);
 
 	UFUNCTION(BlueprintCallable, Category="Zone", meta=(MetaClass="World"))
 	void TransitPlayerToLevel(TSoftObjectPtr<UWorld> Level, FGameplayTag SpawnID);
@@ -154,10 +164,10 @@ protected:
 	UFUNCTION()
 	ULevelSequence* GetTransitSequence();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintPure, Category="Zone")
 	ULevelSequencePlayer* GetTransitSequencePlayer();
 	UPROPERTY()
-	 ALevelSequenceActor* LocalSeqPlayer;
+	ALevelSequenceActor* LocalSeqPlayer;
 	
 	UPROPERTY()
 	bool bSequenceTransit_IsForward;

@@ -9,7 +9,7 @@
 #include "Tickable.h"
 #include "Engine/World.h"
 #include "Gameplay/CombatantComponent.h"
-
+#include "JsonObjectWrapper.h"
 
 #include "OmegaGameplaySubsystem.generated.h"
 
@@ -33,7 +33,8 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 
-	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|GlobalJson")
+	FJsonObjectWrapper WorldJsonObject;
 	
 	//////////////////
 	/// Gameplay Systems

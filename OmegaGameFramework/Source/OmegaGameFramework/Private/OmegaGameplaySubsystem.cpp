@@ -140,7 +140,7 @@ TArray<AOmegaGameplaySystem*> UOmegaGameplaySubsystem::GetActiveGameplaySystemsW
 
 bool UOmegaGameplaySubsystem::IsSystemTagBlocked(FGameplayTagContainer Tags)
 {
-	for(auto* TempSys : GetActiveGameplaySystems())
+	for(const auto* TempSys : GetActiveGameplaySystems())
 	{
 		if(TempSys->BlockSystemTags.HasAnyExact(Tags))
 		{
@@ -259,7 +259,7 @@ void UOmegaGameplaySubsystem::ClearGlobalActorBinding(FName Binding)
 
 AActor* UOmegaGameplaySubsystem::GetGlobalActorBinding(FName Binding)
 {
-	if(GlobalActorBindingRefs.FindOrAdd(Binding))
+	if(GlobalActorBindingRefs.Contains(Binding))
 	{
 		return GlobalActorBindingRefs.FindOrAdd(Binding);
 	}

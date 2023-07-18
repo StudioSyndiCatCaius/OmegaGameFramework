@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "JsonObjectWrapper.h"
 #include "Dom/JsonObject.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaGameSettings.generated.h"
 
 /**
@@ -25,7 +26,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaConfigFunctions : public UBlueprintFunctionLi
 	GENERATED_BODY()
 
 public:
-
 
 	static FJsonObject GetOmegaConfigJsonObject();
 	

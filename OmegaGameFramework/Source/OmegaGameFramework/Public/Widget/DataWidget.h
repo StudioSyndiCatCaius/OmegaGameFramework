@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "DataTooltip.h"
 #include "GameplayTagContainer.h"
-#include "ToolContextInterfaces.h"
 #include "WidgetInterface_Input.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
@@ -43,8 +42,6 @@ protected:
 	UOmegaPlayerSubsystem* GetPlayerSubsystem() const;
 public:
 	
-
-	
 	UPROPERTY()
 	UDataList* ParentList = nullptr;
 
@@ -59,6 +56,8 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget")
 	UMaterialInstanceDynamic* GetHoveredMaterialInstance();
+
+	void Refresh();
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight

@@ -117,6 +117,7 @@ public:
 	//###############################################################################
 	// Contextual Data
 	//###############################################################################
+	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
 	UAnimMontage* Montage;
 	
@@ -134,6 +135,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
 	TArray<FOmegaEffectContainer> Effects;
+	*/
 	
 	virtual TMap<FGameplayTag, ULevelSequence*> GetContextAVSequences_Implementation() override;
 	virtual TMap<FGameplayTag, USoundBase*> GetContextAVSounds_Implementation() override;

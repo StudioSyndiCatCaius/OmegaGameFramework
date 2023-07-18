@@ -2,7 +2,7 @@
 
 
 #include "Gameplay/OmegaGameMode.h"
-
+#include "Kismet/GameplayStatics.h"
 #include "OmegaGameManager.h"
 #include "OmegaGameplaySubsystem.h"
 #include "OmegaGameplaySystem.h"

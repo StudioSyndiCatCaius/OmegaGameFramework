@@ -8,7 +8,10 @@
 
 void UAsyncAction_WaitForFlag::Native_OnFlagEvent(FString Flag, bool State)
 {
-	Local_Finish();
+	if(Flag==Local_Flag && State==Local_State)
+	{
+		Local_Finish();
+	}
 }
 
 void UAsyncAction_WaitForFlag::Local_Finish()

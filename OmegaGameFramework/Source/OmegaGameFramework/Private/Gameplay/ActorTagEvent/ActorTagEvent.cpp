@@ -4,6 +4,8 @@
 // Sets default values
 
 #include "Gameplay/ActorTagEvent/ActorTagEvent.h"
+#include "Components/SkeletalMeshComponent.h"
+
 #include "Components/BillboardComponent.h"
 
 void UActorTagEventFunctions::FireActorTagEvents(TMap<AActor*, FGameplayTag> Events)

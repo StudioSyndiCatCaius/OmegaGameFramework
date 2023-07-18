@@ -2,17 +2,21 @@
 
 
 #include "OmegaGameFrameworkBPLibrary.h"
-#include "OmegaGameFramework.h"
+//#include "OmegaGameFramework.h"
 #include "Engine/World.h"
-#include "EngineUtils.h"
+//#include "EngineUtils.h"
+#include "JsonBlueprintFunctionLibrary.h"
 #include "OmegaGameManager.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
-
+#include "Player/OmegaInputMode.h"
+#include "JsonObjectWrapper.h"
+#include "Dom/JsonObject.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 #include "Save/OmegaSaveSubsystem.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 
 bool UOmegaGameFrameworkBPLibrary::IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact)
@@ -197,7 +201,11 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByClass(TArray<UObje
 
 FGameplayTag UOmegaGameFrameworkBPLibrary::MakeGameplayTagFromString(const FString& String)
 {
-	return FGameplayTag::RequestGameplayTag(FName(*String));
+	if(FGameplayTag::IsValidGameplayTagString(String))
+	{
+		return FGameplayTag::RequestGameplayTag(FName(*String));
+	}
+	return FGameplayTag();
 }
 
 FGameplayTagContainer UOmegaGameFrameworkBPLibrary::MakeGameplayTagContainerFromStrings(TArray<FString> Strings)
@@ -497,6 +505,71 @@ UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(UObject
 	return  nullptr;
 }
 
+UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetFirstComponentWithTag(UObject* Object,
+	TSubclassOf<UActorComponent> Class, FName Tag, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(!Object || !Class)
+	{
+		Outcome = EOmegaFunctionResult::Fail;
+		return nullptr;
+	}
+
+	const AActor* TargetActor = nullptr;
+	
+	if (Cast<AActor>(Object) && Cast<AActor>(Object)->GetComponentByClass(Class))
+	{
+		TargetActor = Cast<AActor>(Object);
+	}
+	
+	if (Cast<UActorComponent>(Object))
+	{
+		TargetActor = Cast<UActorComponent>(Object)->GetOwner();
+	}
+	
+	if(TargetActor)
+	{
+		TArray<UActorComponent*> CompList = TargetActor->GetComponentsByTag(Class,Tag);
+		if(CompList.IsValidIndex(0))
+		{
+			Outcome = EOmegaFunctionResult::Success;
+			return CompList[0];
+		}
+	}
+	
+	Outcome = EOmegaFunctionResult::Fail;
+	return  nullptr;
+}
+
+TArray<AActor*> UOmegaGameFrameworkBPLibrary::FilterActorsWithTag(TArray<AActor*> Actors, FName Tag, bool bExclude,
+	TSubclassOf<AActor> Class)
+{
+	TArray<AActor*> OutActors;
+	for(auto* TempObject : Actors)
+	{
+		if(TempObject && TempObject->ActorHasTag(Tag)!=bExclude)
+		{
+			OutActors.Add(TempObject);
+		}
+	}
+	return OutActors;
+}
+
+TArray<UActorComponent*> UOmegaGameFrameworkBPLibrary::FilterComponentsWithTag(TArray<UActorComponent*> Components,
+	FName Tag, bool bExclude, TSubclassOf<UActorComponent> Class)
+{
+	TArray<UActorComponent*> OutActors;
+	for(auto* TempObject : Components)
+	{
+		if(TempObject && TempObject->ComponentHasTag(Tag)!=bExclude)
+		{
+			OutActors.Add(TempObject);
+		}
+	}
+	return OutActors;
+}
+
+
+
 //###############################################################################
 // InterpActor
 //###############################################################################
@@ -564,6 +637,32 @@ void UOmegaGameFrameworkBPLibrary::SwitchOnSaveTagQuery(const UObject* WorldCont
 		Outcome = EOmegaFunctionResult::Fail;
 	}
 }
+
+void UOmegaGameFrameworkBPLibrary::CombineJsonObjects(const TArray<FJsonObjectWrapper>& JsonObjects,
+	FJsonObjectWrapper& CombinedObject)
+{
+	for (const FJsonObjectWrapper& JsonObject : JsonObjects)
+	{
+		const TSharedPtr<FJsonObject>& JsonObjectRoot = JsonObject.JsonObject;
+
+		for (auto It = JsonObjectRoot->Values.CreateConstIterator(); It; ++It)
+		{
+			const FString& Key = It.Key();
+			const TSharedPtr<FJsonValue>& Value = It.Value();
+			
+			CombinedObject.JsonObject->SetField(Key,Value);
+		}
+	}
+}
+
+FJsonObjectWrapper UOmegaGameFrameworkBPLibrary::CreateJsonField(const FString& FieldName, const int32& Value)
+{
+	const FJsonObjectWrapper NewJson;
+	const TSharedPtr<FJsonValue> JsonValue = MakeShared<FJsonValueNumber>(Value);
+	NewJson.JsonObject->SetField(FieldName,JsonValue);
+	return NewJson;
+}
+
 
 
 

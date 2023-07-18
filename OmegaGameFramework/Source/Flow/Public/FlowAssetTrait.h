@@ -32,9 +32,11 @@ public:
 	void Native_FlowEnd(FName Output, const FString& Flag);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
-	void FlowBegin();
+	void FlowBegin() const; 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
-	void FlowEnd(FName Output, const FString& Flag);
+	void FlowEnd(FName Output, const FString& Flag) const;
+	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
+	void FlowNotified(FName Notify, UObject* Context) const;
 };
 
 

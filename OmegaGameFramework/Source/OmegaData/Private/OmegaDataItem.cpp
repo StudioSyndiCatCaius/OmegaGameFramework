@@ -312,7 +312,8 @@ TArray<FOmegaAttributeModifier> UOmegaDataItem::GetModifierValues_Implementation
 
 TArray<FOmegaEffectContainer> UOmegaDataItem::GetOmegaEffects_Implementation()
 {
-	TArray<FOmegaEffectContainer> OutEffects = Effects;
+	TArray<FOmegaEffectContainer> OutEffects;
+	//OutEffects = Effects;
 	
 	for(auto* TempTrait : GetTraitsWithInterface(UDataInterface_OmegaEffect::StaticClass()))
 	{

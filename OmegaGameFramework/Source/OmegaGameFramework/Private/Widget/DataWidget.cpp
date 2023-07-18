@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "DataInterface_General.h"
 #include "CommonUILibrary.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
@@ -22,7 +23,7 @@ void UDataWidget::NativePreConstruct()
 	SetSourceAsset(ReferencedAsset);
 
 	//TryEnabled/Disable
-		SetIsEnabled(!IsEntityDisabled(ReferencedAsset));
+	SetIsEnabled(!IsEntityDisabled(ReferencedAsset));
 
 	if(GetHoveredMaterialInstance())
 	{
@@ -71,6 +72,11 @@ void UDataWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 {
 	return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();	
+}
+
+void UDataWidget::Refresh()
+{
+	SetIsEnabled(GetIsEntitySelectable());
 }
 
 //----------------------NATIVE CONSTRUCT-------------------------------------------//
@@ -147,7 +153,7 @@ bool UDataWidget::DataWidgetHasTag(FName Tag)
 
 void UDataWidget::Select()
 {
-	if(bIsEnabled)
+	if(GetIsEnabled() && GetIsEntitySelectable())
 	{
 		if (GetSelectAnimation())
 		{
@@ -291,6 +297,8 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 		ReferencedAsset = Asset;
 		SourceAssetChanged.Broadcast(Asset);
 		OnSourceAssetChanged(Asset);
+		
+		Refresh();
 	}
 	
 }

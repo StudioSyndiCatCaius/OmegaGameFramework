@@ -86,6 +86,18 @@ AOmegaInstanceActor* UInstanceActorComponent::GetInstanceByContext(UObject* Cont
 	return nullptr;
 }
 
+AOmegaInstanceActor* UInstanceActorComponent::GetInstanceByName(const FString& Name)
+{
+	for(auto* TempInst : GetInstances())
+	{
+		if(TempInst->ContextObject->GetName() == Name)
+		{
+			return TempInst;
+		}
+	}
+	return nullptr;
+}
+
 TArray<UObject*> UInstanceActorComponent::GetAllInstanceContexts()
 {
 	TArray<UObject*> OutObjs;

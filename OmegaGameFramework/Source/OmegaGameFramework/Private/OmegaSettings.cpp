@@ -108,6 +108,11 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_Begin,"Event.Ability.Begin");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_End,"Event.Ability.End");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Turn_Start,"Event.Combat.Turn.Start");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Turn_End,"Event.Combat.Turn.End");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Start,"Event.Combat.Start");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_End,"Event.Combat.End");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Impact,"Event.Combat.Impact");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Attack,"Event.Combat.Attack");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Defend,"Event.Combat.Defend");
 
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

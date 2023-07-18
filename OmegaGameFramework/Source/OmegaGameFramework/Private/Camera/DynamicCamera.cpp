@@ -3,7 +3,9 @@
 
 #include "Camera/DynamicCamera.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "OmegaSettings.h"
+#include "Engine/LocalPlayer.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UOmegaDynamicCameraSubsystem::Initialize(FSubsystemCollectionBase& Collection)

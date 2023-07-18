@@ -390,7 +390,7 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 		// entirely ignore any Input activation
 	}
 
-	if (InputPins.Contains(PinName))
+	if (InputPins.Contains(PinName) || ActivationType==EFlowPinActivationType::Forced)
 	{
 		if (SignalMode == EFlowSignalMode::Enabled)
 		{

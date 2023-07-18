@@ -80,15 +80,28 @@ public:
 };
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject
+class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject, public IDataInterface_General
 {
 	GENERATED_BODY()
 
-public: 
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
+	FText ReactionName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
+	FText ReactionDescription;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
+	FLinearColor ReactionColor;
 
 	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
-	float OnDamageApplied(float BaseDamage) const;
+	float OnDamageApplied(UOmegaAttribute* Attribute, float BaseDamage) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
 	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
+
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	                                               FText& Description) override;
 };

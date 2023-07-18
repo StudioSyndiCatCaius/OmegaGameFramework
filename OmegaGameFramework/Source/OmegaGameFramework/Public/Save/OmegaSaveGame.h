@@ -10,14 +10,13 @@
 #include "Gameplay/GameplayTagsInterface.h"
 #include "UObject/SoftObjectPath.h"
 
+
 #include "OmegaSaveGame.generated.h"
 
 class UWorld;
 class UGameInstance;
+class UOmegaZoneData;
 
-/**
- * 
- */
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveGame : public UOmegaSaveBase
 {
@@ -33,6 +32,9 @@ public:
 
 	UPROPERTY()
 	FTransform SavedPlayerTransform;
+
+	UPROPERTY()
+	UOmegaZoneData* ActiveZone;
 
 	UPROPERTY(BlueprintReadOnly, Category="Save")
 	FDateTime SaveDate;

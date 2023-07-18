@@ -7,6 +7,7 @@
 
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
+#include "Engine/Texture2D.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Zone/OmegaZoneSubsystem.h"
@@ -62,10 +63,11 @@ void AOmegaZoneTransit::BeginPlay()
 	
 }
 
-void AOmegaZoneTransit::Destroyed()
+void AOmegaZoneTransit::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	//GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->ZonePoints.Remove(this);;
+	Super::EndPlay(EndPlayReason);
 }
+
 
 void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 {
@@ -107,7 +109,11 @@ void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 void AOmegaZoneTransit::OnBoxTransitOverlapBegin(class UPrimitiveComponent* OverlappedComponent, class AActor* OtherActor,
 	class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	const APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if(!PlayerPawn)
+	{
+		return;
+	}
 	APlayerController* MyPlayerController = Cast<APlayerController>(PlayerPawn->GetController());
 	UE_LOG(LogTemp, Warning, TEXT("Begin Zone Transit"));
 	if (MyPlayerController)
@@ -166,7 +172,7 @@ void AOmegaZonePoint::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AOmegaZonePoint::Destroyed()
+void AOmegaZonePoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->ZonePoints.Remove(this);
 }

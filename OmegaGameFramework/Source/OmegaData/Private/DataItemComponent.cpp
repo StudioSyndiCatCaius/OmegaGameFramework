@@ -75,6 +75,14 @@ UOmegaDataItem* UDataItemComponent::GetDataItem()
 	return nullptr;
 }
 
+void UDataItemComponent::ApplyToActor(const FString& Flag, FGameplayTagContainer Tags)
+{
+	if(DataItem)
+	{
+		DataItem->ApplyTraitsToActor(GetOwner(),Flag,Tags);
+	}
+}
+
 TArray<FOmegaAttributeModifier> UDataItemComponent::GetModifierValues_Implementation()
 {
 	if(DataItem)

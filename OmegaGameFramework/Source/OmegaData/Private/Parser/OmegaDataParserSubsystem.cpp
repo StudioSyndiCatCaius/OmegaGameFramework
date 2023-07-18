@@ -2,6 +2,8 @@
 
 
 #include "Parser/OmegaDataParserSubsystem.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 FString UOmegaDataParserReader::GetParsedDataProperty_String(const FString& Property)
 {

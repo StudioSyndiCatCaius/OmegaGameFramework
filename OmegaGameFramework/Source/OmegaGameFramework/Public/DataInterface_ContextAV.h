@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "OmegaGameplayEffect.h"
 #include "UObject/Interface.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "NiagaraSystem.h"
+#include "Sound/SoundBase.h"
+#include "GameplayTagContainer.h"
+#include "LevelSequence.h"
 #include "DataInterface_ContextAV.generated.h"
 
 

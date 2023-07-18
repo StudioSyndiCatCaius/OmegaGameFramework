@@ -29,6 +29,7 @@ void UAsyncAction_ActivateAbility::Activate()
 		if(IsSuccess)
 		{
 			LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::UAsyncAction_ActivateAbility::NativeShutdown);
+			return;
 		}
 		else
 		{

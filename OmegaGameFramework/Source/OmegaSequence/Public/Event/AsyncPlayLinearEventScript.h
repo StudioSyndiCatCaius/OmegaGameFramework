@@ -9,7 +9,7 @@
 #include "AsyncPlayLinearEventScript.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScriptEventFinished, const FString&, Flag);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAsynScriptEventUpdated, int32, NewEventIndex, UOmegaLinearEvent*, NewEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAsynScriptEventUpdated, int32, NewEventIndex, UOmegaLinearEvent*, NewEvent, UOmegaLinearEventInstance*, Instance);
 UCLASS()
 class OMEGASEQUENCE_API UAsyncPlayLinearEventScript : public UBlueprintAsyncActionBase
 {
@@ -27,9 +27,11 @@ public:
 	int32 LocStartIndex;
 	UPROPERTY()
 	TSubclassOf<UOmegaLinearEventScriptReader> Local_ReaderClass;
-
+	UPROPERTY()
+	UOmegaLinearEventInstance* EventInstance;
+	
 	UFUNCTION()
-	void Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef) const;
+	void Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef);
 	UPROPERTY(BlueprintAssignable)
 	FOnAsynScriptEventUpdated NewEvent;
 	

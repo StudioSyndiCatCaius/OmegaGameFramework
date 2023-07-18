@@ -50,6 +50,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="DataItem")
 	UOmegaDataItem* GetDataItem();
 
+	UFUNCTION(BlueprintCallable, Category="DataItem")
+	void ApplyToActor(const FString& Flag, FGameplayTagContainer Tags);
+
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation() override;
 
