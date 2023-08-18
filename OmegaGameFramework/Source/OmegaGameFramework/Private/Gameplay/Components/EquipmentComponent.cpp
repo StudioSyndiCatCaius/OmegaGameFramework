@@ -51,6 +51,28 @@ void UEquipmentComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 }
 
+UEquipmentSlot* UEquipmentComponent::GetSlotFromID(const FString& ID)
+{
+	TArray<UEquipmentSlot*> SlotsTemp;
+	for(auto* TempSlot : SlotsTemp)
+	{
+		if(GetSlotID(TempSlot)==ID)
+		{
+			return TempSlot;
+		}
+	}
+	return nullptr;
+}
+
+FString UEquipmentComponent::GetSlotID(UEquipmentSlot* Slot)
+{
+	if(Slot)
+	{
+		return Slot->GetName();
+	}
+	return "";
+}
+
 TMap<FString, UPrimaryDataAsset*> UEquipmentComponent::GetEquipment()
 {
 	return EquippedItems;
@@ -103,6 +125,15 @@ bool UEquipmentComponent::IsItemRejected(UPrimaryDataAsset* Item)
 		}
 	}
 	return false;
+}
+
+bool UEquipmentComponent::EquipItemToSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot)
+{
+	if(Slot)
+	{
+		return EquipItem(Item,GetSlotID(Slot));
+	}
+	return false;	
 }
 
 bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, FString Slot)
@@ -188,5 +219,70 @@ void UEquipmentComponent::LinkAssetCollectionComponent(UDataAssetCollectionCompo
 void UEquipmentComponent::ClearLinkedAssetCollectionComponent(UDataAssetCollectionComponent* Component)
 {
 	LinkedCollectionComp = nullptr;
+}
+
+void UEquipmentSlot::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	Name = SlotName;
+	Description = SlotDescription;
+}
+
+void UEquipmentSlot::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	Brush = SlotIcon;
+}
+
+void UEquipmentSlot::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	Label = this->GetName();
+}
+
+FGameplayTag UEquipmentSlot::GetObjectGameplayCategory_Implementation()
+{
+	return SlotCategory;
+}
+
+FGameplayTagContainer UEquipmentSlot::GetObjectGameplayTags_Implementation()
+{
+	return SlotTags;
+}
+
+TArray<UPrimaryDataAsset*> UEquipmentSlot::FilterEquippableItems(TArray<UPrimaryDataAsset*> Items, UEquipmentComponent* Component)
+{
+	TArray<UPrimaryDataAsset*> OutItems;
+	
+	for (auto* TempItem : Items)
+	{
+		if(TempItem)
+		{
+			FGameplayTagContainer TempTags;
+			FGameplayTag TempCategory;
+			if(TempItem->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+			{
+				TempCategory = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempItem);
+				TempTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempItem);
+			}
+
+			
+			if(TempCategory.MatchesAny(AcceptedCategories) || AcceptedCategories.IsEmpty())	//If item is of category OR categories are empty
+			{
+				if(RequiredTags.IsEmpty() || TempTags.HasAny(RequiredTags))	//If item is has tags OR categories are empty
+				{
+					if(!SlotScript || SlotScript->CanEquipItem(TempItem, Component))
+					{
+						OutItems.Add(TempItem);
+					}
+				}
+			}
+		}
+	}
+	return OutItems;
+}
+
+bool UEquipmentSlotScript::CanEquipItem_Implementation(UObject* Item, UEquipmentComponent* Component) const
+{
+	return true;
 }
 

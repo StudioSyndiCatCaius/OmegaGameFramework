@@ -10,9 +10,11 @@
 #include "Engine/World.h"
 #include "MovieSceneSequencePlayer.h"
 #include "OmegaGameFrameworkBPLibrary.h"
+#include "OmegaGameManager.h"
 #include "TimerManager.h"
 #include "Engine/LevelStreaming.h"
 #include "OmegaGameplaySystem.h"
+#include "Save/OmegaSaveSubsystem.h"
 #include "Zone/OmegaZoneGameInstanceSubsystem.h"
 
 void UOmegaZoneSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -33,6 +35,81 @@ void UOmegaZoneSubsystem::Tick(float DeltaTime)
 		}
 	}
 	*/
+}
+
+UOmegaLevelData* UOmegaZoneSubsystem::GetLevelData(TSoftObjectPtr<UWorld> SoftLevelReference)
+{
+	// Check if the Soft Level Reference is valid
+	/*if (!SoftLevelReference.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Soft Level Reference is not valid! Cannot load World Data Asset."));
+		return nullptr;
+	}
+*/
+	// Get the current level path
+	FString CurrentLevelPath = SoftLevelReference.GetLongPackageName();
+	UE_LOG(LogTemp, Warning, TEXT("LEVEL DATA CHECK --> CurrentLevelPath: %s"), *CurrentLevelPath);
+	// Remove ":PersistentLevel" from the level path
+	FString LevelPathWithoutPersistentLevel = CurrentLevelPath.Replace(TEXT(":PersistentLevel"), TEXT(""));
+	LevelPathWithoutPersistentLevel.ReplaceInline(TEXT("UEDPIE_0_"),TEXT(""));
+	
+	UE_LOG(LogTemp, Warning, TEXT("LEVEL DATA CHECK --> LevelPathWithoutPersistentLevel: %s"), *LevelPathWithoutPersistentLevel);
+	FString MainNameLevel;
+	FString MainNamePath;
+	
+	// Find the position of the first occurrence of "."
+	int32 DotIndex = -1;
+	if (LevelPathWithoutPersistentLevel.FindChar('/', DotIndex))
+	{
+		// Extract the level name from the path
+		LevelPathWithoutPersistentLevel.Split("/",&MainNamePath,&MainNameLevel,ESearchCase::IgnoreCase,ESearchDir::FromEnd);
+		
+		UE_LOG(LogTemp, Warning, TEXT("LEVEL DATA CHECK --> Final Level: %s"), *MainNameLevel);
+		UE_LOG(LogTemp, Warning, TEXT("LEVEL DATA CHECK --> Final Path: %s"), *MainNamePath);
+		// Construct the DataAsset path
+		FString DataAssetPath = LevelPathWithoutPersistentLevel +  TEXT("_WorldData.") + MainNameLevel + TEXT("_WorldData");
+		
+		// Print the DataAsset path to the log for debugging
+		UE_LOG(LogTemp, Warning, TEXT("LEVEL DATA CHECK --> DataAssetPath: %s"), *DataAssetPath);
+
+		// Load the DataAsset
+		UOmegaLevelData* OmegaLevelData = Cast<UOmegaLevelData>(StaticLoadObject(UOmegaLevelData::StaticClass(), nullptr, *DataAssetPath));
+
+		if (!OmegaLevelData)
+		{
+			// Handle the case when the DataAsset is not found.
+			UE_LOG(LogTemp, Warning, TEXT("OmegaLevelData '%s' not found!"), *DataAssetPath);
+		}
+
+		return OmegaLevelData;
+	}
+	else
+	{
+		// Handle the case when "." is not found in the path.
+		UE_LOG(LogTemp, Warning, TEXT("Invalid level path: %s"), *CurrentLevelPath);
+		return nullptr;
+	}
+}
+
+UOmegaLevelData* UOmegaZoneSubsystem::GetCurrentLevelData()
+{
+	if(!LevelData)
+	{
+		LevelData = GetLevelData(GetCurrentLevelSoftReference());
+	}
+	return LevelData;
+}
+
+TSoftObjectPtr<UWorld> UOmegaZoneSubsystem::GetCurrentLevelSoftReference()
+{
+	UWorld* CurrentWorld = GetWorld();
+	if (!CurrentWorld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No current world found!"));
+		return nullptr;
+	}
+	const TSoftObjectPtr<UWorld> LevelAssetPtr(GetWorld()->GetCurrentLevel()->GetOuter()); // Get the level path name
+	return LevelAssetPtr;
 }
 
 void UOmegaZoneSubsystem::OnLoadFromLevelComplete()
@@ -60,30 +137,66 @@ void UOmegaZoneSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
 	GamInstSubsys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>();
-
+		
 	FTimerHandle LocalTimer;
 	GetWorld()->GetTimerManager().SetTimer(LocalTimer, this, &UOmegaZoneSubsystem::SpawnFromStartingPoint, 0.1f, false);
-	
 }
 
 void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 {
+	// Is in Level Transit?
 	if(GamInstSubsys->IsInlevelTransit)
 	{
 		TArray<AActor*> TempPoints;
-		UGameplayStatics::GetAllActorsOfClass(this,AOmegaZonePoint::StaticClass(),TempPoints);
-		for (auto* TempActor: TempPoints)
+		AOmegaZonePoint* TempPoint = nullptr;
+
+		// If loading from a save game, spawn at saves spot.
+		if(GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->IsFlagActive("$$LoadingLevel$$"))
 		{
-			AOmegaZonePoint* TempPoint = Cast<AOmegaZonePoint>(TempActor);
-			if(TempPoint->FromLevel==GamInstSubsys->PreviousLevel && GamInstSubsys->TargetSpawnPointTag==TempPoint->ZonePointID)
+			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->SetFlagActive("$$LoadingLevel$$",false);
+				
+			const UOmegaSaveGame* TempSave = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData;
+
+			TempPoint = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(),TempSave->SavedPlayerTransform);
+			TempPoint->SetLifeSpan(1);
+			TempPoint->ZoneToLoad=TempSave->ActiveZone;
+			TempPoint->FinishSpawning(TempSave->SavedPlayerTransform);
+		}
+		else
+		{
+			//Try Get Level Transit spawn point
+			UGameplayStatics::GetAllActorsOfClass(this,AOmegaZonePoint::StaticClass(),TempPoints);
+			for (auto* TempActor: TempPoints)
 			{
-				UE_LOG(LogTemp, Display, TEXT("Begining Level Spawn Transit: %s"), *TempPoint->GetName());
-				TransitPlayerToPoint(TempPoint, UGameplayStatics::GetPlayerController(this,0));
-				break;
+				const AOmegaZonePoint* CheckedPoint = Cast<AOmegaZonePoint>(TempActor);
+				if(CheckedPoint && CheckedPoint->FromLevel==GamInstSubsys->PreviousLevel && GamInstSubsys->TargetSpawnPointTag==CheckedPoint->ZonePointID) //Is valid spawn point;
+					{
+						TempPoint = Cast<AOmegaZonePoint>(TempActor);
+						break;
+
+					}
 			}
 		}
+		
+		if(TempPoint)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Begining Level Spawn Transit: %s"), *TempPoint->GetName());
+			TransitPlayerToPoint(TempPoint, UGameplayStatics::GetPlayerController(this,0));
+		}
+	}
+	else
+	{
+		LoadDefaultZone();
 	}
 	GamInstSubsys->IsInlevelTransit = false;
+}
+
+void UOmegaZoneSubsystem::LoadDefaultZone()
+{
+	if(GetCurrentLevelData() && GetCurrentLevelData()->GetDefaultZoneData())  // Load Default Level Data
+	{
+		LoadZone(GetCurrentLevelData()->GetDefaultZoneData());
+	}
 }
 
 
@@ -206,8 +319,15 @@ void UOmegaZoneSubsystem::TransitPlayerToPoint(AOmegaZonePoint* Point, APlayerCo
 		{
 			TargetPlayer = Player;
 		}
-
-		LoadZone(Point->ZoneToLoad);
+		if(Point->ZoneToLoad)
+		{
+			LoadZone(Point->ZoneToLoad);
+		}
+		else
+		{
+			LoadDefaultZone();
+		}
+		
 
 		//if(Point->ZoneToLoad)
 		//{

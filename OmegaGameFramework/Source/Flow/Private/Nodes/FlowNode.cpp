@@ -402,7 +402,10 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 
 			ActivationState = EFlowNodeState::Active;
 		}
-
+		
+		//Send Delegate to subsystem
+		GetFlowSubsystem()->OnFlowNodeEntered.Broadcast(GetFlowAsset(),this,PinName);
+		
 #if !UE_BUILD_SHIPPING
 		// record for debugging
 		TArray<FPinRecord>& Records = InputRecords.FindOrAdd(PinName);
@@ -424,6 +427,7 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 		return;
 	}
 
+	
 	if (SignalMode == EFlowSignalMode::Enabled)
 	{
 		ExecuteInput(PinName);
@@ -481,6 +485,7 @@ void UFlowNode::TriggerOutput(FName PinName, const bool bFinish /*= false*/, con
 		const FConnectedPin FlowPin = GetConnection(PinName);
 		GetFlowAsset()->TriggerInput(FlowPin.NodeGuid, FlowPin.PinName);
 	}
+	
 }
 
 void UFlowNode::TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish, const EFlowPinActivationType ActivationType /*= Default*/)

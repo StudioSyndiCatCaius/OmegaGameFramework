@@ -14,18 +14,48 @@
 class AOmegaGameplaySystem;
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaLevelData : public UPrimaryDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaLevelData : public UPrimaryDataAsset, public  IDataInterface_General, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", DisplayName="Name")
+	FText DisplayName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", DisplayName="Description")
+	FText DisplayDescription;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", DisplayName="Icon")
+	FSlateBrush DisplayIcon;
+
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tags")
+	FGameplayTag CategoryTag;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tags")
+	FGameplayTagContainer GameplayTags;
+
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Level")
+	UOmegaZoneData* DefaultZone;
+
+	//If Default zone is empty, this custom zone data will be defaulted to.
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="Level")
+	UOmegaZoneData* OverrideZoneData;
+
+	UOmegaZoneData* GetDefaultZoneData() const
+	{
+		if(DefaultZone) {return DefaultZone;}
+		if(OverrideZoneData) {return  OverrideZoneData;}
+		return nullptr;
+	}
 	
 };
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaZoneData : public UPrimaryDataAsset
+UCLASS(EditInlineNew)
+class OMEGAGAMEFRAMEWORK_API UOmegaZoneData : public UPrimaryDataAsset, public  IDataInterface_General, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
 
@@ -33,18 +63,21 @@ public:
 	// Sets default values for this actor's properties
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", DisplayName="Name")
 	FText ZoneName;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", DisplayName="Description")
 	FText ZoneDescription;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", DisplayName="Icon")
 	FSlateBrush ZoneIcon;
+
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tags")
 	FGameplayTag ZoneCategory;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tags")
 	FGameplayTagContainer ZoneTags;
+
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone")
 	TArray<FName> StreamedLevels;

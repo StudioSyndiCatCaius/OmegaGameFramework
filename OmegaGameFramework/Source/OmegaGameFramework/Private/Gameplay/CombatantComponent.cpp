@@ -20,6 +20,7 @@
 #include "Gameplay/DataInterface_DamageModifier.h"
 #include "Gameplay/Combatant/CombatantTargetIndicator.h"
 #include "Gameplay/Combatant/OmegaFaction.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetTextLibrary.h"
 
 
@@ -578,7 +579,7 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 	// DAMAGE TYPE REACTIONS
 	if(DamageType && DamageTypeReactions.Contains(DamageType))
 	{
-		const TSubclassOf<UOmegaDamageTypeReaction> ReactClass = DamageTypeReactions.FindOrAdd(DamageType);
+		UOmegaDamageTypeReactionAsset* ReactClass = DamageTypeReactions.FindOrAdd(DamageType);
 		if(GetDamageReactionObject(ReactClass))
 		{
 			UE_LOG(LogTemp, Display, TEXT("Apply reaction damage for %s"), *ReactClass->GetName());
@@ -612,6 +613,15 @@ void UCombatantComponent::CancelAllAbilities()
 	for(auto* TempAb : GetActiveAbilities())
 	{
 		TempAb->CancelAbility();
+	}
+}
+
+void UCombatantComponent::SetAttributeValueCategory(FGameplayTag CategoryTag, bool bReinitialize)
+{
+	AttributeValueCategory = CategoryTag;
+	if(bReinitialize)
+	{
+		InitializeAttributes();
 	}
 }
 
@@ -908,12 +918,18 @@ const TArray<UObject*> UCombatantComponent::GetAttributeModifiers()
 ///Applies Modifier Values
 float UCombatantComponent::GatherAttributeModifiers(TArray<UObject*> Modifiers, float BaseValue, UOmegaAttribute* Attribute)
 {
+	
+	if(!Attribute->bAllowModifiers)
+	{
+		return BaseValue;
+	}
+	
 	//Set Init Value
 	float OutValue = BaseValue;
 	TArray<FOmegaAttributeModifier> TempModList;
 	for(UObject* TempObject : Modifiers)
 	{
-		// Makesute this object uses a Attribute Modifier Interface
+		// Make suRe this object uses a Attribute Modifier Interface
 		if(TempObject)
 		{
 			if(TempObject->Implements<UDataInterface_AttributeModifier>())
@@ -922,20 +938,12 @@ float UCombatantComponent::GatherAttributeModifiers(TArray<UObject*> Modifiers, 
 				TArray<FOmegaAttributeModifier> NewMods = IDataInterface_AttributeModifier::Execute_GetModifierValues(TempObject);
 				TempModList.Append(NewMods);
 				
-				/*
-				for(FOmegaAttributeModifier TempModVal : IDataInterface_AttributeModifier::Execute_GetModifierValues(TempObject))
-				{
-					if(TempModVal.Attribute==Attribute)
-					{
-						const float MultipliedValue = GetAttributeBaseValue(Attribute)*TempModVal.Multiplier;
-						OutValue = OutValue+MultipliedValue+TempModVal.Incrementer;
-					}
-				}
-				*/
 			}
 		}
 	}
 	OutValue = AdjustAttributeValueByModifiers(Attribute, TempModList);
+
+	
 	return OutValue;
 }
 
@@ -964,18 +972,13 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetAllModifierValues()
 	return OutModVals;
 }
 
-UOmegaDamageTypeReaction* UCombatantComponent::GetDamageReactionObject(TSubclassOf<UOmegaDamageTypeReaction> Class)
+UOmegaDamageTypeReaction* UCombatantComponent::GetDamageReactionObject(UOmegaDamageTypeReactionAsset* Class)
 {
-	for (auto* TempReact : LocalDamageReactions)
+	if(Class && Class->ReactionScript)
 	{
-		if(TempReact && TempReact->GetClass()==Class)
-		{
-			return TempReact;
-		}
+		return Class->ReactionScript;
 	}
-	UOmegaDamageTypeReaction* NewLocalReaction = NewObject<UOmegaDamageTypeReaction>(this, Class);
-	LocalDamageReactions.Add(NewLocalReaction);
-	return NewLocalReaction;
+	return nullptr;
 }
 
 ////////////////////////////////////
@@ -987,9 +990,38 @@ FGameplayTagContainer UCombatantComponent::GetBlockedEffectTags()
 	return BlockEffectWithTags;
 }
 
+float UCombatantComponent::GetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass)
+{
+	if(EffectClass)
+	{
+		const float DefaultRate = GetMutableDefault<AOmegaGameplayEffect>(EffectClass)->DefaultSuccessRate;
+		if(EffectSuccessRate.Contains(EffectClass))
+		{
+			return  FMath::Clamp(EffectSuccessRate[EffectClass]+DefaultRate,0.0f,2.0f);
+		}
+		return DefaultRate;
+	}
+	return 1;
+}
+
+void UCombatantComponent::SetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass, float OffsetRate)
+{
+	EffectSuccessRate.Add(EffectClass,OffsetRate);
+}
+
+
+
 AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, float Power, UCombatantComponent* Target, FGameplayTagContainer AddedTags, UObject* Context)
 {
-	if (EffectClass && Target && !Target->GetBlockedEffectTags().HasAny(GetMutableDefault<AOmegaGameplayEffect>(EffectClass)->EffectTags))
+	//Check Effect Success Rate. Abort function if unsuccessful
+	const float SuccessValue = UKismetMathLibrary::RandomFloat();
+	if(SuccessValue>GetEffectSuccessRate(EffectClass))
+	{
+		return nullptr;
+	}
+		
+	if (EffectClass && Target &&
+		!Target->GetBlockedEffectTags().HasAny(GetMutableDefault<AOmegaGameplayEffect>(EffectClass)->EffectTags))
 	{
 		const FTransform SpawnWorldPoint = Target->GetOwner()->GetActorTransform();
 		
@@ -1369,33 +1401,66 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation()
 	return GetAllSkills();
 }
 
-bool UCombatantComponent::RunGambit(UCombatantGambitAsset* Gambit)
+bool UCombatantComponent::RunDefaultGambit()
+{
+	if(DefaultGambit)
+	{
+		return RunGambit(DefaultGambit);
+	}
+	return false;
+}
+
+bool UCombatantComponent::RunGambit(UCombatantGambitAsset* Gambit, bool bReplaceDefaultGambit)
 {
 	if(Gambit)
 	{
-		for(const FCombatantGambit TempGambit : Gambit->GambitActions)
+		TSubclassOf<AOmegaAbility> IncomingAbility;
+		UObject* IncomingContext;
+		
+		if(GetActionDataFromGambit(Gambit, IncomingAbility,IncomingContext))
 		{
-			if(TempGambit.Gambit_IF && TempGambit.Gambit_THEN && TempGambit.Gambit_IF->RunGambitCheck(this))
+			bool WasSuccess;
+			ExecuteAbility(IncomingAbility, IncomingContext,WasSuccess);
+			if(WasSuccess)
 			{
-				TSubclassOf<AOmegaAbility> IncomingAbility;
-				UObject* IncomingContext;
-				TempGambit.Gambit_THEN->RunGambitAction(this, IncomingAbility,IncomingContext);
-				AOmegaAbility* TempAbility;
-				if(IncomingAbility && IsAbilityActive(IncomingAbility,TempAbility))
-				{
-					bool WasSuccess;
-					ExecuteAbility(IncomingAbility, IncomingContext,WasSuccess);
-					if(WasSuccess)
-					{
-						return true;
-					}
-					
-				}
+				return true;
 			}
 		}
 	}
 	return false;
 }
 
+bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit, TSubclassOf<AOmegaAbility>& Ability,
+	UObject*& Context)
+{
+	if(Gambit)
+	{
+		for(const FCombatantGambit TempGambit : Gambit->GetAllGambitActions())
+		{
+			if(TempGambit.Gambit_IF && TempGambit.Gambit_THEN && TempGambit.Gambit_IF->RunGambitCheck(this))	//Is accepted Gambit
+			{
+				TSubclassOf<AOmegaAbility> IncomingAbility;
+				UObject* IncomingContext;
+				TempGambit.Gambit_THEN->RunGambitAction(this, IncomingAbility,IncomingContext);
+				
+				bool SuccessGet;
+				AOmegaAbility* LocalAbility = GetAbility(IncomingAbility,SuccessGet);
+				//Make sure ability is granted
+				if(SuccessGet)
+				{
+					// Make sure this ability is valid and can activcate
+					if(IncomingAbility && LocalAbility && LocalAbility->CanActivate(IncomingContext)) //Check if this ability can be activated
+					{
+						Ability = IncomingAbility;
+						Context = IncomingContext;
+						return true;
+					}
+				}
+				
+			}
+		}
+	}
+	return false;
+}
 
 

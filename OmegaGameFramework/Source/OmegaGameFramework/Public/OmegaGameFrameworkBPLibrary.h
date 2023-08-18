@@ -46,14 +46,14 @@ public:
 	static bool DoesObjectHaveGameplayTag(UObject* Object, FGameplayTag GameplayTag, bool bExact);
 	
 	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
-	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class", DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class,bIncludeOnEmptyTag", DeterminesOutputType="Class"))
 	static TArray<UObject*> FilterObjectsByCategoryTag(TArray<UObject*> Assets, FGameplayTag CategoryTag,
-		bool bExact, bool bExclude, TSubclassOf<UObject> Class);
+		bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag);
 
 	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
-	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class", DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class,bIncludeOnEmptyTag", DeterminesOutputType="Class"))
 	static TArray<UObject*> FilterObjectsByGameplayTags(TArray<UObject*> Assets, FGameplayTagContainer GameplayTags,
-		bool bExact, bool bExclude, TSubclassOf<UObject> Class);
+		bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag);
 
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static FGameplayTagContainer FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn);
@@ -208,6 +208,33 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Json", meta = (CustomStructureParam = "Value", AutoCreateRefTerm = "Value"))
 	static FJsonObjectWrapper CreateJsonField(const FString& FieldName, const int32& Value);
 
-
+	//###############################################################################
+	// Generals
+	//###############################################################################
+	UFUNCTION(BlueprintPure, Category="Omega|General")
+	static FText GetObjectDisplayName(UObject* Object);
+	UFUNCTION(BlueprintPure, Category="Omega|General")
+	static FText GetObjectDisplayDescription(UObject* Object);
+	UFUNCTION(BlueprintPure, Category="Omega|General")
+	static FString GetObjectLabel(UObject* Object);
 };
 
+//--------------------------------------------------------------------------------------------------------------------
+// Star Rank 
+//--------------------------------------------------------------------------------------------------------------------
+UCLASS()
+class UOmegaStarRankFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	//Gets a value from 0-1 based on the star rank. R.G. ☆☆☆☆☆ = 0.0, ★★★☆☆ = 0.6, ★★★★★ = 1
+	UFUNCTION(BlueprintPure, Category="Omega|StarRank")
+	static float GetFloatFromStarRank(EOmegaStarRank Rank);
+
+	//Gets a value from 0-5 based on the star rank. R.G. ☆☆☆☆☆ = 0, ★★★☆☆ = 3, ★★★★★ = 5
+	UFUNCTION(BlueprintPure, Category="Omega|StarRank")
+	static int32 GetIntFromStarRank(EOmegaStarRank Rank);
+	
+};

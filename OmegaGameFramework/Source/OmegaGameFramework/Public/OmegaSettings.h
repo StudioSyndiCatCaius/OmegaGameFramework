@@ -11,7 +11,7 @@
 #include "LevelSequence.h"
 #include "OmegaAttribute.h"
 #include "Engine/DeveloperSettings.h"
-
+#include "MetasoundSource.h"
 #include "GameFramework/SaveGame.h"
 #include "Save/OmegaSaveGame.h"
 #include "Save/OmegaSaveGlobal.h"
@@ -94,11 +94,26 @@ public:
 	//BGM
 	//########################################################
 	UPROPERTY(EditAnywhere, config, Category = "BGM")
-	float BGM_FadeDuration = 0.5;
-
+	float BGM_FadeDuration = 1;
+	
+	UPROPERTY(EditAnywhere, config, Category = "BGM")
+	bool FadeBGMOnLevelTransit = true;
+	
 	UPROPERTY(EditAnywhere, config, Category = "BGM", meta=(MetaClass="GamePreferenceFloat"))
 	FSoftObjectPath BGM_VolumePreference;
 
+	UPROPERTY(EditAnywhere, config, Category = "BGM", meta=(MetaClass="MetasoundSource"))
+	FSoftObjectPath BgmMetasound{"/OmegaGameFramework/DEMO/MetaSound/DemoMS_BGM.DemoMS_BGM"};
+
+	UMetaSoundSource* GetMetaSoundSourceFromPath() const
+	{
+		if (UMetaSoundSource* MetaSoundSource = Cast<UMetaSoundSource>(BgmMetasound.ResolveObject()))
+		{
+			return MetaSoundSource;
+		}
+		return nullptr;
+	}
+	
 	//########################################################
 	//Dyna Cam
 	//########################################################

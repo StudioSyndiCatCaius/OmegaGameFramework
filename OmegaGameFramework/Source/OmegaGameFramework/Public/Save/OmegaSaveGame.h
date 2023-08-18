@@ -51,5 +51,8 @@ public:
 		UPROPERTY(BlueprintReadWrite, Category="Tags")
 		TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
 
+	UPROPERTY(BlueprintReadOnly, Category="Save")
+	UTexture2D* SaveScreenshot;
+
 };
 

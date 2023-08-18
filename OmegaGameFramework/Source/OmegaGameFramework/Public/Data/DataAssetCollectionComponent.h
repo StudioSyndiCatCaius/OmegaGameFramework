@@ -54,8 +54,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Data")
 	void SetCollectionMap(TMap<UPrimaryDataAsset*, int32> Map);
 	
-	UFUNCTION(BlueprintPure, Category = "Ω|Data")
-	TMap<UPrimaryDataAsset*, int32> GetCollectionMap();
+	UFUNCTION(BlueprintPure, Category = "Ω|Data", DisplayName="Get Asset Collection Map")
+	TMap<UPrimaryDataAsset*, int32> GetCollectionMap(bool IncludeZero=true);
 
 	UPROPERTY(BlueprintAssignable)
 	FOnAssetAdded OnAssetAdded;

@@ -19,7 +19,9 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_Input
 {
 	GENERATED_BODY()
 public:
-
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Input")
+	void OnControlSetWidget();
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
 	void InputNavigate(FVector2D Axis);
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
@@ -32,4 +34,5 @@ public:
 	bool InputBlocked();
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
 	void InputTag(FGameplayTag Tag);
+	
 };

@@ -29,8 +29,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsyste
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	
 public:
-	
-	
+
 	////////////////////////
 	/////////Menus/////////
 	//////////////////////

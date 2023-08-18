@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Components/ActorComponent.h"
+#include "Misc/Paths.h"
 #include "Misc/Timespan.h"
 #include "OmegaSaveSubsystem.generated.h"
 
@@ -294,6 +295,16 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem")
 	TArray<UObject*> GetSaveSources();
+	//###############################################################################################
+	// Screenshot
+	//###############################################################################################
+	FString Local_GetScreenshotPath(FString SlotName)
+	{
+		FString fileName = FPaths::ProjectSavedDir();
+		fileName = fileName + "/SaveGames/" + SlotName + ".png";
+		return  fileName;
+	}
+	
 };
 
 

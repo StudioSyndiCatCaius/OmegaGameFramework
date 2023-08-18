@@ -49,10 +49,14 @@ bool UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTag(UObject* Object, FG
 }
 
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray<UObject*> Assets,
-                                                                          FGameplayTag CategoryTag, bool bExact, bool bExclude, TSubclassOf<UObject> Class)
+                                                                          FGameplayTag CategoryTag, bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag)
 {
-	TArray<UObject*> OutAssets;
+	if(bIncludeOnEmptyTag && !CategoryTag.IsValid())
+	{
+		return Assets;
+	}
 	
+	TArray<UObject*> OutAssets;
 	for(auto* TempAsset : Assets)
 	{
 		if(TempAsset)
@@ -82,8 +86,13 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray
 }
 
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByGameplayTags(TArray<UObject*> Assets,
-	FGameplayTagContainer GameplayTags, bool bExact, bool bExclude, TSubclassOf<UObject> Class)
+	FGameplayTagContainer GameplayTags, bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag)
 {
+	if(bIncludeOnEmptyTag && GameplayTags.IsEmpty())
+	{
+		return Assets;
+	}
+		
 	TArray<UObject*> OutAssets;
 	
 	for(auto* TempAsset : Assets)
@@ -661,6 +670,70 @@ FJsonObjectWrapper UOmegaGameFrameworkBPLibrary::CreateJsonField(const FString& 
 	const TSharedPtr<FJsonValue> JsonValue = MakeShared<FJsonValueNumber>(Value);
 	NewJson.JsonObject->SetField(FieldName,JsonValue);
 	return NewJson;
+}
+
+FText UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(UObject* Object)
+{
+	FText OutName;
+	FText OutDescription;
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralDataText(Object,"",nullptr,OutName,OutDescription);
+	}
+	return OutName;
+}
+
+FText UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(UObject* Object)
+{
+	FText OutName;
+	FText OutDescription;
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralDataText(Object,"",nullptr,OutName,OutDescription);
+	}
+	return OutDescription;
+}
+
+FString UOmegaGameFrameworkBPLibrary::GetObjectLabel(UObject* Object)
+{
+	FString OutName;
+	if(Object)
+	{
+		OutName=Object->GetName();
+	}
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralAssetLabel(Object,OutName);
+	}
+	return OutName;
+}
+
+float UOmegaStarRankFunctions::GetFloatFromStarRank(EOmegaStarRank Rank)
+{
+	float OutVal = 0;
+	switch (Rank) {
+	case Star5: OutVal=1; break;
+	case Star4: OutVal=0.8; break;
+	case Star3: OutVal=0.6; break;
+	case Star2: OutVal=0.4; break;
+	case Star1: OutVal=0.2; break;
+	case Star0: OutVal=0; break;
+	}
+	return OutVal;
+}
+
+int32 UOmegaStarRankFunctions::GetIntFromStarRank(EOmegaStarRank Rank)
+{
+	int32 OutVal = 0;
+	switch (Rank) {
+	case Star5: OutVal=5; break;
+	case Star4: OutVal=4; break;
+	case Star3: OutVal=3; break;
+	case Star2: OutVal=2; break;
+	case Star1: OutVal=1; break;
+	case Star0: OutVal=0; break;
+	}
+	return OutVal;
 }
 
 

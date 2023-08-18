@@ -80,6 +80,22 @@ public:
 	FOnZoneUnloaded OnZoneUnloaded;
 	UPROPERTY(BlueprintAssignable)
 	FOnPlaySpawnedAtPoint OnPlaySpawnedAtPoint;
+
+	//------------------------------------------------------------------------
+	// Level Data
+	//------------------------------------------------------------------------
+	UPROPERTY()
+	UOmegaLevelData* LevelData = nullptr;
+
+	UFUNCTION(BlueprintPure, Category="Omega|Zone")
+	UOmegaLevelData* GetLevelData(TSoftObjectPtr<UWorld> SoftLevelReference);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Zone")
+	UOmegaLevelData* GetCurrentLevelData();
+
+	UFUNCTION(BlueprintPure, Category="Omega|Zone")
+	TSoftObjectPtr<UWorld> GetCurrentLevelSoftReference();
+
 	
 protected:
 	UPROPERTY()
@@ -91,13 +107,15 @@ protected:
 	void SpawnFromStartingPoint();
 	
 public:
+
+	UFUNCTION(BlueprintCallable, Category="Zone")
+	void LoadDefaultZone();
+	
 	//#########################################################################################################
 	// TRANSIT
 	//#########################################################################################################
 	UPROPERTY()
 	TArray<AOmegaZonePoint*> ZonePoints;
-
-	
 	
 	UFUNCTION()
 	AOmegaZonePoint* GetZonePointFromID(FGameplayTag ID);

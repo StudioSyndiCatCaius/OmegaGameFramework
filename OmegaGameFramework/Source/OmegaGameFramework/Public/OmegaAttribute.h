@@ -21,6 +21,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAttribute : public UPrimaryDataAsset, public 
 
 public:
 
+	//-----------------------------------------------------------------------------------
+	// General
+	//-----------------------------------------------------------------------------------
+
 	UFUNCTION(BlueprintPure, Category = "Ω|Attributes")
 	float GetAttributeValue(int32 Level, int32 AttributeRank, FGameplayTag ValueCategory);
 
@@ -42,6 +46,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "General")
 	FLinearColor DamageColor;
 	
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "General")
+	UOmegaAttributeScript* Script;
+
+	//-----------------------------------------------------------------------------------
+	// Values
+	//-----------------------------------------------------------------------------------
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
 	float StartValuePercentage;
 
@@ -57,12 +68,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
 	TMap<FGameplayTag, float> ValueCategoryAdjustments;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
+	bool bAllowModifiers = true;
+
 	int32 LocalFloor(float Number, int32 Decimals);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value", AdvancedDisplay)
 	int32 MaxDecimals = 2;
 	
-	//Tags
+	//-----------------------------------------------------------------------------------
+	// Tags
+	//-----------------------------------------------------------------------------------
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags")
 	FGameplayTag AttributeCategory;
 	
@@ -77,7 +94,10 @@ public:
 	FGameplayTagContainer GetObjectGameplayTags();
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation();
 
-///Widget
+	//-----------------------------------------------------------------------------------
+	// Widget
+	//-----------------------------------------------------------------------------------
+
 	UPROPERTY(EditAnywhere, Category="Widget")
 	TEnumAsByte<ERoundingMode> RoundingMode = ERoundingMode::HalfToEven;
 	
@@ -94,6 +114,11 @@ public:
 	int32 MinFractionalDigits;
 	UPROPERTY(EditAnywhere, Category="Widget")
 	int32 MaxFractionalDigits = 0;
+
+	//-----------------------------------------------------------------------------------
+	// Sub Attributes
+	//-----------------------------------------------------------------------------------
+
 	
 //DataInterface
 
@@ -116,4 +141,13 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
 	void GetGeneralAssetLabel(FString& Label);
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label);
+};
+
+UCLASS(EditInlineNew, Blueprintable, BlueprintType)
+class OMEGAGAMEFRAMEWORK_API UOmegaAttributeScript : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	
 };

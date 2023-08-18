@@ -17,8 +17,10 @@
 #include "OmegaSettings.h"
 #include "Gameplay/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetRenderingLibrary.h"
 
 #include "Save/OmegaSaveCondition.h"
+#include "Zone/OmegaZoneGameInstanceSubsystem.h"
 #include "Zone/OmegaZoneSubsystem.h"
 
 
@@ -96,7 +98,9 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success)
 	
 	if (ValidSave)
 	{
-		return Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+		UOmegaSaveGame* LocalGameSave = Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+		LocalGameSave->SaveScreenshot = UKismetRenderingLibrary::ImportFileAsTexture2D(this, Local_GetScreenshotPath(SlotName));
+		return LocalGameSave;
 	}
 	
 	return nullptr;
@@ -137,7 +141,7 @@ bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
 
 	TArray<AActor*> ActorsForSaving;
 	UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UOmegaSaveInterface::StaticClass(), ActorsForSaving);
-
+	
 	//Save Json Sources
 	for(auto* TempSource : GetSaveSources())
 	{
@@ -167,6 +171,10 @@ bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
 	
 	//Save Playtime
 	//LocalActiveData->SavedPlaytime = GetGameInstance()->GetSubsystem<UOmegaGameManager>()->Playtime;
+
+
+	const FString fileName = Local_GetScreenshotPath(SlotName);
+	FScreenshotRequest::RequestScreenshot(fileName, false, false);
 	
 	return UGameplayStatics::SaveGameToSlot(ActiveSaveData, SlotName, 0);
 }
@@ -216,6 +224,9 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 	if(LoadSavedLevel)
 	{
 		const FGameplayTag EmptyPoint;
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->SetFlagActive("$$LoadingLevel$$",true);
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->IsInlevelTransit=true;
+		
 		GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToLevel_Name(*ActiveSaveData->ActiveLevelName,EmptyPoint);
 	}
 	

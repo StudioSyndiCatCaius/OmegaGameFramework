@@ -30,7 +30,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(EditAnywhere, Category="Instanced Actor Component")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Instanced Actor Component", meta=(ExposeOnSpawn))
 	TSubclassOf<AOmegaInstanceActor> InstancedActorClass;
 
 	UPROPERTY()

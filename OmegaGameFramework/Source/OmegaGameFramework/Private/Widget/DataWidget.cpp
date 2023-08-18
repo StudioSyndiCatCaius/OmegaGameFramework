@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
+#include "Widget/DataList.h"
 
 void UDataWidget::NativePreConstruct()
 {
@@ -77,6 +78,15 @@ UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 void UDataWidget::Refresh()
 {
 	SetIsEnabled(GetIsEntitySelectable());
+
+	UObject* LocalListOwner = nullptr;
+	
+	if(GetOwningList() && GetOwningList()->ListOwner)
+	{
+		LocalListOwner = GetOwningList()->ListOwner;
+	}
+	
+	OnRefreshed(ReferencedAsset, LocalListOwner);
 }
 
 //----------------------NATIVE CONSTRUCT-------------------------------------------//
@@ -112,6 +122,11 @@ void UDataWidget::NativeConstruct()
 		}
 	}
 	Local_UpdateTooltip(ReferencedAsset);
+}
+
+void UDataWidget::WidgetNotify(FName Notify)
+{
+	OnWidgetNotify.Broadcast(this, Notify);
 }
 
 FString UDataWidget::GetAssetLabel()

@@ -49,10 +49,22 @@ UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
-	
+
+
 public:
+
+	UFUNCTION()
+	TArray<FCombatantGambit> GetAllGambitActions();
+	
+	//Gambits played BEFORE gambit actions
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Gambits")
+	TArray<UCombatantGambitAsset*> PrecedingGambits;
+		
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Gambits")
 	TArray<FCombatantGambit> GambitActions;
-	
+
+	//Gambits played AFTER gambit actions
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Gambits")
+	TArray<UCombatantGambitAsset*> FollowingGambits;
 };
 

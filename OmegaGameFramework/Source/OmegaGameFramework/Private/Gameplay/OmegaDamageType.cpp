@@ -2,7 +2,7 @@
 
 
 #include "Gameplay/OmegaDamageType.h"
-
+#include "OmegaAttribute.h"
 
 
 void UOmegaDamageType::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
@@ -56,16 +56,21 @@ TMap<FGameplayTag, UNiagaraSystem*> UOmegaDamageType::GetContextAVNiagara_Implem
 	return ContextNiagara;
 }
 
-void UOmegaDamageTypeReaction::GetGeneralAssetColor_Implementation(FLinearColor& Color)
+void UOmegaDamageTypeReactionAsset::GetGeneralAssetColor_Implementation(FLinearColor& Color)
 {
 	Color = ReactionColor;
 }
 
-void UOmegaDamageTypeReaction::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
+void UOmegaDamageTypeReactionAsset::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
 	FText& Name, FText& Description)
 {
 	Name = ReactionName;
 	Description = ReactionDescription;
+}
+
+FGameplayTagContainer UOmegaDamageTypeReactionAsset::GetObjectGameplayTags_Implementation()
+{
+	return ReactionTags;
 }
 
 void UOmegaDamageTypeReaction::OnEffectApplied_Implementation(AOmegaGameplayEffect* Effect) const

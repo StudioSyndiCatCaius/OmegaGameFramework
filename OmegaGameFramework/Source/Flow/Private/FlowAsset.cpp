@@ -358,7 +358,6 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, const bool Override, con
 	PreStartFlow();
 
 	//Run Traits
-	
 	for(UFlowAssetTrait* TempTrait : Traits)
 	{
 		if(TempTrait)
@@ -369,7 +368,6 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, const bool Override, con
 	
 	ensureAlways(StartNode);
 	RecordedNodes.Add(StartNode);
-	StartNode->TriggerFirstOutput(true);
 
 	if(Override && GetNodeFromGuid(NodeGuid))
 	{

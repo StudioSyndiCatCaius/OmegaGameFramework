@@ -22,6 +22,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelected, UDataWidget*, DataWidge
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHovered, UDataWidget*, DataWidget, bool, bIsHovered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlight, UDataWidget*, DataWidget, bool, bIsHighlighted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSourceAssetChanged, UObject*, SourceAsset);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWidgetNotify, UDataWidget*, DataWidget, FName, Notify);
 
 /**
  * 
@@ -57,7 +58,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget")
 	UMaterialInstanceDynamic* GetHoveredMaterialInstance();
 
+	UFUNCTION(BlueprintCallable, Category="DataWidget", meta=(Keywords="update"))
 	void Refresh();
+
+	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget", meta=(Keywords="update"))
+	void OnRefreshed(UObject* SourceAsset = nullptr, UObject* ListOwner = nullptr);
+	
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
@@ -65,9 +71,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
 	bool bIsHighlighted;
 	
-	UPROPERTY(EditAnywhere, Category="Display")
+	UPROPERTY(EditDefaultsOnly, Category="Display")
 	float HighlightWidgetSpeed = 10;
-	UPROPERTY(EditAnywhere, Category="Display", AdvancedDisplay)
+	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)
 	FName HighlightWidgetPropertyName = "Highlight";
 	//---------------------------------------------------------------------------------------------//
 	//	Hover
@@ -75,11 +81,17 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
 	bool bIsHovered;
 	
-	UPROPERTY(EditAnywhere, Category="Display")
+	UPROPERTY(EditDefaultsOnly, Category="Display")
 	float HoverWidgetSpeed = 10;
-	UPROPERTY(EditAnywhere, Category="Display", AdvancedDisplay)
+	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)
 	FName HoverWidgetPropertyName = "Hover";
-	
+	//---------------------------------------------------------------------------------------------//
+	//	Hover
+	//---------------------------------------------------------------------------------------------//
+	UFUNCTION(BlueprintCallable, Category="Notify")
+	void WidgetNotify(FName Notify);
+	UPROPERTY(BlueprintAssignable)
+	FOnWidgetNotify OnWidgetNotify;
 	//---------------------------------------------------------------------------------------------//
 	//	Data List
 	//---------------------------------------------------------------------------------------------//

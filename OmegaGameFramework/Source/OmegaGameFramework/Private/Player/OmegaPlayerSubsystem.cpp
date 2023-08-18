@@ -108,9 +108,13 @@ UMenu* UOmegaPlayerSubsystem::GetMenu(TSubclassOf<UMenu> MenuClass, bool& bIsVal
 
 void UOmegaPlayerSubsystem::SetControlWidget(UUserWidget* Widget)
 {
-	if (Widget)
+	if (Widget && Widget != FocusMenu)
 	{
 		FocusMenu = Widget;
+		if(FocusMenu->GetClass()->ImplementsInterface(UWidgetInterface_Input::StaticClass()))
+		{
+			IWidgetInterface_Input::Execute_OnControlSetWidget(FocusMenu);
+		}
 	}
 }
 

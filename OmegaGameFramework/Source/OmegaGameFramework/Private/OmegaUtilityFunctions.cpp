@@ -16,7 +16,7 @@ int32 UOmegaUtilityFunctions::GetShaderCompilationRemaining()
 	return GShaderCompilingManager->GetNumRemainingJobs();
 
 }
-
+/*
 bool UOmegaUtilityFunctions::CompareFloatValues(float Value1, float Value2, EComparisonMethod ComparisonMethod)
 {
 	{
@@ -40,7 +40,7 @@ bool UOmegaUtilityFunctions::CompareFloatValues(float Value1, float Value2, ECom
 		}
 	}
 }
-
+*/
 UClass* UOmegaAssetFunctions::GetBlueprintClassFromPath(const FString Path)
 {
 	FSoftClassPath LocalPath;

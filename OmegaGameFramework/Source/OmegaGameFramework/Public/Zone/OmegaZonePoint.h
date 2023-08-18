@@ -49,9 +49,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone", meta=(EditCondition="bTransitToLevel"))
 	FGameplayTag LevelTransitID;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category="Zone")
 	UBoxComponent* Box_Transit;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category="Zone")
 	UBoxComponent* Box_Notify;
 	UPROPERTY()
 	UTextRenderComponent* TextComponent;

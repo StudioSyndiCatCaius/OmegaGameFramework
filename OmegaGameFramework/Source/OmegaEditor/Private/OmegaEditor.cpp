@@ -123,6 +123,8 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaLevelingAsset"));
 	ThumnbailNames.Add(TEXT("LevelingComponent"));
 	ThumnbailNames.Add(TEXT("EquipmentComponent"));
+	ThumnbailNames.Add(TEXT("EquipmentSlot"));
+	
 	ThumnbailNames.Add(TEXT("DataAssetCollectionComponent"));
 	ThumnbailNames.Add(TEXT("CombatantExtensionComponent"));
 	ThumnbailNames.Add(TEXT("CombatantGroupComponent"));
@@ -131,6 +133,7 @@ void FOmegaEditor::StartupModule()
 	
 	ThumnbailNames.Add(TEXT("OmegaDataItem"));
 	ThumnbailNames.Add(TEXT("OmegaDataTrait"));
+	ThumnbailNames.Add(TEXT("OmegaDataTraitCollection"));
 	ThumnbailNames.Add(TEXT("DataItemComponent"));
 	
 	ThumnbailNames.Add(TEXT("FlowComponent"));
@@ -141,10 +144,16 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaInstanceActor"));
 
 	ThumnbailNames.Add(TEXT("OmegaFaction"));
+	ThumnbailNames.Add(TEXT("CombatantGambitAsset"));
+	ThumnbailNames.Add(TEXT("CombatantGambitCondition"));
+	ThumnbailNames.Add(TEXT("CombatantGambitAction"));
 	ThumnbailNames.Add(TEXT("OmegaInputMode"));
 	ThumnbailNames.Add(TEXT("OmegaBGM"));
 	ThumnbailNames.Add(TEXT("OmegaDamageType"));
 	ThumnbailNames.Add(TEXT("DynamicCameraState"));
+	
+	ThumnbailNames.Add(TEXT("OmegaZoneData"));
+	ThumnbailNames.Add(TEXT("OmegaLevelData"));
 	
 	FSlateImageBrush* ThumbnailTemp;
 	FSlateImageBrush* IconTemp;

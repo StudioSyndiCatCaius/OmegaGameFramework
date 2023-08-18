@@ -65,9 +65,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, DisplayName="On Activated")
 		void SystemActivated(class UObject* Context, const FString& Flag);
 
-	//-----------------------
+	//---------------------------------------------------------------------
 	// SHUTDOWN
-	//-----------------------
+	//---------------------------------------------------------------------
 	UFUNCTION(BlueprintNativeEvent, DisplayName="On Finish Shutdown")
 		void SystemShutdown(UObject* Context, const FString& Flag);
 
@@ -75,7 +75,6 @@ public:
 	UObject* Shutdown_Context = nullptr;
 	UPROPERTY()
 	FString Shutdown_Flag;
-
 	
 	//Will shut down this gameplay system//
 	UFUNCTION(BlueprintCallable, Category = "Omega|GameplaySystem", meta=(AdvancedDisplay="Context, Flag"))
@@ -87,6 +86,17 @@ public:
 	//WARNING: Do not use this function unless you are overriding the OnBeginShutdown, as it is used to complete the shutdown event. DO NOT CALL OUTSIDE OF THE SYSTEM.
 	UFUNCTION(BlueprintCallable, Category = "Omega|GameplaySystem")
 	void CompleteShutdown();
+
+	//---------------------------------------------------------------------
+	// RESTART
+	//---------------------------------------------------------------------
+
+	//Shutsdown and restarts the system
+	UFUNCTION(BlueprintCallable, Category="Omega|GameplaySystem", meta=(AdvancedDisplay="Context,Flag"))
+	void Restart(UObject* Context, FString Flag);
+
+	UPROPERTY()
+	bool local_InRestart;
 	
 	//-----------------------
 	// Gameplay State
@@ -97,7 +107,10 @@ public:
 	
 	//Context Object//
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "Omega|GameplaySystem")
-		class UObject* ContextObject;
+	class UObject* ContextObject;
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "Omega|GameplaySystem")
+	FString ActivationFlag;
+	
 	UPROPERTY()
 		FString TempFlag;
 

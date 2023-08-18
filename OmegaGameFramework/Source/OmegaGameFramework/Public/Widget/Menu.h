@@ -13,6 +13,7 @@
 class APlayerController;
 class UWidgetAnimation;
 class AOmegaGameplaySystem;
+class UOmegaInputMode;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
@@ -26,13 +27,24 @@ protected:
 	virtual void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
 	//virtual void OnAnimationFinishedPlaying(UUMGSequencePlayer& Player) override;
 	virtual void NativeConstruct() override;
-	
+
 public:
+
+	//----------------------------------------------------------------------
+	// Menu
+	//----------------------------------------------------------------------
+	
+	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
+	UPROPERTY(EditAnywhere, Category = "Menu")
+	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
 
 	UFUNCTION()
 		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag);
 
 	void Native_CompleteOpen();
+
+	UFUNCTION(BlueprintNativeEvent, Category="Menu")
+	bool CanCloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Context, Tags, Flag"))
 		void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
@@ -43,9 +55,6 @@ public:
 	void Native_CompleteClose();
 
 	UPROPERTY()
-	bool PrivateInputBlocked;
-
-	UPROPERTY()
 	FGameplayTagContainer TempTags;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
@@ -54,9 +63,21 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
 		void MenuClosed(FGameplayTagContainer Tags, const FString& Flag);
 
-	/////////////////////////
-	////////ANIMATIONS///////
-	////////////////////////
+		
+	//----------------------------------------------------------------------
+	// Input
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	UOmegaInputMode* CustomInputMode;
+	
+	UPROPERTY()
+	bool PrivateInputBlocked;
+	
+	virtual bool InputBlocked_Implementation() override;
+	//----------------------------------------------------------------------
+	// ANIMATIONS
+	//----------------------------------------------------------------------
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
 	UWidgetAnimation* GetOpenAnimation();
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
@@ -81,13 +102,8 @@ public:
 	USoundBase* OpenSound;
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase* CloseSound;
-
-	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
-	UPROPERTY(EditAnywhere, Category = "Menu")
-	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
 	
-	//Input
-	virtual bool InputBlocked_Implementation() override;
+
 
 	///PROPERTIES//
 

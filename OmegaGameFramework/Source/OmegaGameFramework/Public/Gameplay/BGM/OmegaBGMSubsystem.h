@@ -35,7 +35,7 @@ struct FOmegaBGMData_Incoming
 	UPROPERTY()
 	FGameplayTag Slot;
 	UPROPERTY()
-	USoundBase* Sound;
+	USoundWave* Sound;
 	UPROPERTY()
 	FTimerHandle PlayBGMHandle;
 	UPROPERTY()
@@ -46,7 +46,10 @@ struct FOmegaBGMData_Incoming
 	float ForcePlaybackPos;
 	UPROPERTY()
 	float FadeTime;
-	
+	UPROPERTY()
+	float LoopBegin;
+	UPROPERTY()
+	float LoopEnd;
 };
 
 UCLASS(DisplayName="Omega Subsystem: BGM")
@@ -122,18 +125,25 @@ class OMEGAGAMEFRAMEWORK_API UOmegaBGM : public UPrimaryDataAsset, public IDataI
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="BGM", DisplayName="Name")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", DisplayName="Name")
 	FText BgmName;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="BGM", meta=(MultiLine), DisplayName="Description")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General", meta=(MultiLine), DisplayName="Description")
 	FText BgmDescription;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="BGM")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="General")
 	FGameplayTagContainer GameplayTags;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="BGM")
-	USoundBase* Sound;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Audio")
+	USoundWave* Sound;
 
+	//The point in the Sound Wav where the bgm will begin when the loop ends
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Audio")
+	float LoopBeginTime;
+	//The point in the Sound Wav where the bgm where it will restart the loop
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Audio")
+	float LoopEndTime=-1;
+	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 };

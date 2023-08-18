@@ -190,23 +190,36 @@ void AOmegaGameplaySystem::CompleteShutdown()
 				TempComb->UngrantAbility(TempData.AbilityClass);
 			}	
 		}
-
-		//Activate New Systems
-		for(auto TempSys : SystemsActivatedOnShutdown)
-		{
-			if(TempSys)
-			{
-				GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys, this, this->GetFName().ToString());
-			}
-		}
-
 		
 		//FLAGS
 		Local_SetFlagsActive(false);
-	
+
+		if(local_InRestart)
+		{
+			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(GetClass(), ContextObject, ActivationFlag);
+		}
+		else
+		{
+			//Activate New Systems
+			for(auto TempSys : SystemsActivatedOnShutdown)
+			{
+				if(TempSys)
+				{
+					GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys, this, this->GetFName().ToString());
+				}
+			}
+		}
+		
 		K2_DestroyActor();
 	}
 }
+
+void AOmegaGameplaySystem::Restart(UObject* Context, FString Flag)
+{
+	local_InRestart = true;
+	Shutdown(Context,Flag);
+}
+
 
 void AOmegaGameplaySystem::Local_GrantAbilities(UCombatantComponent* Combatant)
 {

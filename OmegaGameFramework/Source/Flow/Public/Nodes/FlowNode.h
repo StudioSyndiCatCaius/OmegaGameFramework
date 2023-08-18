@@ -101,7 +101,7 @@ protected:
 	FString K2_GetNodeDescription() const;
 
 	// Inherits Guid after graph node
-	UPROPERTY()
+	UPROPERTY(VisibleInstanceOnly, Category="Node")
 	FGuid NodeGuid;
 
 public:

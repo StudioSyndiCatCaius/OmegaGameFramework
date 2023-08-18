@@ -114,6 +114,11 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Impact,"Event.Combat.Impact");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Attack,"Event.Combat.Attack");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Defend,"Event.Combat.Defend");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Game,"Preferences.Game");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Visual,"Preferences.Visual");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Audio,"Preferences.Audio");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Controls,"Preferences.Controls");
+
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

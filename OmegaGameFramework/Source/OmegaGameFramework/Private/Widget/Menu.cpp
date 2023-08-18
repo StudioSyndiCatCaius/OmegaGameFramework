@@ -9,6 +9,7 @@
 
 #include "OmegaGameplaySubsystem.h"
 
+
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
 	
@@ -32,6 +33,11 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		MenuOpened(Tags, Context, Flag);
 		//ANIMATION
 
+		if(CustomInputMode)
+		{
+			GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(CustomInputMode);
+		}
+		
 		if(ParallelGameplaySystem)
 		{
 			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(ParallelGameplaySystem, this);
@@ -63,7 +69,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 
 void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
 {
-	if (bIsOpen)
+	if (bIsOpen && CanCloseMenu(Tags,Context,Flag))
 	{
 		bIsOpen = false;
 		PrivateInputBlocked = true;
@@ -150,9 +156,15 @@ void UMenu::NativeConstruct()
 	Super::NativeConstruct();
 }
 
+
 void UMenu::Native_CompleteOpen()
 {
 	PrivateInputBlocked = false;
+}
+
+bool UMenu::CanCloseMenu_Implementation(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
+{
+	return true;
 }
 
 void UMenu::Native_CompleteClose()

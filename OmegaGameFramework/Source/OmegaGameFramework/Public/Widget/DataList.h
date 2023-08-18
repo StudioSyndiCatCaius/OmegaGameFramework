@@ -24,10 +24,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntrySelected, UDataWidget*, En
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntryHovered, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntryUnhovered, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnEntryHighlighted, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index, bool, IsHighlighted);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEntryNotify, UDataWidget*, DataWidget, FName, Notify);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDataListInputCancel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListInputPage, float, Axis);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListInputNavigate, FVector2D, Axis);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListNavigationOverflow, FVector2D, Axis);
 
 UENUM()
 enum class EDataListFormat : uint8
@@ -99,8 +100,20 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	bool HighlightOnSelect;
+
+	UFUNCTION()
+	void Native_WidgetNotify(UDataWidget* Widget, FName Notify);
 	
-	// Read Only
+	UPROPERTY(BlueprintAssignable)
+	FOnWidgetNotify OnEntryNotifed;
+
+private:
+	UFUNCTION()
+	void SetNewControl(UUserWidget* NewWidget);
+public:
+	//###########################################
+	// Entires - Read Only
+	//###########################################
 	UPROPERTY()
 	TArray<UDataWidget*> Entries;
 
@@ -150,7 +163,7 @@ public:
 	void SelectEntry(int32 Index);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
-	void CycleEntry(int32 Amount);
+	bool CycleEntry(int32 Amount, int32& NewEntry);
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
 	int32 GetEntryIndex(UDataWidget* Entry);
@@ -161,6 +174,10 @@ public:
 	//###########################################
 	// Linked Widgets
 	//###########################################
+
+	// Widget the player's control will change to when input navigation in this direct goes over the max.
+	UPROPERTY(BlueprintAssignable)
+	FOnDataListNavigationOverflow OnNavigationOverflow;
 
 	UPROPERTY(EditInstanceOnly, Category="Linked Widgets")
 	TArray<UDataWidget*> LinkedSelectedWidgets;
@@ -173,7 +190,18 @@ public:
 	virtual void InputPage_Implementation(float Axis ) override;
 	virtual void InputConfirm_Implementation() override;
 	virtual void InputCancel_Implementation() override;
+	virtual void OnControlSetWidget_Implementation() override;
 
+	//Automatically sets control to this list upon hovering an entry.
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Input")
+	bool bAutoSetControlOnHover=true;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Input")
+	bool bRememberIndexOnControlSet=true;
+
+	UPROPERTY()
+	int32 RememberedHoverIndex;
+	
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Input")
 	bool CycleOnInputNavigate=true;
 

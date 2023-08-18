@@ -13,6 +13,7 @@ public class OmegaGameFramework : ModuleRules
 
 		PrecompileForTargets = PrecompileTargetsType.Any;
 
+		
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
@@ -38,8 +39,8 @@ public class OmegaGameFramework : ModuleRules
 				"Engine",
 				"DeveloperSettings",
 				"LevelSequence",
-				"FunctionalTesting",
 				"MovieScene",
+				"MetasoundEngine",
 				"UMG",
 				"InputCore",
 				"Niagara",

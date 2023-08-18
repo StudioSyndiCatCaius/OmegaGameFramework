@@ -34,7 +34,11 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 	{
 		struct FActorSpawnParameters SystemParams;
 		bool bSystemExists;
-		AOmegaGameplaySystem* DummySystem = GetGameplaySystem(Class, bSystemExists);;
+		AOmegaGameplaySystem* DummySystem = GetGameplaySystem(Class, bSystemExists);
+		if(DummySystem && DummySystem->local_InRestart)
+		{
+			bSystemExists = false;
+		}
 
 		//Fail if blocked
 		if(IsSystemTagBlocked(GetMutableDefault<AOmegaGameplaySystem>(Class)->SystemTags) ||
@@ -58,7 +62,8 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 			{
 				DummySystem->ContextObject = Context;
 			}
-
+			DummySystem->ActivationFlag=Flag;
+			
 			//Shutdown Blocked Systems
 			for(auto* TempSys : GetActiveSystemsWithTags(DummySystem->BlockSystemTags))
 			{

@@ -26,6 +26,18 @@ enum class ECombatantEffectTargets : uint8
 
 };
 
+UENUM()
+enum class EOmegaEffectReplacement : uint8
+{
+	// You can pply as many of this kind of effects to the combatant
+	Effect_Addition				UMETA(DisplayName = "Addition"),
+	// If another effect of this type is attempted to be applied, it will replace this effect
+	Effect_Replace      UMETA(DisplayName = "Replace"),
+	// If another effect of this type is attempted to be applied, it will be ignored.
+	Effect_Singleton		UMETA(DisplayName = "Singleton"),
+
+};
+
 USTRUCT(BlueprintType)
 struct FOmegaEffectContainer
 {
@@ -63,7 +75,7 @@ enum class EOmegaEffectType : uint8
 	OET_Heal        UMETA(DisplayName = "Heal"),
 };
 
-UCLASS(hideCategories = (Input, HLOD, WorldPartition, Physics, Collision, Volume, Replication, Rendering))
+UCLASS(hideCategories = (Input, HLOD, WorldPartition, Physics, Collision, Volume, Replication, Rendering, Actor, ActorTick))
 class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
@@ -80,8 +92,16 @@ protected:
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, Category="Effects")
+	//This is the default chance this effect has of being successfully applied. 1 = Always successful
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
+	float DefaultSuccessRate = 1.0;
+	
+	//These tags will be granted to the owning combatant's actor and removed when the effect is
+	UPROPERTY(EditDefaultsOnly, Category="Effect")
 	TArray<FName> ActorsTagsGranted;
+	
+	//Should only one of this effect be allowed at a time?
+	EOmegaEffectReplacement SingletonStatus;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -2,11 +2,25 @@
 
 
 #include "Widget/DataTooltip.h"
+
+#include "OmegaGameFrameworkBPLibrary.h"
 #include "Widget/DataWidget.h"
 
 void UDataTooltip::SetOwningWidget(UDataWidget* NewOwner)
 {
 	OwningWidget = NewOwner;
+	if(NewOwner)
+	{
+		if(GetAssetNameWidget())
+		{
+			GetAssetDescriptionWidget()->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(NewOwner->ReferencedAsset));
+		}
+		if(GetAssetDescriptionWidget())
+		{
+			GetAssetDescriptionWidget()->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(NewOwner->ReferencedAsset));
+		}
+		
+	}
 }
 
 UDataWidget* UDataTooltip::GetOwningDataWidget()

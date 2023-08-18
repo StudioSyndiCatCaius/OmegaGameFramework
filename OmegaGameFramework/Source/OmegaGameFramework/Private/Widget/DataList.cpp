@@ -38,6 +38,19 @@ void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntrie
 	}
 }
 
+void UDataList::Native_WidgetNotify(UDataWidget* Widget, FName Notify)
+{
+	OnEntryNotifed.Broadcast(Widget,Notify);
+}
+
+void UDataList::SetNewControl(UUserWidget* NewWidget)
+{
+	if(NewWidget)
+	{
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetControlWidget(NewWidget);
+	}
+}
+
 void UDataList::ClearList()
 {
 	if (ListPanel)
@@ -120,6 +133,7 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	TempEntry->OnSelected.AddDynamic(this, &UDataList::NativeEntitySelect);
 	TempEntry->OnHovered.AddDynamic(this, &UDataList::NativeEntityHover);
 	TempEntry->OnHighlight.AddDynamic(this, &UDataList::NativeEntityHighlight);
+	TempEntry->OnWidgetNotify.AddDynamic(this, &UDataList::Native_WidgetNotify);
 
 	UHorizontalBoxSlot* HSlotRef;
 	UVerticalBoxSlot* VSlotRef;
@@ -262,10 +276,17 @@ void UDataList::SelectEntry(int32 Index)
 	SelectHoveredEntry();
 }
 
-void UDataList::CycleEntry(int32 Amount)
+bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 {
 	UDataWidget* TempEntry;
 	int32 MaxSize = Entries.Num();
+	
+	//Return false if amount = 0
+	if(Amount==0)
+	{
+		return false;
+	}
+	
 	if(HoveredEntry)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Hovered Valid"));
@@ -279,7 +300,7 @@ void UDataList::CycleEntry(int32 Amount)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FAILED"));
-		return;
+		return false;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("EntrySize"));
 	int Tempindex = GetEntryIndex(TempEntry)+Amount;
@@ -292,7 +313,16 @@ void UDataList::CycleEntry(int32 Amount)
 	{
 		Tempindex = 0;
 	}
-	HoverEntry(Tempindex);
+
+	//IF valid entry index, cycle
+	if (GetEntries().IsValidIndex(Tempindex))
+	{
+		HoverEntry(Tempindex);
+		NewEntry = Tempindex;
+		return true;
+	}
+	
+	return false;
 }
 
 int32 UDataList::GetEntryIndex(UDataWidget* Entry)
@@ -347,11 +377,27 @@ bool UDataList::AnyEntryHasTag(FName Tag)
 }
 
 
-//////////////////////
-///Input////////
-////////////////////
+//---------------------------------------------------------------------------------
+/// Input 
+//---------------------------------------------------------------------------------
 void UDataList::InputNavigate_Implementation(FVector2D Axis)
 {
+	int32 AxisDirection = 0;
+
+	//----------------- Set input direction -----------------//
+		
+	// Check for horizontal direction
+	if (FMath::Abs(Axis.X) > FMath::Abs(Axis.Y))
+	{
+		AxisDirection=(Axis.X > 0) ? 1 : -1;
+	}
+	// Check for vertical direction
+	else
+	{
+		AxisDirection=(Axis.Y > 0) ? 2 : -2;
+	}
+
+	//----------------- Try Run cycle -----------------//
 	if(CycleOnInputNavigate)
 	{
 		float LocalAxis;
@@ -363,17 +409,48 @@ void UDataList::InputNavigate_Implementation(FVector2D Axis)
 		{
 			LocalAxis = Axis.X;
 		}
-		CycleEntry(int32(LocalAxis));
+		
+		int32 TempOutIndex;
+		if(CycleEntry(int32(LocalAxis),TempOutIndex))
+		{
+			return;
+		}
 	}
-	
 	OnInputNavigate.Broadcast(Axis);
+	//if failed cycle or not a valid input, try fo to nav overflow widget
+
+/*
+	switch (AxisDirection)
+	{
+	case 1:
+		
+		break;
+
+	case -1:
+		// Do something for Left direction
+		SetNewControl(NavOverflowLeft);
+		break;
+
+	case 2:
+		// Do something for Up direction
+		SetNewControl(NavOverflowUp);
+		break;
+
+	case -2:
+		// Do something for Down direction
+		SetNewControl(NavOverflowDown);
+		break;
+	default: ;
+	}
+	*/
 }
 
 void UDataList::InputPage_Implementation(float Axis)
 {
 	if(CycleOnInputPage)
 	{
-		CycleEntry(int32(Axis));
+		int32 CycleIndexOut;
+		CycleEntry(int32(Axis),CycleIndexOut);
 	}
 	OnInputPage.Broadcast(Axis);
 }
@@ -389,6 +466,18 @@ void UDataList::InputConfirm_Implementation()
 void UDataList::InputCancel_Implementation()
 {
 	OnInputCancel.Broadcast();
+}
+
+void UDataList::OnControlSetWidget_Implementation()
+{
+	if(bRememberIndexOnControlSet)
+	{
+		HoverEntry(RememberedHoverIndex);
+	}
+	else
+	{
+		HoverEntry(0);
+	}
 }
 
 void UDataList::SetListOwner(UObject* NewOwner)
@@ -529,6 +618,15 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 	if (bIsHovered)
 	{
 		HoveredEntry = DataWidget;
+
+		// UnhoverAllWidgetsFirst
+		for(auto* TempWig : GetEntries())
+		{
+			if(TempWig && DataWidget!=TempWig)
+			{
+				TempWig->Unhover();
+			}
+		}
 		
 		// Set Source Assets on Linked Hover Widgets
 		for(auto* TempWig : LinkedHoverWidgets)
@@ -539,12 +637,12 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 			}
 		}
 		
-		OnEntryHovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget));
 		if(Format==EDataListFormat::Format_ScrollBox)
 		{
 			Cast<UScrollBox>(ListPanel)->ScrollWidgetIntoView(DataWidget);
 		}
 
+		//Update linked description box
 		if(DescriptionTextBlock)
 		{
 			FText DumText;
@@ -552,14 +650,21 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 			IDataInterface_General::Execute_GetGeneralDataText(DataWidget->ReferencedAsset, "DumLabel", this, DumText, DumDesc);
 			DescriptionTextBlock->SetText(DumDesc);
 		}
+		
+		if(bAutoSetControlOnHover)
+		{
+			GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetControlWidget(this);
+		}
+		RememberedHoverIndex = Entries.Find(DataWidget);
+		OnEntryHovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, RememberedHoverIndex);
 	}
 	else
 	{
-		
 		FCustomAssetData LocalTempData;
 		LocalTempData.Texture = nullptr;
 		UGeneralDataObject* TempObject = Native_CreateCustomDataObject(LocalTempData);
-		// Clear Unhovered Entry Widgets
+		
+		// Clear Linked Hover Widgets
 		for(auto* TempWig : LinkedHoverWidgets)
 		{
 			if(TempWig)

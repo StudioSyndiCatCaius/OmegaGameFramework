@@ -14,7 +14,7 @@ struct FOmegaGameplayMessageData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Category="Message", instanced, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, Category="Message", instanced, EditAnywhere)
 	UOmegaGameplayMessage* Message;
 
 	UPROPERTY()

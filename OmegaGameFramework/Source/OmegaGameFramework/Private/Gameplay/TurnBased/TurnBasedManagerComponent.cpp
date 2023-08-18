@@ -120,37 +120,22 @@ void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combat
 TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 {
 	TurnOrder.Empty();
+	TurnOrder = GetRegisteredCombatants();
 	
-	for(UCombatantComponent* TargetCombatant : RegisteredCombatants)
+	if(TurnManager)
 	{
-		if(TargetCombatant && !BlockCombatantTagsFromTurnOrder.HasAny(TargetCombatant->GetCombatantTags()))
-		{
-			const int32 TargetIndex = RegisteredCombatants.Find(TargetCombatant);
-			TurnOrder.Add(TargetCombatant);
-			bool bComparing = true;
+		// Create a copy of the input array to keep the original intact
+		TArray<UCombatantComponent*> TempOrder = TurnOrder;
 
-			TArray<UCombatantComponent*> FlippedTurnOrder = TurnOrder;
-			Algo::Reverse(FlippedTurnOrder);
-		
-			for(UCombatantComponent* ComparedCombatant : FlippedTurnOrder)
-			{
-			
-				if(bComparing && ComparedCombatant != TargetCombatant)		// If still comparing and NOT comparing self
-					{
-					const int32 ComparedIndex = TurnOrder.Find(ComparedCombatant);
-				
-					if(TurnManager->ShouldTargetActFirst(TargetCombatant, ComparedCombatant)) //Checks if Target should go first.
-						{
-						TurnOrder.Swap(ComparedIndex, TargetIndex);
-						}
-					else
-					{
-						bComparing = false;
-					}
-					}
-			}
-		}
+		// Sort the array using the ShouldCheckedObjectSortFirst function as a comparison
+		TempOrder.Sort([&](UCombatantComponent& A, UCombatantComponent& B)
+		{
+			return TurnManager->ShouldTargetActFirst(&A,&B);
+		});
+
+		TurnOrder = TempOrder;
 	}
+
 	OnTurnOrderGenerated.Broadcast(this);
 	return TurnOrder;
 }

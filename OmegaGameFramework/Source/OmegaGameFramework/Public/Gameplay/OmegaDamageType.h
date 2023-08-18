@@ -12,6 +12,7 @@
 class AOmegaGameplayEffect;
 class UNiagaraSystem;
 class ULevelSequence;
+class UOmegaAttribute;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaDamageType : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_ContextAV
@@ -79,13 +80,28 @@ public:
 	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
 };
 
-UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject, public IDataInterface_General
+UCLASS(Blueprintable, BlueprintType, Const, CollapseCategories, EditInlineNew)
+class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject
 {
 	GENERATED_BODY()
 
 public:
 
+	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
+	float OnDamageApplied(UOmegaAttribute* Attribute, float BaseDamage) const;
+
+	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
+	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
+
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReactionAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+{
+	GENERATED_BODY()
+
+public:
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
 	FText ReactionName;
 
@@ -95,13 +111,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
 	FLinearColor ReactionColor;
 
-	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
-	float OnDamageApplied(UOmegaAttribute* Attribute, float BaseDamage) const;
-
-	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
-	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
-
 	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	                                               FText& Description) override;
+												   FText& Description) override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category="Default")
+	UOmegaDamageTypeReaction* ReactionScript;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Default")
+	FGameplayTagContainer ReactionTags;
+
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+	
 };

@@ -6,6 +6,7 @@
 #include "OmegaGameplaySubsystem.h"
 #include "OmegaSettings.h"
 #include "OmegaUtilityFunctions.h"
+#include "Attributes/OmegaAttributeSet.h"
 #include "Gameplay/DataInterface_OmegaEffect.h"
 
 TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByTags(
@@ -146,6 +147,52 @@ UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
 	}
 	return nullptr;
 }
+/*
+TMap<UOmegaAttribute*, float> UCombatantFunctions::CompareAttributeModifiers(UCombatantComponent* Combatant,
+	UObject* ComparedModifier, UObject* UncomparedModifer)
+{
+	TMap<UOmegaAttribute*, float> OutMap;
+	
+	if(Combatant)
+	{
+		TArray<FOmegaAttributeModifier> TempMods = Combatant->GetAllModifierValues();
+
+		//Remove modifiers from Uncomapred Value
+		if(UncomparedModifer && UncomparedModifer->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			for(const FOmegaAttributeModifier TempMod : IDataInterface_AttributeModifier::Execute_GetModifierValues(UncomparedModifer))
+			{
+				TempMods.Remove(TempMod);
+			}
+		}
+
+		//Add compared values
+		if(ComparedModifier && ComparedModifier->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			TempMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(ComparedModifier));
+		}
+
+		//Add attributes to map
+		for(auto* TempAtt : Combatant->AttributeSet->Attributes)
+		{
+			OutMap.Add(TempAtt, Combatant->AdjustAttributeValueByModifiers(TempAtt, TempMods));
+		}
+	}
+	return OutMap;
+}
+
+
+float UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
+	UObject* ComparedModifier, UObject* UncomparedModifer)
+{
+	if(Attribute)
+	{
+		TMap<UOmegaAttribute*, float> OutMap=CompareAttributeModifiers(Combatant, ComparedModifier, UncomparedModifer);
+		return OutMap.FindOrAdd(Attribute);
+	}
+	return 0;
+}
+*/
 
 float UCombatantFunctions::GetCombatantDistantToActiveTarget(UCombatantComponent* Combatant)
 {
@@ -164,7 +211,7 @@ bool UCombatantFunctions::IsCombatantActiveTargetInRange(UCombatantComponent* Co
 	}
 	return false;
 }
-
+/*
 void UCombatantFunctions::IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,  float Value,
 	EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome)
 {
@@ -200,7 +247,7 @@ void UCombatantFunctions::IsAttributeAtPercentage(UCombatantComponent* Combatant
 		}
 	}
 }
-
+*/
 void UCombatantFunctions::DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag,
                                                TEnumAsByte<EOmegaBranch>& Outcome)
 {

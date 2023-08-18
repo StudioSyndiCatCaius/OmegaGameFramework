@@ -43,6 +43,8 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 		IncomingData.Sound = BGM->Sound;
 		IncomingData.ResumePos = ResumeLastPosition;
 		IncomingData.FadeTime = FadeDuration;
+		IncomingData.LoopEnd = BGM->LoopEndTime;
+		IncomingData.LoopBegin = BGM->LoopBeginTime;
 
 		float Local_StopPos;
 		if(BGM != PlayingBGM)
@@ -133,8 +135,19 @@ void UOmegaBGMSubsystem::Local_FinishPlayBGM()
 	{
 		Local_StartPos = SlotData.FindOrAdd(PlayingSlot).SavedPlaybackPosition;	//Set from Resumed position
 	}
-	
-	GetComponentBySlot(PlayingSlot)->SetSound(IncomingData.Sound);
+
+	//Set sound
+	if(GetComponentBySlot(PlayingSlot)->GetSound() && GetComponentBySlot(PlayingSlot)->GetSound()->GetClass()->IsChildOf(UMetaSoundSource::StaticClass()))
+	{
+		GetComponentBySlot(PlayingSlot)->SetWaveParameter(TEXT("Wav"),IncomingData.Sound);
+		GetComponentBySlot(PlayingSlot)->SetFloatParameter(TEXT("Loop_Start"),IncomingData.LoopBegin);
+		GetComponentBySlot(PlayingSlot)->SetFloatParameter(TEXT("Loop_End"),IncomingData.LoopEnd);
+	}
+	else
+	{
+		GetComponentBySlot(PlayingSlot)->SetSound(IncomingData.Sound);
+	}
+
 	if (IncomingData.ResumePos)
 	{
 		GetComponentBySlot(PlayingSlot)->FadeIn(GetFadeDuration(), GetBGMVolume(), Local_StartPos);
@@ -153,13 +166,13 @@ UAudioComponent* UOmegaBGMSubsystem::GetComponentBySlot(FGameplayTag Slot)
 		return SlotData.Find(Slot)->SlotComponent;
 	}
 
-	AGameModeBase* GameMode = UGameplayStatics::GetGameMode(this);
-	if (GameMode)
+	//Setup BGM Component. First check if game mode is valid
+	if (AGameModeBase* GameMode = UGameplayStatics::GetGameMode(this))
 	{
 		const FTransform DumTransform;
-		UAudioComponent* LocalComp = Cast<UAudioComponent>(GameMode->AddComponentByClass(UAudioComponent::StaticClass(),false,DumTransform, false));
 
-		if(LocalComp)
+		//Try Setup Component
+		if(UAudioComponent* LocalComp = Cast<UAudioComponent>(GameMode->AddComponentByClass(UAudioComponent::StaticClass(),false,DumTransform, false)))
 		{
 			LocalComp->VolumeMultiplier = GetBGMVolume();
 			LocalComp->OnAudioPlaybackPercent.AddDynamic(this, &UOmegaBGMSubsystem::Local_OnPlayerbackPercent);
@@ -167,6 +180,11 @@ UAudioComponent* UOmegaBGMSubsystem::GetComponentBySlot(FGameplayTag Slot)
 			FOmegaBGMData LocalNewData;
 			LocalNewData.SlotComponent = LocalComp;
 			SlotData.Add(Slot, LocalNewData);
+
+			if(UMetaSoundSource* MetaSoundSource = GetMutableDefault<UOmegaSettings>()->GetMetaSoundSourceFromPath())
+			{
+				LocalComp->SetSound(MetaSoundSource);
+			}
 
 			return LocalComp;
 		}

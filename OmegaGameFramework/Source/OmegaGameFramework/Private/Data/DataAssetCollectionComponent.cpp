@@ -81,22 +81,42 @@ void UDataAssetCollectionComponent::SetCollectionMap(TMap<UPrimaryDataAsset*, in
 	CollectionMap=Map;
 }
 
-TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap()
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap(bool IncludeZero)
 {
-	return CollectionMap;
+	if(IncludeZero)
+	{
+		return CollectionMap;
+	}
+	
+	TArray<UPrimaryDataAsset*> AssetList;
+	CollectionMap.GetKeys(AssetList);
+	TMap<UPrimaryDataAsset*, int32> OutMap;
+		
+	for(auto* TempAsset : AssetList)
+	{
+		if(TempAsset && GetAssetNumberOfType(TempAsset)>0)
+		{
+			OutMap.Add(TempAsset, GetAssetNumberOfType(TempAsset));
+		}
+	}
+	return OutMap;
 }
 
 
 bool UDataAssetCollectionComponent::NativeAddAsset(UPrimaryDataAsset* Asset)
 {
-	const int32 CurrentValue = CollectionMap.FindOrAdd(Asset);
-	const int32 MaxValue = IDataAssetCollectionInterface::Execute_GetMaxCollectionNumber(Asset);
-	if(CurrentValue<MaxValue || MaxValue<=0)
+	if(Asset)
 	{
-		CollectionMap.Add(Asset, CurrentValue+1);
-		return false;
+		const int32 CurrentValue = CollectionMap.FindOrAdd(Asset);
+		const int32 MaxValue = IDataAssetCollectionInterface::Execute_GetMaxCollectionNumber(Asset);
+		if(CurrentValue<MaxValue || MaxValue<=0)
+		{
+			CollectionMap.Add(Asset, CurrentValue+1);
+			return false;
+		}
+		return true;
 	}
-	return true;
+	return false;
 }
 
 bool UDataAssetCollectionComponent::NativeRemoveAsset(UPrimaryDataAsset* Asset)

@@ -1,6 +1,6 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
 
-#include "..\..\..\Public\Nodes\Route\FlowNode_Hub.h"
+#include "Nodes\Route\FlowNode_Hub.h"
 
 #include "FlowAsset.h"
 #include "Engine/World.h"

@@ -29,6 +29,7 @@ class ACombatantTargetIndicator;
 class UOmegaFaction;
 class UOmegaDamageType;
 class UOmegaDamageTypeReaction;
+class UOmegaDamageTypeReactionAsset;
 class UCombatantGambitAsset;
 
 class UInputComponent;
@@ -160,8 +161,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", AdvancedDisplay)
 	TMap<class UOmegaAttribute*, int32> AttributeLevels;
 
-	UPROPERTY(EditAnywhere, Category = "Attributes", AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes", AdvancedDisplay)
 	FGameplayTag AttributeValueCategory;
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	void SetAttributeValueCategory(FGameplayTag CategoryTag, bool bReinitialize);
 
 	UFUNCTION(BlueprintPure, Category="Modifiers")
 	int32 GetAttributeLevel(UOmegaAttribute* Attribute);
@@ -182,11 +186,11 @@ public:
 	//----------------------------------------------------------------------------------------------------------------//
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects", AdvancedDisplay)
-	TMap<UOmegaDamageType*,TSubclassOf<UOmegaDamageTypeReaction>> DamageTypeReactions;
+	TMap<UOmegaDamageType*,UOmegaDamageTypeReactionAsset*> DamageTypeReactions;
 
 protected:
 	UFUNCTION()
-	UOmegaDamageTypeReaction* GetDamageReactionObject(TSubclassOf<UOmegaDamageTypeReaction> Class);
+	UOmegaDamageTypeReaction* GetDamageReactionObject(UOmegaDamageTypeReactionAsset* Class);
 	UPROPERTY()
 	TArray<UOmegaDamageTypeReaction*> LocalDamageReactions;
 public:
@@ -435,6 +439,19 @@ public:
 
 	UFUNCTION()
 	FGameplayTagContainer GetBlockedEffectTags();
+
+
+
+	//This value will be added to an effects default success rate. If blank, the default rate will be used.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", DisplayName="Offset Effect Success")
+	TMap<TSubclassOf<AOmegaGameplayEffect>,float> EffectSuccessRate;
+
+	UFUNCTION(BlueprintPure, Category="Effects")
+	float GetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass);
+	
+	UFUNCTION(BlueprintCallable, Category="Effects")
+	void SetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass, float OffsetRate=0);
+	
 	//UPROPERTY()
 	//TArray<class AOmegaGameplayEffect*> ActiveEffects;
 
@@ -443,7 +460,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Effects")
 	void TriggerEffectsWithTags(FGameplayTagContainer Tags);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Effects")
 	void TriggerEffectsOfCategory(FGameplayTag CategoryTag);
 
@@ -570,9 +587,19 @@ public:
 	//##################################################################################################################
 	// Gambits
 	//##################################################################################################################
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit")
+	UCombatantGambitAsset* DefaultGambit;
+	
 	UFUNCTION(BlueprintCallable, Category="Combatant|Gambit")
-	bool RunGambit(UCombatantGambitAsset* Gambit);
+	bool RunDefaultGambit();
+	
+	UFUNCTION(BlueprintCallable, Category="Combatant|Gambit")
+	bool RunGambit(UCombatantGambitAsset* Gambit, bool bReplaceDefaultGambit=false);
+
+	UFUNCTION(BlueprintPure, Category="Combatant|Gambit")
+	bool GetActionDataFromGambit(UCombatantGambitAsset* Gambit, TSubclassOf<AOmegaAbility>& Ability, UObject*& Context);
+	
 };
 
 

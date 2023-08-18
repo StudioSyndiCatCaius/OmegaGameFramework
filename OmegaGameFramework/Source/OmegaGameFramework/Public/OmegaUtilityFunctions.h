@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FunctionalTest.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaUtilityFunctions.generated.h"
 
@@ -19,10 +18,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Shader", meta=(Keywords="if, is"))
 	static int32 GetShaderCompilationRemaining();
-
+/*
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Math")
 	static bool CompareFloatValues(float Value1, float Value2, EComparisonMethod ComparisonMethod);
-	
+	*/
 	
 };
 
