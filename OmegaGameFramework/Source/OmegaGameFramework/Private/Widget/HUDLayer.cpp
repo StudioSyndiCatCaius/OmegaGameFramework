@@ -4,6 +4,8 @@
 #include "Widget/HUDLayer.h"
 #include "OmegaGameManager.h"
 #include "Message/OmegaMessageSubsystem.h"
+#include "Player/OmegaPlayerSubsystem.h"
+
 //#include "Engine/Engine.h"
 
 void UHUDLayer::NativeConstruct()
@@ -12,6 +14,7 @@ void UHUDLayer::NativeConstruct()
 	Super::NativeConstruct();
 
 	GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UHUDLayer::OnGameplayMessage);
+	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UHUDLayer::OnInputMethodChanged);
 }
 
 void UHUDLayer::Local_BindGlobalEvent()

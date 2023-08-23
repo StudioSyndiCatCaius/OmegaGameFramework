@@ -16,6 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuOpened, UMenu*, Menu, FGamep
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuClosed, UMenu*, Menu, FGameplayTagContainer, Tags, bool, LastMenu);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FClearHoveredWidgets);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputModeChanged, UOmegaInputMode*, NewMode);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInputDeviceChangedDelegate, bool, bIsUsingGamepad);
 
 class UUserWidget;
 class UHUDLayer;
@@ -158,14 +159,28 @@ public:
 	///////////////////
 	/// Input ////
 	/// /////////
-	UPROPERTY(BlueprintReadOnly, Category="Input")
+	UPROPERTY(BlueprintReadOnly, Category="Omega|Input")
 	UOmegaInputMode* CurrentInputMode;
 	
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Input")
+	UFUNCTION(BlueprintCallable, Category="Omega|Input")
 	void SetCustomInputMode(UOmegaInputMode* InputMode);
 
 	UPROPERTY(BlueprintAssignable)
 	FOnInputModeChanged OnInputModeChanged;
+
+	UPROPERTY(BlueprintAssignable, Category="Omega|Input")
+	FInputDeviceChangedDelegate OnInputDeviceChanged;
+
+	void OnAnyKeyPressed();
+
+	UFUNCTION(BlueprintPure, Category="Omega|Input")
+	bool IsUsingGamepad() const
+	{
+		return bUsingGamepad;
+	}
+private:
+	UPROPERTY()
+	bool bUsingGamepad;
 };
 
 

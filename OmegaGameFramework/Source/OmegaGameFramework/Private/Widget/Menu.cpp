@@ -6,7 +6,6 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 #include "OmegaGameManager.h"
-
 #include "OmegaGameplaySubsystem.h"
 
 
@@ -18,6 +17,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	{
 		//BIND EVENTS
 		GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UMenu::OnGameplayMessage);
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UMenu::OnInputMethodChanged);
 		Local_BindGlobalEvent();
 
 		

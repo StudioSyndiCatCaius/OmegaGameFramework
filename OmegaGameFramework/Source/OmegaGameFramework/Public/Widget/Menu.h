@@ -123,5 +123,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnInputMethodChanged(bool bIsGamepad);
 	
 };

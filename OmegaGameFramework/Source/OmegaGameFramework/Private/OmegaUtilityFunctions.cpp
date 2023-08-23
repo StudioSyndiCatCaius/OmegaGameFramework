@@ -3,6 +3,8 @@
 
 #include "OmegaUtilityFunctions.h"
 #include "ShaderCompiler.h"
+#include "Internationalization/Internationalization.h"
+#include "CoreGlobals.h"
 
 bool UOmegaUtilityFunctions::AreShadersCompiling()
 {
@@ -16,6 +18,12 @@ int32 UOmegaUtilityFunctions::GetShaderCompilationRemaining()
 	return GShaderCompilingManager->GetNumRemainingJobs();
 
 }
+
+void UOmegaUtilityFunctions::SetTextLocalized(FText& TextToLocalize)
+{
+
+}
+
 /*
 bool UOmegaUtilityFunctions::CompareFloatValues(float Value1, float Value2, EComparisonMethod ComparisonMethod)
 {

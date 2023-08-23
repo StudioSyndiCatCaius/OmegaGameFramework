@@ -35,6 +35,7 @@ public class OmegaGameFramework : ModuleRules
 				"Core",
 				"CoreUObject",
 				"CommonUI",
+				"CommonInput",
 				"EnhancedInput",
 				"Engine",
 				"DeveloperSettings",

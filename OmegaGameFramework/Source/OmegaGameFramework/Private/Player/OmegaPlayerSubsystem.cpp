@@ -9,11 +9,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "Widget/WidgetInterface_Input.h"
 #include "Widget/HUDLayer.h"
+#include "UObject/UObjectGlobals.h"
+#include "CommonInputSubsystem.h"
 
 void UOmegaPlayerSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
 	ParentPlayerController = GetLocalPlayer()->GetPlayerController(GetWorld());
 	//ParentPlayerController->OnDestroyed.AddDynamic(this, &UOmegaPlayerSubsystem::CloseAllMenus);
+	
 }
 
 void UOmegaPlayerSubsystem::CloseAllMenus(AActor* DestroyedActor)
@@ -317,6 +320,10 @@ APlayerController* UOmegaPlayerSubsystem::Local_GetPlayerController()
 	if(!ParentPlayerController)
 	{
 		ParentPlayerController = GetLocalPlayer()->GetPlayerController(GetWorld());
+		if (ParentPlayerController->InputComponent)
+		{
+			ParentPlayerController->InputComponent->BindKey("AnyKey",IE_Pressed, this, &UOmegaPlayerSubsystem::OnAnyKeyPressed);
+		}
 	}
 	return ParentPlayerController;
 }
@@ -351,7 +358,6 @@ void UOmegaPlayerSubsystem::SetCustomInputMode(UOmegaInputMode* InputMode)
 		{
 			LocalInputSubsys->AddMappingContext(TempContext, InputMode->InputPriority);
 		}
-		
 	}
 	
 	switch (InputMode->Type)
@@ -370,4 +376,10 @@ void UOmegaPlayerSubsystem::SetCustomInputMode(UOmegaInputMode* InputMode)
 
 	CurrentInputMode = InputMode;
 	OnInputModeChanged.Broadcast(InputMode);
+}
+
+void UOmegaPlayerSubsystem::OnAnyKeyPressed()
+{
+	bUsingGamepad =GetLocalPlayer()->GetSubsystem<UCommonInputSubsystem>()->GetCurrentInputType()==ECommonInputType::Gamepad;
+	OnInputDeviceChanged.Broadcast(IsUsingGamepad());
 }

@@ -217,6 +217,8 @@ public:
 	static FText GetObjectDisplayDescription(UObject* Object);
 	UFUNCTION(BlueprintPure, Category="Omega|General")
 	static FString GetObjectLabel(UObject* Object);
+
+
 };
 
 //--------------------------------------------------------------------------------------------------------------------

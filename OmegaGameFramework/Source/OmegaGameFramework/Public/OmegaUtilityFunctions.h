@@ -22,7 +22,12 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Math")
 	static bool CompareFloatValues(float Value1, float Value2, EComparisonMethod ComparisonMethod);
 	*/
-	
+
+	//###############################################################################
+	// Text
+	//###############################################################################
+	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Text")
+	static void SetTextLocalized(FText& TextToLocalize);
 };
 
 UCLASS()
