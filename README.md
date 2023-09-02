@@ -3,7 +3,7 @@
 * [Website](https://www.studiosyndicat.com/omegagameframework)
 * [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/product/2ca6202e55f44cfd82659fbca6591603)
 
-Omega is an scalable, esy-to-use gameplay framework plugin for Unreal Engine 4 & 5 designed to streamline the process of creating gameplay mechanics and features in your project.
+Omega is an scalable, easy-to-use gameplay framework plugin for Unreal Engine 4 & 5 designed to streamline the process of creating gameplay mechanics and features in your project.
 ### Features:
 ![Image](https://cdn1.epicgames.com/ue/product/Screenshot/OmegaCombatant-1920x1080-11e9f495a441277fbc3b3e829d518778.png?resize=1&w=1920)
 ![Image](https://cdn1.epicgames.com/ue/product/Screenshot/OmegaHudLayers-1920x1080-44b37361beed1b5825b3600123cf0e09.png?resize=1&w=1920)
