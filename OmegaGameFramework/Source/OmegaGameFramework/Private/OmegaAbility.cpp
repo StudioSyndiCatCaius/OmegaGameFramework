@@ -52,8 +52,7 @@ void AOmegaAbility::BeginPlay()
 	}
 	
 	GetGameInstance()->GetOnPawnControllerChanged().AddDynamic(this, &AOmegaAbility::TryAssignControlInput);
-
-
+	
 	if(CombatantOwner->GetOwnerPlayerController() && HudClass)
 	{
 		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->AddHUDLayer(HudClass, this);
@@ -71,6 +70,8 @@ void AOmegaAbility::BeginPlay()
 	
 	SetInputEnabledForOwner(true);
 
+	DefaultInputReceiver->BindToPawn(GetAbilityOwnerCharacter());
+	
 	CombatantOwner->OnCombatantNotify.AddDynamic(this, &AOmegaAbility::OnCombatantNotify);
 	CombatantOwner->OnTargetAdded.AddDynamic(this, &AOmegaAbility::OnRegisteredTarget);
 	CombatantOwner->OnTargetRemoved.AddDynamic(this, &AOmegaAbility::OnUnregisteredTarget);

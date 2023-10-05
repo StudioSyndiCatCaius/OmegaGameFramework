@@ -6,6 +6,16 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
 
+UOmegaPlatformAsset* UOmegaPlatformSettings::GetPlatformAsset() const
+{
+	const FString PlatformName = FPlatformMisc::GetUBTPlatform();
+	if(PlatformAssets.Contains(PlatformName))
+	{
+		return SoftRefToPlatformAsset(PlatformAssets[PlatformName]);
+	}
+	return SoftRefToPlatformAsset(DefaultPlatform);
+}
+
 FSlateBrush UOmegaPlatformFunctions::GetCurrentPlatformActionIcon(const UObject* WorldContextObject, UInputAction* Action, APlayerController* Player)
 {
 	const APlayerController* TempPlayer = UGameplayStatics::GetPlayerController(WorldContextObject,0);

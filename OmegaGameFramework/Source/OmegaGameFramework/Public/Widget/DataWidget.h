@@ -78,8 +78,8 @@ public:
 	//---------------------------------------------------------------------------------------------//
 	//	Hover
 	//---------------------------------------------------------------------------------------------//
-	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
-	bool bIsHovered;
+	//UPROPERTY(BlueprintReadOnly, Category = "DataWidget", meta=(DeprecatedProperty))
+	//bool bIsHovered;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Display")
 	float HoverWidgetSpeed = 10;
@@ -142,6 +142,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataWidget")
 	bool GetIsEntitySelectable();
+
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataWidget")
+	bool IsDataWidgetHovered();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
 	bool IsEntityHidden(UObject* Asset);

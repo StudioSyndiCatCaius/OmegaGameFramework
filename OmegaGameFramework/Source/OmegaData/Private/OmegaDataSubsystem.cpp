@@ -4,6 +4,7 @@
 #include "OmegaDataSubsystem.h"
 
 #include "FileSDKBPLibrary.h"
+#include "GameFeaturesSubsystem.h"
 #include "OmegaDataItem.h"
 #include "OmegaDataSettings.h"
 #include "OmegaGameFrameworkBPLibrary.h"
@@ -11,7 +12,10 @@
 
 void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	if(GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath.IsValidIndex(0))
+	const TArray<FDirectoryPath> LocalPaths = GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath;
+
+	//Scan paths
+	if(LocalPaths.IsValidIndex(0))
 	{
 		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 		TArray<FAssetData> AssetData;

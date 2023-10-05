@@ -10,6 +10,7 @@
 #include "Components/SlateWrapperTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Widget/DataWidget.h"
+#include "Math/Vector2D.h"
 #include "Components/CanvasPanel.h"
 #include "Data/GeneralDataObject.h"
 
@@ -45,26 +46,33 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 	GENERATED_BODY()
 
 public:
+	
+	//###########################################
+	// Class
+	//###########################################
 
+	UPROPERTY(EditInstanceOnly, Instanced, Category="List")
+	UDataListFormat* ListFormat;
+	
 	//###########################################
 	// Entry
 	//###########################################
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = "List",AdvancedDisplay)
 	EDataListFormat Format;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",AdvancedDisplay)
 	TEnumAsByte<EOrientation> Orientation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",AdvancedDisplay)
 	TEnumAsByte<EHorizontalAlignment> EntryHorizontalAlignment;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",AdvancedDisplay)
 	TEnumAsByte<EVerticalAlignment> EntryVerticalAlignment;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",AdvancedDisplay)
 	FSlateChildSize EntrySize;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Layout")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List")
 	bool bAutoSizeList;
 
 	//##### ENTRY CLASS #####//
@@ -106,6 +114,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnWidgetNotify OnEntryNotifed;
+
+	UFUNCTION(BlueprintCallable, Category="Entry")
+	void RefreshAllEntries();
 
 private:
 	UFUNCTION()
@@ -278,9 +289,31 @@ protected:
 	//---------------------------------------------------------------------------------------------//
 	//	Tags
 	//---------------------------------------------------------------------------------------------//
-	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList", DisplayName="Get Entries With Tag")
 	TArray<UDataWidget*> GetEntiresWithTag(FName Tag, bool bInvertGet);
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
 	bool AnyEntryHasTag(FName Tag);
+};
+
+
+UCLASS(EditInlineNew, Blueprintable,BlueprintType,CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UDataListFormat : public UObject
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintNativeEvent,Category="DataList")
+	void AddDataWidget(UDataWidget* DataWidget, UPanelWidget* PanelWidget);
+
+	UFUNCTION(BlueprintNativeEvent,Category="DataList")
+	UPanelWidget* CreateWidget(UDataList* OwningList);
+
+	UFUNCTION(BlueprintNativeEvent,Category="DataList")
+	void OnWidgetHovered(UDataWidget* DataWidget, UPanelWidget* PanelWidget);
+	
+	//UFUNCTION(BlueprintNativeEvent,Category="DataList")
+	//UDataWidget* NavigateEntry(FVector2d Input);
+	
 };

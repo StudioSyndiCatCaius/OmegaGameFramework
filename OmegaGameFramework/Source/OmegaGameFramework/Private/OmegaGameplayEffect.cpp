@@ -4,6 +4,7 @@
 #include "OmegaGameplayEffect.h"
 
 #include "OmegaAttribute.h"
+#include "OmegaGameFrameworkBPLibrary.h"
 #include "TimerManager.h"
 #include "Gameplay/CombatantComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -104,6 +105,40 @@ float AOmegaGameplayEffect::CalculateDamageValue()
 		return LocalDamage;
 	}
 	return 0;
+}
+
+//####################################//####################################//####################################
+//-----Generals
+//####################################//####################################//####################################
+void AOmegaGameplayEffect::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	Label = UOmegaGameFrameworkBPLibrary::GetObjectLabel(EffectContext);
+}
+
+void AOmegaGameplayEffect::GetGeneralAssetColor_Implementation(FLinearColor& Color)
+{
+	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		Execute_GetGeneralAssetColor(EffectContext, Color);
+	}
+}
+
+void AOmegaGameplayEffect::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		Execute_GetGeneralDataText(EffectContext,Label,Context,Name,Description);
+	}
+}
+
+void AOmegaGameplayEffect::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+                                                               UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		Execute_GetGeneralDataImages(EffectContext,Label,Context,Texture,Material,Brush);
+	}
 }
 
 // Called every frame

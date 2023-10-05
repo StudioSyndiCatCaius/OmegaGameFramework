@@ -76,7 +76,7 @@ enum class EOmegaEffectType : uint8
 };
 
 UCLASS(hideCategories = (Input, HLOD, WorldPartition, Physics, Collision, Volume, Replication, Rendering, Actor, ActorTick))
-class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IGameplayTagsInterface, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -178,6 +178,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Ω|Gameplay|Effects")
 	float CalculateDamageValue();
 
+	//####################################//####################################//####################################
+	//-----Generals
+	//####################################//####################################//####################################
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;\
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
 	
 	//####################################//####################################//####################################
 	//-----Tags-----//

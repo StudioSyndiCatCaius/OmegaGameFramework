@@ -124,6 +124,21 @@ void UFlowAsset::HarvestNodeConnections()
 	bool bGraphDirty = false;
 
 	// last moment to remove invalid nodes
+	
+	/*
+	TArray<FGuid> NodeGuids_Local;
+	Nodes.GetKeys(NodeGuids_Local);
+	
+	for(FGuid TempGuid : NodeGuids_Local)
+	{
+		if(!Nodes.Contains(TempGuid) || !Nodes[TempGuid])
+		{
+			Nodes.Remove(TempGuid);
+			bGraphDirty = true;
+		}
+	}
+	*/
+	
 	for (auto NodeIt = Nodes.CreateIterator(); NodeIt; ++NodeIt)
 	{
 		const TPair<FGuid, UFlowNode*>& Pair = *NodeIt;
@@ -133,6 +148,7 @@ void UFlowAsset::HarvestNodeConnections()
 			bGraphDirty = true;
 		}
 	}
+
 
 	for (const TPair<FGuid, UFlowNode*>& Pair : Nodes)
 	{

@@ -440,7 +440,8 @@ public:
 	UFUNCTION()
 	FGameplayTagContainer GetBlockedEffectTags();
 
-
+	UFUNCTION(BlueprintPure, Category="Effects", meta=(DeterminesOutputType="EffectClass"))
+	AOmegaGameplayEffect* GetEffectOfContext(UObject* Context, TSubclassOf<AOmegaGameplayEffect> EffectClass);
 
 	//This value will be added to an effects default success rate. If blank, the default rate will be used.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", DisplayName="Offset Effect Success")
@@ -582,7 +583,7 @@ public:
 public:
 	
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
-	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation() override;
+	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 
 	//##################################################################################################################
 	// Gambits

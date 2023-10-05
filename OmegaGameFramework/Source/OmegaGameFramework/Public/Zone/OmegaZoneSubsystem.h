@@ -143,6 +143,10 @@ public:
 	
 protected:
 
+	//That that will be falled back to if no other active zone exists
+	UPROPERTY()
+	UOmegaZoneData* FallbackZone=nullptr;
+	
 	UPROPERTY()
 	bool bUnloadPreviousZones;
 	UPROPERTY()

@@ -90,15 +90,16 @@ UCombatantComponent* UTurnBasedManagerComponent::GetTurnMemberAtIndex(int32 Inde
 //Add to Turn Order
 void UTurnBasedManagerComponent::AddToTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
 {
-
-	TurnOrder.Add(Combatant);	// NEEDS TO BE FINISHED!! Must add to appropriate Index
-	OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant), Flag, Tags);
-	
-	if(DoesCombatantUseInterface(Combatant))
+	if(!TurnManager->BlockFromTurnOrder(Combatant))
 	{
-		IActorInterface_TurnOrderCombatant::Execute_OnAddedToTurnOrder(GetActiveTurnMember()->GetOwner(), this, Flag, Tags);
+		TurnOrder.Add(Combatant);	// NEEDS TO BE FINISHED!! Must add to appropriate Index
+		OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant), Flag, Tags);
+	
+		if(DoesCombatantUseInterface(Combatant))
+		{
+			IActorInterface_TurnOrderCombatant::Execute_OnAddedToTurnOrder(GetActiveTurnMember()->GetOwner(), this, Flag, Tags);
+		}
 	}
-
 }
 
 //Remove From Turn Order
@@ -116,11 +117,29 @@ void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combat
 	}
 }
 
+void UTurnBasedManagerComponent::RemoveFactionFromTurnOrder(FGameplayTag Faction, FString Flag,
+	FGameplayTagContainer Tags)
+{
+	for(auto* TempComb : GetRegisteredCombatants())
+	{
+		if(TempComb && TempComb->GetFactionTag()==Faction)
+		{
+			RemoveFromTurnOrder(TempComb,Flag,Tags);
+		}
+	}
+}
+
 //Generate TurnOrder
 TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 {
 	TurnOrder.Empty();
-	TurnOrder = GetRegisteredCombatants();
+
+	//Setup Basic Turn Order
+	for(auto* TempComb : GetRegisteredCombatants())
+	{
+		AddToTurnOrder(TempComb, "",FGameplayTagContainer());
+	}
+	//TurnOrder = GetRegisteredCombatants();
 	
 	if(TurnManager)
 	{

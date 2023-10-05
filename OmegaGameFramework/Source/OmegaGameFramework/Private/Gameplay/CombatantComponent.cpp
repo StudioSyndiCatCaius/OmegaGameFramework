@@ -40,7 +40,6 @@ void UCombatantComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	
 	//AddToCombatantList
 	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->Native_RegisterCombatant(this, true);
 	///---Try Setup Input---//
@@ -642,7 +641,7 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
 	TArray<UPrimaryDataAsset*> OutSkills = Skills;
 	for(auto* TempSource : Local_GetSkillSources())
 	{
-		for(auto* TempSkill : IDataInterface_SkillSource::Execute_GetSkills(TempSource))
+		for(auto* TempSkill : IDataInterface_SkillSource::Execute_GetSkills(TempSource,this))
 		{
 			if(TempSkill)
 			{
@@ -720,6 +719,12 @@ TArray<UObject*> UCombatantComponent::GetDamageModifiers()
 //// Get Attribute Values + Attribute Modifiers
 void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue)
 {
+	if(!Attribute)
+	{
+		CurrentValue = 0;
+		MaxValue = 0;
+		return;
+	}
 	//Get base value
 	float BaseValue = GetAttributeBaseValue(Attribute);
 	
@@ -950,6 +955,10 @@ float UCombatantComponent::GatherAttributeModifiers(TArray<UObject*> Modifiers, 
 float UCombatantComponent::AdjustAttributeValueByModifiers(UOmegaAttribute* Attribute,
 	TArray<FOmegaAttributeModifier> Modifiers)
 {
+	if(!Attribute)
+	{
+		return 0;
+	}
 	float StartVal = GetAttributeBaseValue(Attribute);
 	for(FOmegaAttributeModifier Mod : Modifiers)
 	{
@@ -988,6 +997,19 @@ UOmegaDamageTypeReaction* UCombatantComponent::GetDamageReactionObject(UOmegaDam
 FGameplayTagContainer UCombatantComponent::GetBlockedEffectTags()
 {
 	return BlockEffectWithTags;
+}
+
+AOmegaGameplayEffect* UCombatantComponent::GetEffectOfContext(UObject* Context,
+	TSubclassOf<AOmegaGameplayEffect> EffectClass)
+{
+	for(auto* TempEffect : GetAllEffects())
+	{
+		if(TempEffect && (!EffectClass || TempEffect->GetClass()) && TempEffect->EffectContext==Context)
+		{
+			return TempEffect;
+		}
+	}
+	return nullptr;
 }
 
 float UCombatantComponent::GetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass)
@@ -1396,7 +1418,7 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implement
 	return GetAllModifierValues();
 }
 
-TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation()
+TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation(UCombatantComponent* Combatant)
 {
 	return GetAllSkills();
 }

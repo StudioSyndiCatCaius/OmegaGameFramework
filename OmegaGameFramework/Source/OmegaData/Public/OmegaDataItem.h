@@ -115,6 +115,10 @@ public:
 	TArray<UOmegaDataTrait*> GetTraitsWithInterface(const UClass* Interface);
 
 	//###############################################################################
+	// Tag Event
+	//###############################################################################
+	
+	//###############################################################################
 	// Contextual Data
 	//###############################################################################
 	/*
@@ -161,7 +165,7 @@ public:
 	//###############################################################################
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 	virtual TArray<FOmegaEffectContainer> GetOmegaEffects_Implementation() override;
-	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation() override;
+	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	
 	//###############################################################################
 	// Soft Properties

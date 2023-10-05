@@ -152,9 +152,9 @@ public:
 	///////////////////
 	/// DATA WIDGETS ////
 	/// /////////
-
 	UPROPERTY()
 	UDataWidget* HoveredWidget = nullptr;
+
 	
 	///////////////////
 	/// Input ////

@@ -20,6 +20,7 @@
 void UOmegaZoneSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	FallbackZone = NewObject<UOmegaZoneData>(this,UOmegaZoneData::StaticClass());
 }
 
 void UOmegaZoneSubsystem::Tick(float DeltaTime)
@@ -197,6 +198,10 @@ void UOmegaZoneSubsystem::LoadDefaultZone()
 	{
 		LoadZone(GetCurrentLevelData()->GetDefaultZoneData());
 	}
+	else
+	{
+		LoadZone(FallbackZone);
+	}
 }
 
 
@@ -327,12 +332,6 @@ void UOmegaZoneSubsystem::TransitPlayerToPoint(AOmegaZonePoint* Point, APlayerCo
 		{
 			LoadDefaultZone();
 		}
-		
-
-		//if(Point->ZoneToLoad)
-		//{
-			
-		//}
 	}
 	else
 	{

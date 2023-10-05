@@ -20,7 +20,10 @@ public class OmegaData : ModuleRules
 			"Slate",
 			"SlateCore", 
 			"UMG",
-			"FileSDK"
+			"FileSDK",
+			"GameplayTasks",
+			"GameFeatures",
+			"ModularGameplay"
 		});
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{

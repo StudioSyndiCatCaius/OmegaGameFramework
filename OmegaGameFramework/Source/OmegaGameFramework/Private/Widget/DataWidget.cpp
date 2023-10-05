@@ -53,16 +53,16 @@ void UDataWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		float OutVal;
 		
 		const float HoverVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HoverWidgetPropertyName);
-		if(bIsHovered != static_cast<bool>(HoverVal))
+		if(IsDataWidgetHovered() != static_cast<bool>(HoverVal))
 		{
-			OutVal = UKismetMathLibrary::FInterpTo_Constant(HoverVal, bIsHovered, InDeltaTime, HoverWidgetSpeed);
+			OutVal = UKismetMathLibrary::FInterpTo_Constant(HoverVal, IsDataWidgetHovered(), InDeltaTime, HoverWidgetSpeed);
 			GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,OutVal);
 		}
 		
 		const float HighlightVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HighlightWidgetPropertyName);
 		if(bIsHighlighted != static_cast<bool>(HighlightVal))
 		{
-			OutVal = UKismetMathLibrary::FInterpTo_Constant(HighlightVal, bIsHovered, InDeltaTime, HighlightWidgetSpeed);
+			OutVal = UKismetMathLibrary::FInterpTo_Constant(HighlightVal, IsDataWidgetHovered(), InDeltaTime, HighlightWidgetSpeed);
 			GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,OutVal);
 		}
 	}
@@ -192,10 +192,17 @@ void UDataWidget::Select()
 
 void UDataWidget::Hover()
 {
-	if(bIsHovered)
+	//Cancel if already hovered
+	if(IsDataWidgetHovered())
 	{
 		return;
 	}
+
+	if(GetPlayerSubsystem()->HoveredWidget)
+	{
+		GetPlayerSubsystem()->HoveredWidget->Unhover();
+	}
+	
 	if(UUserWidget* TempWidget = GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->HoveredWidget)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempt Unhvover"));
@@ -213,13 +220,13 @@ void UDataWidget::Hover()
 		PlayAnimationForward(GetHoverAnimation(), 1.0f, false);
 	}
 	OnHovered.Broadcast(this, true);
-	bIsHovered=true;
+	GetPlayerSubsystem()->HoveredWidget=this;
 	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->HoveredWidget = this;
 }
 
 void UDataWidget::Unhover()
 {
-	if(!bIsHovered)
+	if(!IsDataWidgetHovered())
 	{
 		return;
 	}
@@ -229,7 +236,7 @@ void UDataWidget::Unhover()
 	{
 		PlayAnimationReverse(GetHoverAnimation(), 1.0f, false);
 	}
-	bIsHovered = false;
+	//bIsHovered = false;
 }
 
 void UDataWidget::SetHighlighted(bool Highlighted)
@@ -252,12 +259,22 @@ void UDataWidget::SetHighlighted(bool Highlighted)
 				PlayAnimationReverse(GetHighlightAnimation(), 1.0f, false);
 			}
 		}
+		OnHighlight.Broadcast(this,Highlighted);
 	}
 }
 
 bool UDataWidget::GetIsEntitySelectable()
 {
 	return !IsEntityDisabled(ReferencedAsset);
+}
+
+bool UDataWidget::IsDataWidgetHovered()
+{
+	if(GetPlayerSubsystem()->HoveredWidget==this)
+	{
+		return true;
+	}
+	return false;
 }
 
 void UDataWidget::SetSourceAsset(UObject* Asset)

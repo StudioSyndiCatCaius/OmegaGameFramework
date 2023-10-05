@@ -27,37 +27,37 @@ void UInputReceiverComponent::BeginPlay()
 
 	//Local_InputAction = NewObject<UInputAction>(this, UInputAction::StaticClass());
 	
-	if(Cast<APawn>(GetOwner()))
-	{
-		UE_LOG(LogTemp, Display, TEXT("Bound Input Reciever event on owner controller change") );
-		Cast<APawn>(GetOwner())->ReceiveControllerChangedDelegate.AddDynamic(this, &UInputReceiverComponent::OnOwningControllerChange);
-	}
+	BindToPawn(Cast<APawn>(GetOwner()));
 }
 
 void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)
 {
-	
-	if(!NewOwner || !InputAction)
+	if(NewOwner && InputAction)
 	{
-		UE_LOG(LogTemp, Display, TEXT("New Owner ot InputAction are invalid") );
-		return;
+		if(UEnhancedInputComponent* NewInputComp = Cast<UEnhancedInputComponent>(NewOwner->InputComponent))
+		{
+			UE_LOG(LogTemp, Display, TEXT("Valid New Input Component") );
+			OwnerInputComp = NewInputComp;
+			OwnerInputComp->BindAction(InputAction, ETriggerEvent::Started, this, &UInputReceiverComponent::Native_Started);
+			OwnerInputComp->BindAction(InputAction, ETriggerEvent::Triggered, this, &UInputReceiverComponent::Native_Triggered);
+			OwnerInputComp->BindAction(InputAction, ETriggerEvent::Canceled, this, &UInputReceiverComponent::Native_Cancel);
+			OwnerInputComp->BindAction(InputAction, ETriggerEvent::Completed, this, &UInputReceiverComponent::Native_Complete);
+			OwnerInputComp->BindAction(InputAction, ETriggerEvent::Ongoing, this, &UInputReceiverComponent::Native_Ongoing);
+			OwnerInputComp->BindActionValue(InputAction);
+		}
 	}
-	
-	UEnhancedInputComponent* NewInputComp = Cast<UEnhancedInputComponent>(NewOwner->InputComponent);
-	
-	if(NewInputComp)
+	else
 	{
-		UE_LOG(LogTemp, Display, TEXT("Valid New Input Component") );
-		OwnerInputComp = NewInputComp;
-		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Started, this, &UInputReceiverComponent::Native_Started);
-		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Triggered, this, &UInputReceiverComponent::Native_Triggered);
-		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Canceled, this, &UInputReceiverComponent::Native_Cancel);
-		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Completed, this, &UInputReceiverComponent::Native_Complete);
-		OwnerInputComp->BindAction(InputAction, ETriggerEvent::Ongoing, this, &UInputReceiverComponent::Native_Ongoing);
-		OwnerInputComp->BindActionValue(InputAction);
+		//UE_LOG(LogTemp, Display, TEXT("Ckecing Input Action: %s"), *InputAction->GetName());
+		if(!InputAction)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Input Action invalid on %s"), *GetOwner()->GetClass()->GetName());
+		}
+		if (!NewOwner)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Input Owner invalid on %s"), *GetOwner()->GetClass()->GetName());
+		}
 	}
-
-	
 }
 
 FInputActionValue UInputReceiverComponent::GetInputActionValue()
@@ -72,7 +72,6 @@ FInputActionValue UInputReceiverComponent::GetInputActionValue()
 
 void UInputReceiverComponent::Native_Started()
 {
-	
 	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Started") );
 	OnInputStarted.Broadcast();
 }
@@ -115,7 +114,15 @@ void UInputReceiverComponent::OnOwningControllerChange(APawn* Pawn, AController*
 	{
 		GetOwner()->EnableInput(Cast<APlayerController>(NewController));
 	}
-	
+}
+
+void UInputReceiverComponent::BindToPawn(APawn* Pawn)
+{
+	if(Pawn)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Bound Input Reciever event on owner controller change") );
+		Pawn->ReceiveControllerChangedDelegate.AddDynamic(this, &UInputReceiverComponent::OnOwningControllerChange);
+	}
 }
 
 

@@ -13,6 +13,7 @@ class AOmegaGameplayEffect;
 class UNiagaraSystem;
 class ULevelSequence;
 class UOmegaAttribute;
+class UCombatantComponent;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaDamageType : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_ContextAV
@@ -48,9 +49,9 @@ public:
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 
-	//##############################################################################
+	//-----------------------------------------------------------------------------------------------------
 	// Context AV
-	//##############################################################################
+	//-----------------------------------------------------------------------------------------------------
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="AV")
 	TMap<FGameplayTag, ULevelSequence*> ContextSequences;
@@ -80,6 +81,10 @@ public:
 	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
 };
 
+//##################################################################################################################
+// TYPE REACTIONS
+//##################################################################################################################
+
 UCLASS(Blueprintable, BlueprintType, Const, CollapseCategories, EditInlineNew)
 class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject
 {
@@ -94,6 +99,10 @@ public:
 	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
 
 };
+
+//##################################################################################################################
+// Reaction Asset
+//##################################################################################################################
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReactionAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
@@ -122,5 +131,17 @@ public:
 	FGameplayTagContainer ReactionTags;
 
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
-	
+};
+
+//##################################################################################################################
+// Reaction Asset
+//##################################################################################################################
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Combat|DamageType|Reactions", meta=(DeterminesOutputType="ScriptClass"))
+	UOmegaDamageTypeReaction* GetScriptFromCombatantDamageReaction(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, TSubclassOf<UOmegaDamageTypeReaction> ScriptClass);
 };

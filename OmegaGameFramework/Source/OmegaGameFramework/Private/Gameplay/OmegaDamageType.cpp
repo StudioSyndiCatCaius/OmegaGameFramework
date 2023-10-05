@@ -3,6 +3,7 @@
 
 #include "Gameplay/OmegaDamageType.h"
 #include "OmegaAttribute.h"
+#include "Gameplay/CombatantComponent.h"
 
 
 void UOmegaDamageType::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
@@ -71,6 +72,22 @@ void UOmegaDamageTypeReactionAsset::GetGeneralDataText_Implementation(const FStr
 FGameplayTagContainer UOmegaDamageTypeReactionAsset::GetObjectGameplayTags_Implementation()
 {
 	return ReactionTags;
+}
+
+UOmegaDamageTypeReaction* UOmegaDamageTypeFunctions::GetScriptFromCombatantDamageReaction(UCombatantComponent* Combatant,
+	UOmegaDamageType* DamageType, TSubclassOf<UOmegaDamageTypeReaction> ScriptClass)
+{
+	if(Combatant && DamageType)
+	{
+		if(const UOmegaDamageTypeReactionAsset* ReactAsset = Combatant->DamageTypeReactions.FindOrAdd(DamageType))
+		{
+			if(ReactAsset->ReactionScript)
+			{
+				return ReactAsset->ReactionScript;
+			}
+		}
+	}
+	return nullptr;
 }
 
 void UOmegaDamageTypeReaction::OnEffectApplied_Implementation(AOmegaGameplayEffect* Effect) const

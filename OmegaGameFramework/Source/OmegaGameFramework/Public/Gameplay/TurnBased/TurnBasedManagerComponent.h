@@ -84,9 +84,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
 	void AddToTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"), DisplayName="Remove From Turn Order (Combatant)")
 	void RemoveFromTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
 
+	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"), DisplayName="Remove From Turn Order (Faction)")
+	void RemoveFactionFromTurnOrder(FGameplayTag Faction, FString Flag, FGameplayTagContainer Tags);
+
+	
 	UPROPERTY(EditDefaultsOnly, Category="Turn")
 	FGameplayTagContainer TriggeredEffectsOnTurnStart;
 	UPROPERTY(EditDefaultsOnly, Category="Turn")

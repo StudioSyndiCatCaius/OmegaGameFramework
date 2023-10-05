@@ -28,8 +28,8 @@ void UGamePreferenceSubsystem::PreloadPrefs()
 	
 	for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaSettings>()->Preferences_ScanPaths)
 	{
-		FString LocalString = NewPath.Path;
-		Filter.PackagePaths.Add(FName(*LocalString));
+		//FString LocalString = NewPath.Path;
+		Filter.PackagePaths.Add(FName(*NewPath.Path));
 	}
 	
 	Filter.bRecursiveClasses = true;

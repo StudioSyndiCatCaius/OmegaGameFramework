@@ -231,7 +231,7 @@ TArray<class UHUDLayer*> UOmegaPlayerSubsystem::GetHUDLayers()
 	TArray<UHUDLayer*> TempLayers;
 	for (UHUDLayer*  TempLayer: ActiveHUDLayers)
 	{
-		if(TempLayer)
+		if(TempLayer && TempLayer->GetClass()->IsChildOf(UHUDLayer::StaticClass()))
 		{
 			TempLayers.Add(TempLayer);
 		}
@@ -246,7 +246,7 @@ TArray<UHUDLayer*> UOmegaPlayerSubsystem::GetHUDLayersWithTags(FGameplayTagConta
 	TArray<UHUDLayer*> OutLayers;
 	for (UHUDLayer* TempLayer : LocalLayers)
 	{
-		if(!(TempLayer==nullptr))
+		if(TempLayer)
 		{
 			FGameplayTagContainer TempTags = TempLayer->HUDTags;
 			if (TempTags.HasAnyExact(Tags))
@@ -264,7 +264,10 @@ void UOmegaPlayerSubsystem::RemoveHUDLayersWithTags(FGameplayTagContainer Tags)
 	CleanHUDLayers();
 	for (UHUDLayer* TempLayer : GetHUDLayersWithTags(Tags))
 	{
-		TempLayer->RemoveFromParent();
+		if(TempLayer)
+		{
+			TempLayer->RemoveFromParent();
+		}
 	}
 }
 
@@ -273,7 +276,10 @@ void UOmegaPlayerSubsystem::RemoveAllHudLayers()
 	CleanHUDLayers();
 	for(UHUDLayer* TempLayer : ActiveHUDLayers)
 	{
-		TempLayer->RemoveFromParent();
+		if(TempLayer)
+		{
+			TempLayer->RemoveFromParent();
+		}
 	}
 	ActiveHUDLayers.Empty();
 }

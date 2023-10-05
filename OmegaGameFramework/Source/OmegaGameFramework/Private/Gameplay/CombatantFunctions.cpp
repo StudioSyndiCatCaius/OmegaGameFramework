@@ -70,6 +70,28 @@ UCombatantComponent* UCombatantFunctions::GetCombatantWithHighestAttributeValue(
 	return OutCombatant;
 }
 
+TArray<UCombatantComponent*> UCombatantFunctions::GetCombatantFromTargetSelection(UCombatantComponent* Instigator,
+	EOmegaCombatTarget Selection)
+{
+	TArray<UCombatantComponent*> OutTargets;
+	if(Instigator)
+	{
+		switch (Selection) {
+		case Target_Self:
+			OutTargets.Add(Instigator);
+			break;
+		case Target_ActiveTarget:
+			OutTargets.Add(Instigator->GetActiveTarget());
+			break;
+		case Target_AllTargets:
+			OutTargets=Instigator->GetRegisteredTargetList();
+			break;
+		default: ;
+		}
+	}
+	return OutTargets;
+}
+
 void UCombatantFunctions::ApplyEffectFromContainer(UCombatantComponent* Combatant, UCombatantComponent* Instigator, FOmegaEffectContainer Effect, UObject* Context)
 {
 	if(Combatant && Effect.EffectClass)

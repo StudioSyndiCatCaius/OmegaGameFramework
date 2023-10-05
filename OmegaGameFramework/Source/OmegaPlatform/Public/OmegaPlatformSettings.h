@@ -21,19 +21,12 @@ public:
 	FSoftObjectPath DefaultPlatform;
 	UPROPERTY(EditAnywhere, Config, Category="Platforms", meta=(MetaClass="OmegaPlatformAsset"))
 	TMap<FString,FSoftObjectPath> PlatformAssets;
-	
-	UOmegaPlatformAsset* GetPlatformAsset()  const
-	{
-		const FString PlatformName = FPlatformMisc::GetUBTPlatform();
-		if(PlatformAssets.Contains(PlatformName))
-		{
-			return SoftRefToPlatformAsset(PlatformAssets[PlatformName]);
-		}
-		return SoftRefToPlatformAsset(DefaultPlatform);
-	}
 
+	UFUNCTION()
+	UOmegaPlatformAsset* GetPlatformAsset() const;
 	
 private:
+	UFUNCTION()
 	UOmegaPlatformAsset* SoftRefToPlatformAsset(FSoftObjectPath Path) const
 	{
 		if (UOmegaPlatformAsset* OmegaPlatformAsset = Cast<UOmegaPlatformAsset>(Path.ResolveObject()))

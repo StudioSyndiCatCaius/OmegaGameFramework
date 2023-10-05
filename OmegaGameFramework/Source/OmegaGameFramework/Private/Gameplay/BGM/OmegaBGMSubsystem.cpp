@@ -47,7 +47,8 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 		IncomingData.LoopBegin = BGM->LoopBeginTime;
 
 		float Local_StopPos;
-		if(BGM != PlayingBGM)
+		
+		if(BGM != PlayingBGM || !IsSlotPlayingBGM(Slot))
 		{
 			//BEGIN PLAY BGM
 			PlayingBGM = BGM;

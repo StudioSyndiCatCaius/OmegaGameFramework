@@ -68,5 +68,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Data Asset Collection")
 	void TransferAllAssetsToCollection(UDataAssetCollectionComponent* To);
+
+	//Checks if the collection has enough of each given type of asset;
+	UFUNCTION(BlueprintPure, Category="Data Asset Collection")
+	bool HasMinimumAssets(TMap<UPrimaryDataAsset*, int32> Assets);
 		
 };

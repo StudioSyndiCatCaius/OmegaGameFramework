@@ -16,7 +16,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputTrigger);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputComplete);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputCancel);
 
-
 UCLASS( ClassGroup=("Input"), meta=(BlueprintSpawnableComponent), DisplayName="Local Input Component" )
 class OMEGAGAMEFRAMEWORK_API UInputReceiverComponent : public UActorComponent
 {
@@ -38,7 +37,7 @@ public:
 	UFUNCTION(Category="Input")
 	FInputActionValue GetInputActionValue();
 	
-	UPROPERTY(EditDefaultsOnly, Category="Input")
+	UPROPERTY(EditAnywhere, Category="Input")
 	class UInputAction* InputAction;
 	
 	UPROPERTY()
@@ -70,6 +69,9 @@ public:
 
 	UFUNCTION()
 	void OnOwningControllerChange(APawn* Pawn, AController* OldController, AController* NewController);
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void BindToPawn(APawn* Pawn);
 	
 };
 

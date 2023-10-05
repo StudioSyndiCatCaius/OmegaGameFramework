@@ -166,3 +166,33 @@ void UDataAssetCollectionComponent::TransferAllAssetsToCollection(UDataAssetColl
 		TransferAssetToCollection(To, TempAsset, 0, true);
 	}
 }
+
+bool UDataAssetCollectionComponent::HasMinimumAssets(TMap<UPrimaryDataAsset*, int32> Assets)
+{
+	for (const auto& Pair : Assets)
+	{
+		UPrimaryDataAsset* Asset = Pair.Key;
+		int32 InputValue = Pair.Value;
+
+		// Check if the asset is present in the 'CollectionMap'
+		if (CollectionMap.Contains(Asset))
+		{
+			int32 CollectionValue = CollectionMap[Asset];
+
+			// Check if the CollectionValue is greater than or equal to InputValue
+			if (CollectionValue < InputValue)
+			{
+				// The CollectionMap does not have the minimum required value for this asset
+				return false;
+			}
+		}
+		else
+		{
+			// The asset is not in the 'CollectionMap', so it can't meet the minimum requirement
+			return false;
+		}
+	}
+
+	// All assets in 'Assets' meet the minimum requirements
+	return true;
+}

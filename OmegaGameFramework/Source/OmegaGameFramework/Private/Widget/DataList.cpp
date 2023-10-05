@@ -140,66 +140,77 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	UUniformGridSlot* USlotRef;
 
 	//Put In List
-	switch (Format)
+	if(ListPanel)
 	{
-	case EDataListFormat::Format_Box:
-
-		switch (Orientation)
+		if(ListFormat)
 		{
-		case EOrientation::Orient_Horizontal:
-			HSlotRef = Cast<UHorizontalBox>(ListPanel)->AddChildToHorizontalBox(TempEntry);
-			HSlotRef->SetHorizontalAlignment(EntryHorizontalAlignment);
-			HSlotRef->SetVerticalAlignment(EntryVerticalAlignment);
-			HSlotRef->SetSize(EntrySize);
-
-			break;
-		case EOrientation::Orient_Vertical:
-			VSlotRef = Cast<UVerticalBox>(ListPanel)->AddChildToVerticalBox(TempEntry);
-			VSlotRef->SetHorizontalAlignment(EntryHorizontalAlignment);
-			VSlotRef->SetVerticalAlignment(EntryVerticalAlignment);
-			VSlotRef->SetSize(EntrySize);
-
-			break;
-		}
-
-		break;
-	case EDataListFormat::Format_ScrollBox:
-		Cast<UScrollBox>(ListPanel)->AddChild(TempEntry);
-		Cast<UScrollBox>(ListPanel)->SetOrientation(Orientation);
-
-		break;
-	case EDataListFormat::Format_UniformGrid:
-		int32 InRow = 0;
-		int32 InCol = 0;
-		switch (Orientation)
-		{
-		case EOrientation::Orient_Horizontal:
-			InRow = CurrentA;
-			InCol = CurrentB;
-			break;
-		case EOrientation::Orient_Vertical:
-			InRow = CurrentB;
-			InCol = CurrentA;
-			break;
-		}
-
-		USlotRef = Cast<UUniformGridPanel>(ListPanel)->AddChildToUniformGrid(TempEntry, InRow, InCol);
-		USlotRef->SetHorizontalAlignment(EntryHorizontalAlignment);
-		USlotRef->SetVerticalAlignment(EntryVerticalAlignment);
-		if (CurrentB>=(UniformGridMaxValue - 1))
-		{
-			CurrentA = CurrentA + 1;
-			CurrentB = 0;
+			ListFormat->AddDataWidget(TempEntry,ListPanel);
 		}
 		else
 		{
-			CurrentB = CurrentB + 1;
+			switch (Format)
+			{
+			case EDataListFormat::Format_Box:
+
+				switch (Orientation)
+				{
+			case EOrientation::Orient_Horizontal:
+				HSlotRef = Cast<UHorizontalBox>(ListPanel)->AddChildToHorizontalBox(TempEntry);
+					HSlotRef->SetHorizontalAlignment(EntryHorizontalAlignment);
+					HSlotRef->SetVerticalAlignment(EntryVerticalAlignment);
+					HSlotRef->SetSize(EntrySize);
+
+					break;
+			case EOrientation::Orient_Vertical:
+				VSlotRef = Cast<UVerticalBox>(ListPanel)->AddChildToVerticalBox(TempEntry);
+					VSlotRef->SetHorizontalAlignment(EntryHorizontalAlignment);
+					VSlotRef->SetVerticalAlignment(EntryVerticalAlignment);
+					VSlotRef->SetSize(EntrySize);
+
+					break;
+				}
+
+				break;
+			case EDataListFormat::Format_ScrollBox:
+				Cast<UScrollBox>(ListPanel)->AddChild(TempEntry);
+				Cast<UScrollBox>(ListPanel)->SetOrientation(Orientation);
+
+				break;
+			case EDataListFormat::Format_UniformGrid:
+				int32 InRow = 0;
+				int32 InCol = 0;
+				switch (Orientation)
+				{
+				case EOrientation::Orient_Horizontal:
+					InRow = CurrentA;
+					InCol = CurrentB;
+					break;
+				case EOrientation::Orient_Vertical:
+					InRow = CurrentB;
+					InCol = CurrentA;
+					break;
+				}
+
+				USlotRef = Cast<UUniformGridPanel>(ListPanel)->AddChildToUniformGrid(TempEntry, InRow, InCol);
+				USlotRef->SetHorizontalAlignment(EntryHorizontalAlignment);
+				USlotRef->SetVerticalAlignment(EntryVerticalAlignment);
+				if (CurrentB>=(UniformGridMaxValue - 1))
+				{
+					CurrentA = CurrentA + 1;
+					CurrentB = 0;
+				}
+				else
+				{
+					CurrentB = CurrentB + 1;
+				}
+				break;
+			}
 		}
-		break;
 	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("Added WidgetToList"));
 	TempEntry->AddedToDataList(this, Entries.Find(TempEntry), Asset, ListTags, Flag);
-
+	
 	return TempEntry;
 }
 
@@ -376,6 +387,26 @@ bool UDataList::AnyEntryHasTag(FName Tag)
 	return false;
 }
 
+void UDataListFormat::OnWidgetHovered_Implementation(UDataWidget* DataWidget, UPanelWidget* PanelWidget)
+{
+	
+}
+
+
+UPanelWidget* UDataListFormat::CreateWidget_Implementation(UDataList* OwningList)
+{
+	return nullptr;
+}
+
+
+void UDataListFormat::AddDataWidget_Implementation(UDataWidget* DataWidget, UPanelWidget* PanelWidget)
+{
+	if(DataWidget && PanelWidget)
+	{
+		PanelWidget->AddChild(DataWidget);
+	}
+}
+
 
 //---------------------------------------------------------------------------------
 /// Input 
@@ -514,32 +545,43 @@ void UDataList::RebuildList()
 		return;
 		UE_LOG(LogTemp, Warning, TEXT("No Valid Parent Panel"));
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Rebuilding List"));
-	//Create Content Panel
-	switch (Format)
-	{
-	case EDataListFormat::Format_Box:
 
-		switch (Orientation)
+	//Use custom list format if valid
+	if(ListFormat)
+	{
+		ListPanel = ListFormat->CreateWidget(this);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Rebuilding List"));
+		//Create Content Panel
+		switch (Format)
 		{
+		case EDataListFormat::Format_Box:
+
+			switch (Orientation)
+			{
 		case EOrientation::Orient_Horizontal:
 			BuildList(UHorizontalBox::StaticClass());
-		break;
+				break;
 		case EOrientation::Orient_Vertical:
 			BuildList(UVerticalBox::StaticClass());
-		break;
+				break;
 		default: ;
-		}
+			}
 
-		break;
-	case EDataListFormat::Format_ScrollBox:
+			break;
+		case EDataListFormat::Format_ScrollBox:
 			BuildList(UScrollBox::StaticClass());
 			Cast<UScrollBox>(ListPanel)->SetOrientation(Orientation);
-		break;
-	case EDataListFormat::Format_UniformGrid:
+			break;
+		case EDataListFormat::Format_UniformGrid:
 			BuildList(UUniformGridPanel::StaticClass());
-		break;
+			break;
+		}
 	}
+	
+	
 
 	//Add to Content Panel and Align
 	ParentPanel->AddChildToCanvas(ListPanel);
@@ -636,8 +678,12 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 				TempWig->SetSourceAsset(DataWidget->ReferencedAsset);
 			}
 		}
-		
-		if(Format==EDataListFormat::Format_ScrollBox)
+
+		if(ListFormat)
+		{
+			ListFormat->OnWidgetHovered(DataWidget,ListPanel);
+		}
+		else if(Format==EDataListFormat::Format_ScrollBox)
 		{
 			Cast<UScrollBox>(ListPanel)->ScrollWidgetIntoView(DataWidget);
 		}
@@ -683,7 +729,6 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 
 void UDataList::NativeEntityHighlight(UDataWidget* DataWidget, bool bIsHighlighted)
 {
-	
 	OnEntryHighlighted.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget), bIsHighlighted);
 }
 
@@ -706,3 +751,13 @@ void UDataList::SetAllEntriesHighlighted(bool bHighlighted)
 	}
 }
 
+void UDataList::RefreshAllEntries()
+{
+	for(auto* TempEntry : GetEntries())
+	{
+		if(TempEntry)
+		{
+			TempEntry->Refresh();
+		}
+	}
+}

@@ -11,6 +11,7 @@
 #include "JsonObjectWrapper.h"
 #include "OmegaGeneralEnums.h"
 #include "AssetRegistry/AssetData.h"
+#include "Components/ScrollBox.h"
 #include "OmegaGameFrameworkBPLibrary.generated.h"
 
 class APlayerController;
@@ -25,7 +26,6 @@ enum EOmegaFlagResult
 	Flag_Active	UMETA(DisplayName = "Activate"),
 	Flag_Inactive	UMETA(DisplayName = "Inactive"),
 };
-
 
 
 UCLASS()
@@ -238,5 +238,15 @@ public:
 	//Gets a value from 0-5 based on the star rank. R.G. ☆☆☆☆☆ = 0, ★★★☆☆ = 3, ★★★★★ = 5
 	UFUNCTION(BlueprintPure, Category="Omega|StarRank")
 	static int32 GetIntFromStarRank(EOmegaStarRank Rank);
+	
+};
+
+UCLASS()
+class UOmegaWidgetFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
 	
 };

@@ -28,6 +28,9 @@ public:
 	//###############################################################################
 	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Text")
 	static void SetTextLocalized(FText& TextToLocalize);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Text")
+	static TArray<FString> GetBlueprintCallableAndPureFunctions(UObject* Object);
 };
 
 UCLASS()

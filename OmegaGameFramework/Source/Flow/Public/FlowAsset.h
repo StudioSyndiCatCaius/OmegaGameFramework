@@ -280,17 +280,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	TArray<UFlowNode*> GetRecordedNodes() const { return RecordedNodes; }
 	
-	UFUNCTION(BlueprintPure, Category = "Flow")
-	TArray<UFlowNode*> GetAllNodes();
-	
-	UFUNCTION(BlueprintPure, Category = "Flow")
-	UFlowNode* GetNodeFromGuid(FGuid Guid);
-	
-	UFUNCTION(BlueprintPure, Category = "Flow")
-	TArray<FGuid> GetActiveNodeGuids();
-
-	UFUNCTION(BlueprintCallable, Category="Flow")
-	void ForceActivateNode(FGuid NodeGuid, FName InputName);
 //////////////////////////////////////////////////////////////////////////
 // SaveGame
 	
@@ -313,7 +302,23 @@ protected:
 public:	
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	bool IsBoundToWorld();
+	
+	//#############################################################################################################
+	// OMEGA ADDITIONS
+	//#############################################################################################################
+	
+	UFUNCTION(BlueprintPure, Category = "Flow")
+	TArray<UFlowNode*> GetAllNodes();
+	
+	UFUNCTION(BlueprintPure, Category = "Flow")
+	UFlowNode* GetNodeFromGuid(FGuid Guid);
+	
+	UFUNCTION(BlueprintPure, Category = "Flow")
+	TArray<FGuid> GetActiveNodeGuids();
 
+	UFUNCTION(BlueprintCallable, Category="Flow")
+	void ForceActivateNode(FGuid NodeGuid, FName InputName);
+	
 	//--------------------------------------------------------//
 	// General
 	//--------------------------------------------------------//

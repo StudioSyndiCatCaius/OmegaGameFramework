@@ -38,11 +38,14 @@ TArray<UOmegaDataTrait*> UOmegaDataItem::GetAllValidTraits()
 	}
 	for(auto* TempTraitCol : TraitCollections)
 	{
-		for(auto* TempTrait : TempTraitCol->Traits)
+		if(TempTraitCol)
 		{
-			if(TempTrait)
+			for(auto* TempTrait : TempTraitCol->Traits)
 			{
-				OutTraits.Add(TempTrait);
+				if(TempTrait)
+				{
+					OutTraits.Add(TempTrait);
+				}
 			}
 		}
 	}
@@ -114,12 +117,15 @@ void UOmegaDataItem::ApplyTraitsToActor(AActor* Actor, FString Flag, FGameplayTa
 		
 	for(auto* TempTrait : GetAllValidTraits())
 	{
-		TempTrait->AppliedToActor(Actor, Flag, Tags);
-		for(auto* TempComp : Actor->GetComponents())
+		if(TempTrait)
 		{
-			if(TempComp)
+			TempTrait->AppliedToActor(Actor, Flag, Tags);
+			for(auto* TempComp : Actor->GetComponents())
 			{
-				TempTrait->AppliedToComponent(TempComp, Flag, Tags);
+				if(TempComp)
+				{
+					TempTrait->AppliedToComponent(TempComp, Flag, Tags);
+				}
 			}
 		}
 	}
@@ -322,13 +328,13 @@ TArray<FOmegaEffectContainer> UOmegaDataItem::GetOmegaEffects_Implementation()
 	return OutEffects;
 }
 
-TArray<UPrimaryDataAsset*> UOmegaDataItem::GetSkills_Implementation()
+TArray<UPrimaryDataAsset*> UOmegaDataItem::GetSkills_Implementation(UCombatantComponent* Combatant)
 {
 	TArray<UPrimaryDataAsset*> OutSkills;
 	
 	for(auto* TempTrait : GetTraitsWithInterface(UDataInterface_SkillSource::StaticClass()))
 	{
-		OutSkills.Append(IDataInterface_SkillSource::Execute_GetSkills(TempTrait));
+		OutSkills.Append(IDataInterface_SkillSource::Execute_GetSkills(TempTrait,Combatant));
 	}
 	return OutSkills;
 }

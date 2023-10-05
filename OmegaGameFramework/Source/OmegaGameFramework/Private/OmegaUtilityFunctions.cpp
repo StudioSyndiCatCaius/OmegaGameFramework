@@ -5,6 +5,8 @@
 #include "ShaderCompiler.h"
 #include "Internationalization/Internationalization.h"
 #include "CoreGlobals.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 
 bool UOmegaUtilityFunctions::AreShadersCompiling()
 {
@@ -54,4 +56,34 @@ UClass* UOmegaAssetFunctions::GetBlueprintClassFromPath(const FString Path)
 	FSoftClassPath LocalPath;
 	LocalPath.SetSubPathString(Path);
 	return LocalPath.ResolveClass();
+}
+
+
+
+TArray<FString> UOmegaUtilityFunctions::GetBlueprintCallableAndPureFunctions(UObject* Object)
+{
+	TArray<FString> FunctionNames;
+
+	if (!Object)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Object is null"));
+		return FunctionNames;
+	}
+
+	UClass* Class = Object->GetClass();
+
+	// Iterate through all the functions of the class
+	for (TFieldIterator<UFunction> FunctionIt(Class); FunctionIt; ++FunctionIt)
+	{
+		UFunction* Function = *FunctionIt;
+
+		// Check if the function is BlueprintCallable or BlueprintPure
+		if (Function->HasAnyFunctionFlags(FUNC_BlueprintCallable) || Function->HasAnyFunctionFlags(FUNC_BlueprintPure))
+		{
+			// Add the function's name to the array
+			FunctionNames.Add(Function->GetName());
+		}
+	}
+
+	return FunctionNames;
 }

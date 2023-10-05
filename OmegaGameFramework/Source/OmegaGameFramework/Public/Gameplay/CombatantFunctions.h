@@ -9,9 +9,15 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "CombatantFunctions.generated.h"
 
-/**
- * 
- */
+UENUM(Blueprintable, BlueprintType)
+enum EOmegaCombatTarget
+{
+	Target_Self					UMETA(DisplayName = "Self"),
+	Target_ActiveTarget			UMETA(DisplayName = "Active Target"),
+	Target_AllTargets			UMETA(DisplayName = "All Targets"),
+};
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibrary
 {
@@ -25,7 +31,9 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 
 	UFUNCTION(BlueprintPure, Category="Combat")
 	static UCombatantComponent* GetCombatantWithHighestAttributeValue(TArray<UCombatantComponent*> Combatants, UOmegaAttribute* Attribute, bool bUseCurrentValue);
-	
+
+	UFUNCTION(BlueprintPure, Category="Combat")
+	static TArray<UCombatantComponent*> GetCombatantFromTargetSelection(UCombatantComponent* Instigator, EOmegaCombatTarget Selection);
 	//-----------------------------------------------------------------------------------
 	// Effects
 	//-----------------------------------------------------------------------------------

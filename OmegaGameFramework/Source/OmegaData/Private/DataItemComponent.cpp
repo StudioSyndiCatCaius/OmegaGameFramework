@@ -92,13 +92,13 @@ TArray<FOmegaAttributeModifier> UDataItemComponent::GetModifierValues_Implementa
 	return IDataInterface_AttributeModifier::GetModifierValues_Implementation();
 }
 
-TArray<UPrimaryDataAsset*> UDataItemComponent::GetSkills_Implementation()
+TArray<UPrimaryDataAsset*> UDataItemComponent::GetSkills_Implementation(UCombatantComponent* Combatant)
 {
 	if(DataItem)
 	{
-		return IDataInterface_SkillSource::Execute_GetSkills(DataItem);
+		return IDataInterface_SkillSource::Execute_GetSkills(DataItem,Combatant);
 	}
-	return IDataInterface_SkillSource::GetSkills_Implementation();
+	return IDataInterface_SkillSource::GetSkills_Implementation(Combatant);
 }
 
 void UDataItemComponent::OnTagEvent_Implementation(FGameplayTag Event)
