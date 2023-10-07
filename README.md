@@ -1,5 +1,6 @@
 # Omega Game Framework
 ### Links
+* [DOCUMENTATION](https://studio-syndicat.gitbook.io/omega-game-framework/)
 * [Website](https://www.studiosyndicat.com/omegagameframework)
 * [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/product/2ca6202e55f44cfd82659fbca6591603)
 
