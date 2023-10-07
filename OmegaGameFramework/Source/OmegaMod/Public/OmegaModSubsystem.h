@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "DataInterface_General.h"
 #include "Gameplay/GameplayTagsInterface.h"
+#include "Gameplay/OmegaGameplayModule.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
 #include "OmegaModSubsystem.generated.h"
@@ -20,6 +21,10 @@ protected:
 	virtual void Deinitialize() override;
 
 public:
+	
+	UPROPERTY()
+	UOmegaModManager* ModManager;
+	UPROPERTY()
 	TArray<UOmegaMod*> ModList;
 
 	UFUNCTION(BlueprintPure, Category="OmegaMods")
@@ -46,18 +51,42 @@ class OMEGAMOD_API UOmegaMod : public UObject, public IDataInterface_General, pu
 
 public:
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, Category="Mod")
 	FText ModName;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, Category="Mod")
 	FText ModDescription;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, Category="Mod")
 	FSlateBrush ModThumbnail;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, Category="Mod")
 	FGameplayTag ModCategory;
+
+	UPROPERTY(BlueprintReadOnly, Category="Mod", DisplayName="Mod Path")
+	FString ModStringData;
 
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+};
+
+UCLASS()
+class OMEGAMOD_API UOmegaModManager : public UOmegaGameplayModule
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	FString GetModFiletype();
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	void OnSetModActive(UOmegaMod* Mod, bool IsActive);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	bool OnGetModActive(UOmegaMod* Mod);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	void OnModInitialized(UOmegaMod* Mod);
+	
 };

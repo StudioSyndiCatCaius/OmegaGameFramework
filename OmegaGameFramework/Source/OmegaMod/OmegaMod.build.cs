@@ -14,6 +14,7 @@ public class OmegaMod : ModuleRules
 			"OmegaGameFramework",
 			"Json",
 			"OmegaSequence",
+			"DeveloperSettings",
 			"GameplayTags",
 			"SlateCore",
 			"OmegaData"});

@@ -46,7 +46,8 @@ public:
 	///
 
 	UFUNCTION()
-	void ActivateModuleFromClass(const UClass* ModuleClass);
+	UOmegaGameplayModule* ActivateModuleFromClass(const UClass* ModuleClass);
+	
 	UPROPERTY()
 	TArray<UOmegaGameplayModule*> ActiveModules;
 	

@@ -2,6 +2,9 @@
 
 
 #include "OmegaModSubsystem.h"
+
+#include "OmegaGameManager.h"
+#include "OmegaModSettings.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
@@ -11,35 +14,33 @@
 
 void UOmegaModSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
-	// Directory Search
+	// Activate the mod manager module
+	const TSubclassOf<UOmegaModManager> ManagerClass = GetMutableDefault<UOmegaModSettings>()->GetOmegaModManagerClass();
+	ModManager = Cast<UOmegaModManager>(GetGameInstance()->GetSubsystem<UOmegaGameManager>()->ActivateModuleFromClass(ManagerClass));
 
+	
 	for(FString TempPath : GetModListPaths())
 	{
+		/*
 		FString ModFileContent;
 		FFileHelper::LoadFileToString(ModFileContent, *TempPath);
+		*/
+		UOmegaMod* NewMod = NewObject<UOmegaMod>(this, UOmegaMod::StaticClass());
+		NewMod->ModStringData=TempPath;
+		ModManager->OnModInitialized(NewMod);
 		
-		// CREATE MOD
-		
+		ModList.Add(NewMod);
 
+		/*
+		// CREATE MOD
 		TSharedPtr<FJsonObject> JsonObject;
 		TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(ModFileContent);
 
 		if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
 		{
-			UOmegaMod* NewMod = NewObject<UOmegaMod>(this, UOmegaMod::StaticClass());
-			// Access properties from the JSON object
-			NewMod->ModName = FText::FromString(JsonObject->GetStringField("Name"));
-			NewMod->ModDescription = FText::FromString(JsonObject->GetStringField("Description"));
 			
-			// Print the values
-			//UE_LOG(LogTemp, Log, TEXT("Name: %s"), *Name);
-			//UE_LOG(LogTemp, Log, TEXT("Age: %d"), Age);
-			//UE_LOG(LogTemp, Log, TEXT("Is Student: %s"), bIsStudent ? TEXT("true") : TEXT("false"));
-			
-			ModList.Add(NewMod);
 		}
-
-		
+		*/
 	}
 	
 }
@@ -60,7 +61,8 @@ TArray<FString> UOmegaModSubsystem::GetModListPaths()
 	
 	for (FString fileName : relativeFileNames)
 	{
-		FileNames.Add(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName  + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName + ".json");
+		FString ModTypeExtension = ModManager->GetModFiletype();
+		FileNames.Add(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName  + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName + "." + ModTypeExtension);
 	}
 	
 	return FileNames;
@@ -78,12 +80,21 @@ TArray<UOmegaMod*> UOmegaModSubsystem::GetInstalledMods()
 
 TArray<UOmegaMod*> UOmegaModSubsystem::GetActiveMods()
 {
+	TArray<UOmegaMod*> OutMods;
+	for(auto* TempMod : GetInstalledMods())
+	{
+		if(TempMod && ModManager->OnGetModActive(TempMod))
+		{
+			OutMods.Add(TempMod);
+		}
+	}
+	
 	return GetInstalledMods();
 }
 
 void UOmegaModSubsystem::SetModActive(UOmegaMod* Mod, bool IsActive)
 {
-	
+	ModManager->OnSetModActive(Mod,IsActive);
 }
 
 void UOmegaMod::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,

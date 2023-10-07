@@ -454,6 +454,7 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 		if(Incoming_SpawnPoint)
 		{
 			APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this,0);
+			
 			PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
 			UGameplayStatics::GetPlayerController(this,0)->SetControlRotation(PawnRef->GetActorRotation());
 			OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this,0),Incoming_SpawnPoint);
