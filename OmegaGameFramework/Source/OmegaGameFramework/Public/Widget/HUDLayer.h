@@ -18,11 +18,21 @@ class OMEGAGAMEFRAMEWORK_API UHUDLayer : public UUserWidget
 {
 	GENERATED_BODY()
 
+private:
+
+	UPROPERTY()
+	bool bRemoving;
+
 public:
 	virtual void NativeConstruct() override;
 	
+	virtual void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
+	
 	UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
 	void LayerAdded(class APlayerController* OwningPlayer, UObject* Context);
+
+	UFUNCTION()
+	void RemoveHUDLayer();
 
 	//UFUNCTION(BlueprintImplementableEvent)
 	//void LayerRemoved();
@@ -33,6 +43,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	int32 SlateLayerIndex;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
+	bool bReverseCloseAnim=true;
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnGlobalEvent(FName Event, UObject* Context);
 	UFUNCTION()
@@ -42,4 +55,16 @@ public:
 	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInputMethodChanged(bool bIsGamepad);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	UWidgetAnimation* GetAppearAnimation();
+	UFUNCTION(BlueprintImplementableEvent)
+	UWidgetAnimation* GetRemovedAnimation();
+
+private:
+
+	UFUNCTION()
+	void Local_RemoveAnimFinished();
+
+
 };

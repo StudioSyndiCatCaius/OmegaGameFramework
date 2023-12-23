@@ -163,7 +163,7 @@ void AOmegaGameplaySystem::CompleteShutdown()
 		{
 			if(TempWidget)
 			{
-				TempWidget->RemoveFromParent();
+				TempWidget->RemoveHUDLayer();
 			}
 		}
 		OnSystemShutdown.Broadcast(Shutdown_Context, Shutdown_Flag);

@@ -355,22 +355,26 @@ bool UCombatantComponent::GrantAbility(TSubclassOf<AOmegaAbility> AbilityClass)
 		const FTransform SpawnWorldPoint;
 		//Spawn Ability
 		LocalAbility = GetWorld()->SpawnActorDeferred<AOmegaAbility>(AbilityClass, SpawnWorldPoint, nullptr);
-		LocalAbility->CombatantOwner = this;
-		
-		if (Cast<ACharacter>(GetOwner()))
+		if(LocalAbility)
 		{
-			LocalAbility->CachedCharacter = Cast<ACharacter>(GetOwner());
-		}
-		if (Cast<APawn>(GetOwner()))
-		{
-			LocalAbility->SetInstigator(Cast<APawn>(GetOwner()));
+			LocalAbility->CombatantOwner = this;
+		
+			if (Cast<ACharacter>(GetOwner()))
+			{
+				LocalAbility->CachedCharacter = Cast<ACharacter>(GetOwner());
+			}
+			if (Cast<APawn>(GetOwner()))
+			{
+				LocalAbility->SetInstigator(Cast<APawn>(GetOwner()));
+			}
+		
+			UGameplayStatics::FinishSpawningActor(LocalAbility, SpawnWorldPoint);
+			LocalAbility->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+			//Add to AbilitiesList
+			AbilityList.Add(LocalAbility);
+			return true;
 		}
 		
-		UGameplayStatics::FinishSpawningActor(LocalAbility, SpawnWorldPoint);
-		LocalAbility->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-		//Add to AbilitiesList
-		AbilityList.Add(LocalAbility);
-		return true;
 	}
 	return false;
 }
@@ -725,14 +729,22 @@ void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& C
 		MaxValue = 0;
 		return;
 	}
-	//Get base value
-	float BaseValue = GetAttributeBaseValue(Attribute);
+	if(OverrideMaxAttributes.Contains(Attribute))
+	{
+		MaxValue = OverrideMaxAttributes[Attribute];
+	}
+	else
+	{
+		//Get base value
+		float BaseValue = GetAttributeBaseValue(Attribute);
 	
-	//Gather All modifiers and apply them to final damage.
-	BaseValue = GatherAttributeModifiers(GetAttributeModifiers(),BaseValue, Attribute);
+		//Gather All modifiers and apply them to final damage.
+		BaseValue = GatherAttributeModifiers(GetAttributeModifiers(),BaseValue, Attribute);
 	
-	MaxValue  = BaseValue;
-	//Get Current Value
+		MaxValue  = BaseValue;
+		//Get Current Value
+	}
+	
 	if (Attribute->bIsValueStatic)
 	{
 		CurrentValue = MaxValue;
@@ -762,6 +774,35 @@ bool UCombatantComponent::IsAbilityTagBlocked(FGameplayTagContainer Tags)
 		}
 	}
 	return false;
+}
+
+void UCombatantComponent::SetOverrideMaxAttribute(UOmegaAttribute* Attribute, float Value)
+{
+	OverrideMaxAttributes.Add(Attribute,Value);
+	Update();
+}
+
+void UCombatantComponent::SetOverrideMaxAttributes(TMap<UOmegaAttribute*, float> Value)
+{
+	OverrideMaxAttributes=Value;
+	Update();
+}
+
+void UCombatantComponent::SetOverrideMaxAttributes_Int(TMap<UOmegaAttribute*, int32> Value)
+{
+	// Assume sourceMap is your TMap<UObject*, int32>
+	TMap<UOmegaAttribute*, int32> sourceMap;
+
+	// Your target TMap with float values
+	TMap<UOmegaAttribute*, float> targetMap;
+
+	// Iterate over the sourceMap
+	for (const TPair<UOmegaAttribute*, int32>& KVP : sourceMap)
+	{
+		// Cast the int32 to float and insert into targetMap
+		targetMap.Add(KVP.Key, (float)KVP.Value);
+	}
+	SetOverrideMaxAttributes(targetMap);
 }
 
 void UCombatantComponent::InitializeFromAsset(UObject* Asset)

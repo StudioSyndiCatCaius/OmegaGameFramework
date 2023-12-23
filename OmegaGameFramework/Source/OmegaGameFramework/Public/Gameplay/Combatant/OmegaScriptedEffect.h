@@ -73,6 +73,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffectFunctions : public UBlueprintFu
 {
 	GENERATED_BODY()
 
+public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="Apply Scripted Effects")
 	static void ApplyEffectScriptToCombatant(TArray<UOmegaScriptedEffect*> Effects, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);
 	

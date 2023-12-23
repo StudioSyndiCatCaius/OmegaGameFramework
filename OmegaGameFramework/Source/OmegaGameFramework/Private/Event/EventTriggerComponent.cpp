@@ -2,7 +2,7 @@
 
 
 #include "Event/EventTriggerComponent.h"
-
+#include "Engine/GameInstance.h"
 #include "OmegaGameManager.h"
 #include "Event/SoftEventInterface.h"
 #include "Kismet/GameplayStatics.h"

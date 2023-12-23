@@ -206,8 +206,8 @@ public:
 	
 	// This will instantiate Flow Asset assigned on this component.
 	// Created Flow Asset instance will be a "root flow", as additional Flow Assets can be instantiated via Sub Graph node
-	UFUNCTION(BlueprintCallable, Category = "RootFlow", meta=(AdvancedDisplay="bOverrideStartingNode, StartingNode, InputName"))
-	void StartRootFlow(const bool bOverrideStartingNode, const FGuid StartingNode, const FName InputName);
+	UFUNCTION(BlueprintCallable, Category = "RootFlow", meta=(AdvancedDisplay="OverrideData, StartingNode, InputName"))
+	void StartRootFlow(FFlowAssetOverrideData OverrideData, const FName InputName);
 
 	// This will destroy instantiated Flow Asset - created from asset assigned on this component.
 	UFUNCTION(BlueprintCallable, Category = "RootFlow")

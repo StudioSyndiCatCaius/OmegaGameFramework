@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
+#include "Components/AudioComponent.h"
 #include "AsyncAction_PlaySound.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAsyncSoundFinished);

@@ -19,6 +19,11 @@ void UOmegaLinearEventSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+void UOmegaLinearEventSubsystem::Local_EndEvent(const UOmegaLinearEventInstance* Instance, const FString& Flag)
+{
+	OnLinearEventSequenceEnd.Broadcast(Instance,Flag);
+}
+
 
 UOmegaLinearEventInstance* UOmegaLinearEventSubsystem::PlayLinearEvent(FLinearEventSequence Sequence, int32 StartingEvent)
 {

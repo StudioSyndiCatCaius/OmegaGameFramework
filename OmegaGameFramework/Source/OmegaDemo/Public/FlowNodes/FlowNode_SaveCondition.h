@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS(DisplayName="Save Condition Check")
+UCLASS(DisplayName="(Save) Condition Check")
 class OMEGADEMO_API UFlowNode_SaveCondition : public UFlowNode
 {
 	GENERATED_BODY()

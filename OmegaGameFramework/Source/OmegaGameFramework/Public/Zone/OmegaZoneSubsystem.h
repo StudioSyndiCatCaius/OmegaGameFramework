@@ -6,6 +6,7 @@
 #include "LevelSequence.h"
 #include "LevelSequencePlayer.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "GameFramework/Actor.h"
 #include "OmegaZone.h"
 #include "Blueprint/UserWidget.h"

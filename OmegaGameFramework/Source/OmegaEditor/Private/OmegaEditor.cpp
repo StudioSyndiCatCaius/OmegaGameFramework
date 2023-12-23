@@ -128,7 +128,7 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("DataAssetCollectionComponent"));
 	ThumnbailNames.Add(TEXT("CombatantExtensionComponent"));
 	ThumnbailNames.Add(TEXT("CombatantGroupComponent"));
-	
+	ThumnbailNames.Add(TEXT("OmegaLinearEvent"));
 	ThumnbailNames.Add(TEXT("TurnBasedManagerComponent"));
 	
 	ThumnbailNames.Add(TEXT("OmegaDataItem"));
@@ -188,7 +188,7 @@ void FOmegaEditor::StartupModule()
 		DirecPrefex.Append("_16");
 		//Create and set Icon
 		IconTemp = new FSlateImageBrush(StyleSet->RootToContentDir(DirecPrefex, TEXT(".png")), FVector2D(16, 16.f));
-		IconTemp->TintColor = FSlateColor(FLinearColor(1,0.2,0.3,1));		//Tint Icon Color
+		IconTemp->TintColor = FSlateColor(FLinearColor(0,0.65,1,1));		//Tint Icon Color
 		IcoName = FName(*IconPrefex);
 		StyleSet->Set(IcoName, IconTemp);
 	};

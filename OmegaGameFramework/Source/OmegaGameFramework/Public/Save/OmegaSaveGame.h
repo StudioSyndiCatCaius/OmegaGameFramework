@@ -6,8 +6,7 @@
 
 #include "Save/OmegaSaveBase.h"
 #include "GameplayTagContainer.h"
-#include "DataInterface_General.h"
-#include "Gameplay/GameplayTagsInterface.h"
+#include "Engine/GameInstance.h"
 #include "UObject/SoftObjectPath.h"
 
 

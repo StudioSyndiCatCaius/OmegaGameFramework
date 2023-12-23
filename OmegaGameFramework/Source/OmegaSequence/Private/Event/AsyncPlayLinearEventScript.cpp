@@ -11,7 +11,7 @@ void UAsyncPlayLinearEventScript::Local_NewEvent(int32 Index, UOmegaLinearEvent*
 	NewEvent.Broadcast(Index,EventRef,EventInstance);
 }
 
-void UAsyncPlayLinearEventScript::Local_Finish(const FString& Flag)
+void UAsyncPlayLinearEventScript::Local_Finish(const FString& Flag, UOmegaLinearEventInstance* Instance)
 {
 	OnFinished.Broadcast(Flag);
 	SetReadyToDestroy();

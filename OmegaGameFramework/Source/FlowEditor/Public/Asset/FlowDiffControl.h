@@ -4,6 +4,7 @@
 
 #include "DiffResults.h"
 #include "IAssetTypeActions.h"
+// 5.3 #include "Editor/Kismet/Private/DiffControl.h"
 #include "Kismet/Private/DiffControl.h"
 
 struct FDiffResultItem;

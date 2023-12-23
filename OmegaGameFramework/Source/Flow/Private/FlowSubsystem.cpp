@@ -67,12 +67,12 @@ void UFlowSubsystem::AbortActiveFlows()
 	RootInstances.Empty();
 }
 
-void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bOverrideStartingNode, const FGuid StartingNode, const FName InputName, const bool bAllowMultipleInstances)
+void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, FFlowAssetOverrideData OverrideData, const FName InputName, const bool bAllowMultipleInstances)
 {
 	UFlowAsset* NewFlow = CreateRootFlow(Owner, FlowAsset, bAllowMultipleInstances);
 	if (NewFlow)
 	{
-		NewFlow->StartFlow(GetGameInstance(), bOverrideStartingNode, StartingNode, InputName);
+		NewFlow->StartFlow(GetGameInstance(), OverrideData, InputName);
 	}
 }
 
@@ -146,8 +146,8 @@ UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_SubGraph* SubGraphNode, cons
 		// don't activate Start Node if we're loading Sub Graph from SaveGame
 		if (SavedInstanceName.IsEmpty())
 		{
-			const FGuid DumGuid;
-			AssetInstance->StartFlow(GetGameInstance(), false, DumGuid,"");
+	
+			AssetInstance->StartFlow(GetGameInstance(), FFlowAssetOverrideData(),"");
 		}
 	}
 

@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "OmegaDynamicSaveVariable.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Components/ActorComponent.h"
+#include "Engine/DataAsset.h"
+#include "Engine/World.h"
 #include "Misc/Paths.h"
 #include "Misc/Timespan.h"
 #include "OmegaSaveSubsystem.generated.h"
@@ -55,7 +58,7 @@ public:
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSaveStateChanged, FGameplayTag, NewState, bool, bGlobal);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSaveTagsEdited, FGameplayTagContainer, EditedTags, bool, Added, bool, bGlobal);
 
 UCLASS(DisplayName = "Omega Subsystem: Save")
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveSubsystem : public UGameInstanceSubsystem
@@ -65,7 +68,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveSubsystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
-
+	void OnLevelChanged(UWorld* World, const UWorld::InitializationValues);
+	
 	UFUNCTION(BlueprintPure, Category = "Omega|SaveSubsystem")
 	void GetSaveSlotName(int32 Slot, FString& OutName);
 
@@ -134,8 +138,10 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnSaveStateChanged OnSaveStateChanged;
+	UPROPERTY(BlueprintAssignable)
+	FOnSaveTagsEdited OnSaveTagsEdited;
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Tags", DisplayName="Set Save State")
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Tags", DisplayName="Set Save State Tag")
 	void SetStoryState(FGameplayTag StateTag, bool Global);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Tags")
@@ -153,6 +159,8 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Tags")
 	bool SaveTagsMatchQuery(FGameplayTagQuery Query, bool Global);
 
+
+	
 	//###############################################################################################
 	// Actor
 	//###############################################################################################
@@ -279,7 +287,7 @@ public:
 	bool CustomSaveConditionsMet(FOmegaSaveConditions Conditions);
 
 	//###############################################################################################
-	// SAVING
+	// SAVING Json
 	//###############################################################################################
 	
 	UFUNCTION(BlueprintCallable, Category="OmegaSaveSubsystem")
@@ -295,6 +303,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem")
 	TArray<UObject*> GetSaveSources();
+
+	//###############################################################################################
+	// GuiSon
+	//###############################################################################################
+	
+	
 	//###############################################################################################
 	// Screenshot
 	//###############################################################################################
@@ -304,11 +318,37 @@ public:
 		fileName = fileName + "/SaveGames/" + SlotName + ".png";
 		return  fileName;
 	}
+
+	//###############################################################################################
+	// Story State
+	//###############################################################################################
+	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem|StoryState")
+	UOmegaStoryStateAsset* GetStoryStateAsset()
+	{
+		return CurrentState;
+	}
+	UPROPERTY()
+	UOmegaStoryStateAsset* CurrentState;
 	
+	UFUNCTION(BlueprintCallable, Category="OmegaSaveSubsystem|StoryState")
+	void SetStoryStateAsset(UOmegaStoryStateAsset* Asset);
+
+	UFUNCTION(BlueprintCallable, Category="OmegaSaveSubsystem|StoryState")
+	void ClearStoryState();
+
+	//###############################################################################################
+	// Dynamic Variables
+	//###############################################################################################
+
+	UFUNCTION(BlueprintCallable, Category="OmegaSaveSubsystem|StoryState", meta=(AdvancedDisplay="bGlobal"))
+	void SetDynamicVariableValue(UOmegaDynamicSaveVariable* Variable, int32 value, bool bGlobal);
+
+	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem|StoryState", meta=(AdvancedDisplay="bGlobal"))
+	int32 GetDynamicVariableValue(UOmegaDynamicSaveVariable* Variable, bool bGlobal);
 };
 
 
-UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Save State Manager", meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Visibility On Save", meta=(BlueprintSpawnableComponent) )
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveStateComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -317,13 +357,72 @@ public:
 
 	virtual void BeginPlay() override;
 
+private:
 	UFUNCTION()
 	void LocalStateChanged(FGameplayTag TagState, bool bGlobal);
-	
+	UFUNCTION()
+	void LocalTagsEdited(FGameplayTagContainer Tags,  bool Added, bool bGlobal);
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags")
 	bool bGlobalSave;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags")
+
+	UFUNCTION()
+	void Refresh();
+
+	//Displays this actor only if the the save state is one of the given tags.
+	UPROPERTY()
 	FGameplayTagContainer VisibleOnStateTags;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags")
+	
+	UPROPERTY()
 	FGameplayTagContainer HiddenOnStateTags;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags", DisplayName="Visible (On Save Query)")
+	FGameplayTagQuery VisibleOnSaveQuery;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags", DisplayName="Hidden (On Save Query)")
+	FGameplayTagQuery HiddenOnSaveQuery;
+	
+};
+
+// ##############################################################################################################################
+// State Asset
+// ##############################################################################################################################
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaStoryStateAsset : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="State")
+	FText DisplayName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="State")
+	FText SateDescription;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="State")
+	TArray<UOmegaStoryStateScript*> Scripts;
+};
+
+UCLASS(Blueprintable, BlueprintType, EditInlineNew)
+class OMEGAGAMEFRAMEWORK_API UOmegaStoryStateScript : public UObject
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintNativeEvent, Category="State Script")
+	void OnStateBegin(UOmegaStoryStateAsset* State);
+
+	UFUNCTION(BlueprintNativeEvent, Category="State Script")
+	void OnStateEnd(UOmegaStoryStateAsset* State);
+
+	UFUNCTION(BlueprintNativeEvent, Category="State Script")
+	void OnLevelChange(UOmegaStoryStateAsset* State, const FString& LevelName);
+
+	virtual UWorld* GetWorld() const override;
+
+	UPROPERTY()
+	UWorld* OuterWorldRef;
 };

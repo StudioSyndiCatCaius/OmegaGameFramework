@@ -2,7 +2,7 @@
 
 
 #include "OmegaAbility.h"
-
+#include "InputAction.h"
 #include "GameFramework/Character.h"
 #include "Gameplay/CombatantComponent.h"
 #include "Input/InputReceiverComponent.h"
@@ -13,6 +13,7 @@
 #include "Gameplay/ActorTagEvent/ActorTagEvent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
+#include "Engine/GameInstance.h"
 
 // Sets default values
 AOmegaAbility::AOmegaAbility()

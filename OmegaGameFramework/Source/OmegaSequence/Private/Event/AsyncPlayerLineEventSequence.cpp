@@ -5,30 +5,40 @@
 #include "Event/OmegaLinearEventInstance.h"
 #include "Engine/World.h"
 
-void UAsyncPlayLinearEventSequence::Local_Finish(const FString& Flag)
+
+void UAsyncPlayLinearEventSequence::Local_Finish(const UOmegaLinearEventInstance* Instance, FString Flag)
 {
-	OnFinished.Broadcast(Flag);
-	SetReadyToDestroy();
+	if(Instance == EventInstance)
+	{
+		OnFinished.Broadcast(Flag);
+		SetReadyToDestroy();
+	}
 }
 
-void UAsyncPlayLinearEventSequence::Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef)
+void UAsyncPlayLinearEventSequence::Local_NewEvent(const UOmegaLinearEventInstance* Instance,
+                                                   const UOmegaLinearEvent* Event, int32 EventIndex)
 {
-	NewEvent.Broadcast(Index,EventRef,EventInstance);
+	if(Instance == EventInstance)
+	{
+		NewEvent.Broadcast(EventIndex,Event,EventInstance);
+	}
 }
+
 
 void UAsyncPlayLinearEventSequence::Activate()
 {
+
 	if(EventData.Events.Num()<=0)
 	{
-		Local_Finish("Empty");
+		Local_Finish(nullptr,"Empty");
 	}
+	
+	SubsystemRef->OnLinearEventSequenceEnd.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_Finish);
+	SubsystemRef->OnLinearEventBegin.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_NewEvent);
+	
 	EventInstance = SubsystemRef->PlayLinearEvent(EventData, Local_StartingIndex);
-	if(EventInstance)
-	{
-		EventInstance->OnEventSequenceFinish.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_Finish);
-		EventInstance->OnEventUpdated.AddDynamic(this, &UAsyncPlayLinearEventSequence::Local_NewEvent);
-	}
-	else
+	
+	if(!EventInstance)
 	{
 		SetReadyToDestroy();
 	}

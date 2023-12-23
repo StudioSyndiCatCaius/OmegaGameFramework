@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Gameplay/DataInterface_AttributeModifier.h"
+#include "Engine/DataAsset.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "EquipmentComponent.generated.h"
 

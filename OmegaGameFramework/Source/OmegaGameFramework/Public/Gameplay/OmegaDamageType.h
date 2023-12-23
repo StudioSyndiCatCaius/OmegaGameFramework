@@ -143,5 +143,5 @@ class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeFunctions : public UBlueprintFuncti
 	GENERATED_BODY()
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat|DamageType|Reactions", meta=(DeterminesOutputType="ScriptClass"))
-	UOmegaDamageTypeReaction* GetScriptFromCombatantDamageReaction(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, TSubclassOf<UOmegaDamageTypeReaction> ScriptClass);
+	static UOmegaDamageTypeReaction* GetScriptFromCombatantDamageReaction(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, TSubclassOf<UOmegaDamageTypeReaction> ScriptClass);
 };

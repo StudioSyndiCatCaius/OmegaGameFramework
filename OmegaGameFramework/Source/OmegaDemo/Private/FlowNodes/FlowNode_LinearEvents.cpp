@@ -29,20 +29,29 @@ void UFlowNode_LinearEvents::ExecuteInput(const FName& PinName)
 FString UFlowNode_LinearEvents::GetNodeDescription() const
 {
 	FString OutString;
-	for(const auto* TempEvent : Events.Events)
+	int32 Index = 0; // Start an index at 0 to number the list items
+
+	for (const auto* TempEvent : Events.Events)
 	{
-		if(TempEvent)
+		if (TempEvent)
 		{
 			const FString LocalString = TempEvent->GetLogString();
-			OutString.Append(LocalString);
-			OutString.Append("\n");
+			OutString += FString::Printf(TEXT("[%d] %s\n"), Index, *LocalString); // Append the indexed string with a newline
+			Index++; // Increment the index for the next list item
 		}
 	}
+
+	// If you want to remove the last newline from the string, you can do so before returning.
+	if (!OutString.IsEmpty())
+	{
+		OutString.RemoveAt(OutString.Len() - 1); // Remove the last character (newline)
+	}
+
 	return OutString;
 }
 #endif
 
-void UFlowNode_LinearEvents::LocalFinish(const FString& Flag)
+void UFlowNode_LinearEvents::LocalFinish(const FString& Flag,UOmegaLinearEventInstance* Instance)
 {
 	TriggerFirstOutput(true);
 }

@@ -141,6 +141,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Turn")
 	TSubclassOf<AOmegaAbility> TurnAbility;
 
+	//Automatically advance to the next turn when the Turn Ability finishes
+	UPROPERTY(EditDefaultsOnly, Category="Turn")
+	bool bAutoAdvanceTurn = true;
+
 	UFUNCTION(BlueprintCallable, Category="Omega|TurnBased")
 	void SetTurnAbilityClass(TSubclassOf<AOmegaAbility> AbilityClass);
 

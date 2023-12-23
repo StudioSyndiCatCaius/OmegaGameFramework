@@ -19,6 +19,16 @@
 #include "Misc/Paths.h"
 
 
+FGameplayTagContainer UOmegaGameFrameworkBPLibrary::GetObjectGameplayTags(UObject* Object)
+{
+	FGameplayTagContainer OutTags;
+	if(Object && Object->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+	{
+		OutTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(Object);
+	}
+	return OutTags;
+}
+
 bool UOmegaGameFrameworkBPLibrary::IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
@@ -707,6 +717,7 @@ FString UOmegaGameFrameworkBPLibrary::GetObjectLabel(UObject* Object)
 	}
 	return OutName;
 }
+
 
 float UOmegaStarRankFunctions::GetFloatFromStarRank(EOmegaStarRank Rank)
 {

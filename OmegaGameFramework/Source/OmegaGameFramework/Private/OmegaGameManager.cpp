@@ -97,11 +97,9 @@ UOmegaGameplayModule* UOmegaGameManager::ActivateModuleFromClass(const UClass* M
 
 UOmegaGameplayModule* UOmegaGameManager::GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module)
 {
-	
-	
 	for(UOmegaGameplayModule* TempModule : ActiveModules)
 	{
-		if(TempModule->GetClass() == Module)
+		if(TempModule->GetClass()->IsChildOf(Module))
 		{
 			return TempModule;
 		}

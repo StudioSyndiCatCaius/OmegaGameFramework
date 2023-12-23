@@ -2,7 +2,7 @@
 
 
 #include "Widget/Menu.h"
-
+#include "Engine/GameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 #include "OmegaGameManager.h"

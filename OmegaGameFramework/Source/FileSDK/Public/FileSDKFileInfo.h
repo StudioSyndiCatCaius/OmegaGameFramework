@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Misc/DateTime.h"
 #include "FileSDKFileInfo.generated.h"
 
 USTRUCT(BlueprintType)

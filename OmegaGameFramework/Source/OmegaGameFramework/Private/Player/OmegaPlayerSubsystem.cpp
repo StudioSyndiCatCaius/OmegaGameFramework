@@ -6,6 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "OmegaSettings.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Widget/WidgetInterface_Input.h"
 #include "Widget/HUDLayer.h"
@@ -219,7 +220,7 @@ bool UOmegaPlayerSubsystem::RemoveHUDLayer(class TSubclassOf<UHUDLayer> LayerCla
 	CleanHUDLayers();
 	if(GetHUDLayerByClass(LayerClass))
 	{
-		GetHUDLayerByClass(LayerClass)->RemoveFromParent();
+		GetHUDLayerByClass(LayerClass)->RemoveHUDLayer();
 		return true;
 	}
 	return false;
@@ -266,7 +267,7 @@ void UOmegaPlayerSubsystem::RemoveHUDLayersWithTags(FGameplayTagContainer Tags)
 	{
 		if(TempLayer)
 		{
-			TempLayer->RemoveFromParent();
+			TempLayer->RemoveHUDLayer();
 		}
 	}
 }
@@ -278,7 +279,7 @@ void UOmegaPlayerSubsystem::RemoveAllHudLayers()
 	{
 		if(TempLayer)
 		{
-			TempLayer->RemoveFromParent();
+			TempLayer->RemoveHUDLayer();
 		}
 	}
 	ActiveHUDLayers.Empty();
@@ -313,7 +314,7 @@ void UOmegaPlayerSubsystem::CleanHUDLayers()
 	TArray<UHUDLayer*> LocalLayers;
 	for(UHUDLayer* TempLayer : ActiveHUDLayers)
 	{
-		if(TempLayer->IsValidLowLevel())
+		if(TempLayer)
 		{
 			LocalLayers.Add(TempLayer);
 		}
@@ -328,7 +329,7 @@ APlayerController* UOmegaPlayerSubsystem::Local_GetPlayerController()
 		ParentPlayerController = GetLocalPlayer()->GetPlayerController(GetWorld());
 		if (ParentPlayerController->InputComponent)
 		{
-			ParentPlayerController->InputComponent->BindKey("AnyKey",IE_Pressed, this, &UOmegaPlayerSubsystem::OnAnyKeyPressed);
+			//ParentPlayerController->InputComponent->BindKey("AnyKey",IE_Pressed, this, &UOmegaPlayerSubsystem::OnAnyKeyPressed);
 		}
 	}
 	return ParentPlayerController;

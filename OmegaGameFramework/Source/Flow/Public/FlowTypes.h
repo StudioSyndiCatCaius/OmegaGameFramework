@@ -20,6 +20,17 @@ enum class EFlowNodeStyle : uint8
 };
 #endif
 
+USTRUCT(BlueprintType)
+struct FFlowAssetOverrideData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="FlowAsset")
+	bool bOverrideStartingNodes;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="FlowAsset")
+	TArray<FGuid> StartingNodes;
+};
+
 UENUM(BlueprintType)
 enum class EFlowNodeState : uint8
 {

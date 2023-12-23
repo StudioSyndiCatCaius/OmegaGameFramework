@@ -8,6 +8,7 @@
 #include "DataInterface_General.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
+#include "JsonObjectWrapper.h"
 #include "OmegaDamageType.h"
 #include "Engine/EngineTypes.h"
 #include "Gameplay/Combatant/DataInterface_SkillSource.h"
@@ -94,6 +95,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Icon"))
 	FSlateBrush CombatantIcon;
 
+	UPROPERTY(BlueprintReadWrite, Category="Combatant", DisplayName="Metadata")
+	FJsonObjectWrapper JsonMetadata;
+
 	UPROPERTY()
 	class UEnhancedInputComponent* OwnerInputComp;
 
@@ -121,6 +125,17 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
 	int32 Level = 1;
+
+	//Forcibly Override whatever the max attributes values found in the "AttributeSet" 
+	UPROPERTY(EditAnywhere, Category = "Attributes")
+	TMap<UOmegaAttribute*, float>  OverrideMaxAttributes;
+
+	UFUNCTION(BlueprintCallable, Category="Combatant|Attributes")
+	void SetOverrideMaxAttribute(UOmegaAttribute* Attribute, float Value);
+	UFUNCTION(BlueprintCallable, Category="Combatant|Attributes")
+	void SetOverrideMaxAttributes(TMap<UOmegaAttribute*, float> Value);
+	UFUNCTION(BlueprintCallable, Category="Combatant|Attributes", DisplayName="Set Override Max Attributes (Int)")
+	void SetOverrideMaxAttributes_Int(TMap<UOmegaAttribute*, int32> Value);
 
 	//----------------------------------------------------------------------------------------------------------------//
 	// -- ATTRIBUTES -- 

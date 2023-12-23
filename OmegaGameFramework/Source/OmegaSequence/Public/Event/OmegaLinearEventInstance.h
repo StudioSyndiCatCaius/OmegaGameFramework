@@ -10,7 +10,7 @@
 
 class UOmegaLinearEventSubsystem;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEventSequenceFinish, const FString&, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEventSequenceFinish, const FString&, Flag, UOmegaLinearEventInstance*, Instance);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEventUpdated, int32, EventIndex, UOmegaLinearEvent*, Event);
 
 UCLASS(BlueprintType)
@@ -112,7 +112,7 @@ inline void UOmegaLinearEventInstance::EndInstance(const FString& Flag)
 		CurrentEvent->EventEnded.RemoveAll(this);
 		CurrentEvent->Finish("PrematureStop");
 	}
-	OnEventSequenceFinish.Broadcast(Flag);
+	OnEventSequenceFinish.Broadcast(Flag,this);
 	SubsystemRef->TempEvents.Remove(this);
 	
 }
@@ -137,7 +137,7 @@ inline void UOmegaLinearEventInstance::StartEvent(UOmegaLinearEvent* Event)
 		Event->GameInstanceRef = SubsystemRef->GameInstanceReference;
 		Event->WorldPrivate = SubsystemRef->GetWorld();
 		OnEventUpdated.Broadcast(GetCurrentEventIndex(),Event);
-		SubsystemRef->OnLinearEventBegin.Broadcast(Event);
+		SubsystemRef->OnLinearEventBegin.Broadcast(this,Event,GetCurrentEventIndex());
 		Event->Native_Begin();
 	}
 	else

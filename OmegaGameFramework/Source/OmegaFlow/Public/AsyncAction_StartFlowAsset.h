@@ -23,7 +23,7 @@ public:
 	const UObject* LocalWorldContext;
 
 	UPROPERTY()
-	FGuid Local_StartNode;
+	FFlowAssetOverrideData Local_StartNode;
 	UPROPERTY()
 	bool Local_OverrideStart;
 	UPROPERTY()
@@ -38,6 +38,6 @@ public:
 	
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="bOverrideStartingNode,NewStartingNode,Input,AllowMultipleInstances")) 
-	static UAsyncAction_StartFlowAsset* StartFlowAsset(UObject* WorldContextObject, UFlowAsset* Asset, bool bOverrideStartingNode, FGuid NewStartingNode, FName Input, bool AllowMultipleInstances);
+	static UAsyncAction_StartFlowAsset* StartFlowAsset(UObject* WorldContextObject, UFlowAsset* Asset, FFlowAssetOverrideData OverrideData, FName Input, bool AllowMultipleInstances);
 	
 };

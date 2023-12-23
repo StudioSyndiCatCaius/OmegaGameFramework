@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "OmegaGameplaySubsystem.h"
 #include "OmegaSettings.h"
+#include "GameFramework/Pawn.h"
 #include "OmegaUtilityFunctions.h"
 #include "Attributes/OmegaAttributeSet.h"
 #include "Gameplay/DataInterface_OmegaEffect.h"

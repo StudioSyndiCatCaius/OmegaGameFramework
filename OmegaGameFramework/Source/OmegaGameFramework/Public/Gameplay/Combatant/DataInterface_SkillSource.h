@@ -27,10 +27,3 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category="Combatant")
 	TArray<UPrimaryDataAsset*> GetSkills(UCombatantComponent* Combatant);
 };
-
-UCLASS()
-class UOmegaSkillsFunctions : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-};

@@ -39,8 +39,8 @@ protected:
 
 public:
 
-		// Temp class holder for settings
-		class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
+	// Temp class holder for settings
+	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
 
 	///GAMEPLAY MODULES
 	///
@@ -55,7 +55,7 @@ public:
 	UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);
 
 	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Modules", DeterminesOutputType="Module"), Category="Omega|Game Manager")
-		TArray<UOmegaGameplayModule*> GetGameplayModules();
+	TArray<UOmegaGameplayModule*> GetGameplayModules();
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"))
 	void FireGlobalEvent(FName Event, UObject* Context);

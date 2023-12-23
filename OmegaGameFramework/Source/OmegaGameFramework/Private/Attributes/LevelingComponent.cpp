@@ -8,6 +8,7 @@
 #include "Attributes/WidgetInterface_LevelingComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/ProgressBar.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
 #include "Kismet/KismetTextLibrary.h"
 

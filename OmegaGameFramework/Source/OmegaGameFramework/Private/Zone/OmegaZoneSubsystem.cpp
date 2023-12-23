@@ -12,9 +12,10 @@
 #include "OmegaGameFrameworkBPLibrary.h"
 #include "OmegaGameManager.h"
 #include "TimerManager.h"
-#include "Engine/LevelStreaming.h"
+#include "Engine/GameInstance.h"
 #include "OmegaGameplaySystem.h"
 #include "Save/OmegaSaveSubsystem.h"
+#include "Engine/Level.h"
 #include "Zone/OmegaZoneGameInstanceSubsystem.h"
 
 void UOmegaZoneSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -454,10 +455,17 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 		if(Incoming_SpawnPoint)
 		{
 			APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this,0);
-			
+			while (!PawnRef)
+			{
+				if(UGameplayStatics::GetPlayerPawn(this,0))
+				{
+					PawnRef=UGameplayStatics::GetPlayerPawn(this,0);
+				}
+			}
 			PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
 			UGameplayStatics::GetPlayerController(this,0)->SetControlRotation(PawnRef->GetActorRotation());
 			OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this,0),Incoming_SpawnPoint);
+			
 		}
 		
 		Local_OnBeginTransitSequence(false);

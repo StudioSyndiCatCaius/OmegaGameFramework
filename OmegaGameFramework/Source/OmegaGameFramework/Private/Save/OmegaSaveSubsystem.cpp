@@ -6,7 +6,7 @@
 #include "OmegaGameManager.h"
 #include "Save/OmegaSaveGame.h"
 #include "Save/OmegaSaveGlobal.h"
-#include "OmegaGameplaySystem.h"
+#include "UnrealClient.h"
 #include "TimerManager.h"
 #include "Save/OmegaSaveInterface.h"
 #include "Dom/JsonObject.h"
@@ -66,6 +66,22 @@ FString UOmegaSaveSubsystem::GetSavePlaytimeString(bool bGlobal, bool bIncludeMi
 void UOmegaSaveSubsystem::Deinitialize()
 {
 	SaveGlobalGame();
+}
+
+void UOmegaSaveSubsystem::OnLevelChanged(UWorld* World, const UWorld::InitializationValues)
+{
+	if(GetStoryStateAsset())
+	{
+		for(auto* TempScript: GetStoryStateAsset()->Scripts)
+		{
+			if(TempScript)
+			{
+				TempScript->OuterWorldRef=World;
+				const FString LevelNameRef = UGameplayStatics::GetCurrentLevelName(this);
+				TempScript->OnLevelChange(GetStoryStateAsset(),LevelNameRef);
+			}
+		}
+	}
 }
 
 void UOmegaSaveSubsystem::GetSaveSlotName(int32 Slot, FString& OutName)
@@ -278,11 +294,13 @@ FGameplayTag UOmegaSaveSubsystem::GetSaveState(bool Global)
 void UOmegaSaveSubsystem::AddStoryTags(FGameplayTagContainer Tags, bool Global)
 {
 	GetSaveObject(Global)->StoryTags.AppendTags(Tags);
+	OnSaveTagsEdited.Broadcast(Tags,true,Global);
 }
 
 void UOmegaSaveSubsystem::RemoveStoryTags(FGameplayTagContainer Tags, bool Global)
 {
 	GetSaveObject(Global)->StoryTags.RemoveTags(Tags);
+	OnSaveTagsEdited.Broadcast(Tags,false,Global);
 }
 
 FGameplayTagContainer UOmegaSaveSubsystem::GetStoryTags(bool Global)
@@ -434,6 +452,7 @@ void UOmegaSaveSubsystem::RemoveSaveTagsFromDataAsset(UPrimaryDataAsset* Asset, 
 		FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
 		TempTags.RemoveTags(Tags);
 		GetSaveObject(bGlobal)->SaveAssetTags.Add(Asset, TempTags);
+		
 	}
 }
 
@@ -679,27 +698,118 @@ TArray<UObject*> UOmegaSaveSubsystem::GetSaveSources()
 	return OutSources;
 }
 
+void UOmegaSaveSubsystem::SetStoryStateAsset(UOmegaStoryStateAsset* Asset)
+{
+	ClearStoryState();
+	if(Asset)
+	{
+		for(auto* TempScript: Asset->Scripts)
+		{
+			if(TempScript)
+			{
+				TempScript->OuterWorldRef=GetWorld();
+				TempScript->OnStateBegin(Asset);
+			}
+		}
+	}
+}
+
+void UOmegaSaveSubsystem::ClearStoryState()
+{
+	if(GetStoryStateAsset())
+	{
+		for(auto* TempScript: GetStoryStateAsset()->Scripts)
+		{
+			if(TempScript)
+			{
+				//TempScript->OuterWorldRef=GetWorld();
+				TempScript->OnStateEnd(GetStoryStateAsset());
+			}
+		}
+	}
+}
+
+void UOmegaSaveSubsystem::SetDynamicVariableValue(UOmegaDynamicSaveVariable* Variable, int32 value, bool bGlobal)
+{
+	GetSaveObject(bGlobal)->DynamicVariableValues.Add(Variable,FString::FromInt(value));
+	
+}
+
+int32 UOmegaSaveSubsystem::GetDynamicVariableValue(UOmegaDynamicSaveVariable* Variable, bool bGlobal)
+{
+	return FCString::Atoi(*GetSaveObject(bGlobal)->DynamicVariableValues.FindOrAdd(Variable));
+}
+
+
+
+//#############################################################################################################################################
+// SAVE STATE COMPONENT
+//#############################################################################################################################################
+
 void UOmegaSaveStateComponent::BeginPlay()
 {
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnSaveStateChanged.AddDynamic(this, &UOmegaSaveStateComponent::LocalStateChanged);
-	LocalStateChanged(GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->GetSaveState(bGlobalSave),bGlobalSave);
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnSaveTagsEdited.AddDynamic(this, &UOmegaSaveStateComponent::LocalTagsEdited);
+	Refresh();
 	Super::BeginPlay();
 }
 
 void UOmegaSaveStateComponent::LocalStateChanged(FGameplayTag TagState, bool bGlobal)
 {
+	
+}
+
+void UOmegaSaveStateComponent::LocalTagsEdited(FGameplayTagContainer Tags, bool Added, bool bGlobal)
+{
 	if(bGlobalSave == bGlobal)
 	{
-		if((!VisibleOnStateTags.IsEmpty()
-			&& !VisibleOnStateTags.HasTag(TagState))
-			|| HiddenOnStateTags.HasTag(TagState))
+		UOmegaSaveSubsystem* SaveSubsystemRef = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+		if(bGlobalSave == bGlobal)
 		{
-			UOmegaGameFrameworkBPLibrary::SetActorActive(GetOwner(),false);
-		}
-		else
-		{
-			UOmegaGameFrameworkBPLibrary::SetActorActive(GetOwner(),true);
+			if(!(VisibleOnSaveQuery.IsEmpty() || SaveSubsystemRef->SaveTagsMatchQuery(VisibleOnSaveQuery,bGlobalSave))	//If visible query is not empty & is valid
+				|| (!HiddenOnSaveQuery.IsEmpty() && SaveSubsystemRef->SaveTagsMatchQuery(HiddenOnSaveQuery,bGlobalSave)))	//OR if hidden is valid...
+			{
+				UOmegaGameFrameworkBPLibrary::SetActorActive(GetOwner(),false);	//...this hide this actor
+			}
+			else
+			{
+				UOmegaGameFrameworkBPLibrary::SetActorActive(GetOwner(),true);
+			}
 		}
 	}
+}
+
+void UOmegaSaveStateComponent::Refresh()
+{
+	LocalStateChanged(GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->GetSaveState(bGlobalSave),bGlobalSave);
+	LocalTagsEdited(FGameplayTagContainer(),false,bGlobalSave);
+}
+
+// ##############################################################################################################################
+// State Asset
+// ##############################################################################################################################
+void UOmegaStoryStateScript::OnStateBegin_Implementation(UOmegaStoryStateAsset* State)
+{
+}
+
+void UOmegaStoryStateScript::OnStateEnd_Implementation(UOmegaStoryStateAsset* State)
+{
+}
+
+void UOmegaStoryStateScript::OnLevelChange_Implementation(UOmegaStoryStateAsset* State, const FString& LevelName)
+{
+}
+
+UWorld* UOmegaStoryStateScript::GetWorld() const
+{
+	if(OuterWorldRef)
+	{
+		return OuterWorldRef;
+	}
+	if(GetOuter()->GetWorld())
+	{
+		return GetOuter()->GetWorld();
+	}
+	return UObject::GetWorld();
 }
 

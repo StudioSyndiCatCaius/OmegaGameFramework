@@ -9,6 +9,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Engine/DataAsset.h"
 #include "DataInterface_General.h"
+#include "Engine/GameInstance.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
@@ -58,16 +59,16 @@ public:
 	//###############################################################################
 	// Gameplay Tags
 	//###############################################################################
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Tags", AdvancedDisplay)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", AdvancedDisplay)
 	FGameplayTag GameplayID;
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Tags")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General")
 	FGameplayTag GameplayCategory;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Tags")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General")
 	FGameplayTagContainer GameplayTags;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Tags", AdvancedDisplay)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", AdvancedDisplay)
 	TMap<FString, FGameplayTagQuery> TagQueries;
 
 	UFUNCTION(BlueprintPure, Category="OmegaDataItem|Tags", meta=(Keywords="Gameplay, Tag"))

@@ -33,7 +33,8 @@ public:
 };
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLinearEventBegin, const UOmegaLinearEvent*, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnLinearEventBegin, const UOmegaLinearEventInstance*, Instance, const UOmegaLinearEvent*, Event, int32, EventIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLinearEventSequenceEnd, const UOmegaLinearEventInstance*, Instance, FString, Flag);
 
 UCLASS(DisplayName="Omega Subsystem: Linear Events")
 class OMEGASEQUENCE_API UOmegaLinearEventSubsystem : public UWorldSubsystem
@@ -43,7 +44,9 @@ class OMEGASEQUENCE_API UOmegaLinearEventSubsystem : public UWorldSubsystem
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-
+	UFUNCTION()
+	void Local_EndEvent(const UOmegaLinearEventInstance* Instance, const FString& Flag);
+	
 public:
 	UPROPERTY()
 	UGameInstance* GameInstanceReference;
@@ -65,6 +68,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnLinearEventBegin OnLinearEventBegin;
+	UPROPERTY(BlueprintAssignable)
+	FOnLinearEventSequenceEnd OnLinearEventSequenceEnd;
 	
 	///CHOICE
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")

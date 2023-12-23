@@ -4,6 +4,7 @@
 #include "Gameplay/OmegaGameplayCue.h"
 #include "NiagaraComponent.h"
 #include "Components/AudioComponent.h"
+#include "Engine/World.h"
 #include "Components/PostProcessComponent.h"
 #include "Camera/CameraShakeSourceComponent.h"
 #include "Kismet/GameplayStatics.h"

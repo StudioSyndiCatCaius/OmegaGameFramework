@@ -63,8 +63,8 @@ void UFlowComponent::BeginPlay()
 			}
 			else if (bAutoStartRootFlow)
 			{
-				const FGuid DumGuid;
-				StartRootFlow(false, DumGuid, "");
+				
+				StartRootFlow(FFlowAssetOverrideData(), "");
 			}
 		}
 	}
@@ -383,7 +383,7 @@ void UFlowComponent::OnRep_NotifyTagsFromAnotherComponent()
 	}
 }
 
-void UFlowComponent::StartRootFlow(const bool bOverrideStartingNode, const FGuid StartingNode, const FName InputName)
+void UFlowComponent::StartRootFlow(FFlowAssetOverrideData OverrideData, const FName InputName)
 {
 	if (RootFlow && IsFlowNetMode(RootFlowMode))
 	{
@@ -391,7 +391,7 @@ void UFlowComponent::StartRootFlow(const bool bOverrideStartingNode, const FGuid
 		{
 			VerifyIdentityTags();
 
-			FlowSubsystem->StartRootFlow(this, RootFlow, bOverrideStartingNode, StartingNode, InputName, bAllowMultipleInstances);
+			FlowSubsystem->StartRootFlow(this, RootFlow, OverrideData, InputName, bAllowMultipleInstances);
 		}
 	}
 }

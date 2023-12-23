@@ -32,10 +32,10 @@ public:
 	UOmegaLinearEventInstance* LocalInst;
 
 	UFUNCTION()
-	void LocalFinish(const FString& Flag);
+	void LocalFinish(const FString& Flag,UOmegaLinearEventInstance* Instance=nullptr);
 };
 
-UCLASS(DisplayName="Edit Save Tags")
+UCLASS(DisplayName="Edit Save Tags",meta=(DeprecatedNode))
 class OMEGADEMO_API UFlowNode_EditSaveTags : public UFlowNode
 {
 	GENERATED_BODY()

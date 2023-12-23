@@ -57,6 +57,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaBGMSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
+private:
+	UPROPERTY()
+	bool bIsBgmLocked;
 protected:
 
 	UFUNCTION()
@@ -82,6 +85,9 @@ public:
 	FGameplayTag PlayingSlot;
 	UPROPERTY()
 	UOmegaBGM* PlayingBGM;
+
+	UFUNCTION(BlueprintPure, Category="Omega|BGM")
+	UOmegaBGM* GetPlayingBGM();
 	
 	UFUNCTION()
 	float GetFadeDuration();
@@ -95,6 +101,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|BGM")
 	void StopBGM(bool Fade, float& StoppedPosition, float FadeDuration=0.5);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|BGM")
+	void PauseBGM(bool bPaused);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|BGM")
+	void SetBGMLocked(bool bLocked) {bIsBgmLocked=bLocked;}
+
+	
 	UFUNCTION(BlueprintPure, Category="Omega|BGM")
 	bool IsSlotPlayingBGM(FGameplayTag Slot);
 

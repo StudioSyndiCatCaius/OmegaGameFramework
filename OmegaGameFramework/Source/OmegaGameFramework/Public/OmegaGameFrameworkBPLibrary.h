@@ -9,6 +9,7 @@
 #include "Gameplay/OmegaGameplayModule.h"
 #include "Kismet/GameplayStatics.h"
 #include "JsonObjectWrapper.h"
+#include "Engine/AssetUserData.h"
 #include "OmegaGeneralEnums.h"
 #include "AssetRegistry/AssetData.h"
 #include "Components/ScrollBox.h"
@@ -39,6 +40,9 @@ public:
 	// Gameplay tags
 	//###############################################################################
 
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"))
+	static FGameplayTagContainer GetObjectGameplayTags(UObject* Object);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static bool IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact);
 
@@ -217,7 +221,12 @@ public:
 	static FText GetObjectDisplayDescription(UObject* Object);
 	UFUNCTION(BlueprintPure, Category="Omega|General")
 	static FString GetObjectLabel(UObject* Object);
-
+	
+	//###############################################################################
+    // MetaData
+    //###############################################################################
+	//UFUNCTION(BlueprintPure, Category="Omega|MetaData", meta=(DeterminesOutputType="Class"))
+	//UOmegaAssetMetadata* GetMetadataFromObject(UObject* Object, TSubclassOf<UOmegaAssetMetadata> Class);
 
 };
 
@@ -249,4 +258,12 @@ class UOmegaWidgetFunctions : public UBlueprintFunctionLibrary
 public:
 
 	
+};
+
+UCLASS(BlueprintType,Blueprintable)
+class UOmegaAssetMetadata : public UAssetUserData
+{
+	GENERATED_BODY()
+
+public:
 };

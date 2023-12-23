@@ -2,6 +2,8 @@
 
 
 #include "Gameplay/InstanceActor/InstanceActorComponent.h"
+
+#include "OmegaGameFrameworkBPLibrary.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -90,7 +92,8 @@ AOmegaInstanceActor* UInstanceActorComponent::GetInstanceByName(const FString& N
 {
 	for(auto* TempInst : GetInstances())
 	{
-		if(TempInst->ContextObject->GetName() == Name)
+		
+		if(UOmegaGameFrameworkBPLibrary::GetObjectLabel(TempInst) == Name)
 		{
 			return TempInst;
 		}

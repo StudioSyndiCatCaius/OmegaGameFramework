@@ -369,7 +369,7 @@ void UFlowAsset::PreStartFlow()
 #endif
 }
 
-void UFlowAsset::StartFlow(UGameInstance* GameInstance, const bool Override, const FGuid NodeGuid, const FName InputName)
+void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData OverrideData, const FName InputName)
 {
 	PreStartFlow();
 
@@ -385,9 +385,16 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, const bool Override, con
 	ensureAlways(StartNode);
 	RecordedNodes.Add(StartNode);
 
-	if(Override && GetNodeFromGuid(NodeGuid))
+	//Try Override Nodes
+	if(OverrideData.bOverrideStartingNodes)
 	{
-		TriggerInput(NodeGuid, InputName);
+		for (FGuid TempGuid : OverrideData.StartingNodes)
+		{
+			if(GetNodeFromGuid(TempGuid))
+			{
+				TriggerInput(TempGuid, InputName);
+			}
+		}
 	}
 	else
 	{

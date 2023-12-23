@@ -109,12 +109,30 @@ void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 void AOmegaZoneTransit::OnBoxTransitOverlapBegin(class UPrimitiveComponent* OverlappedComponent, class AActor* OtherActor,
 	class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	const APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	APawn* PlayerPawn = nullptr;
+	APlayerController* MyPlayerController = nullptr;
+	
+	if(OtherActor->GetClass()->IsChildOf(APawn::StaticClass()))
+	{
+		PlayerPawn = Cast<APawn>(OtherActor);
+		if(PlayerPawn->GetController()->GetClass()->IsChildOf(APlayerController::StaticClass()))
+		{
+			MyPlayerController = Cast<APlayerController>(PlayerPawn->GetController());
+		}
+	}
+	
+	// Fail checks
 	if(!PlayerPawn)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to start transition: invalid player"));
 		return;
 	}
-	APlayerController* MyPlayerController = Cast<APlayerController>(PlayerPawn->GetController());
+	if(!CanPlayerTransit(PlayerPawn))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to start transition: cannot transition this player pawn"));
+		return;
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("Begin Zone Transit"));
 	if (MyPlayerController)
 	{

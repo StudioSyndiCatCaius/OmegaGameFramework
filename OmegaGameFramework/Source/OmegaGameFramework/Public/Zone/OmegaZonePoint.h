@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaGameFrameworkBPLibrary.h"
 #include "OmegaZone.h"
 #include "VolumeUtils.h"
 #include "Components/TextRenderComponent.h"
@@ -32,21 +33,20 @@ protected:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	
-	
 public:
 	// Called every frame
 	//virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone", meta=(EditCondition="!bTransitToLevel"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone", meta=(EditCondition="!bTransitToLevel"))
 	AOmegaZonePoint* TransitPoint;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zone", DisplayName="Transit To Level?")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone", DisplayName="Transit To Level?")
 	bool bTransitToLevel;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone", meta=(EditCondition="bTransitToLevel"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zone", meta=(EditCondition="bTransitToLevel"))
 	TSoftObjectPtr<UWorld> TransitLevel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone", meta=(EditCondition="bTransitToLevel"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zone", meta=(EditCondition="bTransitToLevel"))
 	FGameplayTag LevelTransitID;
 
 	UPROPERTY(EditDefaultsOnly, Category="Zone")
@@ -61,6 +61,14 @@ public:
 	UPROPERTY(EditAnywhere, Category="Display")
 	float Box_Y = 500;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone")
+	FGameplayTagContainer AcceptedPlayerTags;
+
+	UFUNCTION()
+	bool CanPlayerTransit(APawn* PlayerPawn) const
+	{
+		return AcceptedPlayerTags.IsEmpty() || UOmegaGameFrameworkBPLibrary::GetObjectGameplayTags(PlayerPawn).HasAnyExact(AcceptedPlayerTags);
+	}
 
 protected:
 	void UpdateBoxes();

@@ -36,7 +36,7 @@ public:
 	FOnAsynScriptEventUpdated NewEvent;
 	
 	UFUNCTION()
-	void Local_Finish(const FString& Flag);
+	void Local_Finish(const FString& Flag, UOmegaLinearEventInstance* Instance=nullptr);
 	UPROPERTY(BlueprintAssignable)
 	FOnScriptEventFinished OnFinished;
 	

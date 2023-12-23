@@ -236,7 +236,7 @@ void UTurnBasedManagerComponent::Local_TurnAbilityFinish(bool Cancelled)
 	{
 		BeginTurn(GetActiveTurnMember(), "Repeat", RepeatedTurnTags);
 	}
-	else //Try Start Turn
+	else if(bAutoAdvanceTurn) //Try Start Turn
 	{
 		
 		FString TurnFailReason;

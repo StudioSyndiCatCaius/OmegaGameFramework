@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "DataInterface_General.h"
 #include "JsonObjectWrapper.h"
+#include "OmegaDynamicSaveVariable.h"
 #include "Misc/Timespan.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "UObject/SoftObjectPath.h"
@@ -161,5 +162,12 @@ public:
 	void SetSaveProperty_Json(const FString& Name, FJsonObjectWrapper Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FJsonObjectWrapper GetSaveProperty_Json(const FString& Name);
-	
+
+	//GuiSon
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaSame|GuiSon")
+	TMap<FGuid, FJsonObjectWrapper> GuidJsonObjects;
+
+
+	UPROPERTY()
+	TMap<UOmegaDynamicSaveVariable*, FString> DynamicVariableValues;
 };

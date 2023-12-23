@@ -3,6 +3,8 @@
 
 #include "Gameplay/Combatant/CombatantExtensionComponent.h"
 
+#include "OmegaAbility.h"
+
 // Sets default values for this component's properties
 UCombatantExtensionComponent::UCombatantExtensionComponent()
 {
@@ -19,15 +21,29 @@ void UCombatantExtensionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
+	// Retrieve the component and class once and store them in local variables
+	UCombatantComponent* FoundCombatantComp = Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()));
+	const UClass* OwnerClass = GetOwner()->GetClass();
+
+	// Check if the component exists and assign it to CombatantRef
+	if (FoundCombatantComp)
 	{
-		CombatantRef = Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()));
-		CombatantRef->OnDamaged.AddDynamic(this, &UCombatantExtensionComponent::OnAttributeDamaged);
-		CombatantRef->OnCombatantNotify.AddDynamic(this, &UCombatantExtensionComponent::OnCombatantNotify);
+		CombatantRef = FoundCombatantComp;
 	}
-	
+	// Check if the owner is a child of AOmegaAbility and assign CombatantOwner to CombatantRef
+	else if (OwnerClass && OwnerClass->IsChildOf(AOmegaAbility::StaticClass()))
+	{
+		if (const AOmegaAbility* OmegaAbility = Cast<AOmegaAbility>(GetOwner()))
+		{
+			CombatantRef = OmegaAbility->CombatantOwner;
+		}
+	}
+
 	if(CombatantRef)
 	{
+		CombatantRef->OnDamaged.AddDynamic(this, &UCombatantExtensionComponent::OnAttributeDamaged);
+		CombatantRef->OnCombatantNotify.AddDynamic(this, &UCombatantExtensionComponent::OnCombatantNotify);
+		
 		if(bIsAttributeModifier)
 		{
 			CombatantRef->AddAttrbuteModifier(this);

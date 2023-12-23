@@ -12,6 +12,15 @@
 #include "Preferences/Asset/GamePreferenceFloat.h"
 
 
+UOmegaBGM* UOmegaBGMSubsystem::GetPlayingBGM()
+{
+	if(PlayingBGM && IsSlotPlayingBGM(PlayingSlot))
+	{
+		return PlayingBGM;
+	}
+	return nullptr;
+}
+
 float UOmegaBGMSubsystem::GetFadeDuration()
 {
 	return GetMutableDefault<UOmegaSettings>()->BGM_FadeDuration;
@@ -33,6 +42,10 @@ float UOmegaBGMSubsystem::GetBGMVolume()
 
 void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeLastPosition, bool FadePrevious, float FadeDuration)
 {
+	if(bIsBgmLocked)
+	{
+		return;
+	}
 	if(BGM)
 	{
 		FOmegaBGMData_Incoming NewLocalIncomingData;
@@ -81,6 +94,10 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 
 void UOmegaBGMSubsystem::StopBGM(bool Fade, float& StoppedPosition, float FadeDuration)
 {
+	if(bIsBgmLocked)
+	{
+		return;
+	}
 	FOmegaBGMData TempSlotData = SlotData.FindOrAdd(PlayingSlot);
 	TempSlotData.SavedPlaybackPosition = LocalSavedPosition;
 	StoppedPosition = LocalSavedPosition;
@@ -95,6 +112,11 @@ void UOmegaBGMSubsystem::StopBGM(bool Fade, float& StoppedPosition, float FadeDu
 		GetComponentBySlot(PlayingSlot)->Stop();
 	}
 	
+}
+
+void UOmegaBGMSubsystem::PauseBGM(bool bPaused)
+{
+	GetComponentBySlot(PlayingSlot)->SetPaused(bPaused);
 }
 
 bool UOmegaBGMSubsystem::IsSlotPlayingBGM(FGameplayTag Slot)

@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "OmegaSettings.h"
+#include "GameFramework/Pawn.h"
 #include "Engine/LocalPlayer.h"
 #include "Kismet/KismetMathLibrary.h"
 

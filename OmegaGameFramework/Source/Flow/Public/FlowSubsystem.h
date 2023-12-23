@@ -10,6 +10,8 @@
 #include "FlowComponent.h"
 #include "FlowSubsystem.generated.h"
 
+
+
 class UFlowAsset;
 class UFlowNode_SubGraph;
 
@@ -66,8 +68,8 @@ public:
 	virtual void AbortActiveFlows();
 
 	/* Start the root Flow, graph that will eventually instantiate next Flow Graphs through the SubGraph node */
-	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta=(AdvancedDisplay="bOverrideStartingNode, StartingNode, bAllowMultipleInstances, InputName"))
-	virtual void StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bOverrideStartingNode, const FGuid StartingNode, const FName InputName, const bool bAllowMultipleInstances = true);
+	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta=(AdvancedDisplay="OverrideData, StartingNode, bAllowMultipleInstances, InputName"))
+	virtual void StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, FFlowAssetOverrideData OverrideData, const FName InputName="", const bool bAllowMultipleInstances = true);
 
 	virtual UFlowAsset* CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true);
 

@@ -4,14 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
 #include "GameplayTagContainer.h"
-#include "InputAction.h"
 #include "Gameplay/CombatantComponent.h"
-
 #include "Input/InputReceiverComponent.h"
 #include "Widget/HUDLayer.h"
-
 #include "OmegaAbility.generated.h"
 
 
@@ -23,6 +19,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbilityEnd, bool, bCancelled);
 
 class ACharacter;
 class UCharacterMovementComponent;
+class UPawnMovementComponent;
 class UEnhancedInputComponent;
 class UHUDLayer;
 class UTimelineComponent;

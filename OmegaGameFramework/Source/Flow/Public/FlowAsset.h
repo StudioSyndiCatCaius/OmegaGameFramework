@@ -243,7 +243,7 @@ public:
 	virtual void PreloadNodes();
 
 	virtual void PreStartFlow();
-	virtual void StartFlow(UGameInstance* GameInstance, const bool Override, const FGuid NodeGuid, const FName InputName);
+	virtual void StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData OverrideData, const FName InputName);
 	
 	virtual void FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance = true);
 
@@ -275,7 +275,7 @@ public:
 	// Returns nodes that have any work left, not marked as Finished yet
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	TArray<UFlowNode*> GetActiveNodes() const { return ActiveNodes; }
-
+	
 	// Returns nodes active in the past, done their work
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	TArray<UFlowNode*> GetRecordedNodes() const { return RecordedNodes; }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Gameplay/GameplayTagsInterface.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaGameplayCue.generated.h"
 
 class UPostProcessComponent;

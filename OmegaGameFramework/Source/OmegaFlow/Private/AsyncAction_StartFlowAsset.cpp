@@ -28,16 +28,15 @@ void UAsyncAction_StartFlowAsset::Activate()
 	if(SubsystemRef)
 	{
 		SubsystemRef->OnFlowEventFinish.AddDynamic(this, &UAsyncAction_StartFlowAsset::Native_OnFinishFlow);
-		SubsystemRef->StartRootFlow(this, Local_FlowAsset, Local_OverrideStart, Local_StartNode, Local_Input, Local_MultiInst);
+		SubsystemRef->StartRootFlow(this, Local_FlowAsset, Local_StartNode, Local_Input, Local_MultiInst);
 	}
 }
 
-UAsyncAction_StartFlowAsset* UAsyncAction_StartFlowAsset::StartFlowAsset(UObject* WorldContextObject, UFlowAsset* Asset, bool bOverrideStartingNode, FGuid NewStartingNode, FName Input, bool AllowMultipleInstances)
+UAsyncAction_StartFlowAsset* UAsyncAction_StartFlowAsset::StartFlowAsset(UObject* WorldContextObject, UFlowAsset* Asset, FFlowAssetOverrideData OverrideData, FName Input, bool AllowMultipleInstances)
 {
 	UAsyncAction_StartFlowAsset* NewNode = NewObject<UAsyncAction_StartFlowAsset>();
 	NewNode->Local_FlowAsset = Asset;
-	NewNode->Local_OverrideStart = bOverrideStartingNode;
-	NewNode->Local_StartNode = NewStartingNode;
+	NewNode->Local_StartNode = OverrideData;
 	NewNode->Local_Input = Input;
 	NewNode->Local_MultiInst = AllowMultipleInstances;
 	NewNode->LocalWorldContext = WorldContextObject;

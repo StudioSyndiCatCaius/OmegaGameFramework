@@ -3,6 +3,7 @@
 
 #include "Gameplay/Components/ActorStateComponent.h"
 #include "Engine/World.h"
+#include "Engine/GameInstance.h"
 #include "Save/OmegaSaveGame.h"
 #include "Save/OmegaSaveSubsystem.h"
 
