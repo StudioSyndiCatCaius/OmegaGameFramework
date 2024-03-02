@@ -8,8 +8,8 @@ void UFileSDKCopyFileAsync::Activate() {
 
   if (fileInfo.bIsDirectory) {
     FFunctionGraphTask::CreateAndDispatchWhenReady(
-      [=] {
-        auto successful = UFileSDKBPLibrary::CopyDirectory(
+      [this] {
+        bool bSuccessful = UFileSDKBPLibrary::CopyDirectory(
           Source,
           Destination,
           ProgressCallback,
@@ -17,7 +17,7 @@ void UFileSDKCopyFileAsync::Activate() {
           ChunkSizeInKilobytes
         );
 
-        Completed.Broadcast(successful);
+        Completed.Broadcast(bSuccessful);
       },
       TStatId(),
       nullptr,
@@ -26,8 +26,8 @@ void UFileSDKCopyFileAsync::Activate() {
   } else {
     FFileSDKDelegatePreInfo PreInfo;
     FFunctionGraphTask::CreateAndDispatchWhenReady(
-      [=] {
-        auto successful = UFileSDKBPLibrary::CopyFile(
+      [this, PreInfo] {
+        bool bSuccessful = UFileSDKBPLibrary::CopyFile(
           Source,
           Destination,
           ProgressCallback,
@@ -36,7 +36,7 @@ void UFileSDKCopyFileAsync::Activate() {
           OverwriteDestination
         );
 
-        Completed.Broadcast(successful);
+        Completed.Broadcast(bSuccessful);
       },
       TStatId(),
       nullptr,
