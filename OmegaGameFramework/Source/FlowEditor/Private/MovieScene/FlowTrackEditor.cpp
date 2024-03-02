@@ -1,7 +1,7 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
 
-#include "FlowTrackEditor.h"
-#include "FlowSection.h"
+#include "MovieScene/FlowTrackEditor.h"
+#include "MovieScene/FlowSection.h"
 
 #include "MovieScene/MovieSceneFlowRepeaterSection.h"
 #include "MovieScene/MovieSceneFlowTrack.h"
@@ -65,7 +65,7 @@ void FFlowTrackEditor::AddFlowSubMenu(FMenuBuilder& MenuBuilder)
 void FFlowTrackEditor::BuildAddTrackMenu(FMenuBuilder& MenuBuilder)
 {
 	UMovieSceneSequence* RootMovieSceneSequence = GetSequencer()->GetRootMovieSceneSequence();
-	FMovieSceneSequenceEditor* SequenceEditor = FMovieSceneSequenceEditor::Find(RootMovieSceneSequence);
+	const FMovieSceneSequenceEditor* SequenceEditor = FMovieSceneSequenceEditor::Find(RootMovieSceneSequence);
 
 	if (SequenceEditor && SequenceEditor->SupportsEvents(RootMovieSceneSequence))
 	{
@@ -144,7 +144,7 @@ const FSlateBrush* FFlowTrackEditor::GetIconBrush() const
 	return FAppStyle::GetBrush("Sequencer.Tracks.Event");
 }
 
-void FFlowTrackEditor::HandleAddFlowTrackMenuEntryExecute(UClass* SectionType)
+void FFlowTrackEditor::HandleAddFlowTrackMenuEntryExecute(UClass* SectionType) const
 {
 	UMovieScene* FocusedMovieScene = GetFocusedMovieScene();
 
@@ -163,7 +163,12 @@ void FFlowTrackEditor::HandleAddFlowTrackMenuEntryExecute(UClass* SectionType)
 
 	TArray<UMovieSceneFlowTrack*> NewTracks;
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 2
 	UMovieSceneFlowTrack* NewMasterTrack = FocusedMovieScene->AddMasterTrack<UMovieSceneFlowTrack>();
+#else
+	UMovieSceneFlowTrack* NewMasterTrack = FocusedMovieScene->AddTrack<UMovieSceneFlowTrack>();
+#endif
+
 	NewTracks.Add(NewMasterTrack);
 	if (GetSequencer().IsValid())
 	{
@@ -179,12 +184,12 @@ void FFlowTrackEditor::HandleAddFlowTrackMenuEntryExecute(UClass* SectionType)
 	}
 }
 
-void FFlowTrackEditor::CreateNewSection(UMovieSceneTrack* Track, int32 RowIndex, UClass* SectionType, bool bSelect) const
+void FFlowTrackEditor::CreateNewSection(UMovieSceneTrack* Track, const int32 RowIndex, UClass* SectionType, const bool bSelect) const
 {
-	TSharedPtr<ISequencer> SequencerPtr = GetSequencer();
+	const TSharedPtr<ISequencer> SequencerPtr = GetSequencer();
 	if (SequencerPtr.IsValid())
 	{
-		UMovieScene* FocusedMovieScene = GetFocusedMovieScene();
+		const UMovieScene* FocusedMovieScene = GetFocusedMovieScene();
 		const FQualifiedFrameTime CurrentTime = SequencerPtr->GetLocalTime();
 
 		FScopedTransaction Transaction(LOCTEXT("CreateNewFlowSectionTransactionText", "Add Flow Section"));
@@ -218,7 +223,7 @@ void FFlowTrackEditor::CreateNewSection(UMovieSceneTrack* Track, int32 RowIndex,
 			}
 			else
 			{
-				const float DefaultLengthInSeconds = 5.f;
+				constexpr float DefaultLengthInSeconds = 5.f;
 				NewSectionRange = TRange<FFrameNumber>(CurrentTime.Time.FrameNumber, CurrentTime.Time.FrameNumber + (DefaultLengthInSeconds * SequencerPtr->GetFocusedTickResolution()).FloorToFrame());
 			}
 
