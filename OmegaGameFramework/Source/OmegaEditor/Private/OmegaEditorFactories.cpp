@@ -2,7 +2,7 @@
 
 
 #include "OmegaEditorFactories.h"
-#include "AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "BlueprintEditorModule.h"
 #include "DetailCategoryBuilder.h"
 #include "IAssetTools.h"
