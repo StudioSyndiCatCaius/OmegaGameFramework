@@ -2,7 +2,7 @@
 
 #include "AsyncAction_LevelSequence.h"
 
-#include "LevelSequence/Public/DefaultLevelSequenceInstanceData.h"
+#include "Runtime/LevelSequence/Public/DefaultLevelSequenceInstanceData.h"
 
 
 void UAsyncAction_LevelSequence::Local_Play()
