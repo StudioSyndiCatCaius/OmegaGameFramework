@@ -27,18 +27,18 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileSubsystem : public UGameInstanceSubsystem
 	FString override_audio_path="audio";
 	
 public:
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category="Omega|File")
 	FString GetOverrideDirectory() const;
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category="Omega|File")
 	FString GetOverrideDirectory_Images() const;
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category="Omega|File")
 	FString GetOverrideDirectory_Audio() const;
 
 
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Omega|File")
 	TMap<FString, UTexture2D*> imported_images;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Omega|File")
 	TMap<FString, USoundBase*> imported_sounds;
 };
 
