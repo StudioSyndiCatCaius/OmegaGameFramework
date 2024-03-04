@@ -19,9 +19,15 @@ void UOmegaLinearEventSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UOmegaLinearEventSubsystem::Local_EndEvent(const UOmegaLinearEventInstance* Instance, const FString& Flag)
+void UOmegaLinearEventSubsystem::Local_EndEvent(const FString& Flag, UOmegaLinearEventInstance* Instance)
 {
 	OnLinearEventSequenceEnd.Broadcast(Instance,Flag);
+}
+
+void UOmegaLinearEventSubsystem::Local_NewEvent(UOmegaLinearEventInstance* Instance, int32 EventIndex,
+	UOmegaLinearEvent* Event)
+{
+	OnLinearEventBegin.Broadcast(Instance,Event,EventIndex);
 }
 
 
@@ -31,7 +37,16 @@ UOmegaLinearEventInstance* UOmegaLinearEventSubsystem::PlayLinearEvent(FLinearEv
 	
 	TempEventInst->SubsystemRef = this;
 	TempEventInst->SequenceData = Sequence;
-	//TempEventInst->GetCurrentEventIndex() = StartingEvent-1;
+
+	TempEventInst->OnEventSequenceFinish.AddDynamic(this, &UOmegaLinearEventSubsystem::Local_EndEvent);
+	TempEventInst->OnEventUpdated.AddDynamic(this, &UOmegaLinearEventSubsystem::Local_NewEvent);
+	
+	//set the starting event sequence to the previous event from "StartingEvent". This means when "NextEvent" fires bellow, it will run the correct starting index.
+	if (Sequence.Events.IsValidIndex(StartingEvent-1))
+	{
+		TempEventInst->CurrentEvent=Sequence.Events[StartingEvent-1];
+	}
+	
 	TempEvents.Add(TempEventInst);
 	TempEventInst->NextEvent("Root");
 	return TempEventInst;
@@ -66,7 +81,10 @@ AOmegaLinearChoiceInstance* UOmegaLinearEventSubsystem::PlayLinearChoice(FOmegaL
 	LocalInst->ChoiceData = Choices;
 	for(auto* TempChoice : LocalInst->ChoiceData.Choices)
 	{
-		TempChoice->GameInstanceRef = GetWorld()->GetGameInstance();
+		if(TempChoice)
+		{
+			TempChoice->GameInstanceRef = GetWorld()->GetGameInstance();
+		}
 	}
 	LocalInst->FinishSpawning(SpawnWorldPoint);
 	

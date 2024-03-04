@@ -43,6 +43,11 @@ void UDataList::Native_WidgetNotify(UDataWidget* Widget, FName Notify)
 	OnEntryNotifed.Broadcast(Widget,Notify);
 }
 
+FLuaValue UDataList::GetListScript(TSubclassOf<ULuaState> State)
+{
+	return ULuaObjectFunctions::RunLuaScriptContainer(this,List_Script,State);
+}
+
 void UDataList::SetNewControl(UUserWidget* NewWidget)
 {
 	if(NewWidget)
@@ -128,6 +133,7 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	{
 		TempEntry->ReferencedAsset = Asset;
 	}
+	TempEntry->Script=Entry_Script;
 	
 	// Bind Delegates
 	TempEntry->OnSelected.AddDynamic(this, &UDataList::NativeEntitySelect);
@@ -256,11 +262,16 @@ TArray<UDataWidget*> UDataList::GetEntries()
 	return OutEntries;
 }
 
-void UDataList::HoverEntry(int32 Index)
+void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 {
-	if(GetEntry(Index))
+	int32 incoming_index=Index;
+	if(UseLastIndex)
 	{
-		GetEntry(Index)->Hover();
+		incoming_index=RememberedHoverIndex;
+	}
+	if(GetEntry(incoming_index))
+	{
+		GetEntry(incoming_index)->Hover();
 	}
 }
 
@@ -450,30 +461,30 @@ void UDataList::InputNavigate_Implementation(FVector2D Axis)
 	OnInputNavigate.Broadcast(Axis);
 	//if failed cycle or not a valid input, try fo to nav overflow widget
 
-/*
+
 	switch (AxisDirection)
 	{
 	case 1:
-		
+		OnNavigationOverflow.Broadcast(FVector2d(1,0));
 		break;
 
 	case -1:
 		// Do something for Left direction
-		SetNewControl(NavOverflowLeft);
+		OnNavigationOverflow.Broadcast(FVector2d(-1,0));
 		break;
 
 	case 2:
 		// Do something for Up direction
-		SetNewControl(NavOverflowUp);
+		OnNavigationOverflow.Broadcast(FVector2d(0,1));
 		break;
 
 	case -2:
 		// Do something for Down direction
-		SetNewControl(NavOverflowDown);
+		OnNavigationOverflow.Broadcast(FVector2d(0,-1));
 		break;
 	default: ;
 	}
-	*/
+	
 }
 
 void UDataList::InputPage_Implementation(float Axis)
@@ -507,7 +518,7 @@ void UDataList::OnControlSetWidget_Implementation()
 	}
 	else
 	{
-		HoverEntry(0);
+		HoverEntry(0,bRememberIndexOnControlSet);
 	}
 }
 
@@ -734,7 +745,7 @@ void UDataList::NativeEntityHighlight(UDataWidget* DataWidget, bool bIsHighlight
 
 void UDataList::SetEntryHighlighted(int32 Index, bool bHighlighted)
 {
-	if(GetEntries()[Index])
+	if(GetEntries().IsValidIndex(Index))
 	{
 		GetEntries()[Index]->SetHighlighted(bHighlighted);
 	}

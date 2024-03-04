@@ -45,8 +45,9 @@ class OMEGASEQUENCE_API UOmegaLinearEventSubsystem : public UWorldSubsystem
 	virtual void Deinitialize() override;
 
 	UFUNCTION()
-	void Local_EndEvent(const UOmegaLinearEventInstance* Instance, const FString& Flag);
-	
+	void Local_EndEvent(const FString& Flag, UOmegaLinearEventInstance* Instance);
+	UFUNCTION()
+	void Local_NewEvent(UOmegaLinearEventInstance* Instance, int32 EventIndex, UOmegaLinearEvent* Event);
 public:
 	UPROPERTY()
 	UGameInstance* GameInstanceReference;

@@ -99,6 +99,7 @@ void FOmegaEditor::StartupModule()
 
 	// Add Basic Thumbnail Location List
 	TArray<FString> ThumnbailNames;
+	ThumnbailNames.Add(TEXT("OmegaComponent"));
 	ThumnbailNames.Add(TEXT("OmegaAbility"));
 	ThumnbailNames.Add(TEXT("OmegaGameplaySystem"));
 	ThumnbailNames.Add(TEXT("OmegaGameplayModule"));

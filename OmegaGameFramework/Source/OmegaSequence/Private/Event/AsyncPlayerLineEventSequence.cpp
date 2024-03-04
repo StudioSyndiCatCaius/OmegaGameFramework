@@ -27,7 +27,6 @@ void UAsyncPlayLinearEventSequence::Local_NewEvent(const UOmegaLinearEventInstan
 
 void UAsyncPlayLinearEventSequence::Activate()
 {
-
 	if(EventData.Events.Num()<=0)
 	{
 		Local_Finish(nullptr,"Empty");
@@ -46,9 +45,9 @@ void UAsyncPlayLinearEventSequence::Activate()
 
 UAsyncPlayLinearEventSequence* UAsyncPlayLinearEventSequence::PlayLinearEventSequence(UObject* WorldContextObject, FLinearEventSequence Events, int32 StartingIndex)
 {
-	UAsyncPlayLinearEventSequence* NewEvent = NewObject<UAsyncPlayLinearEventSequence>();
-	NewEvent->SubsystemRef = WorldContextObject->GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>();
-	NewEvent->EventData = Events;
-	NewEvent->Local_StartingIndex = StartingIndex;
-	return  NewEvent;
+	UAsyncPlayLinearEventSequence* LocalEvent = NewObject<UAsyncPlayLinearEventSequence>();
+	LocalEvent->SubsystemRef = WorldContextObject->GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>();
+	LocalEvent->EventData = Events;
+	LocalEvent->Local_StartingIndex = StartingIndex;
+	return  LocalEvent;
 }

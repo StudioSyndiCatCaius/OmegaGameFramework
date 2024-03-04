@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "DataInterface_General.h"
 #include "CommonUILibrary.h"
+#include "LuaBlueprintFunctionLibrary.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/Image.h"
@@ -55,14 +56,14 @@ void UDataWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		const float HoverVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HoverWidgetPropertyName);
 		if(IsDataWidgetHovered() != static_cast<bool>(HoverVal))
 		{
-			OutVal = UKismetMathLibrary::FInterpTo_Constant(HoverVal, IsDataWidgetHovered(), InDeltaTime, HoverWidgetSpeed);
+			OutVal = UKismetMathLibrary::FInterpTo_Constant(HoverVal, IsDataWidgetHovered(), InDeltaTime, (1.0f/HoverWidgetSpeed));
 			GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,OutVal);
 		}
 		
 		const float HighlightVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HighlightWidgetPropertyName);
 		if(bIsHighlighted != static_cast<bool>(HighlightVal))
 		{
-			OutVal = UKismetMathLibrary::FInterpTo_Constant(HighlightVal, IsDataWidgetHovered(), InDeltaTime, HighlightWidgetSpeed);
+			OutVal = UKismetMathLibrary::FInterpTo_Constant(HighlightVal, IsDataWidgetHovered(), InDeltaTime, (1.0f/HighlightWidgetSpeed));
 			GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,OutVal);
 		}
 	}
@@ -70,23 +71,79 @@ void UDataWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	Super::NativeTick(MyGeometry, InDeltaTime);
 }
 
+void UDataWidget::SetVisibility(ESlateVisibility InVisibility)
+{
+	Super::SetVisibility(InVisibility);
+
+	bool bStopTimer=false;
+	switch (GetVisibility()) {
+		case ESlateVisibility::Visible: break;
+		case ESlateVisibility::Collapsed: break;
+		bStopTimer=true;
+		case ESlateVisibility::Hidden: break;
+		bStopTimer=true;
+		case ESlateVisibility::HitTestInvisible: break;
+		case ESlateVisibility::SelfHitTestInvisible: break;
+	default: ;
+	}
+
+	if(bStopTimer)
+	{
+		GetWorld()->GetTimerManager().PauseTimer(refresh_timer);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().UnPauseTimer(refresh_timer);
+	}
+}
+
 UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 {
 	return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();	
 }
 
+FLuaValue UDataWidget::GetWidgetScript(TSubclassOf<ULuaState> State)
+{
+	return ULuaObjectFunctions::RunLuaScriptContainer(this,Script,State);
+}
+
+FLuaValue UDataWidget::WidgetScriptKeyCall(const FString& key, TArray<FLuaValue> args, TSubclassOf<ULuaState> State)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableKeyCall(GetWidgetScript(State),key,args);
+}
+
+void UDataWidget::private_refresh(UDataWidget* widget)
+{
+	if(widget)
+	{
+		if(ReferencedAsset != widget->ReferencedAsset)
+		{
+			ReferencedAsset=widget->ReferencedAsset;
+			OnSourceAssetChanged(ReferencedAsset);
+		}
+		
+		if (widget->ParentList && widget->ParentList != ParentList)
+		{
+			ParentList=widget->ParentList;
+			OnNewListOwner(ParentList);
+		}
+		
+	}
+	Refresh();
+}
+
 void UDataWidget::Refresh()
 {
-	SetIsEnabled(GetIsEntitySelectable());
-
-	UObject* LocalListOwner = nullptr;
 	
+	SetIsEnabled(GetIsEntitySelectable());
+	UObject* LocalListOwner = nullptr;
 	if(GetOwningList() && GetOwningList()->ListOwner)
 	{
 		LocalListOwner = GetOwningList()->ListOwner;
 	}
 	
 	OnRefreshed(ReferencedAsset, LocalListOwner);
+	OnWidgetRefreshed.Broadcast(this);
 }
 
 //----------------------NATIVE CONSTRUCT-------------------------------------------//
@@ -118,10 +175,19 @@ void UDataWidget::NativeConstruct()
 		if(Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass())))
 		{
 			OwnerDataWidget = Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass()));
-			OwnerDataWidget->SourceAssetChanged.AddDynamic(this, &UDataWidget::SetSourceAsset);
+			OwnerDataWidget->OnWidgetRefreshed.AddDynamic(this, &UDataWidget::private_refresh);
 		}
 	}
 	Local_UpdateTooltip(ReferencedAsset);
+
+	if(IsDesignTime())
+	{
+		
+		const double moddedval = FMath::RandRange(RefreshVariance*-1.0f,RefreshVariance);
+		refresh_val= moddedval+RefreshFrequency;
+		
+		GetWorld()->GetTimerManager().SetTimer(refresh_timer, this, &UDataWidget::Refresh, refresh_val, true);
+	}
 }
 
 void UDataWidget::WidgetNotify(FName Notify)
@@ -327,9 +393,8 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 		Local_UpdateTooltip(Asset);
 			
 		ReferencedAsset = Asset;
-		SourceAssetChanged.Broadcast(Asset);
+
 		OnSourceAssetChanged(Asset);
-		
 		Refresh();
 	}
 	

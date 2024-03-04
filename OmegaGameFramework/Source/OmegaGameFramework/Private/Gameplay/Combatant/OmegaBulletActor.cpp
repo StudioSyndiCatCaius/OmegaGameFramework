@@ -60,7 +60,7 @@ void AOmegaBulletActor::local_spawnCue(TSubclassOf<AOmegaGameplayCue> cue)
 {
 	if(cue)
 	{
-		UOmegaGameplayCueFunctions::PlayGameplayCue(this,cue,GetActorTransform(),nullptr);
+		UOmegaGameplayCueFunctions::PlayGameplayCue(this,cue,GetActorTransform(),FHitResult(),nullptr);
 	}
 }
 

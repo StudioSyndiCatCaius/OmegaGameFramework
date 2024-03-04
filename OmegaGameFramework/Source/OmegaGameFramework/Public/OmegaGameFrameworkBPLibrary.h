@@ -9,8 +9,10 @@
 #include "Gameplay/OmegaGameplayModule.h"
 #include "Kismet/GameplayStatics.h"
 #include "JsonObjectWrapper.h"
+#include "Curves/CurveFloat.h"
 #include "Engine/AssetUserData.h"
 #include "OmegaGeneralEnums.h"
+#include "LuaValue.h"
 #include "AssetRegistry/AssetData.h"
 #include "Components/ScrollBox.h"
 #include "OmegaGameFrameworkBPLibrary.generated.h"
@@ -182,6 +184,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|Actors", meta=(DeterminesOutputType="Class", AdvancedDisplay="ExcludedActors"))
 	static TArray<UActorComponent*> FilterComponentsWithTag(TArray<UActorComponent*> Components, FName Tag, bool bExclude,TSubclassOf<UActorComponent> Class);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject",DeterminesOutputType="Class"))
+	static AActor* Quick_SpawnActor(UObject* WorldContextObject, TSubclassOf<AActor> Class, FTransform Transform, const TArray<FName> Tags);
 	
 	//###############################################################################
 	// InterpActor
@@ -223,11 +228,16 @@ public:
 	static FString GetObjectLabel(UObject* Object);
 	
 	//###############################################################################
-    // MetaData
-    //###############################################################################
+	// MetaData
+	//###############################################################################
 	//UFUNCTION(BlueprintPure, Category="Omega|MetaData", meta=(DeterminesOutputType="Class"))
 	//UOmegaAssetMetadata* GetMetadataFromObject(UObject* Object, TSubclassOf<UOmegaAssetMetadata> Class);
-
+	
+	//###############################################################################
+	// MetaData
+	//###############################################################################
+	UFUNCTION(BlueprintCallable,Category="Omega|Assets",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"))
+	static UDataAsset* CreateDataAssetFromLua(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class,FLuaValue Value);
 };
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -251,12 +261,14 @@ public:
 };
 
 UCLASS()
-class UOmegaWidgetFunctions : public UBlueprintFunctionLibrary
+class UOmegaCurveFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
 
+	UFUNCTION(BlueprintPure,Category="Omega|Math|Curve")
+	float GetCurveValueFromTime(FRuntimeFloatCurve curve,float time);
 	
 };
 

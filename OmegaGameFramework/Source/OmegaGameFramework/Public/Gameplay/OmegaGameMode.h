@@ -24,16 +24,16 @@ protected:
 public:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems", DisplayName="Pre-Load Gameplay Systems")
-	TArray<TSubclassOf<AOmegaGameplaySystem>> AutoGameplaySystems;
+	TArray<TSubclassOf <AOmegaGameplaySystem>> AutoGameplaySystems;
 
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems", DisplayName="Load Gameplay System")
-	TSubclassOf<AOmegaGameplaySystem> LoadGameplaySystem;
+	TSubclassOf <AOmegaGameplaySystem> LoadGameplaySystem;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Game Mode")
 	void OnLoadEventFinished();
 	
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems", DisplayName="Post-Load Gameplay Systems")
-	TArray<TSubclassOf<AOmegaGameplaySystem>> PostLoadGameplaySystems;
+	TArray<TSubclassOf <AOmegaGameplaySystem>> PostLoadGameplaySystems;
 	
 	protected:
 	virtual void BeginPlay() override;

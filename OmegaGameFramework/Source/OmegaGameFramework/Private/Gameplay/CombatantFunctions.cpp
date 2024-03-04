@@ -170,6 +170,30 @@ UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
 	}
 	return nullptr;
 }
+
+TArray<FOmegaAttributeModifier> UCombatantFunctions::FlatAttributesToModifierValues(
+	TMap<UOmegaAttribute*, float> FlatAttributes,bool AsMultiplier)
+{
+	TArray<FOmegaAttributeModifier> out;
+	TArray<UOmegaAttribute*> local_attributes;
+	for(auto* a: local_attributes)
+	{
+		FOmegaAttributeModifier new_mod;
+		new_mod.Attribute=a;
+		float local_val = FlatAttributes[a];
+		if(AsMultiplier)
+		{
+			new_mod.Multiplier=local_val;
+		}
+		else
+		{
+			new_mod.Incrementer=local_val;
+		}
+		out.Add(new_mod);
+	}
+	return out;
+}
+
 /*
 TMap<UOmegaAttribute*, float> UCombatantFunctions::CompareAttributeModifiers(UCombatantComponent* Combatant,
 	UObject* ComparedModifier, UObject* UncomparedModifer)

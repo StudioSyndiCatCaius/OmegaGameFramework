@@ -45,6 +45,9 @@ public:
 	UEquipmentSlot* GetSlotFromID(const FString& ID);
 	FString GetSlotID(UEquipmentSlot* Slot);
 
+	UPROPERTY(EditDefaultsOnly, Instanced, Category="Equipment")
+	UEquipmentScript* Script;
+
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
 	TMap<FString, UPrimaryDataAsset*> GetEquipment();
 
@@ -86,9 +89,9 @@ public:
 
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 
-	//##############################################################################################
+	//----------------------
 	// Data Collect
-	//##############################################################################################
+	//----------------------
 	UPROPERTY()
 	UDataAssetCollectionComponent* LinkedCollectionComp;
 	
@@ -97,6 +100,52 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Equipment", meta=(Keywords="set, get"))
 	void ClearLinkedAssetCollectionComponent(UDataAssetCollectionComponent* Component);
+};
+
+//##############################################################################################
+// Equipment Script
+//##############################################################################################
+
+USTRUCT(BlueprintType)
+struct FOmegaEquipmentData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combatant")
+	TArray<FOmegaAttributeModifier> AttributesMods;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combatant")
+	TArray<UPrimaryDataAsset*> Skills;
+};
+
+
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UEquipmentScript : public UObject
+{
+	GENERATED_BODY()
+private:
+	virtual UWorld* GetWorld() const override;
+	
+	UFUNCTION()
+	virtual UGameInstance* GetGameInstance() const;
+	
+	UPROPERTY(Transient)
+	UWorld* WorldPrivate = nullptr;
+
+	UEquipmentScript(const FObjectInitializer& ObjectInitializer);
+
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category="Equipment")
+	FOmegaEquipmentData GetSlotData(const FString& Slot) const;
+};
+
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UEquipmentSlotScript : public UObject
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
+	bool CanEquipItem(UObject* Item, UEquipmentComponent* Component=nullptr) const; 
 };
 
 UCLASS()
@@ -138,12 +187,3 @@ public:
 	TArray<UPrimaryDataAsset*> FilterEquippableItems(TArray<UPrimaryDataAsset*> Items, UEquipmentComponent* Component=nullptr);
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCategories)
-class OMEGAGAMEFRAMEWORK_API UEquipmentSlotScript : public UObject
-{
-	GENERATED_BODY()
-public:
-
-	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
-	bool CanEquipItem(UObject* Item, UEquipmentComponent* Component=nullptr) const; 
-};

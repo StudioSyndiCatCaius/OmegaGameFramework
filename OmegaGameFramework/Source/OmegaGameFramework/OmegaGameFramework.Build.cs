@@ -37,6 +37,7 @@ public class OmegaGameFramework : ModuleRules
 				"CommonUI",
 				"CommonInput",
 				"EnhancedInput",
+				"LuaMachine",
 				"Engine",
 				"DeveloperSettings",
 				"LevelSequence",

@@ -6,7 +6,7 @@
 #include "Engine/World.h"
 #include "Parser/OmegaDataParserSubsystem.h"
 
-void UAsyncPlayLinearEventScript::Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef)
+void UAsyncPlayLinearEventScript::Local_NewEvent(UOmegaLinearEventInstance* Instance,int32 Index, UOmegaLinearEvent* EventRef)
 {
 	NewEvent.Broadcast(Index,EventRef,EventInstance);
 }

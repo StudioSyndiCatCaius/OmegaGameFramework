@@ -15,6 +15,29 @@
 	"Installed": true,
 	"Modules": [
 		{
+		  "Name": "LuaMachine",
+		  "Type": "Runtime",
+		  "LoadingPhase": "PreDefault",
+		  "WhitelistPlatforms": [
+			"Mac",
+			"Win64",
+			"Linux",
+			"LinuxArm64",
+			"Android",
+			"IOS",
+		  ]
+		},
+		{
+		  "Name": "LuaMachineEditor",
+		  "Type": "Editor",
+		  "LoadingPhase": "Default",
+		  "WhitelistPlatforms": [
+			"Linux",
+			"Mac",
+			"Win64"
+		  ]
+		},
+		{
 			"Name": "FileSDK",
 			"Type": "Runtime",
 			"LoadingPhase": "PreLoadingScreen",

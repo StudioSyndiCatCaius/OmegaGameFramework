@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NiagaraSystem.h"
 #include "GameFramework/Actor.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -35,6 +36,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	//If true, will destroy the cue automatically when no sound, particle, or camerashake is playing.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cue")
+	bool bAttemptAutocomplete=true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cue")
+	TArray<UNiagaraSystem*> NiagaraParticles;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cue")
+	TArray<USoundBase*> Sounds;
+
+	UPROPERTY(BlueprintReadOnly, Category="Cue")
+	FHitResult HitData;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cue")
 	UNiagaraComponent* Niagara;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cue")
@@ -52,5 +65,5 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayCueFunctions : public UBlueprintFunct
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Cues", meta=(WorldContext="WorldContextObject"))
-	static void PlayGameplayCue(UObject* WorldContextObject, TSubclassOf<AOmegaGameplayCue> Cue, FTransform Origin, AActor* ActorOrigin=nullptr);
+	static void PlayGameplayCue(UObject* WorldContextObject, TSubclassOf<AOmegaGameplayCue> Cue, FTransform Origin, FHitResult Hit, AActor* ActorOrigin=nullptr);
 };

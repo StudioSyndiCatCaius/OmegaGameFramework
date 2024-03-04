@@ -60,6 +60,9 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 	//-----------------------------------------------------------------------------------
 	UFUNCTION(BlueprintPure, Category="Attributes", meta=(CompactNodeTitle="Attribute ID"))
 	static UOmegaAttribute* GetAttributeByUniqueID(const FString& ID);
+	
+	UFUNCTION(BlueprintCallable, Category="Attributes")
+	static TArray<FOmegaAttributeModifier> FlatAttributesToModifierValues(TMap<UOmegaAttribute*, float> FlatAttributes,bool AsMultiplier);
 
 	/*
 	UFUNCTION(BlueprintPure, Category="Attributes")

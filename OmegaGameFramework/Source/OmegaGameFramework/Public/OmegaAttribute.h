@@ -14,6 +14,8 @@
 #include "OmegaAttribute.generated.h"
 
 
+class UCombatantComponent;
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaAttribute : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
 {
@@ -37,8 +39,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Label", Category = "General")
 	FString AttributeLabel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Icon", Category = "General")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Icon (Texture)", Category = "General", AdvancedDisplay)
 	UTexture2D* AttributeIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Icon", Category = "General", DisplayName="Icon")
+	FSlateBrush AttributeSlateIcon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "General")
 	FLinearColor AttributeColor;
@@ -143,11 +148,14 @@ public:
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label);
 };
 
-UCLASS(EditInlineNew, Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaAttributeScript : public UPrimaryDataAsset
+UCLASS(EditInlineNew, Blueprintable, BlueprintType, Abstract, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UOmegaAttributeScript : public UObject
 {
 	GENERATED_BODY()
 
 public:
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Attribute")
+	float GetAttributeValue(int32 level,FGameplayTag ValueCategory);
 	
 };

@@ -30,7 +30,7 @@ void AOmegaInstanceActor::Tick(float DeltaTime)
 
 bool AOmegaInstanceActor::Local_SourceHasInterface() const
 {
-	return ContextObject->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass());	
+	return ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass());	
 }
 
 void AOmegaInstanceActor::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,

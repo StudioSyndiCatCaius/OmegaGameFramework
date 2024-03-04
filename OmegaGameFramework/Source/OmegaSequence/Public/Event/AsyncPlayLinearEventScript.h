@@ -31,7 +31,7 @@ public:
 	UOmegaLinearEventInstance* EventInstance;
 	
 	UFUNCTION()
-	void Local_NewEvent(int32 Index, UOmegaLinearEvent* EventRef);
+	void Local_NewEvent(UOmegaLinearEventInstance* Instance,int32 Index, UOmegaLinearEvent* EventRef);
 	UPROPERTY(BlueprintAssignable)
 	FOnAsynScriptEventUpdated NewEvent;
 	

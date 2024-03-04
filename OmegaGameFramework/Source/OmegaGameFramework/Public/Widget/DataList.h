@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "GameplayTagContainer.h"
+#include "LuaObject.h"
 #include "WidgetInterface_Input.h"
 #include "Types/SlateEnums.h"
 #include "Components/SlateWrapperTypes.h"
@@ -117,6 +118,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Entry")
 	void RefreshAllEntries();
+	//---------------------------------------------------------------------------------------------//
+	//	Lua
+	//---------------------------------------------------------------------------------------------//
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Lua", meta=(MultiLine))
+	FLuaScriptContainer List_Script;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Lua", meta=(MultiLine))
+	FLuaScriptContainer Entry_Script;
+	UFUNCTION(BlueprintCallable,Category="Lua")
+	FLuaValue GetListScript(TSubclassOf<ULuaState> State);
 
 private:
 	UFUNCTION()
@@ -162,7 +172,12 @@ public:
 	
 	//Access Entires
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
-	void HoverEntry(int32 Index);
+	void HoverEntry(int32 Index,bool UseLastIndex=false);
+
+private:
+	UPROPERTY()
+	int32 remembered_hover_index;
+public:
 	
     UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
     UDataWidget* GetHoveredEntry();

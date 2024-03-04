@@ -5,6 +5,10 @@
 
 float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGameplayTag ValueCategory)
 {
+	if(Script)
+	{
+		return Script->GetAttributeValue(Level,ValueCategory);
+	}
 
 	float FinalValue = MaxValue;
 
@@ -80,7 +84,7 @@ void UOmegaAttribute::GetGeneralDataText_Implementation(const FString& Label, co
 void UOmegaAttribute::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
 	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
 {
-	IDataInterface_General::GetGeneralDataImages_Implementation(Label, Context, AttributeIcon, Material, Brush);
+	IDataInterface_General::GetGeneralDataImages_Implementation(Label, Context, AttributeIcon, Material, AttributeSlateIcon);
 }
 
 void UOmegaAttribute::GetGeneralAssetColor_Implementation(FLinearColor& Color)

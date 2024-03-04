@@ -99,9 +99,12 @@ void UCombatantComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 void UCombatantComponent::SetMasterDataSourceActive(UObject* Source, bool bActive)
 {
-	SetSkillSourceActive(Source, bActive);
-	SetAttributeModifierActive(Source, bActive);
-	SetDamageModifierActive(Source, bActive);
+	if(Source)
+	{
+		SetSkillSourceActive(Source, bActive);
+		SetAttributeModifierActive(Source, bActive);
+		SetDamageModifierActive(Source, bActive);
+	}
 }
 
 void UCombatantComponent::SetAbilityActive(bool bActive, AOmegaAbility* Ability)

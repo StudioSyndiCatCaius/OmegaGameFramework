@@ -90,3 +90,25 @@ public:
 	void OnModInitialized(UOmegaMod* Mod);
 	
 };
+
+
+UCLASS()
+class OMEGAMOD_API UOmegaModFileFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	FString GetModFiletype();
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	void OnSetModActive(UOmegaMod* Mod, bool IsActive);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	bool OnGetModActive(UOmegaMod* Mod);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Mods")
+	void OnModInitialized(UOmegaMod* Mod);
+	
+};

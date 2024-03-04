@@ -32,7 +32,7 @@ void UHUDLayer::OnAnimationFinished_Implementation(const UWidgetAnimation* Anima
 
 void UHUDLayer::RemoveHUDLayer()
 {
-	if(GetRemovedAnimation() && !bRemoving)
+	if(this && IsVisible() && GetRemovedAnimation() && !bRemoving)
 	{
 		bRemoving=true;
 		if(bReverseCloseAnim)

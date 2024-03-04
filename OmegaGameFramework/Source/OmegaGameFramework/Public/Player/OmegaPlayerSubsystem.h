@@ -155,6 +155,16 @@ public:
 	UPROPERTY()
 	UDataWidget* HoveredWidget = nullptr;
 
+	UFUNCTION(BlueprintPure,Category="Widgets")
+	UDataWidget* GetCurrentHoverWidget() const
+	{
+		if(HoveredWidget)
+		{
+			return HoveredWidget;
+		}
+		return nullptr;
+	};
+
 	
 	///////////////////
 	/// Input ////

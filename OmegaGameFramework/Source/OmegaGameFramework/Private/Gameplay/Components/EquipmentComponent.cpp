@@ -219,8 +219,38 @@ void UEquipmentComponent::ClearLinkedAssetCollectionComponent(UDataAssetCollecti
 	LinkedCollectionComp = nullptr;
 }
 
+//##############################################################################################
+// Equipment Script
+//##############################################################################################
+
+UWorld* UEquipmentScript::GetWorld() const
+{
+	if(GetGameInstance())
+	{
+		return GetGameInstance()->GetWorld();
+	}
+	return nullptr;
+}
+
+UGameInstance* UEquipmentScript::GetGameInstance() const
+{
+	return Cast<UGameInstance>(GetOuter());
+}
+
+UEquipmentScript::UEquipmentScript(const FObjectInitializer& ObjectInitializer)
+{
+	if (const UObject* Owner = GetOuter())
+	{
+		WorldPrivate = Owner->GetWorld();
+	}
+}
+
+//##############################################################################################
+// Equipment Slot
+//##############################################################################################
+
 void UEquipmentSlot::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
+                                                       FText& Description)
 {
 	Name = SlotName;
 	Description = SlotDescription;

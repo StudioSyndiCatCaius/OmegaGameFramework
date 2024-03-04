@@ -10,6 +10,7 @@
 #include "Player/OmegaInputMode.h"
 #include "JsonObjectWrapper.h"
 #include "Dom/JsonObject.h"
+#include "LuaInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -222,7 +223,7 @@ FGameplayTag UOmegaGameFrameworkBPLibrary::MakeGameplayTagFromString(const FStri
 {
 	if(FGameplayTag::IsValidGameplayTagString(String))
 	{
-		return FGameplayTag::RequestGameplayTag(FName(*String));
+		return FGameplayTag::RequestGameplayTag(FName(*String),false);
 	}
 	return FGameplayTag();
 }
@@ -357,7 +358,7 @@ AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetActiveGameplaySystem(cons
 UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObject* WorldContextObject,
 	TSubclassOf<UOmegaGameplayModule> ModuleClass)
 {
-	if(WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
+	if(WorldContextObject && WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
 	{
 		return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass);
 	}
@@ -587,6 +588,15 @@ TArray<UActorComponent*> UOmegaGameFrameworkBPLibrary::FilterComponentsWithTag(T
 	return OutActors;
 }
 
+AActor* UOmegaGameFrameworkBPLibrary::Quick_SpawnActor(UObject* WorldContextObject, TSubclassOf<AActor> Class,
+	FTransform Transform, const TArray<FName> Tags)
+{
+	AActor* new_actor = WorldContextObject->GetWorld()->SpawnActorDeferred<AActor>(Class, Transform, nullptr);
+	new_actor->Tags=Tags;
+	UGameplayStatics::FinishSpawningActor(new_actor, Transform);
+	return new_actor;
+}
+
 
 
 //###############################################################################
@@ -718,6 +728,17 @@ FString UOmegaGameFrameworkBPLibrary::GetObjectLabel(UObject* Object)
 	return OutName;
 }
 
+UDataAsset* UOmegaGameFrameworkBPLibrary::CreateDataAssetFromLua(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value)
+{
+	if(Class && Class->ImplementsInterface(ULuaInterface::StaticClass()))
+	{
+		UDataAsset* new_obj = NewObject<UDataAsset>(WorldContextObject->GetWorld()->GetGameInstance(),Class);
+		ILuaInterface::Execute_SetValue(new_obj,Value,"");
+		return new_obj;
+	}
+	return nullptr;
+}
+
 
 float UOmegaStarRankFunctions::GetFloatFromStarRank(EOmegaStarRank Rank)
 {
@@ -745,6 +766,11 @@ int32 UOmegaStarRankFunctions::GetIntFromStarRank(EOmegaStarRank Rank)
 	case Star0: OutVal=0; break;
 	}
 	return OutVal;
+}
+
+float UOmegaCurveFunctions::GetCurveValueFromTime(FRuntimeFloatCurve curve,float time)
+{
+	return curve.GetRichCurve()->Eval(time);
 }
 
 

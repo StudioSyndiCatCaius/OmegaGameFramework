@@ -30,6 +30,7 @@ void AOmegaGameMode::BeginPlay()
 	//Activate Game Systems
 	for (const TSubclassOf<AOmegaGameplaySystem> TempSystem : AutoGameplaySystems)
 	{
+		
 		SystemRef->ActivateGameplaySystem(TempSystem, this, "GameMode_PreLoad");
 	}
 

@@ -218,9 +218,9 @@ UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass,
 bool UOmegaPlayerSubsystem::RemoveHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, FString Flag)
 {
 	CleanHUDLayers();
-	if(GetHUDLayerByClass(LayerClass))
+	if(UHUDLayer* tem_layer = GetHUDLayerByClass(LayerClass))
 	{
-		GetHUDLayerByClass(LayerClass)->RemoveHUDLayer();
+		tem_layer->RemoveHUDLayer();
 		return true;
 	}
 	return false;
@@ -232,7 +232,7 @@ TArray<class UHUDLayer*> UOmegaPlayerSubsystem::GetHUDLayers()
 	TArray<UHUDLayer*> TempLayers;
 	for (UHUDLayer*  TempLayer: ActiveHUDLayers)
 	{
-		if(TempLayer && TempLayer->GetClass()->IsChildOf(UHUDLayer::StaticClass()))
+		if(TempLayer)
 		{
 			TempLayers.Add(TempLayer);
 		}
@@ -289,7 +289,7 @@ UHUDLayer* UOmegaPlayerSubsystem::GetHUDLayerByClass(TSubclassOf<UHUDLayer> Laye
 {
 	for(auto* TempLayer : GetHUDLayers())
 	{
-		if(TempLayer->GetClass() == LayerClass)
+		if(TempLayer->GetClass() == LayerClass && TempLayer->IsVisible())
 		{
 			return TempLayer;
 		}
@@ -320,6 +320,7 @@ void UOmegaPlayerSubsystem::CleanHUDLayers()
 		}
 	}
 	ActiveHUDLayers = LocalLayers;
+	return;
 }
 
 APlayerController* UOmegaPlayerSubsystem::Local_GetPlayerController()

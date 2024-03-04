@@ -6,15 +6,23 @@
 #include "Components/AudioComponent.h"
 #include "Engine/World.h"
 #include "Components/PostProcessComponent.h"
+#include "Components/BillboardComponent.h"
 #include "Camera/CameraShakeSourceComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AOmegaGameplayCue::AOmegaGameplayCue()
 {
+	RootComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("CueRoot"));
+	
 	Niagara = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Niagara"));
+	Niagara->SetupAttachment(RootComponent);
 	Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Audio"));
+	Audio->SetupAttachment(RootComponent);
 	PostProcess = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));
+	PostProcess->SetupAttachment(RootComponent);
 	CameraShake = CreateDefaultSubobject<UCameraShakeSourceComponent>(TEXT("Camera Shake"));
+	CameraShake->SetupAttachment(RootComponent);
 
 	PostProcess->bUnbound=false;
 	CameraShake->bAutoStart=true;
@@ -23,10 +31,31 @@ AOmegaGameplayCue::AOmegaGameplayCue()
 void AOmegaGameplayCue::BeginPlay()
 {
 	// Bind the function to the OnSystemFinished event of the Niagara component
-	Niagara->OnSystemFinished.AddDynamic(this, &AOmegaGameplayCue::OnFinishParticle);
+
 	// Bind the function to the OnAudioFinished event of the Audio component
+	
+	int32 temp_index=0;
+	
+	// Play Sound
+	temp_index = UKismetMathLibrary::RandomInteger(Sounds.Num()-1);
+	if (Sounds.IsValidIndex(temp_index))
+	{
+		Audio->SetSound(Sounds[temp_index]);
+	}
+	Audio->Play();
 	Audio->OnAudioFinished.AddDynamic(this, &AOmegaGameplayCue::TryFinish);
-	//Super::BeginPlay();
+	
+	// Play Niagara
+	temp_index = UKismetMathLibrary::RandomInteger(NiagaraParticles.Num()-1);
+	if (NiagaraParticles.IsValidIndex(temp_index))
+	{
+		Niagara->SetAsset(NiagaraParticles[temp_index]);
+	}
+	Niagara->ResetSystem();
+	Niagara->OnSystemFinished.AddDynamic(this, &AOmegaGameplayCue::OnFinishParticle);
+	
+	
+	Super::BeginPlay();
 }
 
 void AOmegaGameplayCue::OnFinishParticle(UNiagaraComponent* Comp)
@@ -36,6 +65,10 @@ void AOmegaGameplayCue::OnFinishParticle(UNiagaraComponent* Comp)
 
 void AOmegaGameplayCue::TryFinish()
 {
+	if(!bAttemptAutocomplete)
+	{
+		return;
+	}
 	if(!Audio->IsPlaying() && Niagara->IsComplete())
 	{
 		K2_DestroyActor();
@@ -48,11 +81,12 @@ void AOmegaGameplayCue::Tick(float DeltaTime)
 }
 
 void UOmegaGameplayCueFunctions::PlayGameplayCue(UObject* WorldContextObject, TSubclassOf<AOmegaGameplayCue> Cue,
-                                                 FTransform Origin, AActor* ActorOrigin)
+                                                 FTransform Origin, FHitResult Hit, AActor* ActorOrigin)
 {
 	if(Cue)
 	{
 		AOmegaGameplayCue* CueRef = WorldContextObject->GetWorld()->SpawnActorDeferred<AOmegaGameplayCue>(Cue, Origin, nullptr);
+		CueRef->HitData=Hit;
 		UGameplayStatics::FinishSpawningActor(CueRef, Origin);
 
 		if(ActorOrigin)
