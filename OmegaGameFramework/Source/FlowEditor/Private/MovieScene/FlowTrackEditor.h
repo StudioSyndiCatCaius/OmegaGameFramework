@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Sequencer/Public/ISequencer.h"
+#include "Editor/Sequencer/Public/ISequencer.h"
 #include "MovieSceneTrack.h"
 #include "ISequencerSection.h"
 #include "ISequencerTrackEditor.h"
@@ -14,7 +13,7 @@ class FMenuBuilder;
 /**
 * A property track editor for named events.
 */
-class FFlowTrackEditor final : public FMovieSceneTrackEditor
+class FLOWEDITOR_API FFlowTrackEditor : public FMovieSceneTrackEditor
 {
 public:
 	/**
@@ -47,7 +46,7 @@ private:
 	void AddFlowSubMenu(FMenuBuilder& MenuBuilder);
 
 	/** Callback for executing the "Add Event Track" menu entry. */
-	void HandleAddFlowTrackMenuEntryExecute(UClass* SectionType);
+	void HandleAddFlowTrackMenuEntryExecute(UClass* SectionType) const;
 
 	void CreateNewSection(UMovieSceneTrack* Track, int32 RowIndex, UClass* SectionType, bool bSelect) const;
 };

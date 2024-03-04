@@ -5,7 +5,7 @@
 #include "Modules/ModuleInterface.h"
 #include "Styling/SlateStyleRegistry.h"
 
-#include "PlacementMode/Public/IPlacementModeModule.h"
+#include "Editor/PlacementMode/Public/IPlacementModeModule.h"
 #include "Interfaces/IPluginManager.h"
 #include "Runtime/Launch/Resources/Version.h"
 

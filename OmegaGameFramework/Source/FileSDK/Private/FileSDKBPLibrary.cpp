@@ -166,7 +166,13 @@ void UFileSDKBPLibrary::CopyFileAsync(
   int ChunkSizeInKilobytes
 ) {
   FFunctionGraphTask::CreateAndDispatchWhenReady(
-    [=] {
+    [
+      Source,
+      Destination,
+      ProgressCallback,
+      PreInfo,
+      ChunkSizeInKilobytes
+    ] {
       UFileSDKBPLibrary::CopyFile(
         Source,
         Destination,
@@ -336,7 +342,13 @@ void UFileSDKBPLibrary::CopyDirectoryAsync(
   int ChunkSizeInKilobytes
 ) {
   FFunctionGraphTask::CreateAndDispatchWhenReady(
-    [=] {
+    [
+      Source,
+      Destination,
+      ProgressCallback,
+      OverwriteDestination,
+      ChunkSizeInKilobytes
+    ] {
       UFileSDKBPLibrary::CopyDirectory(
         Source,
         Destination,
