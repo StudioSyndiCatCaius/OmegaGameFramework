@@ -9,6 +9,7 @@ public class OmegaDemo : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[] { 
 			"Core", 
 			"CoreUObject", 
+			"LuaMachine",
 			"Engine", 
 			"GameplayTags", 
 			"UMG",
