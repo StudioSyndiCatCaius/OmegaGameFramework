@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/Interface.h"
 #include "LuaValue.h"
 
 #include "LuaInterface.generated.h"
