@@ -6,6 +6,7 @@
 #include "LuaCode.h"
 #include "LuaInterface.h"
 #include "Engine/DataAsset.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "LuaObject.generated.h"
 
 USTRUCT(BlueprintType)

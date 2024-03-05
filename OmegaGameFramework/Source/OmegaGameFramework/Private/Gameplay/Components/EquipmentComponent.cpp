@@ -5,6 +5,7 @@
 
 #include "Data/DataAssetCollectionComponent.h"
 #include "Engine/DataAsset.h"
+#include "Engine/GameInstance.h"
 #include "Gameplay/CombatantComponent.h"
 #include "Gameplay/GameplayTagsInterface.h"
 
