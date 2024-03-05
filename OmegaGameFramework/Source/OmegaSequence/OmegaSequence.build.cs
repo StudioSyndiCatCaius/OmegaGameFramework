@@ -11,6 +11,7 @@ public class OmegaSequence : ModuleRules
 			"CoreUObject", 
 			"Engine", 
 			"OmegaData",
+			"LuaMachine",
 			"GameplayTags", 
 			"OmegaGameFramework"});
  

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LuaInterface.h"
+//#include "LuaInterface.h"
 #include "UObject/NoExportTypes.h"
 #include "OmegaLinearEvent.generated.h"
 
@@ -13,7 +13,7 @@ class UOmegaLinearEventSubsystem;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEventEnded, const FString&, Flag);
 
 UCLASS(BlueprintType, Blueprintable, abstract, editinlinenew, hidecategories=Object, CollapseCategories)
-class OMEGASEQUENCE_API UOmegaLinearEvent : public UObject, public ILuaInterface
+class OMEGASEQUENCE_API UOmegaLinearEvent : public UObject
 {
 	GENERATED_BODY()
 public:

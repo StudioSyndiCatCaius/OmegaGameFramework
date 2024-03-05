@@ -137,6 +137,17 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TArray<class TSubclassOf<UHUDLayer>> AddedPlayerWidgets;
+
+	UFUNCTION(BlueprintImplementableEvent, Category="HUD") 
+	TArray<class TSubclassOf<UHUDLayer>> GetAddedHudLayers() const;
+private:
+	TArray<TSubclassOf<UHUDLayer>> local_GetAllHudClasses() const
+	{
+		TArray<TSubclassOf<UHUDLayer>> temp_hudlayers = AddedPlayerWidgets;
+		temp_hudlayers.Append(GetAddedHudLayers());
+		return temp_hudlayers;
+	}
+public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TArray<UInputMappingContext*> AddPlayerInputMapping;

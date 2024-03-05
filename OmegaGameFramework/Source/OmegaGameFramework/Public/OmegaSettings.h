@@ -133,3 +133,4 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Zones")
 	FGameplayTag ZoneBGMSlot;
 };
+

@@ -154,3 +154,7 @@ UClass* UOmegaSettings::GetOmegaGlobalSaveClass() const
 	UClass* const LocalSaveClass = GlobalSaveClass.IsValid() ? LoadObject<UClass>(NULL, *GlobalSaveClass.ToString()) : nullptr;
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGlobal::StaticClass();
 }
+
+UOmegaSettingsScript::UOmegaSettingsScript(const FObjectInitializer& ObjectInitializer)
+{
+}
