@@ -2,6 +2,8 @@
 
 
 #include "Gameplay/OmegaScriptedTrace.h"
+#include "Engine/GameInstance.h"
+#include "Engine/HitResult.h"
 
 
 const FHitResult UOmegaScriptedTraceFunctions::ScriptedTrace_Single(UObject* context, FOmegaScriptedTrace Trace,bool& Success)

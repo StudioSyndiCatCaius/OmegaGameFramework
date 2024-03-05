@@ -15,6 +15,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/OmegaPlayerSubsystem.h"
 #include "Widget/DataList.h"
+#include "TimerManager.h"
 
 void UDataWidget::NativePreConstruct()
 {
