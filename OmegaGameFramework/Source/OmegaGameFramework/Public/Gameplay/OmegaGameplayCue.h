@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "NiagaraSystem.h"
+#include "Engine/HitResult.h"
 #include "GameFramework/Actor.h"
 #include "Gameplay/GameplayTagsInterface.h"
 #include "Kismet/BlueprintFunctionLibrary.h"

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "Sound/SoundBase.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "OmegaFileSubsystem.generated.h"
 
