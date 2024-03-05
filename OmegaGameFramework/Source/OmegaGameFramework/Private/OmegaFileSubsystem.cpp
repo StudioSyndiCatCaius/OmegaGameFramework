@@ -2,6 +2,7 @@
 
 
 #include "OmegaFileSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
