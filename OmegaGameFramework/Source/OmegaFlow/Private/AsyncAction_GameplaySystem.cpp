@@ -3,7 +3,7 @@
 
 #include "AsyncAction_GameplaySystem.h"
 
-#include "OmegaGameplaySubsystem.h"
+#include "Subsystems/OmegaSubsystem_Gameplay.h"
 
 
 UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem

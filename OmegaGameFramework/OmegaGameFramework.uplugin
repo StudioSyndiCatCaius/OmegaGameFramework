@@ -124,27 +124,7 @@
 			]
 		},
 		{
-			"Name": "OmegaVisual",
-			"Type": "Runtime",
-			"loadingPhase": "Default"
-		},
-		{
-			"Name": "OmegaUI",
-			"Type": "Runtime",
-			"loadingPhase": "Default"
-		},
-		{
 			"Name": "OmegaParser",
-			"Type": "Runtime",
-			"loadingPhase": "Default"
-		},
-		{
-			"Name": "OmegaMod",
-			"Type": "Runtime",
-			"loadingPhase": "Default"
-		},
-		{
-			"Name": "OmegaPlatform",
 			"Type": "Runtime",
 			"loadingPhase": "Default"
 		}

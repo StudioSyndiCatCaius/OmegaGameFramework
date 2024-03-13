@@ -4,7 +4,7 @@
 #include "AsyncAction_Menu.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "Player/OmegaPlayerSubsystem.h"
+#include "Subsystems/OmegaSubsystem_Player.h"
 
 void UAsyncAction_Menu::NativeShutdown(FGameplayTagContainer CloseTags, UObject* Context, const FString OutFlag)
 {

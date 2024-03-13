@@ -3,7 +3,7 @@
 
 #include "AsyncAction_ActivateAbility.h"
 
-#include "Gameplay/CombatantComponent.h"
+#include "Components/CombatantComponent.h"
 
 void UAsyncAction_ActivateAbility::NativeShutdown(bool bCancelled)
 {
@@ -22,7 +22,7 @@ void UAsyncAction_ActivateAbility::NativeShutdown(bool bCancelled)
 void UAsyncAction_ActivateAbility::Activate()
 {
 	AOmegaAbility* AbilityRef;
-	if(!CombatantRef->IsAbilityActive(LocalAbilityClass, AbilityRef))
+	if(CombatantRef && !CombatantRef->IsAbilityActive(LocalAbilityClass, AbilityRef))
 	{
 		bool IsSuccess;
 		AOmegaAbility* LocalAbility = CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);

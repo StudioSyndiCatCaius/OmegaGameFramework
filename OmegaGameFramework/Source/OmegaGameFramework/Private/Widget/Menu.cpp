@@ -4,9 +4,9 @@
 #include "Widget/Menu.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Player/OmegaPlayerSubsystem.h"
-#include "OmegaGameManager.h"
-#include "OmegaGameplaySubsystem.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/OmegaSubsystem_Gameplay.h"
+#include "Subsystems/OmegaSubsystem_Player.h"
 
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)

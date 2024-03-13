@@ -155,6 +155,3 @@ UClass* UOmegaSettings::GetOmegaGlobalSaveClass() const
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGlobal::StaticClass();
 }
 
-UOmegaSettingsScript::UOmegaSettingsScript(const FObjectInitializer& ObjectInitializer)
-{
-}

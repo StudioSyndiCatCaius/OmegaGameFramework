@@ -3,7 +3,7 @@
 
 #include "AsyncAction_ActivateGambit.h"
 
-#include "Gameplay/CombatantComponent.h"
+#include "Components/CombatantComponent.h"
 
 void UAsyncAction_ActivateGambit::NativeShutdown(bool bCancelled)
 {

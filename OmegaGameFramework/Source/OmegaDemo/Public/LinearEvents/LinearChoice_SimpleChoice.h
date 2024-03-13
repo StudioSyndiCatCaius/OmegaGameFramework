@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DataInterface_General.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "Choice/OmegaLinearChoice.h"
-#include "Save/OmegaSaveSubsystem.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 #include "UObject/Object.h"
 #include "LinearChoice_SimpleChoice.generated.h"
 

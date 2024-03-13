@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "OmegaGameplaySystem.h"
+#include "Actors/OmegaGameplaySystem.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "AsyncAction_GameplaySystem.generated.h"
 

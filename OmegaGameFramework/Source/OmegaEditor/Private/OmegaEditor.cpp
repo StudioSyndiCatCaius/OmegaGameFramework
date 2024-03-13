@@ -13,10 +13,9 @@
 
 #include "AssetTypeActions_Base.h"
 #include "IAssetTools.h"
-#include "OmegaAbility.h"
-#include "OmegaGameplayEffect.h"
-
-#include "OmegaGameplaySystem.h"
+#include "Actors/OmegaAbility.h"
+#include "Actors/OmegaGameplayEffect.h"
+#include "Actors/OmegaGameplaySystem.h"
 
 #include "Widget/DataWidget.h"
 #include "Widget/Menu.h"

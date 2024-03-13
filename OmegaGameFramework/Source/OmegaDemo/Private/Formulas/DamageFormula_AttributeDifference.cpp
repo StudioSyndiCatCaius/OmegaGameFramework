@@ -2,7 +2,7 @@
 
 #include "Formulas/DamageFormula_AttributeDifference.h"
 
-#include "Gameplay/CombatantComponent.h"
+#include "Components/CombatantComponent.h"
 
 
 void UDamageFormula_AttributeDifference::GetDamageAmount_Implementation(UCombatantComponent* Instigator, UCombatantComponent* Target,

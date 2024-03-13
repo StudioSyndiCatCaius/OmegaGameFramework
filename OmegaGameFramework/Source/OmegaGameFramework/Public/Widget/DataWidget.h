@@ -7,10 +7,10 @@
 #include "GameplayTagContainer.h"
 #include "LuaBlueprintFunctionLibrary.h"
 #include "LuaObject.h"
-#include "WidgetInterface_Input.h"
+#include "Interfaces/OmegaInterface_Widget.h"
+#include "Subsystems/OmegaSubsystem_Player.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
-#include "Player/OmegaPlayerSubsystem.h"
 #include "DataWidget.generated.h"
 
 class UDataList;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "OmegaGameplaySystem.h"
+#include "Actors/OmegaGameplaySystem.h"
 #include "GameFramework/Actor.h"
 #include "OmegaDemoSystems.generated.h"
 

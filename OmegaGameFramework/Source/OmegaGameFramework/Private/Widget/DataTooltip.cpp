@@ -3,7 +3,7 @@
 
 #include "Widget/DataTooltip.h"
 
-#include "OmegaGameFrameworkBPLibrary.h"
+#include "Functions/OmegaFunctions_Common.h"
 #include "Widget/DataWidget.h"
 
 void UDataTooltip::SetOwningWidget(UDataWidget* NewOwner)

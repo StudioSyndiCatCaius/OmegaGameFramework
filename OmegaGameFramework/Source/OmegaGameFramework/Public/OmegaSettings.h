@@ -7,15 +7,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InputMappingContext.h"
-#include "LevelSequence.h"
-#include "OmegaAttribute.h"
 #include "Engine/DeveloperSettings.h"
 #include "MetasoundSource.h"
-#include "GameFramework/SaveGame.h"
-#include "Save/OmegaSaveGame.h"
-#include "Save/OmegaSaveGlobal.h"
-#include "Preferences/GamePreference.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 #include "UObject/SoftObjectPath.h"
 
 #include "OmegaSettings.generated.h"
@@ -82,7 +76,13 @@ public:
 	//These paths will automatically scanned on Init. And game preferences found in them will be automatically loaded into the Game Preferences Subsystem.
 	UPROPERTY(EditAnywhere, config, Category = "Game Preferences")
 	TArray<FDirectoryPath> Preferences_ScanPaths;
-
+	
+	//########################################################
+	//Player
+	//########################################################
+	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaHoverCursor"))
+	FSoftClassPath HoverCursorClass;
+	
 	//########################################################
 	//Combat
 	//########################################################
@@ -132,5 +132,16 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Zones")
 	FGameplayTag ZoneBGMSlot;
+
+	//########################################################
+	//Zones
+	//########################################################
+	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaModManager"))
+	TArray<FString> ModPaths;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaModManager"))
+	FSoftClassPath ModManagerClass;
+	
+	
 };
 

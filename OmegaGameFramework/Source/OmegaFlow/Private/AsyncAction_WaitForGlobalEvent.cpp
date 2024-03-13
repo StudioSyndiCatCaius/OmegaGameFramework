@@ -3,8 +3,8 @@
 
 #include "AsyncAction_WaitForGlobalEvent.h"
 
-#include "OmegaGameManager.h"
-#include "Player/OmegaPlayerSubsystem.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/OmegaSubsystem_Player.h"
 
 void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Context)
 {

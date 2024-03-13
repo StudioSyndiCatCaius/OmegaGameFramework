@@ -5,7 +5,7 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "DataInterface_General.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "CommonUILibrary.h"
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -13,7 +13,7 @@
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Player/OmegaPlayerSubsystem.h"
+#include "Subsystems/OmegaSubsystem_Player.h"
 #include "Widget/DataList.h"
 #include "TimerManager.h"
 

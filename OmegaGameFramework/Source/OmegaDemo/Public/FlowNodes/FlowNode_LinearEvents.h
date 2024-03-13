@@ -7,7 +7,7 @@
 #include "GameplayTags.h"
 #include "Flow/Public/Nodes/FlowNode.h"
 #include "UObject/Object.h"
-#include "Utils/OmegaUtils_General.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "FlowNode_LinearEvents.generated.h"
 
 	

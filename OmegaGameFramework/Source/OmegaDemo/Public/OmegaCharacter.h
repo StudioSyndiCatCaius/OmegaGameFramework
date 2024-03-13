@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "DataItemComponent.h"
-#include "Attributes/LevelingComponent.h"
-#include "Data/DataAssetCollectionComponent.h"
+#include "Components/LevelingComponent.h"
+#include "Components/DataAssetCollectionComponent.h"
+#include "Components/CombatantComponent.h"
+#include "Components/ActorStateComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "GameFramework/Character.h"
-#include "Gameplay/CombatantComponent.h"
-#include "Gameplay/Components/ActorStateComponent.h"
-#include "Gameplay/Components/EquipmentComponent.h"
 #include "OmegaCharacter.generated.h"
 
 UCLASS()

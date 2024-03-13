@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
-#include "Message/OmegaMessageSubsystem.h"
-#include "Widget/WidgetInterface_Input.h"
+#include "Subsystems/OmegaSubsystem_Message.h"
+#include "Interfaces/OmegaInterface_Widget.h"
 
 #include "Menu.generated.h"
 

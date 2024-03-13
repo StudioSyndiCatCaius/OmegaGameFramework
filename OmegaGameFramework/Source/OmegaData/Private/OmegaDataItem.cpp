@@ -2,8 +2,8 @@
 
 
 #include "OmegaDataItem.h"
-#include "Gameplay/Combatant/DataInterface_SkillSource.h"
-#include "OmegaGameplayEffect.h"
+#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Actors/OmegaGameplayEffect.h"
 
 
 bool UOmegaDataItem::AreTagsAccepted(const FString& Query, FGameplayTagContainer Tags)
@@ -170,57 +170,6 @@ TArray<UOmegaDataTrait*> UOmegaDataItem::GetTraitsWithInterface(const UClass* In
 	return OutTraits;
 }
 
-//############################################################################################################
-// Contextual Data
-//############################################################################################################
-
-TMap<FGameplayTag, ULevelSequence*> UOmegaDataItem::GetContextAVSequences_Implementation()
-{
-	TMap<FGameplayTag, ULevelSequence*> OutVals;
-	for(auto* TempTrait : GetAllValidTraits())
-	{
-		TMap<FGameplayTag, ULevelSequence*> TempVals = IDataInterface_ContextAV::Execute_GetContextAVSequences(TempTrait);
-		TArray<FGameplayTag> TagList;
-		TempVals.GetKeys(TagList);
-		for (FGameplayTag TempID: TagList)
-		{
-			OutVals.Add(TempID, TempVals[TempID]);
-		}
-	}
-	return OutVals;
-}
-
-TMap<FGameplayTag, USoundBase*> UOmegaDataItem::GetContextAVSounds_Implementation()
-{
-	TMap<FGameplayTag, USoundBase*> OutVals;
-	for(auto* TempTrait : GetAllValidTraits())
-	{
-		TMap<FGameplayTag, USoundBase*> TempVals = IDataInterface_ContextAV::Execute_GetContextAVSounds(TempTrait);
-		TArray<FGameplayTag> TagList;
-		TempVals.GetKeys(TagList);
-		for (FGameplayTag TempID: TagList)
-		{
-			OutVals.Add(TempID, TempVals[TempID]);
-		}
-	}
-	return OutVals;
-}
-
-TMap<FGameplayTag, UNiagaraSystem*> UOmegaDataItem::GetContextAVNiagara_Implementation()
-{
-	TMap<FGameplayTag, UNiagaraSystem*> OutVals;
-	for(auto* TempTrait : GetAllValidTraits())
-	{
-		TMap<FGameplayTag, UNiagaraSystem*> TempVals = IDataInterface_ContextAV::Execute_GetContextAVNiagara(TempTrait);
-		TArray<FGameplayTag> TagList;
-		TempVals.GetKeys(TagList);
-		for (FGameplayTag TempID: TagList)
-		{
-			OutVals.Add(TempID, TempVals[TempID]);
-		}
-	}
-	return OutVals;
-}
 
 //############################################################################################################
 // Gamepaly Tags

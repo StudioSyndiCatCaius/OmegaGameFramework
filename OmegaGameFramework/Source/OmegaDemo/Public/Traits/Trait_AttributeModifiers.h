@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "OmegaDataTrait.h"
-#include "Gameplay/DataInterface_AttributeModifier.h"
+#include "Interfaces/OmegaInterface_Combatant.h"
 #include "Trait_AttributeModifiers.generated.h"
 
 /**

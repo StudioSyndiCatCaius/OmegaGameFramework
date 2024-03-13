@@ -3,7 +3,7 @@
 
 #include "AsyncAction_WaitForFlag.h"
 
-#include "OmegaGameManager.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
 
 
 void UAsyncAction_WaitForFlag::Native_OnFlagEvent(FString Flag, bool State)

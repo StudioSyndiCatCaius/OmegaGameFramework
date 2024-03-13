@@ -6,14 +6,14 @@
 #include "UObject/ObjectMacros.h"
 #include "GameplayTagContainer.h"
 #include "LuaObject.h"
-#include "WidgetInterface_Input.h"
+#include "Interfaces/OmegaInterface_Widget.h"
 #include "Types/SlateEnums.h"
 #include "Components/SlateWrapperTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Widget/DataWidget.h"
 #include "Math/Vector2D.h"
 #include "Components/CanvasPanel.h"
-#include "Data/GeneralDataObject.h"
+#include "Misc/GeneralDataObject.h"
 
 #include "DataList.generated.h"
 
