@@ -60,9 +60,15 @@ FVector UGamePreferenceSubsystem::local_GetPref(UGamePreference* Preference)
 	return FVector();
 }
 
-void UGamePreferenceSubsystem::Initialize(FSubsystemCollectionBase& Colection)
+void UGamePreferenceSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	PreloadPrefs();
+	Super::OnWorldBeginPlay(InWorld);
+}
+
+void UGamePreferenceSubsystem::Initialize(FSubsystemCollectionBase& Colection)
+{
+	//-- maybe remove this?
 }
 
 //BOOL////////////////////////
@@ -152,6 +158,23 @@ void UGamePreferenceSubsystem::SetGamePreferenceInt(UGamePreference* Preference,
 	}
 }
 
+FString UGamePreferenceSubsystem::GetGamePreference_String(UGamePreference* Preference)
+{
+	if(Preference && Preference->PreferenceScript)
+	{
+		return Preference->PreferenceScript->GetValueString(local_GetPref(Preference));
+	}
+	return "";
+}
+
+FText UGamePreferenceSubsystem::GetGamePreference_Text(UGamePreference* Preference)
+{
+	if(Preference && Preference->PreferenceScript)
+	{
+		return Preference->PreferenceScript->GetValueText(local_GetPref(Preference));
+	}
+	return FText();
+}
 
 
 FGameplayTag UGamePreference::GetObjectGameplayCategory_Implementation()

@@ -401,7 +401,7 @@ void UOmegaPlayerSubsystem::SetCustomInputMode(UOmegaInputMode* InputMode)
 			break;
 	default: ;
 	}
-
+	
 	CurrentInputMode = InputMode;
 	OnInputModeChanged.Broadcast(InputMode);
 }
@@ -414,9 +414,13 @@ void UOmegaPlayerSubsystem::OnAnyKeyPressed()
 
 void UOmegaHoverCursor::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
+	if(!subsystem_ref)
+	{
+		subsystem_ref = GetOwningPlayer()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+	}
 	if(subsystem_ref && subsystem_ref->GetCurrentHoverWidget())
 	{
-		SetVisibility(ESlateVisibility::Visible);
+		SetVisibility(subsystem_ref->GetCurrentHoverWidget()->GetVisibility());
 		const FVector2D target_pos = USlateBlueprintLibrary::LocalToAbsolute(subsystem_ref->GetCurrentHoverWidget()->GetCachedGeometry(),FVector2d());
 		last_pos=UKismetMathLibrary::Vector2DInterpTo(last_pos,target_pos,InDeltaTime,InterpSpeed);
 		SetPositionInViewport(last_pos);

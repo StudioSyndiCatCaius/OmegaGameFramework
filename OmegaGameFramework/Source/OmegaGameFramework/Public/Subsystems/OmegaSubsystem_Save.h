@@ -120,12 +120,17 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
 		class UOmegaSaveGame* ActiveSaveData;
-
 	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
 		class UOmegaSaveGlobal* GlobalSaveData;
 
+private:
+
+	void Local_InitializeSaveObjects();
+
 	UPROPERTY()
 	bool Local_JsonSave;
+
+public:
 	
 	UFUNCTION()
 	UOmegaSaveBase* GetSaveObject(bool Global);

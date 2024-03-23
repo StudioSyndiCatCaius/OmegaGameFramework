@@ -34,6 +34,20 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems", DisplayName="Post-Load Gameplay Systems")
 	TArray<TSubclassOf <AOmegaGameplaySystem>> PostLoadGameplaySystems;
+
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems")
+	TArray<TSubclassOf <AOmegaGameplaySystem>> PersistentGameplaySystems;
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems")
+	float PersistentSystemActivationFrequency=0.4;
+
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems")
+	FGameplayTagContainer AutoBlockSystemTags;
+	
+private:
+	UFUNCTION()
+	void Local_ActivatePersistentSystems();
+private:
+	FTimerHandle PersistentSystemsTimerHandle;
 	
 	protected:
 	virtual void BeginPlay() override;

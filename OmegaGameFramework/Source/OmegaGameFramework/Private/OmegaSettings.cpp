@@ -88,6 +88,23 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_18,"Story.Chapter.18");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_19,"Story.Chapter.19");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_20,"Story.Chapter.20");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_00,"Animation.Action.Attack.Combo.00");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_01,"Animation.Action.Attack.Combo.01");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_02,"Animation.Action.Attack.Combo.02");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_03,"Animation.Action.Attack.Combo.03");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_04,"Animation.Action.Attack.Combo.04");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_05,"Animation.Action.Attack.Combo.05");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_06,"Animation.Action.Attack.Combo.06");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_07,"Animation.Action.Attack.Combo.07");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_08,"Animation.Action.Attack.Combo.08");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_09,"Animation.Action.Attack.Combo.09");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Jump_Start,"Animation.Action.Jump.Start");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Jump_Loop,"Animation.Action.Jump.Loop");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Jump_End,"Animation.Action.Jump.End");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Dodge,"Animation.Action.Dodge");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Roll,"Animation.Action.Roll");
+
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_00,"Flag.Power.0%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_10,"Flag.Power.10%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_20,"Flag.Power.20%");

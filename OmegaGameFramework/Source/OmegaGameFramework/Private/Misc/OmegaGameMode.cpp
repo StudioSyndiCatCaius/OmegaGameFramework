@@ -3,6 +3,7 @@
 
 #include "Misc/OmegaGameMode.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 
@@ -15,8 +16,17 @@ void AOmegaGameMode::Local_LoadSystemShutdown(UObject* Context, FString Flag)
 	{
 		SystemRef->ActivateGameplaySystem(TempSystem, this, "GameMode_PostLoad");
 	}
-	
 	OnLoadEventFinished();
+}
+
+void AOmegaGameMode::Local_ActivatePersistentSystems()
+{
+	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	
+	for (const TSubclassOf<AOmegaGameplaySystem> TempSystem : PersistentGameplaySystems)
+	{
+		SystemRef->ActivateGameplaySystem(TempSystem, this, "PersistentSystem");
+	}
 }
 
 void AOmegaGameMode::BeginPlay()
@@ -42,5 +52,13 @@ void AOmegaGameMode::BeginPlay()
 	{
 		Local_LoadSystemShutdown(this, "NONE");
 	}
+
+	// Bind a function to be called by the timer.
+	FTimerDelegate TimerDel;
+	TimerDel.BindUFunction(this, FName("Local_ActivatePersistentSystems"));
+
+	// Set the timer. Replace GetWorld()->GetTimerManager() with your context.
+	GetWorld()->GetTimerManager().SetTimer(PersistentSystemsTimerHandle, TimerDel, PersistentSystemActivationFrequency, true);
+
 	
 }

@@ -635,8 +635,8 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 	//Setup Root Billboard
 	UBillboardComponent* RootRef = CreateDefaultSubobject<UBillboardComponent>("RootBillboard");
 	
-	UTexture2D* TextureBill = LoadObject<UTexture2D>(GetTransientPackage(), TEXT("/OmegaGameFramework/Textures/Kenny/icons/board/structure_house.structure_house"));
-	RootRef->SetSprite(TextureBill);
+	//UTexture2D* TextureBill = LoadObject<UTexture2D>(GetTransientPackage(), TEXT("/OmegaGameFramework/Textures/Kenny/icons/board/structurehouse.structurehouse"));
+	//RootRef->SetSprite(TextureBill);
 	
 	Box_Transit = CreateOptionalDefaultSubobject<UBoxComponent>("Transit Box");
 	Box_Notify = CreateOptionalDefaultSubobject<UBoxComponent>("Notify Box");
@@ -689,12 +689,15 @@ void AOmegaZoneTransit::BeginPlay()
 			point_class=ZoneSpawnPointClass;
 		}
 		
-		linked_point = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(point_class,GetActorTransform());
 		
-		linked_point->SetActorLocation(Spawn_Point_Ref->GetComponentLocation());
-		linked_point->FromLevel=TransitLevel;
-		linked_point->ZonePointID=LevelTransitID;
-		linked_point->FinishSpawning(linked_point->GetActorTransform());
+		linked_point = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(point_class,GetActorTransform());
+		if(linked_point)
+		{
+			linked_point->SetActorLocation(Spawn_Point_Ref->GetComponentLocation());
+			linked_point->FromLevel=TransitLevel;
+			linked_point->ZonePointID=LevelTransitID;
+			linked_point->FinishSpawning(linked_point->GetActorTransform());
+		}
 	}
 	
 }

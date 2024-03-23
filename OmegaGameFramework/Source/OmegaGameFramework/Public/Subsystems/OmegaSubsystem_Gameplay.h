@@ -56,6 +56,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	TArray<AOmegaGameplaySystem*> GetActiveGameplaySystemsWithInterface(TSubclassOf<UInterface> Interface);
 
+	UFUNCTION()
+	FGameplayTagContainer GetBlockedSystemTags();
+	
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	bool IsSystemTagBlocked(FGameplayTagContainer Tags);
 	
@@ -64,9 +67,21 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	TArray<AOmegaGameplaySystem*> GetActiveSystemsWithTags(FGameplayTagContainer Tags);
+
+	UFUNCTION(BlueprintCallable, Category = "OmegaGameplaySubsystem")
+	void SetSystemTagsBlocked(FGameplayTagContainer Tags, bool bBlocked);
+
+private:
+	UPROPERTY()
+	FGameplayTagContainer ExtraBlockedSystemTags;
+
+	//Refreshes system states. will shutdown any systems with blocked tags.
+	UFUNCTION()
+	void Local_RefreshSystemState();
+
+public:
 	
 	//PLAYER
-	
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	APlayerController* GetPlayerController(int32 Index);
 

@@ -13,6 +13,7 @@
 #include "Misc/OmegaUtils_Enums.h"
 #include "JsonObjectWrapper.h"
 #include "Curves/CurveFloat.h"
+#include "Math/Vector2D.h"
 #include "Engine/AssetUserData.h"
 #include "LuaValue.h"
 #include "AssetRegistry/AssetData.h"
@@ -162,9 +163,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="ComponentClass"))
 	static TArray<UActorComponent*> GetComponentsFromActors(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Actors")
+	static TArray<FVector2D> GetActorPositionVectors2D(TArray<AActor*> Actors, const APlayerController* Player, bool ViewportRelative);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Actors")
 	static AActor* GetClosestActorToPoint(TArray<AActor*> Actors, FVector Point);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Actors")
+	static AActor* GetClosestActorToViewportPoint2D(TArray<AActor*> Actors, FVector2D Point, const APlayerController* Player, bool ViewportRelative);
 
 	// True = (ActorHiddenInGame=false, Collision=Enabled, TimeDilation=1 | False = (ActorHiddenInGame=true, Collision=Disabled, TimeDilation=0)
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors")
@@ -229,10 +236,11 @@ public:
 	static FString GetObjectLabel(UObject* Object);
 	
 	//###############################################################################
-	// MetaData
+	// Math
 	//###############################################################################
-	//UFUNCTION(BlueprintPure, Category="Omega|MetaData", meta=(DeterminesOutputType="Class"))
-	//UOmegaAssetMetadata* GetMetadataFromObject(UObject* Object, TSubclassOf<UOmegaAssetMetadata> Class);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Math")
+	static int32 GetClosestVector2dToPoint(TArray<FVector2D> Vectors, FVector2D point, FVector2D& out_point);
 	
 	//###############################################################################
 	// MetaData

@@ -427,3 +427,20 @@ private:
 	static void HttpGenericRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TWeakPtr<FLuaSmartReference> Context, FLuaHttpResponseReceived ResponseReceived, FLuaHttpError Error);
 
 };
+
+UCLASS()
+class LUAMACHINE_API ULuaTableFunctionLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static FLuaValue MergeTables(UObject* WorldContextObject, TSubclassOf<ULuaState> State, TArray<FLuaValue> TablesToMerge);
+	
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static FLuaValue CreateTableFromValues(UObject* WorldContextObject, TSubclassOf<ULuaState> State, TMap<FString,FLuaValue> Values);
+	
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State,subfield_key", WorldContext = "WorldContextObject"))
+	static FLuaValue MergeTablesFromObjects(UObject* WorldContextObject, TSubclassOf<ULuaState> State, TArray<UObject*> Objects, const FString& subfield_key);
+};

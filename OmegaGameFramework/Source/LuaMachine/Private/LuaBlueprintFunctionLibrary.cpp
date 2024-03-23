@@ -24,6 +24,7 @@
 #include "IAssetRegistry.h"
 #include "AssetRegistryModule.h"
 #endif
+#include "LuaObject.h"
 #include "Misc/FileHelper.h"
 #include "Serialization/ArrayReader.h"
 #include "TextureResource.h"
@@ -1982,4 +1983,59 @@ ULuaState* ULuaBlueprintFunctionLibrary::CreateDynamicLuaState(UObject* WorldCon
 	}
 
 	return NewLuaState->GetLuaState(WorldContextObject->GetWorld());
+}
+
+
+
+FLuaValue ULuaTableFunctionLibrary::MergeTables(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	TArray<FLuaValue> TablesToMerge)
+{
+	FLuaValue new_table = ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
+	for(FLuaValue temp_table : TablesToMerge)
+	{
+		for(FLuaValue temp_key : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(temp_table))
+		{
+			new_table.SetField(temp_key.String,temp_table.GetField(temp_key.String));
+		}
+	}
+	return new_table;
+}
+
+FLuaValue ULuaTableFunctionLibrary::CreateTableFromValues(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	TMap<FString,FLuaValue> Values)
+{
+	FLuaValue new_table = ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
+	TArray<FString> key_list;
+	Values.GetKeys(key_list);
+	for(FString temp_key : key_list)
+	{
+		new_table.SetField(temp_key,Values.FindOrAdd(temp_key));
+	}
+	return new_table;
+}
+
+FLuaValue ULuaTableFunctionLibrary::MergeTablesFromObjects(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	TArray<UObject*> Objects, const FString& subfield_key)
+{
+	FLuaValue new_table = ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
+	TArray<FLuaValue> tables_to_merge;
+	for(auto* temp_obj: Objects)
+	{
+		if(temp_obj)
+		{
+			FLuaValue in_key;
+			FLuaValue in_val;
+			ULuaObjectFunctions::GetObjectKeyAndValue(temp_obj,in_key,in_val);
+			if(subfield_key.IsEmpty())
+			{
+				tables_to_merge.Add(in_val);
+			}
+			else
+			{
+				tables_to_merge.Add(ULuaBlueprintFunctionLibrary::LuaTableGetField(in_val,subfield_key));
+			}
+		}
+	}
+
+	return MergeTables(WorldContextObject,State,tables_to_merge);
 }

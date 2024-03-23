@@ -56,12 +56,12 @@ void AOmegaGameplayEffect::BeginPlay()
 	
 	if(TargetedCombatant)
 	{
+		TargetedCombatant->OnDamaged.AddDynamic(this, &AOmegaGameplayEffect::OnAttributeDamaged);
 		for(FName TempTag : ActorsTagsGranted)
 		{
 			TargetedCombatant->GetOwner()->Tags.Add(TempTag);
 		}
 	}
-	
 	EffectBeginPlay(EffectContext);
 }
 

@@ -22,7 +22,6 @@ class OMEGAGAMEFRAMEWORK_API UDamageFormula : public UObject
 {
 	GENERATED_BODY()
 
-
 public:
 	UFUNCTION(BlueprintNativeEvent, Category="Damage")
 	void GetDamageAmount(UCombatantComponent* Instigator, UCombatantComponent* Target, float& DamageOut);
@@ -167,6 +166,9 @@ public:
 	
 	//Should only one of this effect be allowed at a time?
 	EOmegaEffectReplacement SingletonStatus;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
+	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* InstigatorCombatant, UOmegaDamageType* DamageType, FHitResult Hit);
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -24,19 +24,7 @@
 
 void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
-	const FString LocalGlSaveName = GetMutableDefault<UOmegaSettings>()->GlobalSaveName;
-	const TSubclassOf<UOmegaSaveGlobal> LocalGlobalSaveClass = GetMutableDefault<UOmegaSettings>()->GetOmegaGlobalSaveClass(); //Get Global Settings class
-
-	ActiveSaveData = CreateNewGame();
-	
-	if (UGameplayStatics::DoesSaveGameExist(LocalGlSaveName, 0))		//Is there is already a Global Save File?
-	{
-		GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::LoadGameFromSlot(LocalGlSaveName, 0)); //If yes, load it
-	}
-	else
-	{
-		GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::CreateSaveGameObject(LocalGlobalSaveClass)); //If no, create a new one.
-	}
+	Local_InitializeSaveObjects();
 
 	//Setup play timer
 	FTimerHandle GameTimeHandle;
@@ -245,6 +233,28 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 	}
 	
 	//GetGameInstance()->GetSubsystem<UGamePreferenceSubsystem>()->Local_PreferenceUpdateAll();
+}
+
+void UOmegaSaveSubsystem::Local_InitializeSaveObjects()
+{
+	if(!GlobalSaveData)
+	{
+		const FString LocalGlSaveName = GetMutableDefault<UOmegaSettings>()->GlobalSaveName;
+		const TSubclassOf<UOmegaSaveGlobal> LocalGlobalSaveClass = GetMutableDefault<UOmegaSettings>()->GetOmegaGlobalSaveClass(); //Get Global Settings class
+		
+		if (UGameplayStatics::DoesSaveGameExist(LocalGlSaveName, 0))		//Is there is already a Global Save File?
+			{
+			GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::LoadGameFromSlot(LocalGlSaveName, 0)); //If yes, load it
+			}
+		else
+		{
+			GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::CreateSaveGameObject(LocalGlobalSaveClass)); //If no, create a new one.
+		}
+	}
+	if(!ActiveSaveData)
+	{
+		ActiveSaveData = CreateNewGame();
+	}
 }
 
 UOmegaSaveBase* UOmegaSaveSubsystem::GetSaveObject(bool Global)

@@ -83,12 +83,25 @@ void AOmegaGameplayCue::Tick(float DeltaTime)
 void UOmegaGameplayCueFunctions::PlayGameplayCue(UObject* WorldContextObject, TSubclassOf<AOmegaGameplayCue> Cue,
                                                  FTransform Origin, FHitResult Hit, AActor* ActorOrigin)
 {
+	if(!WorldContextObject->GetWorld())
+	{
+		return;
+	}
+	WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplayCueSubsystem>()->PlayGameplayCue(Cue,Origin,Hit,ActorOrigin);
+}
+
+void UOmegaGameplayCueSubsystem::PlayGameplayCue(TSubclassOf<AOmegaGameplayCue> Cue,
+	FTransform Origin, FHitResult Hit, AActor* ActorOrigin)
+{
 	if(Cue)
 	{
-		AOmegaGameplayCue* CueRef = WorldContextObject->GetWorld()->SpawnActorDeferred<AOmegaGameplayCue>(Cue, Origin, nullptr);
+		AOmegaGameplayCue* CueRef = GetWorld()->SpawnActorDeferred<AOmegaGameplayCue>(Cue, Origin, nullptr);
 		CueRef->HitData=Hit;
-		CueRef->FinishSpawning(Origin);
-
+		if(CueRef)
+		{
+			return;
+		}
+		UGameplayStatics::FinishSpawningActor(CueRef,Origin);
 		if(ActorOrigin)
 		{
 			CueRef->AttachToActor(ActorOrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));

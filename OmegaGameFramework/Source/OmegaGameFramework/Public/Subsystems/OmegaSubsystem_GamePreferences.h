@@ -96,6 +96,13 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Preference")
 	FVector GetDefaultValue() const;
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Preference")
+	FText GetValueText(FVector Value) const;
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Preference")
+	FString GetValueString(FVector Value) const;
+	
 };
 
 inline void UGamePreferenceScript::OnPreferenceValueUpdated_Implementation(UGameUserSettings* GameSettings, FVector Value) const
@@ -147,7 +154,6 @@ UCLASS(DisplayName="Omega Subsystem: Preferences")
 class OMEGAGAMEFRAMEWORK_API UGamePreferenceSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
-
 protected:
 
 	void PreloadPrefs();
@@ -156,11 +162,11 @@ protected:
 	void local_SetPref(UGamePreference* Preference, FVector value);
 	UFUNCTION()
 	FVector local_GetPref(UGamePreference* Preference);
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
-	//virtual void Deinitialize() override;
 
 	UPROPERTY()
 	TArray<UGamePreference*> PreloadedPreferences;
@@ -214,6 +220,14 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnPrefernceIntUpdated OnIntPreferenceUpdated;
+
+	//Float
+	UFUNCTION(BlueprintPure, Category = "Omega|GamePreferences",DisplayName="Get Game preference (As String)")
+	FString GetGamePreference_String(class UGamePreference* Preference);
+
+	//Float
+	UFUNCTION(BlueprintPure, Category = "Omega|GamePreferences",DisplayName="Get Game preference (As Text)")
+	FText GetGamePreference_Text(class UGamePreference* Preference);
 
 };
 

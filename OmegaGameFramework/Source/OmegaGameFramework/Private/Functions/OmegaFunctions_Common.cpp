@@ -56,6 +56,7 @@ bool UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTag(UObject* Object, FG
 		}
 		return LocalTags.HasTag(GameplayTag);
 	}
+	
 	return false;
 }
 
@@ -443,6 +444,22 @@ TArray<UActorComponent*> UOmegaGameFrameworkBPLibrary::GetComponentsFromActors(T
 	return OutComps;
 }
 
+TArray<FVector2D> UOmegaGameFrameworkBPLibrary::GetActorPositionVectors2D(TArray<AActor*> Actors,
+                                                                          const APlayerController* Player, bool ViewportRelative)
+{
+	TArray<FVector2D> out;
+	for(const auto* TempActor : Actors)
+	{
+		if(TempActor)
+		{
+			FVector2D new_out;
+			UGameplayStatics::ProjectWorldToScreen(Player,TempActor->GetActorLocation(),new_out,ViewportRelative);
+			out.Add(new_out);
+		}
+	}
+	return out;
+}
+
 AActor* UOmegaGameFrameworkBPLibrary::GetClosestActorToPoint(TArray<AActor*> Actors, FVector Point)
 {
 	AActor* OutActor = nullptr;
@@ -464,6 +481,18 @@ AActor* UOmegaGameFrameworkBPLibrary::GetClosestActorToPoint(TArray<AActor*> Act
 		}
 	}
 	return OutActor;
+}
+
+AActor* UOmegaGameFrameworkBPLibrary::GetClosestActorToViewportPoint2D(TArray<AActor*> Actors, FVector2D Point,
+	const APlayerController* Player, bool ViewportRelative)
+{
+	if(Actors.IsValidIndex(0))
+	{
+		TArray<FVector2D> temp_vecs = GetActorPositionVectors2D(Actors,Player,ViewportRelative);
+		FVector2D out_dump;
+		return Actors[GetClosestVector2dToPoint(temp_vecs,Point,out_dump)];
+	}
+	return nullptr;
 }
 
 void UOmegaGameFrameworkBPLibrary::SetActorActive(AActor* Actor, bool bIsActive)
@@ -726,6 +755,27 @@ FString UOmegaGameFrameworkBPLibrary::GetObjectLabel(UObject* Object)
 		IDataInterface_General::Execute_GetGeneralAssetLabel(Object,OutName);
 	}
 	return OutName;
+}
+
+int32 UOmegaGameFrameworkBPLibrary::GetClosestVector2dToPoint(TArray<FVector2D> Vectors, FVector2D point,
+	FVector2D& out_point)
+{
+	if(Vectors.IsValidIndex(0))
+	{
+		FVector2D last_point=Vectors[0];
+		int32 out_index = 0;
+		for(FVector2D temp_vec: Vectors)
+		{
+			if(UKismetMathLibrary::Distance2D(last_point,point)>UKismetMathLibrary::Distance2D(temp_vec,point))
+			{
+				last_point=temp_vec;
+				out_index=Vectors.Find(temp_vec);
+			}
+		}
+		out_point=Vectors[out_index];
+		return out_index;
+	}
+	return 0;
 }
 
 UDataAsset* UOmegaGameFrameworkBPLibrary::CreateDataAssetFromLua(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value)

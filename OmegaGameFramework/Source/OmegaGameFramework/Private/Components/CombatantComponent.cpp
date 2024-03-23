@@ -1160,7 +1160,7 @@ TArray<AOmegaGameplayEffect*> UCombatantComponent::GetAllEffects()
 	{
 		if(TempActor && TempActor->GetClass()->IsChildOf(AOmegaGameplayEffect::StaticClass()))
 		{
-			OutEffects.Add(Cast<AOmegaGameplayEffect>(TempActor));
+			OutEffects.AddUnique(Cast<AOmegaGameplayEffect>(TempActor));
 		}
 	}
 	

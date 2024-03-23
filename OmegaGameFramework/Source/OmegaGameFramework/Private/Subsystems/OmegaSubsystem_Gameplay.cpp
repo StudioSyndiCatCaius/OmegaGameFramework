@@ -63,11 +63,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 			}
 			DummySystem->ActivationFlag=Flag;
 			
-			//Shutdown Blocked Systems
-			for(auto* TempSys : GetActiveSystemsWithTags(DummySystem->BlockSystemTags))
-			{
-				TempSys->Shutdown(DummySystem, "Canceled");
-			}
+			Local_RefreshSystemState();
 			
 			//Finish & Activate
 			DummySystem->SystemActivated(Context, Flag);
@@ -75,7 +71,6 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 			return DummySystem;
 		}
 	}
-
 	return nullptr;
 }
 
@@ -142,16 +137,19 @@ TArray<AOmegaGameplaySystem*> UOmegaGameplaySubsystem::GetActiveGameplaySystemsW
 	return OutSystems;
 }
 
-bool UOmegaGameplaySubsystem::IsSystemTagBlocked(FGameplayTagContainer Tags)
+FGameplayTagContainer UOmegaGameplaySubsystem::GetBlockedSystemTags()
 {
+	FGameplayTagContainer out = ExtraBlockedSystemTags;
 	for(const auto* TempSys : GetActiveGameplaySystems())
 	{
-		if(TempSys->BlockSystemTags.HasAnyExact(Tags))
-		{
-			return true;
-		}
+		out.AppendTags(TempSys->BlockSystemTags);
 	}
-	return false;
+	return out;
+}
+
+bool UOmegaGameplaySubsystem::IsSystemTagBlocked(FGameplayTagContainer Tags)
+{
+	return GetBlockedSystemTags().HasAnyExact(Tags);;
 }
 
 bool UOmegaGameplaySubsystem::IsSystemTagActive(FGameplayTagContainer Tags)
@@ -177,6 +175,27 @@ TArray<AOmegaGameplaySystem*> UOmegaGameplaySubsystem::GetActiveSystemsWithTags(
 		}
 	}
 	return OutSystems;
+}
+
+void UOmegaGameplaySubsystem::SetSystemTagsBlocked(FGameplayTagContainer Tags, bool bBlocked)
+{
+	if(bBlocked)
+	{
+		ExtraBlockedSystemTags.AppendTags(Tags);
+	}
+	else
+	{
+		ExtraBlockedSystemTags.RemoveTags(Tags);
+	}
+}
+
+void UOmegaGameplaySubsystem::Local_RefreshSystemState()
+{
+	//Shutdown Blocked Systems
+	for(auto* TempSys : GetActiveSystemsWithTags(GetBlockedSystemTags()))
+	{
+		TempSys->Shutdown(this, "Canceled");
+	}
 }
 
 APlayerController* UOmegaGameplaySubsystem::GetPlayerController(int32 Index)

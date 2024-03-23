@@ -162,6 +162,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD", meta = (AdvancedDisplay = "Flag"))
 	bool RemoveHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, FString Flag);
 
+	UPROPERTY()
 	TArray <class UHUDLayer*> ActiveHUDLayers;
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|HUD")
