@@ -2,6 +2,7 @@
 
 
 #include "Actors/OmegaGameplaySystem.h"
+#include "Engine/GameInstance.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"

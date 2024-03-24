@@ -2,6 +2,7 @@
 
 
 #include "Widget/HUDLayer.h"
+#include "Engine/GameInstance.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Message.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
