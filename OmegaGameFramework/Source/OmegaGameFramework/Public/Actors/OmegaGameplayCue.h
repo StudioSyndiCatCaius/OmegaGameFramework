@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Subsystems/WorldSubsystem.h"
 #include "OmegaGameplayCue.generated.h"
 
 class UPostProcessComponent;
