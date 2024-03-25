@@ -18,5 +18,3 @@ A collection of Subsystems and classes for easily creating data and system heavy
 
 ### Specialized
  - **Input Handler**: An Input action localized to a single actor.
-
- 
