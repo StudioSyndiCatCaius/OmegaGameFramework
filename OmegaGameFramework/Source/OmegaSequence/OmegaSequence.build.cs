@@ -9,7 +9,6 @@ public class OmegaSequence : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", 
 			"CoreUObject", 
-			"LuaMachine",
 			"Engine", 
 			"OmegaData",
 			"LuaMachine",
