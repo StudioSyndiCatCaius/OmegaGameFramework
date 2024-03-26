@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Components/ActorComponent.h"
+#include "GameFramework/Actor.h"
 #include "InstanceActorComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInstanceNotify, AOmegaInstanceActor*, Instance, FName, Notify);

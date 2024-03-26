@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
+#include "InputCoreTypes.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "UObject/SoftObjectPath.h"
 #include "Engine/DataAsset.h"

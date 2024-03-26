@@ -2,6 +2,7 @@
 
 
 #include "Misc/OmegaGameMode.h"
+#include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"

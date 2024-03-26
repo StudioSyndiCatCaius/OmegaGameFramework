@@ -3,6 +3,7 @@
 
 #include "AsyncAction_WaitForGlobalEvent.h"
 
+#include "Engine/GameInstance.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 

@@ -2,6 +2,7 @@
 
 #include "Subsystems/OmegaSubsystem_Platforms.h"
 #include "EnhancedInputSubsystems.h"
+#include "InputCoreTypes.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"

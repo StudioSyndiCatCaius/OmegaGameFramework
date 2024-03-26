@@ -6,6 +6,7 @@
 
 #include "Engine/DataAsset.h"
 #include "Interfaces/OmegaInterface_Common.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaDamageType.generated.h"
 
 class AOmegaGameplayEffect;
