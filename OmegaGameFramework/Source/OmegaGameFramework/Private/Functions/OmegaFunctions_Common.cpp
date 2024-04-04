@@ -3,6 +3,7 @@
 
 #include "Functions/OmegaFunctions_Common.h"
 //#include "OmegaGameFramework.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 //#include "EngineUtils.h"
 #include "JsonBlueprintFunctionLibrary.h"

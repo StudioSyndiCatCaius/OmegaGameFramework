@@ -611,7 +611,7 @@ void UDataList::RebuildList()
 	
 	if (bUseCustomEntries)
 	{
-		for (const FCustomAssetData TempData : CustomEntries)
+		for (const FCustomAssetData& TempData : CustomEntries)
 		{
 			AddedCustomEntryToList(TempData, DefaultListFlag);
 		}

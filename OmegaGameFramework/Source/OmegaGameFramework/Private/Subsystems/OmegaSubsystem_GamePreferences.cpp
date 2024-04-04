@@ -19,7 +19,7 @@ void UGamePreferenceSubsystem::PreloadPrefs()
 	FARFilter Filter;
 	Filter.ClassPaths.Add(UGamePreference::StaticClass()->GetClassPathName());
 	
-	for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaSettings>()->Preferences_ScanPaths)
+	for(const FDirectoryPath& NewPath : GetMutableDefault<UOmegaSettings>()->Preferences_ScanPaths)
 	{
 		//FString LocalString = NewPath.Path;
 		Filter.PackagePaths.Add(FName(*NewPath.Path));

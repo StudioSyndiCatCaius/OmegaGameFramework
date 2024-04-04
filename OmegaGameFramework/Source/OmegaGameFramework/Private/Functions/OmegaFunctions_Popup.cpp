@@ -3,6 +3,7 @@
 
 #include "Functions/OmegaFunctions_Popup.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "TimerManager.h"
 
 void UOmegaPopupWidget::NativeConstruct()
 {

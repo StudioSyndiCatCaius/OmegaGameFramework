@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/OmegaInterface_Common.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 

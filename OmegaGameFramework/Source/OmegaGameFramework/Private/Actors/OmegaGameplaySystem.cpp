@@ -2,6 +2,7 @@
 
 
 #include "Actors/OmegaGameplaySystem.h"
+#include "Engine/GameInstance.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
@@ -98,7 +99,7 @@ void AOmegaGameplaySystem::Destroyed()
 
 void AOmegaGameplaySystem::Local_SetFlagsActive(bool State)
 {
-	for(const auto LocalFlag : ActiveFlags)
+	for(const auto& LocalFlag : ActiveFlags)
 	{
 		GetGameInstance()->GetSubsystem<UOmegaGameManager>()->SetFlagActive(LocalFlag, State);
 	}

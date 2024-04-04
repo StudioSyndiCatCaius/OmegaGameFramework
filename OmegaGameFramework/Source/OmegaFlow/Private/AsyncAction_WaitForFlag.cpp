@@ -3,6 +3,7 @@
 
 #include "AsyncAction_WaitForFlag.h"
 
+#include "Engine/GameInstance.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 
 
