@@ -141,7 +141,28 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Visual,"Preferences.Visual");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Audio,"Preferences.Audio");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Controls,"Preferences.Controls");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Title,"Menu.Title");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Save,"Menu.Save");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Load,"Menu.Load");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Settings,"Menu.Settings");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Pause,"Menu.Pause");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Confirm,"Menu.Confirm");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Info,"Menu.Info");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Tutorial,"Menu.Tutorial");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Equip,"Menu.Equipment");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Items,"Menu.Items");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Party,"Menu.Party");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Quest,"Menu.Quest");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Journal,"Menu.Journal");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Cooking,"Menu.Cooking");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Exploration,"System.Exploration");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Combat,"System.Combat");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Menu,"System.Menu");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Pause,"System.Pause");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Cutscene,"System.Cutscene");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Dialog,"System.Dialog");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Loading,"System.Loading");
 
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

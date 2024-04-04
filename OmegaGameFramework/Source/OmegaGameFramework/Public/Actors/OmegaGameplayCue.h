@@ -78,6 +78,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayCueSubsystem : public UWorldSubsystem
 	TArray<AOmegaGameplayCue*> ActiveCues;
 	
 public:
-	UFUNCTION(BlueprintCallable, Category="Omega|Cues", meta=(WorldContext="WorldContextObject"))
-	void PlayGameplayCue(TSubclassOf<AOmegaGameplayCue> Cue, FTransform Origin, FHitResult Hit, AActor* ActorOrigin=nullptr);
+	UFUNCTION(BlueprintCallable, Category="Omega|Cues", meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"))
+	AOmegaGameplayCue* PlayGameplayCue(TSubclassOf<AOmegaGameplayCue> Cue, FTransform Origin, FHitResult Hit, AActor* ActorOrigin=nullptr);
 };

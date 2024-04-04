@@ -6,13 +6,17 @@
 #include "Engine/World.h"
 //#include "EngineUtils.h"
 #include "JsonBlueprintFunctionLibrary.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/IAssetRegistry.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "JsonObjectWrapper.h"
+#include "LuaBlueprintFunctionLibrary.h"
 #include "Dom/JsonObject.h"
 #include "LuaInterface.h"
+#include "Functions/OmegaFunctions_Combatant.h"
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -272,6 +276,61 @@ const TArray<FString> UOmegaGameFrameworkBPLibrary::GetDisplayNamesFromObjects(T
 	return StringsOut;
 }
 
+UObject* UOmegaGameFrameworkBPLibrary::GetSortedAssetByClass(const FString& AssetName, TSubclassOf<UObject> Class, const FString& OverridePath, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	FString start_path = OverridePath;
+
+	if(OverridePath.IsEmpty())
+	{
+		if(GetMutableDefault<UOmegaSettings>()->SortedAssetsRootPathByClass.Contains(Class))
+		{
+			start_path = GetMutableDefault<UOmegaSettings>()->SortedAssetsRootPathByClass[Class].Path+"/";
+		}
+		else
+		{
+			start_path = GetMutableDefault<UOmegaSettings>()->SortedAssetsRootPath.Path+"/"+Class->GetName()+"/";
+		}
+	}
+
+	const FString full_path = start_path+AssetName+"."+AssetName;
+	UE_LOG(LogTemp,Log,TEXT("Tried to load sorted asset from path: %s"), *full_path);
+	
+	// Get the Asset Registry module
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	// Get the Asset Registry
+	const IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+	if(UObject* outval = AssetRegistry.GetAssetByObjectPath(FName(*full_path)).GetAsset())
+	{
+		Outcome=EOmegaFunctionResult::Success;
+		return outval;
+	}
+	Outcome=EOmegaFunctionResult::Fail;
+	return nullptr;
+}
+
+UObject* UOmegaGameFrameworkBPLibrary::GetAssetFromGlobalID(FGameplayTag GlobalID)
+{
+	if(GetMutableDefault<UOmegaSettings>()->GlobalIDAssets.Contains(GlobalID))
+	{
+		if(UObject* temp_obj = GetMutableDefault<UOmegaSettings>()->GlobalIDAssets[GlobalID].ResolveObject())
+		{
+			return temp_obj;
+		}
+	}
+	return nullptr;
+}
+
+UClass* UOmegaGameFrameworkBPLibrary::GetClassFromGlobalID(FGameplayTag GlobalID)
+{
+	if(GetMutableDefault<UOmegaSettings>()->GlobalIDClasses.Contains(GlobalID))
+	{
+		if(UClass* temp_obj = GetMutableDefault<UOmegaSettings>()->GlobalIDClasses[GlobalID].ResolveClass())
+		{
+			return temp_obj;
+		}
+	}
+	return nullptr;
+}
 
 
 AActor* UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius)
@@ -787,6 +846,36 @@ UDataAsset* UOmegaGameFrameworkBPLibrary::CreateDataAssetFromLua(UObject* WorldC
 		return new_obj;
 	}
 	return nullptr;
+}
+
+TMap<UOmegaAttribute*, float> UOmegaGameFrameworkBPLibrary::LuaToOmegaAttributes(UObject* WorldContextObject,
+	TSubclassOf<UDataAsset> Class, FLuaValue Value)
+{
+	TMap<UOmegaAttribute*, float> out;
+
+	for(FLuaValue temp_val : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(Value))
+	{
+		if(UOmegaAttribute* temp_att = UCombatantFunctions::GetAttributeByUniqueID(temp_val.String))
+		{
+			out.FindOrAdd(temp_att,ULuaBlueprintFunctionLibrary::Conv_LuaValueToFloat(Value.GetField(temp_val.String)));
+		}
+	}
+	return out;
+}
+
+TMap<UOmegaAttribute*, int32> UOmegaGameFrameworkBPLibrary::LuaToOmegaAttributes_int(UObject* WorldContextObject,
+	TSubclassOf<UDataAsset> Class, FLuaValue Value)
+{
+	TMap<UOmegaAttribute*, int32> out;
+
+	for(FLuaValue temp_val : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(Value))
+	{
+		if(UOmegaAttribute* temp_att = UCombatantFunctions::GetAttributeByUniqueID(temp_val.String))
+		{
+			out.FindOrAdd(temp_att,ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(Value.GetField(temp_val.String)));
+		}
+	}
+	return out;
 }
 
 

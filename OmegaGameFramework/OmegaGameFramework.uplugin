@@ -127,6 +127,11 @@
 			"Name": "OmegaParser",
 			"Type": "Runtime",
 			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaOnline",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
 		}
 	],
 	"Plugins": [

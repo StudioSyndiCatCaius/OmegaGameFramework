@@ -77,20 +77,24 @@ void UOmegaGameManager::Deinitialize()
 
 UOmegaGameplayModule* UOmegaGameManager::ActivateModuleFromClass(const UClass* ModuleClass)
 {
-	for (auto* TempMod : ActiveModules)
+	if(ModuleClass)
 	{
-		if(TempMod->GetClass()==ModuleClass)
+		for (auto* TempMod : ActiveModules)
 		{
-			return TempMod;
+			if(TempMod->GetClass()==ModuleClass)
+			{
+				return TempMod;
+			}
 		}
+	
+		UOmegaGameplayModule* NewModule = NewObject<UOmegaGameplayModule>(GetGameInstance(), ModuleClass);
+		ActiveModules.Add(NewModule);
+		NewModule->Native_Initialize();
+	
+		UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"Gameplay Module Activated: ", NewModule->GetClass());
+		return NewModule;
 	}
-	
-	UOmegaGameplayModule* NewModule = NewObject<UOmegaGameplayModule>(GetGameInstance(), ModuleClass);
-	ActiveModules.Add(NewModule);
-	NewModule->Native_Initialize();
-	
-	UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"Gameplay Module Activated: ", NewModule->GetClass());
-	return NewModule;
+	return nullptr;
 }
 
 

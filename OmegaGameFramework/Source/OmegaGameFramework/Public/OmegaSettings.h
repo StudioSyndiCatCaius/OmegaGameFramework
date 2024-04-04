@@ -50,14 +50,16 @@ public:
 	TArray<FName> SystemScansPath;
 	
 	//SAVE
-
 	UClass* GetOmegaGameSaveClass() const;
 	
 	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "OmegaSaveGame"))
 	FSoftClassPath GameSaveClass;
-
+	
 	UPROPERTY(EditAnywhere, config, Category = "Save")
 	FString SaveGamePrefex = "save_";
+	
+	UPROPERTY()
+	TArray<FString> LuaFields_AutoSavedToGame;
 
 	UClass* GetOmegaGlobalSaveClass() const;
 
@@ -66,9 +68,24 @@ public:
 
 	UPROPERTY(EditAnywhere, config, Category = "Save")
 	FString GlobalSaveName = "global";
+	UPROPERTY()
+    TArray<FString> LuaFields_AutoSavedToGlobal;
 
 	//Writes save game properties to a Json String. If false, uses legacy method. NOTE: Seting this as 
 	//Input
+
+	// Root path used in the "Get Sorted Asset" function
+	UPROPERTY(EditAnywhere, config, Category = "Assets", meta = (MetaClass = "OmegaGameplayModule"))
+	FDirectoryPath SortedAssetsRootPath;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Assets", meta = (MetaClass = "OmegaGameplayModule"))
+    TMap<TSubclassOf<UObject>, FDirectoryPath> SortedAssetsRootPathByClass;
+
+	UPROPERTY(EditAnywhere, config, Category = "Assets")
+	TMap<FGameplayTag,FSoftObjectPath> GlobalIDAssets;
+
+	UPROPERTY(EditAnywhere, config, Category = "Assets")
+	TMap<FGameplayTag,FSoftClassPath> GlobalIDClasses;
 	
 	//########################################################
 	//Preferences

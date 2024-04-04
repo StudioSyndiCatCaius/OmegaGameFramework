@@ -1985,10 +1985,49 @@ ULuaState* ULuaBlueprintFunctionLibrary::CreateDynamicLuaState(UObject* WorldCon
 	return NewLuaState->GetLuaState(WorldContextObject->GetWorld());
 }
 
+FLuaValue ULuaBlueprintFunctionLibrary::GetLuaFieldValueFromTable(FLuaValue Table, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome)
+{
+	FLuaValue out = Table.GetField(Field);
+
+	if(out.IsNil())
+	{
+		Outcome = ELuaValueResult::Nil;
+	}
+	else
+	{
+		Outcome = ELuaValueResult::Valid;
+	}
+	return out;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::GetLuaFieldValueFromObject(UObject* Object, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome)
+{
+	FLuaValue out;
+	if(Object)
+	{
+		FLuaValue out_key;
+		FLuaValue out_val;
+		ULuaObjectFunctions::GetObjectKeyAndValue(Object, out_key,out_val);
+		out = out_val.GetField(Field);
+		if(out.IsNil())
+		{
+			Outcome = ELuaValueResult::Nil;
+		}
+		else
+		{
+			Outcome = ELuaValueResult::Valid;
+		}
+	}
+	else
+	{
+		Outcome = ELuaValueResult::Nil;
+	}
+	return out;
+}
 
 
 FLuaValue ULuaTableFunctionLibrary::MergeTables(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	TArray<FLuaValue> TablesToMerge)
+                                                TArray<FLuaValue> TablesToMerge)
 {
 	FLuaValue new_table = ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
 	for(FLuaValue temp_table : TablesToMerge)
@@ -2038,4 +2077,28 @@ FLuaValue ULuaTableFunctionLibrary::MergeTablesFromObjects(UObject* WorldContext
 	}
 
 	return MergeTables(WorldContextObject,State,tables_to_merge);
+}
+
+bool ULuaGlobalFunctionLibrary::GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Bool;
+}
+
+int32 ULuaGlobalFunctionLibrary::GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Integer;
+}
+
+float ULuaGlobalFunctionLibrary::GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).ToFloat();
+}
+
+FString ULuaGlobalFunctionLibrary::GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global));
 }

@@ -24,7 +24,8 @@ UCLASS()
 class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
+
+public:
 	UFUNCTION(BlueprintPure, Category="Combat")
 	static TArray<UCombatantComponent*> FilterCombatantsByTags(TArray<UCombatantComponent*> Combatants, FGameplayTagContainer Tags, bool bExact, bool bExclude);
 

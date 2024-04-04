@@ -69,9 +69,6 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static FGameplayTag GetFirstTagOfType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn);
 	
-	UFUNCTION(BlueprintPure, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
-	static TArray<UObject*> FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude);
-
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static FGameplayTag MakeGameplayTagFromString(const FString& String);
 
@@ -93,11 +90,23 @@ public:
 	//###############################################################################
 	// Object
 	//###############################################################################
+	UFUNCTION(BlueprintPure, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
+	static TArray<UObject*> FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Object")
 	static UObject* SelectObjectByName(TArray<UObject*> Objects, const FString& Name);
 
 	UFUNCTION(BlueprintPure, Category="Omega|Object")
 	static const TArray<FString> GetDisplayNamesFromObjects(TArray<UObject*> Objects);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="OverridePath", ExpandEnumAsExecs = "Outcome"))
+	static UObject* GetSortedAssetByClass(const FString& AssetName, TSubclassOf<UObject> Class, const FString& OverridePath, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Object")
+	static UObject* GetAssetFromGlobalID(FGameplayTag GlobalID);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Object")
+	static UClass* GetClassFromGlobalID(FGameplayTag GlobalID);
 	
 	//###############################################################################
 	// Player
@@ -243,10 +252,16 @@ public:
 	static int32 GetClosestVector2dToPoint(TArray<FVector2D> Vectors, FVector2D point, FVector2D& out_point);
 	
 	//###############################################################################
-	// MetaData
+	// Lua
 	//###############################################################################
-	UFUNCTION(BlueprintCallable,Category="Omega|Assets",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintCallable,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"))
 	static UDataAsset* CreateDataAssetFromLua(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class,FLuaValue Value);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"))
+	static TMap<UOmegaAttribute*, float> LuaToOmegaAttributes(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"), DisplayName="Lua To Omega Attributes (Int)")
+	static TMap<UOmegaAttribute*, int32> LuaToOmegaAttributes_int(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value);
 };
 
 //--------------------------------------------------------------------------------------------------------------------

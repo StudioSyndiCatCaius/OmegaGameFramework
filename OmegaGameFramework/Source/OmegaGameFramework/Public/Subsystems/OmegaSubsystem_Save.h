@@ -126,6 +126,9 @@ public:
 private:
 
 	void Local_InitializeSaveObjects();
+	void local_SaveLuaFields(TArray<FString> fields, UOmegaSaveBase* save);
+	void local_LoadLuaFields(TArray<FString> fields, UOmegaSaveBase* save);
+	
 
 	UPROPERTY()
 	bool Local_JsonSave;

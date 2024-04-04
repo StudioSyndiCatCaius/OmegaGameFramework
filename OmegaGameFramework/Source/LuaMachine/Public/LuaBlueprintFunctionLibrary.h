@@ -30,6 +30,12 @@ enum class ELuaReflectionType : uint8
 	Function,
 };
 
+UENUM(Blueprintable)
+enum ELuaValueResult
+{
+	Valid		UMETA(DisplayName = "Valid"),
+	Nil		UMETA(DisplayName = "Nil"),
+};
 
 UCLASS()
 class LUAMACHINE_API ULuaBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
@@ -422,6 +428,12 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Lua")
 	static ULuaState* CreateDynamicLuaState(UObject* WorldContextObject, TSubclassOf<ULuaState> LuaStateClass);
 
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
+	static FLuaValue GetLuaFieldValueFromTable(FLuaValue Table, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
+	static FLuaValue GetLuaFieldValueFromObject(UObject* Object, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome);
+
 private:
 	static void HttpRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSubclassOf<ULuaState> LuaState, TWeakObjectPtr<UWorld> World, const FString SecurityHeader, const FString SignaturePublicExponent, const FString SignatureModulus, FLuaHttpSuccess Completed);
 	static void HttpGenericRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TWeakPtr<FLuaSmartReference> Context, FLuaHttpResponseReceived ResponseReceived, FLuaHttpError Error);
@@ -443,4 +455,25 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State,subfield_key", WorldContext = "WorldContextObject"))
 	static FLuaValue MergeTablesFromObjects(UObject* WorldContextObject, TSubclassOf<ULuaState> State, TArray<UObject*> Objects, const FString& subfield_key);
+};
+
+
+UCLASS()
+class LUAMACHINE_API ULuaGlobalFunctionLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static bool GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static int32 GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static float GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static FString GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
 };

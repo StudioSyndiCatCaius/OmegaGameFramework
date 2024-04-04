@@ -30,6 +30,7 @@ AOmegaGameplayCue::AOmegaGameplayCue()
 
 void AOmegaGameplayCue::BeginPlay()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Run begin play on cue: %s"), *GetName());
 	// Bind the function to the OnSystemFinished event of the Niagara component
 
 	// Bind the function to the OnAudioFinished event of the Audio component
@@ -53,8 +54,7 @@ void AOmegaGameplayCue::BeginPlay()
 	}
 	Niagara->ResetSystem();
 	Niagara->OnSystemFinished.AddDynamic(this, &AOmegaGameplayCue::OnFinishParticle);
-	
-	
+	UE_LOG(LogTemp, Warning, TEXT("Finish begin play on cue: %s"), *GetName());
 	Super::BeginPlay();
 }
 
@@ -90,21 +90,19 @@ void UOmegaGameplayCueFunctions::PlayGameplayCue(UObject* WorldContextObject, TS
 	WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplayCueSubsystem>()->PlayGameplayCue(Cue,Origin,Hit,ActorOrigin);
 }
 
-void UOmegaGameplayCueSubsystem::PlayGameplayCue(TSubclassOf<AOmegaGameplayCue> Cue,
+AOmegaGameplayCue* UOmegaGameplayCueSubsystem::PlayGameplayCue(TSubclassOf<AOmegaGameplayCue> Cue,
 	FTransform Origin, FHitResult Hit, AActor* ActorOrigin)
 {
 	if(Cue)
 	{
 		AOmegaGameplayCue* CueRef = GetWorld()->SpawnActorDeferred<AOmegaGameplayCue>(Cue, Origin, nullptr);
 		CueRef->HitData=Hit;
-		if(CueRef)
-		{
-			return;
-		}
 		UGameplayStatics::FinishSpawningActor(CueRef,Origin);
 		if(ActorOrigin)
 		{
 			CueRef->AttachToActor(ActorOrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 		}
+		return CueRef;
 	}
+	return nullptr;
 }

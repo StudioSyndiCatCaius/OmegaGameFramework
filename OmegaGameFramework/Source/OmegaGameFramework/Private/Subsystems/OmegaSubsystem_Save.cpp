@@ -11,6 +11,7 @@
 #include "Dom/JsonObject.h"
 #include "Kismet/GameplayStatics.h"
 #include "JsonObjectWrapper.h"
+#include "LuaBlueprintFunctionLibrary.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "Engine/EngineTypes.h"
 #include "OmegaSettings.h"
@@ -137,6 +138,8 @@ bool UOmegaSaveSubsystem::SaveGameUnique(EUniqueSaveFormats Format)
 	return Local_SaveGame(LocalSaveName);
 }
 
+
+
 bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
 {
 	//LocalActiveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
@@ -160,6 +163,8 @@ bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
 	{
 		TempModule->GameFileSaved(ActiveSaveData);
 	}
+	//Save Lua Data
+	// local_SaveLuaFields(GetMutableDefault<UOmegaSettings>()->LuaFields_AutoSavedToGame,GetSaveObject(false));
 	
 	if (IsValid(UGameplayStatics::GetPlayerPawn(this, 0)))
 	{
@@ -257,6 +262,30 @@ void UOmegaSaveSubsystem::Local_InitializeSaveObjects()
 	}
 }
 
+void UOmegaSaveSubsystem::local_SaveLuaFields(TArray<FString> fields, UOmegaSaveBase* save)
+{
+	for(FString temp_field: fields)
+	{
+		const FLuaValue lua_data = ULuaBlueprintFunctionLibrary::LuaGetGlobal(this,GetMutableDefault<ULuaSettings>()->DefaultState.LoadSynchronous(), temp_field);
+		FJsonObjectWrapper new_json;
+		new_json.JsonObjectFromString(ULuaBlueprintFunctionLibrary::LuaValueToJson(lua_data));
+		save->SetSaveProperty_Json(temp_field,new_json);
+	}
+}
+
+void UOmegaSaveSubsystem::local_LoadLuaFields(TArray<FString> fields, UOmegaSaveBase* save)
+{
+	for(FString temp_field: fields)
+	{
+		TSubclassOf<ULuaState> lua_state = GetMutableDefault<ULuaSettings>()->DefaultState.LoadSynchronous();
+		FString json_string;
+		save->GetSaveProperty_Json(temp_field).JsonObjectToString(json_string);
+		FLuaValue lua_data;
+		ULuaBlueprintFunctionLibrary::LuaValueFromJson(this, lua_state, json_string,lua_data);
+		ULuaBlueprintFunctionLibrary::LuaSetGlobal(this,lua_state,temp_field,lua_data);
+	}
+}
+
 UOmegaSaveBase* UOmegaSaveSubsystem::GetSaveObject(bool Global)
 {
 	if(Global)
@@ -271,6 +300,7 @@ UOmegaSaveBase* UOmegaSaveSubsystem::GetSaveObject(bool Global)
 
 void UOmegaSaveSubsystem::SaveGlobalGame()
 {
+	// local_SaveLuaFields(GetMutableDefault<UOmegaSettings>()->LuaFields_AutoSavedToGlobal,GetSaveObject(true));
 	const FString LocalGlSaveName = GetMutableDefault<UOmegaSettings>()->GlobalSaveName;
 	UGameplayStatics::SaveGameToSlot(GlobalSaveData, LocalGlSaveName, 0);
 }

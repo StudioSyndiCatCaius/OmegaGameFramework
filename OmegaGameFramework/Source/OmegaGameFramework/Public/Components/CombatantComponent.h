@@ -184,7 +184,7 @@ public:
 
 	UPROPERTY()
 	TMap<class UOmegaAttribute*, float> CurrentAttributeValues;
-
+	
 	float GatherAttributeModifiers(TArray<UObject*> Modifiers, float BaseValue, UOmegaAttribute* Attribute);
 
 	UFUNCTION(BlueprintPure, Category="Attributes")
@@ -459,15 +459,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", DisplayName="Offset Effect Success")
 	TMap<TSubclassOf<AOmegaGameplayEffect>,float> EffectSuccessRate;
 
-	UFUNCTION(BlueprintPure, Category="Effects")
+	UFUNCTION(BlueprintPure, Category="Effects", meta=(DeprecatedFunction))
 	float GetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass);
 	
-	UFUNCTION(BlueprintCallable, Category="Effects")
+	UFUNCTION(BlueprintCallable, Category="Effects", meta=(DeprecatedFunction))
 	void SetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass, float OffsetRate=0);
 	
-	//UPROPERTY()
-	//TArray<class AOmegaGameplayEffect*> ActiveEffects;
-
 	UFUNCTION(BlueprintCallable, Category = "Effects", meta=(AdvancedDisplay="AddedTags, Location"))
 	class AOmegaGameplayEffect* CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, float Power, UCombatantComponent* Target, FGameplayTagContainer AddedTags, UObject* Context);
 	
