@@ -25,9 +25,9 @@ public:
 	FString GetLocalFilesPath();
 	
 	UFUNCTION(BlueprintCallable,Category="Lua")
-	FLuaValue RunLocalFile(const FString& file);
+	FLuaValue RunLocalFile(const FString& file,bool bNonLocal);
 	
 	UFUNCTION(BlueprintCallable,Category="Lua")
-	void RunLocalFilesInPath(const FString& path,bool bRecursive);
+	void RunLocalFilesInPath(const FString& path,bool bRecursive,bool bNonLocal);
 };
 

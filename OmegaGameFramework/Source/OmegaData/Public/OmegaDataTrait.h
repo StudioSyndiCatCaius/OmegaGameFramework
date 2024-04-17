@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "LevelSequence.h"
 #include "GameplayTagContainer.h"
+#include "LuaInterface.h"
 #include "Functions/OmegaFunctions_SoftProperty.h"
 #include "OmegaDataTrait.generated.h"
 
@@ -17,7 +18,7 @@ class USoundBase;
 class UNiagaraSystem;
 
 UCLASS(Blueprintable, abstract, const, editinlinenew, hidecategories=Object, CollapseCategories)
-class OMEGADATA_API UOmegaDataTrait : public UObject, public IDataInterface_General
+class OMEGADATA_API UOmegaDataTrait : public UObject, public IDataInterface_General, public ILuaInterface
 {
 	GENERATED_BODY()
 

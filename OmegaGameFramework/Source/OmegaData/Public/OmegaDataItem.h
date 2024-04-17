@@ -27,7 +27,7 @@ class ULevelSequence;
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
 																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
-																public IDataInterface_SkillSource, public IDataInterface_Skill
+																public IDataInterface_SkillSource, public IDataInterface_Skill, public ILuaInterface
 {
 	GENERATED_BODY()
 
@@ -137,7 +137,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
 	TArray<FOmegaEffectContainer> Effects;
 	*/
-	
+	//###############################################################################
+	// Gameplay Tags
+	//###############################################################################
+	virtual FLuaValue GetKey_Implementation() override;
+	virtual FLuaValue GetValue_Implementation(const FString& Field) override;
 
 	
 	//###############################################################################

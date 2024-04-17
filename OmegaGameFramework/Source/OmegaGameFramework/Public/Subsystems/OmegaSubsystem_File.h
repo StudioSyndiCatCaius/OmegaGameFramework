@@ -8,9 +8,9 @@
 #include "Sound/SoundBase.h"
 #include "OmegaSubsystem_File.generated.h"
 
-/**
- * 
- */
+
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaFileSubsystem : public UGameInstanceSubsystem
 {
@@ -40,6 +40,7 @@ public:
 	TMap<FString, UTexture2D*> imported_images;
 	UPROPERTY(BlueprintReadOnly, Category="Omega|File")
 	TMap<FString, USoundBase*> imported_sounds;
+	
 };
 
 UCLASS()

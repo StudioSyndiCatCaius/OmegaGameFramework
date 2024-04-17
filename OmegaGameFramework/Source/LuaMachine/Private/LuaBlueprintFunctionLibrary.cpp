@@ -2079,26 +2079,53 @@ FLuaValue ULuaTableFunctionLibrary::MergeTablesFromObjects(UObject* WorldContext
 	return MergeTables(WorldContextObject,State,tables_to_merge);
 }
 
-bool ULuaGlobalFunctionLibrary::GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+// --- Value Functions ---
+
+bool ULuaValuesFunctionLibrary::GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
 	const FString& Global)
 {
 	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Bool;
 }
 
-int32 ULuaGlobalFunctionLibrary::GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+int32 ULuaValuesFunctionLibrary::GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
 	const FString& Global)
 {
 	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Integer;
 }
 
-float ULuaGlobalFunctionLibrary::GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+float ULuaValuesFunctionLibrary::GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
 	const FString& Global)
 {
 	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).ToFloat();
 }
 
-FString ULuaGlobalFunctionLibrary::GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+FString ULuaValuesFunctionLibrary::GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
 	const FString& Global)
 {
 	return ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Bool(FLuaValue Table, const FString& Key, bool Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_BoolToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Int(FLuaValue Table, const FString& Key, int32 Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_IntToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Float(FLuaValue Table, const FString& Key, float Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_FloatToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_String(FLuaValue Table, const FString& Key, FString Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Object(FLuaValue Table, const FString& Key, UObject* Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_ObjectToLuaValue(Value));
 }

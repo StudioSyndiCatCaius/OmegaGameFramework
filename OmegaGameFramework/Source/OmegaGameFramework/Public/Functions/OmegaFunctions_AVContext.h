@@ -38,6 +38,8 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextAV
 	TMap<FGameplayTag, UNiagaraSystem*> GetContextAVNiagara();
 	UFUNCTION(BlueprintNativeEvent, Category="AV")
 	TMap<FGameplayTag, UAnimMontage*> GetContextAVMontages();
+	UFUNCTION(BlueprintNativeEvent, Category="AV")
+	TMap<FGameplayTag, UAnimSequence*> GetContextAVAnimations();
 };
 
 
@@ -54,6 +56,8 @@ class UOmegaContextAVFunctions : public UBlueprintFunctionLibrary
 	static UNiagaraSystem* TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID);
 	UFUNCTION(BlueprintPure, Category="AV")
 	static UAnimMontage* TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID);
+	UFUNCTION(BlueprintPure, Category="AV")
+	static UAnimSequence* TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID);
 
 	
 };

@@ -76,3 +76,21 @@ UAnimMontage* UOmegaContextAVFunctions::TryGetObjectContext_Montages(UObject* Ob
 	}
 	return nullptr;
 }
+
+UAnimSequence* UOmegaContextAVFunctions::TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
+	{
+		TArray<FGameplayTag> IDList;
+		TMap<FGameplayTag, UAnimSequence*> TempData = IDataInterface_ContextAV::Execute_GetContextAVAnimations(Object);
+		TempData.GetKeys(IDList);
+		for(FGameplayTag TempID : IDList)
+		{
+			if(TempData.Contains(ID))
+			{
+				return TempData[ID];
+			}
+		}
+	}
+	return nullptr;
+}

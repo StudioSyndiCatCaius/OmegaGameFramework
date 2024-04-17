@@ -14,7 +14,7 @@ void ULuaSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	settings_ref = GetMutableDefault<ULuaSettings>();
 	if(settings_ref->bAutorunFiles)
 	{
-		RunLocalFile(settings_ref->Autorun_InitFile);
+		RunLocalFile(settings_ref->Autorun_InitFile,false);
 	}
 
 	for(TSoftObjectPtr<ULuaCode> temp_asset: settings_ref->AutorunCodeAssets)
@@ -29,19 +29,29 @@ FString ULuaSubsystem::GetLocalFilesPath()
 	return UKismetSystemLibrary::GetProjectContentDirectory()+settings_ref->Autorun_ContentPath+"/";
 }
 
-FLuaValue ULuaSubsystem::RunLocalFile(const FString& file)
+FLuaValue ULuaSubsystem::RunLocalFile(const FString& file, bool bNonLocal)
 {
 	
-	const FString target_path = GetLocalFilesPath()+file+".lua";
+	FString target_path = GetLocalFilesPath()+file+".lua";
+	if(bNonLocal)
+	{
+		target_path=file;
+	}
 	UE_LOG(LogTemp, Log, TEXT("Tried to autorun Luafile: %s"), *target_path);
 	return ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(GetWorld(),ULuaBlueprintFunctionLibrary::GetDefaultLuaState(),target_path,true);
 }
 
-void ULuaSubsystem::RunLocalFilesInPath(const FString& path, bool bRecursive)
+void ULuaSubsystem::RunLocalFilesInPath(const FString& path, bool bRecursive,bool bNonLocal)
 {
 	TArray<FString> FileNames;
 	IFileManager & FileManager = IFileManager::Get();
-	const FString target_path = GetLocalFilesPath()+path+"/";
+	FString target_path = GetLocalFilesPath()+path+"/";
+
+	if(bNonLocal)
+	{
+		target_path=path;	
+	}
+	
 	UE_LOG(LogTemp, Log, TEXT("Getting lua files from path: %s"), *target_path);
 	if(bRecursive)
 	{

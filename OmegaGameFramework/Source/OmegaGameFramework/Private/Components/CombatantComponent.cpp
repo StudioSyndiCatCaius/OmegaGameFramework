@@ -764,11 +764,18 @@ void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& C
 	}
 }
 
+void UCombatantComponent::GetAttributeValue_Impure(UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue)
+{
+	GetAttributeValue(Attribute,CurrentValue,MaxValue);
+}
+
 //Get Attribute Base Value
 float UCombatantComponent::GetAttributeBaseValue(UOmegaAttribute* Attribute)
 {
 	return Attribute->GetAttributeValue(Level, GetAttributeLevel(Attribute), AttributeValueCategory);
 }
+
+
 
 bool UCombatantComponent::IsAbilityTagBlocked(FGameplayTagContainer Tags)
 {

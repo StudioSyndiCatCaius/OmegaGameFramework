@@ -17,6 +17,7 @@ public class OmegaData : ModuleRules
 			"DeveloperSettings", 
 			"GameplayTags",
 			"OmegaGameFramework", 
+			"LuaMachine",
 			"Slate",
 			"SlateCore", 
 			"UMG",

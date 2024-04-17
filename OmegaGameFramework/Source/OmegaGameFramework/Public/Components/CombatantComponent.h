@@ -151,9 +151,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	void GetAttributeValue(class UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue);
 
+	UFUNCTION(BlueprintCallable, Category = "Attributes", DisplayName="GetAttributeValue (Impure)")
+	void GetAttributeValue_Impure(class UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue);
+	
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	float GetAttributeBaseValue(UOmegaAttribute* Attribute);
-
+	
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	float GetAttributePercentage(class UOmegaAttribute* Attribute);
 	

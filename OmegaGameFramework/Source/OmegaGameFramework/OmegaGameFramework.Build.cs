@@ -40,6 +40,7 @@ public class OmegaGameFramework : ModuleRules
 				"LuaMachine",
 				"Engine",
 				"DeveloperSettings",
+				"ApplicationCore",
 				"LevelSequence",
 				"MovieScene",
 				"MetasoundEngine",
