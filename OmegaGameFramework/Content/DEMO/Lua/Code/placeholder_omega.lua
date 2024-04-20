@@ -14,6 +14,8 @@ UE={
     RUN_PATH=function(path,recursive)end,
     RUN_FILES_IN_DIR=function (dir) end,
     PLUGIN_GET_DIR=function(dir) return "/" end,
+    RUN_PLUGIN_FILE=function (plugin,file) end,
+    RUN_PLUGIN_PATH=function (plugin,path,recursive) end,
 
     -- ########################################################################
     -- Actor
@@ -33,7 +35,7 @@ UE={
     -- ########################################################################
 
     MENU_OPEN=function (menu,context,flag) end,
-    SYSTEM_SET_ACTIVE=function (system,active,context,flag) end,
+    SYSTEM_ACTIVATE=function (system,context,flag) end,
 
     -- ########################################################################
     -- Level

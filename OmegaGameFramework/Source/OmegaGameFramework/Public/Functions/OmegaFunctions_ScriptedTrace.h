@@ -13,10 +13,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTraceLogic : public UObject
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(Transient)
-	UWorld* WorldPrivate = nullptr;
+
 
 public:
+	UPROPERTY(Transient)
+	UWorld* WorldPrivate = nullptr;
 	UOmegaScriptedTraceLogic(const FObjectInitializer& ObjectInitializer);
 	virtual UWorld* GetWorld() const override;
 	UFUNCTION()

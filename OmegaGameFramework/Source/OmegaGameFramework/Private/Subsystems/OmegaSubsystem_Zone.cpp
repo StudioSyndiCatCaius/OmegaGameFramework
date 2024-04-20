@@ -696,6 +696,7 @@ void AOmegaZoneTransit::BeginPlay()
 			linked_point->SetActorLocation(Spawn_Point_Ref->GetComponentLocation());
 			linked_point->FromLevel=TransitLevel;
 			linked_point->ZonePointID=LevelTransitID;
+			linked_point->ZoneToLoad=SpawnZoneToLoad;
 			linked_point->FinishSpawning(linked_point->GetActorTransform());
 		}
 	}

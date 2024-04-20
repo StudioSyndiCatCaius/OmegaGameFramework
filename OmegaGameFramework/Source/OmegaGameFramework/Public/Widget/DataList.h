@@ -41,6 +41,22 @@ enum class EDataListFormat : uint8
 };
 
 
+UCLASS(BlueprintType, Blueprintable, abstract, editinlinenew, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UObject
+{
+	GENERATED_BODY()
+public:
+	UDataListCustomEntry(const FObjectInitializer& ObjectInitializer);
+	virtual UWorld* GetWorld() const override;
+
+	UPROPERTY()
+	UWorld* WorldPrivate = nullptr;
+	UPROPERTY()
+	UGameInstance* GameInstanceRef = nullptr;
+	UFUNCTION()
+	virtual UGameInstance* GetGameInstance() const;
+};
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInterface_Input
 {
@@ -79,6 +95,8 @@ public:
 	//##### ENTRY CLASS #####//
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
+	UPROPERTY(EditAnywhere, Instanced, Category = "Entry")
+	UDataWidgetMetadata* EntryMetadata;
 
 	UFUNCTION(BlueprintCallable, Category="Entry", meta=(AdvancedDisplay="KeepEntires"))
 	void SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries=true);

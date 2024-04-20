@@ -23,12 +23,16 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantRegistered, UCombatantCo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantUnegistered, UCombatantComponent*, Combatant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCombatantDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameplayStateChange, FGameplayTag, NewState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnGameplaySystemActiveStateChange, AOmegaGameplaySystem*, system, UObject*, context, const FString&, flag, bool, bActive);
 
 UCLASS(DisplayName="Omega Subsystem: Gameplay")
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplaySubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 public:
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGameplaySystemActiveStateChange OnGameplaySystemActiveStateChange;
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 

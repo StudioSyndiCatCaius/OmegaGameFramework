@@ -175,7 +175,7 @@ TArray<TSubclassOf<UOmegaGameplayModule>> UOmegaSettings::GetGameplayModuleClass
 	TArray<TSubclassOf<UOmegaGameplayModule>> ModuleClasses;
 	for(FSoftClassPath TempPath : RegisteredGameplayModules)
 	{
-		UClass* const LocalClass = TempPath.IsValid() ? LoadObject<UClass>(NULL, *TempPath.ToString()) : nullptr;
+		UClass* const LocalClass = TempPath.IsValid() ? LoadObject<UClass>(nullptr, *TempPath.ToString()) : nullptr;
 		ModuleClasses.Add(LocalClass);
 	}
 	return ModuleClasses;

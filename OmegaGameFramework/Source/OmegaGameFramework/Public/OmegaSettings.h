@@ -17,6 +17,7 @@
 class AOmegaGameplaySystem;
 class UOmegaGameplayModule;
 class UGamePreferenceFloat;
+class UOmegaSlateStyle;
 
 UENUM(BlueprintType)
 enum class EOmegaInputModeType : uint8
@@ -99,6 +100,9 @@ public:
 	//########################################################
 	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaHoverCursor"))
 	FSoftClassPath HoverCursorClass;
+
+	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaSlateStyle"))
+	FSoftObjectPath DefaultSlateStyle;
 	
 	//########################################################
 	//Combat
@@ -134,7 +138,7 @@ public:
 	//########################################################
 	//Dyna Cam
 	//########################################################
-	UPROPERTY(EditAnywhere, config, Category = "Dynamic Camera", meta = (MetaClass = "CameraActor"))
+	UPROPERTY(EditAnywhere, config, Category = "Dynamic Camera", meta = (MetaClass = "OmegaDynamicCamera"))
 	FSoftClassPath DynamicCameraClass;
 
 	//########################################################
@@ -151,12 +155,14 @@ public:
 	FGameplayTag ZoneBGMSlot;
 
 	//########################################################
-	//Zones
+	//Mods
 	//########################################################
 	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaModManager"))
 	TArray<FString> ModPaths;
+	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaMod"))
+    FSoftClassPath ModClass;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaModManager"))
+	UPROPERTY()
 	FSoftClassPath ModManagerClass;
 	
 	

@@ -67,7 +67,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 			
 			//Finish & Activate
 			DummySystem->SystemActivated(Context, Flag);
-			
+			OnGameplaySystemActiveStateChange.Broadcast(DummySystem,Context,Flag,true);
 			return DummySystem;
 		}
 	}
@@ -251,6 +251,7 @@ void UOmegaGameplaySubsystem::NativeRemoveSystem(AOmegaGameplaySystem* System)
 {
 	if (ActiveSystems.Contains(System))
 	{
+		
 		ActiveSystems.Remove(System);
 	}
 }

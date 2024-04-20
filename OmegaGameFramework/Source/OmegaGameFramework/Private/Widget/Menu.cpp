@@ -2,7 +2,10 @@
 
 
 #include "Widget/Menu.h"
+
+#include "OmegaStyle_Slate.h"
 #include "Engine/GameInstance.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
@@ -21,10 +24,10 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		Local_BindGlobalEvent();
 
 		
-		bIsOpen = true;
+		
 		TempTags = Tags;
 		PrivateInputBlocked = true;
-		
+		InputBlock_Remaining=InputBlockDelay;
 		SetIsEnabled(true);
 		SetVisibility(VisibilityOnOpen);
 		
@@ -47,6 +50,10 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		if(OpenSound)
 		{
 			PlaySound(OpenSound);
+		}
+		else if(UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open)
+		{
+			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open);
 		}
 		
 		if(GetOpenAnimation())
@@ -95,12 +102,14 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			PlaySound(CloseSound);
 		}
+		else if(UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close)
+		{
+			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close);
+		}
 		
 		//ANIMATION
 
 		bIsClosing = true;
-		
-		
 		if(GetCloseAnimation())
 		{
 			if(ReverseCloseAnimation)
@@ -156,9 +165,41 @@ void UMenu::NativeConstruct()
 	Super::NativeConstruct();
 }
 
+void UMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	if(InputBlock_Remaining > 0.0)
+	{
+		InputBlock_Remaining=InputBlock_Remaining-InDeltaTime;
+	}
+	
+	float target_val=0.0;
+	if(bIsOpen) { target_val=1.0; }
+	if(target_val != OpenCloseInterp_Value)
+	{
+		isPlayingOpenCloseInterp=true;
+		OpenCloseInterp_Value=UKismetMathLibrary::FInterpTo_Constant(OpenCloseInterp_Value,target_val,InDeltaTime,1.0/OpenCloseInterpTime);
+		if(AutoInterpOpacityOnOpenClose)
+		{
+			SetRenderOpacity(OpenCloseInterp_Value);
+		}
+		UpdateOpenCloseInterp(OpenCloseInterp_Value);
+	}
+	else
+	{
+		isPlayingOpenCloseInterp=false;
+		if(bIsClosing)
+		{
+			Native_CompleteClose();
+		}
+	}
+	
+	Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
 
 void UMenu::Native_CompleteOpen()
 {
+	bIsOpen = true;
 	PrivateInputBlocked = false;
 }
 
@@ -169,23 +210,26 @@ bool UMenu::CanCloseMenu_Implementation(FGameplayTagContainer Tags, UObject* Con
 
 void UMenu::Native_CompleteClose()
 {
-	PrivateInputBlocked = true;
-	SetIsEnabled(false);
-	bIsClosing = false;
-	SetVisibility(ESlateVisibility::Collapsed);
-	UE_LOG(LogTemp, Warning, TEXT("Menu CLOSE Complete") );
-	
-	if(ParallelGameplaySystem)
+	if(!isPlayingOpenCloseInterp)
 	{
-		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(ParallelGameplaySystem, this);
-	}
+		bIsClosing = false;
+		PrivateInputBlocked = true;
+		SetIsEnabled(false);
+		SetVisibility(ESlateVisibility::Collapsed);
+		UE_LOG(LogTemp, Warning, TEXT("Menu CLOSE Complete") );
 	
-    RemoveFromParent();
+		if(ParallelGameplaySystem)
+		{
+			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(ParallelGameplaySystem, this);
+		}
+	
+		RemoveFromParent();
+	}
 }
 
 bool UMenu::InputBlocked_Implementation()
 {
-	return PrivateInputBlocked;
+	return IsInputBlocked();
 }
 
 void UMenu::Local_BindGlobalEvent()

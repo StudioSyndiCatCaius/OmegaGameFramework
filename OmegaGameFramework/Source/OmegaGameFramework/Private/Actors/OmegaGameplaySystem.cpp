@@ -169,6 +169,7 @@ void AOmegaGameplaySystem::CompleteShutdown()
 		SystemShutdown(Shutdown_Context, Shutdown_Flag);
 		if (SubsysRef)
 		{
+			SubsysRef->OnGameplaySystemActiveStateChange.Broadcast(this,Shutdown_Context,Shutdown_Flag,false);
 			SubsysRef->NativeRemoveSystem(this);
 		}
 

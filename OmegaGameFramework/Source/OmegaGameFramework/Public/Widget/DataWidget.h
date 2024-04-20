@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "LuaBlueprintFunctionLibrary.h"
 #include "LuaObject.h"
+#include "Math/Vector2D.h"
 #include "Interfaces/OmegaInterface_Widget.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Blueprint/IUserObjectListEntry.h"
@@ -26,16 +27,51 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlight, UDataWidget*, DataWid
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWidgetRefreshed, UDataWidget*, DataWidget);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWidgetNotify, UDataWidget*, DataWidget, FName, Notify);
 
-/**
- * 
- */
+
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories, const)
+class OMEGAGAMEFRAMEWORK_API UDataWidgetMetadata : public UObject
+{
+	GENERATED_BODY()
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
+	bool Show_Image=true;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
+	bool OverrideImageSize;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
+	FVector2D Image_Size;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
+	bool Show_Name=true;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
+	bool Show_Description=true;
+		
+	UFUNCTION(BlueprintImplementableEvent, Category="Meta")
+	void OnMetaApplied(UDataWidget* widget) const;
+};
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
+
+	void Local_SetVisFromBool(UWidget* widget, bool val) const
+	{
+		if(widget)
+		{
+			if(val)
+			{
+				widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+			else
+			{
+				widget->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
+	}
 	
 protected:
-
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
 	virtual void NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent) override;
@@ -45,11 +81,12 @@ protected:
 	
 	UOmegaPlayerSubsystem* GetPlayerSubsystem() const;
 public:
-	
-	
 	UPROPERTY()
 	UDataList* ParentList = nullptr;
 
+	UPROPERTY(EditAnywhere, Category="DataWidget")
+	FText NameText;
+	
 	UPROPERTY(EditInstanceOnly, Category="DataWidget")
 	FString AssetLabel;
 	
@@ -63,6 +100,25 @@ public:
 	UMaterialInstanceDynamic* GetHoveredMaterialInstance();
 
 	//---------------------------------------------------------------------------------------------//
+	//	Meta
+	//---------------------------------------------------------------------------------------------//
+	UPROPERTY(EditAnywhere, Instanced, Category="Meta")
+	UDataWidgetMetadata* WidgetMetadata;
+	UFUNCTION(BlueprintPure,Category="Meta")
+	UDataWidgetMetadata* GetWidgetMetadata() const
+	{
+		if(WidgetMetadata)
+		{
+		return WidgetMetadata;
+		}
+		return nullptr;
+	}
+	UFUNCTION()
+	void RefreshMeta();
+	UFUNCTION(BlueprintImplementableEvent,Category="Meta")
+	void MetaRefreshed(const UDataWidgetMetadata* Metadata);
+	
+	//---------------------------------------------------------------------------------------------//
 	//	Lua
 	//---------------------------------------------------------------------------------------------//
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Lua", meta=(MultiLine))
@@ -73,6 +129,8 @@ public:
 	FLuaValue GetWidgetScript(TSubclassOf<ULuaState> State);
 	UFUNCTION(BlueprintCallable,Category="Lua",meta=(AdvancedDisplay="State"))
 	FLuaValue WidgetScriptKeyCall(const FString& key, TArray<FLuaValue> args, TSubclassOf<ULuaState> State);
+
+	
 
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
@@ -105,29 +163,38 @@ private:
 	FTimerHandle refresh_timer;
 
 public:
+	
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
 	//---------------------------------------------------------------------------------------------//
+
+	
 	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
 	bool bIsHighlighted;
-	
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Highlight Widget Duration")
-	float HighlightWidgetSpeed = 1.1;
+	float HighlightWidgetSpeed = 0.1;
+
 	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)
 	FName HighlightWidgetPropertyName = "Highlight";
 	//---------------------------------------------------------------------------------------------//
 	//	Hover
 	//---------------------------------------------------------------------------------------------//
-	//UPROPERTY(BlueprintReadOnly, Category = "DataWidget", meta=(DeprecatedProperty))
-	//bool bIsHovered;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Hover Widget Duration")
-	float HoverWidgetSpeed = 1.0;
+	float HoverWidgetSpeed = 0.1;
 	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)
 	FName HoverWidgetPropertyName = "Hover";
-	//UFUNCTION(BlueprintImplementableEvent, Category="Hover")
-	//void OnHoverUpdate(float HoverValue);
 
+	UPROPERTY()
+	float HoverValue_current;
+	UPROPERTY()
+	float HighlightValue_current;
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Hover")
+	void OnHoverUpdate(float HoverValue);
+	UFUNCTION(BlueprintImplementableEvent, Category="Hover")
+	void OnHighlightUpdate(float HoverValue);
+	
 private:
 	UPROPERTY()
 	float hover_value;

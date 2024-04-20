@@ -44,8 +44,11 @@ ULuaState* ULuaBlueprintFunctionLibrary::LOCAL_getLuaState(UObject* WorldContext
 
 TSubclassOf<ULuaState> ULuaBlueprintFunctionLibrary::GetDefaultLuaState()
 {
-	return GetMutableDefault<ULuaSettings>()->DefaultState.LoadSynchronous();
-	
+	if(!GetMutableDefault<ULuaSettings>()->DefaultState.IsNull())
+	{
+		return GetMutableDefault<ULuaSettings>()->DefaultState.LoadSynchronous();
+	}
+	return ULuaState::StaticClass();
 }
 
 FLuaValue ULuaBlueprintFunctionLibrary::LuaCreateNil()

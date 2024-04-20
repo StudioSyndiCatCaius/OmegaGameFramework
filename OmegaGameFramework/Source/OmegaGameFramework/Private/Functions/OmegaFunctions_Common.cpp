@@ -686,6 +686,27 @@ AActor* UOmegaGameFrameworkBPLibrary::Quick_SpawnActor(UObject* WorldContextObje
 	return new_actor;
 }
 
+void UOmegaGameFrameworkBPLibrary::SetActorInputEnabled(UObject* WorldContextObject, AActor* Actor, bool bEnabled,
+	APlayerController* Player)
+{
+	if(!Actor)
+	{
+		return;
+	}
+	APlayerController* temp_player=UGameplayStatics::GetPlayerController(WorldContextObject,0);
+	if(Player)
+	{
+		temp_player=Player;
+	}
+	if(bEnabled)
+	{
+		Actor->EnableInput(temp_player);
+	}
+	else
+	{
+		Actor->DisableInput(temp_player);
+	}
+}
 
 
 //###############################################################################

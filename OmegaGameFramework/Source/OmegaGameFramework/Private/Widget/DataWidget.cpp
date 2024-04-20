@@ -16,16 +16,21 @@
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Widget/DataList.h"
 #include "TimerManager.h"
+#include "Functions/OmegaFunctions_Utility.h"
+#include "OmegaStyle_Slate.h"
 
 void UDataWidget::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 
 	bIsFocusable = true;
-
+	if(GetNameTextWidget())
+	{
+		GetNameTextWidget()->SetText(NameText);
+	}
+	
+	//Setup Source Asset
 	SetSourceAsset(ReferencedAsset);
-
-	//TryEnabled/Disable
 	SetIsEnabled(!IsEntityDisabled(ReferencedAsset));
 
 	if(GetHoveredMaterialInstance())
@@ -50,24 +55,32 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 
 void UDataWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	if(GetHoveredMaterialInstance() && IsRendered())
+	const float HoverValue_target = IsDataWidgetHovered();
+
+	if(HoverValue_current!=HoverValue_target)
 	{
-		float OutVal;
-		
-		const float HoverVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HoverWidgetPropertyName);
-		if(IsDataWidgetHovered() != static_cast<bool>(HoverVal))
+		HoverValue_current=UKismetMathLibrary::FInterpTo_Constant(HoverValue_current, HoverValue_target, InDeltaTime, (1.0f/HoverWidgetSpeed));
+		if(GetHoveredMaterialInstance())
 		{
-			OutVal = UKismetMathLibrary::FInterpTo_Constant(HoverVal, IsDataWidgetHovered(), InDeltaTime, (1.0f/HoverWidgetSpeed));
-			GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,OutVal);
+			GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,HoverValue_current);
 		}
-		
-		const float HighlightVal = GetHoveredMaterialInstance()->K2_GetScalarParameterValue(HighlightWidgetPropertyName);
-		if(bIsHighlighted != static_cast<bool>(HighlightVal))
-		{
-			OutVal = UKismetMathLibrary::FInterpTo_Constant(HighlightVal, IsDataWidgetHovered(), InDeltaTime, (1.0f/HighlightWidgetSpeed));
-			GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,OutVal);
-		}
+		OnHoverUpdate(HoverValue_current);
 	}
+	const float HighlightValue_target = bIsHighlighted;
+	if(HighlightValue_current!=HighlightValue_target)
+	{
+
+		HighlightValue_current=UKismetMathLibrary::FInterpTo_Constant(HighlightValue_current, HighlightValue_target, InDeltaTime, (1.0f/HighlightWidgetSpeed));
+		
+		if(GetHoveredMaterialInstance())
+		{
+			GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,HighlightValue_current);
+		}
+		OnHighlightUpdate(HighlightValue_current);
+	}
+	
+	
+	
 
 	Super::NativeTick(MyGeometry, InDeltaTime);
 }
@@ -101,6 +114,29 @@ void UDataWidget::SetVisibility(ESlateVisibility InVisibility)
 UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 {
 	return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();	
+}
+
+void UDataWidget::RefreshMeta()
+{
+	if(WidgetMetadata)
+	{
+		WidgetMetadata->OnMetaApplied(this);
+		Local_SetVisFromBool(GetNameTextWidget(),WidgetMetadata->Show_Name);
+		Local_SetVisFromBool(GetDescriptionTextWidget(),WidgetMetadata->Show_Description);
+		bool dump_bool;
+		FVector2d dump_vec;
+		
+		if(UImage* ico_img = GetBrushImage(dump_bool,dump_vec))
+		{
+			Local_SetVisFromBool(ico_img,WidgetMetadata->Show_Image);
+			if(WidgetMetadata->OverrideImageSize)
+			{
+				ico_img->SetDesiredSizeOverride(WidgetMetadata->Image_Size);
+			}
+		}
+		
+		MetaRefreshed(WidgetMetadata);
+	}
 }
 
 FLuaValue UDataWidget::GetWidgetScript(TSubclassOf<ULuaState> State)
@@ -152,6 +188,13 @@ void UDataWidget::Refresh()
 void UDataWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	//Create default metadata if invalid
+	if(!WidgetMetadata)
+	{
+		WidgetMetadata = NewObject<UDataWidgetMetadata>(this,UDataWidgetMetadata::StaticClass());
+	}
+	
 	if (GetButtonWidget())
 	{
 		GetButtonWidget()->OnClicked.AddDynamic(this, &UDataWidget::Select);
@@ -245,14 +288,22 @@ void UDataWidget::Select()
 		
 		if(SelectSound)
 		{
-				GetPlayerSubsystem()->PlayUiSound(SelectSound);
+			GetPlayerSubsystem()->PlayUiSound(SelectSound);
+		}
+		else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+		{
+			GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Select);
 		}
 	}
 	else
 	{
 		if(ErrorSound)
 		{
-				GetPlayerSubsystem()->PlayUiSound(ErrorSound);
+			GetPlayerSubsystem()->PlayUiSound(ErrorSound);
+		}
+		else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+		{
+			GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Error);
 		}
 	}
 }
@@ -280,6 +331,10 @@ void UDataWidget::Hover()
 	if(HoverSound)
 	{
 		GetPlayerSubsystem()->PlayUiSound(HoverSound);
+	}
+	else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+	{
+		GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Hover);
 	}
 	
 	if (GetHoverAnimation())

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Slate/WidgetTransform.h"
+#include "Math/Vector2D.h"
 #include "OmegaFunctions_Utility.generated.h"
 
 UCLASS()
@@ -51,3 +53,19 @@ class UOmegaAssetFunctions : public UBlueprintFunctionLibrary
 	UClass* GetBlueprintClassFromPath(const FString Path);
 	
 };
+
+UCLASS()
+class UOmegaMathFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintPure,Category="Omega|Widget")
+	static FWidgetTransform LerpWidgetTransform(FWidgetTransform a, FWidgetTransform b, float alpha);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Widget")
+	static FVector2D LerpVector2D(FVector2D a, FVector2D b, float alpha);
+	
+};
+

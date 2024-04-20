@@ -8,8 +8,9 @@
 
 const FHitResult UOmegaScriptedTraceFunctions::ScriptedTrace_Single(UObject* context, FOmegaScriptedTrace Trace,bool& Success)
 {
-	if(Trace.Logic)
+	if(Trace.Logic && context && context->GetWorld())
 	{
+		Trace.Logic->WorldPrivate=context->GetWorld();
 		return Trace.Logic->RunTrace(context,Success);
 	}
 	return  FHitResult();
@@ -18,8 +19,9 @@ const FHitResult UOmegaScriptedTraceFunctions::ScriptedTrace_Single(UObject* con
 const TArray<FHitResult> UOmegaScriptedTraceFunctions::ScriptedTrace_Multi(UObject* context, FOmegaScriptedTrace Trace,bool& Success)
 {
 	TArray<FHitResult>  out;
-	if(Trace.Logic)
+	if(Trace.Logic && context && context->GetWorld())
 	{
+		Trace.Logic->WorldPrivate=context->GetWorld();
 		return Trace.Logic->RunTrace_Multi(context,Success);
 	}
 	return out;
@@ -44,5 +46,9 @@ UWorld* UOmegaScriptedTraceLogic::GetWorld() const
 
 UGameInstance* UOmegaScriptedTraceLogic::GetGameInstance() const
 {
+	if(WorldPrivate)
+	{
+		return WorldPrivate->GetGameInstance();
+	}
 	return Cast<UGameInstance>(GetOuter());
 }

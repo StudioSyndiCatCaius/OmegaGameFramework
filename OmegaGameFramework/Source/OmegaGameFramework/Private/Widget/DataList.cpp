@@ -20,6 +20,32 @@
 #include "Engine/DataAsset.h"
 
 
+UDataListCustomEntry::UDataListCustomEntry(const FObjectInitializer& ObjectInitializer)
+{
+	if (const UObject* Owner = GetOuter())
+	{
+		WorldPrivate = Owner->GetWorld();
+	}
+}
+
+UWorld* UDataListCustomEntry::GetWorld() const
+{
+	if(WorldPrivate)
+    {
+    	return WorldPrivate;
+    }
+    else if(GetGameInstance())
+    {
+    	return GetGameInstance()->GetWorld();
+    }
+    return nullptr;
+}
+
+UGameInstance* UDataListCustomEntry::GetGameInstance() const
+{
+	return GameInstanceRef;
+}
+
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
 	if(NewClass)
@@ -115,11 +141,14 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
 
+	if(EntryMetadata)
+	{
+		TempEntry->WidgetMetadata=EntryMetadata;
+	}
 	if(OverrideEntryTooltip)
 	{
 		TempEntry->DefaultTooltipWidget = OverrideEntryTooltip;
 	}
-	
 	// Do not add if hidden
 	if(TempEntry->IsEntityHidden(Asset))
 	{

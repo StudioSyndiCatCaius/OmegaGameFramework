@@ -50,5 +50,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileFunctions : public UBlueprintFunctionLibr
 public:
 	UFUNCTION(BlueprintPure, Category="Omega|File", meta=(WorldContext="WorldContextObject"))
 	static UTexture2D* GetOverride_Texture(UObject* WorldContextObject, const FString& name);
+
 };
 

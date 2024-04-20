@@ -38,6 +38,7 @@ public class OmegaGameFramework : ModuleRules
 				"CommonInput",
 				"EnhancedInput",
 				"LuaMachine",
+				"FileSDK",
 				"Engine",
 				"DeveloperSettings",
 				"ApplicationCore",

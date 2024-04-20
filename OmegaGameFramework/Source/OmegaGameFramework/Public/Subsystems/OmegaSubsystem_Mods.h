@@ -20,6 +20,9 @@ protected:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
 
+	UFUNCTION()
+	TSubclassOf<UOmegaMod> GetModClass();
+
 public:
 	
 	UPROPERTY()
@@ -50,6 +53,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaMod : public UObject, public IDataInterface_G
 	GENERATED_BODY()
 
 public:
+	UOmegaMod(const FObjectInitializer& ObjectInitializer);
+	virtual UWorld* GetWorld() const override;
+	UPROPERTY() UWorld* WorldPrivate = nullptr;
+	UPROPERTY() UGameInstance* GameInstanceRef = nullptr;
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
 	
 	UPROPERTY(BlueprintReadWrite, Category="Mod")
 	FText ModName;
@@ -66,6 +74,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Mod", DisplayName="Mod Path")
 	FString ModStringData;
 
+	UFUNCTION(BlueprintImplementableEvent,Category="Mods")
+	void OnModInitialized(const FString& path);
+	
+	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
 };

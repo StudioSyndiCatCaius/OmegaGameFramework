@@ -379,6 +379,9 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Spawn",meta=(EditCondition="bUseLinkedSpawnPoint"))
 	TSubclassOf<AOmegaZonePoint> ZoneSpawnPointClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawn")
+	UOmegaZoneData* SpawnZoneToLoad;
 	
 protected:
 	void UpdateBoxes();

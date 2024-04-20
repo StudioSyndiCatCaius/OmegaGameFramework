@@ -5,6 +5,8 @@
 #include "ShaderCompiler.h"
 #include "Internationalization/Internationalization.h"
 #include "CoreGlobals.h"
+
+#include "Kismet/KismetMathLibrary.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 
@@ -56,6 +58,26 @@ UClass* UOmegaAssetFunctions::GetBlueprintClassFromPath(const FString Path)
 	FSoftClassPath LocalPath;
 	LocalPath.SetSubPathString(Path);
 	return LocalPath.ResolveClass();
+}
+
+FWidgetTransform UOmegaMathFunctions::LerpWidgetTransform(FWidgetTransform a, FWidgetTransform b, float alpha)
+{
+	FWidgetTransform out;
+	out.Angle=UKismetMathLibrary::Lerp(a.Angle,b.Angle,alpha);
+	
+	out.Scale=LerpVector2D(a.Scale,b.Scale,alpha);
+	out.Shear=LerpVector2D(a.Shear,b.Shear,alpha);
+	out.Translation=LerpVector2D(a.Translation,b.Translation,alpha);
+
+	return out;
+}
+
+FVector2D UOmegaMathFunctions::LerpVector2D(FVector2D a, FVector2D b, float alpha)
+{
+	FVector2D out;
+	out.X=UKismetMathLibrary::Lerp(a.X,b.X,alpha);
+	out.Y=UKismetMathLibrary::Lerp(a.Y,b.Y,alpha);
+	return out;
 }
 
 

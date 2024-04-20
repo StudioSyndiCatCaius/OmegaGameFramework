@@ -13,36 +13,13 @@
 
 void UOmegaModSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
-	/*
-	// Activate the mod manager module
-	const TSubclassOf<UOmegaModManager> ManagerClass = GetMutableDefault<UOmegaModSettings>()->GetOmegaModManagerClass();
-	ModManager = Cast<UOmegaModManager>(GetGameInstance()->GetSubsystem<UOmegaGameManager>()->ActivateModuleFromClass(ManagerClass));
-*/
-	if(ModManager)
+	for(FString TempPath : GetModListPaths())
 	{
-		for(FString TempPath : GetModListPaths())
-		{
-			/*
-			FString ModFileContent;
-			FFileHelper::LoadFileToString(ModFileContent, *TempPath);
-			*/
-			UOmegaMod* NewMod = NewObject<UOmegaMod>(this, UOmegaMod::StaticClass());
-			NewMod->ModStringData=TempPath;
-			ModManager->OnModInitialized(NewMod);
-			
-			ModList.Add(NewMod);
+		UOmegaMod* NewMod = NewObject<UOmegaMod>(this, GetModClass());
+		NewMod->ModStringData=TempPath;
+		ModList.Add(NewMod);
 
-			/*
-			// CREATE MOD
-			TSharedPtr<FJsonObject> JsonObject;
-			TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(ModFileContent);
-
-			if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
-			{
-				
-			}
-			*/
-		}
+		NewMod->OnModInitialized(TempPath);
 	}
 }
 
@@ -51,11 +28,19 @@ void UOmegaModSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+TSubclassOf<UOmegaMod> UOmegaModSubsystem::GetModClass()
+{
+	if(const TSubclassOf<UOmegaMod> mod_class = GetMutableDefault<UOmegaSettings>()->ModClass.TryLoadClass<UOmegaMod>())
+	{
+		return mod_class;
+	}
+	return UOmegaMod::StaticClass();
+}
+
 TArray<FString> UOmegaModSubsystem::GetModListPaths()
 {
 	TArray<FString> FileNames;
 	IFileManager & FileManager = IFileManager::Get();
-	
 	TArray<FString> relativeFileNames;
 
 	FileManager.FindFiles(relativeFileNames,*(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + TEXT("*")),false,true);
@@ -63,8 +48,8 @@ TArray<FString> UOmegaModSubsystem::GetModListPaths()
 	for (FString fileName : relativeFileNames)
 	{
 		//FString ModTypeExtension = ModManager->GetModFiletype();
-		FString ModTypeExtension = ".lua";
-		FileNames.Add(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName  + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName + "." + ModTypeExtension);
+		FString ModTypeExtension = "lua";
+		FileNames.Add(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName  + FGenericPlatformMisc::GetDefaultPathSeparator() + "mod." + ModTypeExtension);
 	}
 	
 	return FileNames;
@@ -99,8 +84,29 @@ void UOmegaModSubsystem::SetModActive(UOmegaMod* Mod, bool IsActive)
 	ModManager->OnSetModActive(Mod,IsActive);
 }
 
+// ================================================================================================================
+// MOD Object
+// ================================================================================================================
+
+UOmegaMod::UOmegaMod(const FObjectInitializer& ObjectInitializer)
+{
+	if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
+}
+
+UWorld* UOmegaMod::GetWorld() const
+{
+	if(WorldPrivate) { return WorldPrivate; }
+	if(GetGameInstance()) { return GetGameInstance()->GetWorld(); }
+	return nullptr;
+}
+
+UGameInstance* UOmegaMod::GetGameInstance() const
+{
+	return GameInstanceRef;
+}
+
 void UOmegaMod::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
+                                                  FText& Description)
 {
 	Name = ModName;
 	Description = ModDescription;
