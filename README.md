@@ -1,4 +1,4 @@
-<p align="center"><img src="images/Omega logo.png" alt="drawing" width="700"/></p>
+<p align="center"><img src="docs/images/Omega logo.png" alt="drawing" width="700"/></p>
 
 <p align="center"> <h2>Your one-stop for easy game development in Unreal Engine. </h2></p>
 
