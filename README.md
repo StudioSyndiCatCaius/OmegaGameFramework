@@ -9,10 +9,12 @@ Omega Game Framework is a free, open-source high-level plugin for Unreal Engine 
 * [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/product/2ca6202e55f44cfd82659fbca6591603)
 
 ### Features:
-![Image](https://cdn1.epicgames.com/ue/product/Screenshot/OmegaCombatant-1920x1080-11e9f495a441277fbc3b3e829d518778.png?resize=1&w=1920)
-![Image](https://cdn1.epicgames.com/ue/product/Screenshot/OmegaHudLayers-1920x1080-44b37361beed1b5825b3600123cf0e09.png?resize=1&w=1920)
-![Image](https://cdn1.epicgames.com/ue/product/Screenshot/OmegaMenus-1920x1080-409b1113e8af1ab195bc38748882adc2.png?resize=1&w=1920)
-![Image](https://cdn1.epicgames.com/ue/product/Screenshot/OmegaPreferences-1920x1080-10ec73a744b38f51fa3dd0d38f6367fc.png?resize=1&w=1920)
-![Image](https://cdn1.epicgames.com/ue/product/Screenshot/OmegaSave-1920x1080-9b5ea03e01564d2b63e992a1b2dd9df6.png?resize=1&w=1920)
 
-
+|-|-|
+|-|-|
+| ![alt text](docs/images/Screenshots/OGF_1_abilities.png) | ![alt text](docs/images/Screenshots/OGF_2_attributes.png)
+| ![alt text](docs/images/Screenshots/OGF_3_Systems.png) | ![alt text](docs/images/Screenshots/OGF_4_modules.png)
+| ![alt text](docs/images/Screenshots/OGF_5_save.png) | ![alt text](docs/images/Screenshots/OGF_6_equipment.png)
+| ![alt text](docs/images/Screenshots/OGF_7_XP.png) | ![alt text](docs/images/Screenshots/OGF_8_inventory.png)
+| ![alt text](docs/images/Screenshots/OGF_9_turnOrder.png) | ![alt text](docs/images/Screenshots/OGF_10_dataItems.png)
+| ![alt text](docs/images/Screenshots/OGF_11_flowAsset.png) | ![alt text](docs/images/Screenshots/OGF_12_zoneManager.png)
