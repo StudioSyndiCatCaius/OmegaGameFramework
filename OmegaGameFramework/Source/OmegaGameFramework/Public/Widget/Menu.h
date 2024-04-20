@@ -48,9 +48,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Context, Tags, Flag"))
 		void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
-
-	UPROPERTY()
-	bool bIsClosing;
+private:
+	UPROPERTY() bool bIsClosing;
+	UPROPERTY() bool bIsPlayingAnimation;
+public:
 	
 	void Native_CompleteClose();
 
@@ -74,12 +75,13 @@ public:
 	//Prevents input when menus is opened for a set amount of time
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Input")
 	float InputBlockDelay=0.2;
+private:
 	UPROPERTY()
 	float InputBlock_Remaining;
 	UPROPERTY()
 	bool PrivateInputBlocked;
-
-	UFUNCTION() bool IsInputBlocked() const { return PrivateInputBlocked || bIsOpen || InputBlock_Remaining > 0.0; }
+public:
+	UFUNCTION() bool IsInputBlocked() const { return PrivateInputBlocked || bIsClosing || !bIsOpen || InputBlock_Remaining > 0.0; }
 	
 	virtual bool InputBlocked_Implementation() override;
 	//----------------------------------------------------------------------
@@ -120,7 +122,9 @@ public:
 	USoundBase* OpenSound;
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase* CloseSound;
-	
+	//If no sound is found for a menu sound, default to using sounds from the current OmegaSlateStyle Asset
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	bool DefaultToStyleSounds=true;
 
 
 	///PROPERTIES//

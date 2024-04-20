@@ -51,13 +51,14 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		{
 			PlaySound(OpenSound);
 		}
-		else if(UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open)
+		else if(DefaultToStyleSounds && UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open)
 		{
 			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open);
 		}
 		
 		if(GetOpenAnimation())
 		{
+			bIsPlayingAnimation=true;
 			if(ReverseOpenAnimation)
 			{
 				PlayAnimationReverse(GetOpenAnimation());
@@ -102,16 +103,15 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			PlaySound(CloseSound);
 		}
-		else if(UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close)
+		else if(DefaultToStyleSounds && UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close)
 		{
 			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close);
 		}
 		
 		//ANIMATION
-
-		bIsClosing = true;
 		if(GetCloseAnimation())
 		{
+			bIsPlayingAnimation=true;
 			if(ReverseCloseAnimation)
 			{
 				PlayAnimationReverse(GetCloseAnimation());
@@ -125,20 +125,22 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			Native_CompleteClose();
 		}
+		
+		bIsClosing = true;
 	}
 }
 
 void UMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* MovieSceneBlends)
 {
-	
 	if(MovieSceneBlends==GetOpenAnimation() && !bIsClosing)
 	{
+		bIsPlayingAnimation=false;
 		UE_LOG(LogTemp, Warning, TEXT("Menu CLOSE Complete") );
 		Native_CompleteOpen();
 	}
 	else if (MovieSceneBlends==GetCloseAnimation() && bIsClosing)
 	{
-		Native_CompleteClose();
+		bIsPlayingAnimation=false;
 	}
 	Super::OnAnimationFinished_Implementation(MovieSceneBlends);
 }
@@ -146,22 +148,6 @@ void UMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* MovieScen
 
 void UMenu::NativeConstruct()
 {
-	/*
-	//Try Set Close Anim
-	if(GetCloseAnimation())
-	{
-		CloseDelegate.BindUFunction(this, "Native_CompleteClose");
-		BindToAnimationFinished(GetCloseAnimation(), CloseDelegate);
-	}
-	
-	//Try Set Open Anim
-	if(GetOpenAnimation())
-	{
-		OpenDelegate.BindUFunction(this, "Native_CompleteOpen");
-		BindToAnimationFinished(GetOpenAnimation(), OpenDelegate);
-		
-	}*/
-	
 	Super::NativeConstruct();
 }
 
@@ -187,7 +173,7 @@ void UMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	else
 	{
 		isPlayingOpenCloseInterp=false;
-		if(bIsClosing)
+		if(bIsClosing && !bIsPlayingAnimation)
 		{
 			Native_CompleteClose();
 		}

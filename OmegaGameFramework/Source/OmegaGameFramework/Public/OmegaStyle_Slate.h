@@ -14,11 +14,11 @@
 #include "Components/ComboBoxString.h"
 #include "Components/ProgressBar.h"
 #include "Components/Slider.h"
+#include "Widget/DataWidget.h"
 #include "OmegaStyle_Slate.generated.h"
 
-/**
- * 
- */
+class UOmegaBGM;
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle : public UPrimaryDataAsset
 {
@@ -75,6 +75,21 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Menu_Close;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataWidget")
+	TSubclassOf<UDataWidget> DataWidget_SaveSlot;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
+	FSlateBrush LogoDefault;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
+	FSlateBrush LoadingIndicator;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
+	TArray<FSlateBrush> SplashImages;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
+	FSlateBrush GenericMenu_Background;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="BGM")
+	UOmegaBGM* BGM_Title;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
 	TSubclassOf<UMenu> Menu_Pause;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
@@ -87,6 +102,12 @@ public:
 	TSubclassOf<UMenu> Menu_Choice;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
 	TSubclassOf<UMenu> Menu_CombatCommand;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	TSubclassOf<UMenu> Menu_Settings;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	TSubclassOf<UMenu> Menu_NewGame;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	TSubclassOf<UMenu> Menu_Extras;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="HUD")
 	TSubclassOf<UHUDLayer> HUD_Loading;

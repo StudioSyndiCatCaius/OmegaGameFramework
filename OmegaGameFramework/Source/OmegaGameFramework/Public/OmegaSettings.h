@@ -18,6 +18,7 @@ class AOmegaGameplaySystem;
 class UOmegaGameplayModule;
 class UGamePreferenceFloat;
 class UOmegaSlateStyle;
+class UOmegaGameplayStyle;
 
 UENUM(BlueprintType)
 enum class EOmegaInputModeType : uint8
@@ -35,20 +36,22 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSettings : public UDeveloperSettings
 
 public:
 	
-	UPROPERTY(config)
-	TArray<TSubclassOf<AOmegaGameplaySystem>> AutoActivatedGameplaySystems;
-
+	UPROPERTY(config) TArray<TSubclassOf<AOmegaGameplaySystem>> AutoActivatedGameplaySystems;
 	TArray<TSubclassOf<UOmegaGameplayModule>> GetGameplayModuleClasses() const;
-
+	UPROPERTY() TArray<FName> SystemScansPath;
+	UPROPERTY() TArray<FString> LuaFields_AutoSavedToGame;
+	UClass* GetOmegaGlobalSaveClass() const;
+	
 	//Will automatically scan these directories at startup to try and load and actiavate modules from them. NOTE: This can be a slow process. Try and only set these paths to folders containing GameplayModules.
-	UPROPERTY(EditAnywhere, config, Category = "Modules", meta = (MetaClass = "OmegaGameplayModule"))
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FDirectoryPath> AutoModuleScanPaths;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Modules", meta = (MetaClass = "OmegaGameplayModule"))
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FSoftClassPath> RegisteredGameplayModules;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaGameplayStyle"))
+	FSoftObjectPath DefaultGameplayStyle;
 
-	UPROPERTY()
-	TArray<FName> SystemScansPath;
 	
 	//SAVE
 	UClass* GetOmegaGameSaveClass() const;
@@ -58,11 +61,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Save")
 	FString SaveGamePrefex = "save_";
-	
-	UPROPERTY()
-	TArray<FString> LuaFields_AutoSavedToGame;
-
-	UClass* GetOmegaGlobalSaveClass() const;
 
 	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "OmegaSaveGlobal"))
 	FSoftClassPath GlobalSaveClass;
