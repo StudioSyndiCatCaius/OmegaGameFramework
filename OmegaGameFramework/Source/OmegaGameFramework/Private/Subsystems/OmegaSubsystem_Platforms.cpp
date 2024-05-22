@@ -37,9 +37,9 @@ FSlateBrush UOmegaPlatformFunctions::GetCurrentPlatformActionIcon(const UObject*
 	
 		for(FKey TempKey : TempKeys)
 		{
-			if(PlatformAsset->KeyInfo.Contains(TempKey) && TempKey.IsGamepadKey()==TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->IsUsingGamepad())
+			if(TempKey.IsGamepadKey()==TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->IsUsingGamepad())
 			{
-				return PlatformAsset->KeyInfo.FindOrAdd(TempKey).KeyIcon;
+				return PlatformAsset->GetKeySlateBrush(TempKey);
 			}
 		}
 	}
@@ -50,12 +50,9 @@ FSlateBrush UOmegaPlatformFunctions::GetCurrentPlatformActionIcon(const UObject*
 FSlateBrush UOmegaPlatformFunctions::GetCurrentPlatformKeyIcon(const UObject* WorldContextObject, FKey Key,
 	APlayerController* Player)
 {
-	if(UOmegaPlatformAsset* PlatformAsset = GetMutableDefault<UOmegaPlatformSettings>()->GetPlatformAsset())
+	if(const UOmegaPlatformAsset* PlatformAsset = GetMutableDefault<UOmegaPlatformSettings>()->GetPlatformAsset())
 	{
-		if(PlatformAsset->KeyInfo.Contains(Key))
-		{
-			return PlatformAsset->KeyInfo.Find(Key)->KeyIcon;
-		}
+		return PlatformAsset->GetKeySlateBrush(Key);
 	}
 	return FSlateBrush();
 }

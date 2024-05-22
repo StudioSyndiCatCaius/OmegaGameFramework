@@ -55,3 +55,22 @@ enum class EOmegaGender : uint8
 	Male            UMETA(DisplayName = "Male"),
 	Female            UMETA(DisplayName = "Female"),
 };
+
+// =============================
+UENUM(BlueprintType)
+enum class EOmegaGamepad_Facebuttons : uint8
+{
+	Facebutton_Bottom            UMETA(DisplayName = "Bottom"),
+	Facebutton_Top            UMETA(DisplayName = "Top"),
+	Facebutton_Left            UMETA(DisplayName = "Left"),
+	Facebutton_Right            UMETA(DisplayName = "Right"),
+};
+// =============================
+
+UENUM(BlueprintType)
+enum class EOmegaGamepad_Shoulder : uint8
+{
+	Shoulder_L            UMETA(DisplayName = "Left"),
+	Shoulder_R            UMETA(DisplayName = "Right"),
+};
+// =============================

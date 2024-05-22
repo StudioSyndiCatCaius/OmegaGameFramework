@@ -89,6 +89,8 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, Category="InstanceActor", VisibleInstanceOnly)
 	UObject* ContextObject = nullptr;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
+	FString ContextLabel;
 	UPROPERTY(BlueprintReadOnly, Category="InstanceActor")
 	UInstanceActorComponent* OwningComponent;
 

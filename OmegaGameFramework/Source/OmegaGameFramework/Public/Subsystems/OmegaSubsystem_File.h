@@ -9,6 +9,13 @@
 #include "OmegaSubsystem_File.generated.h"
 
 
+USTRUCT()
+struct FOmegaFileObjectList
+{
+	GENERATED_BODY()
+	UPROPERTY()
+	TArray<UObject*> file_objects;
+};
 
 
 UCLASS()
@@ -17,7 +24,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
+	
 	UFUNCTION()
 	TArray<FString> GetFilesOfExtension(FString path, FString extension);
 
@@ -27,8 +34,14 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileSubsystem : public UGameInstanceSubsystem
 	FString override_images_path="images";
 	UPROPERTY()
 	FString override_audio_path="audio";
+
+	UPROPERTY()
+	TMap<UClass*, FOmegaFileObjectList> imported_overrides;
 	
 public:
+	UFUNCTION()
+	void ImportOverrideFilesInPath(const FString& path);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|File")
 	FString GetOverrideDirectory() const;
 	UFUNCTION(BlueprintPure, Category="Omega|File")
@@ -50,6 +63,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileFunctions : public UBlueprintFunctionLibr
 public:
 	UFUNCTION(BlueprintPure, Category="Omega|File", meta=(WorldContext="WorldContextObject"))
 	static UTexture2D* GetOverride_Texture(UObject* WorldContextObject, const FString& name);
-
+	
 };
 

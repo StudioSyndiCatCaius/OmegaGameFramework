@@ -107,6 +107,17 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|Object")
 	static UClass* GetClassFromGlobalID(FGameplayTag GlobalID);
+	//###############################################################################
+	// Asset Getter
+	//###############################################################################
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"))
+	static TArray<UObject*> GetAllAssetsOfClass(TSubclassOf<UObject> Class);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Asset from Path")
+	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Class from Path")
+	static UClass* GetClass_FromPath(const FString& AssetPath, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 	
 	//###############################################################################
 	// Player
@@ -207,6 +218,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject", AdvancedDisplay="Player"))
 	static void SetActorInputEnabled(UObject* WorldContextObject, AActor* Actor, bool bEnabled, APlayerController* Player);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
+	static AActor* TryGetChildActorAsClass(UChildActorComponent* ChildActor, TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 	
 	//###############################################################################
 	// InterpActor

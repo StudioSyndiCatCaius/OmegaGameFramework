@@ -42,7 +42,7 @@ enum class EDataListFormat : uint8
 
 
 UCLASS(BlueprintType, Blueprintable, abstract, editinlinenew, CollapseCategories)
-class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UObject
+class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UObject, public IDataInterface_General
 {
 	GENERATED_BODY()
 public:
@@ -103,11 +103,14 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TArray<UPrimaryDataAsset*> DefaultAssets;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	bool bUseCustomEntries;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Entry")
+	TArray<UDataListCustomEntry*> CustomEntryObjects;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",AdvancedDisplay)
 	TArray<FCustomAssetData> CustomEntries;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
@@ -214,6 +217,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
 	UDataWidget* GetEntry(int32 Index);
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void WidgetNotify(FName notify);
 	
 	//###########################################
 	// Linked Widgets

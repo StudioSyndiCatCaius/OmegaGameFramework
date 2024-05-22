@@ -40,6 +40,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaDynamicCameraSubsystem : public ULocalPlayerS
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+	UPROPERTY() float time_SinceLastCheck;
+	UPROPERTY() bool is_DynamicCamerActive;
+
 public:
 
 	virtual void Tick(float DeltaTime) override;
@@ -62,21 +65,35 @@ public:
 	}
 	// FTickableGameObject End
 
-public:
 
+	UPROPERTY() AOmegaDynamicCamera* override_camera;
+	UPROPERTY() TArray<AOmegaDynamicCamera*> source_cameras;
+	UPROPERTY() AOmegaDynamicCamera* master_camera;
+	UPROPERTY() float last_delta;
+	
 	UFUNCTION()
 	TSubclassOf<AOmegaDynamicCamera> GetDynamicCameraClass();
 
-	UFUNCTION(BlueprintPure, Category="DynamicCamera")
+	UFUNCTION(BlueprintPure, Category="DynamicCamera",DisplayName="Get Master Camera")
 	AOmegaDynamicCamera* GetDynamicCamera();
-
-	UPROPERTY()
-	AOmegaDynamicCamera* ref_camera;
-
-
+	UFUNCTION(BlueprintPure, Category="DynamicCamera",DisplayName="Get Source Camera")
+	AOmegaDynamicCamera* GetSourceCamera();
+	
+	UFUNCTION()
+	void SetCameraSourceRegistered(AOmegaDynamicCamera* Camera, bool IsActive);
+	
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void SetDynamicCameraActive(bool IsActive);
+
+	UFUNCTION()
+	void InterpToTarget(AOmegaDynamicCamera* cam_source, AOmegaDynamicCamera* cam_master, float speed);
 	
+	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
+	void SetOverrideCamera(AOmegaDynamicCamera* Camera);
+	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
+	void ClearOverrideCamera();
+	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
+	void SnapToCurrentSource();
 };
 
 UCLASS()
@@ -99,26 +116,36 @@ protected:
 
 	UPROPERTY()
 	float ArmLength_target;
-	UPROPERTY()
-	float InterpSpeed;
-
 	UFUNCTION()
 	TArray<UObject*> GetValidSources();
 
+	virtual void BeginPlay() override;
+
 public:
 	virtual void Tick(float DeltaSeconds) override;
+
+	UFUNCTION(BlueprintImplementableEvent,Category="DynamicCamera")
+	void ActiveTick(float deltaTime);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DynamicCamera")
 	USpringArmComponent* comp_spring;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DynamicCamera")
 	UCameraComponent* comp_camera;
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|DynamicCamera")
-	void SetSourceActive(UObject* source, bool bActive);
-	UFUNCTION(BlueprintCallable,Category="Omega|DynamicCamera")
-	void SetSourceList(TArray<UObject*> Sources);
-	UFUNCTION(BlueprintCallable,Category="Omega|DynamicCamera")
-	void ClearSources();
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
+	int32 Priority;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
+	bool CameraActive=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
+	float InterpSpeed=10.0;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
+	float InterpSpeed_Location;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
+	float InterpSpeed_Rotation;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
+	bool SetRotationToPlayerControl;
+
+	float SpeedOffset(float offset) const { return  InterpSpeed+offset; }
 };
 
 UINTERFACE(MinimalAPI)
@@ -148,12 +175,5 @@ class OMEGAGAMEFRAMEWORK_API UOmegaDynamicCameraFunctions : public UBlueprintFun
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable,Category="Omega|DynamicCamera",meta=(WorldContext="WorldContextObject", AdvancedDisplay="player"))
-	static void SetDynamicCamera_Active(UObject* WorldContextObject, APlayerController* player, bool bActive);
-	UFUNCTION(BlueprintCallable,Category="Omega|DynamicCamera",meta=(WorldContext="WorldContextObject", AdvancedDisplay="player"))
-	static void SetDynamicCamera_SourceActive(UObject* WorldContextObject, APlayerController* player,UObject* Source, bool bActive);
-	UFUNCTION(BlueprintCallable,Category="Omega|DynamicCamera",meta=(WorldContext="WorldContextObject", AdvancedDisplay="player"))
-	static void SetDynamicCamera_SourceList(UObject* WorldContextObject, APlayerController* player,TArray<UObject*> Sources);
-	UFUNCTION(BlueprintCallable,Category="Omega|DynamicCamera",meta=(WorldContext="WorldContextObject", AdvancedDisplay="player"))
-	static void ClearDynamicCameraSources(UObject* WorldContextObject, APlayerController* player);
+
 };

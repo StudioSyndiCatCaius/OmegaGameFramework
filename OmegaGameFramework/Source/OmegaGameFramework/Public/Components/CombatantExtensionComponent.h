@@ -39,6 +39,15 @@ public:
 	UCombatantComponent* CombatantRef = nullptr;
 
 	UFUNCTION(BlueprintImplementableEvent)
+	void OnCombatantSetup(UCombatantComponent* Combatant);
+
+	UFUNCTION(BlueprintCallable,Category="Combatant")
+	void SetCombatant(UCombatantComponent* Combatant);
+
+	UFUNCTION(BlueprintCallable,Category="Combatant")
+	void ClearCombatant();
+	
+	UFUNCTION(BlueprintImplementableEvent)
 	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
 	
 	UFUNCTION(BlueprintImplementableEvent)

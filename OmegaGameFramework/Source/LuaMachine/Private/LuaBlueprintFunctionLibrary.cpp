@@ -213,6 +213,7 @@ FLuaValue ULuaBlueprintFunctionLibrary::Conv_BoolToLuaValue(const bool Value)
 	return FLuaValue(Value);
 }
 
+
 int32 ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(const FLuaValue& Value)
 {
 	return Value.ToInteger();
@@ -2026,6 +2027,24 @@ FLuaValue ULuaBlueprintFunctionLibrary::GetLuaFieldValueFromObject(UObject* Obje
 		Outcome = ELuaValueResult::Nil;
 	}
 	return out;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::LuaGlobalCall_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	FGameplayTag Name, TArray<FLuaValue> Args)
+{
+	return LuaGlobalCall(WorldContextObject,State,Name.ToString(),Args);
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::LuaGetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	FGameplayTag Name)
+{
+	return LuaGetGlobal(WorldContextObject,State,Name.ToString());
+}
+
+void ULuaBlueprintFunctionLibrary::LuaSetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	FGameplayTag Name, FLuaValue Value)
+{
+	LuaSetGlobal(WorldContextObject,State,Name.ToString(),Value);
 }
 
 

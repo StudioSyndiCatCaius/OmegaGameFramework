@@ -70,3 +70,28 @@ void ULuaSubsystem::RunLocalFilesInPath(const FString& path, bool bRecursive,boo
 		ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(GetWorld(),ULuaBlueprintFunctionLibrary::GetDefaultLuaState(),i,true);
 	}
 }
+
+ULuaObject* ULuaGlobalObjectFunctions::GetGlobalLuaObject_FromTag(UObject* WorldContextObject, FGameplayTag name,
+	TSubclassOf<ULuaState> State)
+{
+	return  GetGlobalLuaObject_FromString(WorldContextObject,name.ToString(),State);
+}
+
+ULuaObject* ULuaGlobalObjectFunctions::GetGlobalLuaObject_FromString(UObject* WorldContextObject, const FString& name,
+	TSubclassOf<ULuaState> State)
+{
+	ULuaSubsystem* subsys_ref = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<ULuaSubsystem>();
+	if(subsys_ref->globalLuaObjects.Contains(name) && subsys_ref->globalLuaObjects[name])
+	{
+		return subsys_ref->globalLuaObjects[name];
+	}
+	FLuaValue lua_key = ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue(name);
+	FLuaValue val = ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,name);
+	ULuaObject* newobjectlua = ULuaObjectFunctions::CreateLuaObject(WorldContextObject,lua_key,val);
+	FString new_name = "LuaGen_" + name;
+	newobjectlua->Rename(*new_name);
+	subsys_ref->globalLuaObjects.Add(name,newobjectlua);
+	return newobjectlua;
+}
+
+

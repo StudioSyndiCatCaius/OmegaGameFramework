@@ -47,6 +47,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject"))
 	static ULuaObject* CreateLuaObject(UObject* WorldContextObject, FLuaValue key, FLuaValue value);
 
+	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject", AdvancedDisplay="State"))
+	static ULuaObject* CreateLuaObjectFromGlobal(UObject* WorldContextObject,const FString& field,TSubclassOf<ULuaState> State);
+	
+	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject", AdvancedDisplay="State"))
+	static TArray<ULuaObject*> CreateLuaObjectsFromGlobal(UObject* WorldContextObject,const TArray<FString>& fields,TSubclassOf<ULuaState> State);
+	
 	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject"))
 	static TArray<ULuaObject*> CreateLuaObjectsFromTable(UObject* WorldContextObject,FLuaValue table);
 

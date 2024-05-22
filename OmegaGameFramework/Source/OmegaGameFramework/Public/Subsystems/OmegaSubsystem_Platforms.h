@@ -25,9 +25,32 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPlatformAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 public:
+	//Settings will first be imported from the parent asset, then overwritten by this asset's settings.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Platform")
+	TArray<UOmegaPlatformAsset*> InheritedSettings;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Key")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Platform")
 	TMap<FKey,FPlatformKeyInfo> KeyInfo;
+
+	UFUNCTION(BlueprintCallable,Category="Key")
+	FSlateBrush GetKeySlateBrush(FKey key) const
+	{
+		if(KeyInfo.Contains(key))
+		{
+			return KeyInfo.Find(key)->KeyIcon;
+		}
+		for(const auto* tempSet : InheritedSettings)
+		{
+			if(tempSet)
+			{
+				if(tempSet->KeyInfo.Contains(key))
+				{
+					return tempSet->GetKeySlateBrush(key);
+				}
+			}
+		}
+		return FSlateBrush();
+	}
 };
 
 
@@ -49,7 +72,7 @@ private:
 	UFUNCTION()
 	UOmegaPlatformAsset* SoftRefToPlatformAsset(FSoftObjectPath Path) const
 	{
-		if (UOmegaPlatformAsset* OmegaPlatformAsset = Cast<UOmegaPlatformAsset>(Path.ResolveObject()))
+		if (UOmegaPlatformAsset* OmegaPlatformAsset = Cast<UOmegaPlatformAsset>(Path.TryLoad()))
 		{
 			return OmegaPlatformAsset;
 		}
@@ -70,6 +93,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|Platform", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context")) 
 	static FSlateBrush GetCurrentPlatformKeyIcon(const UObject* WorldContextObject, FKey Key, APlayerController* Player);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Platform", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context")) 
 	static UOmegaPlatformAsset* GetCurrentPlatformAsset();
 };

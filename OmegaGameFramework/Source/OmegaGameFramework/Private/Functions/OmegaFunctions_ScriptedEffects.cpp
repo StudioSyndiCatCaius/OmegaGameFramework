@@ -22,6 +22,16 @@ bool UOmegaScriptedEffect::CanApplyEffect_Implementation(UCombatantComponent* Ta
 	return true;
 }
 
+FLuaValue UOmegaScriptedEffect::GetValue_Implementation(const FString& Field)
+{
+	return lua_val;
+}
+
+void UOmegaScriptedEffect::SetValue_Implementation(FLuaValue Value, const FString& Field)
+{
+	lua_val = Value;
+}
+
 void UOmegaScriptedEffectAsset::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
                                                                   FText& Name, FText& Description)
 {

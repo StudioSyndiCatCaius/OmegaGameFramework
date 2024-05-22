@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LuaInterface.h"
+#include "LuaValue.h"
 #include "Engine/DataAsset.h"
 
 #include "Styling/SlateBrush.h"
@@ -27,7 +29,7 @@ public:
 
 
 UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories, Abstract)
-class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffect : public UObject
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffect : public UObject, public ILuaInterface
 {
 	GENERATED_BODY()
 
@@ -40,6 +42,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category="Scripted Effect")
 	TArray<TSubclassOf<AOmegaGameplayCue>> GetCuesToPlay();
+
+	UPROPERTY() FLuaValue lua_val;
+	virtual FLuaValue GetValue_Implementation(const FString& Field) override;
+	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field) override;
 };
 
 UCLASS(EditInlineNew)
@@ -80,5 +86,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="Apply Scripted Effects (Custom)")
 	static void ApplyCustomScriptedEffectToCombatant(FOmegaCustomScriptedEffects Effects, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);
+
 
 };

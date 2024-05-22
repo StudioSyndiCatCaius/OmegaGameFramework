@@ -39,6 +39,11 @@ TArray<FString> UOmegaFileSubsystem::GetFilesOfExtension(FString path, FString e
 	return out;
 }
 
+void UOmegaFileSubsystem::ImportOverrideFilesInPath(const FString& path)
+{
+	//put import code here
+}
+
 FString UOmegaFileSubsystem::GetOverrideDirectory() const
 {
 	const FString dir = UKismetSystemLibrary::GetProjectDirectory();

@@ -17,6 +17,7 @@
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Dom/JsonObject.h"
 #include "LuaInterface.h"
+#include "OmegaSettings_Paths.h"
 #include "Functions/OmegaFunctions_Combatant.h"
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/OmegaInterface_Common.h"
@@ -333,6 +334,74 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClassFromGlobalID(FGameplayTag GlobalID
 	return nullptr;
 }
 
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<UObject> Class)
+{
+	TArray<UObject*> LoadedAssets;
+	if(Class)
+	{
+		// Access the asset registry
+		const IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+	
+		// Query the asset registry
+		TArray<FAssetData> AssetList;
+		AssetRegistry.GetAssetsByClass(Class->GetClassPathName(),AssetList);
+
+		// Iterate over the results and load each asset
+		for (const FAssetData& Asset : AssetList)
+		{
+			if (UObject* LoadedAsset = Asset.GetAsset())
+			{
+				LoadedAssets.Add(LoadedAsset);
+				UE_LOG(LogTemp, Warning, TEXT("Loaded asset: %s"), *LoadedAsset->GetName());
+			}
+		}
+		return LoadedAssets;
+	}
+	return LoadedAssets;
+}
+
+UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class,
+                                                         TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	FString in_path = AssetPath;
+	
+	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
+	{
+		if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
+		{
+			if(path_settings->ClassPaths.Contains(Class))
+			{
+				const FString base_path = path_settings->ClassPaths[Class].Path;
+				in_path=base_path+AssetPath+"."+AssetPath;
+			}
+		}
+	}
+
+
+	if(UObject* out = UKismetSystemLibrary::Conv_SoftObjPathToSoftObjRef(UKismetSystemLibrary::MakeSoftObjectPath(in_path)).LoadSynchronous())
+	{
+		if(out->GetClass()->IsChildOf(Class) || !Class)
+		{
+			Outcome=EOmegaFunctionResult::Success;
+			return out;
+		}
+	}
+	Outcome=EOmegaFunctionResult::Fail;
+	return nullptr;
+}
+
+
+UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath,
+	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(UClass* out_obj = UKismetSystemLibrary::Conv_SoftClassPathToSoftClassRef(UKismetSystemLibrary::MakeSoftClassPath(AssetPath)).LoadSynchronous())
+	{
+		Outcome=EOmegaFunctionResult::Success;
+		return out_obj;
+	}
+	Outcome=EOmegaFunctionResult::Fail;
+	return nullptr;
+}
 
 AActor* UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius)
 {
@@ -706,6 +775,18 @@ void UOmegaGameFrameworkBPLibrary::SetActorInputEnabled(UObject* WorldContextObj
 	{
 		Actor->DisableInput(temp_player);
 	}
+}
+
+AActor* UOmegaGameFrameworkBPLibrary::TryGetChildActorAsClass(UChildActorComponent* ChildActor, TSubclassOf<AActor> Class,
+	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(ChildActor && ChildActor->GetChildActor() && ChildActor->GetChildActorClass()->IsChildOf(Class))
+	{
+		Outcome = EOmegaFunctionResult::Success;
+		return ChildActor->GetChildActor();
+	}
+	Outcome = EOmegaFunctionResult::Fail;
+	return nullptr;
 }
 
 

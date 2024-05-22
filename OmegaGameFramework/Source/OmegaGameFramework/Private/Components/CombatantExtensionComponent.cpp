@@ -41,6 +41,33 @@ void UCombatantExtensionComponent::BeginPlay()
 
 	if(CombatantRef)
 	{
+		SetCombatant(CombatantRef);
+	}
+	// ...
+	
+}
+
+void UCombatantExtensionComponent::BeginDestroy()
+{
+	ClearCombatant();
+	Super::BeginDestroy();
+}
+
+
+// Called every frame
+void UCombatantExtensionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// ...
+}
+
+void UCombatantExtensionComponent::SetCombatant(UCombatantComponent* Combatant)
+{
+	if(Combatant)
+	{
+		ClearCombatant();
+		CombatantRef=Combatant;
 		CombatantRef->OnDamaged.AddDynamic(this, &UCombatantExtensionComponent::OnAttributeDamaged);
 		CombatantRef->OnCombatantNotify.AddDynamic(this, &UCombatantExtensionComponent::OnCombatantNotify);
 		
@@ -56,12 +83,12 @@ void UCombatantExtensionComponent::BeginPlay()
 		{
 			CombatantRef->SetSkillSourceActive(this, true);
 		}
+
+		OnCombatantSetup(Combatant);
 	}
-	// ...
-	
 }
 
-void UCombatantExtensionComponent::BeginDestroy()
+void UCombatantExtensionComponent::ClearCombatant()
 {
 	if(CombatantRef)
 	{
@@ -77,16 +104,7 @@ void UCombatantExtensionComponent::BeginDestroy()
 		{
 			CombatantRef->SetSkillSourceActive(this, false);
 		}
+		CombatantRef=nullptr;
 	}
-	Super::BeginDestroy();
-}
-
-
-// Called every frame
-void UCombatantExtensionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 

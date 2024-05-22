@@ -30,6 +30,11 @@ void UAsyncAction_GameplaySystem::NativeShutdown(UObject* Context, const FString
 	SetReadyToDestroy();
 }
 
+void UAsyncAction_GameplaySystem::Native_Notify(UObject* Context, const FString Flag)
+{
+	Notify.Broadcast(Context,Flag);
+}
+
 void UAsyncAction_GameplaySystem::Activate()
 {
 	if(Local_WorldContext && Local_WorldContext->GetWorld())
@@ -44,6 +49,7 @@ void UAsyncAction_GameplaySystem::Activate()
 			{
 				AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag);
 				NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
+				NewSystem->OnSystemNotify.AddDynamic(this, &UAsyncAction_GameplaySystem::Native_Notify);
 			}
 			else
 			{

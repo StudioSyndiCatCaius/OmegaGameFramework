@@ -214,6 +214,11 @@ void AOmegaGameplaySystem::CompleteShutdown()
 	}
 }
 
+void AOmegaGameplaySystem::OutputNotify(UObject* Context, const FString& Flag)
+{
+	OnSystemNotify.Broadcast(Context,Flag);
+}
+
 void AOmegaGameplaySystem::Restart(UObject* Context, FString Flag)
 {
 	local_InRestart = true;

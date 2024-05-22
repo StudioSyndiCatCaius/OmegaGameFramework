@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
+#include "LuaObject.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "LuaSubsystem.generated.h"
 
@@ -19,8 +21,11 @@ class LUAMACHINE_API ULuaSubsystem : public UGameInstanceSubsystem
 
 	UPROPERTY()
 	ULuaSettings* settings_ref;
-	
+
 public:
+	UPROPERTY()
+	TMap<FString, ULuaObject*> globalLuaObjects;
+	
 	UFUNCTION(BlueprintPure,Category="Lua")
 	FString GetLocalFilesPath();
 	
@@ -31,3 +36,16 @@ public:
 	void RunLocalFilesInPath(const FString& path,bool bRecursive,bool bNonLocal);
 };
 
+UCLASS()
+class LUAMACHINE_API ULuaGlobalObjectFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Object",DisplayName="Get Global Lua Asset (From Tag)",meta=(WorldContext="WorldContextObject",AdvancedDisplay="State"))
+	static ULuaObject* GetGlobalLuaObject_FromTag(UObject* WorldContextObject, FGameplayTag name, TSubclassOf<ULuaState> State);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Object",DisplayName="Get Global Lua Asset (From String)",meta=(WorldContext="WorldContextObject",AdvancedDisplay="State"))
+	static ULuaObject* GetGlobalLuaObject_FromString(UObject* WorldContextObject, const FString& name, TSubclassOf<ULuaState> State);
+};

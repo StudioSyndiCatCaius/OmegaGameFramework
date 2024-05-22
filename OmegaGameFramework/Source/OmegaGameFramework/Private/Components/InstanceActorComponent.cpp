@@ -24,6 +24,7 @@ void UInstanceActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
 	// ...
 	
 }
@@ -198,6 +199,10 @@ AOmegaInstanceActor::AOmegaInstanceActor()
 void AOmegaInstanceActor::BeginPlay()
 {
 	Super::BeginPlay();
+	if(ContextObject)
+	{
+		ContextLabel = UOmegaGameFrameworkBPLibrary::GetObjectLabel(ContextObject);
+	}
 	
 }
 

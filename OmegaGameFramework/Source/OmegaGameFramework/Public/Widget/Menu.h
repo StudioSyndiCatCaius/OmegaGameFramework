@@ -35,6 +35,8 @@ public:
 	//----------------------------------------------------------------------
 	
 	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	FText DisplayName;
 	UPROPERTY(EditAnywhere, Category = "Menu")
 	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
 
@@ -64,7 +66,16 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
 		void MenuClosed(FGameplayTagContainer Tags, const FString& Flag);
 
-		
+	//----------------------------------------------------------------------
+	// Reset
+	//----------------------------------------------------------------------
+	UFUNCTION(BlueprintCallable,Category="Menu")
+	void Reset()
+	{
+		OnReset();
+	}
+	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
+	void OnReset();
 	//----------------------------------------------------------------------
 	// Input
 	//----------------------------------------------------------------------

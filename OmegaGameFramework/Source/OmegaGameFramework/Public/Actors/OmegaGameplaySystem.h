@@ -38,6 +38,7 @@ struct FGameplaySystemAbilityRules
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShutdown, UObject*, Context, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNotify, UObject*, Context, FString, Flag);
 
 UCLASS(config = Game, notplaceable, BlueprintType, Blueprintable, Transient, hideCategories = (Info, Rendering, MovementReplication, Collision, HLOD, WorldPartition), meta = (ShortTooltip = ""))
 class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AActor, public IOmegaSaveInterface
@@ -85,12 +86,20 @@ public:
 	//WARNING: Do not use this function unless you are overriding the OnBeginShutdown, as it is used to complete the shutdown event. DO NOT CALL OUTSIDE OF THE SYSTEM.
 	UFUNCTION(BlueprintCallable, Category = "Omega|GameplaySystem")
 	void CompleteShutdown();
+	
+	//---------------------------------------------------------------------
+	// Notify
+	//---------------------------------------------------------------------
+	UFUNCTION(BlueprintCallable,Category="Omega|GameplaySystem", meta=(AdvancedDisplay="Context"))
+	void OutputNotify(UObject* Context, const FString& Flag);
 
+	UPROPERTY(BlueprintAssignable)
+	FOnNotify OnSystemNotify;
 	//---------------------------------------------------------------------
 	// RESTART
 	//---------------------------------------------------------------------
 
-	//Shutsdown and restarts the system
+	//Shutdown and restart the system
 	UFUNCTION(BlueprintCallable, Category="Omega|GameplaySystem", meta=(AdvancedDisplay="Context,Flag"))
 	void Restart(UObject* Context, FString Flag);
 

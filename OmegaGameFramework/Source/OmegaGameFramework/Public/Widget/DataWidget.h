@@ -29,7 +29,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWidgetNotify, UDataWidget*, Data
 
 
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories, const)
+UCLASS(Blueprintable,BlueprintType,EditInlineNew, const)
 class OMEGAGAMEFRAMEWORK_API UDataWidgetMetadata : public UObject
 {
 	GENERATED_BODY()
@@ -204,8 +204,13 @@ public:
 	//---------------------------------------------------------------------------------------------//
 	UFUNCTION(BlueprintCallable, Category="Notify")
 	void WidgetNotify(FName Notify);
+protected:
+	UFUNCTION(BlueprintImplementableEvent,Category="Notify",DisplayName="On Widget Notify")
+	void Local_OnWidgetNotify(FName notify);
+public:
 	UPROPERTY(BlueprintAssignable)
 	FOnWidgetNotify OnWidgetNotify;
+
 	//---------------------------------------------------------------------------------------------//
 	//	Data List
 	//---------------------------------------------------------------------------------------------//

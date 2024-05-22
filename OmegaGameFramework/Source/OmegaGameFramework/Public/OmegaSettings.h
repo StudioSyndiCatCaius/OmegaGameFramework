@@ -49,9 +49,10 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FSoftClassPath> RegisteredGameplayModules;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaGameplayStyle"))
-	FSoftObjectPath DefaultGameplayStyle;
-
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaSettings_Gameplay"))
+	FSoftObjectPath DefaultSettings_Gameplay;
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaSettings_Paths"))
+	FSoftObjectPath DefaultSettings_Paths;
 	
 	//SAVE
 	UClass* GetOmegaGameSaveClass() const;
@@ -99,8 +100,8 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaHoverCursor"))
 	FSoftClassPath HoverCursorClass;
 
-	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaSlateStyle"))
-	FSoftObjectPath DefaultSlateStyle;
+	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaSettings_Slate"))
+	FSoftObjectPath DefaultSettings_Slate;
 	
 	//########################################################
 	//Combat

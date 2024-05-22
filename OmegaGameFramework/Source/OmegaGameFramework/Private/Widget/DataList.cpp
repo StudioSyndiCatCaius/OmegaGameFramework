@@ -398,6 +398,17 @@ UDataWidget* UDataList::GetEntry(int32 Index)
 	return nullptr;
 }
 
+void UDataList::WidgetNotify(FName notify)
+{
+	for(auto* temp_entry: GetEntries())
+	{
+		if(temp_entry)
+		{
+			temp_entry->WidgetNotify(notify);
+		}
+	}
+}
+
 TArray<UDataWidget*> UDataList::GetEntiresWithTag(FName Tag, bool bInvertGet)
 {
 	TArray<UDataWidget*> OutWidgets;
@@ -421,7 +432,7 @@ bool UDataList::AnyEntryHasTag(FName Tag)
 	{
 		if(TempEntry->DataWidgetHasTag(Tag))
 		{
-			return false;
+			return true;
 		}
 	}
 	return false;
@@ -640,9 +651,22 @@ void UDataList::RebuildList()
 	
 	if (bUseCustomEntries)
 	{
-		for (const FCustomAssetData& TempData : CustomEntries)
+		if(CustomEntryObjects.IsValidIndex(0))
 		{
-			AddedCustomEntryToList(TempData, DefaultListFlag);
+			for(auto* temp_entry : CustomEntryObjects)
+			{
+				if(temp_entry)
+				{
+					AddAssetToList(temp_entry,"");
+				}
+			}
+		}
+		else
+		{
+			for (const FCustomAssetData& TempData : CustomEntries)
+			{
+				AddedCustomEntryToList(TempData, DefaultListFlag);
+			}
 		}
 	}
 	else

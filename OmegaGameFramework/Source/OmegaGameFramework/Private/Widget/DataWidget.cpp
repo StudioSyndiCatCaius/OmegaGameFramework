@@ -17,7 +17,7 @@
 #include "Widget/DataList.h"
 #include "TimerManager.h"
 #include "Functions/OmegaFunctions_Utility.h"
-#include "OmegaStyle_Slate.h"
+#include "..\..\Public\OmegaSettings_Slate.h"
 
 void UDataWidget::NativePreConstruct()
 {
@@ -38,7 +38,8 @@ void UDataWidget::NativePreConstruct()
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,0);
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,0);
 	}
-	
+
+	RefreshMeta();
 }
 
 void UDataWidget::NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent)
@@ -171,14 +172,13 @@ void UDataWidget::private_refresh(UDataWidget* widget)
 
 void UDataWidget::Refresh()
 {
-	
 	SetIsEnabled(GetIsEntitySelectable());
 	UObject* LocalListOwner = nullptr;
 	if(GetOwningList() && GetOwningList()->ListOwner)
 	{
 		LocalListOwner = GetOwningList()->ListOwner;
 	}
-	
+	RefreshMeta();
 	OnRefreshed(ReferencedAsset, LocalListOwner);
 	OnWidgetRefreshed.Broadcast(this);
 }
@@ -237,6 +237,7 @@ void UDataWidget::NativeConstruct()
 void UDataWidget::WidgetNotify(FName Notify)
 {
 	OnWidgetNotify.Broadcast(this, Notify);
+	Local_OnWidgetNotify(Notify);
 }
 
 FString UDataWidget::GetAssetLabel()

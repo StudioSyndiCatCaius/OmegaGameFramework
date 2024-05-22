@@ -259,7 +259,7 @@ void UOmegaDataItem::GetGeneralAssetLabel_Implementation(FString& Label)
 {
 	if(CustomLabel.IsEmpty())
 	{
-		Label = DisplayName.ToString();
+		Label = GetName();
 	}
 	Label = CustomLabel;
 }

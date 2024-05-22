@@ -690,7 +690,7 @@ void AOmegaZoneTransit::BeginPlay()
 		}
 		
 		
-		linked_point = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(point_class,GetActorTransform());
+		linked_point = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(point_class,GetActorTransform(),this);
 		if(linked_point)
 		{
 			linked_point->SetActorLocation(Spawn_Point_Ref->GetComponentLocation());

@@ -16,7 +16,41 @@ void UOmegaDynamicCameraSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 
 void UOmegaDynamicCameraSubsystem::Tick(float DeltaTime)
 {
-	//
+	last_delta=DeltaTime;
+	if(AOmegaDynamicCamera* cam_source = GetSourceCamera())
+	{
+		if(AOmegaDynamicCamera* cam_master = GetDynamicCamera())
+		{
+			InterpToTarget(cam_source,cam_master,cam_source->InterpSpeed);
+		}
+	}
+	if(is_DynamicCamerActive)
+	{
+		if(time_SinceLastCheck>0.0)
+		{
+			time_SinceLastCheck=time_SinceLastCheck-DeltaTime;
+		}
+		else
+		{
+			APlayerController* local_playerController = GetLocalPlayer()->GetPlayerController(GetLocalPlayer()->GetWorld());
+			if(local_playerController->GetViewTarget() != GetDynamicCamera())
+			{
+				local_playerController->SetViewTarget(GetDynamicCamera());
+			}
+			time_SinceLastCheck=0.5;
+		}
+	}
+}
+
+void UOmegaDynamicCameraSubsystem::SnapToCurrentSource()
+{
+	if(AOmegaDynamicCamera* cam_source = GetSourceCamera())
+	{
+		if(AOmegaDynamicCamera* cam_master = GetDynamicCamera())
+		{
+			InterpToTarget(cam_source,cam_master,0.0);
+		}
+	}
 }
 
 TSubclassOf<AOmegaDynamicCamera> UOmegaDynamicCameraSubsystem::GetDynamicCameraClass()
@@ -28,16 +62,59 @@ TSubclassOf<AOmegaDynamicCamera> UOmegaDynamicCameraSubsystem::GetDynamicCameraC
 
 AOmegaDynamicCamera* UOmegaDynamicCameraSubsystem::GetDynamicCamera()
 {
-	if(!ref_camera)
+	if(!master_camera)
 	{
-		ref_camera = GetWorld()->SpawnActorDeferred<AOmegaDynamicCamera>(GetDynamicCameraClass(),FTransform());
-		ref_camera->FinishSpawning(FTransform());
+		master_camera = GetWorld()->SpawnActorDeferred<AOmegaDynamicCamera>(GetDynamicCameraClass(),FTransform());
+		master_camera->FinishSpawning(FTransform());
 	}
-	return ref_camera;
+	return master_camera;
+}
+
+AOmegaDynamicCamera* UOmegaDynamicCameraSubsystem::GetSourceCamera()
+{
+	if(override_camera)
+	{
+		return override_camera;
+	}
+	AOmegaDynamicCamera* out=nullptr;
+	for(auto* temp_cam : source_cameras)
+	{
+		if(temp_cam)
+		{
+			if(out)
+			{
+				if(temp_cam->CameraActive && temp_cam->Priority>=out->Priority)
+				{
+					out=temp_cam;
+				}
+			}
+			else
+			{
+				out=temp_cam;
+			}
+		}
+	}
+	return out;
+}
+
+void UOmegaDynamicCameraSubsystem::SetCameraSourceRegistered(AOmegaDynamicCamera* Camera, bool IsActive)
+{
+	if(Camera)
+	{
+		if(IsActive)
+		{
+			source_cameras.AddUnique(Camera);
+		}
+		else
+		{
+			source_cameras.Remove(Camera);
+		}
+	}
 }
 
 void UOmegaDynamicCameraSubsystem::SetDynamicCameraActive(bool IsActive)
 {
+	is_DynamicCamerActive = IsActive;
 	APlayerController* LocalController = GetLocalPlayer()->GetPlayerController(GetWorld());
 	if(IsActive)
 	{
@@ -47,6 +124,39 @@ void UOmegaDynamicCameraSubsystem::SetDynamicCameraActive(bool IsActive)
 	{
 		LocalController->SetViewTarget(LocalController->K2_GetPawn());
 	}
+}
+
+void UOmegaDynamicCameraSubsystem::InterpToTarget(AOmegaDynamicCamera* cam_source, AOmegaDynamicCamera* cam_master,
+	float speed)
+{
+	if(cam_source && cam_master)
+	{
+		const FVector loc_master = GetDynamicCamera()->GetActorLocation();
+		cam_master->SetActorLocation(UKismetMathLibrary::VInterpTo(loc_master,cam_source->GetActorLocation(),last_delta,speed));
+		cam_master->SetActorRotation(UKismetMathLibrary::RInterpTo(cam_master->GetActorRotation(),cam_source->GetActorRotation(),last_delta,speed));
+		cam_master->comp_camera->SetFieldOfView(UKismetMathLibrary::FInterpTo(cam_master->comp_camera->FieldOfView,cam_source->comp_camera->FieldOfView,last_delta,speed));
+
+		cam_master->comp_spring->TargetArmLength=UKismetMathLibrary::FInterpTo(cam_master->comp_spring->TargetArmLength,cam_source->comp_spring->TargetArmLength,last_delta,speed);
+		cam_master->comp_spring->SetRelativeLocation(UKismetMathLibrary::VInterpTo(cam_master->comp_spring->GetRelativeLocation(),cam_source->comp_spring->GetRelativeLocation(),last_delta,speed));
+		cam_master->comp_spring->SetRelativeRotation(UKismetMathLibrary::RInterpTo(cam_master->comp_spring->GetRelativeRotation(),cam_source->comp_spring->GetRelativeRotation(),last_delta,speed));
+	}
+}
+
+void UOmegaDynamicCameraSubsystem::SetOverrideCamera(AOmegaDynamicCamera* Camera)
+{
+	if(Camera)
+	{
+		override_camera=Camera;
+	}
+	else
+	{
+		override_camera=nullptr;
+	}
+}
+
+void UOmegaDynamicCameraSubsystem::ClearOverrideCamera()
+{
+	override_camera=nullptr;
 }
 
 AOmegaDynamicCamera::AOmegaDynamicCamera()
@@ -120,6 +230,15 @@ FTransform AOmegaDynamicCamera::LOCAL_Average_Transform(TArray<FTransform> input
 
 void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 {
+	if(CameraActive)
+	{
+		ActiveTick(DeltaSeconds);
+	}
+	if(SetRotationToPlayerControl)
+	{
+		UGameplayStatics::GetPlayerController(this,0)->SetControlRotation(GetActorRotation());
+	}
+	/*
 	TArray<FTransform> loc_roots;
 	TArray<FVector> loc_targets;
 	TArray<FVector> loc_offsets;
@@ -188,7 +307,7 @@ void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 			temp_player->SetControlRotation(comp_camera->K2_GetComponentRotation());
 		}
 	}
-	
+	*/
 	
 	Super::Tick(DeltaSeconds);
 }
@@ -206,76 +325,10 @@ TArray<UObject*> AOmegaDynamicCamera::GetValidSources()
 	return out;
 }
 
-void AOmegaDynamicCamera::SetSourceActive(UObject* source, bool bActive)
+void AOmegaDynamicCamera::BeginPlay()
 {
-	if(source && source->GetClass()->ImplementsInterface(UOmegaDynamicCameraSource::StaticClass()))
-	{
-		if(bActive)
-		{
-			REF_Sources.AddUnique(source);
-		}
-		else
-		{
-			REF_Sources.Remove(source);
-		}
-	}
+	UGameplayStatics::GetPlayerController(this,0)->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SetCameraSourceRegistered(this,true);
+	Super::BeginPlay();
 }
 
-void AOmegaDynamicCamera::SetSourceList(TArray<UObject*> Sources)
-{
-	ClearSources();
-	for (auto* temp_source: Sources)
-	{
-		SetSourceActive(temp_source,true);
-	}
-}
-
-void AOmegaDynamicCamera::ClearSources()
-{
-	REF_Sources.Empty();
-}
-
-void UOmegaDynamicCameraFunctions::SetDynamicCamera_Active(UObject* WorldContextObject, APlayerController* player,
-	bool bActive)
-{
-	const APlayerController* ref_player=UGameplayStatics::GetPlayerController(WorldContextObject,0);
-	if(player)
-	{
-		ref_player=player;
-	}
-	ref_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SetDynamicCameraActive(bActive);
-}
-
-void UOmegaDynamicCameraFunctions::SetDynamicCamera_SourceActive(UObject* WorldContextObject, APlayerController* player,
-                                                                 UObject* Source, bool bActive)
-{
-	const APlayerController* ref_player=UGameplayStatics::GetPlayerController(WorldContextObject,0);
-	if(player)
-	{
-		ref_player=player;
-	}
-	ref_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetDynamicCamera()->SetSourceActive(Source,bActive);
-}
-
-void UOmegaDynamicCameraFunctions::SetDynamicCamera_SourceList(UObject* WorldContextObject, APlayerController* player,
-	TArray<UObject*> Sources)
-{
-	const APlayerController* ref_player=UGameplayStatics::GetPlayerController(WorldContextObject,0);
-	if(player)
-	{
-		ref_player=player;
-	}
-	ref_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetDynamicCamera()->SetSourceList(Sources);
-	
-}
-
-void UOmegaDynamicCameraFunctions::ClearDynamicCameraSources(UObject* WorldContextObject, APlayerController* player)
-{
-	const APlayerController* ref_player=UGameplayStatics::GetPlayerController(WorldContextObject,0);
-	if(player)
-	{
-		ref_player=player;
-	}
-	ref_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetDynamicCamera()->ClearSources();
-}
 

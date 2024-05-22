@@ -4,6 +4,7 @@
 #include "LuaObject.h"
 
 #include "LuaBlueprintFunctionLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
 
 void ULuaObject::SetKey_Implementation(FLuaValue Key)
 {
@@ -38,15 +39,50 @@ ULuaObject* ULuaObjectFunctions::CreateLuaObject(UObject* WorldContextObject, FL
 	return new_object;
 }
 
+ULuaObject* ULuaObjectFunctions::CreateLuaObjectFromGlobal(UObject* WorldContextObject,const FString& field, TSubclassOf<ULuaState> State)
+{
+	FString out_l;
+	FString out_r;
+	UKismetStringLibrary::Split(field,".",out_l,out_r,ESearchCase::IgnoreCase,ESearchDir::FromEnd);
+	if(out_r.IsEmpty())
+	{
+		out_r=field;
+	}
+	FLuaValue val = ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,field);
+	FLuaValue key = ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue(out_r);
+	if(val.IsNil())
+	{
+		return nullptr;
+	}
+	return CreateLuaObject(WorldContextObject,key,val);
+}
+
+TArray<ULuaObject*> ULuaObjectFunctions::CreateLuaObjectsFromGlobal(UObject* WorldContextObject,
+	const TArray<FString>& fields, TSubclassOf<ULuaState> State)
+{
+	TArray<ULuaObject*> out;
+	for(FString temp_field : fields)
+	{
+		if(ULuaObject* temp_obj = CreateLuaObjectFromGlobal(WorldContextObject,temp_field,State))
+		{
+			out.Add(temp_obj);
+		}
+	}
+	return out;
+}
+
+
 TArray<ULuaObject*> ULuaObjectFunctions::CreateLuaObjectsFromTable(UObject* WorldContextObject, FLuaValue table)
 {
 	TArray<ULuaObject*> out;
-	for(FLuaValue i : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(table))
+	TArray<FLuaValue> list =  ULuaBlueprintFunctionLibrary::LuaTableGetValues(table);
+	for (int i = 0; i < list.Num(); ++i)
 	{
-		FString local_key = ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(i);
-		ULuaObject* newobj= CreateLuaObject(WorldContextObject,i,ULuaBlueprintFunctionLibrary::LuaTableGetField(table,local_key));
+		FLuaValue index_key = ULuaBlueprintFunctionLibrary::LuaTableGetKeys(table)[i];
+		ULuaObject* newobj= CreateLuaObject(WorldContextObject,index_key,list[i]);
 		out.Add(newobj);
 	}
+
 	return out;
 }
 

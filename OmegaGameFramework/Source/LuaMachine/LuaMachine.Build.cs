@@ -30,6 +30,7 @@ public class LuaMachine : ModuleRules
                 "HTTP",
                 "Json",
                 "DeveloperSettings",
+                "GameplayTags",
                 "PakFile"
 				// ... add other public dependencies that you statically link with here ...
 			}

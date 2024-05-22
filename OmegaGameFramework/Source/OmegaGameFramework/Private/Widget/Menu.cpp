@@ -3,7 +3,7 @@
 
 #include "Widget/Menu.h"
 
-#include "OmegaStyle_Slate.h"
+#include "..\..\Public\OmegaSettings_Slate.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -23,7 +23,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UMenu::OnInputMethodChanged);
 		Local_BindGlobalEvent();
 
-		
+		Reset();
 		
 		TempTags = Tags;
 		PrivateInputBlocked = true;

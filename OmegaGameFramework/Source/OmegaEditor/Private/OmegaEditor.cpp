@@ -115,7 +115,7 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("GamePreferenceBool"));
 	ThumnbailNames.Add(TEXT("GamePreferenceString"));
 	ThumnbailNames.Add(TEXT("GamePreferenceTag"));
-
+	
 	ThumnbailNames.Add(TEXT("Menu"));
 	ThumnbailNames.Add(TEXT("HUDLayer"));
 	ThumnbailNames.Add(TEXT("DataWidget"));
@@ -142,6 +142,7 @@ void FOmegaEditor::StartupModule()
 	
 	ThumnbailNames.Add(TEXT("InstanceActorComponent"));
 	ThumnbailNames.Add(TEXT("OmegaInstanceActor"));
+	ThumnbailNames.Add(TEXT("OmegaObjectSorterAsset"));
 
 	ThumnbailNames.Add(TEXT("OmegaFaction"));
 	ThumnbailNames.Add(TEXT("CombatantGambitAsset"));
