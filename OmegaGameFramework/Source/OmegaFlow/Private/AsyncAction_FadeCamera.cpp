@@ -3,7 +3,7 @@
 
 #include "AsyncAction_FadeCamera.h"
 
-#include "OmegaGameManager.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 

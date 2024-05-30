@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Save/OmegaSaveCondition.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 #include "UObject/Object.h"
 #include "SaveCondition_AssetCollected.generated.h"
 

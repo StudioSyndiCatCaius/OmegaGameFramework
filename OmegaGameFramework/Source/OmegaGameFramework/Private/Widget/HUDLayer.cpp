@@ -2,9 +2,10 @@
 
 
 #include "Widget/HUDLayer.h"
-#include "OmegaGameManager.h"
-#include "Message/OmegaMessageSubsystem.h"
-#include "Player/OmegaPlayerSubsystem.h"
+#include "Engine/GameInstance.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/OmegaSubsystem_Message.h"
+#include "Subsystems/OmegaSubsystem_Player.h"
 
 //#include "Engine/Engine.h"
 
@@ -23,7 +24,7 @@ void UHUDLayer::OnAnimationFinished_Implementation(const UWidgetAnimation* Anima
 	{
 		
 	}
-	else if (Animation==GetAppearAnimation() && bRemoving)
+	else if (Animation==GetRemovedAnimation() && bRemoving)
 	{
 		Local_RemoveAnimFinished();
 	}
@@ -32,7 +33,7 @@ void UHUDLayer::OnAnimationFinished_Implementation(const UWidgetAnimation* Anima
 
 void UHUDLayer::RemoveHUDLayer()
 {
-	if(this && IsVisible() && GetRemovedAnimation() && !bRemoving)
+	if(this != nullptr && IsVisible() && GetRemovedAnimation() && !bRemoving)
 	{
 		bRemoving=true;
 		if(bReverseCloseAnim)

@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "OmegaGameplaySystem.h"
+#include "Actors/OmegaGameplaySystem.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "AsyncAction_GameplaySystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShutdown, UObject*, Context, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSystemNotify, UObject*, Context, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailedActivateSystem);
 
 UCLASS()
@@ -18,12 +19,12 @@ class OMEGAFLOW_API UAsyncAction_GameplaySystem : public UBlueprintAsyncActionBa
 
 public:
 
-	UPROPERTY(BlueprintAssignable)
-	FShutdown OnShutdown;
+	UPROPERTY(BlueprintAssignable) FShutdown OnShutdown;
+	UPROPERTY(BlueprintAssignable) FSystemNotify Notify;
+	UPROPERTY(BlueprintAssignable) FOnFailedActivateSystem Failed;
+	UFUNCTION() void NativeShutdown(UObject* Context, const FString Flag);
+	UFUNCTION() void Native_Notify(UObject* Context, const FString Flag);
 	
-	UPROPERTY(BlueprintAssignable)
-	FOnFailedActivateSystem Failed;
-
 	UPROPERTY()
 	TSubclassOf<AOmegaGameplaySystem> LocalSystemClass;
 	UPROPERTY()
@@ -35,9 +36,7 @@ public:
 	UPROPERTY()
 	const UObject* Local_WorldContext;
 	
-	UFUNCTION()
-	void NativeShutdown(UObject* Context, const FString Flag);
-	
+
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject")) 
 	static UAsyncAction_GameplaySystem* ActivateGameplaySystem(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag);

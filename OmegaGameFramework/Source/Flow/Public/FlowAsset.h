@@ -2,10 +2,9 @@
 
 #pragma once
 
-#include "DataInterface_General.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "FlowSave.h"
 #include "FlowTypes.h"
-#include "Gameplay/GameplayTagsInterface.h"
 #include "Templates/SubclassOf.h"
 #include "FlowAsset.generated.h"
 

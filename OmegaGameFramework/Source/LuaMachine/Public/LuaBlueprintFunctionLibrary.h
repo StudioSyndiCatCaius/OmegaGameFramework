@@ -8,15 +8,13 @@
 #include "LuaValue.h"
 #include  "LuaSettings.h"
 #include "LuaTableAsset.h"
+#include "GameplayTagContainer.h"
 #include "UObject/TextProperty.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Runtime/Online/HTTP/Public/HttpModule.h"
 #include "Sound/SoundWave.h"
 #include "LuaBlueprintFunctionLibrary.generated.h"
 
-/**
- * 
- */
 
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FLuaHttpSuccess, FLuaValue, ReturnValue, bool, bWasSuccessful, int32, StatusCode);
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FLuaHttpResponseReceived, FLuaValue, Context, FLuaValue, Response);
@@ -30,6 +28,12 @@ enum class ELuaReflectionType : uint8
 	Function,
 };
 
+UENUM(Blueprintable)
+enum ELuaValueResult
+{
+	Valid		UMETA(DisplayName = "Valid"),
+	Nil		UMETA(DisplayName = "Nil"),
+};
 
 UCLASS()
 class LUAMACHINE_API ULuaBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
@@ -347,67 +351,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Lua")
 	static bool LuaValueIsThread(const FLuaValue& Value);
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
-	static FVector LuaTableToVector(FLuaValue Value);
-
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	static FLuaValue LuaTableSetMetaTable(FLuaValue InTable, FLuaValue InMetaTable);
 
-	UFUNCTION(BlueprintPure, meta=(DisplayName = "To String (LuaValue)", BlueprintAutocast), Category="Lua")
-	static FString Conv_LuaValueToString(const FLuaValue& Value);
 
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Text (LuaValue)", BlueprintAutocast), Category="Lua")
-	static FText Conv_LuaValueToText(const FLuaValue& Value);
 
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Name (LuaValue)", BlueprintAutocast), Category="Lua")
-	static FName Conv_LuaValueToName(const FLuaValue& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Object (LuaValue)", BlueprintAutocast), Category="Lua")
-	static UObject* Conv_LuaValueToObject(const FLuaValue& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Class (LuaValue)", BlueprintAutocast), Category="Lua")
-	static UClass* Conv_LuaValueToClass(const FLuaValue& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To LuaValue (Object)", BlueprintAutocast), Category="Lua")
-	static FLuaValue Conv_ObjectToLuaValue(UObject* Object);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To LuaValue (Float)", BlueprintAutocast), Category="Lua")
-	static FLuaValue Conv_FloatToLuaValue(const float Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Int (LuaValue)", BlueprintAutocast), Category="Lua")
-	static int32 Conv_LuaValueToInt(const FLuaValue& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Float (LuaValue)", BlueprintAutocast), Category="Lua")
-	static float Conv_LuaValueToFloat(const FLuaValue& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Vector (LuaValue)", BlueprintAutocast), Category = "Lua")
-	static FVector Conv_LuaValueToFVector(const FLuaValue& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To Bool (LuaValue)", BlueprintAutocast), Category="Lua")
-	static bool Conv_LuaValueToBool(const FLuaValue& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To LuaValue (Int)", BlueprintAutocast), Category="Lua")
-	static FLuaValue Conv_IntToLuaValue(const int32 Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To LuaValue (String)", BlueprintAutocast), Category="Lua")
-	static FLuaValue Conv_StringToLuaValue(const FString& Value);
-
-	UFUNCTION(BlueprintPure, meta = (BDisplayName = "To LuaValue (Text)", lueprintAutocast), Category="Lua")
-	static FLuaValue Conv_TextToLuaValue(const FText& Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To LuaValue (Name)", BlueprintAutocast), Category="Lua")
-	static FLuaValue Conv_NameToLuaValue(const FName Value);
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "To LuaValue (Bool)", BlueprintAutocast), Category="Lua")
-	static FLuaValue Conv_BoolToLuaValue(const bool Value);
-
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Lua")
-	static FLuaValue LuaCreateLazyTable(UObject* WorldContextObject, TSubclassOf<ULuaState> State);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
-	static FLuaValue LuaCreateUFunction(UObject* InObject, const FString& FunctionName);
-
-	UFUNCTION(BlueprintCallable, meta = (ExpandEnumAsExecs = "LuaValueTypes"), Category = "Lua")
+		UFUNCTION(BlueprintCallable, meta = (ExpandEnumAsExecs = "LuaValueTypes"), Category = "Lua")
 	static void SwitchOnLuaValueType(const FLuaValue& LuaValue, ELuaValueType& LuaValueTypes);
 
 	UFUNCTION(BlueprintCallable, meta = (ExpandEnumAsExecs = "LuaReflectionTypes"), Category = "Lua")
@@ -422,8 +371,139 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Lua")
 	static ULuaState* CreateDynamicLuaState(UObject* WorldContextObject, TSubclassOf<ULuaState> LuaStateClass);
 
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
+	static FLuaValue GetLuaFieldValueFromTable(FLuaValue Table, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
+	static FLuaValue GetLuaFieldValueFromObject(UObject* Object, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome);
+
+	// Tag Based
+
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", AutoCreateRefTerm = "Args"), Category="Lua",DisplayName="Lua Global Call (From Tag)")
+	static FLuaValue LuaGlobalCall_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State, FGameplayTag Name, TArray<FLuaValue> Args);
+
+	UFUNCTION(BlueprintCallable, meta=(AdvancedDisplay="State", WorldContext="WorldContextObject"), Category="Lua",DisplayName="Lua Get Global (From Tag)")
+	static FLuaValue LuaGetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State, FGameplayTag Name);
+
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua",DisplayName="Lua Set Global (From Tag)")
+	static void LuaSetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State, FGameplayTag Name, FLuaValue Value);
+
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Lua")
+	static FLuaValue LuaCreateLazyTable(UObject* WorldContextObject, TSubclassOf<ULuaState> State);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
+	static FLuaValue LuaCreateUFunction(UObject* InObject, const FString& FunctionName);
+	
+	// --------------------------------------------------
+	// CONVERTORS
+	// --------------------------------------------------
+
+	// String
+	UFUNCTION(BlueprintPure, meta=(DisplayName = "Lua -> String", BlueprintAutocast), Category="Lua")
+	static FString Conv_LuaValueToString(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "String -> Lua", BlueprintAutocast), Category="Lua")
+	static FLuaValue Conv_StringToLuaValue(const FString& Value);
+
+	// Text
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Text", BlueprintAutocast), Category="Lua")
+	static FText Conv_LuaValueToText(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (BDisplayName = "Text -> Lua", lueprintAutocast), Category="Lua")
+	static FLuaValue Conv_TextToLuaValue(const FText& Value);
+
+	//Name
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Name", BlueprintAutocast), Category="Lua")
+	static FName Conv_LuaValueToName(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Name -> Lua", BlueprintAutocast), Category="Lua")
+	static FLuaValue Conv_NameToLuaValue(const FName Value);
+
+	//Object
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Object", BlueprintAutocast), Category="Lua")
+	static UObject* Conv_LuaValueToObject(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Object -> Lua", BlueprintAutocast), Category="Lua")
+	static FLuaValue Conv_ObjectToLuaValue(UObject* Object);
+
+	//Class
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Class", BlueprintAutocast), Category="Lua")
+	static UClass* Conv_LuaValueToClass(const FLuaValue& Value);
+
+	//Float
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Float -> Lua", BlueprintAutocast), Category="Lua")
+	static FLuaValue Conv_FloatToLuaValue(const float Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Float", BlueprintAutocast), Category="Lua")
+	static float Conv_LuaValueToFloat(const FLuaValue& Value);
+
+	// Int
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Int", BlueprintAutocast), Category="Lua")
+	static int32 Conv_LuaValueToInt(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Int -> Lua", BlueprintAutocast), Category="Lua")
+	static FLuaValue Conv_IntToLuaValue(const int32 Value);
+	
+	//Vector
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Vector", BlueprintAutocast), Category = "Lua")
+	static FVector Conv_LuaValueToFVector(const FLuaValue& Value);
+	UFUNCTION()
+	static FVector LuaTableToVector(FLuaValue Value);
+	
+	//Bool
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Bool", BlueprintAutocast), Category="Lua")
+	static bool Conv_LuaValueToBool(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Bool -> Lua", BlueprintAutocast), Category="Lua")
+	static FLuaValue Conv_BoolToLuaValue(const bool Value);
+
+
 private:
 	static void HttpRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSubclassOf<ULuaState> LuaState, TWeakObjectPtr<UWorld> World, const FString SecurityHeader, const FString SignaturePublicExponent, const FString SignatureModulus, FLuaHttpSuccess Completed);
 	static void HttpGenericRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TWeakPtr<FLuaSmartReference> Context, FLuaHttpResponseReceived ResponseReceived, FLuaHttpError Error);
 
+};
+
+UCLASS()
+class LUAMACHINE_API ULuaTableFunctionLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static FLuaValue MergeTables(UObject* WorldContextObject, TSubclassOf<ULuaState> State, TArray<FLuaValue> TablesToMerge);
+	
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static FLuaValue CreateTableFromValues(UObject* WorldContextObject, TSubclassOf<ULuaState> State, TMap<FString,FLuaValue> Values);
+	
+	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State,subfield_key", WorldContext = "WorldContextObject"))
+	static FLuaValue MergeTablesFromObjects(UObject* WorldContextObject, TSubclassOf<ULuaState> State, TArray<UObject*> Objects, const FString& subfield_key);
+};
+
+
+UCLASS()
+class LUAMACHINE_API ULuaValuesFunctionLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	// Globals
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static bool GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static int32 GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static float GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	static FString GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+
+	// Sets
+	UFUNCTION(BlueprintCallable, Category="Lua")
+	static FLuaValue LuaTableSetField_Bool(FLuaValue Table, const FString& Key, bool Value);
+	UFUNCTION(BlueprintCallable, Category="Lua")
+	static FLuaValue LuaTableSetField_Int(FLuaValue Table, const FString& Key, int32 Value);
+	UFUNCTION(BlueprintCallable, Category="Lua")
+	static FLuaValue LuaTableSetField_Float(FLuaValue Table, const FString& Key, float Value);
+	UFUNCTION(BlueprintCallable, Category="Lua")
+	static FLuaValue LuaTableSetField_String(FLuaValue Table, const FString& Key, FString Value);
+	UFUNCTION(BlueprintCallable, Category="Lua")
+	static FLuaValue LuaTableSetField_Object(FLuaValue Table, const FString& Key, UObject* Value);
 };

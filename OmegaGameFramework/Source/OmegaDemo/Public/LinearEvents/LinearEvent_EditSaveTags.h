@@ -6,7 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Event/OmegaLinearEvent.h"
 #include "UObject/Object.h"
-#include "Utils/OmegaUtils_General.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "LinearEvent_EditSaveTags.generated.h"
 
 /**

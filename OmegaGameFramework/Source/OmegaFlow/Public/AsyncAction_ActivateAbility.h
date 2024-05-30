@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "OmegaAbility.h"
+#include "Actors/OmegaAbility.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "AsyncAction_ActivateAbility.generated.h"
 

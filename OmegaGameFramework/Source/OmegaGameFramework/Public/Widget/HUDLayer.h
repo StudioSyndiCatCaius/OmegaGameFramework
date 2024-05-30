@@ -31,7 +31,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
 	void LayerAdded(class APlayerController* OwningPlayer, UObject* Context);
 
-	UFUNCTION()
+	//Will run the removal animation, and then clea the HUD Layer once finished.
+	UFUNCTION(BlueprintCallable, Category="HUD")
 	void RemoveHUDLayer();
 
 	//UFUNCTION(BlueprintImplementableEvent)

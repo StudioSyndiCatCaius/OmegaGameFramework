@@ -3,10 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DataInterface_General.h"
-#include "GameplayTagContainer.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "Event/OmegaLinearEvent.h"
-#include "Gameplay/GameplayTagsInterface.h"
 #include "Nodes/FlowNode.h"
 #include "UObject/Object.h"
 #include "LinearEvent_SimpleMessage.generated.h"

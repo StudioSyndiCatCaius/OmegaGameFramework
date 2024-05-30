@@ -24,6 +24,7 @@
 #include "IAssetRegistry.h"
 #include "AssetRegistryModule.h"
 #endif
+#include "LuaObject.h"
 #include "Misc/FileHelper.h"
 #include "Serialization/ArrayReader.h"
 #include "TextureResource.h"
@@ -43,8 +44,11 @@ ULuaState* ULuaBlueprintFunctionLibrary::LOCAL_getLuaState(UObject* WorldContext
 
 TSubclassOf<ULuaState> ULuaBlueprintFunctionLibrary::GetDefaultLuaState()
 {
-	return GetMutableDefault<ULuaSettings>()->DefaultState.LoadSynchronous();
-	
+	if(!GetMutableDefault<ULuaSettings>()->DefaultState.IsNull())
+	{
+		return GetMutableDefault<ULuaSettings>()->DefaultState.LoadSynchronous();
+	}
+	return ULuaState::StaticClass();
 }
 
 FLuaValue ULuaBlueprintFunctionLibrary::LuaCreateNil()
@@ -208,6 +212,7 @@ FLuaValue ULuaBlueprintFunctionLibrary::Conv_BoolToLuaValue(const bool Value)
 {
 	return FLuaValue(Value);
 }
+
 
 int32 ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(const FLuaValue& Value)
 {
@@ -1982,4 +1987,167 @@ ULuaState* ULuaBlueprintFunctionLibrary::CreateDynamicLuaState(UObject* WorldCon
 	}
 
 	return NewLuaState->GetLuaState(WorldContextObject->GetWorld());
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::GetLuaFieldValueFromTable(FLuaValue Table, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome)
+{
+	FLuaValue out = Table.GetField(Field);
+
+	if(out.IsNil())
+	{
+		Outcome = ELuaValueResult::Nil;
+	}
+	else
+	{
+		Outcome = ELuaValueResult::Valid;
+	}
+	return out;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::GetLuaFieldValueFromObject(UObject* Object, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome)
+{
+	FLuaValue out;
+	if(Object)
+	{
+		FLuaValue out_key;
+		FLuaValue out_val;
+		ULuaObjectFunctions::GetObjectKeyAndValue(Object, out_key,out_val);
+		out = out_val.GetField(Field);
+		if(out.IsNil())
+		{
+			Outcome = ELuaValueResult::Nil;
+		}
+		else
+		{
+			Outcome = ELuaValueResult::Valid;
+		}
+	}
+	else
+	{
+		Outcome = ELuaValueResult::Nil;
+	}
+	return out;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::LuaGlobalCall_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	FGameplayTag Name, TArray<FLuaValue> Args)
+{
+	return LuaGlobalCall(WorldContextObject,State,Name.ToString(),Args);
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::LuaGetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	FGameplayTag Name)
+{
+	return LuaGetGlobal(WorldContextObject,State,Name.ToString());
+}
+
+void ULuaBlueprintFunctionLibrary::LuaSetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	FGameplayTag Name, FLuaValue Value)
+{
+	LuaSetGlobal(WorldContextObject,State,Name.ToString(),Value);
+}
+
+
+FLuaValue ULuaTableFunctionLibrary::MergeTables(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+                                                TArray<FLuaValue> TablesToMerge)
+{
+	FLuaValue new_table = ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
+	for(FLuaValue temp_table : TablesToMerge)
+	{
+		for(FLuaValue temp_key : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(temp_table))
+		{
+			new_table.SetField(temp_key.String,temp_table.GetField(temp_key.String));
+		}
+	}
+	return new_table;
+}
+
+FLuaValue ULuaTableFunctionLibrary::CreateTableFromValues(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	TMap<FString,FLuaValue> Values)
+{
+	FLuaValue new_table = ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
+	TArray<FString> key_list;
+	Values.GetKeys(key_list);
+	for(FString temp_key : key_list)
+	{
+		new_table.SetField(temp_key,Values.FindOrAdd(temp_key));
+	}
+	return new_table;
+}
+
+FLuaValue ULuaTableFunctionLibrary::MergeTablesFromObjects(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	TArray<UObject*> Objects, const FString& subfield_key)
+{
+	FLuaValue new_table = ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
+	TArray<FLuaValue> tables_to_merge;
+	for(auto* temp_obj: Objects)
+	{
+		if(temp_obj)
+		{
+			FLuaValue in_key;
+			FLuaValue in_val;
+			ULuaObjectFunctions::GetObjectKeyAndValue(temp_obj,in_key,in_val);
+			if(subfield_key.IsEmpty())
+			{
+				tables_to_merge.Add(in_val);
+			}
+			else
+			{
+				tables_to_merge.Add(ULuaBlueprintFunctionLibrary::LuaTableGetField(in_val,subfield_key));
+			}
+		}
+	}
+
+	return MergeTables(WorldContextObject,State,tables_to_merge);
+}
+
+// --- Value Functions ---
+
+bool ULuaValuesFunctionLibrary::GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Bool;
+}
+
+int32 ULuaValuesFunctionLibrary::GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Integer;
+}
+
+float ULuaValuesFunctionLibrary::GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).ToFloat();
+}
+
+FString ULuaValuesFunctionLibrary::GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global)
+{
+	return ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Bool(FLuaValue Table, const FString& Key, bool Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_BoolToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Int(FLuaValue Table, const FString& Key, int32 Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_IntToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Float(FLuaValue Table, const FString& Key, float Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_FloatToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_String(FLuaValue Table, const FString& Key, FString Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue(Value));
+}
+
+FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Object(FLuaValue Table, const FString& Key, UObject* Value)
+{
+	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_ObjectToLuaValue(Value));
 }

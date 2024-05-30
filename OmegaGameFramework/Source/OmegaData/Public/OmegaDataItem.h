@@ -8,17 +8,13 @@
 #include "GameFramework/Actor.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/DataAsset.h"
-#include "DataInterface_General.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "Engine/GameInstance.h"
-#include "Gameplay/GameplayTagsInterface.h"
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
-#include "Data/DataAssetCollectionInterface.h"
-#include "Data/OmegaSoftPropertyInterface.h"
-#include "Gameplay/DataInterface_AttributeModifier.h"
-#include "Gameplay/DataInterface_OmegaEffect.h"
-#include "Gameplay/Combatant/DataInterface_Skill.h"
-#include "Gameplay/Combatant/DataInterface_SkillSource.h"
+#include "Components/DataAssetCollectionComponent.h"
+#include "Functions/OmegaFunctions_SoftProperty.h"
+#include "Interfaces/OmegaInterface_Combatant.h"
 
 
 #include "OmegaDataItem.generated.h"
@@ -31,7 +27,7 @@ class ULevelSequence;
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
 																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
-																public IDataInterface_SkillSource, public IDataInterface_Skill, public IDataInterface_ContextAV
+																public IDataInterface_SkillSource, public IDataInterface_Skill, public ILuaInterface
 {
 	GENERATED_BODY()
 
@@ -141,10 +137,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", AdvancedDisplay)
 	TArray<FOmegaEffectContainer> Effects;
 	*/
-	
-	virtual TMap<FGameplayTag, ULevelSequence*> GetContextAVSequences_Implementation() override;
-	virtual TMap<FGameplayTag, USoundBase*> GetContextAVSounds_Implementation() override;
-	virtual TMap<FGameplayTag, UNiagaraSystem*> GetContextAVNiagara_Implementation() override;
+	//###############################################################################
+	// Gameplay Tags
+	//###############################################################################
+	virtual FLuaValue GetKey_Implementation() override;
+	virtual FLuaValue GetValue_Implementation(const FString& Field) override;
+
 	
 	//###############################################################################
 	// Gameplay Tags

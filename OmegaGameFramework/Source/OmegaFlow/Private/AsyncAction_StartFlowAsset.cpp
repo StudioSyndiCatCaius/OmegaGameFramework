@@ -3,10 +3,9 @@
 
 #include "AsyncAction_StartFlowAsset.h"
 
-#include "OmegaGameManager.h"
+#include "Engine/GameInstance.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Flow/Public/FlowSubsystem.h"
-
-
 
 
 void UAsyncAction_StartFlowAsset::Native_OnFinishFlow(UFlowAsset* FlowAsset, FName Output, const FString& Flag)

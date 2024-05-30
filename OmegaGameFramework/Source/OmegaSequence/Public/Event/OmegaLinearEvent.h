@@ -19,13 +19,10 @@ class OMEGASEQUENCE_API UOmegaLinearEvent : public UObject
 public:
 	UOmegaLinearEvent(const FObjectInitializer& ObjectInitializer);
 	virtual UWorld* GetWorld() const override;
-
-	UPROPERTY()
-	UWorld* WorldPrivate = nullptr;
-	UPROPERTY()
-	UGameInstance* GameInstanceRef = nullptr;
-	UFUNCTION()
-	virtual UGameInstance* GetGameInstance() const;
+	UPROPERTY() UWorld* WorldPrivate = nullptr;
+	UPROPERTY() UGameInstance* GameInstanceRef = nullptr;
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
+	
 	UPROPERTY()
 	UOmegaLinearEventSubsystem* SubsystemRef;
 

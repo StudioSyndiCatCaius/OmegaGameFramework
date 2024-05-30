@@ -4,8 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Save/OmegaSaveCondition.h"
-#include "Save/OmegaSaveSubsystem.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 #include "UObject/Object.h"
 #include "SaveCondition_QueryTags.generated.h"
 

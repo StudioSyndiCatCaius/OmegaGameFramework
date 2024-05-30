@@ -8,7 +8,7 @@ public class LuaMachine : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
-
+		
         PublicIncludePaths.AddRange(
             new string[] {
 				// ... add public include paths required here ...
@@ -30,6 +30,7 @@ public class LuaMachine : ModuleRules
                 "HTTP",
                 "Json",
                 "DeveloperSettings",
+                "GameplayTags",
                 "PakFile"
 				// ... add other public dependencies that you statically link with here ...
 			}

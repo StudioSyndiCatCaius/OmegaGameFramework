@@ -7,7 +7,7 @@
 #include "GameFeaturesSubsystem.h"
 #include "OmegaDataItem.h"
 #include "OmegaDataSettings.h"
-#include "OmegaGameFrameworkBPLibrary.h"
+#include "Functions/OmegaFunctions_Common.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 
 void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)

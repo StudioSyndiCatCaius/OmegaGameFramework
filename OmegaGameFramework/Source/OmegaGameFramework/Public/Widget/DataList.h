@@ -6,14 +6,14 @@
 #include "UObject/ObjectMacros.h"
 #include "GameplayTagContainer.h"
 #include "LuaObject.h"
-#include "WidgetInterface_Input.h"
+#include "Interfaces/OmegaInterface_Widget.h"
 #include "Types/SlateEnums.h"
 #include "Components/SlateWrapperTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Widget/DataWidget.h"
 #include "Math/Vector2D.h"
 #include "Components/CanvasPanel.h"
-#include "Data/GeneralDataObject.h"
+#include "Misc/GeneralDataObject.h"
 
 #include "DataList.generated.h"
 
@@ -40,6 +40,22 @@ enum class EDataListFormat : uint8
 	Format_UniformGrid		UMETA(DisplayName = "Uniform Grid"),
 };
 
+
+UCLASS(BlueprintType, Blueprintable, abstract, editinlinenew, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UObject, public IDataInterface_General
+{
+	GENERATED_BODY()
+public:
+	UDataListCustomEntry(const FObjectInitializer& ObjectInitializer);
+	virtual UWorld* GetWorld() const override;
+
+	UPROPERTY()
+	UWorld* WorldPrivate = nullptr;
+	UPROPERTY()
+	UGameInstance* GameInstanceRef = nullptr;
+	UFUNCTION()
+	virtual UGameInstance* GetGameInstance() const;
+};
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInterface_Input
@@ -79,17 +95,22 @@ public:
 	//##### ENTRY CLASS #####//
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
+	UPROPERTY(EditAnywhere, Instanced, Category = "Entry")
+	UDataWidgetMetadata* EntryMetadata;
 
 	UFUNCTION(BlueprintCallable, Category="Entry", meta=(AdvancedDisplay="KeepEntires"))
 	void SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries=true);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TArray<UPrimaryDataAsset*> DefaultAssets;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	bool bUseCustomEntries;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Entry")
+	TArray<UDataListCustomEntry*> CustomEntryObjects;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",AdvancedDisplay)
 	TArray<FCustomAssetData> CustomEntries;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
@@ -196,6 +217,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
 	UDataWidget* GetEntry(int32 Index);
+
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void WidgetNotify(FName notify);
 	
 	//###########################################
 	// Linked Widgets

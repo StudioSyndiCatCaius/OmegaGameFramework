@@ -7,7 +7,17 @@ public class OmegaOnline : ModuleRules
 	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", "UMG", "OmegaGameFramework"});
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core", 
+			"CoreUObject", 
+			"Engine", 
+			"GameplayTags", 
+			"UMG", 
+			"OnlineSubsystem",
+			"OnlineSubsystemUtils",
+			"OmegaGameFramework"
+		});
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]

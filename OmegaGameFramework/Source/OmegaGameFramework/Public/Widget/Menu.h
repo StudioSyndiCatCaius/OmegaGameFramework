@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
-#include "Message/OmegaMessageSubsystem.h"
-#include "Widget/WidgetInterface_Input.h"
+#include "Subsystems/OmegaSubsystem_Message.h"
+#include "Interfaces/OmegaInterface_Widget.h"
 
 #include "Menu.generated.h"
 
@@ -27,7 +27,7 @@ protected:
 	virtual void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
 	//virtual void OnAnimationFinishedPlaying(UUMGSequencePlayer& Player) override;
 	virtual void NativeConstruct() override;
-
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 public:
 
 	//----------------------------------------------------------------------
@@ -35,6 +35,8 @@ public:
 	//----------------------------------------------------------------------
 	
 	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	FText DisplayName;
 	UPROPERTY(EditAnywhere, Category = "Menu")
 	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
 
@@ -48,9 +50,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Context, Tags, Flag"))
 		void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
-
-	UPROPERTY()
-	bool bIsClosing;
+private:
+	UPROPERTY() bool bIsClosing;
+	UPROPERTY() bool bIsPlayingAnimation;
+public:
 	
 	void Native_CompleteClose();
 
@@ -63,16 +66,33 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
 		void MenuClosed(FGameplayTagContainer Tags, const FString& Flag);
 
-		
+	//----------------------------------------------------------------------
+	// Reset
+	//----------------------------------------------------------------------
+	UFUNCTION(BlueprintCallable,Category="Menu")
+	void Reset()
+	{
+		OnReset();
+	}
+	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
+	void OnReset();
 	//----------------------------------------------------------------------
 	// Input
 	//----------------------------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	UOmegaInputMode* CustomInputMode;
-	
+
+	//Prevents input when menus is opened for a set amount of time
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Input")
+	float InputBlockDelay=0.2;
+private:
+	UPROPERTY()
+	float InputBlock_Remaining;
 	UPROPERTY()
 	bool PrivateInputBlocked;
+public:
+	UFUNCTION() bool IsInputBlocked() const { return PrivateInputBlocked || bIsClosing || !bIsOpen || InputBlock_Remaining > 0.0; }
 	
 	virtual bool InputBlocked_Implementation() override;
 	//----------------------------------------------------------------------
@@ -82,7 +102,18 @@ public:
 	UWidgetAnimation* GetOpenAnimation();
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
 	UWidgetAnimation* GetCloseAnimation();
-
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animations")
+	float OpenCloseInterpTime=0.2;
+	UPROPERTY()
+	float OpenCloseInterp_Value;
+	UPROPERTY()
+	bool isPlayingOpenCloseInterp;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animations")
+	bool AutoInterpOpacityOnOpenClose;
+	UFUNCTION(BlueprintImplementableEvent,Category="Animations")
+	void UpdateOpenCloseInterp(float value);
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animations")
 	bool ReverseOpenAnimation;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animations")
@@ -102,7 +133,9 @@ public:
 	USoundBase* OpenSound;
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase* CloseSound;
-	
+	//If no sound is found for a menu sound, default to using sounds from the current OmegaSlateStyle Asset
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	bool DefaultToStyleSounds=true;
 
 
 	///PROPERTIES//

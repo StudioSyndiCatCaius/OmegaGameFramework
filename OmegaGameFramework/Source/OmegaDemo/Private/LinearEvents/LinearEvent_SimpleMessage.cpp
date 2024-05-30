@@ -4,7 +4,7 @@
 #include "LinearEvents/LinearEvent_SimpleMessage.h"
 
 #include "OmegaDataItem.h"
-#include "OmegaGameManager.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "OmegaLinearEventSubsystem.h"
 
 FString ULinearEvent_SimpleMessage::GetLogString_Implementation() const

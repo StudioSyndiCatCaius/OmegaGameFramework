@@ -2,8 +2,13 @@
 
 
 #include "OmegaDataItem.h"
-#include "Gameplay/Combatant/DataInterface_SkillSource.h"
-#include "OmegaGameplayEffect.h"
+
+#include "LuaBlueprintFunctionLibrary.h"
+#include "LuaObject.h"
+#include "LuaInterface.h"
+#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Actors/OmegaGameplayEffect.h"
+#include "Functions/OmegaFunctions_Common.h"
 
 
 bool UOmegaDataItem::AreTagsAccepted(const FString& Query, FGameplayTagContainer Tags)
@@ -171,56 +176,31 @@ TArray<UOmegaDataTrait*> UOmegaDataItem::GetTraitsWithInterface(const UClass* In
 }
 
 //############################################################################################################
-// Contextual Data
+// Lua
 //############################################################################################################
-
-TMap<FGameplayTag, ULevelSequence*> UOmegaDataItem::GetContextAVSequences_Implementation()
+FLuaValue UOmegaDataItem::GetKey_Implementation()
 {
-	TMap<FGameplayTag, ULevelSequence*> OutVals;
-	for(auto* TempTrait : GetAllValidTraits())
-	{
-		TMap<FGameplayTag, ULevelSequence*> TempVals = IDataInterface_ContextAV::Execute_GetContextAVSequences(TempTrait);
-		TArray<FGameplayTag> TagList;
-		TempVals.GetKeys(TagList);
-		for (FGameplayTag TempID: TagList)
-		{
-			OutVals.Add(TempID, TempVals[TempID]);
-		}
-	}
-	return OutVals;
+	FString S_label;
+	GetGeneralAssetLabel_Implementation(S_label);
+	return ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue(S_label);
 }
 
-TMap<FGameplayTag, USoundBase*> UOmegaDataItem::GetContextAVSounds_Implementation()
+FLuaValue UOmegaDataItem::GetValue_Implementation(const FString& Field)
 {
-	TMap<FGameplayTag, USoundBase*> OutVals;
-	for(auto* TempTrait : GetAllValidTraits())
+	FLuaValue out = ULuaBlueprintFunctionLibrary::LuaCreateTable(this,ULuaState::StaticClass());
+	for(auto* temp_trait: GetAllValidTraits())
 	{
-		TMap<FGameplayTag, USoundBase*> TempVals = IDataInterface_ContextAV::Execute_GetContextAVSounds(TempTrait);
-		TArray<FGameplayTag> TagList;
-		TempVals.GetKeys(TagList);
-		for (FGameplayTag TempID: TagList)
-		{
-			OutVals.Add(TempID, TempVals[TempID]);
-		}
+		TArray<FLuaValue> temp_merges;
+		temp_merges.Add(out);
+		FLuaValue trait_lua_key;
+		FLuaValue trait_lua;
+		ULuaObjectFunctions::GetObjectKeyAndValue(temp_trait,trait_lua_key,trait_lua);
+		temp_merges.Add(trait_lua);
+		out = ULuaTableFunctionLibrary::MergeTables(this,ULuaState::StaticClass(),temp_merges);
 	}
-	return OutVals;
+	return out;
 }
 
-TMap<FGameplayTag, UNiagaraSystem*> UOmegaDataItem::GetContextAVNiagara_Implementation()
-{
-	TMap<FGameplayTag, UNiagaraSystem*> OutVals;
-	for(auto* TempTrait : GetAllValidTraits())
-	{
-		TMap<FGameplayTag, UNiagaraSystem*> TempVals = IDataInterface_ContextAV::Execute_GetContextAVNiagara(TempTrait);
-		TArray<FGameplayTag> TagList;
-		TempVals.GetKeys(TagList);
-		for (FGameplayTag TempID: TagList)
-		{
-			OutVals.Add(TempID, TempVals[TempID]);
-		}
-	}
-	return OutVals;
-}
 
 //############################################################################################################
 // Gamepaly Tags
@@ -279,7 +259,7 @@ void UOmegaDataItem::GetGeneralAssetLabel_Implementation(FString& Label)
 {
 	if(CustomLabel.IsEmpty())
 	{
-		Label = DisplayName.ToString();
+		Label = GetName();
 	}
 	Label = CustomLabel;
 }

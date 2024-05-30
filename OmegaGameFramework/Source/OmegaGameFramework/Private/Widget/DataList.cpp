@@ -20,6 +20,32 @@
 #include "Engine/DataAsset.h"
 
 
+UDataListCustomEntry::UDataListCustomEntry(const FObjectInitializer& ObjectInitializer)
+{
+	if (const UObject* Owner = GetOuter())
+	{
+		WorldPrivate = Owner->GetWorld();
+	}
+}
+
+UWorld* UDataListCustomEntry::GetWorld() const
+{
+	if(WorldPrivate)
+    {
+    	return WorldPrivate;
+    }
+    else if(GetGameInstance())
+    {
+    	return GetGameInstance()->GetWorld();
+    }
+    return nullptr;
+}
+
+UGameInstance* UDataListCustomEntry::GetGameInstance() const
+{
+	return GameInstanceRef;
+}
+
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
 	if(NewClass)
@@ -115,11 +141,14 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
 
+	if(EntryMetadata)
+	{
+		TempEntry->WidgetMetadata=EntryMetadata;
+	}
 	if(OverrideEntryTooltip)
 	{
 		TempEntry->DefaultTooltipWidget = OverrideEntryTooltip;
 	}
-	
 	// Do not add if hidden
 	if(TempEntry->IsEntityHidden(Asset))
 	{
@@ -369,6 +398,17 @@ UDataWidget* UDataList::GetEntry(int32 Index)
 	return nullptr;
 }
 
+void UDataList::WidgetNotify(FName notify)
+{
+	for(auto* temp_entry: GetEntries())
+	{
+		if(temp_entry)
+		{
+			temp_entry->WidgetNotify(notify);
+		}
+	}
+}
+
 TArray<UDataWidget*> UDataList::GetEntiresWithTag(FName Tag, bool bInvertGet)
 {
 	TArray<UDataWidget*> OutWidgets;
@@ -392,7 +432,7 @@ bool UDataList::AnyEntryHasTag(FName Tag)
 	{
 		if(TempEntry->DataWidgetHasTag(Tag))
 		{
-			return false;
+			return true;
 		}
 	}
 	return false;
@@ -611,9 +651,22 @@ void UDataList::RebuildList()
 	
 	if (bUseCustomEntries)
 	{
-		for (const FCustomAssetData TempData : CustomEntries)
+		if(CustomEntryObjects.IsValidIndex(0))
 		{
-			AddedCustomEntryToList(TempData, DefaultListFlag);
+			for(auto* temp_entry : CustomEntryObjects)
+			{
+				if(temp_entry)
+				{
+					AddAssetToList(temp_entry,"");
+				}
+			}
+		}
+		else
+		{
+			for (const FCustomAssetData& TempData : CustomEntries)
+			{
+				AddedCustomEntryToList(TempData, DefaultListFlag);
+			}
 		}
 	}
 	else

@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DataInterface_ContextAV.h"
-#include "DataInterface_General.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "GameFramework/Actor.h"
 #include "LevelSequence.h"
 #include "GameplayTagContainer.h"
-#include "Data/OmegaSoftPropertyInterface.h"
+#include "LuaInterface.h"
+#include "Functions/OmegaFunctions_SoftProperty.h"
 #include "OmegaDataTrait.generated.h"
 
 class AActor;
@@ -18,7 +18,7 @@ class USoundBase;
 class UNiagaraSystem;
 
 UCLASS(Blueprintable, abstract, const, editinlinenew, hidecategories=Object, CollapseCategories)
-class OMEGADATA_API UOmegaDataTrait : public UObject, public IDataInterface_General, public IDataInterface_ContextAV
+class OMEGADATA_API UOmegaDataTrait : public UObject, public IDataInterface_General, public ILuaInterface
 {
 	GENERATED_BODY()
 
@@ -54,13 +54,5 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait")
 	void OnActorTick(AActor* Actor, float DeltaTime) const;
 	// SOFT PROPERTIES
-	
-	//###############################################################################
-	// Contextual Data
-	//###############################################################################
-
-	virtual TMap<FGameplayTag, ULevelSequence*> GetContextAVSequences_Implementation() override;
-	virtual TMap<FGameplayTag, USoundBase*> GetContextAVSounds_Implementation() override;
-	virtual TMap<FGameplayTag, UNiagaraSystem*> GetContextAVNiagara_Implementation() override;
 	
 };

@@ -6,17 +6,16 @@
 #include "Factories/Factory.h"
 #include "AssetTypeActions_Base.h"
 
-#include "OmegaAttribute.h"
-#include "OmegaAbility.h"
+#include "Misc/OmegaAttribute.h"
+#include "Actors/OmegaAbility.h"
+#include "Misc/OmegaAttribute.h"
 #include "OmegaDataItem.h"
-#include "OmegaGameplaySystem.h"
-#include "Attributes/OmegaAttributeSet.h"
-#include "Save/OmegaSaveGame.h"
-#include "Save/OmegaSaveGlobal.h"
+#include "Actors/OmegaGameplaySystem.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
 #include "Factories/BlueprintFactory.h"
-#include "Gameplay/OmegaGameplayModule.h"
+#include "Misc/OmegaGameplayModule.h"
 #include "Widget/Menu.h"
 #include "OmegaEditorFactories.generated.h"
 
