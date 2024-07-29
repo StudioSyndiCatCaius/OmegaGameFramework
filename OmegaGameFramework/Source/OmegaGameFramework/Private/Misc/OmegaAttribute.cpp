@@ -98,6 +98,19 @@ void UOmegaAttribute::GetGeneralAssetLabel_Implementation(FString& Label)
 }
 
 
+TArray<UOmegaAttribute*> UOmegaAttributeSet::GetAllAttributes()
+{
+	TArray<UOmegaAttribute*> out=Attributes;
+	for (auto* TempSet : InheritedSets)
+	{
+		if(TempSet)
+		{
+			out.Append(TempSet->Attributes);
+		}
+	}
+	return out;
+}
+
 TArray<UOmegaAttribute*> UOmegaAttributeSet::GetMetricAttributes()
 {
 	return Local_GetAtt(false);
@@ -111,7 +124,7 @@ TArray<UOmegaAttribute*> UOmegaAttributeSet::GetStaticAttributes()
 TArray<UOmegaAttribute*> UOmegaAttributeSet::Local_GetAtt(bool bStatic)
 {
 	TArray<UOmegaAttribute*> OutAtts;
-	for(auto* TempAtt: Attributes)
+	for(auto* TempAtt: GetAllAttributes())
 	{
 		if(TempAtt && (TempAtt->bIsValueStatic == bStatic))
 		{

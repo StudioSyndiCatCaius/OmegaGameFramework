@@ -119,7 +119,6 @@ float ULevelingComponent::AdjustXPRate(float InXP, bool UseAdjust)
 	{
 		return InXP;
 	}
-	Native_Update();
 }
 
 void ULevelingComponent::Native_Update()

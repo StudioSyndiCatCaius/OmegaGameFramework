@@ -53,7 +53,8 @@ public:
 	FSoftObjectPath DefaultSettings_Gameplay;
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaSettings_Paths"))
 	FSoftObjectPath DefaultSettings_Paths;
-	
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaFileManagerSettings"))
+	FSoftObjectPath DefaultSettings_FileManager;
 	//SAVE
 	UClass* GetOmegaGameSaveClass() const;
 	

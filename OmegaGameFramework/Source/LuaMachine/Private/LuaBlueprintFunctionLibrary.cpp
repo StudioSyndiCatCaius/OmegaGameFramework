@@ -28,6 +28,7 @@
 #include "Misc/FileHelper.h"
 #include "Serialization/ArrayReader.h"
 #include "TextureResource.h"
+#include "GameplayTagContainer.h"
 
 
 
@@ -2029,23 +2030,6 @@ FLuaValue ULuaBlueprintFunctionLibrary::GetLuaFieldValueFromObject(UObject* Obje
 	return out;
 }
 
-FLuaValue ULuaBlueprintFunctionLibrary::LuaGlobalCall_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	FGameplayTag Name, TArray<FLuaValue> Args)
-{
-	return LuaGlobalCall(WorldContextObject,State,Name.ToString(),Args);
-}
-
-FLuaValue ULuaBlueprintFunctionLibrary::LuaGetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	FGameplayTag Name)
-{
-	return LuaGetGlobal(WorldContextObject,State,Name.ToString());
-}
-
-void ULuaBlueprintFunctionLibrary::LuaSetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	FGameplayTag Name, FLuaValue Value)
-{
-	LuaSetGlobal(WorldContextObject,State,Name.ToString(),Value);
-}
 
 
 FLuaValue ULuaTableFunctionLibrary::MergeTables(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
@@ -2127,6 +2111,47 @@ FString ULuaValuesFunctionLibrary::GetLuaGlobal_AsString(UObject* WorldContextOb
 	return ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global));
 }
 
+
+// Set Global
+
+void ULuaValuesFunctionLibrary::SetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global, bool Value)
+{
+	ULuaBlueprintFunctionLibrary::LuaSetGlobal(WorldContextObject,State,Global,ULuaBlueprintFunctionLibrary::Conv_BoolToLuaValue(Value));
+}
+
+
+void ULuaValuesFunctionLibrary::SetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+                                                   const FString& Global, int32 Value)
+{
+	ULuaBlueprintFunctionLibrary::LuaSetGlobal(WorldContextObject,State,Global,ULuaBlueprintFunctionLibrary::Conv_IntToLuaValue(Value));
+}
+
+void ULuaValuesFunctionLibrary::SetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global, float Value)
+{
+	ULuaBlueprintFunctionLibrary::LuaSetGlobal(WorldContextObject,State,Global,ULuaBlueprintFunctionLibrary::Conv_FloatToLuaValue(Value));
+}
+
+void ULuaValuesFunctionLibrary::SetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global, const FString& Value)
+{
+	ULuaBlueprintFunctionLibrary::LuaSetGlobal(WorldContextObject,State,Global,ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue(Value));
+}
+
+void ULuaValuesFunctionLibrary::AddLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global, int32 Value)
+{
+	SetLuaGlobal_AsInt(WorldContextObject,State,Global,Value+GetLuaGlobal_AsInt(WorldContextObject,State,Global));
+}
+
+void ULuaValuesFunctionLibrary::AddLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
+	const FString& Global, float Value)
+{
+	SetLuaGlobal_AsFloat(WorldContextObject,State,Global,Value+GetLuaGlobal_AsFloat(WorldContextObject,State,Global));
+}
+
+// Set Table
 FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Bool(FLuaValue Table, const FString& Key, bool Value)
 {
 	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_BoolToLuaValue(Value));

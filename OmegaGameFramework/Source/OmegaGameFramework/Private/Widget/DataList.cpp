@@ -140,11 +140,8 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
-
-	if(EntryMetadata)
-	{
-		TempEntry->WidgetMetadata=EntryMetadata;
-	}
+	TempEntry->WidgetTags=EntryAutoTags;
+	TempEntry->WidgetMetadata=EntryMetadata;
 	if(OverrideEntryTooltip)
 	{
 		TempEntry->DefaultTooltipWidget = OverrideEntryTooltip;
@@ -291,6 +288,19 @@ TArray<UDataWidget*> UDataList::GetEntries()
 	return OutEntries;
 }
 
+TArray<UDataWidget*> UDataList::GetEntries_Impure(TSubclassOf<UDataWidget> Class)
+{
+	TArray<UDataWidget*> out;
+	for (auto* i : GetEntries())
+	{
+		if(i->GetClass()->IsChildOf(Class))
+		{
+			out.Add(i);
+		}
+	}
+	return out;
+}
+
 void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 {
 	int32 incoming_index=Index;
@@ -298,9 +308,14 @@ void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 	{
 		incoming_index=RememberedHoverIndex;
 	}
+	
 	if(GetEntry(incoming_index))
 	{
 		GetEntry(incoming_index)->Hover();
+	}
+	else
+	{
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetControlWidget(this);
 	}
 }
 

@@ -117,7 +117,13 @@ public:
 	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Class from Path")
-	static UClass* GetClass_FromPath(const FString& AssetPath, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	static UClass* GetClass_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Asset from Lua Field")
+	static UObject* GetAsset_FromLuaField(FLuaValue Lua, const FString& Field, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Class from Lua Field")
+	static UClass* GetClass_FromLuaField(FLuaValue Lua, const FString& Field, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 	
 	//###############################################################################
 	// Player
@@ -190,6 +196,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|Actors")
 	static AActor* GetClosestActorToPoint(TArray<AActor*> Actors, FVector Point);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(DeterminesOutputType="FilterClass"))
+	static AActor* GetClosestOverlappingActor(UPrimitiveComponent* OverlappedComponent,TSubclassOf<AActor> FilterClass);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Actors")
 	static AActor* GetClosestActorToViewportPoint2D(TArray<AActor*> Actors, FVector2D Point, const APlayerController* Player, bool ViewportRelative);
 

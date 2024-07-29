@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "Subsystems/EngineSubsystem.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Sound/SoundBase.h"
 #include "OmegaSubsystem_File.generated.h"
@@ -14,12 +14,12 @@ struct FOmegaFileObjectList
 {
 	GENERATED_BODY()
 	UPROPERTY()
-	TArray<UObject*> file_objects;
+	TMap<FString, UObject*> file_objects;
 };
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaFileSubsystem : public UGameInstanceSubsystem
+class OMEGAGAMEFRAMEWORK_API UOmegaFileSubsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
 
@@ -39,20 +39,21 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileSubsystem : public UGameInstanceSubsystem
 	TMap<UClass*, FOmegaFileObjectList> imported_overrides;
 	
 public:
-	UFUNCTION()
-	void ImportOverrideFilesInPath(const FString& path);
+	UFUNCTION(BlueprintPure,Category="Omega|File")
+	UOmegaFileManagerSettings* GetFileManagerSettings() const;
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|File")
+	void ImportFileAsOverrideAsset(const FString& path);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|File")
+	void ImportFileAsOverrideAsset_List(const FString& path);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|File")
 	FString GetOverrideDirectory() const;
-	UFUNCTION(BlueprintPure, Category="Omega|File")
-	FString GetOverrideDirectory_Images() const;
-	UFUNCTION(BlueprintPure, Category="Omega|File")
-	FString GetOverrideDirectory_Audio() const;
+
+	UFUNCTION(BlueprintCallable,Category="Omega|File",meta=(DeterminesOutputType="Class"))
+	UObject* GetOverrideObject(FString name, UClass* Class) const;
 	
-	UPROPERTY(BlueprintReadOnly, Category="Omega|File")
-	TMap<FString, UTexture2D*> imported_images;
-	UPROPERTY(BlueprintReadOnly, Category="Omega|File")
-	TMap<FString, USoundBase*> imported_sounds;
 	
 };
 
@@ -61,8 +62,35 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileFunctions : public UBlueprintFunctionLibr
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintPure, Category="Omega|File", meta=(WorldContext="WorldContextObject"))
-	static UTexture2D* GetOverride_Texture(UObject* WorldContextObject, const FString& name);
+	
+};
+
+
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew)
+class OMEGAGAMEFRAMEWORK_API UOmegaFileImportScript : public UObject
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditDefaultsOnly,Category="FileImport")
+	UClass* ImportClass;
+	UPROPERTY(EditDefaultsOnly,Category="FileImport")
+	TArray<FString> ValidExtensions;
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="FileImport")
+	UObject* ImportAsObject(const FString& path, const FString& name, const FString& extension);
+};
+
+
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaFileManagerSettings : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Instanced,Category="FileImporter")
+	TArray<UOmegaFileImportScript*> ImportScripts;
 	
 };
 

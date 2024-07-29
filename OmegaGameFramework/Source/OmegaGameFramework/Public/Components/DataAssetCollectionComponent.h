@@ -10,6 +10,39 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UDataAsset*, Asset, int32, Amount, bool, IsFull);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetRemoved, UDataAsset*, Asset, int32, Amount, bool, IsEmpty);
 
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Abstract, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionScript : public UObject
+{
+	GENERATED_BODY()
+private:
+	virtual UWorld* GetWorld() const override;
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
+	
+
+	UDataAssetCollectionScript(const FObjectInitializer& ObjectInitializer);
+
+public:
+	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
+	UPROPERTY()
+	UDataAssetCollectionComponent* Ref_Comp;
+	
+	UFUNCTION(BlueprintPure,Category="Equipment")
+	UDataAssetCollectionComponent* GetOwningComponent() const { return  Ref_Comp; }
+
+	UPROPERTY()
+	TMap<UPrimaryDataAsset*, int32> REF_collectedAssets;
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
+	int32 GetAmountOfAsset(UPrimaryDataAsset* Asset) const;
+
+	UFUNCTION(BlueprintNativeEvent,Category="Equipment")
+	void AddAsset(UPrimaryDataAsset* Asset, int32 amount);
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
+	TArray<UPrimaryDataAsset*> GetAssetList() const;
+	
+};
+
 UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Inventory (Data Asset Collection)", meta=(BlueprintSpawnableComponent) )
 class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionComponent : public UActorComponent
 {
@@ -23,16 +56,11 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	bool NativeAddAsset(UPrimaryDataAsset* Asset);
+public:
 
-	UFUNCTION()
-	bool NativeRemoveAsset(UPrimaryDataAsset* Asset);
-
-	UPROPERTY(EditAnywhere, Category="Equipment", DisplayName="Collected Assets")
-	TMap<UPrimaryDataAsset*, int32> CollectionMap;
-
-public:	
+	UPROPERTY(Instanced, EditDefaultsOnly, BlueprintReadWrite,Category="DataAssetCollection", DisplayName="Script")
+	UDataAssetCollectionScript* DataAssetCollectionScript;
+	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -95,3 +123,6 @@ class OMEGAGAMEFRAMEWORK_API IDataAssetCollectionInterface
 	UFUNCTION(BlueprintNativeEvent)
 	int32 GetMaxCollectionNumber();
 };
+
+
+

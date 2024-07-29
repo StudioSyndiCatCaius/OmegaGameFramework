@@ -55,17 +55,18 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_Combatant
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Widget|Combatant")
 	class UCombatantComponent* GetCombatantComponent();
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Widget|Combatant")
 	void GetAttributeTexts(class UOmegaAttribute* Attribute, class UTextBlock*& CurrentValue, class UTextBlock*& MaxValue);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Widget|Combatant")
 	void GetAttributeProgressBar(class UOmegaAttribute* Attribute, class UProgressBar*& ProgressBar, bool& bUseAttributeColor);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Ω|Widget|Combatant")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Widget|Combatant")
 	void OnCombatantUpdated(UCombatantComponent* Combatant);
 
-	
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category="Widget|Combatant")
+	void SetAttributeComparison(bool bComparing, UCombatantComponent* Combatant, UObject* ComparedSource, UObject* UncomparedSource);
 };

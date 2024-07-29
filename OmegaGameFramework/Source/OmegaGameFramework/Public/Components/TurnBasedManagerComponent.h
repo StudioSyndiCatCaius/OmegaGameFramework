@@ -13,7 +13,7 @@
 // Turn Manager 
 // =========================================
 
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew,CollapseCategories,Abstract)
 class OMEGAGAMEFRAMEWORK_API UTurnManagerBase : public UObject
 {
 	GENERATED_BODY()
@@ -74,15 +74,15 @@ public:
 	// Turn Manager
 	//###########################################
 	
-	UPROPERTY(EditDefaultsOnly, Category="Turn Manager")
+	UPROPERTY(meta=(DeprecatedProperty))
 	TSubclassOf<UTurnManagerBase> TurnManagerClass = UTurnManagerBase::StaticClass();
 
-	UFUNCTION(BlueprintCallable, Category="Omega|TurnBased")
+	UFUNCTION()
 	void SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass);
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Instanced="TurnManager",DisplayName="Turn Manager")
 	UTurnManagerBase* TurnManager;
-
+	
 	//Prevents Combatants with these tags from being allowed to have a turn.
 	UPROPERTY(EditDefaultsOnly, Category="Turn Manager")
 	FGameplayTagContainer BlockCombatantTagsFromTurnOrder;

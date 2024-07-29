@@ -22,24 +22,24 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(Transient)
-	UWorld* WorldPrivate = nullptr;
+	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
 
+	
 protected:
 
 	UFUNCTION()
 	void Native_OnLevelOpened(FString LevelName, AOmegaGameMode* GameMode);
 	
 public:
-
 	UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer);
 	virtual UWorld* GetWorld() const override;
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
+	
 	
 	UFUNCTION()
 	void Native_Initialize();
 	
-	UFUNCTION()
-	virtual UGameInstance* GetGameInstance() const;
+	
 	
 	//Functions
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameplayModule")

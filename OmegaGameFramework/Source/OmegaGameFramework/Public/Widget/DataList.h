@@ -41,7 +41,7 @@ enum class EDataListFormat : uint8
 };
 
 
-UCLASS(BlueprintType, Blueprintable, abstract, editinlinenew, CollapseCategories)
+UCLASS(BlueprintType, Blueprintable, Abstract, editinlinenew, CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UObject, public IDataInterface_General
 {
 	GENERATED_BODY()
@@ -96,7 +96,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
 	UPROPERTY(EditAnywhere, Instanced, Category = "Entry")
-	UDataWidgetMetadata* EntryMetadata;
+	TArray<UDataWidgetMetadata*> EntryMetadata;
 
 	UFUNCTION(BlueprintCallable, Category="Entry", meta=(AdvancedDisplay="KeepEntires"))
 	void SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries=true);
@@ -119,9 +119,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString EntryLabel;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry",DisplayName="List Gameplay Tags")
 	FGameplayTagContainer ListTags;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry")
+    TArray<FName> EntryAutoTags;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString DefaultListFlag;
 
@@ -184,12 +187,13 @@ public:
 	UFUNCTION()
 	UGeneralDataObject* Native_CreateCustomDataObject(FCustomAssetData EntryData);
 	
-
+	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList", DisplayName="Get Entries (Pure)")
+	TArray<UDataWidget*> GetEntries();
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList", DisplayName="Get Entries",meta=(DeterminesOutputType="Class"))
+	TArray<UDataWidget*> GetEntries_Impure(TSubclassOf<UDataWidget> Class);
+	
 	UPROPERTY()
 	UDataWidget* HoveredEntry;
-
-	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
-	TArray<UDataWidget*> GetEntries();
 	
 	//Access Entires
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")

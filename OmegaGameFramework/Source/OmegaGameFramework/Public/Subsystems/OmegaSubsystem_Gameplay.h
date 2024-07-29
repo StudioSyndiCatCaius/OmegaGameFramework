@@ -12,6 +12,7 @@
 #include "Engine/World.h"
 #include "Components/CombatantComponent.h"
 #include "JsonObjectWrapper.h"
+#include "LuaValue.h"
 #include "OmegaSubsystem_Gameplay.generated.h"
 
 class AOmegaGameplaySystem;
@@ -36,8 +37,10 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|GlobalJson")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|")
 	FJsonObjectWrapper WorldJsonObject;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FLuaValue LuaWorldData;
 
 	UFUNCTION()
 	void NativeRemoveSystem(AOmegaGameplaySystem* System);
@@ -159,6 +162,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Pause")
 	void SetActorsPaused(FGameplayTagContainer Tags, bool bIsPaused);
 
+	//--------------------------
+	// Actor Groups
+	//--------------------------
 };
 
 //------------------------------------------------------------------------------

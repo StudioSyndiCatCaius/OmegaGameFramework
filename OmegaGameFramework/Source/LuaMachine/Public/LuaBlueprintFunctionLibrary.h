@@ -15,6 +15,7 @@
 #include "Sound/SoundWave.h"
 #include "LuaBlueprintFunctionLibrary.generated.h"
 
+class UScriptStruct;
 
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FLuaHttpSuccess, FLuaValue, ReturnValue, bool, bWasSuccessful, int32, StatusCode);
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FLuaHttpResponseReceived, FLuaValue, Context, FLuaValue, Response);
@@ -376,18 +377,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Lua|Table",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
 	static FLuaValue GetLuaFieldValueFromObject(UObject* Object, const FString& Field, TEnumAsByte<ELuaValueResult>& Outcome);
-
-	// Tag Based
-
-	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", AutoCreateRefTerm = "Args"), Category="Lua",DisplayName="Lua Global Call (From Tag)")
-	static FLuaValue LuaGlobalCall_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State, FGameplayTag Name, TArray<FLuaValue> Args);
-
-	UFUNCTION(BlueprintCallable, meta=(AdvancedDisplay="State", WorldContext="WorldContextObject"), Category="Lua",DisplayName="Lua Get Global (From Tag)")
-	static FLuaValue LuaGetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State, FGameplayTag Name);
-
-	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua",DisplayName="Lua Set Global (From Tag)")
-	static void LuaSetGlobal_FromTag(UObject* WorldContextObject, TSubclassOf<ULuaState> State, FGameplayTag Name, FLuaValue Value);
-
+	
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Lua")
 	static FLuaValue LuaCreateLazyTable(UObject* WorldContextObject, TSubclassOf<ULuaState> State);
 
@@ -482,19 +472,32 @@ class LUAMACHINE_API ULuaValuesFunctionLibrary : public UBlueprintFunctionLibrar
 
 public:
 
-	// Globals
-	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	// Globals - Get
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global (As Bool)")
 	static bool GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
-
-	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global (As Int)")
 	static int32 GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
-
-	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global (As Float)")
 	static float GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
-
-	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"))
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global (As String)")
 	static FString GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
 
+	// Globals - Set
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Set LUA Global (As Bool)")
+	static void SetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, bool Value);
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Set LUA Global (As Int)")
+	static void SetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, int32 Value);
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Set LUA Global (As Float)")
+	static void SetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, float Value);
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Set LUA Global (As String)")
+	static void SetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, const FString& Value);
+
+	// Globals - Add
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Add LUA Global (As Int)")
+	static void AddLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, int32 Value);
+	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Add LUA Global (As Float)")
+	static void AddLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, float Value);
+	
 	// Sets
 	UFUNCTION(BlueprintCallable, Category="Lua")
 	static FLuaValue LuaTableSetField_Bool(FLuaValue Table, const FString& Key, bool Value);

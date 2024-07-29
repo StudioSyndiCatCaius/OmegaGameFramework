@@ -166,6 +166,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Attribute")
 	float GetAttributeValue(int32 level,FGameplayTag ValueCategory);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Attribute")
+	FText GetDisplayText(float value);
 	
 };
 
@@ -180,11 +183,16 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	TArray<UOmegaAttributeSet*> InheritedSets;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 	TArray<class UOmegaAttribute*> Attributes;
 
 	UPROPERTY()
 	FGameplayTag ValueCategory;
 
+	UFUNCTION(BlueprintPure, Category="Attributes")
+	TArray<UOmegaAttribute*> GetAllAttributes();
 	UFUNCTION(BlueprintPure, Category="Attributes")
 	TArray<UOmegaAttribute*> GetMetricAttributes();
 	UFUNCTION(BlueprintPure, Category="Attributes")

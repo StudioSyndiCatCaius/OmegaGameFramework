@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CommonTextBlock.h"
 #include "DataTooltip.h"
 #include "GameplayTagContainer.h"
 #include "LuaBlueprintFunctionLibrary.h"
@@ -35,16 +36,6 @@ class OMEGAGAMEFRAMEWORK_API UDataWidgetMetadata : public UObject
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
-	bool Show_Image=true;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
-	bool OverrideImageSize;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
-	FVector2D Image_Size;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
-	bool Show_Name=true;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Meta")
-	bool Show_Description=true;
 		
 	UFUNCTION(BlueprintImplementableEvent, Category="Meta")
 	void OnMetaApplied(UDataWidget* widget) const;
@@ -68,6 +59,14 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget, public IUserObjec
 			{
 				widget->SetVisibility(ESlateVisibility::Collapsed);
 			}
+		}
+	}
+
+	void local_overrideTextStyle(UTextBlock* text, TSubclassOf<UCommonTextStyle> style)
+	{
+		if(text && text->GetClass()->IsChildOf(UCommonTextBlock::StaticClass()) && style)
+		{
+			Cast<UCommonTextBlock>(text)->SetStyle(style);
 		}
 	}
 	
@@ -103,20 +102,22 @@ public:
 	//	Meta
 	//---------------------------------------------------------------------------------------------//
 	UPROPERTY(EditAnywhere, Instanced, Category="Meta")
-	UDataWidgetMetadata* WidgetMetadata;
+	TArray<UDataWidgetMetadata*> WidgetMetadata;
+	
 	UFUNCTION(BlueprintPure,Category="Meta")
-	UDataWidgetMetadata* GetWidgetMetadata() const
+	TArray<UDataWidgetMetadata*> GetWidgetMetadata() const
 	{
-		if(WidgetMetadata)
-		{
 		return WidgetMetadata;
-		}
-		return nullptr;
 	}
+
+	UFUNCTION(BlueprintPure,Category="Meta",meta=(DeterminesOutputType="Class"))
+	UDataWidgetMetadata* GetWidgetMetadata_FromClass(TSubclassOf<UDataWidgetMetadata> Class);
+	
 	UFUNCTION()
 	void RefreshMeta();
+	
 	UFUNCTION(BlueprintImplementableEvent,Category="Meta")
-	void MetaRefreshed(const UDataWidgetMetadata* Metadata);
+	void MetaRefreshed();
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Lua
@@ -279,7 +280,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void SetSourceAsset(UObject* Asset);
 
-	UPROPERTY()
+
+	UPROPERTY(BlueprintAssignable)
 	FOnWidgetRefreshed OnWidgetRefreshed;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
@@ -311,13 +313,16 @@ public:
 	
 //BINDABLE WIDGETS
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget - Root Panel")
+	UTextBlock* GetRootPanelWidget();
+
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget - Name Text")
 	UTextBlock* GetNameTextWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget - Description - Text")
 	UTextBlock* GetDescriptionTextWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget - Button")
 	UButton* GetButtonWidget();
 
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
@@ -326,7 +331,7 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
 	UImage* GetMaterialImage();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget - Brush Icon")
 	UImage* GetBrushImage(bool& bOverrideSize, FVector2D& Size);
 	
 //BINDABLE Anims

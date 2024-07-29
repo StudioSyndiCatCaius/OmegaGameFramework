@@ -25,6 +25,10 @@ void UEquipmentComponent::BeginPlay()
 	{
 		Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->AddAttrbuteModifier(this);
 	}
+	if(Script)
+	{
+		Script->Ref_Comp=this;
+	}
 	
 	Super::BeginPlay();
 }
@@ -62,7 +66,7 @@ UEquipmentSlot* UEquipmentComponent::GetSlotFromID(const FString& ID)
 	return nullptr;
 }
 
-FString UEquipmentComponent::GetSlotID(UEquipmentSlot* Slot)
+FString UEquipmentComponent::GetSlotID(const UEquipmentSlot* Slot)
 {
 	if(Slot)
 	{
@@ -75,6 +79,8 @@ TMap<FString, UPrimaryDataAsset*> UEquipmentComponent::GetEquipment()
 {
 	return EquippedItems;
 }
+
+
 
 TArray<UPrimaryDataAsset*> UEquipmentComponent::GetEquippedItems()
 {
@@ -134,6 +140,7 @@ bool UEquipmentComponent::EquipItemToSlot(UPrimaryDataAsset* Item, UEquipmentSlo
 	return false;	
 }
 
+
 bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, FString Slot)
 {
 	if(!Item)
@@ -142,6 +149,14 @@ bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, FString Slot)
 	}
 	if(IsItemAccepted(Item) && !IsItemRejected(Item))
 	{
+		if(Script)
+		{
+			bool success = Script->TryEquip(Slot,Item);
+			if(!success)
+			{
+				return false;
+			}
+		}
 		UnequipSlot(Slot);
 		EquippedItems.Add(Slot, Item);
 		OnItemEquipped.Broadcast(Item, Slot);
@@ -180,6 +195,11 @@ bool UEquipmentComponent::UnequipSlot(FString Slot)
 
 UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot(FString Slot, bool& bValidItem)
 {
+	if(Script)
+	{
+		bValidItem = true;
+		return Script->GetItemInSlot(Slot);
+	}
 	if(EquippedItems.FindOrAdd(Slot))
 	{
 		bValidItem = true;
@@ -189,12 +209,29 @@ UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot(FString Slot, bool& b
 	return nullptr;
 }
 
+UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot_Asset(UEquipmentSlot* Slot, bool& bValidItem)
+{
+	return GetEquipmentInSlot(GetSlotID(Slot),bValidItem);
+}
+
 TArray<FOmegaAttributeModifier> UEquipmentComponent::GetModifierValues_Implementation()
 {
 	TArray<FOmegaAttributeModifier> OutMods;
-	
 	TArray<UPrimaryDataAsset*> LocalItems;
-	EquippedItems.GenerateValueArray(LocalItems);
+	
+	if(Script)
+	{
+		
+		for(FString TempString : Script->GetEquipSlotsLabels())
+		{
+			bool outbool;
+			LocalItems.Add(GetEquipmentInSlot(TempString,outbool));
+		}
+	}
+	else
+	{
+		EquippedItems.GenerateValueArray(LocalItems);
+	}
 
 	for(auto* TempAsset : LocalItems)
 	{
@@ -243,6 +280,27 @@ UEquipmentScript::UEquipmentScript(const FObjectInitializer& ObjectInitializer)
 	{
 		WorldPrivate = Owner->GetWorld();
 	}
+}
+
+TArray<FString> UEquipmentScript::GetEquipSlotsLabels_Implementation() const
+{
+	TArray<FString> out;
+	GetOwningComponent()->EquippedItems.GetKeys(out);
+	return out;
+}
+
+UPrimaryDataAsset* UEquipmentScript::GetItemInSlot_Implementation(const FString& Slot) const
+{
+	if(GetOwningComponent()->EquippedItems.Contains(Slot))
+	{
+		return GetOwningComponent()->EquippedItems[Slot];
+	}
+	return nullptr;
+}
+
+bool UEquipmentScript::TryEquip_Implementation(const FString& Slot, UPrimaryDataAsset* Item) const
+{
+	return true;
 }
 
 //##############################################################################################

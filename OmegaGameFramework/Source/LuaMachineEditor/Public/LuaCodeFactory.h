@@ -41,7 +41,7 @@ class LUAMACHINEEDITOR_API ULuaCodeFactory : public UFactory, public FReimportHa
 		{
 			return FactoryCreateNew(InClass, InOuter, InName, Flags, nullptr, GWarn, NAME_None);
 		}
-
+		/*
 		if (NewAsset)
 		{
 			NewAsset->MarkPackageDirty();
@@ -50,6 +50,7 @@ class LUAMACHINEEDITOR_API ULuaCodeFactory : public UFactory, public FReimportHa
 		}
 
 		return NewAsset;
+		*/
 	}
 
 public:

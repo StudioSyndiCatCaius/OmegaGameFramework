@@ -194,7 +194,7 @@ bool UOmegaPlayerSubsystem::CanInterfaceInput() const
 		return false;
 	}
 	if(IWidgetInterface_Input::Execute_InputBlocked(FocusMenu) ||	//Block if Input Blocked
-		FocusMenu->GetVisibility()==ESlateVisibility::Collapsed || FocusMenu->GetVisibility()==ESlateVisibility::Hidden)	//Block on Collapsed OR Hidden
+		!FocusMenu->IsRendered())	//Block on Collapsed OR Hidden
 	{
 		return false;
 	}

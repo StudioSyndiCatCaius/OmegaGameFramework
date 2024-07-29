@@ -32,13 +32,16 @@ void UOmegaDynamicCameraSubsystem::Tick(float DeltaTime)
 		}
 		else
 		{
+			/*
 			APlayerController* local_playerController = GetLocalPlayer()->GetPlayerController(GetLocalPlayer()->GetWorld());
 			if(local_playerController->GetViewTarget() != GetDynamicCamera())
 			{
 				local_playerController->SetViewTarget(GetDynamicCamera());
 			}
 			time_SinceLastCheck=0.5;
+			*/
 		}
+			 
 	}
 }
 

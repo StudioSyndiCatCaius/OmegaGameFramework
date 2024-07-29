@@ -40,6 +40,7 @@ public class OmegaGameFramework : ModuleRules
 				"LuaMachine",
 				"FileSDK",
 				"Engine",
+				"SkeletalMerging",
 				"DeveloperSettings",
 				"ApplicationCore",
 				"LevelSequence",

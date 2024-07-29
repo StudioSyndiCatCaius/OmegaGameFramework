@@ -70,10 +70,10 @@ public:
 	/*
 	UFUNCTION(BlueprintPure, Category="Attributes")
 	static TMap<UOmegaAttribute*, float> CompareAttributeModifiers(UCombatantComponent* Combatant, UObject* ComparedModifier, UObject* UncomparedModifer);
-
-	UFUNCTION(BlueprintPure, Category="Attributes")
-	static float CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedModifier, UObject* UncomparedModifer);
 	*/
+	UFUNCTION(BlueprintPure, Category="Attributes")
+	static float CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedSource, UObject* UncomparedSource);
+	
 	//-----------------------------------------------------------------------------------
 	// Targets
 	//-----------------------------------------------------------------------------------

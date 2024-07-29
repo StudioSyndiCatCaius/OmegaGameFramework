@@ -58,6 +58,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
 	int32 OverrideCombatantLevel(UCombatantComponent* Combatant, bool& bOverride);
+
+
 };
 
 

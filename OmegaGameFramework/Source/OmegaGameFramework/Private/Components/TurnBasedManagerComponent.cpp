@@ -22,9 +22,10 @@ void UTurnBasedManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetTurnManagerClass(TurnManagerClass);
-	
-	
+	if(!TurnManager)
+	{
+		TurnManager=NewObject<UTurnManagerBase>(this,UTurnManagerBase::StaticClass());
+	}
 	
 }
 

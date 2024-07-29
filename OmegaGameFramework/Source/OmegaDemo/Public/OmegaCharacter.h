@@ -12,7 +12,7 @@
 #include "GameFramework/Character.h"
 #include "OmegaCharacter.generated.h"
 
-UCLASS()
+UCLASS(HideCategories=("Physics","Collision","Rendering"))
 class OMEGADEMO_API AOmegaCharacter : public ACharacter
 {
 	GENERATED_BODY()

@@ -116,6 +116,8 @@ public:
 	//----------------------------------------------------------------------------------------------------------------//
 	// -- Attributes -- 
 	//----------------------------------------------------------------------------------------------------------------//
+	UFUNCTION(BlueprintCallable,Category="Attributes")
+	void ChangeAttributeSet(UOmegaAttributeSet* NewSet,bool Reinitialize);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
 	class UOmegaAttributeSet* AttributeSet;

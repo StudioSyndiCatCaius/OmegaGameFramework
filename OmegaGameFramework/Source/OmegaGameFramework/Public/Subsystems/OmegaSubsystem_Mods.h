@@ -76,7 +76,12 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Mods")
 	void OnModInitialized(const FString& path);
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Mods")
+	bool Get_IsModActive();
 	
+	UFUNCTION(BlueprintImplementableEvent,Category="Mods")
+	void Set_IsModActive(bool Loaded);
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;

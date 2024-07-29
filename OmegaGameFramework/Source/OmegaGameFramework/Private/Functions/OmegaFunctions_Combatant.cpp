@@ -194,6 +194,19 @@ TArray<FOmegaAttributeModifier> UCombatantFunctions::FlatAttributesToModifierVal
 	return out;
 }
 
+float UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
+	UObject* ComparedSource, UObject* UncomparedSource)
+{
+	if(Combatant)
+	{
+		TArray<UObject*> temp_Mods=Combatant->GetAttributeModifiers();
+		if(ComparedSource) {temp_Mods.Add(ComparedSource);}
+		if(UncomparedSource && temp_Mods.Contains(UncomparedSource)) {temp_Mods.Remove(UncomparedSource);}
+		return Combatant->GetAttributeComparedValue(Attribute,temp_Mods);
+	}
+	return 0.0;
+}
+
 /*
 TMap<UOmegaAttribute*, float> UCombatantFunctions::CompareAttributeModifiers(UCombatantComponent* Combatant,
 	UObject* ComparedModifier, UObject* UncomparedModifer)

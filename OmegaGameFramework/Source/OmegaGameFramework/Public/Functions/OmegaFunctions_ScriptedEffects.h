@@ -89,3 +89,18 @@ public:
 
 
 };
+
+// This class does not need to be modified.
+UINTERFACE(MinimalAPI)
+class UOmegaScriptedEffectsInterface : public UInterface
+{
+	GENERATED_BODY()
+};
+
+class OMEGAGAMEFRAMEWORK_API IOmegaScriptedEffectsInterface
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Omega|ScriptedEffects")
+	FOmegaCustomScriptedEffects GetScriptedEffects() const;
+};

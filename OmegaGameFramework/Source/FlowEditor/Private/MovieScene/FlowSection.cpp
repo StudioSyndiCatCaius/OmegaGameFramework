@@ -13,6 +13,7 @@
 #include "Sections/MovieSceneEventSection.h"
 #include "SequencerSectionPainter.h"
 #include "SequencerTimeSliderController.h"
+#include "TimeToPixel.h"
 
 #define LOCTEXT_NAMESPACE "FlowSection"
 

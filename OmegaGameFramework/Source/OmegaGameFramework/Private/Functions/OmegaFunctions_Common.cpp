@@ -24,6 +24,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Subsystems/OmegaSubsystem_File.h"
 
 
 FGameplayTagContainer UOmegaGameFrameworkBPLibrary::GetObjectGameplayTags(UObject* Object)
@@ -363,6 +364,12 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<U
 UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class,
                                                          TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
+	//use imported override file if it exits.
+	if(UObject* override_file = GEngine->GetEngineSubsystem<UOmegaFileSubsystem>()->GetOverrideObject(AssetPath,Class))
+	{
+		return override_file;
+	}
+	
 	FString in_path = AssetPath;
 	
 	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
@@ -391,7 +398,7 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 }
 
 
-UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath,
+UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, 
 	TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(UClass* out_obj = UKismetSystemLibrary::Conv_SoftClassPathToSoftClassRef(UKismetSystemLibrary::MakeSoftClassPath(AssetPath)).LoadSynchronous())
@@ -402,6 +409,54 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath
 	Outcome=EOmegaFunctionResult::Fail;
 	return nullptr;
 }
+
+UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, const FString& Field,
+	TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	FString in_path = Lua.GetField(Field).String;
+	
+	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
+	{
+		if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
+		{
+			if(path_settings->ClassPaths.Contains(Class))
+			{
+				const FString base_path = path_settings->ClassPaths[Class].Path;
+				in_path=base_path+in_path+"."+in_path;
+			}
+		}
+	}
+
+	return GetAsset_FromPath(in_path,Class,Outcome);
+
+}
+
+UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromLuaField(FLuaValue Lua, const FString& Field,
+	TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	FString in_path = Lua.GetField(Field).String;
+	
+	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
+	{
+		if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
+		{
+			if(path_settings->ClassPaths.Contains(Class))
+			{
+				const FString base_path = path_settings->ClassPaths[Class].Path;
+				in_path=base_path+in_path+"."+in_path+"_c";
+			}
+		}
+	}
+
+	if(UClass* out_obj = UKismetSystemLibrary::Conv_SoftClassPathToSoftClassRef(UKismetSystemLibrary::MakeSoftClassPath(in_path)).LoadSynchronous())
+	{
+		Outcome=EOmegaFunctionResult::Success;
+		return out_obj;
+	}
+	Outcome=EOmegaFunctionResult::Fail;
+	return nullptr;
+}
+
 
 AActor* UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius)
 {
@@ -497,7 +552,11 @@ UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObj
 
 void UOmegaGameFrameworkBPLibrary::FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context)
 {
-	WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(Event, Context);
+	if(WorldContextObject)
+	{
+		WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(Event, Context);
+	}
+	
 }
 
 void UOmegaGameFrameworkBPLibrary::OnFlagActiveReset(const UObject* WorldContextObject, const FString& Flag, bool bDeactivateFlagOnActive, TEnumAsByte<EOmegaFlagResult>& Outcome)
@@ -612,8 +671,21 @@ AActor* UOmegaGameFrameworkBPLibrary::GetClosestActorToPoint(TArray<AActor*> Act
 	return OutActor;
 }
 
+AActor* UOmegaGameFrameworkBPLibrary::GetClosestOverlappingActor(UPrimitiveComponent* OverlappedComponent,
+	TSubclassOf<AActor> FilterClass)
+{
+	if(OverlappedComponent)
+	{
+		TArray<AActor*> tempactors;
+		OverlappedComponent->GetOverlappingActors(tempactors,FilterClass);
+
+		return GetClosestActorToPoint(tempactors,OverlappedComponent->GetComponentLocation());
+	}
+	return  nullptr;
+}
+
 AActor* UOmegaGameFrameworkBPLibrary::GetClosestActorToViewportPoint2D(TArray<AActor*> Actors, FVector2D Point,
-	const APlayerController* Player, bool ViewportRelative)
+                                                                       const APlayerController* Player, bool ViewportRelative)
 {
 	if(Actors.IsValidIndex(0))
 	{

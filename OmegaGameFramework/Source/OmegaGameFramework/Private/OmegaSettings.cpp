@@ -163,6 +163,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Cutscene,"System.Cutscene");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Dialog,"System.Dialog");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Loading,"System.Loading");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attributes_Static_HP,"Attributes.Static.HP");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attributes_Static_MP,"Attributes.Static.MP");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attributes_Static_TP,"Attributes.Static.TP");
+
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

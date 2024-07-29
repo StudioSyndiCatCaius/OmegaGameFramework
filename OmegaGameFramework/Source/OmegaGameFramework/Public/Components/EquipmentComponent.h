@@ -42,14 +42,14 @@ public:
 
 	//Slot and Id converstion
 	UEquipmentSlot* GetSlotFromID(const FString& ID);
-	FString GetSlotID(UEquipmentSlot* Slot);
+	FString GetSlotID(const UEquipmentSlot* Slot);
 
 	UPROPERTY(EditDefaultsOnly, Instanced, Category="Equipment")
 	UEquipmentScript* Script;
 
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
 	TMap<FString, UPrimaryDataAsset*> GetEquipment();
-
+	
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
 	TArray<UPrimaryDataAsset*> GetEquippedItems();
 	
@@ -68,11 +68,15 @@ public:
 	bool IsItemRejected(UPrimaryDataAsset* Item);
 
 	
-	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item")
+	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (Asset")
 	bool EquipItemToSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot);
+	
+	//UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (String)")
+	//bool EquipItem_String(const FString& Item, const FString& Slot);
 	
 	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (Slot Label)")
 	bool EquipItem(UPrimaryDataAsset* Item, FString Slot);
+	
 	
 	UFUNCTION(BlueprintCallable, Category="Equipment")
 	bool UnequipSlot(FString Slot);
@@ -80,6 +84,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Equipment")
 	UPrimaryDataAsset* GetEquipmentInSlot(FString Slot, bool& bValidItem);
 
+	UFUNCTION(BlueprintPure, Category="Equipment")
+	UPrimaryDataAsset* GetEquipmentInSlot_Asset(UEquipmentSlot* Slot, bool& bValidItem);
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnItemEquipped OnItemEquipped;
 
@@ -123,18 +130,26 @@ class OMEGAGAMEFRAMEWORK_API UEquipmentScript : public UObject
 	GENERATED_BODY()
 private:
 	virtual UWorld* GetWorld() const override;
-	
-	UFUNCTION()
-	virtual UGameInstance* GetGameInstance() const;
-	
-	UPROPERTY(Transient)
-	UWorld* WorldPrivate = nullptr;
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
+	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
 
 	UEquipmentScript(const FObjectInitializer& ObjectInitializer);
 
 public:
-	UFUNCTION(BlueprintImplementableEvent, Category="Equipment")
-	FOmegaEquipmentData GetSlotData(const FString& Slot) const;
+	UPROPERTY()
+	UEquipmentComponent* Ref_Comp;
+	
+	UFUNCTION(BlueprintPure,Category="Equipment")
+	UEquipmentComponent* GetOwningComponent() const { return  Ref_Comp; }
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
+	UPrimaryDataAsset* GetItemInSlot(const FString& Slot) const;
+
+	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
+	TArray<FString> GetEquipSlotsLabels() const;
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
+	bool TryEquip(const FString& Slot, UPrimaryDataAsset* Item) const; 
 };
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCategories)

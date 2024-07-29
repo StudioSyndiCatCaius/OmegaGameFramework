@@ -10,6 +10,7 @@
 #include "Engine/DataAsset.h"
 #include "Engine/World.h"
 #include "JsonObjectWrapper.h"
+#include "LuaValue.h"
 #include "Misc/Paths.h"
 #include "Misc/Timespan.h"
 #include "GameFramework/SaveGame.h"
@@ -437,6 +438,8 @@ public:
 	//
 	UPROPERTY(BlueprintReadWrite, Category="Omega|Save")
 	FJsonObjectWrapper JsonSaveObject;
+	UPROPERTY(BlueprintReadWrite, Category="Omega|Save")
+	FLuaValue LuaSaveData;
 	
 	//Tags
 	UPROPERTY(BlueprintReadOnly, DisplayName="Save State", Category="Omega|Save")

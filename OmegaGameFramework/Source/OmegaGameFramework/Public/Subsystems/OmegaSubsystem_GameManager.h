@@ -111,7 +111,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|GlobalJson")
 	FJsonObjectWrapper GlobalJsonObject;
-
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FLuaValue LuaGameInstanceData;
+	
 	//UFUNCTION(BlueprintCallable, Category="OmegaGameManager|GlobalJson", meta = (CustomStructureParam = "Value", AutoCreateRefTerm = "Value"))
 	//bool SetGlobalJsonProperty(const FString& Property, const int32& Value);
 

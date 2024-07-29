@@ -47,7 +47,6 @@ TArray<FString> UOmegaModSubsystem::GetModListPaths()
 	
 	for (FString fileName : relativeFileNames)
 	{
-		//FString ModTypeExtension = ModManager->GetModFiletype();
 		FString ModTypeExtension = "lua";
 		FileNames.Add(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName  + FGenericPlatformMisc::GetDefaultPathSeparator() + "mod." + ModTypeExtension);
 	}
@@ -70,7 +69,7 @@ TArray<UOmegaMod*> UOmegaModSubsystem::GetActiveMods()
 	TArray<UOmegaMod*> OutMods;
 	for(auto* TempMod : GetInstalledMods())
 	{
-		if(TempMod && ModManager->OnGetModActive(TempMod))
+		if(TempMod && TempMod->Get_IsModActive())
 		{
 			OutMods.Add(TempMod);
 		}
@@ -81,7 +80,7 @@ TArray<UOmegaMod*> UOmegaModSubsystem::GetActiveMods()
 
 void UOmegaModSubsystem::SetModActive(UOmegaMod* Mod, bool IsActive)
 {
-	ModManager->OnSetModActive(Mod,IsActive);
+	Mod->Set_IsModActive(IsActive);
 }
 
 // ================================================================================================================

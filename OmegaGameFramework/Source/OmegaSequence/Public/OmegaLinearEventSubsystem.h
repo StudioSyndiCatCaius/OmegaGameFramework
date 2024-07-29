@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Event/OmegaLinearEvent.h"
+#include "UObject/Interface.h"
 #include "Choice/OmegaLinearChoiceInstance.h"
 #include "OmegaLinearEventSubsystem.generated.h"
 
@@ -96,4 +97,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Script")
 	FLinearEventSequence ConvertToLinearEventSequence(const FString& Script, TSubclassOf<UOmegaDataParserReader> ReaderClass, bool ScriptIsPath);
 	
+};
+
+UINTERFACE(MinimalAPI)
+class UDataInterface_EventSequence : public UInterface { GENERATED_BODY() };
+
+class OMEGASEQUENCE_API IDataInterface_EventSequence
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Omega|LinearEvents")
+	FLinearEventSequence GetEventSequence(const FString& Flag);
 };

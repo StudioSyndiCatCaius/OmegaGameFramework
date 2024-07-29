@@ -24,7 +24,7 @@
 			"Linux",
 			"LinuxArm64",
 			"Android",
-			"IOS",
+			"IOS"
 		  ]
 		},
 		{
@@ -165,6 +165,10 @@
 		},
 		{
 			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "SkeletalMerging",
 			"Enabled": true
 		}
 	]

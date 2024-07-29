@@ -17,6 +17,7 @@ UE={
     PLUGIN_GET_DIR=function(dir) return "/" end,
     RUN_PLUGIN_FILE=function (plugin,file) end,
     RUN_PLUGIN_PATH=function (plugin,path,recursive) end,
+    STRING_FROM_FILE=function(file) end,
 
     -- ########################################################################
     -- Actor

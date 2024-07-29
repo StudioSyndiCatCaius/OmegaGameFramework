@@ -16,6 +16,10 @@ UOmegaSettings_Gameplay* UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle()
 UOmegaGameplayMetaSettings* UOmegaGameplayStyleFunctions::GetCurrentGameplayMetaStyle(
 	TSubclassOf<UOmegaGameplayMetaSettings> Class)
 {
+	if(!Class)
+	{
+		return nullptr;
+	}
 	if(GetCurrentGameplayStyle())
 	{
 		for(auto* temp_set : GetCurrentGameplayStyle()->MetaSettings)
@@ -26,7 +30,9 @@ UOmegaGameplayMetaSettings* UOmegaGameplayStyleFunctions::GetCurrentGameplayMeta
 			}
 		}
 	}
-	return nullptr;
+	
+	
+	return Cast<UOmegaGameplayMetaSettings>(Class->ClassDefaultObject);
 }
 
 bool UOmegaGameplayStyleFunctions::OmegaGameplayInputCall(APlayerController* Player, const FKey& Key, bool End)

@@ -127,6 +127,15 @@ void UCombatantComponent::SetAbilityActive(bool bActive, AOmegaAbility* Ability)
 	}
 }
 
+void UCombatantComponent::ChangeAttributeSet(UOmegaAttributeSet* NewSet, bool Reinitialize)
+{
+	AttributeSet=NewSet;
+	if(Reinitialize)
+	{
+		InitializeAttributes();
+	}
+}
+
 ////////////////////////////////////
 ////////// -- TAGS -- //////////
 ///////////////////////////////////
@@ -869,14 +878,17 @@ void UCombatantComponent::InitializeAttributes()
 		float DumVal = 0.0f;
 		for (UOmegaAttribute* TempAtt : AttributeSet->Attributes)
 		{
-			if (AttributeLevels.Contains(TempAtt))
+			if(TempAtt)
 			{
-				int32 DumRank = 0;
-				DumRank = AttributeLevels[TempAtt];
+				if (AttributeLevels.Contains(TempAtt))
+				{
+					int32 DumRank = 0;
+					DumRank = AttributeLevels[TempAtt];
+				}
+				GetAttributeValue(TempAtt, CurrentVal, DumVal);	
+				//DumVal = GetAttributeBaseValue(TempAtt);
+				CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);
 			}
-			GetAttributeValue(TempAtt, CurrentVal, DumVal);	
-			//DumVal = GetAttributeBaseValue(TempAtt);
-			CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);
 		}
 	}
 	else

@@ -93,10 +93,10 @@ void UDataWidget::SetVisibility(ESlateVisibility InVisibility)
 	bool bStopTimer=false;
 	switch (GetVisibility()) {
 		case ESlateVisibility::Visible: break;
-		case ESlateVisibility::Collapsed: break;
-		bStopTimer=true;
-		case ESlateVisibility::Hidden: break;
-		bStopTimer=true;
+		case ESlateVisibility::Collapsed: bStopTimer=true; break;
+
+		case ESlateVisibility::Hidden:bStopTimer=true; break;
+
 		case ESlateVisibility::HitTestInvisible: break;
 		case ESlateVisibility::SelfHitTestInvisible: break;
 	default: ;
@@ -117,26 +117,27 @@ UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 	return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();	
 }
 
+UDataWidgetMetadata* UDataWidget::GetWidgetMetadata_FromClass(TSubclassOf<UDataWidgetMetadata> Class)
+{
+	for(auto* tempMeta : WidgetMetadata)
+	{
+		if(tempMeta && tempMeta->GetClass()->IsChildOf(Class))
+		{
+			return tempMeta;
+		}
+	}
+	return  nullptr;
+}
+
 void UDataWidget::RefreshMeta()
 {
-	if(WidgetMetadata)
+	for(auto* tempMeta : WidgetMetadata)
 	{
-		WidgetMetadata->OnMetaApplied(this);
-		Local_SetVisFromBool(GetNameTextWidget(),WidgetMetadata->Show_Name);
-		Local_SetVisFromBool(GetDescriptionTextWidget(),WidgetMetadata->Show_Description);
-		bool dump_bool;
-		FVector2d dump_vec;
-		
-		if(UImage* ico_img = GetBrushImage(dump_bool,dump_vec))
+		if(tempMeta)
 		{
-			Local_SetVisFromBool(ico_img,WidgetMetadata->Show_Image);
-			if(WidgetMetadata->OverrideImageSize)
-			{
-				ico_img->SetDesiredSizeOverride(WidgetMetadata->Image_Size);
-			}
+			tempMeta->OnMetaApplied(this);
 		}
-		
-		MetaRefreshed(WidgetMetadata);
+		MetaRefreshed();
 	}
 }
 
@@ -190,10 +191,7 @@ void UDataWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	//Create default metadata if invalid
-	if(!WidgetMetadata)
-	{
-		WidgetMetadata = NewObject<UDataWidgetMetadata>(this,UDataWidgetMetadata::StaticClass());
-	}
+
 	
 	if (GetButtonWidget())
 	{
