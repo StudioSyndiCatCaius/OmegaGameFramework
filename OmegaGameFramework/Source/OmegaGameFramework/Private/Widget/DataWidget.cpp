@@ -114,7 +114,11 @@ void UDataWidget::SetVisibility(ESlateVisibility InVisibility)
 
 UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 {
-	return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();	
+	if(GetOwningLocalPlayer())
+	{
+		return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+	}
+	return nullptr;	
 }
 
 UDataWidgetMetadata* UDataWidget::GetWidgetMetadata_FromClass(TSubclassOf<UDataWidgetMetadata> Class)
@@ -173,6 +177,48 @@ void UDataWidget::private_refresh(UDataWidget* widget)
 
 void UDataWidget::Refresh()
 {
+	if (ReferencedAsset && ReferencedAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))		//Only run if asset uses Data interface
+	{
+		FText LocalDesc;
+		FText LocalName;
+			
+		IDataInterface_General::Execute_GetGeneralDataText(ReferencedAsset, AssetLabel, this, LocalName, LocalDesc);
+		if (GetNameTextWidget())
+		{
+			GetNameTextWidget()->SetText(LocalName);
+		}
+		if (GetDescriptionTextWidget())
+		{
+			GetDescriptionTextWidget()->SetText(LocalDesc);
+		}
+			
+		UTexture2D* LocalTexture = nullptr;
+		UMaterialInterface* LocalMat = nullptr;
+		FSlateBrush LocalBrush;
+		IDataInterface_General::Execute_GetGeneralDataImages(ReferencedAsset, AssetLabel, this, LocalTexture, LocalMat, LocalBrush);
+		if(GetTextureImage()&&LocalTexture)
+		{
+			GetTextureImage()->SetBrushFromTexture(LocalTexture);
+		}
+		if(GetMaterialImage()&&LocalMat)
+		{
+				
+			GetMaterialImage()->SetBrushFromMaterial(LocalMat);
+		}
+		bool Local_OverrideSize;
+		FVector2D Local_NewSize;
+		if(GetBrushImage(Local_OverrideSize, Local_NewSize) && LocalBrush.GetResourceObject())
+		{
+				
+			if(Local_OverrideSize)
+			{
+				LocalBrush.ImageSize = Local_NewSize;
+			}
+			GetBrushImage(Local_OverrideSize, Local_NewSize)->SetBrush(LocalBrush);
+		}
+			
+	}//Finish widget setup
+	
 	SetIsEnabled(GetIsEntitySelectable());
 	UObject* LocalListOwner = nullptr;
 	if(GetOwningList() && GetOwningList()->ListOwner)
@@ -309,6 +355,10 @@ void UDataWidget::Select()
 
 void UDataWidget::Hover()
 {
+	if(!GetPlayerSubsystem())
+	{
+		return;
+	}
 	//Cancel if already hovered
 	if(IsDataWidgetHovered())
 	{
@@ -391,7 +441,7 @@ bool UDataWidget::GetIsEntitySelectable()
 
 bool UDataWidget::IsDataWidgetHovered()
 {
-	if(GetPlayerSubsystem()->HoveredWidget==this)
+	if(GetPlayerSubsystem() && GetPlayerSubsystem()->HoveredWidget==this)
 	{
 		return true;
 	}
@@ -402,47 +452,7 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 {
 	if (Asset)	 //Only if valid asset
 	{
-		if (Asset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))		//Only run if asset uses Data interface
-		{
-			FText LocalDesc;
-			FText LocalName;
-			
-			IDataInterface_General::Execute_GetGeneralDataText(Asset, AssetLabel, this, LocalName, LocalDesc);
-			if (GetNameTextWidget())
-			{
-				GetNameTextWidget()->SetText(LocalName);
-			}
-			if (GetDescriptionTextWidget())
-			{
-				GetDescriptionTextWidget()->SetText(LocalDesc);
-			}
-			
-			UTexture2D* LocalTexture = nullptr;
-			UMaterialInterface* LocalMat = nullptr;
-			FSlateBrush LocalBrush;
-			IDataInterface_General::Execute_GetGeneralDataImages(Asset, AssetLabel, this, LocalTexture, LocalMat, LocalBrush);
-			if(GetTextureImage()&&LocalTexture)
-			{
-				GetTextureImage()->SetBrushFromTexture(LocalTexture);
-			}
-			if(GetMaterialImage()&&LocalMat)
-			{
-				
-				GetMaterialImage()->SetBrushFromMaterial(LocalMat);
-			}
-			bool Local_OverrideSize;
-			FVector2D Local_NewSize;
-			if(GetBrushImage(Local_OverrideSize, Local_NewSize) && LocalBrush.GetResourceObject())
-			{
-				
-				if(Local_OverrideSize)
-				{
-					LocalBrush.ImageSize = Local_NewSize;
-				}
-				GetBrushImage(Local_OverrideSize, Local_NewSize)->SetBrush(LocalBrush);
-			}
-			
-		}//Finish widget setup
+		
 		
 		//Set Tooltip Asset
 		Local_UpdateTooltip(Asset);

@@ -45,6 +45,7 @@ public class OmegaGameFramework : ModuleRules
 				"ApplicationCore",
 				"LevelSequence",
 				"MovieScene",
+				"ImageWrapper",
 				"MetasoundEngine",
 				"UMG",
 				"InputCore",
@@ -68,7 +69,8 @@ public class OmegaGameFramework : ModuleRules
 				"AssetRegistry",
 				"GameplayTags",
 				"PropertyPath",
-				"DeveloperSettings"
+				"DeveloperSettings",
+				"AudioPlatformConfiguration",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

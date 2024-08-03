@@ -135,6 +135,9 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Hit,"Event.Physics.Hit");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Touch,"Event.Physics.Touch");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Break,"Event.Physics.Break");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Drag_Grab,"Event.Drag.Grab");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Drag_Drop,"Event.Drag.Drop");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Game,"Preferences.Game");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Visual,"Preferences.Visual");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Pref_Audio,"Preferences.Audio");

@@ -9,16 +9,17 @@
 
 
 ## Subsystems
-|Name|Description|
-|-|-|
-|[Save](docs/subsystems/subsystem_save.md)| Saving and loading game data.|
-|[Gameplay](docs/subsystems/subsystem_gameplay.md)| Manage Level/World systems and gameplay with **Combatants** and async blueprint **Gameplay Systems**.
-|[Game Manager](docs/subsystems/subsystem_manager.md)| Manage Game Instance level systems and events with blueprint **Gameplay Modules**.
-|[BGM](docs/subsystems/subsystem_zone.md)| Play and manage music.|
-|[Zone](docs/subsystems/subsystem_zone.md)| Advanced methods for handling and transitioning between Zones and Levels.|
-|[Player](docs/subsystems/subsystem_player.md)| Manage advance input and widget for a player controller using **Menus** and **HUD Layers**.|
-|[Scripted Effects](docs/subsystems/subsystem_scriptedEffects.md)| Scripted & Highly customizable effects that can be applied to a **Combatant**.|
-|[Cues](docs/subsystems/subsystem_player.md)| Actors that contain an assembly of VFX, such as particles and sounds in a single source.|
+|Name|Description| Doc Status |
+|-|-|-|
+|[Save](docs/subsystems/subsystem_save.md)| Saving and loading game data. | <span style="color:#FFC300;">WIP</span>
+|[Gameplay](docs/subsystems/subsystem_gameplay.md)| Manage Level/World systems and gameplay with **Combatants** and async blueprint **Gameplay Systems**. | <span style="color:red;">Incomplete</span>
+|[Game Manager](docs/subsystems/subsystem_manager.md)| Manage Game Instance level systems and events with blueprint **Gameplay Modules**. | <span style="color:red;">Incomplete</span>
+|[Dynamic Camera](docs/subsystems/subsystem_camera.md)| Easily manage and blend between cameras automatically.| <span style="color:#23bf7b;">Ready</span>
+|[BGM](docs/subsystems/subsystem_zone.md)| Play and manage music.| <span style="color:#23bf7b;">Ready</span>
+|[Zone](docs/subsystems/subsystem_zone.md)| Advanced methods for handling and transitioning between Zones and Levels.| <span style="color:#23bf7b;">Ready</span>
+|[Player](docs/subsystems/subsystem_player.md)| Manage advance input and widget for a player controller using **Menus** and **HUD Layers**.| <span style="color:red;">Incomplete</span>
+|[Scripted Effects](docs/subsystems/subsystem_scriptedEffects.md)| Scripted & Highly customizable effects that can be applied to a **Combatant**.| <span style="color:red;">Incomplete</span>
+|[Cues](docs/subsystems/subsystem_player.md)| Actors that contain an assembly of VFX, such as particles and sounds in a single source.| <span style="color:red;">Incomplete</span>
 
 ## Widgets
 |Name|Description|

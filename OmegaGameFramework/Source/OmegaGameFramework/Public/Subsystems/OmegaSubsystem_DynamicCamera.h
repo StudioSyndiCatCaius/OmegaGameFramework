@@ -121,11 +121,16 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
+	UOmegaDynamicCameraSubsystem* REF_Subsystem=nullptr;
+	UPROPERTY()
+	APlayerController* REF_SourcePlayer=nullptr;
+
 public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(BlueprintImplementableEvent,Category="DynamicCamera")
-	void ActiveTick(float deltaTime);
+	void ActiveTick(float deltaTime, bool IsSourceCamera, APlayerController* SourcePlayer);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DynamicCamera")
 	USpringArmComponent* comp_spring;

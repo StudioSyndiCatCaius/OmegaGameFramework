@@ -82,7 +82,7 @@ AOmegaDynamicCamera* UOmegaDynamicCameraSubsystem::GetSourceCamera()
 	AOmegaDynamicCamera* out=nullptr;
 	for(auto* temp_cam : source_cameras)
 	{
-		if(temp_cam)
+		if(temp_cam && temp_cam!=GetDynamicCamera()) //If camera is valid & is NOT the Master Camera.
 		{
 			if(out)
 			{
@@ -142,6 +142,8 @@ void UOmegaDynamicCameraSubsystem::InterpToTarget(AOmegaDynamicCamera* cam_sourc
 		cam_master->comp_spring->TargetArmLength=UKismetMathLibrary::FInterpTo(cam_master->comp_spring->TargetArmLength,cam_source->comp_spring->TargetArmLength,last_delta,speed);
 		cam_master->comp_spring->SetRelativeLocation(UKismetMathLibrary::VInterpTo(cam_master->comp_spring->GetRelativeLocation(),cam_source->comp_spring->GetRelativeLocation(),last_delta,speed));
 		cam_master->comp_spring->SetRelativeRotation(UKismetMathLibrary::RInterpTo(cam_master->comp_spring->GetRelativeRotation(),cam_source->comp_spring->GetRelativeRotation(),last_delta,speed));
+		cam_master->comp_spring->SocketOffset==UKismetMathLibrary::VInterpTo(cam_master->comp_spring->SocketOffset,cam_source->comp_spring->SocketOffset,last_delta,speed);
+		cam_master->comp_spring->TargetOffset==UKismetMathLibrary::VInterpTo(cam_master->comp_spring->TargetOffset,cam_source->comp_spring->TargetOffset,last_delta,speed);
 	}
 }
 
@@ -235,7 +237,18 @@ void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 {
 	if(CameraActive)
 	{
-		ActiveTick(DeltaSeconds);
+		if(!REF_SourcePlayer)
+		{
+			REF_SourcePlayer=UGameplayStatics::GetPlayerController(this,0);
+		}
+		if(!REF_Subsystem && REF_SourcePlayer)
+		{
+			REF_Subsystem=REF_SourcePlayer->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>();
+		}
+		if(REF_Subsystem && REF_SourcePlayer)
+		{
+			ActiveTick(DeltaSeconds,REF_Subsystem->GetSourceCamera()!=this,REF_SourcePlayer);
+		}
 	}
 	if(SetRotationToPlayerControl)
 	{

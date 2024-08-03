@@ -1,17 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Subsystems/OmegaSubsystem_File.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Engine/Texture2D.h"
+
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
-#include "FileSDKBPLibrary.h"
+
+#include "Sound/SoundWave.h"
+#include "Sound/SoundWaveProcedural.h"
+#include "Misc/FileHelper.h"
+
 #include "OmegaSettings.h"
 #include "Kismet/BlueprintPathsLibrary.h"
-#include "Kismet/KismetRenderingLibrary.h"
+
 #include "Kismet/KismetSystemLibrary.h"
+
+#include "ImageUtils.h"
 
 void UOmegaFileSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -96,6 +103,90 @@ UObject* UOmegaFileSubsystem::GetOverrideObject(FString name, UClass* Class) con
 		}
 	}
 	return nullptr;
+}
+
+UTexture2D* UOmegaFileFunctions::OmegaImport_Texture2D(const FString& FilePath)
+{
+	UTexture2D* Texture = FImageUtils::ImportFileAsTexture2D(FilePath);;
+	if(Texture)
+	{
+		
+		return Texture;
+	}
+	return nullptr;
+}
+
+struct FWaveHeader
+{
+	// WAV file header structure
+	uint8   RIFF[4];        // RIFF Header
+	uint32  ChunkSize;      // RIFF Chunk Size
+	uint8   WAVE[4];        // WAVE Header
+	uint8   fmt[4];         // FMT header
+	uint32  Subchunk1Size;  // Size of the fmt chunk
+	uint16  AudioFormat;    // Audio format
+	uint16  NumOfChan;      // Number of channels
+	uint32  SamplesPerSec;  // Sampling Frequency in Hz
+	uint32  bytesPerSec;    // bytes per second
+	uint16  blockAlign;     // 2=16-bit mono, 4=16-bit stereo
+	uint16  bitsPerSample;  // Number of bits per sample
+	uint8   Subchunk2ID[4]; // "data"  string
+	uint32  Subchunk2Size;  // Sampled data length
+};
+
+USoundWave* UOmegaFileFunctions::OmegaImport_Sound(const FString& FilePath, FString& Error)
+{
+	// Check if the file exists
+	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
+	{
+		Error="File does not exist: "+FilePath;
+		UE_LOG(LogTemp, Error, TEXT("File does not exist: %s"), *FilePath);
+		return nullptr;
+	}
+
+	// Load the file to a byte array
+	TArray<uint8> RawFileData;
+	if (!FFileHelper::LoadFileToArray(RawFileData, *FilePath))
+	{
+		Error="Failed to load file: "+FilePath;
+		UE_LOG(LogTemp, Error, TEXT("Failed to load file: %s"), *FilePath);
+		return nullptr;
+	}
+
+	// Parse the WAV header
+	if (RawFileData.Num() < sizeof(FWaveHeader))
+	{
+		Error="File is too small to be a valid WAV file: "+FilePath;
+		UE_LOG(LogTemp, Error, TEXT("File is too small to be a valid WAV file: %s"), *FilePath);
+		return nullptr;
+	}
+
+	FWaveHeader* WaveHeader = reinterpret_cast<FWaveHeader*>(RawFileData.GetData());
+	if (FMemory::Memcmp(WaveHeader->RIFF, "RIFF", 4) != 0 || FMemory::Memcmp(WaveHeader->WAVE, "WAVE", 4) != 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid WAV file: %s"), *FilePath);
+		return nullptr;
+	}
+
+	// Create a new USoundWaveProcedural object
+	USoundWaveProcedural* SoundWave = NewObject<USoundWaveProcedural>(USoundWaveProcedural::StaticClass());
+	if (!SoundWave)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create USoundWaveProcedural object"));
+		return nullptr;
+	}
+
+	// Set properties from WAV header
+	SoundWave->SetSampleRate(WaveHeader->SamplesPerSec);
+	SoundWave->NumChannels = WaveHeader->NumOfChan;
+	SoundWave->Duration = static_cast<float>(WaveHeader->Subchunk2Size) / (WaveHeader->SamplesPerSec * WaveHeader->NumOfChan * (WaveHeader->bitsPerSample / 8));
+
+	// Set the raw PCM data (skip the header)
+	const uint8* PCMData = RawFileData.GetData() + sizeof(FWaveHeader);
+	int32 PCMDataSize = RawFileData.Num() - sizeof(FWaveHeader);
+	SoundWave->QueueAudio(PCMData, PCMDataSize);
+
+	return SoundWave;
 }
 
 

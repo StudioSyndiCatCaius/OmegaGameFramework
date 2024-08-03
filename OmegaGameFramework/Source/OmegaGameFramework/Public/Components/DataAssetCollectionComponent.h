@@ -59,7 +59,7 @@ protected:
 public:
 
 	UPROPERTY(Instanced, EditDefaultsOnly, BlueprintReadWrite,Category="DataAssetCollection", DisplayName="Script")
-	UDataAssetCollectionScript* DataAssetCollectionScript;
+	UDataAssetCollectionScript* DataAssetCollectionScript=nullptr;
 	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

@@ -62,6 +62,12 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileFunctions : public UBlueprintFunctionLibr
 {
 	GENERATED_BODY()
 public:
+
+	UFUNCTION(BlueprintCallable,Category="Omega|File|Import")
+	static UTexture2D* OmegaImport_Texture2D(const FString& FilePath);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|File|Import")
+	static USoundWave* OmegaImport_Sound(const FString& FilePath, FString& Error);
 	
 };
 

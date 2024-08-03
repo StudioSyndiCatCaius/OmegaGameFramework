@@ -19,3 +19,9 @@ Omega Game Framework is a free, open-source high-level plugin for Unreal Engine 
 | ![alt text](docs/images/Screenshots/OGF_7_XP.png) | ![alt text](docs/images/Screenshots/OGF_8_inventory.png)
 | ![alt text](docs/images/Screenshots/OGF_9_turnOrder.png) | ![alt text](docs/images/Screenshots/OGF_10_dataItems.png)
 | ![alt text](docs/images/Screenshots/OGF_11_flowAsset.png) | ![alt text](docs/images/Screenshots/OGF_12_zoneManager.png)
+
+### Credits:
+Plugins
+* [FlowGraph](https://github.com/MothCocoon/FlowGraph)
+
+Assets
