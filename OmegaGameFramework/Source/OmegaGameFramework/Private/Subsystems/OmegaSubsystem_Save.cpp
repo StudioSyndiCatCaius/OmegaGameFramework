@@ -57,16 +57,12 @@ void UOmegaSaveSubsystem::Deinitialize()
 
 void UOmegaSaveSubsystem::OnLevelChanged(UWorld* World, const UWorld::InitializationValues)
 {
-	if(GetStoryStateAsset())
+	for(auto* TempState : GetActiveStoryStates())
 	{
-		for(auto* TempScript: GetStoryStateAsset()->Scripts)
+		for(auto* TempScript : TempState->Scripts)
 		{
-			if(TempScript)
-			{
-				TempScript->OuterWorldRef=World;
-				const FString LevelNameRef = UGameplayStatics::GetCurrentLevelName(this);
-				TempScript->OnLevelChange(GetStoryStateAsset(),LevelNameRef);
-			}
+			TempScript->OverrideWorld(GetWorld());
+			TempScript->OnLevelChange(TempState,UGameplayStatics::GetCurrentLevelName(this));
 		}
 	}
 }
@@ -700,35 +696,55 @@ TArray<UObject*> UOmegaSaveSubsystem::GetSaveSources()
 	return OutSources;
 }
 
-void UOmegaSaveSubsystem::SetStoryStateAsset(UOmegaStoryStateAsset* Asset)
+TArray<UOmegaStoryStateAsset*> UOmegaSaveSubsystem::GetActiveStoryStates()
 {
-	ClearStoryState();
-	if(Asset)
+
+	TArray<UOmegaStoryStateAsset*> out;
+	out.Append(ActiveSaveData->ActiveStoryStates);
+	out.Append(GlobalSaveData->ActiveStoryStates);
+	return out;
+}
+
+
+void UOmegaSaveSubsystem::SetStoryStateActive(UOmegaStoryStateAsset* State, bool bActive,bool bGlobalSave)
+{
+	if(State)
 	{
-		for(auto* TempScript: Asset->Scripts)
+		if(IsStoryStateActive(State)!=bActive)
 		{
-			if(TempScript)
+			if(bActive)
 			{
-				TempScript->OuterWorldRef=GetWorld();
-				TempScript->OnStateBegin(Asset);
+				GetSaveObject(bGlobalSave)->ActiveStoryStates.AddUnique(State);
+				for(auto* TempScript : State->Scripts)
+				{
+					TempScript->OverrideWorld(GetWorld());
+					TempScript->OnStateBegin(State);
+				}
+			}
+			else
+			{
+				GetSaveObject(bGlobalSave)->ActiveStoryStates.Remove(State);
+				for(auto* TempScript : State->Scripts)
+				{
+					TempScript->OverrideWorld(GetWorld());
+					TempScript->OnStateEnd(State);
+				}
 			}
 		}
 	}
 }
 
-void UOmegaSaveSubsystem::ClearStoryState()
+void UOmegaSaveSubsystem::ClearAllStoryStates(bool bGlobal)
 {
-	if(GetStoryStateAsset())
+	for(auto* TempState : GetActiveStoryStates())
 	{
-		for(auto* TempScript: GetStoryStateAsset()->Scripts)
-		{
-			if(TempScript)
-			{
-				//TempScript->OuterWorldRef=GetWorld();
-				TempScript->OnStateEnd(GetStoryStateAsset());
-			}
-		}
+		SetStoryStateActive(TempState,false,bGlobal);
 	}
+}
+
+bool UOmegaSaveSubsystem::IsStoryStateActive(UOmegaStoryStateAsset* State)
+{
+	return GetActiveStoryStates().Contains(State);
 }
 
 void UOmegaSaveSubsystem::SetDynamicVariableValue(UOmegaDynamicSaveVariable* Variable, int32 value, bool bGlobal)
@@ -761,6 +777,27 @@ void UOmegaSaveBase::Local_OnLoaded()
 {
 	
 }
+
+// ====================================================================================================
+// Story State Script
+// ====================================================================================================
+UWorld* UOmegaStoryStateScript::GetWorld() const
+{
+	if(WorldPrivate) { return  WorldPrivate; }
+	if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
+}
+
+UGameInstance* UOmegaStoryStateScript::GetGameInstance() const
+{
+	if(WorldPrivate) { return WorldPrivate->GetGameInstance();}
+	return Cast<UGameInstance>(GetOuter());
+}
+
+UOmegaStoryStateScript::UOmegaStoryStateScript(const FObjectInitializer& ObjectInitializer)
+{
+	if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
+}
+
 
 
 
@@ -969,18 +1006,5 @@ void UOmegaStoryStateScript::OnStateEnd_Implementation(UOmegaStoryStateAsset* St
 
 void UOmegaStoryStateScript::OnLevelChange_Implementation(UOmegaStoryStateAsset* State, const FString& LevelName)
 {
-}
-
-UWorld* UOmegaStoryStateScript::GetWorld() const
-{
-	if(OuterWorldRef)
-	{
-		return OuterWorldRef;
-	}
-	if(GetOuter()->GetWorld())
-	{
-		return GetOuter()->GetWorld();
-	}
-	return UObject::GetWorld();
 }
 

@@ -170,6 +170,9 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attributes_Static_HP,"Attributes.Static.HP");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attributes_Static_MP,"Attributes.Static.MP");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attributes_Static_TP,"Attributes.Static.TP");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Camera_Battle,"Camera.Battle");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Camera_Dialogue,"Camera.Dialogue");
+
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

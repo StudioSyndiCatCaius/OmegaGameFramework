@@ -31,6 +31,10 @@ UGameInstance* UOmegaLinearChoice::GetGameInstance() const
 	return GameInstanceRef;
 }
 
+void UOmegaLinearChoice::OnChoiceSelected_Implementation() const
+{
+}
+
 
 void UAyncLinearChoice::LocalChoiceSelected(UOmegaLinearChoice* Choice, int32 ChoiceIndex)
 {

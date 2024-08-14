@@ -210,6 +210,27 @@ uint8 UFlowNode::CountNumberedOutputs() const
 	return Result;
 }
 
+bool UFlowNode::HasPin(FName PinName, bool bInput)
+{
+	TArray<FFlowPin> pin_list;
+	if(bInput)
+	{
+		pin_list=InputPins;
+	}
+	else
+	{
+		pin_list=OutputPins;
+	}
+	for(auto TempPin : pin_list)
+	{
+		if(TempPin.PinName==PinName)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 TArray<FName> UFlowNode::GetInputNames() const
 {
 	TArray<FName> Result;

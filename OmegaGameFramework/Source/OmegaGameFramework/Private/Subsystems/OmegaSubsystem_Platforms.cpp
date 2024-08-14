@@ -7,6 +7,24 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
 
+void UOmegaAchievementListener::UnlockAchievement() const
+{
+	// unlock cod goes here
+}
+
+void UOmegaAchievement::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	Name=Achievement_Name;
+	Description=Achievement_Description;
+}
+
+void UOmegaAchievement::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	Brush=Achievement_Icon;
+}
+
 UOmegaPlatformAsset* UOmegaPlatformSettings::GetPlatformAsset() const
 {
 	const FString PlatformName = FPlatformMisc::GetUBTPlatform();

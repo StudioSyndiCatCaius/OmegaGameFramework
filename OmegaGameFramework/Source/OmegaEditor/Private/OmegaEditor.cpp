@@ -155,6 +155,20 @@ void FOmegaEditor::StartupModule()
 	
 	ThumnbailNames.Add(TEXT("OmegaZoneData"));
 	ThumnbailNames.Add(TEXT("OmegaLevelData"));
+	ThumnbailNames.Add(TEXT("OmegaScriptedEffect"));
+	ThumnbailNames.Add(TEXT("OmegaPlatformAsset"));
+	ThumnbailNames.Add(TEXT("OmegaAchievement"));
+	ThumnbailNames.Add(TEXT("OmegaStoryStateAsset"));
+	ThumnbailNames.Add(TEXT("GamePreference"));
+	ThumnbailNames.Add(TEXT("OmegaSettings_Gameplay"));
+	ThumnbailNames.Add(TEXT("OmegaSettings_Slate"));
+	
+	ThumnbailNames.Add(TEXT("GamePreferenceScript"));
+	ThumnbailNames.Add(TEXT("OmegaGameplayMetaSetting"));
+	ThumnbailNames.Add(TEXT("OmegaScriptedEffect"));
+	ThumnbailNames.Add(TEXT("OmegaDynamicCamera"));
+	ThumnbailNames.Add(TEXT("OmegaGameplayCue"));
+	ThumnbailNames.Add(TEXT("DataListFormat"));
 	
 	FSlateImageBrush* ThumbnailTemp;
 	FSlateImageBrush* IconTemp;

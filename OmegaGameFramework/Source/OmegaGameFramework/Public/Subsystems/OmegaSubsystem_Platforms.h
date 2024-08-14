@@ -20,6 +20,49 @@ struct FPlatformKeyInfo
 	FSlateBrush KeyIcon;
 };
 
+// ========================================================
+// ACHIEVEMENTS
+// ========================================================
+
+UCLASS(BlueprintType, Blueprintable,EditInlineNew, Const,Abstract)
+class OMEGAGAMEFRAMEWORK_API UOmegaAchievementListener : public UObject
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Achievements")
+	void OnBegin_GameInstance() const;
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Achievements")
+	void OnBegin_GameWorld() const;
+
+	UFUNCTION(BlueprintCallable,Category="Achievements")
+	void UnlockAchievement() const;
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaAchievement : public UPrimaryDataAsset, public IDataInterface_General
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement",DisplayName="Name")
+	FText Achievement_Name;
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement",DisplayName="Icon")
+	FSlateBrush Achievement_Icon;
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement",DisplayName="Description",meta=(MultiLine))
+	FText Achievement_Description;
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement")
+	int32 Score;
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Instanced,Category="Achievement")
+	TArray<UOmegaAchievementListener*> Listeners;
+
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+};
+
+
+
 UCLASS(BlueprintType, Blueprintable)
 class OMEGAGAMEFRAMEWORK_API UOmegaPlatformAsset : public UPrimaryDataAsset
 {
@@ -97,3 +140,5 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|Platform", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context")) 
 	static UOmegaPlatformAsset* GetCurrentPlatformAsset();
 };
+
+

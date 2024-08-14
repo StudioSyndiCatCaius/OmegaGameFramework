@@ -9,6 +9,7 @@
 #include "OmegaDataSettings.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Subsystems/OmegaSubsystem_AssetHandler.h"
 
 void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -41,6 +42,9 @@ void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 				if(TempItem->GameplayID.IsValid())
 				{
 					DataItemIDs.Add(TempItem->GameplayID, TempItem);
+					FString label;
+					TempItem->GetGeneralAssetLabel(label);
+					GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(TempItem,label);
 				}
 			}
 		}

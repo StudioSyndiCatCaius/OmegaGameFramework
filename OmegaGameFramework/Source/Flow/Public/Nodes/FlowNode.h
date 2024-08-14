@@ -153,6 +153,9 @@ protected:
 	TArray<FFlowPin> GetInputPins() const { return InputPins; }
 	TArray<FFlowPin> GetOutputPins() const { return OutputPins; }
 
+	UFUNCTION()
+	bool HasPin(FName PinName, bool bInput);
+
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	TArray<FName> GetInputNames() const;
 

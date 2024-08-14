@@ -98,10 +98,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|Object")
 	static const TArray<FString> GetDisplayNamesFromObjects(TArray<UObject*> Objects);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="OverridePath", ExpandEnumAsExecs = "Outcome"))
-	static UObject* GetSortedAssetByClass(const FString& AssetName, TSubclassOf<UObject> Class, const FString& OverridePath, TEnumAsByte<EOmegaFunctionResult>& Outcome);
-
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Object")
 	static UObject* GetAssetFromGlobalID(FGameplayTag GlobalID);
 

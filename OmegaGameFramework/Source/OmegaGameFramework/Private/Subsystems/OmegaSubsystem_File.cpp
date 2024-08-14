@@ -19,6 +19,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 #include "ImageUtils.h"
+#include "Subsystems/OmegaSubsystem_AssetHandler.h"
 
 void UOmegaFileSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -60,17 +61,7 @@ void UOmegaFileSubsystem::ImportFileAsOverrideAsset(const FString& path)
 			if(TempScript && TempScript->ValidExtensions.Contains(extension))
 			{
 				UObject* new_obj = TempScript->ImportAsObject(path,filename,extension);
-				if(new_obj)
-				{
-					FOmegaFileObjectList input_list;
-					if(imported_overrides.Contains(TempScript->ImportClass))
-					{
-						input_list=imported_overrides[TempScript->ImportClass];
-					}
-					//add loaded object to import path.
-					input_list.file_objects.Add(filename,new_obj);
-					imported_overrides.Add(TempScript->ImportClass,input_list);
-				}
+				RegisterOverrideAsset(new_obj,filename,TempScript->ImportClass);
 			}
 		}
 	}
@@ -105,6 +96,35 @@ UObject* UOmegaFileSubsystem::GetOverrideObject(FString name, UClass* Class) con
 	return nullptr;
 }
 
+void UOmegaFileSubsystem::RegisterOverrideAsset(UObject* Asset, FString Name, UClass* Class)
+{
+	if(Asset && !Name.IsEmpty())
+	{
+		GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(Asset,Name);
+		
+		UClass* in_class=Asset->GetClass();
+		if(!Class)
+		{
+			in_class=Class;
+		}
+		if(Asset->GetClass()->IsChildOf(in_class))
+		{
+			FOmegaFileObjectList input_list;
+			if(imported_overrides.Contains(in_class))
+			{
+				input_list=imported_overrides[in_class];
+			}
+			//add loaded object to import path.
+			input_list.file_objects.Add(Name,Asset);
+			imported_overrides.Add(Class,input_list);
+		}
+	}
+}
+
+
+// ================================================================================================
+// FILE IMPORT TYPES
+// ================================================================================================
 UTexture2D* UOmegaFileFunctions::OmegaImport_Texture2D(const FString& FilePath)
 {
 	UTexture2D* Texture = FImageUtils::ImportFileAsTexture2D(FilePath);;

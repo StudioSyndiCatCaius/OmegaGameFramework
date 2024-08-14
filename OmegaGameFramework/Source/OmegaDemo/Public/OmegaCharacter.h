@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "DataItemComponent.h"
-#include "Components/LevelingComponent.h"
-#include "Components/DataAssetCollectionComponent.h"
+#include "Components/Component_Leveling.h"
+#include "Components/Component_Inventory.h"
 #include "Components/CombatantComponent.h"
-#include "Components/ActorStateComponent.h"
-#include "Components/EquipmentComponent.h"
+#include "Components/Component_ActorState.h"
+#include "Components/Component_Equipment.h"
 #include "GameFramework/Character.h"
 #include "OmegaCharacter.generated.h"
 

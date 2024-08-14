@@ -329,18 +329,19 @@ public:
 	// Story State
 	//###############################################################################################
 	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem|StoryState")
-	UOmegaStoryStateAsset* GetStoryStateAsset()
-	{
-		return CurrentState;
-	}
+	TArray<UOmegaStoryStateAsset*> GetActiveStoryStates();
+	
 	UPROPERTY()
-	UOmegaStoryStateAsset* CurrentState;
+	TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
 	
 	UFUNCTION(BlueprintCallable, Category="OmegaSaveSubsystem|StoryState")
-	void SetStoryStateAsset(UOmegaStoryStateAsset* Asset);
+	void SetStoryStateActive(UOmegaStoryStateAsset* State, bool bActive,bool bGlobalSave);
 
 	UFUNCTION(BlueprintCallable, Category="OmegaSaveSubsystem|StoryState")
-	void ClearStoryState();
+	void ClearAllStoryStates(bool bGlobal);
+
+	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem|StoryState")
+	bool IsStoryStateActive(UOmegaStoryStateAsset* State);
 
 	//###############################################################################################
 	// Dynamic Variables
@@ -418,6 +419,8 @@ public:
 	UFUNCTION()
 	void Local_OnLoaded();
 	
+	UPROPERTY()
+	TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
 	
 	//GamePreferences
 	UPROPERTY()
@@ -589,6 +592,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Save")
 	UTexture2D* SaveScreenshot;
 
+
+
 };
 
 UCLASS()
@@ -740,7 +745,13 @@ class OMEGAGAMEFRAMEWORK_API UOmegaStoryStateScript : public UObject
 {
 	GENERATED_BODY()
 
+	virtual UWorld* GetWorld() const override;
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
+	UOmegaStoryStateScript(const FObjectInitializer& ObjectInitializer);
+	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
 public:
+
+	void OverrideWorld(UWorld* WorldNew) { if(!WorldPrivate && WorldNew){ WorldPrivate=WorldNew; } }
 
 	UFUNCTION(BlueprintNativeEvent, Category="State Script")
 	void OnStateBegin(UOmegaStoryStateAsset* State);
@@ -750,9 +761,5 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category="State Script")
 	void OnLevelChange(UOmegaStoryStateAsset* State, const FString& LevelName);
-
-	virtual UWorld* GetWorld() const override;
-
-	UPROPERTY()
-	UWorld* OuterWorldRef;
+	
 };

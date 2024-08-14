@@ -7,6 +7,7 @@
 #include "OmegaSettings.h"
 #include "GameFramework/Pawn.h"
 #include "Engine/LocalPlayer.h"
+#include "Functions/OmegaFunctions_Common.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UOmegaDynamicCameraSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -56,6 +57,17 @@ void UOmegaDynamicCameraSubsystem::SnapToCurrentSource()
 	}
 }
 
+void UOmegaDynamicCameraSubsystem::SetAllCamerasWithTags_Active(FGameplayTagContainer Tags, bool bActive)
+{
+	for(auto* TempCam : source_cameras)
+	{
+		if(TempCam && UOmegaGameFrameworkBPLibrary::GetObjectGameplayTags(TempCam).HasAnyExact(Tags))
+		{
+			TempCam->CameraActive=bActive;
+		}
+	}
+}
+
 TSubclassOf<AOmegaDynamicCamera> UOmegaDynamicCameraSubsystem::GetDynamicCameraClass()
 {
 	const FSoftClassPath LocalCamPath = GetMutableDefault<UOmegaSettings>()->DynamicCameraClass;
@@ -75,23 +87,23 @@ AOmegaDynamicCamera* UOmegaDynamicCameraSubsystem::GetDynamicCamera()
 
 AOmegaDynamicCamera* UOmegaDynamicCameraSubsystem::GetSourceCamera()
 {
-	if(override_camera)
+	if(override_camera && override_camera->CameraActive)
 	{
 		return override_camera;
 	}
 	AOmegaDynamicCamera* out=nullptr;
 	for(auto* temp_cam : source_cameras)
 	{
-		if(temp_cam && temp_cam!=GetDynamicCamera()) //If camera is valid & is NOT the Master Camera.
+		if(temp_cam && temp_cam!=GetDynamicCamera() && !temp_cam->IsActorBeingDestroyed()) //If camera is valid & is NOT the Master Camera.
 		{
-			if(out)
+			if(out) //if a valid check camera has been set
 			{
 				if(temp_cam->CameraActive && temp_cam->Priority>=out->Priority)
 				{
 					out=temp_cam;
 				}
 			}
-			else
+			else// if not set this as the check camera
 			{
 				out=temp_cam;
 			}
@@ -151,6 +163,7 @@ void UOmegaDynamicCameraSubsystem::SetOverrideCamera(AOmegaDynamicCamera* Camera
 {
 	if(Camera)
 	{
+		Camera->CameraActive=true;
 		override_camera=Camera;
 	}
 	else
@@ -235,6 +248,8 @@ FTransform AOmegaDynamicCamera::LOCAL_Average_Transform(TArray<FTransform> input
 
 void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 {
+	if(DeltaSeconds<=0.0) { return; } //Failsafe because BeginPlay keeps causing problems.
+	
 	if(CameraActive)
 	{
 		if(!REF_SourcePlayer)
@@ -326,6 +341,11 @@ void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 	*/
 	
 	Super::Tick(DeltaSeconds);
+}
+
+FGameplayTagContainer AOmegaDynamicCamera::GetObjectGameplayTags_Implementation()
+{
+	return CameraTags;
 }
 
 TArray<UObject*> AOmegaDynamicCamera::GetValidSources()

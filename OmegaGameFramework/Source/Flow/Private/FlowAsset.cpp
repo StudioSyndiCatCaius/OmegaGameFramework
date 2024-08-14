@@ -392,7 +392,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 		{
 			if(GetNodeFromGuid(TempGuid))
 			{
-				TriggerInput(TempGuid, InputName);
+				TriggerInput(TempGuid, InputName,true);
 			}
 		}
 	}
@@ -471,8 +471,17 @@ void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, bool 
 			ActiveNodes.Add(Node);
 			RecordedNodes.Add(Node);
 		}
-
-		Node->TriggerInput(PinName);
+		if(bForce && !Node->HasPin(PinName,true))
+		{
+			if(Node->InputPins.IsValidIndex(0))
+			{
+				Node->TriggerInput(Node->InputPins[0].PinName);
+			}
+		}
+		else
+		{
+			Node->TriggerInput(PinName);
+		}
 	}
 }
 
@@ -635,7 +644,7 @@ void UFlowAsset::GetGeneralAssetLabel_Implementation(FString& Label)
 {
 	if(CustomLabel.IsEmpty())
 	{
-		Label = this->GetName();
+		Label = this->GetDisplayName().ToString();
 	}
 	else
 	{

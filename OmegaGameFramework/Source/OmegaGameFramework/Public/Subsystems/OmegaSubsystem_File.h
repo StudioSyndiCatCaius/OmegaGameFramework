@@ -54,7 +54,8 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|File",meta=(DeterminesOutputType="Class"))
 	UObject* GetOverrideObject(FString name, UClass* Class) const;
 	
-	
+	UFUNCTION(BlueprintCallable,Category="Omega|File")
+	void RegisterOverrideAsset(UObject* Asset, FString Name, UClass* Class);
 };
 
 UCLASS()

@@ -44,7 +44,7 @@ protected:
 	UPROPERTY() bool is_DynamicCamerActive;
 
 public:
-
+	
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual ETickableTickType GetTickableTickType() const override
@@ -79,25 +79,30 @@ public:
 	UFUNCTION(BlueprintPure, Category="DynamicCamera",DisplayName="Get Source Camera")
 	AOmegaDynamicCamera* GetSourceCamera();
 	
-	UFUNCTION()
-	void SetCameraSourceRegistered(AOmegaDynamicCamera* Camera, bool IsActive);
+	UFUNCTION() void SetCameraSourceRegistered(AOmegaDynamicCamera* Camera, bool IsActive);
 	
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void SetDynamicCameraActive(bool IsActive);
+	UFUNCTION(BlueprintPure,Category="Dynamic Camera")
+	bool IsDynamicCameraActive() const { return is_DynamicCamerActive;}
 
 	UFUNCTION()
 	void InterpToTarget(AOmegaDynamicCamera* cam_source, AOmegaDynamicCamera* cam_master, float speed);
-	
+
+	//Overrides the Source camera with a specific camera. Doing this will active that camera. Deactivating it will ignore its override.
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void SetOverrideCamera(AOmegaDynamicCamera* Camera);
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void ClearOverrideCamera();
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void SnapToCurrentSource();
+
+	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
+	void SetAllCamerasWithTags_Active(FGameplayTagContainer Tags, bool bActive);
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaDynamicCamera : public APawn
+class OMEGAGAMEFRAMEWORK_API AOmegaDynamicCamera : public APawn, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
 
@@ -151,6 +156,10 @@ public:
 	bool SetRotationToPlayerControl;
 
 	float SpeedOffset(float offset) const { return  InterpSpeed+offset; }
+
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="DynamicCamera")
+	FGameplayTagContainer CameraTags;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 };
 
 UINTERFACE(MinimalAPI)

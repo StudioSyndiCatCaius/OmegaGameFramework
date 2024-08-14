@@ -8,6 +8,8 @@
 #include "Misc/OmegaAttribute.h"
 #include "OmegaInterface_Combatant.generated.h"
 
+class UCombatantComponent;
+class UCombatantFilter;
 
 
 // This class does not need to be modified.
@@ -132,6 +134,7 @@ UINTERFACE(MinimalAPI)
 class UDataInterface_Skill : public UInterface
 {
 	GENERATED_BODY()
+	
 };
 
 class OMEGAGAMEFRAMEWORK_API IDataInterface_Skill
@@ -139,8 +142,11 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Skill
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-	public:
-
+public:
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="Skills")
+	TMap<UOmegaAttribute*, float> GetSkillAttributeCosts(UCombatantComponent* Combatant,UObject* Context);
+	
 	UFUNCTION(BlueprintNativeEvent, Category="Combatant")
 	TSubclassOf<UCombatantFilter> GetSkillTargetFilter(); 
 };

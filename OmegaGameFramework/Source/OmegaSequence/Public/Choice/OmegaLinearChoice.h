@@ -31,5 +31,8 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Choice")
 	bool IsChoiceAvailable() const;
+
+	UFUNCTION(BlueprintNativeEvent, Category="Choice")
+	void OnChoiceSelected() const;
 	
 };

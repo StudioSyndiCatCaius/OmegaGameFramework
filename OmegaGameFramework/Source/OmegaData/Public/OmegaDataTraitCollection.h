@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS(DisplayName="Omega Subsystem: Data")
+UCLASS()
 class OMEGADATA_API UOmegaDataTraitCollection : public UPrimaryDataAsset
 {
 	GENERATED_BODY()

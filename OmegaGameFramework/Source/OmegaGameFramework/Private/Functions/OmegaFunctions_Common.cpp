@@ -24,6 +24,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Subsystems/OmegaSubsystem_AssetHandler.h"
 #include "Subsystems/OmegaSubsystem_File.h"
 
 
@@ -279,37 +280,6 @@ const TArray<FString> UOmegaGameFrameworkBPLibrary::GetDisplayNamesFromObjects(T
 	return StringsOut;
 }
 
-UObject* UOmegaGameFrameworkBPLibrary::GetSortedAssetByClass(const FString& AssetName, TSubclassOf<UObject> Class, const FString& OverridePath, TEnumAsByte<EOmegaFunctionResult>& Outcome)
-{
-	FString start_path = OverridePath;
-
-	if(OverridePath.IsEmpty())
-	{
-		if(GetMutableDefault<UOmegaSettings>()->SortedAssetsRootPathByClass.Contains(Class))
-		{
-			start_path = GetMutableDefault<UOmegaSettings>()->SortedAssetsRootPathByClass[Class].Path+"/";
-		}
-		else
-		{
-			start_path = GetMutableDefault<UOmegaSettings>()->SortedAssetsRootPath.Path+"/"+Class->GetName()+"/";
-		}
-	}
-
-	const FString full_path = start_path+AssetName+"."+AssetName;
-	UE_LOG(LogTemp,Log,TEXT("Tried to load sorted asset from path: %s"), *full_path);
-	
-	// Get the Asset Registry module
-	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	// Get the Asset Registry
-	const IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-	if(UObject* outval = AssetRegistry.GetAssetByObjectPath(FName(*full_path)).GetAsset())
-	{
-		Outcome=EOmegaFunctionResult::Success;
-		return outval;
-	}
-	Outcome=EOmegaFunctionResult::Fail;
-	return nullptr;
-}
 
 UObject* UOmegaGameFrameworkBPLibrary::GetAssetFromGlobalID(FGameplayTag GlobalID)
 {
@@ -365,9 +335,12 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
                                                          TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	//use imported override file if it exits.
-	if(UObject* override_file = GEngine->GetEngineSubsystem<UOmegaFileSubsystem>()->GetOverrideObject(AssetPath,Class))
+	if(UObject* override_file = GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->GetSortedAsset_FromLabel(AssetPath))
 	{
-		return override_file;
+		if(override_file->GetClass()->IsChildOf(Class) || !Class)
+		{
+			return override_file;
+		}
 	}
 	
 	FString in_path = AssetPath;

@@ -12,7 +12,7 @@
 #include "Engine/GameInstance.h"
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
-#include "Components/DataAssetCollectionComponent.h"
+#include "Components/Component_Inventory.h"
 #include "Functions/OmegaFunctions_SoftProperty.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
 
