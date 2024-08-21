@@ -24,8 +24,6 @@ AOmegaGameplaySystem::AOmegaGameplaySystem()
 // Called when the game starts or when spawned
 void AOmegaGameplaySystem::BeginPlay()
 {
-	Super::BeginPlay();
-	
 	///ATTACH TO GAME MODE
 	if(!GetAttachParentActor())
 	{
@@ -38,6 +36,7 @@ void AOmegaGameplaySystem::BeginPlay()
 	UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
 
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnTaggedGlobalEvent);
 	
 	for (AActor* TempActor : FoundPlayers)
 	{
@@ -90,6 +89,7 @@ void AOmegaGameplaySystem::BeginPlay()
 	//SetupSave
 	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSaveSourceRegistered(this,true);
 	
+	Super::BeginPlay();
 }
 
 void AOmegaGameplaySystem::Destroyed()

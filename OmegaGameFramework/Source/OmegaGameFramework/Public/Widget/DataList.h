@@ -340,7 +340,7 @@ protected:
 };
 
 
-UCLASS(EditInlineNew, Blueprintable,BlueprintType,CollapseCategories)
+UCLASS(EditInlineNew, Blueprintable,BlueprintType,CollapseCategories,Abstract)
 class OMEGAGAMEFRAMEWORK_API UDataListFormat : public UObject
 {
 	GENERATED_BODY()
@@ -356,7 +356,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent,Category="DataList")
 	void OnWidgetHovered(UDataWidget* DataWidget, UPanelWidget* PanelWidget);
 	
-	//UFUNCTION(BlueprintNativeEvent,Category="DataList")
-	//UDataWidget* NavigateEntry(FVector2d Input);
+	UFUNCTION(BlueprintNativeEvent,Category="DataList")
+	UDataWidget* OnReceiveInput_Navigation(FVector2D Input2D, int32 Input1D, UDataList* List);
 	
 };

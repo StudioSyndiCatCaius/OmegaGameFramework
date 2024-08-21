@@ -31,6 +31,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAttribute : public UPrimaryDataAsset, public 
 	GENERATED_BODY()
 
 public:
+	virtual FString GetDesc() override;
 
 	//-----------------------------------------------------------------------------------
 	// General
@@ -39,29 +40,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Ω|Attributes")
 	float GetAttributeValue(int32 Level, int32 AttributeRank, FGameplayTag ValueCategory);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name", Category = "General")
-	FText AttributeName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name", Category = "General") FText AttributeName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Description", Category = "General") FText AttributeDescription;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Label", Category = "General") FString AttributeLabel;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Icon", Category = "General", DisplayName="Icon") FSlateBrush AttributeSlateIcon;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "General") FLinearColor AttributeColor;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "General") FLinearColor DamageColor;
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "General") UOmegaAttributeScript* Script;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Description", Category = "General")
-	FText AttributeDescription;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Label", Category = "General")
-	FString AttributeLabel;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Icon (Texture)", Category = "General", AdvancedDisplay)
-	UTexture2D* AttributeIcon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Icon", Category = "General", DisplayName="Icon")
-	FSlateBrush AttributeSlateIcon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "General")
-	FLinearColor AttributeColor;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "General")
-	FLinearColor DamageColor;
-	
-	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "General")
-	UOmegaAttributeScript* Script;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Icon (Texture)", Category = "General", AdvancedDisplay) UTexture2D* AttributeIcon;
 
 	//-----------------------------------------------------------------------------------
 	// Values

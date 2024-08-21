@@ -3,6 +3,15 @@
 
 #include "Misc/OmegaAttribute.h"
 
+FString UOmegaAttribute::GetDesc()
+{
+	if(!AttributeDescription.ToString().IsEmpty())
+	{
+		return AttributeDescription.ToString();
+	}
+	return Super::GetDesc();
+}
+
 float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGameplayTag ValueCategory)
 {
 	if(Script)

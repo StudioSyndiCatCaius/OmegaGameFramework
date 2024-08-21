@@ -11,11 +11,11 @@ void UOmegaMessageSubsystem::FireGameplayMessage(FOmegaGameplayMessageData Messa
 	MessageLog.Add(LoggedMessage);
 	
 	//Fire message delegate
-	OnGameplayMessage.Broadcast(Message.Message, Message.Message->GetMessageCategory());
+	OnGameplayMessage.Broadcast(Message.Message, Message.Message->GetMessageCategory(),Message.Message->GetValue_Implementation(""));
 	
 }
 
-void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory)
+void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory, FLuaValue meta)
 {
 	FOmegaGameplayMessageData LocalMessageData;
 	LocalMessageData.Message = NewObject<UOmegaGameplayMessage>(UOmegaGameplayMessage::StaticClass());
@@ -25,10 +25,15 @@ void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FTex
 	}
 	LocalMessageData.Message->Temp_Text = Text;
 	LocalMessageData.Message->Temp_Tag = MessageCategory;
+	LocalMessageData.Message->lua_val=meta;
 
 	FireGameplayMessage(LocalMessageData);
 }
 
+FLuaValue UOmegaGameplayMessage::GetValue_Implementation(const FString& Field) { return lua_val; }
+FLuaValue UOmegaGameplayMessage::GetKey_Implementation() { return lua_key; }
+void UOmegaGameplayMessage::SetKey_Implementation(FLuaValue Key) { lua_key=Key; }
+void UOmegaGameplayMessage::SetValue_Implementation(FLuaValue Value, const FString& Field) { lua_val=Value; }
 
 
 //##################################################################################

@@ -35,11 +35,8 @@ public:
 	virtual UWorld* GetWorld() const override;
 	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
 	
-	
 	UFUNCTION()
 	void Native_Initialize();
-	
-	
 	
 	//Functions
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameplayModule")
@@ -56,7 +53,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
 	void OnGlobalEvent(FName Event, UObject* Instigator);
-
+	UFUNCTION(BlueprintImplementableEvent, Category="Event")
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Instigator);
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnLevelOpened(const FString& LevelName, AOmegaGameMode* GameMode);
 

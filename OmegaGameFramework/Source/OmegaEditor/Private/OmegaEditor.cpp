@@ -143,7 +143,10 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("InstanceActorComponent"));
 	ThumnbailNames.Add(TEXT("OmegaInstanceActor"));
 	ThumnbailNames.Add(TEXT("OmegaObjectSorterAsset"));
-
+	
+	ThumnbailNames.Add(TEXT("OmegaAnimationEmote"));
+	ThumnbailNames.Add(TEXT("OmegaAnimationEmoteScript"));
+	
 	ThumnbailNames.Add(TEXT("OmegaFaction"));
 	ThumnbailNames.Add(TEXT("CombatantGambitAsset"));
 	ThumnbailNames.Add(TEXT("CombatantGambitCondition"));
@@ -152,6 +155,8 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaBGM"));
 	ThumnbailNames.Add(TEXT("OmegaDamageType"));
 	ThumnbailNames.Add(TEXT("DynamicCameraState"));
+	ThumnbailNames.Add(TEXT("OmegaEnvironment"));
+	ThumnbailNames.Add(TEXT("OmegaEnvironmentPreset"));
 	
 	ThumnbailNames.Add(TEXT("OmegaZoneData"));
 	ThumnbailNames.Add(TEXT("OmegaLevelData"));
@@ -235,13 +240,15 @@ void FOmegaEditor::StartupModule()
 		)));
 	}
 	
-	
 }
 
 void FOmegaEditor::ShutdownModule()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(StyleSet->GetStyleSetName());
+
 }
+
+
 
 #undef LOCTEXT_NAMESPACE
 

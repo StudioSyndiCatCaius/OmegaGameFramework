@@ -220,5 +220,6 @@ bool UMenu::InputBlocked_Implementation()
 
 void UMenu::Local_BindGlobalEvent()
 {
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UMenu::OnGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UMenu::OnGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UMenu::OnTaggedGlobalEvent);
 }

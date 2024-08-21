@@ -136,11 +136,10 @@ public:
 	//If no sound is found for a menu sound, default to using sounds from the current OmegaSlateStyle Asset
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	bool DefaultToStyleSounds=true;
-
-
+	
 	///PROPERTIES//
 
-	UPROPERTY(BlueprintReadOnly, Category = "Ω|Widget|Menu")
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu")
 	bool bIsOpen;
 
 	///DELGATES//
@@ -149,13 +148,14 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FClosed OnClosed;
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Name)")
 	void OnGlobalEvent(FName Event, UObject* Context);
-	UFUNCTION()
-	void Local_BindGlobalEvent();
+	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Tag)")
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
+	UFUNCTION() void Local_BindGlobalEvent();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory);
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FLuaValue meta);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInputMethodChanged(bool bIsGamepad);
 	

@@ -73,6 +73,17 @@ TArray<UObject*> UOmegaAssetHandlerFunctions::GetAllAssetsInPath(const FString& 
 	return AssetObjects;
 }
 
+TArray<UObject*> UOmegaAssetHandlerFunctions::GetAllAssetsInPathList(TArray<FString> Paths, bool bRecursive,
+	UClass* Class)
+{
+	TArray<UObject*> out;
+	for(FString temp_path:Paths)
+	{
+		out.Append(GetAllAssetsInPath(temp_path,bRecursive,Class));
+	}
+	return out;
+}
+
 TArray<UObject*> UOmegaAssetHandlerFunctions::GetSortedAssets_OfClass(UClass* Class)
 {
 	TArray<UObject*> out;

@@ -55,6 +55,7 @@ void UHUDLayer::RemoveHUDLayer()
 void UHUDLayer::Local_BindGlobalEvent()
 {
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UHUDLayer::OnGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UHUDLayer::OnTaggedGlobalEvent);
 }
 
 void UHUDLayer::Local_RemoveAnimFinished()

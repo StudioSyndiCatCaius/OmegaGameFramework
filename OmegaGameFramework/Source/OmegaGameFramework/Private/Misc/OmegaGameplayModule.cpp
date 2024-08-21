@@ -12,25 +12,18 @@
 
 UOmegaGameplayModule::UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	if (const UObject* Owner = GetOuter())
-	{
-		WorldPrivate = Owner->GetWorld();
-	}
+	if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
 }
-
 UWorld* UOmegaGameplayModule::GetWorld() const
 {
-	if(GetGameInstance())
-	{
-		return GetGameInstance()->GetWorld();
-	}
-	return nullptr;
+	if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
 }
 
 void UOmegaGameplayModule::Native_Initialize()
 {
 	//Bind OnGlobalEvent
 	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnGlobalEvent);
+	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnTaggedGlobalEvent);
 	//Bind OnLevelOpened
 	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnNewLevel.AddDynamic(this, &UOmegaGameplayModule::Native_OnLevelOpened);
 	Initialized();

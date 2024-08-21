@@ -11,6 +11,7 @@
 #include "GameFramework/Actor.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "Interfaces/OmegaInterface_Common.h"
+#include "Components/ArrowComponent.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "Engine/DataAsset.h"
 #include "Components/TextRenderComponent.h"
@@ -307,7 +308,7 @@ public:
 // =============================================================================================================
 // Zone Transit Point
 // =============================================================================================================
-UCLASS(DisplayName="Zone Transit")
+UCLASS(DisplayName="Omega Actor: Zone Transit Volume")
 class OMEGAGAMEFRAMEWORK_API AOmegaZoneTransit : public AActor
 {
 	GENERATED_BODY()
@@ -403,7 +404,7 @@ protected:
 // Zone Spawn Point
 // =============================================================================================================
 
-UCLASS(DisplayName="Zone Spawn Point")
+UCLASS(DisplayName="Omega Actor: Zone Transit Spawn Point")
 class OMEGAGAMEFRAMEWORK_API AOmegaZonePoint : public AActor, public IDataInterface_General
 {
 	GENERATED_BODY()
@@ -412,6 +413,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	AOmegaZonePoint();
+	UPROPERTY() UArrowComponent* DirectionalArrow;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
 	FText PointName;

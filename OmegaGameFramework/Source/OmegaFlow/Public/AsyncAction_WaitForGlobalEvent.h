@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "AsyncAction_WaitForGlobalEvent.generated.h"
 
@@ -29,10 +30,36 @@ public:
 	UFUNCTION()
 	void Native_OnEvent(FName Event, UObject* Context);
 	
-	
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject")) 
 	static UAsyncAction_WaitForGlobalEvent* WaitForGlobalEvent(const UObject* WorldContextObject, FName Event);
+	
+};
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceiveTaggedEvent, UObject*, Context);
+
+UCLASS()
+class OMEGAFLOW_API UAsyncAction_WaitForTaggedGlobalEvent : public UBlueprintAsyncActionBase
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintAssignable)
+	FOnReceiveTaggedEvent OnReceiveEvent;
+
+	UPROPERTY()
+	const UObject* LocalWorldContext;
+	UPROPERTY()
+	FGameplayTag EventRef;
+	UPROPERTY()
+	UObject* ContextRef;
+
+	UFUNCTION()
+	void Native_OnEvent(FGameplayTag Event, UObject* Context);
+	
+	virtual void Activate() override;
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject")) 
+	static UAsyncAction_WaitForTaggedGlobalEvent* WaitForTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event);
 	
 };

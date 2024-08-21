@@ -20,6 +20,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MovieSceneSequencePlayer.h"
 #include "TimerManager.h"
+#include "Components/ArrowComponent.h"
 
 
 // =============================================================================================================
@@ -852,6 +853,8 @@ void AOmegaZonePoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 AOmegaZonePoint::AOmegaZonePoint()
 {
 	UCapsuleComponent* CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>("Capsule Component");
+	DirectionalArrow= CreateOptionalDefaultSubobject<UArrowComponent>("DirectionArrow");
+	if(DirectionalArrow) { DirectionalArrow->SetupAttachment(CapsuleComponent); }
 	if(CapsuleComponent)
 	{
 		CapsuleComponent->InitCapsuleSize(45,90);

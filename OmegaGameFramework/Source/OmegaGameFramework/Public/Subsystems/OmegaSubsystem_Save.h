@@ -439,33 +439,33 @@ public:
 	TMap<class UGamePreferenceInt*, int32> IntPrefs;
 
 	//
-	UPROPERTY(BlueprintReadWrite, Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Omega|Save")
 	FJsonObjectWrapper JsonSaveObject;
 	UPROPERTY(BlueprintReadWrite, Category="Omega|Save")
 	FLuaValue LuaSaveData;
 	
 	//Tags
-	UPROPERTY(BlueprintReadOnly, DisplayName="Save State", Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, DisplayName="Save State", Category="Omega|Save")
 	FGameplayTag StoryState;
 	
-	UPROPERTY(BlueprintReadOnly, DisplayName="Save Tags", Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, DisplayName="Save Tags", Category="Omega|Save")
 	FGameplayTagContainer StoryTags;
 
 	//DataAssets
-	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TArray<UPrimaryDataAsset*> CollectedDataAssets;
 
 	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
 	TMap<UPrimaryDataAsset*, FGameplayTagContainer> SaveAssetTags;
 
 	//DataAssets
-	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TArray<FGuid> CollectedGuids;
 
-	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TMap<FGuid, FGameplayTagContainer> GuidTags;
 
-	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TMap<FGuid, FJsonObjectWrapper> GuidJson;
 	
 	//Soft Property

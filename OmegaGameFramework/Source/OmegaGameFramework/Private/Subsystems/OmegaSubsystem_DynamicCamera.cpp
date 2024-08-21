@@ -94,11 +94,14 @@ AOmegaDynamicCamera* UOmegaDynamicCameraSubsystem::GetSourceCamera()
 	AOmegaDynamicCamera* out=nullptr;
 	for(auto* temp_cam : source_cameras)
 	{
-		if(temp_cam && temp_cam!=GetDynamicCamera() && !temp_cam->IsActorBeingDestroyed()) //If camera is valid & is NOT the Master Camera.
+		if(temp_cam &&
+			temp_cam!=GetDynamicCamera() &&
+			!temp_cam->IsActorBeingDestroyed()
+			&& temp_cam->CameraActive) //If camera is valid & is NOT the Master Camera.
 		{
 			if(out) //if a valid check camera has been set
 			{
-				if(temp_cam->CameraActive && temp_cam->Priority>=out->Priority)
+				if(temp_cam->CameraActive && temp_cam->Priority >= out->Priority)
 				{
 					out=temp_cam;
 				}
@@ -262,7 +265,7 @@ void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 		}
 		if(REF_Subsystem && REF_SourcePlayer)
 		{
-			ActiveTick(DeltaSeconds,REF_Subsystem->GetSourceCamera()!=this,REF_SourcePlayer);
+			//ActiveTick(DeltaSeconds,REF_Subsystem->GetSourceCamera()!=this,REF_SourcePlayer);
 		}
 	}
 	if(SetRotationToPlayerControl)

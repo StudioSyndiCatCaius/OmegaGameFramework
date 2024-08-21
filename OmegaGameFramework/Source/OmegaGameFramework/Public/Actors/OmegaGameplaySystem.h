@@ -33,7 +33,6 @@ struct FGameplaySystemAbilityRules
 	//Tags required for this ability to be granted. (Blank will add to all)
 	UPROPERTY(EditDefaultsOnly, Category="GameplaySystemRules")
 	FGameplayTagQuery AcceptedCombatantTags;
-
 };
 
 
@@ -199,7 +198,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Gameplay System")
 	void OnGlobalEvent(FName Event, UObject* Context);
-	
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega Gameplay System")
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
 };
 
 

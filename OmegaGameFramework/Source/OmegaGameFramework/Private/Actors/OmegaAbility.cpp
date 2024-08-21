@@ -282,6 +282,10 @@ APlayerController* AOmegaAbility::GetAbilityOwnerPlayer()
 
 UCharacterMovementComponent* AOmegaAbility::GetAbilityOwnerCharacterMoveComponent()
 {
+	if(!CachedCharacter)
+	{
+		return nullptr;
+	}
 	TempMoveComp = CachedCharacter->GetMovementComponent();
 	if (TempMoveComp)
 	{

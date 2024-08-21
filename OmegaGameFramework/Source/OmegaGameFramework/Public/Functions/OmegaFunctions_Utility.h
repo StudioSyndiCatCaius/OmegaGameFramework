@@ -66,6 +66,12 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Widget")
 	static FVector2D LerpVector2D(FVector2D a, FVector2D b, float alpha);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static float GetAngle_FromVectors(FVector A, FVector B);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static float GetAngle_FromRotators(FRotator A, FRotator B);
 	
 };
 

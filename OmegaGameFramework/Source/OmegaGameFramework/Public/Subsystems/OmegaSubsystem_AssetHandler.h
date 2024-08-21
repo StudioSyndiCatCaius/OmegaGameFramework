@@ -40,6 +40,8 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
 	static TArray<UObject*> GetAllAssetsInPath(const FString& Path, bool bRecursive, UClass* Class);
 
+	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
+	static TArray<UObject*> GetAllAssetsInPathList(TArray<FString> Paths, bool bRecursive, UClass* Class);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
 	static TArray<UObject*> GetSortedAssets_OfClass(UClass* Class);

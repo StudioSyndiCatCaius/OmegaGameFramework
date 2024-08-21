@@ -25,6 +25,7 @@ struct FGameplayLogEntry
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGlobalEvent, FName, Event, UObject*, Instigator);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTaggedGlobalEvent, FGameplayTag, Event, UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewLevel, FString, LevelName, AOmegaGameMode*, GameMode);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFlagStateChange, FString, Flag, bool, NewState);
 
@@ -43,7 +44,6 @@ public:
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
 
 	///GAMEPLAY MODULES
-	///
 
 	UFUNCTION()
 	UOmegaGameplayModule* ActivateModuleFromClass(const UClass* ModuleClass);
@@ -56,16 +56,25 @@ public:
 
 	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Modules", DeterminesOutputType="Module"), Category="Omega|Game Manager")
 	TArray<UOmegaGameplayModule*> GetGameplayModules();
-
-	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"))
+		
+	UPROPERTY(BlueprintAssignable)
+	FOnNewLevel OnNewLevel;
+	
+	//################################################################
+	// Global Event
+	//################################################################
+	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"),DisplayName="Fire Global Event (Name)")
 	void FireGlobalEvent(FName Event, UObject* Context);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnGlobalEvent OnGlobalEvent;
 	
+	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tag)")
+	void FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
+	
 	UPROPERTY(BlueprintAssignable)
-	FOnNewLevel OnNewLevel;
-
+	FOnTaggedGlobalEvent OnTaggedGlobalEvent;
+	
 	//################################################################
 	// FLAGS
 	//################################################################

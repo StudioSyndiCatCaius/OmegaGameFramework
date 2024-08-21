@@ -11,15 +11,7 @@
 /**
  * 
  */
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaGameSettings : public UObject
-{
-	GENERATED_BODY()
 
-public:
-	
-	
-};
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaConfigFunctions : public UBlueprintFunctionLibrary
 {
@@ -41,7 +33,6 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Get Ω Config Property (Int32)", meta=(CompactNodeTitle="Config (Int32)"))
 	static int32 GetOmegaConfigProperty_Int(const FString Property);
 
-	//UFUNCTION(BlueprintCallable, Category="Omega|Config", meta = (CustomStructureParam = "OutValue", AutoCreateRefTerm = "OutValue"))
-	//static void GetOmegaConfigProperty(const FString& Property, int32& OutValue);
+
 	
 };

@@ -121,6 +121,11 @@ void UOmegaGameManager::FireGlobalEvent(FName Event, UObject* Context)
 	OnGlobalEvent.Broadcast(Event, Context);
 }
 
+void UOmegaGameManager::FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context)
+{
+	OnTaggedGlobalEvent.Broadcast(Event,Context);
+}
+
 void UOmegaGameManager::SetFlagActive(FString Flag, bool bActive)
 {
 	if(IsFlagActive(Flag) != bActive)

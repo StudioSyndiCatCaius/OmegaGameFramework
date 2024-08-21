@@ -80,6 +80,15 @@ FVector2D UOmegaMathFunctions::LerpVector2D(FVector2D a, FVector2D b, float alph
 	return out;
 }
 
+float UOmegaMathFunctions::GetAngle_FromVectors(FVector A, FVector B)
+{
+	return UKismetMathLibrary::DegAcos(UKismetMathLibrary::Dot_VectorVector(UKismetMathLibrary::Normal(A),UKismetMathLibrary::Normal(B)));
+}
+
+float UOmegaMathFunctions::GetAngle_FromRotators(FRotator A, FRotator B)
+{
+	return GetAngle_FromVectors(UKismetMathLibrary::Conv_RotatorToVector(A),UKismetMathLibrary::Conv_RotatorToVector(B));
+}
 
 
 TArray<FString> UOmegaUtilityFunctions::GetBlueprintCallableAndPureFunctions(UObject* Object)

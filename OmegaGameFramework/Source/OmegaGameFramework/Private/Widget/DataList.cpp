@@ -453,6 +453,13 @@ bool UDataList::AnyEntryHasTag(FName Tag)
 	return false;
 }
 
+UDataWidget* UDataListFormat::OnReceiveInput_Navigation_Implementation(FVector2D Input2D, int32 Input1D, UDataList* List)
+{
+	int32 TempOutIndex;
+	List->CycleEntry(Input1D,TempOutIndex);
+	return nullptr;
+}
+
 void UDataListFormat::OnWidgetHovered_Implementation(UDataWidget* DataWidget, UPanelWidget* PanelWidget)
 {
 	
@@ -495,6 +502,7 @@ void UDataList::InputNavigate_Implementation(FVector2D Axis)
 	}
 
 	//----------------- Try Run cycle -----------------//
+	
 	if(CycleOnInputNavigate)
 	{
 		float LocalAxis;
@@ -508,7 +516,14 @@ void UDataList::InputNavigate_Implementation(FVector2D Axis)
 		}
 		
 		int32 TempOutIndex;
-		if(CycleEntry(int32(LocalAxis),TempOutIndex))
+		if(ListFormat)
+		{
+			if(UDataWidget* new_hover = ListFormat->OnReceiveInput_Navigation(Axis,LocalAxis,this))
+			{
+				new_hover->Hover();
+			}
+		}
+		else if(CycleEntry(int32(LocalAxis),TempOutIndex))
 		{
 			return;
 		}

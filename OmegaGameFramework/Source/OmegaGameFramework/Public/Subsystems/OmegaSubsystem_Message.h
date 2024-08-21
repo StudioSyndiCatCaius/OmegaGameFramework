@@ -7,6 +7,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "EngineUtils.h"
 #include "GameplayTagContainer.h"
+#include "LuaInterface.h"
 #include "OmegaSubsystem_Message.generated.h"
 
 USTRUCT(BlueprintType, Atomic)
@@ -21,7 +22,7 @@ struct FOmegaGameplayMessageData
 	FText MessageLog_Text;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameplayMessage, UOmegaGameplayMessage*, Message, FGameplayTag, MessageCategory);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnGameplayMessage, UOmegaGameplayMessage*, Message, FGameplayTag, MessageCategory, FLuaValue, meta);
 
 UCLASS(DisplayName="Omega Subsystem: Message")
 class OMEGAGAMEFRAMEWORK_API UOmegaMessageSubsystem : public UGameInstanceSubsystem
@@ -36,7 +37,7 @@ public:
 	void FireGameplayMessage(FOmegaGameplayMessageData Message);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message")
-	void FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory);
+	void FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory, FLuaValue meta);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnGameplayMessage OnGameplayMessage;
@@ -51,30 +52,32 @@ public:
 //##################################################################################
 
 UCLASS(Blueprintable, EditInlineNew, CollapseCategories)
-class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMessage : public UObject, public IDataInterface_General
+class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMessage : public UObject, public IDataInterface_General, public IGameplayTagsInterface, public ILuaInterface
 {
 	GENERATED_BODY()
 
 public:
 	
-	UPROPERTY()
-	UObject* Temp_Instigator = nullptr;
+	UPROPERTY() UObject* Temp_Instigator = nullptr;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	UObject* GetMessageInstigator();
 
-	UPROPERTY()
-	FText Temp_Text;
+	UPROPERTY() FText Temp_Text;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	FText GetMessageText();
 
-	UPROPERTY()
-	FGameplayTag Temp_Tag;
+	UPROPERTY() FGameplayTag Temp_Tag;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	FGameplayTag GetMessageCategory();
 
-	UPROPERTY()
-	FGameplayTagContainer Temp_Tags;
+	UPROPERTY() FGameplayTagContainer Temp_Tags;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	FGameplayTagContainer GetMessageTags();
-	
+
+	UPROPERTY() FLuaValue lua_val;
+	UPROPERTY() FLuaValue lua_key;
+	virtual FLuaValue GetValue_Implementation(const FString& Field) override;
+	virtual FLuaValue GetKey_Implementation() override;
+	virtual void SetKey_Implementation(FLuaValue Key) override;
+	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field) override;
 };

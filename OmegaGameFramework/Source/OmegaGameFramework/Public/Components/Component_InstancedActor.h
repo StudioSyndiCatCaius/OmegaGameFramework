@@ -91,6 +91,14 @@ public:
 	UObject* ContextObject = nullptr;
 	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
 	FString ContextLabel;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
+	FText Context_Name;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
+	FSlateBrush Context_Icon;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
+	FText Context_Description;
+
+	
 	UPROPERTY(BlueprintReadOnly, Category="InstanceActor")
 	UInstanceActorComponent* OwningComponent;
 

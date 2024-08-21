@@ -17,6 +17,7 @@
 #include "Engine/AssetUserData.h"
 #include "LuaValue.h"
 #include "AssetRegistry/AssetData.h"
+#include "LevelInstance/LevelInstanceActor.h"
 #include "OmegaFunctions_Common.generated.h"
 
 class APlayerController;
@@ -162,7 +163,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"))
 	static void FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context);
-
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"))
+	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event, UObject* Context);
+	
 	//###############################################################################
 	// Flag
 	//###############################################################################
@@ -260,12 +263,10 @@ public:
 	//###############################################################################
 	// Generals
 	//###############################################################################
-	UFUNCTION(BlueprintPure, Category="Omega|General")
-	static FText GetObjectDisplayName(UObject* Object);
-	UFUNCTION(BlueprintPure, Category="Omega|General")
-	static FText GetObjectDisplayDescription(UObject* Object);
-	UFUNCTION(BlueprintPure, Category="Omega|General")
-	static FString GetObjectLabel(UObject* Object);
+	UFUNCTION(BlueprintPure, Category="Omega|General")	static FText GetObjectDisplayName(UObject* Object);
+	UFUNCTION(BlueprintPure, Category="Omega|General")	static FText GetObjectDisplayDescription(UObject* Object);
+	UFUNCTION(BlueprintPure, Category="Omega|General")	static FString GetObjectLabel(UObject* Object);
+	UFUNCTION(BlueprintPure, Category="Omega|General")	static FSlateBrush GetObjectIcon(UObject* Object);
 	
 	//###############################################################################
 	// Math
@@ -285,6 +286,18 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"), DisplayName="Lua To Omega Attributes (Int)")
 	static TMap<UOmegaAttribute*, int32> LuaToOmegaAttributes_int(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value);
+};
+
+UCLASS()
+class UOmegaLevelFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintPure,Category="Omega|Level")
+	static bool IsLevelInstance_ReferenceValid(const ALevelInstance* LevelInstance);
+	
 };
 
 //--------------------------------------------------------------------------------------------------------------------

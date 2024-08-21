@@ -532,6 +532,15 @@ void UOmegaGameFrameworkBPLibrary::FireGlobalEvent(const UObject* WorldContextOb
 	
 }
 
+void UOmegaGameFrameworkBPLibrary::FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event,
+	UObject* Context)
+{
+	if(WorldContextObject)
+	{
+		WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(Event, Context);
+	}
+}
+
 void UOmegaGameFrameworkBPLibrary::OnFlagActiveReset(const UObject* WorldContextObject, const FString& Flag, bool bDeactivateFlagOnActive, TEnumAsByte<EOmegaFlagResult>& Outcome)
 {
 	UOmegaGameManager* LocalMod = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
@@ -964,8 +973,20 @@ FString UOmegaGameFrameworkBPLibrary::GetObjectLabel(UObject* Object)
 	return OutName;
 }
 
+FSlateBrush UOmegaGameFrameworkBPLibrary::GetObjectIcon(UObject* Object)
+{
+	FSlateBrush out;
+	UTexture2D* dum_txt;
+	UMaterialInterface* dum_mat;
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralDataImages(Object," ",nullptr,dum_txt,dum_mat,out);
+	}
+	return out;
+}
+
 int32 UOmegaGameFrameworkBPLibrary::GetClosestVector2dToPoint(TArray<FVector2D> Vectors, FVector2D point,
-	FVector2D& out_point)
+                                                              FVector2D& out_point)
 {
 	if(Vectors.IsValidIndex(0))
 	{
@@ -1025,6 +1046,16 @@ TMap<UOmegaAttribute*, int32> UOmegaGameFrameworkBPLibrary::LuaToOmegaAttributes
 	}
 	return out;
 }
+
+bool UOmegaLevelFunctions::IsLevelInstance_ReferenceValid(const ALevelInstance* LevelInstance)
+{
+	if(LevelInstance)
+	{
+		return LevelInstance->GetWorldAsset().IsValid();
+	}
+	return false;
+}
+
 
 
 float UOmegaStarRankFunctions::GetFloatFromStarRank(EOmegaStarRank Rank)

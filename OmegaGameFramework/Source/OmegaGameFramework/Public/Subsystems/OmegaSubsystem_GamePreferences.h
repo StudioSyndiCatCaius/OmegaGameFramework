@@ -20,19 +20,15 @@ enum class EGamePreferenceType : uint8
 	PrefType_Bool        UMETA(DisplayName = "Bool"),
 	PrefType_Float        UMETA(DisplayName = "Float"),
 	PrefType_Int        UMETA(DisplayName = "Int"),
-	PrefType_String        UMETA(DisplayName = "String"),
-	PrefType_Tag        UMETA(DisplayName = "Tag"),
 };
 
 UCLASS(BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UGamePreference : public UPrimaryDataAsset, public IGameplayTagsInterface, public IDataInterface_General
 {
 	GENERATED_BODY()
-	
-
 public:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General",DisplayName="Name")
 	FText PrefernceName;
 
 	UPROPERTY(BlueprintReadOnly, Category="GamePreference")
@@ -41,6 +37,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
 	FString PreferenceLabel;
 
+	//Should the value be saved/loaded from the "OmegaPreferences.ini" file?
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
+	bool bSaveToConfig;
 	//Is this preference saved globally save file?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
 	bool bGlobal;
@@ -54,7 +53,7 @@ public:
 	//#############################################
 	// SCRIPT
 	//#############################################
-	UPROPERTY(EditDefaultsOnly, Instanced, Category = "General")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "General")
 	UGamePreferenceScript* PreferenceScript;
 	
 //Interface
@@ -66,9 +65,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
 		FGameplayTagContainer GetObjectGameplayTags();
 		virtual FGameplayTagContainer GetObjectGameplayTags_Implementation();
-		
-		
-	//DataInterface
 
 	//Texts
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
@@ -90,7 +86,9 @@ class OMEGAGAMEFRAMEWORK_API UGamePreferenceScript : public UObject
 	GENERATED_BODY()
 
 public:
-
+	UFUNCTION(BlueprintImplementableEvent,Category="Preference")
+	EGamePreferenceType GetPreferenceType() const;
+	
 	UFUNCTION(BlueprintNativeEvent, Category="Preference")
 	void OnPreferenceValueUpdated(UGameUserSettings* GameSettings, FVector Value) const;
 
@@ -154,6 +152,7 @@ UCLASS(DisplayName="Omega Subsystem: Preferences")
 class OMEGAGAMEFRAMEWORK_API UGamePreferenceSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
+	FString ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(FPaths::ProjectConfigDir() + TEXT("/OmegaPreferences.ini")); 
 protected:
 
 	void PreloadPrefs();

@@ -202,6 +202,9 @@ void AOmegaInstanceActor::BeginPlay()
 	if(ContextObject)
 	{
 		ContextLabel = UOmegaGameFrameworkBPLibrary::GetObjectLabel(ContextObject);
+		Context_Name = UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(ContextObject);
+		Context_Description = UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(ContextObject);
+		Context_Icon = UOmegaGameFrameworkBPLibrary::GetObjectIcon(ContextObject);
 	}
 	
 }
