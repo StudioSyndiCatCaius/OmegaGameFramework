@@ -52,3 +52,4 @@ public:
 	FGameplayTagContainer GetObjectGameplayTags();
 
 };
+

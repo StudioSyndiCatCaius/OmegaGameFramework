@@ -39,6 +39,8 @@ protected:
 	virtual void Deinitialize() override;
 
 public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Manager")
+	FGameplayTagContainer StateTags;
 
 	// Temp class holder for settings
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;

@@ -218,6 +218,12 @@ void UDataWidget::Refresh()
 		}
 			
 	}//Finish widget setup
+
+	if(GetWidget_SizeBox() && bCanOverrideSize)
+	{
+		GetWidget_SizeBox()->SetWidthOverride(OverrideSize.X);
+		GetWidget_SizeBox()->SetHeightOverride(OverrideSize.Y);
+	}
 	
 	SetIsEnabled(GetIsEntitySelectable());
 	UObject* LocalListOwner = nullptr;

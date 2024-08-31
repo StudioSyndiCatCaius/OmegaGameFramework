@@ -7,51 +7,132 @@
 #include "AssetTypeActions_Base.h"
 
 #include "Misc/OmegaAttribute.h"
+#include "Misc/OmegaFaction.h"
 #include "Actors/OmegaAbility.h"
-#include "Misc/OmegaAttribute.h"
 #include "OmegaDataItem.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Misc/CombatantGambits.h"
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
+#include "Components/Component_Leveling.h"
 #include "Factories/BlueprintFactory.h"
+#include "Functions/OmegaFunctions_Animation.h"
 #include "Misc/OmegaGameplayModule.h"
+#include "Subsystems/OmegaSubsystem_BGM.h"
 #include "Widget/Menu.h"
 #include "OmegaEditorFactories.generated.h"
 
-/**
- * 
- */
+#define OMACRO_ASSETTYPE_HEADERFIELD(AssetName, DisplayName, AssetDescription, AssetColor, AssetCategory) \
+inline UObject* U##AssetName##_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) \
+{ \
+	check(Class->IsChildOf(U##AssetName##::StaticClass())); \
+	return NewObject<U##AssetName##>(InParent, Class, Name, Flags | RF_Transactional); \
+} \
+inline U##AssetName##_Factory::U##AssetName##_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) { \
+	SupportedClass = U##AssetName##::StaticClass(); bEditAfterNew = true; bCreateNew = true; \
+} \
+class FAssetTypeActions_##AssetName: public FAssetTypeActions_Base \
+{ \
+public: \
+FAssetTypeActions_##AssetName##(EAssetTypeCategories::Type InAssetCategory) : OmegaAssetCategory(InAssetCategory){}; \
+virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_"#AssetName"Desc", DisplayName); } \
+virtual uint32 GetCategories() override { return OmegaAssetCategory; } \
+virtual FColor GetTypeColor() const override { return AssetColor; } \
+virtual UClass* GetSupportedClass() const override { return U##AssetName::StaticClass(); } \
+virtual const TArray<FText>& GetSubMenus() const override \
+{ static const TArray<FText> SubMenus { NSLOCTEXT("AssetTypeActions", "OmegaAssetSubMenu_"#AssetCategory, AssetCategory) }; return SubMenus; }; \
+private: \
+EAssetTypeCategories::Type OmegaAssetCategory; \
+}; \
 
 ////////////////////////////////////////////
 ////////---Asset Factories---//////////////
 ///////////////////////////////////////////
 
-//static EAssetTypeCategories::Type OmegaAssetCategory;
-
 //Attributes
-UCLASS()
-class OMEGAEDITOR_API UOmegaAttributes_Factory : public UFactory
+UCLASS() class OMEGAEDITOR_API UOmegaAttribute_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-public:
-
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaAttribute,"Attribute", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
-class FAssetTypeActions_OmegaAttributes : public FAssetTypeActions_Base
+//Factions
+UCLASS() class OMEGAEDITOR_API UOmegaFaction_Factory : public UFactory
 {
-public:
-	FAssetTypeActions_OmegaAttributes(EAssetTypeCategories::Type InAssetCategory) : OmegaAssetCategory(InAssetCategory){};
-	
-	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaAttributes", "Attribute"); }
-	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor(201, 29, 85); }
-	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_InputContextDesc", "A collection of device input to action mappings."); }
-	virtual UClass* GetSupportedClass() const override { return UOmegaAttribute::StaticClass(); }
-private:
-	EAssetTypeCategories::Type OmegaAssetCategory;
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaFaction,"Faction", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
+
+//DamageType
+UCLASS() class OMEGAEDITOR_API UOmegaDamageType_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaDamageType,"Damage Type", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
+
+//BGM
+UCLASS() class OMEGAEDITOR_API UOmegaBGM_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaBGM,"BGM", "Asset Desc here", FColor(100, 0, 225),"Audio")
+
+//Combatant Gambit
+UCLASS() class OMEGAEDITOR_API UCombatantGambitAsset_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(CombatantGambitAsset,"Combat Gambit", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
+
+//Level Data
+UCLASS() class OMEGAEDITOR_API UOmegaLevelData_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaLevelData,"Level: World Data", "Asset Desc here", FColor(225, 150, 0),"World")
+
+//Level Data
+UCLASS() class OMEGAEDITOR_API UOmegaZoneData_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaZoneData,"Level: Zone Data", "Asset Desc here", FColor(225, 150, 0),"World")
+
+
+//Level Data
+UCLASS() class OMEGAEDITOR_API UOmegaStoryStateAsset_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaStoryStateAsset,"Story State", "Asset Desc here", FColor(201, 29, 85),"Save")
+
+//Emote
+UCLASS() class OMEGAEDITOR_API UOmegaAnimationEmote_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaAnimationEmote,"Emote", "Asset Desc here", FColor(0, 225, 110),"Animation")
+
+//Leveling Asset
+UCLASS() class OMEGAEDITOR_API UOmegaLevelingAsset_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaLevelingAsset,"Leveling Asset", "Asset Desc here", FColor(0, 225, 110),"Gameplay")
+
+
 
 //DataItems
 UCLASS()
@@ -73,9 +154,14 @@ public:
 	virtual FColor GetTypeColor() const override { return FColor(50, 255, 180); }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegDataItemDesc", "An Item type."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaDataItem::StaticClass(); }
+	virtual const TArray<FText>& GetSubMenus() const override
+	{ static const TArray<FText> SubMenus { NSLOCTEXT("AssetTypeActions", "OmegaAssetSubMenu_Combat", "Combat") }; return SubMenus; };
+
 private:
 	EAssetTypeCategories::Type OmegaAssetCategory;
 };
+
+
 
 //Ability
 UCLASS()
@@ -97,28 +183,6 @@ public:
 	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_AbilityContextDesc", "This is Ability"); }
 	virtual UClass* GetSupportedClass() const override { return AOmegaAbility::StaticClass(); }
-private:
-	EAssetTypeCategories::Type OmegaAssetCategory;
-};
-
-//AttributeSet
-UCLASS()
-class OMEGAEDITOR_API UOmegaAttributeSet_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-public:
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-};
-class FAssetTypeActions_OmegaAttributeSet : public FAssetTypeActions_Base
-{
-public:
-	FAssetTypeActions_OmegaAttributeSet(EAssetTypeCategories::Type InAssetCategory) : OmegaAssetCategory(InAssetCategory){};
-	
-	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaAttributeSet", "Attribute Set"); }
-	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor(201, 29, 85); }
-	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_AttributeContextDesc", "A collection of attributes that can be assigned to a combatant."); }
-	virtual UClass* GetSupportedClass() const override { return UOmegaAttributeSet::StaticClass(); }
 private:
 	EAssetTypeCategories::Type OmegaAssetCategory;
 };
@@ -264,41 +328,3 @@ private:
 	EAssetTypeCategories::Type OmegaAssetCategory;
 };
 
-////////////////// Game Preferences ///////////////////
-/*
-//GamePreferenceBool
-UCLASS()
-class OMEGAEDITOR_API UGamePreferenceBool_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-public:
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-};
-
-//GamePreferenceFloat
-UCLASS()
-class OMEGAEDITOR_API UGamePreferenceFloat_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-public:
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-};
-
-//GamePreferenceString
-UCLASS()
-class OMEGAEDITOR_API UGamePreferenceString_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-public:
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-};
-
-//GamePreferenceTag
-UCLASS()
-class OMEGAEDITOR_API UGamePreferenceTag_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-public:
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-};
-*/

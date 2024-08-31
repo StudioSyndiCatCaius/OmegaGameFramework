@@ -13,6 +13,7 @@
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/SizeBox.h"
 #include "DataWidget.generated.h"
 
 class UDataList;
@@ -313,18 +314,25 @@ public:
 	
 //BINDABLE WIDGETS
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget - Root Panel")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - Root")
 	UTextBlock* GetRootPanelWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget - Name Text")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Text) - Name")
 	UTextBlock* GetNameTextWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget - Description - Text")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Text) - Description")
 	UTextBlock* GetDescriptionTextWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget - Button")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget (Button) - Select")
 	UButton* GetButtonWidget();
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry")
+	bool bCanOverrideSize;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry",meta=(EditCondition="bCanOverrideSize"))
+	FVector2D OverrideSize;
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - SizeBox")
+	USizeBox* GetWidget_SizeBox();
+	
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
 	UImage* GetTextureImage();
 

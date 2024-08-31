@@ -46,6 +46,9 @@ public:
 	//###############################################################################
 
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"))
+	static bool HasTags_Advance(FGameplayTagContainer Tags, FGameplayTagContainer Has, bool bAll, bool bExact);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"))
 	static FGameplayTagContainer GetObjectGameplayTags(UObject* Object);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
@@ -286,6 +289,25 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"), DisplayName="Lua To Omega Attributes (Int)")
 	static TMap<UOmegaAttribute*, int32> LuaToOmegaAttributes_int(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value);
+
+	//###############################################################################
+	// State Tag
+	//###############################################################################
+
+	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (World)")
+	static void SetStateTagsActive_World(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bActive);
+	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (World)")
+	static FGameplayTagContainer GetStateTagsActive_World(UObject* WorldContextObject);
+	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (World)")
+	static bool AreStateTagsActive_World(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bAll, bool bExact);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (Game Instance)")
+	static void SetStateTagsActive_GameInstance(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bActive);
+	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (Game Instance)")
+	static FGameplayTagContainer GetStateTagsActive_GameInstance(UObject* WorldContextObject);
+	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (Game Instance)")
+	static bool AreStateTagsActive_GameInstance(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bAll, bool bExact);
+	
 };
 
 UCLASS()

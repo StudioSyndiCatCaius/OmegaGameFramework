@@ -28,6 +28,23 @@
 #include "Subsystems/OmegaSubsystem_File.h"
 
 
+bool UOmegaGameFrameworkBPLibrary::HasTags_Advance(FGameplayTagContainer Tags, FGameplayTagContainer Has, bool bAll, bool bExact)
+{
+	if(bAll)
+	{
+		if(bExact)
+		{
+			return Tags.HasAllExact(Has);
+		}
+		return Tags.HasAll(Has);
+	}
+	if(bExact)
+	{
+		return Tags.HasAllExact(Has);
+	}
+	return Tags.HasAny(Has);
+}
+
 FGameplayTagContainer UOmegaGameFrameworkBPLibrary::GetObjectGameplayTags(UObject* Object)
 {
 	FGameplayTagContainer OutTags;
@@ -1046,6 +1063,71 @@ TMap<UOmegaAttribute*, int32> UOmegaGameFrameworkBPLibrary::LuaToOmegaAttributes
 	}
 	return out;
 }
+
+//###############################################################################
+// State Tag
+//###############################################################################
+void UOmegaGameFrameworkBPLibrary::SetStateTagsActive_World(UObject* WorldContextObject, FGameplayTagContainer Tags,
+	bool bActive)
+{
+	if(WorldContextObject)
+	{
+		if(bActive)
+		{
+			WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->StateTags.AppendTags(Tags);
+		}
+		else
+		{
+			WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->StateTags.RemoveTags(Tags);
+		}
+	}
+}
+
+FGameplayTagContainer UOmegaGameFrameworkBPLibrary::GetStateTagsActive_World(UObject* WorldContextObject)
+{
+	if(WorldContextObject)
+	{
+		return WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->StateTags;
+	}
+	return FGameplayTagContainer();
+}
+
+bool UOmegaGameFrameworkBPLibrary::AreStateTagsActive_World(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bAll, bool bExact)
+{
+	return HasTags_Advance(GetStateTagsActive_World(WorldContextObject),Tags,bAll,bExact);
+}
+
+void UOmegaGameFrameworkBPLibrary::SetStateTagsActive_GameInstance(UObject* WorldContextObject,
+	FGameplayTagContainer Tags, bool bActive)
+{
+	if(WorldContextObject)
+	{
+		if(bActive)
+		{
+			WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->StateTags.AppendTags(Tags);
+		}
+		else
+		{
+			WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->StateTags.RemoveTags(Tags);
+		}
+	}
+}
+
+FGameplayTagContainer UOmegaGameFrameworkBPLibrary::GetStateTagsActive_GameInstance(UObject* WorldContextObject)
+{
+	if(WorldContextObject)
+	{
+		return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->StateTags;
+	}
+	return FGameplayTagContainer();
+}
+
+bool UOmegaGameFrameworkBPLibrary::AreStateTagsActive_GameInstance(UObject* WorldContextObject,
+	FGameplayTagContainer Tags, bool bAll, bool bExact)
+{
+	return HasTags_Advance(GetStateTagsActive_GameInstance(WorldContextObject),Tags,bAll,bExact);
+}
+
 
 bool UOmegaLevelFunctions::IsLevelInstance_ReferenceValid(const ALevelInstance* LevelInstance)
 {

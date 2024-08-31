@@ -333,3 +333,25 @@ void UCombatantFunctions::DoesCombatantHaveEffectWithTag(UCombatantComponent* Co
 		Outcome = EOmegaBranch::No;
 	}
 }
+
+
+FGameplayTag UOmegaCommonSkill::GetObjectGameplayCategory_Implementation() { return CategoryTag; }
+FGameplayTagContainer UOmegaCommonSkill::GetObjectGameplayTags_Implementation() { return GameplayTags; }
+void UOmegaCommonSkill::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description) { Name=DisplayName; Description=DisplayDescription; }
+void UOmegaCommonSkill::GetGeneralAssetLabel_Implementation(FString& Label) { Label=DisplayLabel; }
+void UOmegaCommonSkill::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) { Brush=DisplayIcon; }
+
+TSubclassOf<UCombatantFilter> UOmegaCommonSkill::GetSkillTargetFilter_Implementation()
+{
+	return TargetFilter;
+}
+
+/*
+TMap<UOmegaAttribute*, float> UOmegaCommonSkill::GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,
+	UObject* Context)
+{
+	return AttributeUseCost;
+}
+*/

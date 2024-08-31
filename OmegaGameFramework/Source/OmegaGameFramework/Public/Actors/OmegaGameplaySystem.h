@@ -10,6 +10,7 @@
 #include "GameplayTagContainer.h"
 #include "OmegaAbility.h"
 #include "Components/CombatantComponent.h"
+#include "Subsystems/OmegaSubsystem_QueueDelay.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 
 #include "OmegaGameplaySystem.generated.h"
@@ -40,7 +41,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShutdown, UObject*, Context, FSt
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNotify, UObject*, Context, FString, Flag);
 
 UCLASS(config = Game, notplaceable, BlueprintType, Blueprintable, Transient, hideCategories = (Info, Rendering, MovementReplication, Collision, HLOD, WorldPartition), meta = (ShortTooltip = ""))
-class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AActor, public IOmegaSaveInterface
+class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AActor, public IOmegaSaveInterface, public IInterface_QueueDelay
 {
 	GENERATED_BODY()
 	

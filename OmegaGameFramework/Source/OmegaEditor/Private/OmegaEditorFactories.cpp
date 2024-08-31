@@ -17,17 +17,6 @@
 ///////////////////////////////////////////////////
 
 //////// Attributes ////////
-UOmegaAttributes_Factory::UOmegaAttributes_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) {
-	SupportedClass = UOmegaAttribute::StaticClass();
-	bEditAfterNew = true;
-	bCreateNew = true;
-}
-
-UObject* UOmegaAttributes_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
-{
-	check(Class->IsChildOf(UOmegaAttribute::StaticClass()));
-	return NewObject<UOmegaAttribute>(InParent, Class, Name, Flags | RF_Transactional);
-}
 
 //////// DataItem ////////
 UOmegaDataItems_Factory::UOmegaDataItems_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) {
@@ -40,19 +29,6 @@ UObject* UOmegaDataItems_Factory::FactoryCreateNew(UClass* Class, UObject* InPar
 {
 	check(Class->IsChildOf(UOmegaDataItem::StaticClass()));
 	return NewObject<UOmegaDataItem>(InParent, Class, Name, Flags | RF_Transactional);
-}
-
-//////// AttributesSet ////////
-UOmegaAttributeSet_Factory::UOmegaAttributeSet_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) {
-	SupportedClass = UOmegaAttributeSet::StaticClass();
-	bEditAfterNew = true;
-	bCreateNew = true;
-}
-UObject* UOmegaAttributeSet_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
-	UObject* Context, FFeedbackContext* Warn)
-{
-	check(Class->IsChildOf(UOmegaAttributeSet::StaticClass()));
-	return NewObject<UOmegaAttributeSet>(InParent, Class, Name, Flags | RF_Transactional);
 }
 
 //////// Ability ////////
@@ -229,5 +205,4 @@ UObject* UOmegaHudLayer_Factory::FactoryCreateNew(UClass* Class, UObject* InPare
 		return FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, Name, BPTYPE_Normal, UBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(), CallingContext);
 	}
 }
-
 

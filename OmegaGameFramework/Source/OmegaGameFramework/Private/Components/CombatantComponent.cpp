@@ -1528,26 +1528,39 @@ bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit,
 	{
 		for(const FCombatantGambit TempGambit : Gambit->GetAllGambitActions())
 		{
-			if(TempGambit.Gambit_IF && TempGambit.Gambit_THEN && TempGambit.Gambit_IF->RunGambitCheck(this))	//Is accepted Gambit
+			float rand_val = UKismetMathLibrary::RandomFloat();
+			
+			if(TempGambit.Gambit_THEN && TempGambit.Gambit_TARGET && rand_val<=TempGambit.TriggerChance)	//Is accepted Gambit
 			{
-				TSubclassOf<AOmegaAbility> IncomingAbility;
-				UObject* IncomingContext;
-				TempGambit.Gambit_THEN->RunGambitAction(this, IncomingAbility,IncomingContext);
-				
-				bool SuccessGet;
-				AOmegaAbility* LocalAbility = GetAbility(IncomingAbility,SuccessGet);
-				//Make sure ability is granted
-				if(SuccessGet)
+				bool successful_select=true;
+				for(auto* TempIf : TempGambit.Gambit_IF)
 				{
-					// Make sure this ability is valid and can activcate
-					if(IncomingAbility && LocalAbility && LocalAbility->CanActivate(IncomingContext)) //Check if this ability can be activated
+					if(!TempIf->RunGambitCheck(this))
 					{
-						Ability = IncomingAbility;
-						Context = IncomingContext;
-						return true;
+						successful_select=false;
+						break;
 					}
 				}
+				if(successful_select)
+				{
+					TSubclassOf<AOmegaAbility> IncomingAbility;
+					UObject* IncomingContext;
+					TempGambit.Gambit_THEN->RunGambitAction(this, IncomingAbility,IncomingContext);
 				
+					bool SuccessGet;
+					AOmegaAbility* LocalAbility = GetAbility(IncomingAbility,SuccessGet);
+					//Make sure ability is granted
+					if(SuccessGet)
+					{
+						// Make sure this ability is valid and can activcate
+						if(IncomingAbility && LocalAbility && LocalAbility->CanActivate(IncomingContext)) //Check if this ability can be activated
+						{
+							Ability = IncomingAbility;
+							Context = IncomingContext;
+							return true;
+						}
+					}
+				}
 			}
 		}
 	}

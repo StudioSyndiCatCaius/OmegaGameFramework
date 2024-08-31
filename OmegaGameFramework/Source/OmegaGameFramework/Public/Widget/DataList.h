@@ -142,6 +142,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Entry")
 	void RefreshAllEntries();
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry")
+	bool bCanOverrideSize;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry",meta=(EditCondition="bCanOverrideSize"))
+	FVector2D OverrideSize;
+	
 	//---------------------------------------------------------------------------------------------//
 	//	Lua
 	//---------------------------------------------------------------------------------------------//

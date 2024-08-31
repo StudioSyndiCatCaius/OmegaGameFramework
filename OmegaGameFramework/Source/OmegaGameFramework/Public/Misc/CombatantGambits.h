@@ -12,15 +12,34 @@ struct FCombatantGambit
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit")
+	float TriggerChance = 1.0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit", Instanced, DisplayName="TARGET")
+	UCombatantGambitTarget* Gambit_TARGET = nullptr;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit", Instanced, DisplayName="IF")
-	UCombatantGambitCondition* Gambit_IF = nullptr;
+	TArray<UCombatantGambitCondition*> Gambit_IF;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit", Instanced, DisplayName="THEN")
 	UCombatantGambitAction* Gambit_THEN = nullptr;
 	
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract)
+class OMEGAGAMEFRAMEWORK_API UCombatantGambitTarget : public UObject
+{
+	GENERATED_BODY()
+	
+public:
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Combat|Gambit")
+	TArray<UCombatantComponent*> GetTargetList(const UCombatantComponent* Instigator) const;
+
+};
+
+
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract)
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitCondition : public UObject
 {
 	GENERATED_BODY()
@@ -32,7 +51,7 @@ public:
 
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract)
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitAction : public UObject
 {
 	GENERATED_BODY()
@@ -49,7 +68,6 @@ UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
-
 
 public:
 

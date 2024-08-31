@@ -35,6 +35,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnGameplaySystemActiveStateChange OnGameplaySystemActiveStateChange;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Gameplay")
+	FGameplayTagContainer StateTags;
+
+
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|")

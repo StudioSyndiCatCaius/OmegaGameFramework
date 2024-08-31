@@ -44,22 +44,11 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	
-	virtual ETickableTickType GetTickableTickType() const override
-	{
-		return ETickableTickType::Always;
-	}
-	virtual TStatId GetStatId() const override
-	{
-		RETURN_QUICK_DECLARE_CYCLE_STAT( FMyTickableThing, STATGROUP_Tickables );
-	}
-	virtual bool IsTickableWhenPaused() const
-	{
-		return true;
-	}
+	virtual ETickableTickType GetTickableTickType() const override { return ETickableTickType::Always; }
+	virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT( FMyTickableThing, STATGROUP_Tickables ); }
+	virtual bool IsTickableWhenPaused() const { return true; }
 	virtual bool IsTickableInEditor() const
-	{
-		return false;
-	}
+	{ return false; }
 	// FTickableGameObject End
 
 	UPROPERTY()

@@ -91,6 +91,7 @@ float UOmegaMathFunctions::GetAngle_FromRotators(FRotator A, FRotator B)
 }
 
 
+
 TArray<FString> UOmegaUtilityFunctions::GetBlueprintCallableAndPureFunctions(UObject* Object)
 {
 	TArray<FString> FunctionNames;

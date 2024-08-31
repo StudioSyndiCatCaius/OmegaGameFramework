@@ -142,6 +142,9 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
 	TempEntry->WidgetTags=EntryAutoTags;
 	TempEntry->WidgetMetadata=EntryMetadata;
+	TempEntry->bCanOverrideSize=bCanOverrideSize;
+	TempEntry->OverrideSize=OverrideSize;
+	
 	if(OverrideEntryTooltip)
 	{
 		TempEntry->DefaultTooltipWidget = OverrideEntryTooltip;

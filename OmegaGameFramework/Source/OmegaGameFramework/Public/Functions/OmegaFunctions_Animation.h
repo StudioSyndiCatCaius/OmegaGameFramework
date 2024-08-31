@@ -25,9 +25,7 @@ public:
 };
 
 
-
-
-UCLASS(Blueprintable,BlueprintType,Const,EditInlineNew,Abstract)
+UCLASS(Blueprintable,BlueprintType,Const,EditInlineNew,Abstract,CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UOmegaAnimationEmoteScript : public UObject
 {
 	GENERATED_BODY()

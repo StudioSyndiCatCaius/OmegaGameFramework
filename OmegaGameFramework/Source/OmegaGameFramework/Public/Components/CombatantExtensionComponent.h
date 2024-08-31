@@ -9,7 +9,7 @@
 #include "CombatantExtensionComponent.generated.h"
 
 
-UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent), Blueprintable, BlueprintType )
+UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent), Blueprintable, BlueprintType, Abstract)
 class OMEGAGAMEFRAMEWORK_API UCombatantExtensionComponent : public UActorComponent, public IDataInterface_AttributeModifier, public  IDataInterface_DamageModifier, public IDataInterface_SkillSource
 {
 	GENERATED_BODY()

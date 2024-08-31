@@ -7,6 +7,9 @@
 #include "GameFramework/Character.h"
 #include "Kismet/KismetMathLibrary.h"
 
+UWorld* UOmegaCombatEncounterScript::GetWorld() const { if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr; }
+UGameInstance* UOmegaCombatEncounterScript::GetGameInstance() const { return Cast<UGameInstance>(GetOuter()); }
+UOmegaCombatEncounterScript::UOmegaCombatEncounterScript(const FObjectInitializer& ObjectInitializer) { if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); } }
 
 FTransform AOmegaCombatEncounter_Stage::GetTransformForBattler_Implementation(FGameplayTag FactionTag, int32 index)
 {
@@ -23,8 +26,16 @@ FTransform AOmegaCombatEncounter_Stage::GetTransformForBattler_Implementation(FG
 	return FTransform();
 }
 
+
+
 void UOmegaCombatEncounter_Component::BeginPlay()
 {
+	REF_Stage=nullptr;
+	REF_Instance=nullptr;
+	if(EncounterManagerScript)
+	{
+		EncounterManagerScript->WorldPrivate=GetWorld();
+	}
 	TArray<AActor*> tempActors;
 	UGameplayStatics::GetAllActorsOfClass(this,AOmegaCombatEncounter_Stage::StaticClass(),tempActors);
 	for(auto* tempactor : tempActors) { REF_StageList.Add(Cast<AOmegaCombatEncounter_Stage>(tempactor)); } 
@@ -52,6 +63,24 @@ AOmegaCombatEncounter_Stage* UOmegaCombatEncounter_Component::GetStageFromID(FGa
 	return nullptr;
 }
 
+ULevelSequence* UOmegaCombatEncounter_Component::GetEncounter_SequenceIntro() const
+{
+	if(REF_Instance && REF_Instance->OverrideSequence_Intro)
+	{
+		return REF_Instance->OverrideSequence_Intro;
+	}
+	return Default_SequenceIntro;
+}
+
+UOmegaBGM* UOmegaCombatEncounter_Component::GetEncounter_BGM() const
+{
+	if(REF_Instance && REF_Instance->OverrideBGM)
+	{
+		return REF_Instance->OverrideBGM;
+	}
+	return Default_BGM;
+}
+
 AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter(
 	TSubclassOf<AOmegaCombatEncounter_Instance> EncounterClass,AOmegaCombatEncounter_Stage* Stage)
 {
@@ -60,6 +89,11 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter(
 		REF_Stage=Stage;
 		REF_Instance = GetWorld()->SpawnActorDeferred<AOmegaCombatEncounter_Instance>(EncounterClass,FTransform());
 		REF_Instance->FinishSpawning(Stage->GetActorTransform());
+		if(EncounterManagerScript)
+		{
+			EncounterManagerScript->OnEncounterStarted(REF_Instance,REF_Stage);
+		}
+		
 		return  REF_Instance;
 	}
 	return nullptr;
@@ -81,6 +115,10 @@ bool UOmegaCombatEncounter_Component::EndEncounter()
 	if(REF_Instance)
 	{
 		REF_Instance->K2_DestroyActor();
+		if(EncounterManagerScript)
+		{
+			EncounterManagerScript->OnEncounterEnded(REF_Instance,REF_Stage);
+		}
 		return true;
 	}
 	return false;
@@ -100,10 +138,24 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 				REF_BattlerCombatants.Add(comb_ref);
 				if(DataAsset) { comb_ref->CombatantDataAsset=DataAsset; }
 				if(Faction) { comb_ref->FactionDataAsset=Faction; }
+				if(EncounterManagerScript)
+				{
+					EncounterManagerScript->OnBattlerSpawned(new_char,comb_ref);
+				}
 				return new_char;
 			}
 			GetWorld()->DestroyActor(new_char);
 		}
 	}
 	return nullptr;
+}
+
+AOmegaCombatEncounter_Stage* UOmegaCombatEncounter_Component::GetCurrent_Stage() const
+{
+	return REF_Stage;
+}
+
+AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::GetCurrent_Encounter() const
+{
+	return REF_Instance;
 }

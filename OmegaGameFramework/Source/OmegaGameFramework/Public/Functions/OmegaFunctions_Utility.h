@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FunctionalTest.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Slate/WidgetTransform.h"
 #include "Math/Vector2D.h"
@@ -72,6 +73,7 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static float GetAngle_FromRotators(FRotator A, FRotator B);
+	
 	
 };
 

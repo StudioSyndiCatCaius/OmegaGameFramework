@@ -37,6 +37,7 @@ void AOmegaGameplaySystem::BeginPlay()
 
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnTaggedGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueDelay>()->SetQueuedDelaySourceRegistered(this,true);
 	
 	for (AActor* TempActor : FoundPlayers)
 	{

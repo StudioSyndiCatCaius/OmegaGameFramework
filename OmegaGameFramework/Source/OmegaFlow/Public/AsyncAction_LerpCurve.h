@@ -10,7 +10,6 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLerpCurveUpdate, float, LerpValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLerpCurveFinished);
 UCLASS()
-
 class OMEGAFLOW_API UAsyncAction_LerpCurve : public UBlueprintAsyncActionBase, public FTickableGameObject
 {
 	GENERATED_BODY()
@@ -18,23 +17,10 @@ class OMEGAFLOW_API UAsyncAction_LerpCurve : public UBlueprintAsyncActionBase, p
 public:
 
 	virtual void Tick(float DeltaTime) override;
-	
-	virtual ETickableTickType GetTickableTickType() const override
-	{
-		return ETickableTickType::Always;
-	}
-	virtual TStatId GetStatId() const override
-	{
-		RETURN_QUICK_DECLARE_CYCLE_STAT( FMyTickableThing, STATGROUP_Tickables );
-	}
-	virtual bool IsTickableWhenPaused() const
-	{
-		return true;
-	}
-	virtual bool IsTickableInEditor() const
-	{
-		return false;
-	}
+	virtual ETickableTickType GetTickableTickType() const override {return ETickableTickType::Always; }
+	virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT( FMyTickableThing, STATGROUP_Tickables ); }
+	virtual bool IsTickableWhenPaused() const { return true; }
+	virtual bool IsTickableInEditor() const { return false; }
 	// FTickableGameObject End
 
 	UPROPERTY(BlueprintAssignable)
