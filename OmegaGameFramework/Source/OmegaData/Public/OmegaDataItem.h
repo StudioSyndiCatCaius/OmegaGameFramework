@@ -36,6 +36,10 @@ public:
 	//General
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", DisplayName="Name")
 	FText DisplayName;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", AdvancedDisplay)
+	FLinearColor CustomColor;
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override { Color=CustomColor; }; 
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", AdvancedDisplay)
 	FString CustomLabel;

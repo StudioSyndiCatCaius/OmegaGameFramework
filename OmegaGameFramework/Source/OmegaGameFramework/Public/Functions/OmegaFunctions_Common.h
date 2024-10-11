@@ -189,6 +189,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors")
 	static TArray<AActor*> GetActorsFromComponents(TArray<UActorComponent*> Components);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(DeterminesOutputType="ActorClass"))
+	static TArray<AActor*> GetActorsFromChildActorComponents(TArray<UChildActorComponent*> Components, TSubclassOf<AActor> ActorClass);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="ComponentClass"))
 	static TArray<UActorComponent*> GetComponentsFromActors(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass);
@@ -233,7 +236,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
 	static AActor* TryGetChildActorAsClass(UChildActorComponent* ChildActor, TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
-	
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class"))
+	static TArray<AActor*> GetActorsFromHitResults(TArray<FHitResult> Hits, TSubclassOf<AActor> Class);
+
 	//###############################################################################
 	// InterpActor
 	//###############################################################################
@@ -281,6 +287,9 @@ public:
 	//###############################################################################
 	// Lua
 	//###############################################################################
+	UFUNCTION(BlueprintCallable,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", AdvancedDisplay="ParentTable, StateClass"))
+	static FLuaValue GetLuaValueFromGameplayTag(UObject* WorldContextObject, FGameplayTag Tag, const FString& ParentTable, TSubclassOf<ULuaState> StateClass);
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"))
 	static UDataAsset* CreateDataAssetFromLua(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class,FLuaValue Value);
 

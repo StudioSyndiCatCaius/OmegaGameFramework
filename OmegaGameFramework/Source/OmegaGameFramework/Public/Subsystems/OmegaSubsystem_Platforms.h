@@ -137,6 +137,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|Platform", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context")) 
 	static FSlateBrush GetCurrentPlatformKeyIcon(const UObject* WorldContextObject, FKey Key, APlayerController* Player);
 	
+	UFUNCTION(BlueprintPure, Category="Omega|Platform") 
+	static FKey GetKeyFromName(const FString& KeyName);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Platform", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context")) 
 	static UOmegaPlatformAsset* GetCurrentPlatformAsset();
 };

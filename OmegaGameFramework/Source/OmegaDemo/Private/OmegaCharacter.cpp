@@ -14,10 +14,25 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	Combatant = CreateDefaultSubobject<UCombatantComponent>(TEXT("Combatant"));
 	DataItem = CreateDefaultSubobject<UDataItemComponent>(TEXT("DataItem"));
+	if(DataItem)
+	{
+		DataItem->FlagOnApplied="SetCharacter";
+	}
 	Equipment = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
 	Inventory = CreateDefaultSubobject<UDataAssetCollectionComponent>(TEXT("Inventory"));
 	Leveling = CreateDefaultSubobject<ULevelingComponent>(TEXT("Leveling"));
 	ActorState = CreateDefaultSubobject<UActorStateComponent>(TEXT("ActorState"));
+	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
+	SubscriptComponent = CreateDefaultSubobject<USubscriptComponent>(TEXT("Subscript"));
+}
+
+void AOmegaCharacter::OnConstruction(const FTransform& Transform)
+{
+	if(CharacterAsset)
+	{
+		DataItem->SetDataItem(CharacterAsset);
+	}
+	Super::OnConstruction(Transform);
 }
 
 // Called when the game starts or when spawned
@@ -27,6 +42,7 @@ void AOmegaCharacter::BeginPlay()
 	Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
 	Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
 	DataItem->OnDataItemChanged.AddDynamic(this, &AOmegaCharacter::Local_UpdateDataItem);
+	
 }
 
 void AOmegaCharacter::Local_AddCombatantSource(UObject* Source)

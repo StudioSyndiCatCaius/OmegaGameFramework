@@ -26,10 +26,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Trait")
 	FString TraitLabel;
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait", meta=(AdvancedDisplay="Tags"))
+	UFUNCTION(BlueprintNativeEvent, Category="DataItem|Trait", meta=(AdvancedDisplay="Tags"))
 	void AppliedToActor(AActor* Actor, const FString& Flag, FGameplayTagContainer Tags) const;
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait", meta=(AdvancedDisplay="Tags"))
+	UFUNCTION(BlueprintNativeEvent, Category="DataItem|Trait", meta=(AdvancedDisplay="Tags"))
 	void AppliedToComponent(UActorComponent* Component, const FString& Flag, FGameplayTagContainer Tags) const;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="DataItem|Trait", meta=(AdvancedDisplay="Tags"))

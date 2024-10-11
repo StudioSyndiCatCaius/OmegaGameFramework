@@ -29,8 +29,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlight, UDataWidget*, DataWid
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWidgetRefreshed, UDataWidget*, DataWidget);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWidgetNotify, UDataWidget*, DataWidget, FName, Notify);
 
-
-
 UCLASS(Blueprintable,BlueprintType,EditInlineNew, const)
 class OMEGAGAMEFRAMEWORK_API UDataWidgetMetadata : public UObject
 {
@@ -40,6 +38,10 @@ public:
 		
 	UFUNCTION(BlueprintImplementableEvent, Category="Meta")
 	void OnMetaApplied(UDataWidget* widget) const;
+	
+			
+	UFUNCTION(BlueprintNativeEvent, Category="Meta")
+	bool CanAddObjectToList(UObject* SourceObject) const;
 };
 
 
@@ -125,15 +127,12 @@ public:
 	//---------------------------------------------------------------------------------------------//
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Lua", meta=(MultiLine))
 	FLuaScriptContainer Script;
-
 	
 	UFUNCTION(BlueprintCallable,Category="Lua",meta=(AdvancedDisplay="State"))
 	FLuaValue GetWidgetScript(TSubclassOf<ULuaState> State);
 	UFUNCTION(BlueprintCallable,Category="Lua",meta=(AdvancedDisplay="State"))
 	FLuaValue WidgetScriptKeyCall(const FString& key, TArray<FLuaValue> args, TSubclassOf<ULuaState> State);
-
 	
-
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
 	//---------------------------------------------------------------------------------------------//
@@ -170,6 +169,8 @@ public:
 	//	Highlight
 	//---------------------------------------------------------------------------------------------//
 
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
+	void OnHighlightStateChange(bool bHighlight);
 	
 	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
 	bool bIsHighlighted;
@@ -181,6 +182,9 @@ public:
 	//---------------------------------------------------------------------------------------------//
 	//	Hover
 	//---------------------------------------------------------------------------------------------//
+
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
+	void OnHoverStateChange(bool bHovered);
 	
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Hover Widget Duration")
 	float HoverWidgetSpeed = 0.1;

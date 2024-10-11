@@ -16,6 +16,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_AssetHandler : public UEngineSubsys
 	GENERATED_BODY()
 
 public:
+
 	UFUNCTION(BlueprintCallable,Category="Omega|AssetHandler")
 	TArray<UObject*> GetSortedAsset_All();
 	

@@ -423,7 +423,7 @@ public:
 	TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
 	
 	//GamePreferences
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,Category="Preferences")
 	TMap<UGamePreference*, FVector> PreferenceValues;
 
 	//olf pref values. will be removed long term
@@ -465,8 +465,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TMap<FGuid, FGameplayTagContainer> GuidTags;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
-	TMap<FGuid, FJsonObjectWrapper> GuidJson;
+
 	
 	//Soft Property
 	UPROPERTY(EditAnywhere,Category="Save")
@@ -539,17 +538,21 @@ public:
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FTransform GetSaveProperty_Transform(const FString& Name);
 
-	//JsonProperty
-	UPROPERTY()
-	TMap<FName, FJsonObjectWrapper> Prop_Json;
+	// ======================================================================================
+	// Json
+	// ======================================================================================
+
+	// JsonSave : FName
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save",DisplayName="Json: Named") TMap<FName, FJsonObjectWrapper> Prop_Json;
+	// JsonSave : Guid
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save",DisplayName="Json: Guid") TMap<FGuid, FJsonObjectWrapper> GuidJson;
+	// JsonSave : DataAsset
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save",DisplayName="Json: DataAsset") TMap<UPrimaryDataAsset*, FJsonObjectWrapper> DataAsset_Json;
+	
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Json(const FString& Name, FJsonObjectWrapper Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FJsonObjectWrapper GetSaveProperty_Json(const FString& Name);
-
-	//GuiSon
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaSame|GuiSon")
-	TMap<FGuid, FJsonObjectWrapper> GuidJsonObjects;
 	
 	UPROPERTY()
 	TMap<UOmegaDynamicSaveVariable*, FString> DynamicVariableValues;
@@ -565,14 +568,9 @@ public:
 	// UPROPERTY(BlueprintReadOnly, Category="Playtime")
 	// FTimecode SavedPlaytime;
 	
-	UPROPERTY()
-	FString ActiveLevelName;
-
-	UPROPERTY()
-	FTransform SavedPlayerTransform;
-
-	UPROPERTY()
-	UOmegaZoneData* ActiveZone;
+	UPROPERTY() FString ActiveLevelName;
+	UPROPERTY() FTransform SavedPlayerTransform;
+	UPROPERTY() UOmegaZoneData* ActiveZone;
 
 	UPROPERTY(BlueprintReadOnly, Category="Save")
 	FDateTime SaveDate;

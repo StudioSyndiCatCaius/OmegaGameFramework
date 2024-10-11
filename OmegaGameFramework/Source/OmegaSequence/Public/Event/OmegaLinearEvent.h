@@ -22,6 +22,24 @@ public:
 	UPROPERTY() UWorld* WorldPrivate = nullptr;
 	UPROPERTY() UGameInstance* GameInstanceRef = nullptr;
 	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
+
+	UPROPERTY() FGuid EventGuid;
+	UFUNCTION(BlueprintCallable,Category="LinearEvent|Guid")
+	void SetEventGuid(FGuid Guid)
+	{
+		if(Guid.IsValid())
+		{
+			EventGuid=Guid;
+		}
+	};
+	UFUNCTION(BlueprintPure,Category="LinearEvent|Guid") FGuid GetEventGuid()
+	{
+		if(!EventGuid.IsValid())
+		{
+			EventGuid=FGuid::NewGuid();
+		}
+		return  EventGuid;
+	};
 	
 	UPROPERTY()
 	UOmegaLinearEventSubsystem* SubsystemRef;

@@ -2,6 +2,20 @@
 
 #include "Misc/OmegaUtils_Actor.h"
 
+
+
+AActor* UOmegaActorUtilFunctions::GetSelectedActor(FOmegaActorSelectorData selectorData)
+{
+	if(selectorData.Selector)
+	{
+		if(AActor* out_actor = selectorData.Selector->GetActor())
+		{
+			return out_actor;
+		}
+	}
+	return nullptr;
+}
+
 UWorld* UOmegaActorSelector::GetWorld() const
 {
 	if(WorldPrivate) {return WorldPrivate; }

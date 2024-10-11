@@ -9,6 +9,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
+#include "Kismet/KismetStringLibrary.h"
 
 
 void UOmegaModSubsystem::Initialize(FSubsystemCollectionBase& Colection)
@@ -20,6 +21,8 @@ void UOmegaModSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 		ModList.Add(NewMod);
 
 		NewMod->OnModInitialized(TempPath);
+		
+		FString raw_path;
 	}
 }
 

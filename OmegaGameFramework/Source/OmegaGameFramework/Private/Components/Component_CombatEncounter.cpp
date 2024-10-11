@@ -7,9 +7,18 @@
 #include "GameFramework/Character.h"
 #include "Kismet/KismetMathLibrary.h"
 
-UWorld* UOmegaCombatEncounterScript::GetWorld() const { if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr; }
-UGameInstance* UOmegaCombatEncounterScript::GetGameInstance() const { return Cast<UGameInstance>(GetOuter()); }
+UWorld* UOmegaCombatEncounterScript::GetWorld() const { return WorldPrivate; }
+UGameInstance* UOmegaCombatEncounterScript::GetGameInstance() const { return WorldPrivate->GetGameInstance(); }
 UOmegaCombatEncounterScript::UOmegaCombatEncounterScript(const FObjectInitializer& ObjectInitializer) { if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); } }
+
+UOmegaCombatEncounter_Component* UOmegaCombatEncounterScript::GetOwningComponent() const
+{
+	if(UOmegaCombatEncounter_Component* out_comp = Cast<UOmegaCombatEncounter_Component>(GetOuter()))
+	{
+		return out_comp;
+	}
+	return nullptr;
+}
 
 FTransform AOmegaCombatEncounter_Stage::GetTransformForBattler_Implementation(FGameplayTag FactionTag, int32 index)
 {
@@ -142,6 +151,7 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 				{
 					EncounterManagerScript->OnBattlerSpawned(new_char,comb_ref);
 				}
+				OnEncounterSpawned.Broadcast(new_char);
 				return new_char;
 			}
 			GetWorld()->DestroyActor(new_char);

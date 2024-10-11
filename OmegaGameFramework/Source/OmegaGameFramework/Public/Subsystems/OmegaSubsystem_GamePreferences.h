@@ -31,8 +31,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General",DisplayName="Name")
 	FText PrefernceName;
 
-	UPROPERTY(BlueprintReadOnly, Category="GamePreference")
-	EGamePreferenceType PreferenceType;
+	UFUNCTION(BlueprintCallable,Category="Preference")
+	EGamePreferenceType GetPreferenceType() const;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "General")
 	FString PreferenceLabel;
@@ -92,9 +92,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category="Preference")
 	void OnPreferenceValueUpdated(UGameUserSettings* GameSettings, FVector Value) const;
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Preference")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintPure, Category="Preference")
 	FVector GetDefaultValue() const;
-
+	
+	UFUNCTION(BlueprintImplementableEvent, BlueprintPure, Category="Preference")
+	FVector GetMaxValue() const;
+	
 	UFUNCTION(BlueprintImplementableEvent, Category="Preference")
 	FText GetValueText(FVector Value) const;
 
@@ -144,6 +147,7 @@ public:
 };
 
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPreferenceUpdated, class UGamePreference*, Preference, FVector, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPrefernceBoolUpdated, class UGamePreferenceBool*, Preference, bool, bValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPrefernceFloatUpdated, class UGamePreferenceFloat*, Preference, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPrefernceIntUpdated, class UGamePreferenceInt*, Preference, int32, Value);
@@ -164,6 +168,9 @@ protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 public:
+
+	UPROPERTY(BlueprintAssignable,Category="Preferences")
+	FOnPreferenceUpdated OnPreferenceUpdated;
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 

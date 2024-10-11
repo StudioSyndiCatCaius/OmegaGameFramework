@@ -18,6 +18,7 @@
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/TextBlock.h"
 #include "Engine/DataAsset.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 UDataListCustomEntry::UDataListCustomEntry(const FObjectInitializer& ObjectInitializer)
@@ -121,7 +122,6 @@ void UDataList::RemoveEntryOfAsset(UObject* Asset, bool All)
 	{
 		RemoveEntryFromList(GetEntryIndex(TempEntry));
 	}
-	
 } 
 
 // ADD ENTRY BASE
@@ -136,6 +136,14 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	{
 		return nullptr;
 		UE_LOG(LogTemp, Warning, TEXT("Failed to Add Asset. Invalid Widget Class."));
+	}
+	//check metadata
+	for(auto* TempMeta : EntryMetadata)
+	{
+		if(TempMeta && !TempMeta->CanAddObjectToList(Asset))
+		{
+			return nullptr;
+		}
 	}
 
 	//Create Entry Widget
@@ -283,7 +291,7 @@ TArray<UDataWidget*> UDataList::GetEntries()
 	TArray<UDataWidget*> OutEntries;
 	for(auto* TempEntry : Entries)
 	{
-		if(TempEntry)
+		if(TempEntry && TempEntry->IsRendered())
 		{
 			OutEntries.Add(TempEntry);
 		}
@@ -348,32 +356,31 @@ void UDataList::SelectEntry(int32 Index)
 bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 {
 	UDataWidget* TempEntry;
-	int32 MaxSize = Entries.Num();
+	int32 MaxSize = Entries.Num()-1;
 	
 	//Return false if amount = 0
 	if(Amount==0)
 	{
+	UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: Cycle Amount is 0"));
 		return false;
 	}
 	
 	if(HoveredEntry)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hovered Valid"));
 		TempEntry = HoveredEntry;
 	}
 	else if(GetEntry(0))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Go to Default"));
 		TempEntry = GetEntry(0);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FAILED"));
+		UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: List Empty"));
 		return false;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("EntrySize"));
-	int Tempindex = GetEntryIndex(TempEntry)+Amount;
 
+	int32 Tempindex=GetEntryIndex(TempEntry)+Amount;
+	
 	if(Tempindex < 0)
 	{
 		Tempindex = MaxSize;
@@ -382,7 +389,7 @@ bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 	{
 		Tempindex = 0;
 	}
-
+	
 	//IF valid entry index, cycle
 	if (GetEntries().IsValidIndex(Tempindex))
 	{
@@ -390,7 +397,7 @@ bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 		NewEntry = Tempindex;
 		return true;
 	}
-	
+	UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: Invalid Entry at index %d"), Tempindex);
 	return false;
 }
 
@@ -398,9 +405,9 @@ int32 UDataList::GetEntryIndex(UDataWidget* Entry)
 {
 	if(Entry)
 	{
-		if(Entries.Contains(Entry))
+		if(GetEntries().Contains(Entry))
 		{
-			return Entries.Find(Entry);
+			return GetEntries().Find(Entry);
 			//return Entries.IndexOfByKey(Entry);
 		}
 	}
@@ -409,9 +416,9 @@ int32 UDataList::GetEntryIndex(UDataWidget* Entry)
 
 UDataWidget* UDataList::GetEntry(int32 Index)
 {
-	if(Entries.IsValidIndex(Index))
+	if(GetEntries().IsValidIndex(Index))
 	{
-		return Entries[Index];
+		return GetEntries()[Index];
 	}
 	return nullptr;
 }

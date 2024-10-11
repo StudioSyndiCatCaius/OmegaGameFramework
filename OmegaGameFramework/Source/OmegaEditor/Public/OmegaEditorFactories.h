@@ -12,6 +12,7 @@
 #include "OmegaDataItem.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/OmegaSubsystem_Quest.h"
 #include "Subsystems/OmegaSubsystem_Zone.h"
 #include "Misc/CombatantGambits.h"
 
@@ -91,6 +92,15 @@ UCLASS() class OMEGAEDITOR_API UCombatantGambitAsset_Factory : public UFactory
 };
 OMACRO_ASSETTYPE_HEADERFIELD(CombatantGambitAsset,"Combat Gambit", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
+//Quest
+UCLASS() class OMEGAEDITOR_API UOmegaQuest_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaQuest,"Quest", "Asset Desc here",FColor(201, 29, 85),"Gameplay")
+
+
 //Level Data
 UCLASS() class OMEGAEDITOR_API UOmegaLevelData_Factory : public UFactory
 {
@@ -108,13 +118,14 @@ UCLASS() class OMEGAEDITOR_API UOmegaZoneData_Factory : public UFactory
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaZoneData,"Level: Zone Data", "Asset Desc here", FColor(225, 150, 0),"World")
 
 
-//Level Data
+//Story State
 UCLASS() class OMEGAEDITOR_API UOmegaStoryStateAsset_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaStoryStateAsset,"Story State", "Asset Desc here", FColor(201, 29, 85),"Save")
+
 
 //Emote
 UCLASS() class OMEGAEDITOR_API UOmegaAnimationEmote_Factory : public UFactory
@@ -154,8 +165,6 @@ public:
 	virtual FColor GetTypeColor() const override { return FColor(50, 255, 180); }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegDataItemDesc", "An Item type."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaDataItem::StaticClass(); }
-	virtual const TArray<FText>& GetSubMenus() const override
-	{ static const TArray<FText> SubMenus { NSLOCTEXT("AssetTypeActions", "OmegaAssetSubMenu_Combat", "Combat") }; return SubMenus; };
 
 private:
 	EAssetTypeCategories::Type OmegaAssetCategory;

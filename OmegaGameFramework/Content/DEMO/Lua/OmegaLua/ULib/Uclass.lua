@@ -1,0 +1,33 @@
+UClass={
+    Combatant_Filter={
+        All='/OmegaGameFramework/DEMO/CombFilter/CombatantFilter_Demo_All.CombatantFilter_Demo_All_C',
+        Friendly='/OmegaGameFramework/DEMO/CombFilter/CombatantFilter_Demo_Friendly.CombatantFilter_Demo_Friendly_C',
+        Hostile='/OmegaGameFramework/DEMO/CombFilter/CombatantFilter_Demo_Hostile.CombatantFilter_Demo_Hostile_C',
+        Self='/OmegaGameFramework/DEMO/CombFilter/CombatantFilter_Demo_Self.CombatantFilter_Demo_Self_C',
+    },
+    Linear_Events={
+        GameplaySystem='/OmegaGameFramework/DEMO/LinearEvents/LE_GameplaySystem.LE_GameplaySystem_C',
+        Menu='/OmegaGameFramework/DEMO/LinearEvents/LE_Menu.LE_Menu_C',
+        LevelSequence='/OmegaGameFramework/DEMO/LinearEvents/LE_LevelSequence.LE_LevelSequence_C',
+        Fade='/OmegaGameFramework/DEMO/LinearEvents/LE_Fade.LE_Fade_C',
+        LevelChange='/OmegaGameFramework/DEMO/LinearEvents/LE_Level_Transit.LE_Level_Transit_C',
+        Dialogue_Message='/OmegaGameFramework/DEMO/LinearEvents/LE_DialogueMessage.LE_DialogueMessage_C',
+    },
+    Scripted_Effects={
+        ApplyGameplayEffects='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_ApplyGameplayEffects.EffectScript_ApplyGameplayEffects_C',
+        ApplySingleEffect='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_ApplySingleEffect.EffectScript_ApplySingleEffect_C',
+        ComparedAttributeDamage='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_ComparedAttDamage.EffectScript_ComparedAttDamage_C',
+        Cues='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_Cues.EffectScript_Cues_C',
+        FlatDamage='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_FlatDamage.EffectScript_FlatDamage_C',
+        PercentDamage='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_PercentDamage.EffectScript_PercentDamage_C',
+        RemoveEffectTags='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_RemoveEffectTags.EffectScript_RemoveEffectTags_C',
+        TagEvent='/OmegaGameFramework/DEMO/Effects/Scripts/EffectScript_TagEvent.EffectScript_TagEvent_C',
+    },
+    Menu={
+        Lua='/OmegaGameFramework/DEMO/Menus/OmegaMenu_Lua.OmegaMenu_Lua_C',
+        Tutorial='/OmegaGameFramework/DEMO/Menus/OmegaMenu_Tutorial.OmegaMenu_Tutorial_C',
+        Settings='/OmegaGameFramework/DEMO/Menus/OmegaMenu_Settings.OmegaMenu_Settings_C',
+        SaveLoad=[[/OmegaGameFramework/DEMO/Menus/OmegaMenu_SaveLoad.OmegaMenu_SaveLoad_C]],
+        BGM=[[/OmegaGameFramework/DEMO/Menus/OmegaMenu_SaveLoad.OmegaMenu_SaveLoad_C]]
+    }
+}

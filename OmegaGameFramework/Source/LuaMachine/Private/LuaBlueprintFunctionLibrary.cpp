@@ -2151,6 +2151,22 @@ void ULuaValuesFunctionLibrary::AddLuaGlobal_AsFloat(UObject* WorldContextObject
 	SetLuaGlobal_AsFloat(WorldContextObject,State,Global,Value+GetLuaGlobal_AsFloat(WorldContextObject,State,Global));
 }
 
+FLuaValue ULuaValuesFunctionLibrary::AddValueToLuaGlobalTable(UObject* WorldContextObject, const FString& Global,
+	FLuaValue value, TSubclassOf<ULuaState> State, bool bForceCreateTable)
+{
+	FLuaValue tbl_val = ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global);
+	if(tbl_val.IsNil() && bForceCreateTable)
+	{
+		tbl_val=ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,State);
+	}
+	int32 new_index=ULuaBlueprintFunctionLibrary::LuaTableGetValues(tbl_val).Num()+1;
+	tbl_val=ULuaBlueprintFunctionLibrary::LuaTableSetByIndex(tbl_val,new_index,value);
+	ULuaBlueprintFunctionLibrary::LuaSetGlobal(WorldContextObject,State,Global,tbl_val);
+	return tbl_val;
+}
+
+
+
 // Set Table
 FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Bool(FLuaValue Table, const FString& Key, bool Value)
 {
@@ -2175,4 +2191,34 @@ FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_String(FLuaValue Table, co
 FLuaValue ULuaValuesFunctionLibrary::LuaTableSetField_Object(FLuaValue Table, const FString& Key, UObject* Value)
 {
 	return ULuaBlueprintFunctionLibrary::LuaTableSetField(Table,Key,ULuaBlueprintFunctionLibrary::Conv_ObjectToLuaValue(Value));
+}
+
+// Value Calls
+
+bool ULuaValuesFunctionLibrary::LuaValueCall_Bool(FLuaValue Value, TArray<FLuaValue> Args, bool NilReturn)
+{
+	if (Value.Type==ELuaValueType::Bool) { return  Value.Bool; }
+	FLuaValue out = ULuaBlueprintFunctionLibrary::LuaValueCall(Value,Args);
+	if (out.Type==ELuaValueType::Bool) { return out.Bool; } return NilReturn;
+}
+
+int32 ULuaValuesFunctionLibrary::LuaValueCall_Int(FLuaValue Value, TArray<FLuaValue> Args, int32 NilReturn)
+{
+	if (Value.Type==ELuaValueType::Integer) { return  Value.Integer; }
+	FLuaValue out = ULuaBlueprintFunctionLibrary::LuaValueCall(Value,Args);
+	if (out.Type==ELuaValueType::Integer) { return out.Integer; } return NilReturn;
+}
+
+float ULuaValuesFunctionLibrary::LuaValueCall_Float(FLuaValue Value, TArray<FLuaValue> Args, float NilReturn)
+{
+	if (Value.Type==ELuaValueType::Number) { return  Value.Number; }
+	FLuaValue out = ULuaBlueprintFunctionLibrary::LuaValueCall(Value,Args);
+	if (out.Type==ELuaValueType::Number) { return out.Number; } return NilReturn;
+}
+
+FString ULuaValuesFunctionLibrary::LuaValueCall_String(FLuaValue Value, TArray<FLuaValue> Args, FString NilReturn)
+{
+	if (Value.Type==ELuaValueType::String) { return  Value.String; }
+	FLuaValue out = ULuaBlueprintFunctionLibrary::LuaValueCall(Value,Args);
+	if (out.Type==ELuaValueType::String) { return out.String; } return NilReturn;
 }

@@ -5,6 +5,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Player,"Combat.Faction.Player");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Enemy,"Combat.Faction.Enemy");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Ally,"Combat.Faction.Ally");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Neutral,"Combat.Faction.Neutral");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Destructable,"Combat.Faction.Destructable");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Active,"Combat.Skill.Active");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Passive,"Combat.Skill.Passive");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Damage,"Combat.Effect.Damage");
@@ -162,6 +164,9 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Msg_Start,"Event.Message.Start");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Msg_Next,"Event.Message.Next");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Msg_End,"Event.Message.End");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Start,"Event.Dialogue.Start");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_End,"Event.Dialogue.End");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_Init,"Event.Dialogue.Line.Init");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_PreStart,"Event.Dialogue.Line.PreStart");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_Start,"Event.Dialogue.Line.Start");
@@ -210,3 +215,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Camera_Dialogue,"Camera.Dialogue");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Delay_Load,"Delay.Load");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Delay_Dlg_Line_Setup,"Delay.Dialogue.Line.Setup");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Delay_Block_Advance,"Delay.Block.Advance");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Query_DLG_Line_CanPlay,"Query.Dialogue.Line.CanPlay")
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Query_DLG_CanPlay,"Query.Dialogue.CanPlay");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_Event_Confirm,"Input.Event.Confirm");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_Event_Cancel,"Input.Event.Cancel");

@@ -65,6 +65,58 @@ void USkinComponent::Assemble()
 	Update_Skin();
 }
 
+UMaterialInstanceDynamic* USkinModifier::CreateDynamicMaterial_FromSlot(USkeletalMeshComponent* MeshComp, FName Slot,
+	bool ApplyToComponent)
+{
+	if(MeshComp)
+	{
+		if(MeshComp->GetMaterialSlotNames().Contains(Slot))
+		{
+			int32 mat_index = MeshComp->GetMaterialSlotNames().Find(Slot);
+			UMaterialInterface* current_mat = MeshComp->GetMaterial(mat_index);
+			UMaterialInstanceDynamic* new_mat;
+			if(current_mat->GetClass()->IsChildOf(UMaterialInstanceDynamic::StaticClass()))
+			{
+				new_mat=Cast<UMaterialInstanceDynamic>(current_mat);
+			}
+			else
+			{
+				new_mat = MeshComp->CreateDynamicMaterialInstance(mat_index,MeshComp->GetMaterial(mat_index));
+			}
+			if(ApplyToComponent)
+			{
+				MeshComp->SetMaterial(mat_index,new_mat);
+			}
+			return new_mat;
+		}
+	}
+	return nullptr;
+}
+
+void USkinModifier::ApplyModifier_Implementation(AOmegaSkin* Skin, USkeletalMeshComponent* MeshComponent)
+{
+}
+
+void USkinModifier_DynamicMaterial::ApplyModifierMaterial_Implementation(AOmegaSkin* Skin,
+	USkeletalMeshComponent* MeshComponent, UMaterialInstanceDynamic* Material)
+{
+}
+
+void USkinModifier_DynamicMaterial::ApplyModifier_Implementation(AOmegaSkin* Skin,
+	USkeletalMeshComponent* MeshComponent)
+{
+	TArray<FName> target_slots = SlotsAppliedTo;
+	if(SlotsAppliedTo.IsEmpty())
+	{
+		target_slots=MeshComponent->GetMaterialSlotNames();
+	}
+	for(FName mat_slot : target_slots)
+	{
+		UMaterialInstanceDynamic* new_mat = CreateDynamicMaterial_FromSlot(MeshComponent,mat_slot,true);
+		ApplyModifierMaterial(Skin,MeshComponent,new_mat);
+	}
+}
+
 USkeletalMesh* UOmegaSkinFunctions::MergeMeshes_Omega(TArray<USkeletalMesh*> Meshes, USkeletalMesh* BaseMesh)
 {
 	if(BaseMesh)
@@ -116,6 +168,20 @@ void AOmegaSkin::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 }
 
+void AOmegaSkin::local_applyModifiers(USkeletalMeshComponent* MeshComp)
+{
+	if(MeshComp)
+	{
+		for(auto* TempMod : SkinModifiers)
+		{
+			if(TempMod)
+			{
+				TempMod->ApplyModifier(this, MeshComp);
+			}
+		}
+	}
+}
+
 void AOmegaSkin::BuildSkin()
 {
 	if(Cast<ACharacter>(GetParentActor()))
@@ -144,14 +210,13 @@ void AOmegaSkin::BuildSkin()
 		// Apply mesh
 		if(bMerge && new_mesh)
 		{
-			
 			charRef->GetMesh()->SetSkeletalMeshAsset(new_mesh);
-
 			//Clean Mesh
 			for(auto* tempComp : GetMeshMergeComponents())
 			{
 				tempComp->DestroyComponent();
 			}
+			local_applyModifiers(charRef->GetMesh());
 		}
 		else
 		{
@@ -173,6 +238,7 @@ void AOmegaSkin::BuildSkin()
 					if(tempComp)
 					{
 						tempComp->SetLeaderPoseComponent(charRef->GetMesh(),true);
+						local_applyModifiers(tempComp);
 					}
 				}
 			}
@@ -181,22 +247,22 @@ void AOmegaSkin::BuildSkin()
 				//charRef->GetMesh()->SetHiddenInGame(true);
 				//add blank material here
 			}
-			
 		}
 		
 		//Set Anim Instance
-		if(AnimationClass)
+		if(AnimationClass  && charRef->GetMesh()->GetAnimationMode()==EAnimationMode::Type::AnimationBlueprint)
 		{
 			charRef->GetMesh()->SetAnimInstanceClass(AnimationClass);
 		}
 	}
-	else
+	else //Typicall for preview only
 	{
 		for(auto* tempComp : GetMeshMergeComponents())
 		{
 			if (tempComp && AnimationClass)
 			{
 				tempComp->SetAnimInstanceClass(AnimationClass);
+				local_applyModifiers(tempComp);
 			}
 		}
 	}

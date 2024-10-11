@@ -75,6 +75,11 @@ FSlateBrush UOmegaPlatformFunctions::GetCurrentPlatformKeyIcon(const UObject* Wo
 	return FSlateBrush();
 }
 
+FKey UOmegaPlatformFunctions::GetKeyFromName(const FString& KeyName)
+{
+	return FKey(*KeyName);
+}
+
 UOmegaPlatformAsset* UOmegaPlatformFunctions::GetCurrentPlatformAsset()
 {
 	if(UOmegaPlatformAsset* PlatformAsset = GetMutableDefault<UOmegaPlatformSettings>()->GetPlatformAsset())

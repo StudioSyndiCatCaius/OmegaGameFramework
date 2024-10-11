@@ -49,6 +49,7 @@ public class OmegaGameFramework : ModuleRules
 				"MetasoundEngine",
 				"UMG",
 				"InputCore",
+				"PakFile",
 				"Niagara",
 				"Json",
 				"JsonUtilities",

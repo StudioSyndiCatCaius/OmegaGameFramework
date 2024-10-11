@@ -11,6 +11,7 @@
 #include "Functions/OmegaFunctions_Common.h"
 
 
+
 bool UOmegaDataItem::AreTagsAccepted(const FString& Query, FGameplayTagContainer Tags)
 {
 	if(TagQueries.Contains(Query))

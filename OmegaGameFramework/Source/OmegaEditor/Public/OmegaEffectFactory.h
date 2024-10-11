@@ -3,16 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Factories/BlueprintFactory.h"
-#include "AssetTypeActions_Base.h"
+#include "ThumbnailRendering/DefaultSizedThumbnailRenderer.h"
 #include "OmegaEffectFactory.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class OMEGAEDITOR_API UOmegaEffectFactory : public UFactory
+class UDataItemThumbnailRender: public UDefaultSizedThumbnailRenderer
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
+
+	// UThumbnailRenderer interface
+	virtual void Draw(UObject* Object, int32 X, int32 Y, uint32 Width, uint32 Height, FRenderTarget* Viewport, FCanvas* Canvas, bool bAdditionalViewFamily) override;
+	// End of UThumbnailRenderer interface
 	
 };

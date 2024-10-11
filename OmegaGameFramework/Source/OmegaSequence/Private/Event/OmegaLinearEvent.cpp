@@ -10,6 +10,10 @@ UOmegaLinearEvent::UOmegaLinearEvent(const FObjectInitializer& ObjectInitializer
 	{
 		WorldPrivate = Owner->GetWorld();
 	}
+	if(!EventGuid.IsValid())
+	{
+		EventGuid=FGuid::NewGuid();
+	}
 }
 
 UWorld* UOmegaLinearEvent::GetWorld() const

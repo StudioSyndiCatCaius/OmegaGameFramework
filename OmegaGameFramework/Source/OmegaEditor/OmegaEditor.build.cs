@@ -15,6 +15,7 @@ public class OmegaEditor : ModuleRules
 			"UnrealEd",
 			"InputCore",
 			"OmegaGameFramework", 
+			"RenderCore",
 			"OmegaData",
 			"OmegaDemo",
 			"UMGEditor"

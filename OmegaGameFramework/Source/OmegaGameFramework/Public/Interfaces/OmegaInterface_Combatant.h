@@ -147,7 +147,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="Skills")
 	TMap<UOmegaAttribute*, float> GetSkillAttributeCosts(UCombatantComponent* Combatant,UObject* Context);
 	
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
 	TSubclassOf<UCombatantFilter> GetSkillTargetFilter(); 
 };
 

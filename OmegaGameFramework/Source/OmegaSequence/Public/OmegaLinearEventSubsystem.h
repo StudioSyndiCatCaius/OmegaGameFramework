@@ -9,6 +9,7 @@
 #include "Choice/OmegaLinearChoiceInstance.h"
 #include "OmegaLinearEventSubsystem.generated.h"
 
+
 class UOmegaLinearEventInstance;
 
 USTRUCT(BlueprintType)
@@ -24,13 +25,34 @@ USTRUCT(BlueprintType)
 struct FOmegaLinearEventScriptData
 {
 	GENERATED_BODY()
-
 public:
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Script")
 	FString Event_Type;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Script")
 	FString Event_Data;
+};
+
+USTRUCT(BlueprintType)
+struct FQueuedLinearEventData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="QueuedLinearEvent")
+	int32 priority;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="QueuedLinearEvent")
+	FLinearEventSequence Events;
+};
+
+
+UINTERFACE(MinimalAPI)
+class UQueuedLinearEventInterface : public UInterface { GENERATED_BODY() };
+class OMEGASEQUENCE_API IQueuedLinearEventInterface
+{
+	GENERATED_BODY()
+public:
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "LinearEvents|Queued")
+	TArray<FQueuedLinearEventData> GetQueuedLinearEvents(const FString& Key);
 };
 
 
@@ -50,6 +72,7 @@ class OMEGASEQUENCE_API UOmegaLinearEventSubsystem : public UWorldSubsystem
 	UFUNCTION()
 	void Local_NewEvent(UOmegaLinearEventInstance* Instance, int32 EventIndex, UOmegaLinearEvent* Event);
 public:
+	
 	UPROPERTY()
 	UGameInstance* GameInstanceReference;
 	
@@ -73,9 +96,24 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnLinearEventSequenceEnd OnLinearEventSequenceEnd;
 	
-	///CHOICE
+	// ============================================================================================================
+	// CHOICE
+	// ============================================================================================================
 	UFUNCTION(BlueprintCallable, Category="LinearEvent")
 	AOmegaLinearChoiceInstance* PlayLinearChoice(FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass);
+
+	// ============================================================================================================
+	// Queued Events
+	// ============================================================================================================
+private:
+	UPROPERTY() TArray<UObject*> Queued_event_sources;
+public:
+	
+	UFUNCTION(BlueprintCallable,Category="LinearEvents|Queued")
+	void RegisterQueuedLinearEventSource(UObject* Source, bool bRegistered);
+
+	UFUNCTION(BlueprintCallable,Category="LinearEvents|Queued")
+	FLinearEventSequence GetLinearEventsFromQueueKey(const FString& Key);
 };
 
 UCLASS(Blueprintable, BlueprintType)
@@ -99,6 +137,7 @@ public:
 	
 };
 
+
 UINTERFACE(MinimalAPI)
 class UDataInterface_EventSequence : public UInterface { GENERATED_BODY() };
 
@@ -110,3 +149,4 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Omega|LinearEvents")
 	FLinearEventSequence GetEventSequence(const FString& Flag);
 };
+

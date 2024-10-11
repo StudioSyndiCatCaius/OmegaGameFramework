@@ -43,17 +43,8 @@
 			"LoadingPhase": "PreLoadingScreen",
 			"WhitelistPlatforms": [ "Win64", "Mac", "Linux"]
 		},
-		{
-			"Name": "OmegaGameFramework",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"PlatformAllowList": [
-				"Win64",
-				"Linux",
-				"Mac"
-			]
-		},
-		{"Name": "OmegaEditor", 	"Type": "Editor", 		"LoadingPhase": "PostEngineInit", "PlatformAllowList": ["Win64", "Linux", "Mac"]},
+		{"Name": "OmegaGameFramework", "Type": "Runtime", 	"LoadingPhase": "Default", 			"PlatformAllowList": ["Win64", "Linux", "Mac"]},
+		{"Name": "OmegaEditor", 	"Type": "Editor", 		"LoadingPhase": "PostEngineInit", 	"PlatformAllowList": ["Win64", "Linux", "Mac"]},
 		{"Name": "OmegaFlow", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
 		{"Name": "OmegaData", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
 		{"Name": "Omega5_GameFeatures", "Type": "Runtime", 	"LoadingPhase": "Default" },
@@ -61,9 +52,8 @@
 		{"Name": "OmegaDemo", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
 		{"Name": "OmegaParser", 	"Type": "Runtime", 		"loadingPhase": "Default" },
 		{"Name": "OmegaOnline", 	"Type": "Runtime", 		"loadingPhase": "Default" },
-		
-		{"Name": "Flow", "Type": "Runtime", "LoadingPhase": "PreDefault"},
-		{"Name": "FlowEditor", "Type": "Editor", "LoadingPhase": "Default"}
+		{"Name": "Flow", 			"Type": "Runtime", 		"LoadingPhase": "PreDefault"},
+		{"Name": "FlowEditor", 		"Type": "Editor", 		"LoadingPhase": "Default"}
 	],
 	"Plugins": [
 		{"Name": "EnhancedInput", "Enabled": true},

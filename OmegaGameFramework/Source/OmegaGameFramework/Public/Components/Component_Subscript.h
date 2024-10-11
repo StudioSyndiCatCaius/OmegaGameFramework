@@ -6,6 +6,7 @@
 #include "Interfaces/OmegaInterface_Common.h"
 #include "GameplayTagContainer.h"
 #include "JsonObjectWrapper.h"
+#include "LuaValue.h"
 #include "Components/ActorComponent.h"
 #include "Component_Subscript.generated.h"
 
@@ -15,9 +16,11 @@ class OMEGAGAMEFRAMEWORK_API USubscriptComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
+	UPROPERTY() TMap<FName,FVector> param_data;
+
 public:
 	// Sets default values for this component's properties
-	//USubscriptComponent();
+	USubscriptComponent();
 
 protected:
 	// Called when the game starts
@@ -35,7 +38,15 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category="Default")
 	FJsonObjectWrapper SubscriptData;
 
-	
+	// Params
+	UFUNCTION(BlueprintCallable,Category="Subscript|Params") void SetSubscriptParam_Float(FName Param, float value);
+	UFUNCTION(BlueprintCallable,Category="Subscript|Params") float GetSubscriptParam_Float(FName Param);
+
+	UFUNCTION(BlueprintCallable,Category="Subscript|Params") void SetSubscriptParam_Int32(FName Param, int32 value);
+	UFUNCTION(BlueprintCallable,Category="Subscript|Params") int32 GetSubscriptParam_Int32(FName Param);
+
+	UFUNCTION(BlueprintCallable,Category="Subscript|Params") void SetSubscriptParam_Bool(FName Param, bool value);
+	UFUNCTION(BlueprintCallable,Category="Subscript|Params") bool GetSubscriptParam_Bool(FName Param);
 };
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCategories)
@@ -47,22 +58,13 @@ public:
 
 	USubscript();
 	
-	UPROPERTY()
-	USubscriptComponent* OwnerComp = nullptr;
-	
-	UFUNCTION(BlueprintPure, Category="Subscript")
-	AActor* GetOwningActor() const;
-
-	UFUNCTION(BlueprintPure, Category="Subscript")
-	USubscriptComponent* GetOwningComponent() const;
+	UFUNCTION(BlueprintNativeEvent, Category="Subscript")
+	void OnBeginPlay(USubscriptComponent* OwningComponent) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category="Subscript")
-	void OnBeginPlay() const;
+	void OnEndPlay(USubscriptComponent* OwningComponent) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category="Subscript")
-	void OnEndPlay() const;
-
-	UFUNCTION(BlueprintNativeEvent, Category="Subscript")
-	void Tick(float Delta) const;
+	void Tick(float Delta,USubscriptComponent* OwningComponent) const;
 	
 };

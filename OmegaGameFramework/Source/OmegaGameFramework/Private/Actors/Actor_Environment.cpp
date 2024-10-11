@@ -20,9 +20,17 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 
 
 	SkyLight = CreateOptionalDefaultSubobject<USkyLightComponent>("SkyLight");
-	if(SkyLight) { SkyLight->SetupAttachment(EnvironmentRoot); }
+	if(SkyLight)
+	{
+		SkyLight->SetupAttachment(EnvironmentRoot);
+		SkyLight->SetIntensity(2.0);
+	}
 	DirectionalLight = CreateOptionalDefaultSubobject<UDirectionalLightComponent>("DirectionalLight");
-	if(DirectionalLight) { DirectionalLight->SetupAttachment(EnvironmentRoot); }
+	if(DirectionalLight)
+	{
+		DirectionalLight->SetupAttachment(EnvironmentRoot);
+		DirectionalLight->SetIntensity(5.0);
+	}
 	DirectionalLight_Arrow = CreateOptionalDefaultSubobject<UArrowComponent>("DirectionalLight_Arrow");
 	if(DirectionalLight_Arrow) { DirectionalLight_Arrow->SetupAttachment(DirectionalLight); }
 	Fog= CreateOptionalDefaultSubobject<UExponentialHeightFogComponent>("Fog");

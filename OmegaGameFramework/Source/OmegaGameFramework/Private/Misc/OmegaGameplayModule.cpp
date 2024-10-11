@@ -9,6 +9,8 @@
 #include "UObject/UObjectGlobals.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/GeneralDataObject.h"
+#include "Subsystems/OmegaSubsystem_QueuedQuery.h"
 
 UOmegaGameplayModule::UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -21,11 +23,13 @@ UWorld* UOmegaGameplayModule::GetWorld() const
 
 void UOmegaGameplayModule::Native_Initialize()
 {
-	//Bind OnGlobalEvent
-	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnGlobalEvent);
-	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnTaggedGlobalEvent);
-	//Bind OnLevelOpened
-	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnNewLevel.AddDynamic(this, &UOmegaGameplayModule::Native_OnLevelOpened);
+	if((REF_OwningManager = GetGameInstance()->GetSubsystem<UOmegaGameManager>()))
+	{
+		REF_OwningManager->OnGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnGlobalEvent);
+		REF_OwningManager->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnTaggedGlobalEvent);
+		REF_OwningManager->OnNewLevel.AddDynamic(this, &UOmegaGameplayModule::Native_OnLevelOpened);
+	}
+	
 	Initialized();
 }
 
@@ -37,6 +41,10 @@ void UOmegaGameplayModule::Native_OnLevelOpened(FString LevelName, AOmegaGameMod
 	{
 		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSystem, this, "None");
 	}
+	if(UOmegaSubsystem_QueuedQuery* REF_QuerySubsystem = GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()) 
+	{
+		REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); 
+	} 
 	OnLevelOpened(LevelName, GameMode);
 }
 

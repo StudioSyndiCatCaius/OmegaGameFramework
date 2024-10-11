@@ -10,92 +10,149 @@
 // Script
 //##############################################################################################
 
-UWorld* UOmegaQuestManagerScript::GetWorld() const
+
+UOmegaQuest* UOmegaQuestTypeScript::GetQuestAsset() const
 {
-	if(WorldPrivate) { return  WorldPrivate; }
-	if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
+	if(UOmegaQuest* OuterQuest =Cast<UOmegaQuest>(GetOuter()))
+	{
+		return OuterQuest;
+	}
+	return nullptr;
 }
 
-UGameInstance* UOmegaQuestManagerScript::GetGameInstance() const
+void UOmegaQuestTypeScript::OnLoad_Implementation(FJsonObjectWrapper Data) const
 {
-	if(WorldPrivate) { return WorldPrivate->GetGameInstance();}
-	return Cast<UGameInstance>(GetOuter());
+	
 }
 
-UOmegaQuestManagerScript::UOmegaQuestManagerScript(const FObjectInitializer& ObjectInitializer)
+FJsonObjectWrapper UOmegaQuestTypeScript::OnSave_Implementation(FJsonObjectWrapper Data) const
 {
-	if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
+	return Data;
 }
 
+bool UOmegaQuestTypeScript::CanQuestStart_Implementation() const
+{
+	return true;
+}
 
+void UOmegaQuestTypeScript::SetComplete_Implementation(bool bComplete) const
+{
+	if(GetQuestComponent())
+	{
+		GetQuestComponent()->JsonSaveData.JsonObject->SetBoolField("complete",bComplete);
+	}
+}
+
+void UOmegaQuestTypeScript::SetActive_Implementation(bool bActive) const
+{
+	if(GetQuestComponent())
+	{
+		GetQuestComponent()->JsonSaveData.JsonObject->SetBoolField("active",bActive);
+	}
+}
+
+bool UOmegaQuestTypeScript::IsComplete_Implementation() const
+{
+	if(GetQuestComponent())
+	{
+		return GetQuestComponent()->JsonSaveData.JsonObject->GetBoolField("complete");
+	}
+	return false;
+}
+
+bool UOmegaQuestTypeScript::IsActive_Implementation() const
+{
+	if(GetQuestComponent())
+	{
+		return GetQuestComponent()->JsonSaveData.JsonObject->GetBoolField("active");
+	}
+	return false;
+}
+
+void UOmegaQuestComponent::TryLoadFromJsonSave()
+{
+	if(QuestAsset && QuestAsset->QuestScript)
+	{
+		JsonSaveData=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData->DataAsset_Json.FindOrAdd(QuestAsset);
+		QuestAsset->QuestScript->OnLoad(JsonSaveData);
+	}
+}
+
+void UOmegaQuestComponent::TrySaveToJsonSave()
+{
+	if(QuestAsset && QuestAsset->QuestScript)
+	{
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()
+			->ActiveSaveData->DataAsset_Json.Add(QuestAsset,QuestAsset->QuestScript->OnSave(JsonSaveData));
+	}
+}
 
 //##############################################################################################
 // Component
 //##############################################################################################
 void UOmegaQuestComponent::BeginPlay()
 {
-	if(!QuestManagerScript)
+	if(QuestAsset)
 	{
-		QuestManagerScript=NewObject<UOmegaQuestManagerScript>(this,UOmegaQuestManagerScript::StaticClass());
+		SetQuestAsset(QuestAsset);
 	}
-	QuestManagerScript->WorldPrivate=GetWorld();
-	QuestManagerScript->OwnerComp=this;
-
-	SaveSubsystem=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
-	QuestManagerScript->SaveSubsystem=SaveSubsystem;
-
+	if(bAutoLoadFromSaveJson)
+	{
+		TryLoadFromJsonSave();
+	}
 	
 	Super::BeginPlay();
 }
 
-bool UOmegaQuestComponent::StartQuest(UObject* Context)
+
+void UOmegaQuestComponent::SetQuestAsset(UOmegaQuest* Quest)
 {
-	SetQuestContext(Context);
-	if(!IsQuestActive())
+	if(Quest && Quest->QuestScript && Quest->QuestScript->CanQuestStart())
 	{
-		return QuestManagerScript->Try_StartQuest(Context);
+		Quest->QuestScript->WorldPrivate=GetWorld();
+		Quest->QuestScript->REF_Comp=this;
+		QuestAsset=Quest;
+	}
+}
+
+bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
+ {
+	if(!IsQuestActive() && !IsQuestComplete())
+	{
+		if(Quest || !QuestAsset)
+		{
+			SetQuestAsset(Quest);
+		}
+		if(QuestAsset)
+		{
+			QuestAsset->QuestScript->OnQuestStart();
+			return  true;
+		}
 	}
 	return false;
 }
 
 bool UOmegaQuestComponent::EndQuest(bool bComplete)
 {
-	if(IsQuestActive())
-	{
-		return QuestManagerScript->Try_EndQuest(bComplete);
-	}
 	return false;
 }
 
 bool UOmegaQuestComponent::IsQuestActive()
 {
-	return QuestManagerScript->IsQuest_Active();
+	if(QuestAsset && QuestAsset->QuestScript)
+	{
+		return QuestAsset->QuestScript->IsActive();
+	}
+	return false;
 }
 
 bool UOmegaQuestComponent::IsQuestComplete()
 {
-	return QuestManagerScript->IsQuest_Finished();
-}
-
-UObject* UOmegaQuestComponent::GetState()
-{
-	return QuestManagerScript->Try_GetStateObject();
-}
-
-FString UOmegaQuestComponent::GetState_ID()
-{
-	return QuestManagerScript->Try_GetStateID();
-}
-
-void UOmegaQuestComponent::AttemptLoadState(UObject* NewQuestContext)
-{
-	if(NewQuestContext)
+	if(QuestAsset && QuestAsset->QuestScript)
 	{
-		SetQuestContext(NewQuestContext);
+		return QuestAsset->QuestScript->IsComplete();
 	}
-	//Try Load State
-	if(IsQuestActive())
-	{
-		QuestManagerScript->QuestLoaded(GetState_ID());
-	}
+	return false;
 }
+
+

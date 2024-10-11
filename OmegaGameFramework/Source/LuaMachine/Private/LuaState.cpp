@@ -38,8 +38,11 @@ ULuaState::ULuaState()
 
 ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 {
-	CurrentWorld = InWorld;
-
+	if(InWorld)
+	{
+		CurrentWorld = InWorld;
+	}
+	
 	if (L != nullptr)
 	{
 		return this;
@@ -1569,6 +1572,7 @@ int ULuaState::TableFunction_package_preload(lua_State * L)
 		return luaL_error(L, "%s", lua_tostring(L, -1));
 
 		// now search in additional paths
+		/*
 		for (FString AdditionalPath : LuaState->AppendProjectContentDirSubDir)
 		{
 			if (LuaState->RunFile(AdditionalPath / Key + ".lua", true, 1))
@@ -1579,6 +1583,7 @@ int ULuaState::TableFunction_package_preload(lua_State * L)
 
 		}
 		return luaL_error(L, "unable to find package %s", TCHAR_TO_ANSI(*Key));
+		*/
 	}
 
 	ULuaCode* LuaCode = *LuaCodePtr;

@@ -91,6 +91,45 @@ AOmegaLinearChoiceInstance* UOmegaLinearEventSubsystem::PlayLinearChoice(FOmegaL
 	return LocalInst;
 }
 
+void UOmegaLinearEventSubsystem::RegisterQueuedLinearEventSource(UObject* Source, bool bRegistered)
+{
+	if(Source && Source->GetClass()->ImplementsInterface(UQueuedLinearEventInterface::StaticClass()))
+	{
+		if(bRegistered)
+		{
+			Queued_event_sources.AddUnique(Source);
+		}
+		else if(Queued_event_sources.Contains(Source))
+		{
+			Queued_event_sources.Remove(Source);
+		}
+	}
+}
+
+FLinearEventSequence UOmegaLinearEventSubsystem::GetLinearEventsFromQueueKey(const FString& Key)
+{
+	FLinearEventSequence out;
+	TArray<FQueuedLinearEventData> all_guidslot_data;
+
+	for (auto* TempSource : Queued_event_sources)
+	{
+		all_guidslot_data.Append(IQueuedLinearEventInterface::Execute_GetQueuedLinearEvents(TempSource,Key));
+	}
+
+	// Sort 'all_guidslot_data' by the 'priority' field
+	Algo::Sort(all_guidslot_data, [](const FQueuedLinearEventData& A, const FQueuedLinearEventData& B)
+	{
+		return A.priority < B.priority; // Sort in ascending order of priority
+	});
+
+	for (FQueuedLinearEventData event_data : all_guidslot_data)
+	{
+		out.Events.Append(event_data.Events.Events);
+	}
+
+	return out;
+}
+
 FLinearEventSequence UOmegaLinearEventScriptReader::ConvertToLinearEventSequence(const FString& Script, TSubclassOf<UOmegaDataParserReader> ReaderClass, bool ScriptIsPath)
 {
 	FLinearEventSequence OutEventList;

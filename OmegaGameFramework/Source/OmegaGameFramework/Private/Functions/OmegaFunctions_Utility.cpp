@@ -5,7 +5,8 @@
 #include "ShaderCompiler.h"
 #include "Internationalization/Internationalization.h"
 #include "CoreGlobals.h"
-
+#include "GameFramework/GameUserSettings.h"
+#include "HAL/IConsoleManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -59,6 +60,7 @@ UClass* UOmegaAssetFunctions::GetBlueprintClassFromPath(const FString Path)
 	LocalPath.SetSubPathString(Path);
 	return LocalPath.ResolveClass();
 }
+
 
 FWidgetTransform UOmegaMathFunctions::LerpWidgetTransform(FWidgetTransform a, FWidgetTransform b, float alpha)
 {
@@ -118,4 +120,83 @@ TArray<FString> UOmegaUtilityFunctions::GetBlueprintCallableAndPureFunctions(UOb
 	}
 
 	return FunctionNames;
+}
+
+void UOmegaUtilityFunctions::ApplyGraphicsSettingsFromUserSettings()
+{
+	
+    // Get the current game user settings object
+    UGameUserSettings* UserSettings = GEngine->GetGameUserSettings();
+    if (!UserSettings)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("UserSettings is null!"));
+        return;
+    }
+
+    // Get each graphics setting value from GameUserSettings
+    int32 ResolutionQuality = UserSettings->GetResolutionScaleNormalized() * 100; // Convert from 0-1 to 0-100
+    int32 ViewDistanceQuality = UserSettings->GetViewDistanceQuality();
+    int32 AntiAliasingQuality = UserSettings->GetAntiAliasingQuality();
+    int32 ShadowQuality = UserSettings->GetShadowQuality();
+    int32 PostProcessQuality = UserSettings->GetPostProcessingQuality();
+    int32 TextureQuality = UserSettings->GetTextureQuality();
+    int32 EffectsQuality = UserSettings->GetVisualEffectQuality();
+    int32 FoliageQuality = UserSettings->GetFoliageQuality();
+
+	// Apply these settings using SetConsoleVariableInt
+	SetConsoleVariableInt(TEXT("sg.ResolutionQuality"), ResolutionQuality);
+	SetConsoleVariableInt(TEXT("sg.ViewDistanceQuality"), ViewDistanceQuality);
+	SetConsoleVariableInt(TEXT("sg.AntiAliasingQuality"), AntiAliasingQuality);
+	SetConsoleVariableInt(TEXT("sg.ShadowQuality"), ShadowQuality);
+	SetConsoleVariableInt(TEXT("sg.PostProcessQuality"), PostProcessQuality);
+	SetConsoleVariableInt(TEXT("sg.TextureQuality"), TextureQuality);
+	SetConsoleVariableInt(TEXT("sg.EffectsQuality"), EffectsQuality);
+	SetConsoleVariableInt(TEXT("sg.FoliageQuality"), FoliageQuality);
+
+    // Log the settings for debugging purposes
+    UE_LOG(LogTemp, Log, TEXT("Graphics settings applied from GameUserSettings: Res:%d ViewDist:%d AA:%d Shadow:%d PostProcess:%d Texture:%d Effects:%d Foliage:%d"),
+           ResolutionQuality, ViewDistanceQuality, AntiAliasingQuality, ShadowQuality, PostProcessQuality, TextureQuality, EffectsQuality, FoliageQuality);
+
+}
+
+void UOmegaUtilityFunctions::SetConsoleVariableBool(FString VariableName, bool bValue)
+{
+	IConsoleVariable* ConsoleVariable = IConsoleManager::Get().FindConsoleVariable(*VariableName);
+	if (ConsoleVariable)
+	{
+		ConsoleVariable->Set(bValue);
+		UE_LOG(LogTemp, Log, TEXT("Set %s to %s"), *VariableName, bValue ? TEXT("true") : TEXT("false"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Console variable %s not found!"), *VariableName);
+	}
+}
+
+void UOmegaUtilityFunctions::SetConsoleVariableFloat(FString VariableName, float Value)
+{
+	IConsoleVariable* ConsoleVariable = IConsoleManager::Get().FindConsoleVariable(*VariableName);
+	if (ConsoleVariable)
+	{
+		ConsoleVariable->Set(Value);
+		UE_LOG(LogTemp, Log, TEXT("Set %s to %f"), *VariableName, Value);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Console variable %s not found!"), *VariableName);
+	}
+}
+
+void UOmegaUtilityFunctions::SetConsoleVariableInt(FString VariableName, int32 Value)
+{
+	IConsoleVariable* ConsoleVariable = IConsoleManager::Get().FindConsoleVariable(*VariableName);
+	if (ConsoleVariable)
+	{
+		ConsoleVariable->Set(Value);
+		UE_LOG(LogTemp, Log, TEXT("Set %s to %d"), *VariableName, Value);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Console variable %s not found!"), *VariableName);
+	}
 }

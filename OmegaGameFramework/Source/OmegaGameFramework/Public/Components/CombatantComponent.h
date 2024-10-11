@@ -357,7 +357,7 @@ public:
 	// -- ABILITIES -- 
 	//----------------------------------------------------------------------------------------------------------------//
 
-	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	UPROPERTY(EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<AOmegaAbility>>GrantedAbilities;
 
 	UPROPERTY()

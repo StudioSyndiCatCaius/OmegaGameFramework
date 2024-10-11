@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Misc/GeneralDataObject.h"
 #include "UObject/Object.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
@@ -18,6 +19,83 @@ enum EOmegaQuestStatus
 	
 };
 
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UOmegaQuestTypeScript : public UObject
+{
+	GENERATED_BODY()
+
+	virtual UWorld* GetWorld() const override
+	{
+		if(WorldPrivate) { return  WorldPrivate; }
+		if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
+	};
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const
+	{
+		if(WorldPrivate) { return WorldPrivate->GetGameInstance();}
+		return Cast<UGameInstance>(GetOuter());
+	};
+	UOmegaQuestTypeScript(const FObjectInitializer& ObjectInitializer)
+	{
+		if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
+	};
+	
+	
+	
+public:
+
+	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
+	
+	UPROPERTY() UOmegaQuestComponent* REF_Comp=nullptr;
+	
+	UFUNCTION(BlueprintCallable,Category="Quest")
+	UOmegaQuestComponent* GetQuestComponent() const { return REF_Comp; };
+	UFUNCTION(BlueprintCallable,Category="Quest")
+	UOmegaQuest* GetQuestAsset() const;
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
+	void OnQuestStart() const;
+	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
+	void OnQuestEnd() const;
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
+	FJsonObjectWrapper OnSave(FJsonObjectWrapper Data) const;
+	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
+	void OnLoad(FJsonObjectWrapper Data) const;
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
+	bool CanQuestStart() const;
+
+	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
+	bool IsActive() const;
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Overrides")
+	void SetActive(bool bActive) const;
+	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
+	bool IsComplete() const;
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Overrides")
+	void SetComplete(bool bComplete) const;
+	
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaQuest : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",DisplayName="Name") FText DisplayName;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Description") FText DisplayDescription;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FString CustomLabel;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTag CategoryTag;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTagContainer GameplayTags;
+	OMACRO_ADDPARAMS_GENERAL()
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Quest")
+	UOmegaQuestTypeScript* QuestScript;
+	
+};
+
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaQuestSubsystem : public UGameInstanceSubsystem
@@ -28,53 +106,6 @@ public:
 
 };
 
-UCLASS(EditInlineNew,Blueprintable,BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaQuestManagerScript : public UObject
-{
-	GENERATED_BODY()
-
-	virtual UWorld* GetWorld() const override;
-	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
-	UOmegaQuestManagerScript(const FObjectInitializer& ObjectInitializer);
-
-public:
-	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
-
-	UPROPERTY()
-	UOmegaQuestComponent* OwnerComp=nullptr;
-	UPROPERTY()
-	UOmegaSaveSubsystem* SaveSubsystem;
-
-	UFUNCTION(BlueprintPure,Category="Quest")
-	UOmegaQuestComponent* GetOwningComponent() const {return OwnerComp; }
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	bool QuestLoaded(const FString& state_ID);
-	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="Quest")
-	FString GetQuestID() const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	bool Try_StartQuest(UObject* Context);
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	bool Try_EndQuest(bool bComplete);
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	bool IsQuest_Active();
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	bool IsQuest_Finished();
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	UObject* Try_GetStateObject();
-		
-	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	FString Try_GetStateID();
-
-private:
-	
-};
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UOmegaQuestComponent : public UActorComponent
@@ -85,29 +116,30 @@ class OMEGAGAMEFRAMEWORK_API UOmegaQuestComponent : public UActorComponent
 	UOmegaSaveSubsystem* SaveSubsystem;
 
 	UPROPERTY()
-	UObject* QuestContext=nullptr;
+	UObject* QuestContextObject=nullptr;
 	
 public:
-
+	UPROPERTY(EditAnywhere,Category="Quest")
+	bool bAutoLoadFromSaveJson;
+	UFUNCTION(BlueprintCallable,Category="Quest")
+	void TryLoadFromJsonSave();
+	UFUNCTION(BlueprintCallable,Category="Quest")
+	void TrySaveToJsonSave();
+	
 	virtual void BeginPlay() override;
-
+	UPROPERTY(EditAnywhere,Category="Quest")
+	UOmegaQuest* QuestAsset=nullptr;
+	UPROPERTY(BlueprintReadWrite,Category="Quest")
+	FJsonObjectWrapper JsonSaveData;
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|Quest")
-	void SetQuestContext(UObject* Context)
-	{
-		if(Context)
-		{
-			QuestContext=Context;
-		}
-	}
+	void SetQuestAsset(UOmegaQuest* Quest);
 
 	UFUNCTION(BlueprintPure,Category="Omega|Quest")
-	UObject* GetQuestContext() const {return QuestContext;}
+	UOmegaQuest* GetQuestAsset() const {return QuestAsset;}
 	
-	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite,Category="Quest")
-	UOmegaQuestManagerScript* QuestManagerScript;
-	
-	UFUNCTION(BlueprintCallable,Category="Quest")
-	bool StartQuest(UObject* Context);
+	UFUNCTION(BlueprintCallable,Category="Quest",meta=(AdvancedDisplay="Quest"))
+	bool StartQuest(UOmegaQuest* Quest);
 
 	UFUNCTION(BlueprintCallable,Category="Quest")
 	bool EndQuest(bool bComplete);
@@ -117,18 +149,6 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Quest")
 	bool IsQuestComplete();
-
-	UFUNCTION(BlueprintPure,Category="Quest")
-	UObject* GetState();
-	/*
-	UFUNCTION(BlueprintPure,Category="Quest")
-	TArray<UObject*> GetState_Objectives();
-	*/
-	UFUNCTION(BlueprintPure,Category="Quest")
-	FString GetState_ID();
-
-	UFUNCTION(BlueprintCallable,Category="Quest",meta=(AdvancedDisplay="NewQuestContext"))
-	void AttemptLoadState(UObject* NewQuestContext);
 
 };
 

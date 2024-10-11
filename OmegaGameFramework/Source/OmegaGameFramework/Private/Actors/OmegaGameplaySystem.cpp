@@ -10,6 +10,7 @@
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/GeneralDataObject.h"
 
 // Sets default values
 AOmegaGameplaySystem::AOmegaGameplaySystem()
@@ -38,6 +39,8 @@ void AOmegaGameplaySystem::BeginPlay()
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnTaggedGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueDelay>()->SetQueuedDelaySourceRegistered(this,true);
+	OMACRO_INSTALL_QUEUEDQUERY()
+
 	
 	for (AActor* TempActor : FoundPlayers)
 	{
@@ -89,7 +92,7 @@ void AOmegaGameplaySystem::BeginPlay()
 
 	//SetupSave
 	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSaveSourceRegistered(this,true);
-	
+	local_globalEventTags(GlobalEvents_OnActivate);
 	Super::BeginPlay();
 }
 
@@ -157,7 +160,7 @@ void AOmegaGameplaySystem::CompleteShutdown()
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
 
 		GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSaveSourceRegistered(this,false);
-		
+		GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()->SetQueuedQuerySourceRegistered(this,false);
 		// Remove Player Widgets
 		for (class UHUDLayer* TempWidget : ActivePlayerWidgets)
 		{
@@ -194,7 +197,7 @@ void AOmegaGameplaySystem::CompleteShutdown()
 		
 		//FLAGS
 		Local_SetFlagsActive(false);
-
+		
 		if(local_InRestart)
 		{
 			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(GetClass(), ContextObject, ActivationFlag);
@@ -210,7 +213,7 @@ void AOmegaGameplaySystem::CompleteShutdown()
 				}
 			}
 		}
-		
+		local_globalEventTags(GlobalEvents_OnShutdown);
 		K2_DestroyActor();
 	}
 }
@@ -226,6 +229,16 @@ void AOmegaGameplaySystem::Restart(UObject* Context, FString Flag)
 	Shutdown(Context,Flag);
 }
 
+
+void AOmegaGameplaySystem::local_globalEventTags(FGameplayTagContainer tags)
+{
+	{
+		for(FGameplayTag tempTag : tags.GetGameplayTagArray())
+		{
+			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(tempTag,this);
+		}
+	}
+}
 
 void AOmegaGameplaySystem::Local_GrantAbilities(UCombatantComponent* Combatant)
 {

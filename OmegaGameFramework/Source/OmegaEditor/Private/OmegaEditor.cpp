@@ -13,7 +13,9 @@
 
 #include "AssetTypeActions_Base.h"
 #include "IAssetTools.h"
+#include "OmegaEffectFactory.h"
 #include "Actors/Actor_Environment.h"
+#include "Actor_EventVolume.h"
 #include "Actors/OmegaAbility.h"
 #include "Actors/OmegaGameplayEffect.h"
 #include "Actors/OmegaGameplaySystem.h"
@@ -38,8 +40,12 @@ if (UClass* AssetName##Class = A##AssetName::StaticClass()) { \
 		))); \
 	} \
 
+
+
+
 void FOmegaEditor::StartupModule()
 {
+	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaDataItem::StaticClass(), UDataItemThumbnailRender::StaticClass());
 	//------REGISTER DEFAULT EVENTS-----////
 
 	RegisterDefaultEvent(AOmegaGameplaySystem, SystemActivated);
@@ -75,6 +81,7 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaLevelData,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaZoneData,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(CombatantGambitAsset,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OmegaQuest,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaAnimationEmote,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaStoryStateAsset,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaDataItems,OmegaAssetCategory);
@@ -155,6 +162,7 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("CombatantGambitAction"));
 	ThumnbailNames.Add(TEXT("OmegaInputMode"));
 	ThumnbailNames.Add(TEXT("OmegaBGM"));
+	ThumnbailNames.Add(TEXT("OmegaQuest"));
 	ThumnbailNames.Add(TEXT("OmegaDamageType"));
 	ThumnbailNames.Add(TEXT("DynamicCameraState"));
 	ThumnbailNames.Add(TEXT("OmegaActorEnvironment"));
@@ -250,14 +258,19 @@ void FOmegaEditor::StartupModule()
 		))); }
 	
 	OMACRO_ADDPLACEABLE(OmegaActorEnvironment,"Environment")
+	OMACRO_ADDPLACEABLE(Omega_EventVolume,"Event Volume")
 	OMACRO_ADDPLACEABLE(OmegaZonePoint,"Zone: Spawn Point")
 	OMACRO_ADDPLACEABLE(OmegaZoneTransit,"Zone: Transit Point")
+	
 }
 
 void FOmegaEditor::ShutdownModule()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(StyleSet->GetStyleSetName());
-
+	if (UObjectInitialized())
+	{
+		UThumbnailManager::Get().UnregisterCustomRenderer(UOmegaDataItem::StaticClass());
+	}
 }
 
 

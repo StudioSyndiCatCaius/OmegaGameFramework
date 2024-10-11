@@ -5,6 +5,11 @@
 #include "Engine/World.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "IPlatformFilePak.h"
+#include "HAL/PlatformFilemanager.h"
+#include "Misc/Paths.h"
+#include "Misc/PackageName.h"
+
 
 TArray<UObject*> UOmegaSubsystem_AssetHandler::GetSortedAsset_All()
 {
@@ -29,7 +34,7 @@ UObject* UOmegaSubsystem_AssetHandler::GetSortedAsset_FromLabel(const FString& N
 
 void UOmegaSubsystem_AssetHandler::Register_SortedAsset(UObject* Asset, FString Name)
 {
-	if(Asset && Asset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	if(Asset)
 	{
 		SortedAssets.Add(Name,Asset);
 	}

@@ -9,6 +9,28 @@
 
 #include "GeneralDataObject.generated.h"
 
+
+#define OMACRO_ADDPARAMS_GENERAL() \
+virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override \
+{ Name=DisplayName; Description=DisplayDescription; }; \
+virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override \
+{ Brush=Icon; }; \
+virtual void GetGeneralAssetLabel_Implementation(FString& Label) override { if(!CustomLabel.IsEmpty()) {Label=CustomLabel; return; } Label=GetName(); return; }; \
+virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; }; \
+virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return  GameplayTags; }; \
+
+#define OMACRO_INSTALL_QUEUEDQUERY() \
+if(UOmegaSubsystem_QueuedQuery* REF_QuerySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()) \
+{ \
+	REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); \
+} \
+
+
+
+
+
+
+
 USTRUCT(BlueprintType)
 struct FCustomAssetData
 {

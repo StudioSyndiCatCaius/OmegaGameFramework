@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "GameplayTagContainer.h"
 #include "OmegaGameMode.h"
+#include "Subsystems/OmegaSubsystem_QueuedQuery.h"
 
 #include "OmegaGameplayModule.generated.h"
 
@@ -17,16 +18,18 @@ class UOmegaSaveGame;
  * 
  */
 UCLASS(BlueprintType, Blueprintable, EditInlineNew)
-class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject
+class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject, public IInterface_QueuedQuery
 {
 	GENERATED_BODY()
 
-private:
+
 	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
+	UPROPERTY() UOmegaGameManager* REF_OwningManager;
 
 	
 protected:
-
+	virtual bool GetQueuedQueryValue_Implementation(FGameplayTag Tag, UObject* Context=nullptr) { return true; };
+	
 	UFUNCTION()
 	void Native_OnLevelOpened(FString LevelName, AOmegaGameMode* GameMode);
 	

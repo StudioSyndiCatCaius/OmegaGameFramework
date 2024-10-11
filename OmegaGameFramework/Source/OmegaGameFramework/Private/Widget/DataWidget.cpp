@@ -19,6 +19,11 @@
 #include "Functions/OmegaFunctions_Utility.h"
 #include "..\..\Public\OmegaSettings_Slate.h"
 
+bool UDataWidgetMetadata::CanAddObjectToList_Implementation(UObject* SourceObject) const
+{
+	return true;
+}
+
 void UDataWidget::NativePreConstruct()
 {
 	Super::NativePreConstruct();
@@ -337,24 +342,30 @@ void UDataWidget::Select()
 		}
 		OnSelected.Broadcast(this);
 		
-		if(SelectSound)
+		if(GetPlayerSubsystem())
 		{
-			GetPlayerSubsystem()->PlayUiSound(SelectSound);
-		}
-		else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-		{
-			GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Select);
+			if(SelectSound)
+			{
+				GetPlayerSubsystem()->PlayUiSound(SelectSound);
+			}
+			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+			{
+				GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Select);
+			}
 		}
 	}
 	else
 	{
-		if(ErrorSound)
+		if(GetPlayerSubsystem())
 		{
-			GetPlayerSubsystem()->PlayUiSound(ErrorSound);
-		}
-		else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-		{
-			GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Error);
+			if(ErrorSound)
+			{
+				GetPlayerSubsystem()->PlayUiSound(ErrorSound);
+			}
+			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+			{
+				GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Error);
+			}
 		}
 	}
 }
@@ -363,6 +374,7 @@ void UDataWidget::Hover()
 {
 	if(!GetPlayerSubsystem())
 	{
+		OnHoverStateChange(true);
 		return;
 	}
 	//Cancel if already hovered
@@ -399,12 +411,14 @@ void UDataWidget::Hover()
 	OnHovered.Broadcast(this, true);
 	GetPlayerSubsystem()->HoveredWidget=this;
 	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->HoveredWidget = this;
+	OnHoverStateChange(true);
 }
 
 void UDataWidget::Unhover()
 {
 	if(!IsDataWidgetHovered())
 	{
+		OnHoverStateChange(false);
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Success Unhover"));
@@ -413,6 +427,7 @@ void UDataWidget::Unhover()
 	{
 		PlayAnimationReverse(GetHoverAnimation(), 1.0f, false);
 	}
+	OnHoverStateChange(false);
 	//bIsHovered = false;
 }
 
@@ -437,6 +452,7 @@ void UDataWidget::SetHighlighted(bool Highlighted)
 			}
 		}
 		OnHighlight.Broadcast(this,Highlighted);
+		OnHoverStateChange(Highlighted);
 	}
 }
 

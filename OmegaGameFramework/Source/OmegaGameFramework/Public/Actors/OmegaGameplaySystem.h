@@ -11,6 +11,7 @@
 #include "OmegaAbility.h"
 #include "Components/CombatantComponent.h"
 #include "Subsystems/OmegaSubsystem_QueueDelay.h"
+#include "Subsystems/OmegaSubsystem_QueuedQuery.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 
 #include "OmegaGameplaySystem.generated.h"
@@ -41,7 +42,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShutdown, UObject*, Context, FSt
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNotify, UObject*, Context, FString, Flag);
 
 UCLASS(config = Game, notplaceable, BlueprintType, Blueprintable, Transient, hideCategories = (Info, Rendering, MovementReplication, Collision, HLOD, WorldPartition), meta = (ShortTooltip = ""))
-class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AActor, public IOmegaSaveInterface, public IInterface_QueueDelay
+class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AActor, public IOmegaSaveInterface, public IInterface_QueueDelay, public IInterface_QueuedQuery
 {
 	GENERATED_BODY()
 	
@@ -53,6 +54,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
+	virtual bool GetQueuedQueryValue_Implementation(FGameplayTag Tag, UObject* Context=nullptr) { return true; };
 public:	
 
 	UPROPERTY()
@@ -130,13 +132,22 @@ public:
 	////////////////////////////////////
 	////////////--Tags--/////////////
 	////////////////////////////////////
-	UPROPERTY(EditDefaultsOnly, Category="GameplayTags")
-	FGameplayTagContainer SystemTags;
-	//With Shutdown and block any systems from activating that use these tags.
-	UPROPERTY(EditDefaultsOnly, Category="GameplayTags")
-	FGameplayTagContainer BlockSystemTags;
-	UPROPERTY(EditDefaultsOnly, Category="GameplayTags")
-	FGameplayTagContainer BlockedOnSystemTags;
+
+	//Tags for this system
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags") FGameplayTagContainer SystemTags;
+	//Will Shutdown and block any systems from activating that use these tags.
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags") FGameplayTagContainer BlockSystemTags;
+	//Will not activate while any systems with these tags are active.
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags") FGameplayTagContainer BlockedOnSystemTags;
+	
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags") FGameplayTagContainer GlobalEvents_OnActivate;
+	UPROPERTY(EditDefaultsOnly, Category="GameplayTags") FGameplayTagContainer GlobalEvents_OnShutdown;
+
+private:
+	void local_globalEventTags(FGameplayTagContainer tags);
+	
+public:
+	
 	////////////////////////////////////
 	////////////--PLAYER--/////////////
 	////////////////////////////////////

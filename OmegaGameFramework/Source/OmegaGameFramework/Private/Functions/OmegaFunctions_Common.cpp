@@ -356,6 +356,7 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 	{
 		if(override_file->GetClass()->IsChildOf(Class) || !Class)
 		{
+			Outcome=Success;
 			return override_file;
 		}
 	}
@@ -403,7 +404,23 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath
 UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, const FString& Field,
 	TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
-	FString in_path = Lua.GetField(Field).String;
+	FLuaValue field_data=Lua.GetField(Field);
+	if(Field.IsEmpty())
+	{
+		field_data=Lua;
+	}
+
+	if(UObject* lua_found_obj = ULuaBlueprintFunctionLibrary::Conv_LuaValueToObject(field_data))
+	{
+		if(lua_found_obj->GetClass()->IsChildOf(Class) || !Class)
+		{
+			Outcome=Success;
+			return lua_found_obj;
+		}
+	}
+	
+	FString in_path = field_data.String;
+
 	
 	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
 	{
@@ -424,7 +441,22 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, cons
 UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromLuaField(FLuaValue Lua, const FString& Field,
 	TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
-	FString in_path = Lua.GetField(Field).String;
+	FLuaValue field_data=Lua.GetField(Field);
+	if(Field.IsEmpty())
+	{
+		field_data=Lua;
+	}
+
+	if(UClass* lua_found_obj = ULuaBlueprintFunctionLibrary::Conv_LuaValueToClass(field_data))
+	{
+		if(lua_found_obj->IsChildOf(Class) || !Class)
+		{
+			Outcome=Success;
+			return lua_found_obj;
+		}
+	}
+	
+	FString in_path = field_data.String;
 	
 	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
 	{
@@ -616,6 +648,20 @@ TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromComponents(TArray<UAc
 		}
 	}
 	return OutActors;
+}
+
+TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromChildActorComponents(
+	TArray<UChildActorComponent*> Components, TSubclassOf<AActor> ActorClass)
+{
+	TArray<AActor*> out;
+	for (auto* TempComp : Components)
+	{
+		if(TempComp && TempComp->GetChildActor() && (!ActorClass || TempComp->GetChildActorClass()->IsChildOf(ActorClass)))
+		{
+			out.Add(TempComp->GetChildActor());
+		}
+	}
+	return out;
 }
 
 TArray<UActorComponent*> UOmegaGameFrameworkBPLibrary::GetComponentsFromActors(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass)
@@ -860,6 +906,20 @@ AActor* UOmegaGameFrameworkBPLibrary::TryGetChildActorAsClass(UChildActorCompone
 	return nullptr;
 }
 
+TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromHitResults(TArray<FHitResult> Hits,
+	TSubclassOf<AActor> Class)
+{
+	TArray<AActor*> out;
+	for(FHitResult tempHit : Hits)
+	{
+		if(tempHit.GetActor() && (!Class || tempHit.GetActor()->GetClass()->IsChildOf(Class)))
+		{
+			out.Add(tempHit.GetActor());
+		}
+	}
+	return out;
+}
+
 
 //###############################################################################
 // InterpActor
@@ -1021,6 +1081,17 @@ int32 UOmegaGameFrameworkBPLibrary::GetClosestVector2dToPoint(TArray<FVector2D> 
 		return out_index;
 	}
 	return 0;
+}
+
+FLuaValue UOmegaGameFrameworkBPLibrary::GetLuaValueFromGameplayTag(UObject* WorldContextObject, FGameplayTag Tag,
+	const FString& ParentTable, TSubclassOf<ULuaState> StateClass)
+{
+	FString Field_value=Tag.ToString();
+	if(!ParentTable.IsEmpty())
+	{
+		Field_value=ParentTable+"."+Field_value;
+	}
+	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,StateClass,Field_value);
 }
 
 UDataAsset* UOmegaGameFrameworkBPLibrary::CreateDataAssetFromLua(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value)

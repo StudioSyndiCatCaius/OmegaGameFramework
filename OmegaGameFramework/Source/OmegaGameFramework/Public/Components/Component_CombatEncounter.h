@@ -22,7 +22,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter Stage")
 	FGameplayTag StageID;
 
-	UFUNCTION(BlueprintNativeEvent,Category="Omega|Encounter|Stage")
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Encounter|Stage")
 	FTransform GetTransformForBattler(FGameplayTag FactionTag, int32 index);
 	
 };
@@ -49,12 +49,15 @@ class OMEGAGAMEFRAMEWORK_API UOmegaCombatEncounterScript : public UObject
 
 	virtual UWorld* GetWorld() const override;
 	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
-	
 
 	UOmegaCombatEncounterScript(const FObjectInitializer& ObjectInitializer);
 
 public:
+
 	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
+	
+	UFUNCTION(BlueprintPure,Category="Encounter")
+	UOmegaCombatEncounter_Component* GetOwningComponent() const;	
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Encounter")
 	void OnEncounterStarted(AOmegaCombatEncounter_Instance* Instance, AOmegaCombatEncounter_Stage* Stage) const;
@@ -65,6 +68,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Encounter")
 	void OnBattlerSpawned(ACharacter* Character, UCombatantComponent* Combatant) const;
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEncounterBattlerSpawned, ACharacter*, Battler);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UOmegaCombatEncounter_Component : public UActorComponent
@@ -85,7 +90,8 @@ protected:
 	UOmegaCombatEncounter_Component();
 
 public:
-
+	UPROPERTY(BlueprintAssignable)
+	FOnEncounterBattlerSpawned OnEncounterSpawned;
 		
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Encounter")
 	UOmegaCombatEncounterScript* EncounterManagerScript;

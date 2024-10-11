@@ -13,7 +13,6 @@
 
 void UGamePreferenceSubsystem::PreloadPrefs()
 {
-
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;
 	FARFilter Filter;
@@ -72,42 +71,57 @@ void UGamePreferenceSubsystem::local_SetPref(UGamePreference* Preference, FVecto
 			GetSaveSubsystem()->GetSaveObject(Preference->bGlobal)->PreferenceValues.Add(Preference,value);
 			Local_PreferenceUpdate(Preference);
 		}
+		OnPreferenceUpdated.Broadcast(Preference,value);
 	}
 }
 
 FVector UGamePreferenceSubsystem::local_GetPref(UGamePreference* Preference)
 {
-	UOmegaSaveBase* save_obj = GetSaveSubsystem()->GetSaveObject(Preference->bGlobal);
-	if(Preference->PreferenceScript)
+	if(Preference)
 	{
-		FString in_label=Preference->PreferenceLabel;
-		FString in_section=Preference->PreferenceCategory.ToString();
-		FVector out;
-		FString dump_val;
-		if(Preference->bSaveToConfig && GConfig->GetValue(*in_section,*in_label,dump_val,ConfigFilePath))
-		{
-			switch (Preference->PreferenceScript->GetPreferenceType()) {
-			case EGamePreferenceType::PrefType_Bool:
-				bool temp_bool;
-				GConfig->GetBool(*in_section,*in_label,temp_bool,ConfigFilePath);
-				out.X=static_cast<float>(temp_bool);
-				break;
-			case EGamePreferenceType::PrefType_Float:
-				float temp_float;
-				GConfig->GetFloat(*in_section,*in_label,temp_float,ConfigFilePath);
-				out.X=temp_float;
-				break;
-			case EGamePreferenceType::PrefType_Int:
-				int32 temp_int;
-				GConfig->GetInt(*in_section,*in_label,temp_int,ConfigFilePath);
-				out.X=static_cast<float>(temp_int);
-				break;
-			}
-			
-			return out;
-		}
-		return Preference->PreferenceScript->GetDefaultValue();
+		UOmegaSaveBase* save_obj = GetSaveSubsystem()->GetSaveObject(Preference->bGlobal);
 		
+
+		// FIRST: Try get from config file
+        if(Preference->PreferenceScript && Preference->bSaveToConfig)
+        {
+        	FString in_label=Preference->PreferenceLabel;
+        	FString in_section=Preference->PreferenceCategory.ToString();
+        	FVector out;
+        	FString dump_val;
+        	if(GConfig->GetValue(*in_section,*in_label,dump_val,ConfigFilePath))
+        	{
+        		switch (Preference->PreferenceScript->GetPreferenceType()) {
+        		case EGamePreferenceType::PrefType_Bool:
+        			bool temp_bool;
+        			GConfig->GetBool(*in_section,*in_label,temp_bool,ConfigFilePath);
+        			out.X=static_cast<float>(temp_bool);
+        			break;
+        		case EGamePreferenceType::PrefType_Float:
+        			float temp_float;
+        			GConfig->GetFloat(*in_section,*in_label,temp_float,ConfigFilePath);
+        			out.X=temp_float;
+        			break;
+        		case EGamePreferenceType::PrefType_Int:
+        			int32 temp_int;
+        			GConfig->GetInt(*in_section,*in_label,temp_int,ConfigFilePath);
+        			out.X=static_cast<float>(temp_int);
+        			break;
+        		}
+        		
+        		return out;
+        	}
+        }
+		// SECOND: Try get from save object
+        if(save_obj->PreferenceValues.Contains(Preference))
+        {
+        	return save_obj->PreferenceValues[Preference];
+        }
+		// THIRD: Get default value
+		if(Preference->PreferenceScript)
+		{
+			return Preference->PreferenceScript->GetDefaultValue();
+		}
 	}
 	return FVector();
 }
@@ -227,6 +241,15 @@ FText UGamePreferenceSubsystem::GetGamePreference_Text(UGamePreference* Preferen
 	return FText();
 }
 
+
+EGamePreferenceType UGamePreference::GetPreferenceType() const
+{
+	if(PreferenceScript)
+	{
+		return PreferenceScript->GetPreferenceType();
+	}
+	return EGamePreferenceType::PrefType_Bool;
+}
 
 FGameplayTag UGamePreference::GetObjectGameplayCategory_Implementation() { return PreferenceCategory; }
 FGameplayTagContainer UGamePreference::GetObjectGameplayTags_Implementation() { return PreferenceTags; }

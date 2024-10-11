@@ -46,11 +46,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega", meta=(AdvancedDisplay="Preset"))
 	void Assemble();
 	
-	
 	UPROPERTY()
 	TArray<USkeletalMeshComponent*> MeshComponents;
 	
 	
+};
+
+UCLASS(Blueprintable,BlueprintType,CollapseCategories,EditInlineNew,Abstract)
+class OMEGAGAMEFRAMEWORK_API USkinModifier : public UObject
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION(BlueprintCallable,Category="Omega|Skins")
+	UMaterialInstanceDynamic* CreateDynamicMaterial_FromSlot(USkeletalMeshComponent* MeshComp, FName Slot, bool ApplyToComponent);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Skins")
+	void ApplyModifier(AOmegaSkin* Skin, USkeletalMeshComponent* MeshComponent);
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API USkinModifier_DynamicMaterial : public USkinModifier
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(EditAnywhere,Category="SkinModifier")
+	TArray<FName> SlotsAppliedTo;
+
+	virtual void ApplyModifier_Implementation(AOmegaSkin* Skin, USkeletalMeshComponent* MeshComponent) override;
+
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Skins")
+	void ApplyModifierMaterial(AOmegaSkin* Skin, USkeletalMeshComponent* MeshComponent, UMaterialInstanceDynamic* Material);
 };
 
 
@@ -75,24 +101,30 @@ class OMEGAGAMEFRAMEWORK_API AOmegaSkin : public AActor
 public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skin")
 	USkeletalMesh* MasterSkeleton;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skin")
 	UMaterialInterface* MasterSkeletonOverrideMaterial;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skin")
 	TSubclassOf<UAnimInstance> AnimationClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skin")
 	bool bMerge;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skin")
 	bool bForceFollowMasterComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skin")
 	bool bHideBaseMesh;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Skin")
+	TArray<USkinModifier*> SkinModifiers;
+
+private:
+	UFUNCTION() void local_applyModifiers(USkeletalMeshComponent* MeshComp);
+public:
 	UFUNCTION(BlueprintNativeEvent, Category="Omega")
 	TArray<USkeletalMeshComponent*> GetMeshMergeComponents();
 

@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS(DisplayName="Trait | Attribute Modifiers")
+UCLASS(DisplayName="(Trait) Attribute Modifiers")
 class OMEGADEMO_API UTrait_AttributeModifiers : public UOmegaDataTrait, public IDataInterface_AttributeModifier
 {
 	GENERATED_BODY()
@@ -21,5 +21,29 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
 	TArray<FOmegaAttributeModifier> AttributeModifiers;
+	
+};
+
+UCLASS()
+class OMEGADEMO_API UDataTraitBASE_PrimitiveComponent : public UOmegaDataTrait
+{
+	GENERATED_BODY()
+
+	UDataTraitBASE_PrimitiveComponent();
+
+public:
+	virtual void AppliedToActor_Implementation(AActor* Actor, const FString& Flag, FGameplayTagContainer Tags) const override;
+
+	UFUNCTION(BlueprintImplementableEvent,Category="PrimitiveDataTrait")
+	void ApplyToPrimitiveComponent(UPrimitiveComponent* Component, const FString& Flag) const;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="PrimitiveDataTrait")
+	TArray<TSubclassOf<UPrimitiveComponent>> ValidClasses;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="PrimitiveDataTrait")
+	TArray<FString> ApplyOnFlags;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="PrimitiveDataTrait")
+	bool bFirstOnly;
 	
 };

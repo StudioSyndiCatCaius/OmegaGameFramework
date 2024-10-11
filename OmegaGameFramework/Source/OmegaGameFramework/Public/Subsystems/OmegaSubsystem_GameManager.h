@@ -37,21 +37,18 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameManager : public UGameInstanceSubsystem
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
+	void OnLevelChanged(UWorld* World, const UWorld::InitializationValues);
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Manager")
 	FGameplayTagContainer StateTags;
 
-	// Temp class holder for settings
+
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
-
-	///GAMEPLAY MODULES
-
-	UFUNCTION()
-	UOmegaGameplayModule* ActivateModuleFromClass(const UClass* ModuleClass);
 	
-	UPROPERTY()
-	TArray<UOmegaGameplayModule*> ActiveModules;
+	UFUNCTION() UOmegaGameplayModule* ActivateModuleFromClass(const UClass* ModuleClass);
+	
+	UPROPERTY() TArray<UOmegaGameplayModule*> ActiveModules;
 	
 	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Module", DeterminesOutputType="Module"), Category="Omega|Game Manager")
 	UOmegaGameplayModule* GetGameplayModule(TSubclassOf<UOmegaGameplayModule> Module);

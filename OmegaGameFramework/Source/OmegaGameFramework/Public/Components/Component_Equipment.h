@@ -66,7 +66,6 @@ public:
 	
 	bool IsItemAccepted(UPrimaryDataAsset* Item);
 	bool IsItemRejected(UPrimaryDataAsset* Item);
-
 	
 	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (Asset")
 	bool EquipItemToSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot);
@@ -76,7 +75,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (Slot Label)")
 	bool EquipItem(UPrimaryDataAsset* Item, FString Slot);
-	
 	
 	UFUNCTION(BlueprintCallable, Category="Equipment")
 	bool UnequipSlot(FString Slot);
@@ -128,7 +126,7 @@ UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCat
 class OMEGAGAMEFRAMEWORK_API UEquipmentScript : public UObject
 {
 	GENERATED_BODY()
-private:
+
 	virtual UWorld* GetWorld() const override;
 	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
 	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;

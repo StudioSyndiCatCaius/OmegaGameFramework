@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/CombatantComponent.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "GameFramework/Actor.h"
 #include "AdvancedVolume.generated.h"
@@ -34,10 +35,11 @@ protected:
 	UStaticMesh* ShapeMeshRef;
 
 public:
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Volume")
 	EVolumeShape Shape;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Volume")
 	FLinearColor Color;

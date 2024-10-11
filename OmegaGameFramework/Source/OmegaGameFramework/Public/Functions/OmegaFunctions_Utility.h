@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FunctionalTest.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Slate/WidgetTransform.h"
 #include "Math/Vector2D.h"
@@ -31,6 +30,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Text")
 	static TArray<FString> GetBlueprintCallableAndPureFunctions(UObject* Object);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Graphics")
+	static void ApplyGraphicsSettingsFromUserSettings();
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Console")
+	static void SetConsoleVariableBool(FString VariableName, bool bValue);
+	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Console")
+	static void SetConsoleVariableFloat(FString VariableName, float Value);
+	UFUNCTION(BlueprintCallable, Category="Omega|Utilities|Console")
+	static void SetConsoleVariableInt(FString VariableName, int32 Value);
+
 	// INCOMPLETE: these functions still need to be made
 	UFUNCTION()
 	static bool IsLoading_Foliage()
@@ -55,6 +64,16 @@ class UOmegaAssetFunctions : public UBlueprintFunctionLibrary
 	
 };
 
+
+UCLASS()
+class UOmegaAudioFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Audio")
+	static void SetSoundWaveVolume(USoundWave* SoundWave, float NewVolume) { if(SoundWave) { SoundWave->Volume=NewVolume;  }}
+};
+
 UCLASS()
 class UOmegaMathFunctions : public UBlueprintFunctionLibrary
 {
@@ -73,7 +92,6 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static float GetAngle_FromRotators(FRotator A, FRotator B);
-	
 	
 };
 
