@@ -9,6 +9,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Functions/OmegaFunctions_Common.h"
 
 UOmegaBGM* UOmegaBGMSubsystem::GetPlayingBGM()
 {
@@ -48,14 +49,30 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 	{
 		FOmegaBGMData_Incoming NewLocalIncomingData;
 		IncomingData = NewLocalIncomingData;
+
+		FOmegaBgmSoundData new_dat;
+		new_dat.SoundWave=BGM->Sound;
+		new_dat.Loop_BeginTime=BGM->LoopBeginTime;
+		new_dat.Loop_EndTime=BGM->LoopEndTime;
+
+		//override from script
+		if(BGM->BgmScript)
+		{
+			FOmegaBgmSoundData override_dat= BGM->BgmScript->GetBgmSoundData(this, BGM, GetWorld()->GetGameInstance()->
+				GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData->bgm_styles.FindOrAdd(UOmegaGameFrameworkBPLibrary::GetObjectLabel(BGM)));
+			if(override_dat.SoundWave)
+			{
+				new_dat=override_dat;
+			}
+		}
 		
 		//Setup Incoming Slot Data
 		IncomingData.Slot = Slot;
-		IncomingData.Sound = BGM->Sound;
+		IncomingData.Sound = new_dat.SoundWave;
 		IncomingData.ResumePos = ResumeLastPosition;
 		IncomingData.FadeTime = FadeDuration;
-		IncomingData.LoopEnd = BGM->LoopEndTime;
-		IncomingData.LoopBegin = BGM->LoopBeginTime;
+		IncomingData.LoopEnd = new_dat.Loop_EndTime;
+		IncomingData.LoopBegin = new_dat.Loop_BeginTime;
 
 		float Local_StopPos;
 		
@@ -229,6 +246,11 @@ void UOmegaBGM::GetGeneralDataText_Implementation(const FString& Label, const UO
 {
 	Name = BgmName;
 	Description = BgmDescription;
+}
+
+void UOmegaBGM::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	Label = this->GetName();
 }
 
 FGameplayTagContainer UOmegaBGM::GetObjectGameplayTags_Implementation()

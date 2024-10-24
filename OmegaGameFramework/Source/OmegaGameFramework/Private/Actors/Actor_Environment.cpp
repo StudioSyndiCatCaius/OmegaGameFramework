@@ -60,6 +60,16 @@ void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
 	{
 		SkyLight->RecaptureSky();
 	}
+	if(current_preset)
+	{
+		for(auto* TempScript : current_preset->Scripts)
+		{
+			if(TempScript)
+			{
+				TempScript->OnUpdated(this);
+			}
+		}
+	}
 }
 
 

@@ -1,14 +1,32 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AsyncAction_LevelSequence.h"
-
+#include "ExtensionLibraries/MovieSceneSequenceExtensions.h"
+#include "MovieSceneSequence.h"
 #include "Runtime/LevelSequence/Public/DefaultLevelSequenceInstanceData.h"
 
 
+void UAsyncAction_LevelSequence::Tick(float DeltaTime)
+{
+	if(LocalPlayer)
+	{
+		FQualifiedFrameTime time_frame= LocalPlayer->GetCurrentTime();
+		int32 frame=time_frame.Time.FrameNumber.Value;
+		
+		//UE_LOG(LogTemp, Warning, TEXT("Ticked frame at %s"), *FString::FromInt(frame));
+		if(!seen_frames.Contains(frame) && mapped_frames.Contains(frame))
+		{
+			seen_frames.Add(frame);
+			OnMark.Broadcast(LocalSeqActor,mapped_frames[frame]);
+		}
+	}
+}
+
 void UAsyncAction_LevelSequence::Local_Play()
 {
+	seen_frames.Empty();
 	LocalPlayer->Play();
-	Play.Broadcast(LocalSeqActor);
+	Play.Broadcast(LocalSeqActor,FMovieSceneMarkedFrame());
 }
 
 void UAsyncAction_LevelSequence::Local_Finish()
@@ -84,7 +102,16 @@ UAsyncAction_LevelSequence* UAsyncAction_LevelSequence::PlayLevelSequence(UObjec
 	NewSeq->LocalSettings = Settings;
 	NewSeq->Local_OverrideInstanceData = bOverrideInstanceData;
 	NewSeq->Local_OriginTransform = OriginTransform;
+
+	TArray<FMovieSceneMarkedFrame> loc_frames = LevelSequence->GetMovieScene()->GetMarkedFrames();
+	for(FMovieSceneMarkedFrame TempFrame: loc_frames)
+	{
+		UMovieScene* MovieScene=LevelSequence->GetMovieScene();
+		TempFrame.FrameNumber = FFrameRate::TransformTime(TempFrame.FrameNumber, MovieScene->GetTickResolution(), MovieScene->GetDisplayRate()).RoundToFrame();
+		UE_LOG(LogTemp, Warning, TEXT("Mapped Mark from at %s"), *FString::FromInt(TempFrame.FrameNumber.Value));
+	
+		NewSeq->mapped_frames.Add(TempFrame.FrameNumber.Value,TempFrame);
+	}
 	
 	return NewSeq;
-	
 }

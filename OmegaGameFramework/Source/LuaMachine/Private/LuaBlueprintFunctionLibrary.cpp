@@ -214,6 +214,29 @@ FLuaValue ULuaBlueprintFunctionLibrary::Conv_BoolToLuaValue(const bool Value)
 	return FLuaValue(Value);
 }
 
+TArray<FString> ULuaBlueprintFunctionLibrary::Conv_LuaValueToString_Array(const FLuaValue& Value)
+{
+	TArray<FString> out;
+	for(FLuaValue temp_val : LuaTableGetValues(Value))
+	{
+		out.Add(temp_val.String);
+	}
+	return out;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue_Array(UObject* WorldContextObject, TArray<FString> Value)
+{
+	FLuaValue out=LuaCreateTable(WorldContextObject,nullptr);
+	for (FString temp_string : Value)
+	{
+		FLuaValue in_val;
+		in_val.Type=ELuaValueType::String;
+		in_val.String=temp_string;
+		out.SetFieldByIndex(Value.Find(temp_string)+1,in_val);
+	}
+	return out;
+}
+
 
 int32 ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(const FLuaValue& Value)
 {

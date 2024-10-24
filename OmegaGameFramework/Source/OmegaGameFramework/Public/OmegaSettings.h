@@ -41,6 +41,15 @@ public:
 	UPROPERTY() TArray<FName> SystemScansPath;
 	UPROPERTY() TArray<FString> LuaFields_AutoSavedToGame;
 	UClass* GetOmegaGlobalSaveClass() const;
+
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Gameplay"))
+	FSoftObjectPath DefaultSettings_Gameplay;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Slate"))
+	FSoftObjectPath DefaultSettings_Slate;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Paths"), AdvancedDisplay)
+	FSoftObjectPath DefaultSettings_Paths;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaFileManagerSettings"), AdvancedDisplay)
+	FSoftObjectPath DefaultSettings_FileManager;
 	
 	//Will automatically scan these directories at startup to try and load and actiavate modules from them. NOTE: This can be a slow process. Try and only set these paths to folders containing GameplayModules.
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
@@ -49,12 +58,7 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FSoftClassPath> RegisteredGameplayModules;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaSettings_Gameplay"))
-	FSoftObjectPath DefaultSettings_Gameplay;
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaSettings_Paths"))
-	FSoftObjectPath DefaultSettings_Paths;
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta=(MetaClass="OmegaFileManagerSettings"))
-	FSoftObjectPath DefaultSettings_FileManager;
+	
 	//SAVE
 	UClass* GetOmegaGameSaveClass() const;
 	
@@ -94,15 +98,6 @@ public:
 	//These paths will automatically scanned on Init. And game preferences found in them will be automatically loaded into the Game Preferences Subsystem.
 	UPROPERTY(EditAnywhere, config, Category = "Game Preferences")
 	TArray<FDirectoryPath> Preferences_ScanPaths;
-	
-	//########################################################
-	//Player
-	//########################################################
-	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaHoverCursor"))
-	FSoftClassPath HoverCursorClass;
-
-	UPROPERTY(EditAnywhere, config, Category = "Player", meta=(MetaClass="OmegaSettings_Slate"))
-	FSoftObjectPath DefaultSettings_Slate;
 	
 	//########################################################
 	//Combat

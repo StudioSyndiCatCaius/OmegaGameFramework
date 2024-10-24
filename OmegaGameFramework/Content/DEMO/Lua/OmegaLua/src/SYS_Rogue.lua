@@ -4,8 +4,8 @@ local a={}
 
 local PRESET_LevelUpgrades={
     Skill=function ()
-        local skill_key=SynTable.random_key(D_Skills)
-        local skill_data=D_Skills[skill_key]
+        local skill_key=SynTable.random_key(_D.Skills)
+        local skill_data=_D.Skills[skill_key]
         return {
             description="Unlock new skill: "..skill_data.name,
             icon=UGET.Icon('ico_upgrade_skill'),
@@ -17,8 +17,8 @@ local PRESET_LevelUpgrades={
         
     end,
     StatUp=function ()
-        local att=SynTable.random_key(D_Attributes)
-        local att_dat=D_Attributes[att]
+        local att=SynTable.random_key(_D.Attributes)
+        local att_dat=_D.Attributes[att]
         local att_amount=att_dat.upgrade_amount
         return {
             description="Increase "..att.." +"..tostring(att_amount),

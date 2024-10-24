@@ -16,7 +16,6 @@ enum EOmegaQuestStatus
 	Active			UMETA(DisplayName = "Active"),
 	Complete		UMETA(DisplayName = "Complete"),
 	Failed			UMETA(DisplayName = "Failed"),
-	
 };
 
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,CollapseCategories)
@@ -37,9 +36,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaQuestTypeScript : public UObject
 	UOmegaQuestTypeScript(const FObjectInitializer& ObjectInitializer)
 	{
 		if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
-	};
-	
-	
+	}
 	
 public:
 

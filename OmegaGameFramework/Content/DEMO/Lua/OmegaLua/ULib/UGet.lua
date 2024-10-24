@@ -11,5 +11,7 @@ UGET={
     IMG=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Assets/textures/',name) end,
     IMG_Portraits=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Assets/textures/portraits/',name) end,
     IMG_Tutorial=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Assets/textures/tutorial/',name) end,
-}
 
+    Seq_FX=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Assets/sequences/FX/',name) end,
+    Seq_BattleAction=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Assets/sequences/BattleAction/',name) end,
+}

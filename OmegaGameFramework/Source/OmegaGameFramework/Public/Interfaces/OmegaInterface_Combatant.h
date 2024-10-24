@@ -144,10 +144,15 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Skill
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="Skills")
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Skills")
 	TMap<UOmegaAttribute*, float> GetSkillAttributeCosts(UCombatantComponent* Combatant,UObject* Context);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
-	TSubclassOf<UCombatantFilter> GetSkillTargetFilter(); 
-};
+	TSubclassOf<UCombatantFilter> GetSkillTargetFilter();
 
+	// Skills are given two sequences slots: Charge is typically played first on the instigator. Execution is played second on the Target.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	ULevelSequence* GetSkill_Sequences(UCombatantComponent* Combatant, FGameplayTag Tag);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	UAnimMontage* GetSkill_Montage(UCombatantComponent* Combatant, FGameplayTag Tag);
+};

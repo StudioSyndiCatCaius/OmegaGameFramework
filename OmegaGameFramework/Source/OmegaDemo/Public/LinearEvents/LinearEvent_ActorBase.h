@@ -21,6 +21,8 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Event")
 	AActor* GetEventActor();
+	UFUNCTION(BlueprintPure,Category="Event")
+	TArray<AActor*> GetEventActorList();
 };
 
 UCLASS(DisplayName="(Event) Actor - Teleport")

@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Components/CombatantComponent.h"
-#include "Components/InputReceiverComponent.h"
+#include "Components/Component_InputReceiver.h"
 #include "Widget/HUDLayer.h"
 #include "OmegaAbility.generated.h"
 
@@ -76,8 +76,7 @@ public:
 	UFUNCTION()
 	void Native_Execute();
 
-	UFUNCTION()
-	void Native_InputTrigger();
+	UFUNCTION() void Native_Start();
 	
 	//**Start & End***//
 	

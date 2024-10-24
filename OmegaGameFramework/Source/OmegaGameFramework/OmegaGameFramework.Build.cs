@@ -55,10 +55,13 @@ public class OmegaGameFramework : ModuleRules
 				"JsonUtilities",
 				"JsonBlueprintUtilities",
 				"PCG",
+				"BinkMediaPlayer",
+				//"GameplayTasks",
+				//"GameFeatures",
+				//"ModularGameplay"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
-			
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
@@ -76,7 +79,6 @@ public class OmegaGameFramework : ModuleRules
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
-		
 		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]

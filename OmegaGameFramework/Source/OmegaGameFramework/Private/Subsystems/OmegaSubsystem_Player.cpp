@@ -13,6 +13,7 @@
 #include "Widget/HUDLayer.h"
 #include "UObject/UObjectGlobals.h"
 #include "CommonInputSubsystem.h"
+#include "OmegaSettings_Slate.h"
 #include "Blueprint/SlateBlueprintLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Widget/DataWidget.h"
@@ -23,6 +24,8 @@ void UOmegaPlayerSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 	//ParentPlayerController->OnDestroyed.AddDynamic(this, &UOmegaPlayerSubsystem::CloseAllMenus);
 	GetHoverCursor();
 }
+
+
 
 void UOmegaPlayerSubsystem::CloseAllMenus(AActor* DestroyedActor)
 {
@@ -346,7 +349,8 @@ UOmegaHoverCursor* UOmegaPlayerSubsystem::GetHoverCursor()
 	{
 		return hover_cursor;
 	}
-	if(const TSubclassOf<UOmegaHoverCursor> incoming_class = GetMutableDefault<UOmegaSettings>()->HoverCursorClass.TryLoadClass<UOmegaHoverCursor>())
+	if(!UOmegaSlateFunctions::GetCurrentSlateStyle()) { return nullptr; }
+	if(const TSubclassOf<UOmegaHoverCursor> incoming_class = UOmegaSlateFunctions::GetCurrentSlateStyle()->HoverCursorClass.TryLoadClass<UOmegaHoverCursor>())
 	{
 		hover_cursor = Cast<UOmegaHoverCursor>(CreateWidget(GetWorld(), incoming_class));
 		hover_cursor->subsystem_ref=this;

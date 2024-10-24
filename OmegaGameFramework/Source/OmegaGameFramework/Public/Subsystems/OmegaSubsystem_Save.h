@@ -590,8 +590,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Save")
 	UTexture2D* SaveScreenshot;
 
-
-
+	UPROPERTY(EditAnywhere,Category="Save")
+	TMap<FString,FString> bgm_styles;
 };
 
 UCLASS()

@@ -33,7 +33,12 @@ ULuaObject* ULuaObjectFunctions::CreateLuaObject(UObject* WorldContextObject, FL
 	{
 		target_class=temp_class;
 	}
-	ULuaObject* new_object = NewObject<ULuaObject>(WorldContextObject,target_class);
+	FName in_name;
+	if(key.Type==ELuaValueType::String && !key.String.IsEmpty())
+	{
+		in_name=FName(key.String);
+	}
+	ULuaObject* new_object = NewObject<ULuaObject>(WorldContextObject,target_class,in_name);
 	new_object->lua_key=key;
 	new_object->lua_value=value;
 	return new_object;

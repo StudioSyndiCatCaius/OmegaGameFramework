@@ -110,7 +110,7 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter(
 
 AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter_FromSource(UObject* Source)
 {
-	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
 		return StartEncounter(
 			IDataInterface_CombatEncounter::Execute_GetCombatEncounter_InstanceClass(Source),

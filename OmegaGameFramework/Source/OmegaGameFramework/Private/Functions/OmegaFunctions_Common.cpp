@@ -920,6 +920,45 @@ TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromHitResults(TArray<FHi
 	return out;
 }
 
+void UOmegaGameFrameworkBPLibrary::RotateActorToLookLocation(AActor* Actor, FVector Location, bool X, bool Y, bool Z)
+{
+	if(Actor)
+	{
+		FRotator rot_target=UKismetMathLibrary::FindLookAtRotation(Actor->GetActorLocation(),Location);
+		if(!X) { rot_target.Roll=Actor->GetActorRotation().Roll; }
+		if(!Y) { rot_target.Pitch=Actor->GetActorRotation().Pitch; }
+		if(!Z) { rot_target.Yaw=Actor->GetActorRotation().Yaw; }
+		Actor->SetActorRotation(rot_target);
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::RotateActorToLookTarget(AActor* Actor, AActor* LookTarget, bool X, bool Y, bool Z)
+{
+	if(Actor && LookTarget)
+	{
+		RotateActorToLookLocation(Actor,LookTarget->GetActorLocation(),X,Y,Z);
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::RotateActorToLookTargetsMidpoint(AActor* Actor, TArray<AActor*> LookTargets, bool X,
+	bool Y, bool Z)
+{
+	RotateActorToLookLocation(Actor,UGameplayStatics::GetActorArrayAverageLocation(LookTargets),X,Y,Z);
+}
+
+TArray<FVector> UOmegaGameFrameworkBPLibrary::GetLocationArrayFromActorList(TArray<AActor*> Actors)
+{
+	TArray<FVector> Locations;
+	for (AActor* Actor : Actors)
+	{
+		if (Actor) // Ensure the Actor is valid
+		{
+			Locations.Add(Actor->GetActorLocation());
+		}
+	}
+	return Locations;
+}
+
 
 //###############################################################################
 // InterpActor

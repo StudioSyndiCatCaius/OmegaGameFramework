@@ -31,15 +31,15 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextAV
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
 	UFUNCTION(BlueprintNativeEvent, Category="AV")
-	TMap<FGameplayTag, ULevelSequence*> GetContextAVSequences();
+	ULevelSequence* GetContextAVSequences(FGameplayTag ID);
 	UFUNCTION(BlueprintNativeEvent, Category="AV")
-	TMap<FGameplayTag, USoundBase*> GetContextAVSounds();
+	USoundBase* GetContextAVSounds(FGameplayTag ID);
 	UFUNCTION(BlueprintNativeEvent, Category="AV")
-	TMap<FGameplayTag, UNiagaraSystem*> GetContextAVNiagara();
+	UNiagaraSystem* GetContextAVNiagara(FGameplayTag ID);
 	UFUNCTION(BlueprintNativeEvent, Category="AV")
-	TMap<FGameplayTag, UAnimMontage*> GetContextAVMontages();
+	UAnimMontage* GetContextAVMontages(FGameplayTag ID);
 	UFUNCTION(BlueprintNativeEvent, Category="AV")
-	TMap<FGameplayTag, UAnimSequence*> GetContextAVAnimations();
+	UAnimSequence* GetContextAVAnimations(FGameplayTag ID);
 };
 
 
@@ -47,17 +47,17 @@ UCLASS()
 class UOmegaContextAVFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-
+public:
 	UFUNCTION(BlueprintPure, Category="AV")
-	static ULevelSequence* TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID);
+	static ULevelSequence* TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID, ULevelSequence* Fallback=nullptr);
 	UFUNCTION(BlueprintPure, Category="AV")
-	static USoundBase* TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID);
+	static USoundBase* TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID, USoundBase* Fallback=nullptr);
 	UFUNCTION(BlueprintPure, Category="AV")
-	static UNiagaraSystem* TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID);
+	static UNiagaraSystem* TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID, UNiagaraSystem* Fallback=nullptr);
 	UFUNCTION(BlueprintPure, Category="AV")
-	static UAnimMontage* TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID);
+	static UAnimMontage* TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID, UAnimMontage* Fallback=nullptr);
 	UFUNCTION(BlueprintPure, Category="AV")
-	static UAnimSequence* TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID);
+	static UAnimSequence* TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID, UAnimSequence* Fallback=nullptr);
 
 	
 };

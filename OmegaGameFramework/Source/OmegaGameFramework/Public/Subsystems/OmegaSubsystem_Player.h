@@ -11,6 +11,7 @@
 #include "Components/AudioComponent.h"
 #include "Widget/Menu.h"
 #include "InputMappingContext.h"
+#include "InputCoreTypes.h" // For FKey
 #include "Components/SlateWrapperTypes.h"
 
 #include "OmegaSubsystem_Player.generated.h"
@@ -69,6 +70,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuClosed, UMenu*, Menu, FGamep
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FClearHoveredWidgets);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputModeChanged, UOmegaInputMode*, NewMode);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInputDeviceChangedDelegate, bool, bIsUsingGamepad);
+// DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInputKeyEvent, FKey, FKey, EInputEvent, Event);
 
 UCLASS(DisplayName="Omega Subsystem: Player")
 class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsystem
@@ -76,8 +78,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsyste
 	GENERATED_BODY()
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
+
 	
 public:
+
+	// UPROPERTY() FOnInputKeyEvent OnInputKeyEvent;
 
 	// -- Menus -- //
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta = (DeterminesOutputType = "MenuClass", AdvancedDisplay = "Context, Flag, AutoFocus, Flag"))
@@ -108,11 +113,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Widget", meta=(DisplayName="Control Widget"))
 	class UUserWidget* FocusMenu;
 
-	UPROPERTY(BlueprintAssignable)
-	FMenuOpened OnMenuOpened;
-
-	UPROPERTY(BlueprintAssignable)
-	FMenuClosed OnMenuClosed;
+	UPROPERTY(BlueprintAssignable) FMenuOpened OnMenuOpened;
+	UPROPERTY(BlueprintAssignable) FMenuClosed OnMenuClosed;
 
 	//SOUND
 	UPROPERTY()

@@ -62,18 +62,25 @@ public:
 	//-----------------------------------------------------------------------------------
 	// ATTRIBUTES
 	//-----------------------------------------------------------------------------------
-	UFUNCTION(BlueprintPure, Category="Attributes", meta=(CompactNodeTitle="Attribute ID"))
+	UFUNCTION(BlueprintPure, Category="Omega|Attributes", meta=(CompactNodeTitle="Attribute ID"))
 	static UOmegaAttribute* GetAttributeByUniqueID(const FString& ID);
 	
-	UFUNCTION(BlueprintCallable, Category="Attributes")
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes")
 	static TArray<FOmegaAttributeModifier> FlatAttributesToModifierValues(TMap<UOmegaAttribute*, float> FlatAttributes,bool AsMultiplier);
 
 	/*
 	UFUNCTION(BlueprintPure, Category="Attributes")
 	static TMap<UOmegaAttribute*, float> CompareAttributeModifiers(UCombatantComponent* Combatant, UObject* ComparedModifier, UObject* UncomparedModifer);
 	*/
-	UFUNCTION(BlueprintPure, Category="Attributes")
+	UFUNCTION(BlueprintPure, Category="Omega|Attributes")
 	static float CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedSource, UObject* UncomparedSource);
+
+	//Checks if the combatant has sufficient attributes to use skill
+	UFUNCTION(BlueprintPure, Category="Omega|Attributes")
+	static bool CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject);
+	//Consume the amount of attributes required for this skill. Returns FALSE of insufficient.
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes")
+	static bool ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject);
 	
 	//-----------------------------------------------------------------------------------
 	// Targets
@@ -121,7 +128,7 @@ public:
 
 UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UOmegaCommonSkill : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface,
-																			public IDataInterface_Skill
+																			public IDataInterface_Skill, public IOmegaScriptedEffectsInterface
 {
 	GENERATED_BODY()
 public:
@@ -144,10 +151,23 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	TMap<UOmegaAttribute*, float> AttributeUseCost;
-	//virtual TMap<UOmegaAttribute*, float> GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,UObject* Context) override;
+	virtual TMap<UOmegaAttribute*, float> GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,UObject* Context) override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	FOmegaCustomScriptedEffects Effects_Target;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	FOmegaCustomScriptedEffects Effects_Instigator;
+	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation() override;
+
+	//ANIMATIOn
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") UAnimMontage* DefaultMontage_Asset;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") FGameplayTag DefaultMontage_Tag;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") TMap<FGameplayTag, UAnimMontage*> TaggedMontages;
+	virtual ULevelSequence* GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag) override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") ULevelSequence* DefaultSequence_Asset;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") FGameplayTag DefaultSequence_Tag;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") TMap<FGameplayTag, ULevelSequence*> TaggedSequences;
+	virtual UAnimMontage* GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag) override;
 };

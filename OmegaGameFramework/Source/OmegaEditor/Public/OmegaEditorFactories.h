@@ -76,14 +76,6 @@ UCLASS() class OMEGAEDITOR_API UOmegaDamageType_Factory : public UFactory
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaDamageType,"Damage Type", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
-//BGM
-UCLASS() class OMEGAEDITOR_API UOmegaBGM_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-};
-OMACRO_ASSETTYPE_HEADERFIELD(OmegaBGM,"BGM", "Asset Desc here", FColor(100, 0, 225),"Audio")
-
 //Combatant Gambit
 UCLASS() class OMEGAEDITOR_API UCombatantGambitAsset_Factory : public UFactory
 {
@@ -99,6 +91,15 @@ UCLASS() class OMEGAEDITOR_API UOmegaQuest_Factory : public UFactory
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaQuest,"Quest", "Asset Desc here",FColor(201, 29, 85),"Gameplay")
+
+
+//BGM
+UCLASS() class OMEGAEDITOR_API UOmegaBGM_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaBGM,"BGM", "Asset Desc here", FColor(100, 0, 225),"Audio")
 
 
 //Level Data

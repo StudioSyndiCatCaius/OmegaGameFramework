@@ -52,6 +52,17 @@ public:
 	{
 		return false;
 	}
+
+	UFUNCTION(BlueprintPure, Category = "Omega|Utilities|Build", Meta = (DisplayName = "Is Shipping Build", Keywords = "compile export mode version type build platform"))
+	static bool IsBuild_Shipping();
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Utilities|Viewport", Meta = (DisplayName = "Get Window Mode", Keywords = "screen fullscreen windowed"))
+	static void GetWindowMode(bool& Success, bool& Fullscreen, bool& IsFullscreenWindowed);
+
+	UFUNCTION(BlueprintCallable, Category = "LOmega|Utilities|Viewport", Meta = (DisplayName = "Set Window Mode", Keywords = "screen fullscreen windowed"))
+	static void SetWindowMode(const bool Fullscreen, const bool IsFullscreenWindowed);
+
+	
 };
 
 UCLASS()
@@ -64,6 +75,7 @@ class UOmegaAssetFunctions : public UBlueprintFunctionLibrary
 	
 };
 
+class USoundClass;
 
 UCLASS()
 class UOmegaAudioFunctions : public UBlueprintFunctionLibrary
@@ -72,6 +84,30 @@ class UOmegaAudioFunctions : public UBlueprintFunctionLibrary
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Audio")
 	static void SetSoundWaveVolume(USoundWave* SoundWave, float NewVolume) { if(SoundWave) { SoundWave->Volume=NewVolume;  }}
+
+		/**
+	* Sets the volume of a Sound Class.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Low Entry|Extended Standard Library|Utilities|Sound Class", Meta = (DisplayName = "Set Volume"))
+	static void SoundClass_SetVolume(USoundClass* SoundClass, const double Volume);
+
+	/**
+	* Returns the volume of a Sound Class.
+	*/
+	UFUNCTION(BlueprintPure, Category = "Low Entry|Extended Standard Library|Utilities|Sound Class", Meta = (DisplayName = "Get Volume"))
+	static double SoundClass_GetVolume(USoundClass* SoundClass);
+
+	/**
+	* Sets the pitch of a Sound Class.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Low Entry|Extended Standard Library|Utilities|Sound Class", Meta = (DisplayName = "Set Pitch"))
+	static void SoundClass_SetPitch(USoundClass* SoundClass, const double Pitch);
+
+	/**
+	* Returns the pitch of a Sound Class.
+	*/
+	UFUNCTION(BlueprintPure, Category = "Low Entry|Extended Standard Library|Utilities|Sound Class", Meta = (DisplayName = "Get Pitch"))
+	static double SoundClass_GetPitch(USoundClass* SoundClass);
 };
 
 UCLASS()

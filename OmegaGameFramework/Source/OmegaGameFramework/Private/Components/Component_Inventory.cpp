@@ -157,3 +157,56 @@ bool UDataAssetCollectionComponent::HasMinimumAssets(TMap<UPrimaryDataAsset*, in
 	return true;
 }
 
+
+
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetTotalAssetListTradeCost(
+	TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag)
+{
+	TMap<UPrimaryDataAsset*, int32> out;
+	
+	TArray<UPrimaryDataAsset*> item_list;
+	Assets.GetKeys(item_list);
+	for (auto* item_target : item_list)
+	{
+		int32 num_of_itemsIn=Assets[item_target];
+		if(item_target && item_target->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+		{
+			TMap<UPrimaryDataAsset*, int32> item_trades=IDataAssetCollectionInterface::Execute_GetTradeAssetRequirements(item_target, TradeTag);
+			TArray<UPrimaryDataAsset*> Tradeitem_list;
+			item_trades.GetKeys(Tradeitem_list);
+			for (auto* item_trade : Tradeitem_list)
+			{
+				if(item_trade)
+				{
+					int32 current_val=out.FindOrAdd(item_trade);
+					out.Add(item_trade,num_of_itemsIn*item_trades[item_trade]+current_val);
+				}
+			}
+		}
+	}
+	
+	return out;
+}
+
+int32 UDataAssetCollectionFunctions::GetTotalAssetListTradeCost_One(TMap<UPrimaryDataAsset*, int32> Assets, UPrimaryDataAsset* TradeAsset,
+	FGameplayTag TradeTag)
+{
+	return GetTotalAssetListTradeCost(Assets,TradeTag).FindOrAdd(TradeAsset);
+}
+
+int32 UDataAssetCollectionFunctions::GetDataAssetTradeValue_One(UPrimaryDataAsset* Asset, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag)
+{
+	return GetDataAssetTradeValue_All(Asset,TradeTag).FindOrAdd(TradeAsset);
+}
+
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetDataAssetTradeValue_All(UPrimaryDataAsset* Asset,
+	FGameplayTag TradeTag)
+{
+	TMap<UPrimaryDataAsset*, int32> out;
+	if(Asset && Asset->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+	{
+		return IDataAssetCollectionInterface::Execute_GetTradeAssetRequirements(Asset,TradeTag);
+	}
+	return out;
+}
+

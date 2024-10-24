@@ -4,93 +4,53 @@
 #include "Functions/OmegaFunctions_AVContext.h"
 #include "GameplayTagContainer.h"
 
-// Add default functionality here for any IDataInterface_General functions that are not pure virtual.
-ULevelSequence* UOmegaContextAVFunctions::TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID)
+
+ULevelSequence* UOmegaContextAVFunctions::TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID,
+	ULevelSequence* Fallback)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		TArray<FGameplayTag> IDList;
-		TMap<FGameplayTag, ULevelSequence*> TempData = IDataInterface_ContextAV::Execute_GetContextAVSequences(Object);
-		TempData.GetKeys(IDList);
-		for(FGameplayTag TempID : IDList)
-		{
-			if(TempData.Contains(ID))
-			{
-				return TempData[ID];
-			}
-		}
+		return IDataInterface_ContextAV::Execute_GetContextAVSequences(Object,ID);
 	}
-	return nullptr;
+	
+	return  Fallback;
 }
 
-USoundBase* UOmegaContextAVFunctions::TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID)
+USoundBase* UOmegaContextAVFunctions::TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID, USoundBase* Fallback)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		TArray<FGameplayTag> IDList;
-		TMap<FGameplayTag, USoundBase*> TempData = IDataInterface_ContextAV::Execute_GetContextAVSounds(Object);
-		TempData.GetKeys(IDList);
-		for(FGameplayTag TempID : IDList)
-		{
-			if(TempData.Contains(ID))
-			{
-				return TempData[ID];
-			}
-		}
+		return IDataInterface_ContextAV::Execute_GetContextAVSounds(Object,ID);
 	}
-	return nullptr;
+	return  Fallback;
 }
 
-UNiagaraSystem* UOmegaContextAVFunctions::TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID)
+UNiagaraSystem* UOmegaContextAVFunctions::TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID,
+	UNiagaraSystem* Fallback)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		TArray<FGameplayTag> IDList;
-		TMap<FGameplayTag, UNiagaraSystem*> TempData = IDataInterface_ContextAV::Execute_GetContextAVNiagara(Object);
-		TempData.GetKeys(IDList);
-		for(FGameplayTag TempID : IDList)
-		{
-			if(TempData.Contains(ID))
-			{
-				return TempData[ID];
-			}
-		}
+		return IDataInterface_ContextAV::Execute_GetContextAVNiagara(Object,ID);
 	}
-	return nullptr;
+	return  Fallback;
 }
 
-UAnimMontage* UOmegaContextAVFunctions::TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID)
+UAnimMontage* UOmegaContextAVFunctions::TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID,
+	UAnimMontage* Fallback)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		TArray<FGameplayTag> IDList;
-		TMap<FGameplayTag, UAnimMontage*> TempData = IDataInterface_ContextAV::Execute_GetContextAVMontages(Object);
-		TempData.GetKeys(IDList);
-		for(FGameplayTag TempID : IDList)
-		{
-			if(TempData.Contains(ID))
-			{
-				return TempData[ID];
-			}
-		}
+		return IDataInterface_ContextAV::Execute_GetContextAVMontages(Object,ID);
 	}
-	return nullptr;
+	return  Fallback;
 }
 
-UAnimSequence* UOmegaContextAVFunctions::TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID)
+UAnimSequence* UOmegaContextAVFunctions::TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID,
+	UAnimSequence* Fallback)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		TArray<FGameplayTag> IDList;
-		TMap<FGameplayTag, UAnimSequence*> TempData = IDataInterface_ContextAV::Execute_GetContextAVAnimations(Object);
-		TempData.GetKeys(IDList);
-		for(FGameplayTag TempID : IDList)
-		{
-			if(TempData.Contains(ID))
-			{
-				return TempData[ID];
-			}
-		}
+		return IDataInterface_ContextAV::Execute_GetContextAVAnimations(Object,ID);
 	}
-	return nullptr;
+	return  Fallback;
 }

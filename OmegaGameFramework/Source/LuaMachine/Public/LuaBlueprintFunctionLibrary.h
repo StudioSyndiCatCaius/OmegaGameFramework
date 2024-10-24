@@ -435,11 +435,18 @@ public:
 	static FVector LuaTableToVector(FLuaValue Value);
 	
 	//Bool
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Bool", BlueprintAutocast), Category="Lua")
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Bool", BlueprintAutocast), Category="Lua")
 	static bool Conv_LuaValueToBool(const FLuaValue& Value);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Bool -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_BoolToLuaValue(const bool Value);
 
+	// --------------------------------------------------
+	// Array
+	// --------------------------------------------------
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> String [Array]", BlueprintAutocast, Keywords="to, convert"), Category="Lua")
+	static TArray<FString> Conv_LuaValueToString_Array(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "String -> Lua [Array]", BlueprintAutocast, Keywords="to, convert", WorldContext="WorldContextObject"), Category="Lua")
+	static FLuaValue Conv_StringToLuaValue_Array(UObject* WorldContextObject, TArray<FString> Value);
 
 private:
 	static void HttpRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSubclassOf<ULuaState> LuaState, TWeakObjectPtr<UWorld> World, const FString SecurityHeader, const FString SignaturePublicExponent, const FString SignatureModulus, FLuaHttpSuccess Completed);

@@ -42,10 +42,13 @@ void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 				if(TempItem->GameplayID.IsValid())
 				{
 					DataItemIDs.Add(TempItem->GameplayID, TempItem);
-					FString label;
-					TempItem->GetGeneralAssetLabel(label);
-					GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(TempItem,label);
 				}
+				FString label=TempItem->GetName();
+				if(!TempItem->CustomLabel.IsEmpty())
+				{
+					label=TempItem->CustomLabel;
+				}
+				GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(TempItem,label);
 			}
 		}
 	}

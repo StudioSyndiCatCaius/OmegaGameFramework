@@ -3,67 +3,42 @@
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "OmegaGameFramework",
-	"Description": "A gameplay framework plugin designed to streamline the process of creating gameplay mechanics and features in your project.",
+	"Description": "An expansive gameplay framework plugin designed to streamline the process of creating gameplay mechanics and features in your project.",
 	"Category": "Gameplay",
 	"CreatedBy": "Studio SyndiCat",
 	"CreatedByURL": "https://www.studiosyndicat.com/",
-	"DocsURL": "https://github.com/StudioSyndiCatCaius/OmegaGameFramework/blob/main/docs/documentation.md",
+	"DocsURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/764b3140-7bc2-485d-80f7-15d9c4fa71cc/docs",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/2ca6202e55f44cfd82659fbca6591603",
-	"SupportURL": "https://discord.com/invite/e82Pvkf",
-	"EngineVersion": "5.2",
+	"SupportURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/8f85af8b-d2bb-48cf-97d3-63c8c9993285/forums",
+	"EngineVersion": "5.4",
 	"CanContainContent": true,
 	"Installed": true,
 	"Modules": [
-		{
-		  "Name": "LuaMachine",
-		  "Type": "Runtime",
-		  "LoadingPhase": "PreDefault",
-		  "WhitelistPlatforms": [
-			"Mac",
-			"Win64",
-			"Linux",
-			"LinuxArm64",
-			"Android",
-			"IOS"
-		  ]
-		},
-		{
-		  "Name": "LuaMachineEditor",
-		  "Type": "Editor",
-		  "LoadingPhase": "Default",
-		  "WhitelistPlatforms": [
-			"Linux",
-			"Mac",
-			"Win64"
-		  ]
-		},
-		{
-			"Name": "FileSDK",
-			"Type": "Runtime",
-			"LoadingPhase": "PreLoadingScreen",
-			"WhitelistPlatforms": [ "Win64", "Mac", "Linux"]
-		},
-		{"Name": "OmegaGameFramework", "Type": "Runtime", 	"LoadingPhase": "Default", 			"PlatformAllowList": ["Win64", "Linux", "Mac"]},
-		{"Name": "OmegaEditor", 	"Type": "Editor", 		"LoadingPhase": "PostEngineInit", 	"PlatformAllowList": ["Win64", "Linux", "Mac"]},
-		{"Name": "OmegaFlow", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "OmegaData", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "Omega5_GameFeatures", "Type": "Runtime", 	"LoadingPhase": "Default" },
-		{"Name": "OmegaSequence", 	"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "OmegaDemo", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "OmegaParser", 	"Type": "Runtime", 		"loadingPhase": "Default" },
-		{"Name": "OmegaOnline", 	"Type": "Runtime", 		"loadingPhase": "Default" },
-		{"Name": "Flow", 			"Type": "Runtime", 		"LoadingPhase": "PreDefault"},
-		{"Name": "FlowEditor", 		"Type": "Editor", 		"LoadingPhase": "Default"}
+		{"Name": "LuaMachine", 			"Type": "Runtime", 		"LoadingPhase": "PreDefault", 		"WhitelistPlatforms": ["Mac", "Win64", "Linux", "LinuxArm64", "Android", "IOS"]},
+		{"Name": "LuaMachineEditor", 	"Type": "Editor", 		"LoadingPhase": "Default", 			"WhitelistPlatforms": ["Linux", "Mac", "Win64"]},
+		{"Name": "FileSDK", 			"Type": "Runtime", 		"LoadingPhase": "PreLoadingScreen",	"WhitelistPlatforms": [ "Win64", "Mac", "Linux"]},
+		{"Name": "OmegaGameFramework", 	"Type": "Runtime", 		"LoadingPhase": "Default", 			"WhitelistPlatforms": ["Win64", "Linux", "Mac"]},
+		{"Name": "OmegaEditor", 		"Type": "Editor", 		"LoadingPhase": "PostEngineInit", 	"WhitelistPlatforms": ["Win64", "Linux", "Mac"]},
+		{"Name": "OmegaData", 			"Type": "Runtime", 		"LoadingPhase": "Default" },
+		{"Name": "OmegaDemo", 			"Type": "Runtime", 		"LoadingPhase": "Default" },
+		{"Name": "OmegaFlow", 			"Type": "Runtime", 		"LoadingPhase": "Default" },
+		{"Name": "OmegaSequence", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
+		{"Name": "OmegaOnline", 		"Type": "Runtime", 		"loadingPhase": "Default" },
+		{"Name": "Flow", 				"Type": "Runtime", 		"LoadingPhase": "PreDefault"},
+		{"Name": "FlowEditor", 			"Type": "Editor", 		"LoadingPhase": "Default"}
 	],
 	"Plugins": [
-		{"Name": "EnhancedInput", "Enabled": true},
-		{"Name": "JsonBlueprintUtilities", "Enabled": true},
-		{"Name": "GameFeatures", "Enabled": true},
-		{"Name": "ModularGameplay", "Enabled": true},
-		{"Name": "AssetSearch", "Enabled": true},
-		{"Name": "CommonUI","Enabled": true},
-		{"Name": "Metasound","Enabled": true},
-		{"Name": "Niagara","Enabled": true }, 
-		{"Name": "SkeletalMerging","Enabled": true}
+		{"Name": "EnhancedInput", 			"Enabled": true},
+		{"Name": "JsonBlueprintUtilities", 	"Enabled": true},
+		{"Name": "GameFeatures", 			"Enabled": true},
+		{"Name": "ModularGameplay", 		"Enabled": true},
+		{"Name": "AssetSearch", 			"Enabled": true},
+		{"Name": "CommonUI",				"Enabled": true},
+		{"Name": "Metasound",				"Enabled": true},
+		{"Name": "Niagara",					"Enabled": true}, 
+		{"Name": "SkeletalMerging",			"Enabled": true},
+		{"Name": "SequencerScripting",		"Enabled": true},
+		{"Name": "BinkMedia",				"Enabled": true},
+		{"Name": "PCG",						"Enabled": true}
 	]
 }

@@ -1,9 +1,9 @@
 _SAV={}
 
-D_Skills={}
-D_Attributes={}
+_D.Skills={}
+_D.Attributes={}
 D_Quests={}
-D_Skills={}
+_D.Skills={}
 _D.Item={}
 D_EquipSlots={}
 D_EquipType={}

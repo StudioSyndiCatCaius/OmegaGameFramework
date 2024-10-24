@@ -130,6 +130,27 @@ public:
 // BGM Asset
 //################################################################################################
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaBgmSoundData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite) USoundWave* SoundWave;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite) float Loop_BeginTime;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite) float Loop_EndTime;
+};
+
+UCLASS(EditInlineNew,Blueprintable,BlueprintType,Const,Abstract)
+class OMEGAGAMEFRAMEWORK_API UOmegaBGMScript : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintImplementableEvent,Category="Bgm Script")
+	FOmegaBgmSoundData GetBgmSoundData(UOmegaBGMSubsystem* Subsystem, UOmegaBGM* BGM, const FString& style) const;
+	
+};
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaBGM : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
 {
@@ -155,7 +176,11 @@ public:
 	//The point in the Sound Wav where the bgm where it will restart the loop
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Audio")
 	float LoopEndTime=-1;
+
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="General")
+	UOmegaBGMScript* BgmScript;
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 };

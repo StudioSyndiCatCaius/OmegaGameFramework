@@ -21,8 +21,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorUtilFunctions : public UBlueprintFunctio
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable,Category="Actor Selector")
-	static AActor* GetSelectedActor(FOmegaActorSelectorData selectorData);
+	UFUNCTION(BlueprintCallable,Category="Actor Selector", meta=(WorldContext="WorldContextObject"))
+	static AActor* GetSelectedActor(UObject* WorldContextObject, FOmegaActorSelectorData selectorData);
+	
+	UFUNCTION(BlueprintCallable,Category="Actor Selector", meta=(WorldContext="WorldContextObject"))
+    static TArray<AActor*> GetSelectedActors(UObject* WorldContextObject, FOmegaActorSelectorData selectorData);
 };
 
 UCLASS(Blueprintable,EditInlineNew,Abstract,CollapseCategories)
@@ -36,10 +39,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSelector : public UObject
 	UOmegaActorSelector(const FObjectInitializer& ObjectInitializer);
 	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
 public:
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor Selector")
-	AActor* GetActor();
 
-	UFUNCTION()
-	AActor* Private_GetActor(UWorld* WorldContext);
+	UFUNCTION(BlueprintImplementableEvent,Category="Actor Selector")
+	TArray<AActor*> GetActors();
+	
+	UFUNCTION() AActor* Private_GetActor(UWorld* WorldContext);
+	
+	UFUNCTION() TArray<AActor*> Private_GetActorList(UWorld* WorldContext);
 };

@@ -5,8 +5,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "OmegaSettings.h"
+#include "Functions/OmegaFunctions_Animation.h"
+#include "Functions/OmegaFunctions_AVContext.h"
 #include "GameFramework/Pawn.h"
 #include "Functions/OmegaFunctions_Utility.h"
+#include "GameFramework/Character.h"
 #include "Misc/Attribute.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
 
@@ -106,7 +109,6 @@ void UCombatantFunctions::ApplyEffectFromContainer(UCombatantComponent* Combatan
 		{
 			LocalContext = Instigator;
 		}
-		const FTransform EmptyLoc;
 		Instigator->CreateEffect(Effect.EffectClass, Effect.Power, Combatant, Effect.AddedTags, LocalContext);
 	}
 }
@@ -205,6 +207,58 @@ float UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* 
 		return Combatant->GetAttributeComparedValue(Attribute,temp_Mods);
 	}
 	return 0.0;
+}
+
+bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject)
+{
+	if(Combatant && SkillObject)
+	{
+		if(SkillObject->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
+		{
+			TArray<UOmegaAttribute*> att_list;
+			TMap<UOmegaAttribute*, float> att_vals = IDataInterface_Skill::Execute_GetSkillAttributeCosts(
+				SkillObject, Combatant, nullptr);
+			att_vals.GetKeys(att_list);
+			for(auto* TempAtt : att_list)
+			{
+				if(TempAtt)
+				{
+					float val_cur; float val_max;
+					Combatant->GetAttributeValue(TempAtt, val_cur,val_max);
+					if(val_cur<att_vals[TempAtt])
+					{
+						return false; // return false if even 1 attribute is insufficient
+					}
+				}
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
+bool UCombatantFunctions::ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject)
+{
+	if(CanCombatantUseSkill(Combatant,SkillObject))
+	{
+		if(SkillObject->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
+		{
+			TArray<UOmegaAttribute*> att_list;
+			TMap<UOmegaAttribute*, float> att_vals = IDataInterface_Skill::Execute_GetSkillAttributeCosts(
+				SkillObject, Combatant, nullptr);
+			att_vals.GetKeys(att_list);
+			
+			for(auto* TempAtt : att_list)
+			{
+				if(TempAtt)
+				{
+					Combatant->ApplyAttributeDamage(TempAtt,att_vals[TempAtt],nullptr,nullptr,nullptr,FHitResult());
+				}
+			}
+		}
+		return true;
+	}
+	return false;
 }
 
 /*
@@ -348,10 +402,59 @@ TSubclassOf<UCombatantFilter> UOmegaCommonSkill::GetSkillTargetFilter_Implementa
 	return TargetFilter;
 }
 
-/*
 TMap<UOmegaAttribute*, float> UOmegaCommonSkill::GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,
 	UObject* Context)
 {
 	return AttributeUseCost;
 }
-*/
+
+FOmegaCustomScriptedEffects UOmegaCommonSkill::GetScriptedEffects_Implementation()
+{
+	return Effects_Target;
+}
+
+ULevelSequence* UOmegaCommonSkill::GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag)
+{
+	if(TaggedSequences.Contains(Tag))
+	{
+		return TaggedSequences[Tag];
+	}
+	if(DefaultSequence_Asset)
+	{
+		return DefaultSequence_Asset;
+	}
+	if(Combatant)
+	{
+		if(ACharacter* char_Ref = Cast<ACharacter>(Combatant->GetOwner()))
+		{
+			if(char_Ref->GetMesh()->GetAnimInstance())
+			{
+				return UOmegaContextAVFunctions::TryGetObjectContext_Sequence(char_Ref->GetMesh()->GetAnimInstance(),DefaultSequence_Tag);
+			}
+		}
+	}
+	return nullptr;
+}
+
+UAnimMontage* UOmegaCommonSkill::GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag)
+{
+	if(TaggedMontages.Contains(Tag))
+	{
+		return TaggedMontages[Tag];
+	}
+	if(DefaultMontage_Asset)
+	{
+		return DefaultMontage_Asset;
+	}
+	if(Combatant)
+	{
+		if(ACharacter* char_Ref = Cast<ACharacter>(Combatant->GetOwner()))
+		{
+			if(char_Ref->GetMesh()->GetAnimInstance())
+			{
+				return UOmegaContextAVFunctions::TryGetObjectContext_Montages(char_Ref->GetMesh()->GetAnimInstance(),DefaultMontage_Tag);
+			}
+		}
+	}
+	return nullptr;
+}

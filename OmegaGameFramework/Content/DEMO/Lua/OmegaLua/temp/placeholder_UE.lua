@@ -94,10 +94,10 @@ UE={
     -- ########################################################################
     ATTRIBUTE_GET_CURRENT=function (target,attribute) return 0.0 end,
     ATTRIBUTE_GET_MAX=function (target,attribute) return 0.0 end,
-    ATTRIBUTE_DAMAGE=function (target,instigator,attribute,amount,context) return 0.0 end,
+    ATTRIBUTE_DAMAGE=function (target,instigator,attribute,amount,damage_type,context) return 0.0 end,
 
     EFFECT_CREATE=function (effect,target,instigator,context,power) end,
-
+    Effect_RemoveWithTag=function(combatant,effect_tags) end,
     -- ########################################################################
     -- Player
     -- ########################################################################

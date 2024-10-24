@@ -103,6 +103,9 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Jump_End,"Animation.Action.Jump.End");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Dodge,"Animation.Action.Dodge");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Roll,"Animation.Action.Roll");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Cast,"Animation.Action.Cast");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Impact,"Animation.Action.Impact");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Exp_Happy,"Animation.Expression.Happy");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Exp_Sad,"Animation.Expression.Sad");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Exp_Angry,"Animation.Expression.Angry");
@@ -145,6 +148,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Impact,"Event.Combat.Impact");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Attack,"Event.Combat.Attack");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Defend,"Event.Combat.Defend");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Target_Begin,"Event.Target.Begin");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Target_End,"Event.Target.End");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Target_Update,"Event.Target.Update");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Footstep,"Event.Physics.Footstep");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Hit,"Event.Physics.Hit");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Touch,"Event.Physics.Touch");
@@ -172,6 +179,7 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_PreStart,"Event.Dialogue.Line.Pr
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_Start,"Event.Dialogue.Line.Start");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_End,"Event.Dialogue.Line.End");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_Next,"Event.Dialogue.Line.Next");
+
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Choice_Start,"Event.Choice.Start");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Choice_Select,"Event.Choice.Selected");
@@ -222,3 +230,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Query_DLG_CanPlay,"Query.Dialogue.CanPlay");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_Event_Confirm,"Input.Event.Confirm");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_Event_Cancel,"Input.Event.Cancel");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Amount,"Param.Amount");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Max,"Param.Max");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Min,"Param.Min");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Active,"Param.Active");

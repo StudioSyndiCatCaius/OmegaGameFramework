@@ -19,5 +19,15 @@ SynMath={
             return {x=0,y=0,}
         end
     },
+
+    --- func desc
+    ---@param value number
+    ---@param min number
+    ---@param max number
+    clamp=function (value, min, max)
+        if value < min then return min end
+        if value > max then return max end
+        return value
+      end
 }
 

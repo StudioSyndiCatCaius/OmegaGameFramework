@@ -60,8 +60,10 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
 	TSubclassOf<UCommonTextStyle> Text_Tiny;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataWidget")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Widgets")
 	TSubclassOf<UDataWidget> DataWidget_SaveSlot;
+	UPROPERTY(EditAnywhere, Category = "Widgets", meta=(MetaClass="OmegaHoverCursor"))
+	FSoftClassPath HoverCursorClass;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Border")
 	TSubclassOf<UCommonBorderStyle> Border_Big;
@@ -87,6 +89,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Elements")
 	UOmegaSlateStyle_ComboBox*  ComboBox_Default;
 
+	// Images
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
 	FSlateBrush LogoDefault;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
@@ -95,7 +98,9 @@ public:
 	TArray<FSlateBrush> SplashImages;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
 	FSlateBrush GenericMenu_Background;
-	
+
+
+	// SOUNDS
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Hover;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")

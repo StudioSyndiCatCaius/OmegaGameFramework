@@ -16,6 +16,7 @@ public class OmegaDemo : ModuleRules
 			"JsonUtilities",
 			"AnimGraphRuntime",
 			"OmegaGameFramework",
+			"SequencerScripting",
 			"OmegaSequence",
 			"OmegaData",
 			"Flow"

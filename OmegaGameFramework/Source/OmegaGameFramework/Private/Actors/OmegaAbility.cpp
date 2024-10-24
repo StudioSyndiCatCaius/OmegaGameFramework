@@ -5,7 +5,7 @@
 #include "InputAction.h"
 #include "GameFramework/Character.h"
 #include "Components/CombatantComponent.h"
-#include "Components/InputReceiverComponent.h"
+#include "Components/Component_InputReceiver.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
@@ -37,11 +37,11 @@ void AOmegaAbility::BeginPlay()
 	//Bind Default Inputs
 	if(bActivateOnStarted)
 	{
-		DefaultInputReceiver->OnInputStarted.AddDynamic(this, &AOmegaAbility::Native_InputTrigger);
+		DefaultInputReceiver->OnInputStarted.AddDynamic(this, &AOmegaAbility::Native_Start);
 	}
 	if(bActivateOnTriggered)
 	{
-		DefaultInputReceiver->OnInputTriggered.AddDynamic(this, &AOmegaAbility::Native_InputTrigger);
+		//DefaultInputReceiver->OnInputTriggered.AddDynamic(this, &AOmegaAbility::Native_InputTrigger);
 	}
 	if(bFinishOnInputComplete)
 	{
@@ -217,7 +217,7 @@ void AOmegaAbility::Native_Execute()
 	Execute(ContextObject);
 }
 
-void AOmegaAbility::Native_InputTrigger()
+void AOmegaAbility::Native_Start()
 {
 	if(FlipFlopInput && bIsActive)
 	{
@@ -228,6 +228,9 @@ void AOmegaAbility::Native_InputTrigger()
 		Native_Execute();
 	}
 }
+
+
+
 
 ////Local Activate / Deactivate
 

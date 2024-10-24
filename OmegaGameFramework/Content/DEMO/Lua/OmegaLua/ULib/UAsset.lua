@@ -1,3 +1,7 @@
+local aget=function (path, name)
+    return [[/OmegaGameFramework]]..path..name..'.'..name
+end
+
 UASSET={
     CUSTOM={
         Sequence_FX=function(name) return MAC_PATH_GETASSET('/SyndiAsset_CUSTOM/Sequences/FX/',name) end,
@@ -6,6 +10,33 @@ UASSET={
     Icons={
         keys={}
     },
+
+    Attributes={
+        HP=aget('/DEMO/Attributes/','HP'),
+        MP=aget('/DEMO/Attributes/','MP'),
+        PATK=aget('/DEMO/Attributes/','PATK'),
+        PDEF=aget('/DEMO/Attributes/','PDEF'),
+        MATK=aget('/DEMO/Attributes/','MATK'),
+        MDEF=aget('/DEMO/Attributes/','MDEF'),
+        SPD=aget('/DEMO/Attributes/','Speed'),
+        DEX=aget('/DEMO/Attributes/','Dexterity'),
+    },
+    DamageTypes={
+        physical=aget('/DEMO/DamageType/','DT_x_physical'),
+
+        slash=aget('/DEMO/DamageType/','DT_p_slash'),
+        bash=aget('/DEMO/DamageType/','DT_p_bash'),
+        pierce=aget('/DEMO/DamageType/','DT_p_pierce'),
+
+        fire=aget('/DEMO/DamageType/','DT_m_Fire'),
+        water=aget('/DEMO/DamageType/','DT_m_Water'),
+        earth=aget('/DEMO/DamageType/','DT_m_Earth'),
+        wind=aget('/DEMO/DamageType/','DT_m_Wind'),
+
+        light=aget('/DEMO/DamageType/','DT_c_Light'),
+        dark=aget('/DEMO/DamageType/','DT_c_Dark'),
+    }
+    
 }
 
 

@@ -240,6 +240,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class"))
 	static TArray<AActor*> GetActorsFromHitResults(TArray<FHitResult> Hits, TSubclassOf<AActor> Class);
 
+	// -- ROTATE ACTOR
+
+	//Rotates an Actor to aim at a Location
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	static void RotateActorToLookLocation(AActor* Actor, FVector Location, bool X=false, bool Y=false, bool Z=true);
+	
+	//Rotates an Actor to aim at an actor
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	static void RotateActorToLookTarget(AActor* Actor, AActor* LookTarget, bool X=false, bool Y=false, bool Z=true);
+
+	//Rotates an Actor to aim at the average location of an actor list
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	static void RotateActorToLookTargetsMidpoint(AActor* Actor, TArray<AActor*> LookTargets, bool X=false, bool Y=false, bool Z=true);
+
+	// -- Vector Math
+
+	//Gets the locations of every actor in the list
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	static TArray<FVector> GetLocationArrayFromActorList(TArray<AActor*> Actors);
+	
+	
 	//###############################################################################
 	// InterpActor
 	//###############################################################################

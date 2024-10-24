@@ -11,6 +11,7 @@ public class OmegaFlow : ModuleRules
 			"OmegaGameFramework", 
 			"Flow", 
 			"LevelSequence", 
+			"SequencerScripting",
 			"MovieScene"});
  
 		PublicIncludePaths.AddRange(new string[] {Path.Combine(ModuleDirectory,"Public")});

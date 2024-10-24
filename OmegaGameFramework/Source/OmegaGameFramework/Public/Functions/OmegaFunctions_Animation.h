@@ -4,25 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "LevelSequence.h"
 #include "UObject/Interface.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaFunctions_Animation.generated.h"
 
-UINTERFACE(MinimalAPI)
-class UDataInterface_Animation : public UInterface { GENERATED_BODY() };
-
-class OMEGAGAMEFRAMEWORK_API IDataInterface_Animation
-{
-	GENERATED_BODY()
-public:
-	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Omega|Animation")
-	UAnimSequence* GetAnimationSequence_FromTag(FGameplayTag Tag);
-	UFUNCTION(BlueprintImplementableEvent, Category = "Omega|Animation")
-	UAnimMontage* GetAnimationMontage_FromTag(FGameplayTag Tag);
-
-};
 
 
 UCLASS(Blueprintable,BlueprintType,Const,EditInlineNew,Abstract,CollapseCategories)
@@ -65,12 +52,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAnimationFunctions : public UBlueprintFunctio
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintPure,Category="Omega|Animation")
-	static UAnimSequence* GetObjectAnimation_Sequence_FromTag(UObject* Object, FGameplayTag Tag);
 	
-	UFUNCTION(BlueprintPure,Category="Omega|Animation")
-	static UAnimMontage* GetObjectAnimation_Montage_FromTag(UObject* Object, FGameplayTag Tag);
-
 	UFUNCTION(BlueprintCallable,Category="Omega|Animation")
 	static void PlayEmoteAnimation(ACharacter* Character, UOmegaAnimationEmote* Emote);
 };

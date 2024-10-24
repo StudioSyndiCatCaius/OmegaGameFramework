@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataAsset.h"
 #include "Component_Inventory.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UDataAsset*, Asset, int32, Amount, bool, IsFull);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetRemoved, UDataAsset*, Asset, int32, Amount, bool, IsEmpty);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetRemoved, UDataAsset*, Asset, int32, Amount, bool, IsEmpty);
 
 
 UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Inventory (Data Asset Collection)", meta=(BlueprintSpawnableComponent) )
@@ -53,10 +54,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Omega|Inventory", DisplayName="Get Asset Collection Map")
 	TMap<UPrimaryDataAsset*, int32> GetCollectionMap(int32 Min=1);
 
-	UPROPERTY(BlueprintAssignable)
-	FOnAssetAdded OnAssetAdded;
-	UPROPERTY(BlueprintAssignable)
-	FOnAssetRemoved OnAssetRemoved;
+	UPROPERTY(BlueprintAssignable) FOnAssetAdded OnAssetAdded;
+	//UPROPERTY(BlueprintAssignable) FOnAssetRemoved OnAssetRemoved;
 
 	//TRANSFEr
 	UFUNCTION(BlueprintCallable, Category="Data Asset Collection")
@@ -68,6 +67,11 @@ public:
 	//Checks if the collection has enough of each given type of asset;
 	UFUNCTION(BlueprintPure, Category="Data Asset Collection")
 	bool HasMinimumAssets(TMap<UPrimaryDataAsset*, int32> Assets);
+	
+	// ==================================================================
+	// Trading
+	// ==================================================================
+
 		
 };
 
@@ -88,9 +92,33 @@ class OMEGAGAMEFRAMEWORK_API IDataAssetCollectionInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
-	UFUNCTION(BlueprintNativeEvent)
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Inventory")
 	int32 GetMaxCollectionNumber();
+
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Inventory")
+	TMap<UPrimaryDataAsset*, int32> GetTradeAssetRequirements(FGameplayTag TradeTag);
 };
 
 
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+	
+public:
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+	static TMap<UPrimaryDataAsset*, int32> GetTotalAssetListTradeCost(TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+	static int32 GetTotalAssetListTradeCost_One(TMap<UPrimaryDataAsset*, int32> Assets, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+    static int32 GetDataAssetTradeValue_One(UPrimaryDataAsset* Asset, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+	static TMap<UPrimaryDataAsset*, int32> GetDataAssetTradeValue_All(UPrimaryDataAsset* Asset, FGameplayTag TradeTag);
+    	
+};
 

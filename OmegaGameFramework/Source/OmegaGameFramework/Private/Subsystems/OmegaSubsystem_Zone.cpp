@@ -147,57 +147,60 @@ void UOmegaZoneSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
 	GamInstSubsys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>();
-		
+
+	if (!GamInstSubsys) return;
 	FTimerHandle LocalTimer;
 	GetWorld()->GetTimerManager().SetTimer(LocalTimer, this, &UOmegaZoneSubsystem::SpawnFromStartingPoint, 0.1f, false);
+
 }
 
 void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 {
-	// Is in Level Transit?
-	if(GamInstSubsys->IsInlevelTransit)
+	if (!GamInstSubsys || !GamInstSubsys->IsInlevelTransit)
 	{
-		TArray<AActor*> TempPoints;
-		AOmegaZonePoint* TempPoint = nullptr;
+		LoadDefaultZone();
+		return;
+	}
 
-		// If loading from a save game, spawn at saves spot.
-		if(GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->IsFlagActive("$$LoadingLevel$$"))
+	AOmegaZonePoint* TempPoint = nullptr;
+	UOmegaGameManager* GameManager = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
+	UOmegaSaveSubsystem* SaveSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+    
+	if (GameManager->IsFlagActive("$$LoadingLevel$$"))
+	{
+		GameManager->SetFlagActive("$$LoadingLevel$$", false);
+
+		const UOmegaSaveGame* TempSave = SaveSubsystem->ActiveSaveData;
+		TempPoint = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(), TempSave->SavedPlayerTransform);
+		if (TempPoint)
 		{
-			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->SetFlagActive("$$LoadingLevel$$",false);
-				
-			const UOmegaSaveGame* TempSave = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData;
-
-			TempPoint = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(),TempSave->SavedPlayerTransform);
 			TempPoint->SetLifeSpan(1);
-			TempPoint->ZoneToLoad=TempSave->ActiveZone;
+			TempPoint->ZoneToLoad = TempSave->ActiveZone;
 			TempPoint->FinishSpawning(TempSave->SavedPlayerTransform);
-		}
-		else
-		{
-			//Try Get Level Transit spawn point
-			UGameplayStatics::GetAllActorsOfClass(this,AOmegaZonePoint::StaticClass(),TempPoints);
-			for (auto* TempActor: TempPoints)
-			{
-				const AOmegaZonePoint* CheckedPoint = Cast<AOmegaZonePoint>(TempActor);
-				if(CheckedPoint && CheckedPoint->FromLevel==GamInstSubsys->PreviousLevel && GamInstSubsys->TargetSpawnPointTag==CheckedPoint->ZonePointID) //Is valid spawn point;
-					{
-						TempPoint = Cast<AOmegaZonePoint>(TempActor);
-						break;
-
-					}
-			}
-		}
-		
-		if(TempPoint)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Begining Level Spawn Transit: %s"), *TempPoint->GetName());
-			TransitPlayerToPoint(TempPoint, UGameplayStatics::GetPlayerController(this,0));
 		}
 	}
 	else
 	{
-		LoadDefaultZone();
+		TArray<AActor*> TempPoints;
+		UGameplayStatics::GetAllActorsOfClass(this, AOmegaZonePoint::StaticClass(), TempPoints);
+		for (AActor* TempActor : TempPoints)
+		{
+			AOmegaZonePoint* CheckedPoint = Cast<AOmegaZonePoint>(TempActor);
+			if (CheckedPoint && CheckedPoint->FromLevel == GamInstSubsys->PreviousLevel 
+				&& GamInstSubsys->TargetSpawnPointTag == CheckedPoint->ZonePointID)
+			{
+				TempPoint = CheckedPoint;
+				break;
+			}
+		}
 	}
+
+	if (TempPoint)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Beginning Level Spawn Transit: %s"), *TempPoint->GetName());
+		TransitPlayerToPoint(TempPoint, UGameplayStatics::GetPlayerController(this, 0));
+	}
+
 	GamInstSubsys->IsInlevelTransit = false;
 }
 
@@ -217,23 +220,19 @@ void UOmegaZoneSubsystem::LoadDefaultZone()
 // Begins the a transition event
 void UOmegaZoneSubsystem::LoadZone(UOmegaZoneData* Zone, bool UnloadPreviousZones)
 {
-	if(!IsMidPlayerTransit)
+	if (IsMidPlayerTransit || !Zone) 
 	{
-		if(Zone)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Begin Zone Load: %s"), *Zone->GetName());
-			IncomingZone_Load = Zone;
-		}
-		bUnloadPreviousZones = UnloadPreviousZones;
-		IsMidPlayerTransit = true;		//marks the transition event as active
-		
-		Local_PreBeginTransitActions();
-		Local_OnBeginTransitSequence(true);
+		UE_LOG(LogTemp, Warning, TEXT("Cannot change zones, Player is mid-transit or Zone is invalid."));
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot changes zones, Player is mid-transit"));
-	}
+
+	UE_LOG(LogTemp, Display, TEXT("Begin Zone Load: %s"), *Zone->GetName());
+	IncomingZone_Load = Zone;
+	bUnloadPreviousZones = UnloadPreviousZones;
+	IsMidPlayerTransit = true;
+
+	Local_PreBeginTransitActions();
+	Local_OnBeginTransitSequence(true);
 }
 
 void UOmegaZoneSubsystem::UnloadZone(UOmegaZoneData* Zone)
@@ -326,28 +325,23 @@ void UOmegaZoneSubsystem::TransitPlayerToLevel(TSoftObjectPtr<UWorld> Level, FGa
 
 void UOmegaZoneSubsystem::TransitPlayerToPoint(AOmegaZonePoint* Point, APlayerController* Player)
 {
-	if(Point)
+	if (!Point)
 	{
-		Incoming_SpawnPoint = Point;
-		const APlayerController* TargetPlayer = UGameplayStatics::GetPlayerController(this, 0);
-		if(Player)
-		{
-			TargetPlayer = Player;
-		}
-		if(Point->ZoneToLoad)
-		{
-			LoadZone(Point->ZoneToLoad);
-		}
-		else
-		{
-			LoadDefaultZone();
-		}
+		UE_LOG(LogTemp, Error, TEXT("Tried to transit but POINT was invalid"));
+		return;
+	}
+
+	Incoming_SpawnPoint = Point;
+	APlayerController* TargetPlayer = Player ? Player : UGameplayStatics::GetPlayerController(this, 0);
+
+	if (Point->ZoneToLoad)
+	{
+		LoadZone(Point->ZoneToLoad);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Tried to transit but POINT was invalid"));
+		LoadDefaultZone();
 	}
-	
 }
 
 //------------------------------------
@@ -441,69 +435,51 @@ void UOmegaZoneSubsystem::Local_OnNextLoadEvent()
 // Runs after all the levels are loaded/unloaded
 void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 {
-	if(LoadState)
+	if (LoadState)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Finish Zone LOAD"));
-		
-		if(Incoming_LoadTaskZone)
+
+		if (Incoming_LoadTaskZone)
 		{
-			// LOAD FINISH
 			OnZoneLoaded.Broadcast(Incoming_LoadTaskZone);
-		
-			//ACTIVATE SYSTEMS
-			for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+
+			for (TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
 			{
-				if(TempSys)
+				if (TempSys)
 				{
 					GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys);
 				}
 			}
 		}
-		
-		//Teleport Player to spawn point
-		if(Incoming_SpawnPoint)
+
+		if (Incoming_SpawnPoint)
 		{
-			APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this,0);
+			APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this, 0);
 			while (!PawnRef)
 			{
-				if(UGameplayStatics::GetPlayerPawn(this,0))
-				{
-					PawnRef=UGameplayStatics::GetPlayerPawn(this,0);
-				}
+				PawnRef = UGameplayStatics::GetPlayerPawn(this, 0);
 			}
 			PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
-			UGameplayStatics::GetPlayerController(this,0)->SetControlRotation(PawnRef->GetActorRotation());
-			OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this,0),Incoming_SpawnPoint);
-			
+			UGameplayStatics::GetPlayerController(this, 0)->SetControlRotation(PawnRef->GetActorRotation());
+			OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this, 0), Incoming_SpawnPoint);
 		}
-		
+
 		Local_OnBeginTransitSequence(false);
 	}
 	else
 	{
 		UE_LOG(LogTemp, Display, TEXT("Finish Zone UNLOAD"));
-		// UNLOAD FINISH
-		if(LoadedZones.Contains(IncomingZone_Unload))
-		{
-			LoadedZones.Remove(IncomingZone_Unload);
-		}
-		
-		if(Incoming_LoadTaskZone)
-		{
-			OnZoneUnloaded.Broadcast(Incoming_LoadTaskZone);
 
-			//SHUTDOWN SYSTEMS
-			for(TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
-			{
-				if(TempSys)
-				{
-					GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys);
-				}
-			}
+		LoadedZones.Remove(IncomingZone_Unload);
+		OnZoneUnloaded.Broadcast(IncomingZone_Unload);
+
+		for (TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+		{
+			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys);
 		}
 	}
 
-	if(Local_IsWaitForLoad)
+	if (Local_IsWaitForLoad)
 	{
 		Local_FinishZoneLoad();
 	}

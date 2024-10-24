@@ -47,30 +47,34 @@ UCombatantComponent::UCombatantComponent()
 void UCombatantComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	//AddToCombatantList
-	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->Native_RegisterCombatant(this, true);
-	///---Try Setup Input---//
+    
+	auto* WorldSubsystem = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	if (WorldSubsystem)
+	{
+		WorldSubsystem->Native_RegisterCombatant(this, true);
+	}
+    
 	OwnerPawn = Cast<APawn>(GetOwner());
-	//Grant StarterAbilities
-	for(const TSubclassOf<AOmegaAbility> TempAbClass : GrantedAbilities)
+
+	// Grant StarterAbilities
+	for (const auto& TempAbClass : GrantedAbilities)
 	{
 		GrantAbility(TempAbClass);
 	}
 
-	if(TargetIndicatorClass)
+	if (TargetIndicatorClass)
 	{
-		
-		TargetIndicator = GetWorld()->SpawnActorDeferred<ACombatantTargetIndicator>(TargetIndicatorClass, GetOwner()->GetTransform(), nullptr);
-		TargetIndicator->CombatantOwner = this;
-		
-	
-		UGameplayStatics::FinishSpawningActor(TargetIndicator, GetOwner()->GetTransform());
-		TargetIndicator->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-
+		TargetIndicator = GetWorld()->SpawnActorDeferred<ACombatantTargetIndicator>(
+			TargetIndicatorClass, GetOwner()->GetTransform(), nullptr
+		);
+		if (TargetIndicator)
+		{
+			TargetIndicator->CombatantOwner = this;
+			UGameplayStatics::FinishSpawningActor(TargetIndicator, GetOwner()->GetTransform());
+			TargetIndicator->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+		}
 	}
-	
-	
+
 	InitializeAttributes();
 }
 
@@ -189,78 +193,55 @@ bool UCombatantComponent::CombatantHasAllTag(FGameplayTagContainer Tags, bool Ex
 ///////////////////////////////////
 void UCombatantComponent::Update()
 {
-	//Update Widgets
 	TArray<UUserWidget*> FoundWidgets;
-	UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, FoundWidgets, UWidgetInterface_Combatant::StaticClass(), false);
-	for (UUserWidget* TempWidget : FoundWidgets)
-	{
-		if (IWidgetInterface_Combatant::Execute_GetCombatantComponent(TempWidget) == this&&AttributeSet)
-		{
+    UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, FoundWidgets, UWidgetInterface_Combatant::StaticClass(), false);
 
-			IWidgetInterface_Combatant::Execute_OnCombatantUpdated(TempWidget, this);
-			
-			//Set Attribute Texts
-			//GEngine->AddOnScreenDebugMessage(-1, 3.0F, FColor::Green, "ReachWidget");
-			//IWidgetInterface_Combatant::Execute_GetAttributeTexts(TempWidget)
-			for (UOmegaAttribute* LocalAtb : AttributeSet->Attributes)
-			{
-				float DumVal;
-				float DumMax;
-				GetAttributeValue(LocalAtb, DumVal, DumMax);
+    for (auto* TempWidget : FoundWidgets)
+    {
+        if (IWidgetInterface_Combatant::Execute_GetCombatantComponent(TempWidget) == this && AttributeSet)
+        {
+            IWidgetInterface_Combatant::Execute_OnCombatantUpdated(TempWidget, this);
 
-				UTextBlock* ValText;
-				UTextBlock* MaxText;
-				IWidgetInterface_Combatant::Execute_GetAttributeTexts(TempWidget, LocalAtb, ValText, MaxText);
-				//Set Max Value Text
-				if (MaxText)
-				{
-					FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
-					(
-						DumMax,
-						LocalAtb->RoundingMode,
-						LocalAtb->bAlwaysSign,
-						LocalAtb->bUseGrouping,
-						LocalAtb->MinIntegralDigits,
-						LocalAtb->MaxIntegralDigits,
-						LocalAtb->MinFractionalDigits,
-						LocalAtb->MaxFractionalDigits
-						);
-					
-					MaxText->SetText(LocalText_Val);
-				}
-				//Set Current Value Text
-				if (ValText)
-				{
-					FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
-					(
-						DumVal,
-						LocalAtb->RoundingMode,
-						LocalAtb->bAlwaysSign,
-						LocalAtb->bUseGrouping,
-						LocalAtb->MinIntegralDigits,
-						LocalAtb->MaxIntegralDigits,
-						LocalAtb->MinFractionalDigits,
-						LocalAtb->MaxFractionalDigits
-						);
-					
-					ValText->SetText(LocalText_Val);
-				}
+            // Update attribute texts and progress bars
+            for (auto* LocalAtb : AttributeSet->Attributes)
+            {
+                float DumVal = 0.f, DumMax = 0.f;
+                GetAttributeValue(LocalAtb, DumVal, DumMax);
 
-				class UProgressBar* AttProg;
-				bool bLocal_BarToColor;
-				IWidgetInterface_Combatant::Execute_GetAttributeProgressBar(TempWidget, LocalAtb, AttProg, bLocal_BarToColor);
-				if (AttProg)
-				{
-					AttProg->SetPercent(GetAttributePercentage(LocalAtb));
-					if(bLocal_BarToColor)
-					{
-						AttProg->SetFillColorAndOpacity(LocalAtb->AttributeColor);
-					}
-				}
-				
-			}
-		}
-	} //Widget Update END
+                UTextBlock* ValText = nullptr;
+                UTextBlock* MaxText = nullptr;
+                IWidgetInterface_Combatant::Execute_GetAttributeTexts(TempWidget, LocalAtb, ValText, MaxText);
+
+                if (MaxText)
+                {
+                    MaxText->SetText(UKismetTextLibrary::Conv_FloatToText(
+	                    DumMax, LocalAtb->RoundingMode, LocalAtb->bAlwaysSign, LocalAtb->bUseGrouping,
+	                    LocalAtb->MinIntegralDigits, LocalAtb->MaxIntegralDigits, LocalAtb->MinFractionalDigits,
+	                    LocalAtb->MaxFractionalDigits));
+                }
+
+                if (ValText)
+                {
+                    ValText->SetText(UKismetTextLibrary::Conv_FloatToText(
+	                    DumVal, LocalAtb->RoundingMode, LocalAtb->bAlwaysSign, LocalAtb->bUseGrouping,
+	                    LocalAtb->MinIntegralDigits, LocalAtb->MaxIntegralDigits, LocalAtb->MinFractionalDigits,
+	                    LocalAtb->MaxFractionalDigits));
+                }
+
+                UProgressBar* AttProg = nullptr;
+                bool bLocal_BarToColor = false;
+                IWidgetInterface_Combatant::Execute_GetAttributeProgressBar(TempWidget, LocalAtb, AttProg, bLocal_BarToColor);
+                if (AttProg)
+                {
+                    AttProg->SetPercent(GetAttributePercentage(LocalAtb));
+                    if (bLocal_BarToColor)
+                    {
+                        AttProg->SetFillColorAndOpacity(LocalAtb->AttributeColor);
+                    }
+                }
+            }
+        }
+    }
 }
 
 APawn* UCombatantComponent::GetOwnerPawn()
@@ -442,35 +423,22 @@ AOmegaAbility* UCombatantComponent::GetAbility(TSubclassOf<AOmegaAbility> Abilit
 ///////////////////////////////////
 AOmegaAbility* UCombatantComponent::ExecuteAbility(TSubclassOf<AOmegaAbility> AbilityClass, class UObject* Context, bool& bSuccess)
 {
-	bool bIsAbilityActive;
-	if (AbilityClass&&!IsAbilityTagBlocked(AbilityClass.GetDefaultObject()->AbilityTags)&&GetAbility(AbilityClass, bIsAbilityActive))
+	bSuccess = false;
+	if (AbilityClass == nullptr || IsAbilityTagBlocked(AbilityClass.GetDefaultObject()->AbilityTags))
 	{
-		AOmegaAbility* LocalAbility = nullptr;
-		LocalAbility = GetAbility(AbilityClass, bIsAbilityActive);		//Set Local Ability if possible
-		if(LocalAbility&&!IsAbilityActive(AbilityClass, LocalAbility))
-		{
-			LocalAbility->ContextObject = Context;
-			LocalAbility->Native_Execute();
-		}
-		/*else
-		{
-			//If Ability is already spawned, run "Activated" again.
-			IsAbilityActive(AbilityClass, LocalAbility);
-			if (!LocalAbility->bIsKilling)
-			{
-				LocalAbility->AbilityTriggered(Context);
-			}
-			
-		}*/
+		return nullptr;
+	}
+
+	AOmegaAbility* LocalAbility = GetAbility(AbilityClass, bSuccess);
+	if (bSuccess && !IsAbilityActive(AbilityClass, LocalAbility))
+	{
+		LocalAbility->ContextObject = Context;
+		LocalAbility->Native_Execute();
 		bSuccess = true;
 		return LocalAbility;
 	}
-	else
-	{
-		bSuccess = false;
-		return nullptr;
-	}
-	
+
+	return nullptr;
 }
 
 bool UCombatantComponent::IsAbilityActive(class TSubclassOf<AOmegaAbility> AbilityClass, class AOmegaAbility*& Ability)
