@@ -23,7 +23,7 @@ void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		FARFilter Filter;
 		Filter.ClassPaths.Add(UOmegaDataItem::StaticClass()->GetClassPathName());
 	
-		for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath)
+		for(const FDirectoryPath& NewPath : GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath)
 		{
 			FString LocalString = NewPath.Path;
 			Filter.PackagePaths.Add(FName(*LocalString));

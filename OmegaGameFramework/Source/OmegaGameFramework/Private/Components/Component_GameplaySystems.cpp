@@ -35,7 +35,7 @@ void UGameplaySystemsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 
 void UGameplaySystemsComponent::Local_ActivateSystems()
 {
-	for(const auto TempSys : GameplaySystems)
+	for(const auto& TempSys : GameplaySystems)
 	{
 		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys, this, ActivationFlag);
 	}
@@ -43,7 +43,7 @@ void UGameplaySystemsComponent::Local_ActivateSystems()
 
 void UGameplaySystemsComponent::Local_ShutdownSystems()
 {
-	for(const auto TempSys : GameplaySystems)
+	for(const auto& TempSys : GameplaySystems)
 	{
 		if(TempSys)
 		{

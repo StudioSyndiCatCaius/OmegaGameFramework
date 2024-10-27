@@ -55,7 +55,7 @@ void UOmegaScriptedEffectFunctions::ApplyEffectScriptToCombatant(TArray<UOmegaSc
 			TempEffect->OnEffectApplied(Target, Instigator);
 
 			//Spawn Cues
-			for(const TSubclassOf<AOmegaGameplayCue> TempCue : TempEffect->GetCuesToPlay())
+			for(const TSubclassOf<AOmegaGameplayCue>& TempCue : TempEffect->GetCuesToPlay())
 			{
 				UOmegaGameplayCueFunctions::PlayGameplayCue(Target,TempCue,FTransform(), FHitResult(),Target->GetOwner());
 			}
@@ -71,7 +71,7 @@ void UOmegaScriptedEffectFunctions::ApplyScriptedEffectToCombatant(UOmegaScripte
 		ApplyEffectScriptToCombatant(EffectAsset->ScriptedEffects,Target,Instigator);
 		
 		//Spawn Cues
-		for(const TSubclassOf<AOmegaGameplayCue> TempCue : EffectAsset->GameplayCues)
+		for(const TSubclassOf<AOmegaGameplayCue>& TempCue : EffectAsset->GameplayCues)
 		{
 			UOmegaGameplayCueFunctions::PlayGameplayCue(Target,TempCue,FTransform(),FHitResult(),Target->GetOwner());
 		}
