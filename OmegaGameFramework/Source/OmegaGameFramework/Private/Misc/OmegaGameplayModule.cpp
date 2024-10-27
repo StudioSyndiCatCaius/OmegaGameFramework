@@ -23,7 +23,7 @@ UWorld* UOmegaGameplayModule::GetWorld() const
 
 void UOmegaGameplayModule::Native_Initialize()
 {
-	if((REF_OwningManager = GetGameInstance()->GetSubsystem<UOmegaGameManager>()))
+	if((REF_OwningManager = GetGameInstance()->GetSubsystem<UOmegaGameManager>()) != nullptr)
 	{
 		REF_OwningManager->OnGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnGlobalEvent);
 		REF_OwningManager->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnTaggedGlobalEvent);
