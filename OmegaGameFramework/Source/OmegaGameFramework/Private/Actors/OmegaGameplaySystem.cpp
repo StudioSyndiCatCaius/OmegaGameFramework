@@ -48,7 +48,7 @@ void AOmegaGameplaySystem::BeginPlay()
 		const APlayerController* TempPlayer = Cast<APlayerController>(TempActor);
 		
 		//Add New Widgets To Player Screen
-		for (const class TSubclassOf <UHUDLayer> TempWidgetClass : local_GetAllHudClasses())
+		for (const class TSubclassOf <UHUDLayer>& TempWidgetClass : local_GetAllHudClasses())
 		{
 			UOmegaPlayerSubsystem* LocalSystem = TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
 			UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this);

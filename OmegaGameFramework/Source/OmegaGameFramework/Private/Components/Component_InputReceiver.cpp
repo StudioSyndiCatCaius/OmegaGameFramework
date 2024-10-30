@@ -169,7 +169,7 @@ void UInputReceiverComponent::OnOwningControllerChange(APawn* Pawn, AController*
 		GetOwner()->DisableInput(Cast<APlayerController>(OldController));
 	}
 	
-	if((REF_OwningController = Cast<APlayerController>(NewController)))
+	if((REF_OwningController = Cast<APlayerController>(NewController)) != nullptr)
 	{
 		GetOwner()->EnableInput(Cast<APlayerController>(NewController));
 	}

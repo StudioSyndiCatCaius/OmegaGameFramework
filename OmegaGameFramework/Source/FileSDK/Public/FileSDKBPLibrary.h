@@ -21,8 +21,10 @@
 
 #if PLATFORM_WINDOWS
   #include "Windows/WindowsPlatformMisc.h"
-#elif PLATFORM_LINUX || PLATFORM_ANDROID
+#elif PLATFORM_LINUX
   #include "Unix/UnixPlatformMisc.h"
+#elif PLATFORM_ANDROID
+  #include "Android/AndroidPlatformMisc.h"
 #elif PLATFORM_MAC || PLATFORM_IOS
   #include "Apple/ApplePlatformMisc.h"
   #include <sys/stat.h>

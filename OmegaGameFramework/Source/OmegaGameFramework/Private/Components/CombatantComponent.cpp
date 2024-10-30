@@ -1494,7 +1494,7 @@ bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit,
 {
 	if(Gambit)
 	{
-		for(const FCombatantGambit TempGambit : Gambit->GetAllGambitActions())
+		for(const FCombatantGambit& TempGambit : Gambit->GetAllGambitActions())
 		{
 			float rand_val = UKismetMathLibrary::RandomFloat();
 			

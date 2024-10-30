@@ -13,7 +13,7 @@ void AOmegaGameMode::Local_LoadSystemShutdown(UObject* Context, FString Flag)
 	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 	
 	//Activate Game Systems
-	for (const TSubclassOf<AOmegaGameplaySystem> TempSystem : PostLoadGameplaySystems)
+	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : PostLoadGameplaySystems)
 	{
 		SystemRef->ActivateGameplaySystem(TempSystem, this, "GameMode_PostLoad");
 	}
@@ -24,7 +24,7 @@ void AOmegaGameMode::Local_ActivatePersistentSystems()
 {
 	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 	
-	for (const TSubclassOf<AOmegaGameplaySystem> TempSystem : PersistentGameplaySystems)
+	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : PersistentGameplaySystems)
 	{
 		SystemRef->ActivateGameplaySystem(TempSystem, this, "PersistentSystem");
 	}
@@ -38,7 +38,7 @@ void AOmegaGameMode::BeginPlay()
 	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 
 	//Activate Game Systems
-	for (const TSubclassOf<AOmegaGameplaySystem> TempSystem : AutoGameplaySystems)
+	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : AutoGameplaySystems)
 	{
 		
 		SystemRef->ActivateGameplaySystem(TempSystem, this, "GameMode_PreLoad");
