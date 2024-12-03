@@ -40,7 +40,7 @@ DECLARE_DELEGATE(FFlowAssetEvent);
  * Single asset containing flow nodes.
  */
 UCLASS(BlueprintType, hideCategories = Object)
-class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, public IDataInterface_General
+class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, public IDataInterface_General, public IDataInterface_GUID
 {
 	GENERATED_UCLASS_BODY()
 
@@ -54,7 +54,11 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	FGuid AssetGuid;
+public:	
 
+	virtual FGuid GetObjectGuid_Implementation() const  override { return AssetGuid; };
+
+	
 	// Set it to False, if this asset is instantiated as Root Flow for owner that doesn't live in the world
 	// This allow to SaveGame support works properly, if owner of Root Flow would be Game Instance or its subsystem
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flow Asset")

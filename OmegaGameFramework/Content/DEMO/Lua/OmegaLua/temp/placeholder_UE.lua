@@ -110,10 +110,10 @@ UE={
     LINEAR_EVENT_START=function (class,meta)
         return {}
     end,
+
+    EventSequence=function (events,callback) end,
     
-    GLOBAL_EVENT=function (event,context)
-        
-    end,
+    GLOBAL_EVENT=function (event,context) end,
    
     -- ########################################################################
     -- SAVE
@@ -136,6 +136,13 @@ UE={
 
     URL_Launch=function(url) end,
     QuitGame=function() end,
+
+
+    -- ########################################################################
+    -- JSON
+    -- ########################################################################
+    Json_SaveField_Set=function(name,data,global) end,
+    Json_SaveField_Get=function(name,global) return {} end,
 
 }
 

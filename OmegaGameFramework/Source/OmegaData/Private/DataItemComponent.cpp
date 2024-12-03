@@ -2,7 +2,7 @@
 
 
 #include "DataItemComponent.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 #include "OmegaDataSubsystem.h"
 
 // Sets default values for this component's properties

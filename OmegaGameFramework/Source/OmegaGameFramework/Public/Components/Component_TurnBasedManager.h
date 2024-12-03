@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/OmegaAbility.h"
+#include "Actors/Actor_Ability.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Components/ActorComponent.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 #include "Component_TurnBasedManager.generated.h"
 
 // =========================================
@@ -152,12 +152,16 @@ public:
 	// Tag Events
 	//###########################################
 
-	UPROPERTY(EditAnywhere, Category="TagEvents")
+	UPROPERTY(EditAnywhere, Category="TagEvents",DisplayName="Turn Member Events - On Turn Begin")
 	FGameplayTagContainer TagEventsOnTurnBegin;
-
-	UPROPERTY(EditAnywhere, Category="TagEvents")
+	UPROPERTY(EditAnywhere, Category="TagEvents",DisplayName="Turn Member Events - On Turn End")
 	FGameplayTagContainer TagEventsOnTurnEnd;
 
+	UPROPERTY(EditAnywhere, Category="TagEvents",DisplayName="Global Event - On Turn Begin")
+	FGameplayTag TagEventsOnTurnBegin_Global;
+	UPROPERTY(EditAnywhere, Category="TagEvents",DisplayName="Global Event - On Turn End")
+	FGameplayTag TagEventsOnTurnEnd_Global;
+	
 	UFUNCTION(BlueprintCallable, Category="TurnBased|Event")
 	void FireEventsOnCombatants(FGameplayTagContainer Events);
 	

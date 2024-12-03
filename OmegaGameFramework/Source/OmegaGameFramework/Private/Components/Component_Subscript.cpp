@@ -28,7 +28,7 @@ void USubscriptComponent::BeginPlay()
 	PrimaryComponentTick.bCanEverTick=true;
 	SetComponentTickEnabled(true);
 	RegisterComponent();
-	for(const auto* TempScript : Subscripts)
+	for(const auto* TempScript : GetAllSubscripts())
 	{
 		if(TempScript)
 		{
@@ -36,12 +36,15 @@ void USubscriptComponent::BeginPlay()
 			TempScript->OnBeginPlay(this);
 		}
 	}
+	GetOwner()->OnActorBeginOverlap.AddDynamic(this, &USubscriptComponent::OnActorBeginOverlap);
+	GetOwner()->OnActorEndOverlap.AddDynamic(this, &USubscriptComponent::OnActorEndOverlap);
+	GetOwner()->OnActorHit.AddDynamic(this, &USubscriptComponent::OnActorHit);
 	Super::BeginPlay();
 }
 
 void USubscriptComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	for(const auto* TempScript : Subscripts)
+	for(const auto* TempScript : GetAllSubscripts())
 	{
 		if(TempScript)
 		{
@@ -56,14 +59,78 @@ void USubscriptComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void USubscriptComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                         FActorComponentTickFunction* ThisTickFunction)
 {
-	for(const auto* TempScript : Subscripts)
+	for(const auto* TempScript : GetAllSubscripts())
 	{
-		if(TempScript)
+		if(TempScript && TempScript->bCanTick)
 		{
 			TempScript->Tick(DeltaTime,this);
 		}
 	}
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void USubscriptComponent::OnTagEvent_Implementation(FGameplayTag Event)
+{
+	for(const auto* TempScript : GetAllSubscripts())
+	{
+		if(TempScript)
+		{
+			TempScript->OnTagEvent(this,Event);
+		}
+	}
+}
+
+TArray<USubscript*> USubscriptComponent::GetAllSubscripts()
+{
+	TArray<USubscript*> out;
+	for (auto* temp_script : Subscripts)
+	{
+		if(temp_script) { out.Add(temp_script); }
+	}
+	for (auto* temp_coll : SubscriptCollections)
+	{
+		if(temp_coll)
+		{
+			for (auto* temp_script : temp_coll->Subscripts)
+			{
+				if(temp_script) { out.Add(temp_script); }
+			}
+		}
+	}
+	return out;
+}
+
+void USubscriptComponent::OnActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
+{
+	for(const auto* TempScript : GetAllSubscripts())
+	{
+		if(TempScript && TempScript->bCanTick)
+		{
+			TempScript->ActorBeginOverlap(this,OverlappedActor,OtherActor);
+		}
+	}
+}
+
+void USubscriptComponent::OnActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
+{
+	for(const auto* TempScript : GetAllSubscripts())
+	{
+		if(TempScript && TempScript->bCanTick)
+		{
+			TempScript->ActorEndOverlap(this,OverlappedActor,OtherActor);
+		}
+	}
+}
+
+void USubscriptComponent::OnActorHit(AActor* SelfActor, AActor* OtherActor, FVector Vector, const FHitResult& hit)
+{
+	for(const auto* TempScript : GetAllSubscripts())
+	{
+		if(TempScript && TempScript->bCanTick)
+		{
+			TempScript->ActorHit(this,SelfActor,OtherActor,Vector,hit);
+		}
+	}
 }
 
 void USubscriptComponent::SetSubscriptParam_Float(FName Param, float value)
@@ -99,8 +166,36 @@ bool USubscriptComponent::GetSubscriptParam_Bool(FName Param)
 	return false;
 }
 
+void USubscriptComponent::SetSubscriptParam_Vector(FName Param, FVector value)
+{
+	param_data.Add(Param,value);
+}
+
+FVector USubscriptComponent::GetSubscriptParam_Vector(FName Param)
+{
+	if(param_data.Contains(Param)) { return param_data[Param]; }
+	return FVector();
+}
+
 USubscript::USubscript()
 {
 
+}
+
+void USubscript::ActorHit_Implementation(USubscriptComponent* OwningComponent, AActor* SelfActor, AActor* OtherActor, FVector Vector, const FHitResult& hit) const
+{
+}
+
+void USubscript::ActorEndOverlap_Implementation(USubscriptComponent* OwningComponent, AActor* OverlappedActor, AActor* OtherActor) const
+{
+}
+
+void USubscript::ActorBeginOverlap_Implementation(USubscriptComponent* OwningComponent, AActor* OverlappedActor, AActor* OtherActor) const
+{
+}
+
+void USubscript::OnTagEvent_Implementation(USubscriptComponent* OwningComponent, FGameplayTag Event) const
+{
+	
 }
 

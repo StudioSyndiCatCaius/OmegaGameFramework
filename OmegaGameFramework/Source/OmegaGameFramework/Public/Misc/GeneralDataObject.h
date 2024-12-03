@@ -6,7 +6,8 @@
 #include "UObject/NoExportTypes.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "GameplayTagContainer.h"
-
+#include "LuaObject.h"
+#include "Misc/OmegaAttribute.h"
 #include "GeneralDataObject.generated.h"
 
 
@@ -82,5 +83,36 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
 	void GetGeneralAssetLabel(FString& Label);
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label);
+
+};
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaLuaBaseObject : public ULuaObject, public IDataInterface_AttributeModifier
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditDefaultsOnly,Category="FieldNames") FString Param_AttributeMods="attributes";
+
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",DisplayName="Name") FText DisplayName;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Description") FText DisplayDescription;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FString CustomLabel;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTag CategoryTag;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTagContainer GameplayTags;
+	OMACRO_ADDPARAMS_GENERAL();
+	
+public:
 
 };

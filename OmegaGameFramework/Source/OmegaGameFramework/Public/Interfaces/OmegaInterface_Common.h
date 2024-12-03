@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "Styling/SlateBrush.h"
 #include "GameplayTagContainer.h"
+#include "Engine/DataAsset.h"
 #include "OmegaInterface_Common.generated.h"
 
 // ===================================================================================================================
@@ -34,6 +35,18 @@ public:
 	void GetGeneralAssetLabel(FString& Label);
 
 };
+
+UINTERFACE(MinimalAPI)
+class UDataInterface_GUID : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_GUID
+{
+	GENERATED_BODY()
+public:
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|GUID")
+	FGuid GetObjectGuid() const;
+};
+
 
 // ===================================================================================================================
 // Tags Interface

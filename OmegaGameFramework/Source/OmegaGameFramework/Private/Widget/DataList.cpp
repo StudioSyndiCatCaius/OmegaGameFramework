@@ -304,7 +304,7 @@ TArray<UDataWidget*> UDataList::GetEntries_Impure(TSubclassOf<UDataWidget> Class
 	TArray<UDataWidget*> out;
 	for (auto* i : GetEntries())
 	{
-		if(i->GetClass()->IsChildOf(Class))
+		if(i->GetClass()->IsChildOf(Class) || !Class)
 		{
 			out.Add(i);
 		}
@@ -671,8 +671,6 @@ void UDataList::RebuildList()
 			break;
 		}
 	}
-	
-	
 
 	//Add to Content Panel and Align
 	ParentPanel->AddChildToCanvas(ListPanel);
@@ -689,32 +687,20 @@ void UDataList::RebuildList()
 
 	ClearList();
 	
-	if (bUseCustomEntries)
+	for (UPrimaryDataAsset* TempAsset : DefaultAssets)
 	{
-		if(CustomEntryObjects.IsValidIndex(0))
+		AddAssetToList(TempAsset, DefaultListFlag);
+	}
+	for(auto* temp_entry : CustomEntryObjects)
+	{
+		if(temp_entry)
 		{
-			for(auto* temp_entry : CustomEntryObjects)
-			{
-				if(temp_entry)
-				{
-					AddAssetToList(temp_entry,"");
-				}
-			}
-		}
-		else
-		{
-			for (const FCustomAssetData& TempData : CustomEntries)
-			{
-				AddedCustomEntryToList(TempData, DefaultListFlag);
-			}
+			AddAssetToList(temp_entry,"");
 		}
 	}
-	else
+	for (const FCustomAssetData& TempData : CustomEntries)
 	{
-		for (UPrimaryDataAsset* TempAsset : DefaultAssets)
-		{
-			AddAssetToList(TempAsset, DefaultListFlag);
-		}
+		AddedCustomEntryToList(TempData, DefaultListFlag);
 	}
 }
 

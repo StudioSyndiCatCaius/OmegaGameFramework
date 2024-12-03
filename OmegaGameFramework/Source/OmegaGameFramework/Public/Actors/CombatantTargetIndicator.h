@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 #include "CombatantTargetIndicator.generated.h"
 
 UCLASS()

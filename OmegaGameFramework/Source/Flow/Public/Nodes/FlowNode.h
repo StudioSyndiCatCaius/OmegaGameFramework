@@ -9,6 +9,7 @@
 #include "Templates/SubclassOf.h"
 
 #include "FlowTypes.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "Nodes/FlowPin.h"
 #include "FlowNode.generated.h"
 
@@ -23,7 +24,7 @@ DECLARE_DELEGATE(FFlowNodeEvent);
  * A Flow Node is UObject-based node designed to handle entire gameplay feature within single node.
  */
 UCLASS(Abstract, Blueprintable, HideCategories = Object)
-class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface
+class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID
 {
 	GENERATED_UCLASS_BODY()
 
@@ -108,6 +109,7 @@ public:
 	void SetGuid(const FGuid NewGuid) { NodeGuid = NewGuid; }
 	UFUNCTION(BlueprintPure, Category="Flow Node")
 	FGuid GetGuid() const { return NodeGuid; }
+	virtual FGuid GetObjectGuid_Implementation() const  override { return NodeGuid; };
 
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowAsset* GetFlowAsset() const;

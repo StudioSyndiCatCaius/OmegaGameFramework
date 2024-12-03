@@ -61,8 +61,7 @@ void UOmegaSaveSubsystem::OnLevelChanged(UWorld* World, const UWorld::Initializa
 	{
 		for(auto* TempScript : TempState->Scripts)
 		{
-			TempScript->OverrideWorld(GetWorld());
-			TempScript->OnLevelChange(TempState,UGameplayStatics::GetCurrentLevelName(this));
+			TempScript->OnLevelChange(this, TempState,UGameplayStatics::GetCurrentLevelName(this));
 		}
 	}
 }
@@ -92,13 +91,18 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success)
 {
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
-	const bool ValidSave = UGameplayStatics::DoesSaveGameExist(SlotName, 0);
+	return LoadGame_Named(SlotName,Success);
+}
+
+UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame_Named(FString Slot, bool& Success)
+{
+	const bool ValidSave = UGameplayStatics::DoesSaveGameExist(Slot, 0);
 	Success = ValidSave;
 	
 	if (ValidSave)
 	{
-		UOmegaSaveGame* LocalGameSave = Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
-		LocalGameSave->SaveScreenshot = UKismetRenderingLibrary::ImportFileAsTexture2D(this, Local_GetScreenshotPath(SlotName));
+		UOmegaSaveGame* LocalGameSave = Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(Slot, 0));
+		LocalGameSave->SaveScreenshot = UKismetRenderingLibrary::ImportFileAsTexture2D(this, Local_GetScreenshotPath(Slot));
 		return LocalGameSave;
 	}
 	
@@ -106,37 +110,28 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success)
 }
 
 
-
 //ON SAVE
-void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, bool& Success)
+void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, FGameplayTag SaveCategory, bool& Success)
 {
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
+	Success = Local_SaveGame(SlotName,SaveCategory);
+}
 
-	Success = Local_SaveGame(SlotName);
+void UOmegaSaveSubsystem::SaveActiveGame_Named(FString Slot, FGameplayTag SaveCategory, bool& Success)
+{
+	Success = Local_SaveGame(Slot,SaveCategory);
 }
 
 
 bool UOmegaSaveSubsystem::SaveGameUnique(EUniqueSaveFormats Format)
 {
-	FString LocalSaveName;
-	
-	switch (Format) {
-	case EUniqueSaveFormats::SaveFormat_Quicksave:
-		LocalSaveName = "quicksave";
-		break;
-	case EUniqueSaveFormats::SaveFormat_Autosave:
-		LocalSaveName = "autosave";
-		break;
-	default: ;
-	}
-
-	return Local_SaveGame(LocalSaveName);
+	return false;
 }
 
 
 
-bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
+bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName,FGameplayTag SaveCategory)
 {
 	//LocalActiveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
 
@@ -171,10 +166,10 @@ bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName)
 
 	//SaveDate
 	ActiveSaveData->SaveDate = UKismetMathLibrary::Now();
+	ActiveSaveData->SaveCategory=SaveCategory;
 	
 	//Save Playtime
 	//LocalActiveData->SavedPlaytime = GetGameInstance()->GetSubsystem<UOmegaGameManager>()->Playtime;
-
 
 	const FString fileName = Local_GetScreenshotPath(SlotName);
 	FScreenshotRequest::RequestScreenshot(fileName, false, false);
@@ -195,10 +190,7 @@ UOmegaSaveGame* UOmegaSaveSubsystem::CreateNewGame()
 
 void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSavedLevel, FGameplayTagContainer Tags)
 {
-	if (!GameData)
-	{
-		return;
-	}
+	if (!GameData) { return; }
 	
 	ActiveSaveData = GameData;
 	ActiveSaveData->OnGameStarted(Tags);
@@ -227,12 +219,10 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 	if(LoadSavedLevel)
 	{
 		const FGameplayTag EmptyPoint;
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->SetFlagActive("$$LoadingLevel$$",true);
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->IsInlevelTransit=true;
-		
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->bIsLoadingGame=true;
 		GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToLevel_Name(*ActiveSaveData->ActiveLevelName,EmptyPoint);
 	}
-	
+	OnNewGameStarted.Broadcast(GameData);
 	//GetGameInstance()->GetSubsystem<UGamePreferenceSubsystem>()->Local_PreferenceUpdateAll();
 }
 
@@ -469,25 +459,33 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 	return OutAssets;
 }
 
-void UOmegaSaveSubsystem::AddSaveTagsToDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal)
+void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags,
+	bool bGlobal)
 {
+	FGameplayTagContainer TempTags;
 	if(GetSaveObject(bGlobal)->SaveAssetTags.Contains(Asset))
 	{
-		FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
-		TempTags.AppendTags(Tags);
-		GetSaveObject(bGlobal)->SaveAssetTags.Add(Asset, TempTags);
+		TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
 	}
+	if(bHasTags)
+	{
+		TempTags.AppendTags(Tags);
+	}
+	else
+	{
+		TempTags.RemoveTags(Tags);
+	}
+	GetSaveObject(bGlobal)->SaveAssetTags.Add(Asset, TempTags);
+}
+
+void UOmegaSaveSubsystem::AddSaveTagsToDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal)
+{
+	SetSaveTagsOnDataAsset(Asset,Tags,true,bGlobal);
 }
 
 void UOmegaSaveSubsystem::RemoveSaveTagsFromDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal)
 {
-	if(GetSaveObject(bGlobal)->SaveAssetTags.Contains(Asset))
-	{
-		FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
-		TempTags.RemoveTags(Tags);
-		GetSaveObject(bGlobal)->SaveAssetTags.Add(Asset, TempTags);
-		
-	}
+	SetSaveTagsOnDataAsset(Asset,Tags,false,bGlobal);
 }
 
 bool UOmegaSaveSubsystem::DoesDataAssetHaveSaveTags(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bExact, bool bGlobal)
@@ -620,9 +618,9 @@ bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Condition
 			TempCondition->WorldPrivate = GetWorld();
 		}
 	}
-	
-	if(Conditions.CheckType == EBoolType::BoolType_And)
-	{
+
+	switch (Conditions.CheckType) {
+	case BoolType_And:
 		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
 		{
 			if(!TempCondition || !TempCondition->CheckSaveCondition(this))
@@ -630,9 +628,8 @@ bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Condition
 				return false;
 			}
 		}
-	}
-	else
-	{
+		break;
+	case BoolType_Or:
 		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
 		{
 			if(TempCondition && TempCondition->CheckSaveCondition(this))
@@ -641,6 +638,16 @@ bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Condition
 			}
 			return false;
 		}
+		break;
+	case BoolType_NONE:
+		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
+		{
+			if(TempCondition && TempCondition->CheckSaveCondition(this))
+			{
+				return false;
+			}
+		}
+		break;
 	}
 	
 	return true;
@@ -648,6 +655,7 @@ bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Condition
 
 void UOmegaSaveSubsystem::SaveObjectJsonData(UObject* Object, bool Global)
 {
+	
 	if(Object && Object->GetClass()->ImplementsInterface(UOmegaSaveInterface::StaticClass()))
 	{
 		if(IOmegaSaveInterface::Execute_UseJsonSaveData(Object))
@@ -714,11 +722,18 @@ void UOmegaSaveSubsystem::SetStoryStateActive(UOmegaStoryStateAsset* State, bool
 		{
 			if(bActive)
 			{
+				//Check if the state can be activated
+				for(auto* TempScript : State->Scripts)
+				{
+					if(!TempScript->CanActivateState(this,State))
+					{
+						return;
+					}
+				}
 				GetSaveObject(bGlobalSave)->ActiveStoryStates.AddUnique(State);
 				for(auto* TempScript : State->Scripts)
 				{
-					TempScript->OverrideWorld(GetWorld());
-					TempScript->OnStateBegin(State);
+					TempScript->OnStateBegin(this,State);
 				}
 			}
 			else
@@ -726,8 +741,7 @@ void UOmegaSaveSubsystem::SetStoryStateActive(UOmegaStoryStateAsset* State, bool
 				GetSaveObject(bGlobalSave)->ActiveStoryStates.Remove(State);
 				for(auto* TempScript : State->Scripts)
 				{
-					TempScript->OverrideWorld(GetWorld());
-					TempScript->OnStateEnd(State);
+					TempScript->OnStateEnd(this,State);
 				}
 			}
 		}
@@ -781,23 +795,6 @@ void UOmegaSaveBase::Local_OnLoaded()
 // ====================================================================================================
 // Story State Script
 // ====================================================================================================
-UWorld* UOmegaStoryStateScript::GetWorld() const
-{
-	if(WorldPrivate) { return  WorldPrivate; }
-	if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
-}
-
-UGameInstance* UOmegaStoryStateScript::GetGameInstance() const
-{
-	if(WorldPrivate) { return WorldPrivate->GetGameInstance();}
-	return Cast<UGameInstance>(GetOuter());
-}
-
-UOmegaStoryStateScript::UOmegaStoryStateScript(const FObjectInitializer& ObjectInitializer)
-{
-	if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
-}
-
 
 
 
@@ -948,8 +945,6 @@ UGameInstance* UOmegaSaveCondition::GetGameInstance() const
 	return Cast<UGameInstance>(GetOuter());
 }
 
-
-
 //#############################################################################################################################################
 // SAVE STATE COMPONENT
 //#############################################################################################################################################
@@ -996,15 +991,22 @@ void UOmegaSaveStateComponent::Refresh()
 // ##############################################################################################################################
 // State Asset
 // ##############################################################################################################################
-void UOmegaStoryStateScript::OnStateBegin_Implementation(UOmegaStoryStateAsset* State)
+
+bool UOmegaStoryStateScript::CanActivateState_Implementation(UOmegaSaveSubsystem* SaveSubsystem,
+	UOmegaStoryStateAsset* State)
+{
+	return true;
+}
+
+void UOmegaStoryStateScript::OnStateBegin_Implementation(UOmegaSaveSubsystem* SaveSubsystem,UOmegaStoryStateAsset* State)
 {
 }
 
-void UOmegaStoryStateScript::OnStateEnd_Implementation(UOmegaStoryStateAsset* State)
+void UOmegaStoryStateScript::OnStateEnd_Implementation(UOmegaSaveSubsystem* SaveSubsystem,UOmegaStoryStateAsset* State)
 {
 }
 
-void UOmegaStoryStateScript::OnLevelChange_Implementation(UOmegaStoryStateAsset* State, const FString& LevelName)
+void UOmegaStoryStateScript::OnLevelChange_Implementation(UOmegaSaveSubsystem* SaveSubsystem,UOmegaStoryStateAsset* State, const FString& LevelName)
 {
 }
 

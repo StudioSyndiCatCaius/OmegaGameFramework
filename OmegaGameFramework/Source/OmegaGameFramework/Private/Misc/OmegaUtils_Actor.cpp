@@ -51,7 +51,9 @@ TArray<AActor*> UOmegaActorSelector::Private_GetActorList(UWorld* WorldContext)
 	if(WorldContext)
 	{
 		WorldPrivate=WorldContext;
+		return GetActors();
 	}
-	return GetActors();
+	TArray<AActor*> nullOut;
+	return nullOut;
 }
 

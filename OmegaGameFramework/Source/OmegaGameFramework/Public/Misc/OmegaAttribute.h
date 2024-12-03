@@ -98,7 +98,10 @@ public:
 	//-----------------------------------------------------------------------------------
 	// Widget
 	//-----------------------------------------------------------------------------------
-
+	
+	UFUNCTION(BlueprintPure, Category="Attribute")
+	FText GetAttributeValueDisplayText(float value);
+	
 	UPROPERTY(EditAnywhere, Category="Widget")
 	TEnumAsByte<ERoundingMode> RoundingMode = ERoundingMode::HalfToEven;
 	

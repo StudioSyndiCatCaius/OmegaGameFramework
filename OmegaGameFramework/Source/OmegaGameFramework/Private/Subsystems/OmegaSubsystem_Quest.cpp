@@ -20,12 +20,12 @@ UOmegaQuest* UOmegaQuestTypeScript::GetQuestAsset() const
 	return nullptr;
 }
 
-void UOmegaQuestTypeScript::OnLoad_Implementation(FJsonObjectWrapper Data) const
+void UOmegaQuestTypeScript::OnLoad_Implementation(UOmegaQuestComponent* Component, FJsonObjectWrapper Data) const
 {
 	
 }
 
-FJsonObjectWrapper UOmegaQuestTypeScript::OnSave_Implementation(FJsonObjectWrapper Data) const
+FJsonObjectWrapper UOmegaQuestTypeScript::OnSave_Implementation(UOmegaQuestComponent* Component, FJsonObjectWrapper Data) const
 {
 	return Data;
 }
@@ -74,7 +74,7 @@ void UOmegaQuestComponent::TryLoadFromJsonSave()
 	if(QuestAsset && QuestAsset->QuestScript)
 	{
 		JsonSaveData=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData->DataAsset_Json.FindOrAdd(QuestAsset);
-		QuestAsset->QuestScript->OnLoad(JsonSaveData);
+		QuestAsset->QuestScript->OnLoad(this, JsonSaveData);
 	}
 }
 
@@ -83,7 +83,7 @@ void UOmegaQuestComponent::TrySaveToJsonSave()
 	if(QuestAsset && QuestAsset->QuestScript)
 	{
 		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()
-			->ActiveSaveData->DataAsset_Json.Add(QuestAsset,QuestAsset->QuestScript->OnSave(JsonSaveData));
+			->ActiveSaveData->DataAsset_Json.Add(QuestAsset,QuestAsset->QuestScript->OnSave(this, JsonSaveData));
 	}
 }
 
@@ -109,7 +109,7 @@ void UOmegaQuestComponent::SetQuestAsset(UOmegaQuest* Quest)
 {
 	if(Quest && Quest->QuestScript && Quest->QuestScript->CanQuestStart())
 	{
-		Quest->QuestScript->WorldPrivate=GetWorld();
+		
 		Quest->QuestScript->REF_Comp=this;
 		QuestAsset=Quest;
 	}
@@ -125,7 +125,7 @@ bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
 		}
 		if(QuestAsset)
 		{
-			QuestAsset->QuestScript->OnQuestStart();
+			QuestAsset->QuestScript->OnQuestStart(this);
 			return  true;
 		}
 	}
@@ -153,6 +153,16 @@ bool UOmegaQuestComponent::IsQuestComplete()
 		return QuestAsset->QuestScript->IsComplete();
 	}
 	return false;
+}
+
+TArray<UObject*> UOmegaQuestComponent::GetActiveQuestTasks()
+{
+	TArray<UObject*> out;
+	if(QuestAsset && QuestAsset->QuestScript)
+	{
+		return QuestAsset->QuestScript->GetActiveTasks(this);
+	}
+	return out;
 }
 
 

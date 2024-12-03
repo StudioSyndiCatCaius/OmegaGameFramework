@@ -19,8 +19,134 @@
 #include "OmegaSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "MovieSceneSequencePlayer.h"
+#include "OmegaSettings_Gameplay.h"
 #include "TimerManager.h"
+#include "Camera/CameraComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Kismet/KismetMathLibrary.h"
+
+
+UZoneEntityComponent::UZoneEntityComponent()
+{
+	LegendAsset=LoadObject<UZoneLegendAsset>(nullptr, TEXT("/OmegaGameFramework/DEMO/Zone/Legend/Legend_SpawnPoint.Legend_SpawnPoint"));
+}
+
+void UZoneEntityComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->RegisterZoneEntity(this,true);
+	TSubclassOf<AZoneEntityDisplayActor> inClass;
+	if(DisplayActorClass)
+	{
+		inClass=DisplayActorClass;
+	}
+	else if (LegendAsset && LegendAsset->DefaultDisplayActor)
+	{
+		inClass=LegendAsset->DefaultDisplayActor;
+	}
+	else if(UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	{
+		if(TSubclassOf<AZoneEntityDisplayActor> tempClass = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle()->DefaultZoneEntityDisplayActor)
+		{
+			inClass=tempClass;
+		}
+	}
+	if(inClass)
+	{
+		FTransform in_pos;
+		Ref_DisplayActor= GetWorld()->SpawnActorDeferred<AZoneEntityDisplayActor>(inClass,in_pos,GetOwner());
+		Ref_DisplayActor->owning_component=this;
+		Ref_DisplayActor->FinishSpawning(in_pos);
+		Ref_DisplayActor->AttachToActor(GetOwner(),FAttachmentTransformRules(EAttachmentRule::SnapToTarget,false));
+	}
+}
+
+void UZoneEntityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(GetWorld() && GetWorld()->GetSubsystem<UOmegaZoneSubsystem>())
+	{
+		GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->RegisterZoneEntity(this,false);
+	}
+	if(Ref_DisplayActor)
+	{
+		Ref_DisplayActor->K2_DestroyActor();
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
+FVector2D UZoneEntityComponent::GetPosition2D()
+{
+	return UKismetMathLibrary::Conv_VectorToVector2D(GetOwner()->GetActorLocation());
+	
+}
+
+float UZoneEntityComponent::GetRotation2D()
+{
+
+	return GetOwner()->GetActorRotation().Yaw;
+}
+
+void UZoneEntityComponent::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	Name=DisplayName;
+	Description=DisplayDescription;
+}
+
+void UZoneEntityComponent::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	if(LegendAsset)
+	{
+		Brush=LegendAsset->Icon;
+	}
+}
+
+FGameplayTag UZoneEntityComponent::GetObjectGameplayCategory_Implementation()
+{
+	if(LegendAsset)
+	{
+		return LegendAsset->CategoryTag;
+	}
+	return FGameplayTag();
+}
+
+FGameplayTagContainer UZoneEntityComponent::GetObjectGameplayTags_Implementation()
+{
+	FGameplayTagContainer outTags=ExtraTags;
+	if(LegendAsset)
+	{
+		outTags.AppendTags(LegendAsset->GameplayTags);
+	}
+	return outTags;
+}
+
+AZoneEntityViewCamera::AZoneEntityViewCamera()
+{
+	RootComponent=CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	
+	SpringArm=CreateOptionalDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
+	SpringArm->SetupAttachment(RootComponent);
+	SpringArm->TargetArmLength=400;
+	CameraComponent=CreateOptionalDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	CameraComponent->SetupAttachment(SpringArm);
+	SceneCaptureComponent=CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(TEXT("Scene Capture"));
+	SceneCaptureComponent->SetupAttachment(CameraComponent);
+	SceneCaptureComponent->PrimitiveRenderMode=ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+}
+
+void AZoneEntityViewCamera::BeginPlay()
+{
+	Super::BeginPlay();
+	for(UZoneEntityComponent* temp_entity : GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->GetRegisteredZoneEntities())
+	{
+		if(temp_entity->GetDisplayActor())
+		{
+			SceneCaptureComponent->ShowOnlyActors.Add(temp_entity->GetDisplayActor());
+		}
+	}
+}
 
 
 // =============================================================================================================
@@ -32,30 +158,15 @@ void UOmegaZoneSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	FallbackZone = NewObject<UOmegaZoneData>(this,UOmegaZoneData::StaticClass());
 }
 
+
 void UOmegaZoneSubsystem::Tick(float DeltaTime)
 {
-	/*
-	if(GamInstSubsys && GamInstSubsys->IsInlevelTransit && !bIsInLevelTransit)
-	{
-		if(UGameplayStatics::GetPlayerCharacter(this,0))
-		{
-			GamInstSubsys->IsInlevelTransit = false;
-			FTimerHandle LocalTimer;
-			GetWorld()->GetTimerManager().SetTimer(LocalTimer, this, &UOmegaZoneSubsystem::OnLoadFromLevelComplete, 0.1f, false);
-		}
-	}
-	*/
+
 }
 
 UOmegaLevelData* UOmegaZoneSubsystem::GetLevelData(TSoftObjectPtr<UWorld> SoftLevelReference)
 {
-	// Check if the Soft Level Reference is valid
-	/*if (!SoftLevelReference.IsValid())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Soft Level Reference is not valid! Cannot load World Data Asset."));
-		return nullptr;
-	}
-*/
+
 	// Get the current level path
 	FString CurrentLevelPath = SoftLevelReference.GetLongPackageName();
 	UE_LOG(LogTemp, Warning, TEXT("LEVEL DATA CHECK --> CurrentLevelPath: %s"), *CurrentLevelPath);
@@ -122,6 +233,32 @@ TSoftObjectPtr<UWorld> UOmegaZoneSubsystem::GetCurrentLevelSoftReference()
 	return LevelAssetPtr;
 }
 
+TArray<UZoneEntityComponent*> UOmegaZoneSubsystem::GetRegisteredZoneEntities() const
+{
+	TArray<UZoneEntityComponent*> out;
+	for(UZoneEntityComponent* temp_entity : registered_entities)
+	{
+		if(temp_entity)
+		{
+			out.Add(temp_entity);
+		}
+	}
+	return out;
+}
+
+TArray<UZoneEntityComponent*> UOmegaZoneSubsystem::GetRegisteredZoneEntities_OfLegend(UZoneLegendAsset* Legend) const
+{
+	TArray<UZoneEntityComponent*> out;
+	for(UZoneEntityComponent* temp_entity : GetRegisteredZoneEntities())
+	{
+		if(temp_entity && temp_entity->LegendAsset==Legend)
+		{
+			out.Add(temp_entity);
+		}
+	}
+	return out;
+}
+
 void UOmegaZoneSubsystem::OnLoadFromLevelComplete()
 {
 	AOmegaZonePoint* OutPoint = nullptr;
@@ -161,14 +298,15 @@ void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 		LoadDefaultZone();
 		return;
 	}
-
+	GamInstSubsys->IsInlevelTransit = false;
+	
 	AOmegaZonePoint* TempPoint = nullptr;
 	UOmegaGameManager* GameManager = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
 	UOmegaSaveSubsystem* SaveSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
     
-	if (GameManager->IsFlagActive("$$LoadingLevel$$"))
+	if (GamInstSubsys->bIsLoadingGame)
 	{
-		GameManager->SetFlagActive("$$LoadingLevel$$", false);
+		GamInstSubsys->bIsLoadingGame=false;
 
 		const UOmegaSaveGame* TempSave = SaveSubsystem->ActiveSaveData;
 		TempPoint = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(), TempSave->SavedPlayerTransform);
@@ -201,7 +339,7 @@ void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 		TransitPlayerToPoint(TempPoint, UGameplayStatics::GetPlayerController(this, 0));
 	}
 
-	GamInstSubsys->IsInlevelTransit = false;
+
 }
 
 void UOmegaZoneSubsystem::LoadDefaultZone()
@@ -473,9 +611,12 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 		LoadedZones.Remove(IncomingZone_Unload);
 		OnZoneUnloaded.Broadcast(IncomingZone_Unload);
 
-		for (TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+		if(Incoming_LoadTaskZone)
 		{
-			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys);
+			for (TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+			{
+				GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys);
+			}
 		}
 	}
 
@@ -830,6 +971,7 @@ AOmegaZonePoint::AOmegaZonePoint()
 {
 	UCapsuleComponent* CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>("Capsule Component");
 	DirectionalArrow= CreateOptionalDefaultSubobject<UArrowComponent>("DirectionArrow");
+	ZoneEntityComponent= CreateOptionalDefaultSubobject<UZoneEntityComponent>("ZoneEntity");
 	if(DirectionalArrow) { DirectionalArrow->SetupAttachment(CapsuleComponent); }
 	if(CapsuleComponent)
 	{
@@ -864,3 +1006,9 @@ void UOmegaZoneGameInstanceSubsystem::OnLevelChanged(UWorld* World, const UWorld
 		//World->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToPointID(TargetSpawnPointTag, UGameplayStatics::GetPlayerController(this, 0));
 	}
 }
+
+// =============================================================================================================
+// Zone Minimap
+// =============================================================================================================
+
+

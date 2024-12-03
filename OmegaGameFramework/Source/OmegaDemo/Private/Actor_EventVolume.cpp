@@ -3,6 +3,8 @@
 
 #include "Actor_EventVolume.h"
 
+#include "Kismet/KismetStringLibrary.h"
+
 
 void UOmegaEventVolumeTriggerScript::TriggerEvent() const
 {
@@ -54,3 +56,4 @@ void AOmega_EventVolume::BeginPlay()
 	}
 	Super::BeginPlay();
 }
+

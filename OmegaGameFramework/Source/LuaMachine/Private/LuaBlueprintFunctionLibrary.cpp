@@ -35,6 +35,10 @@
 ULuaState* ULuaBlueprintFunctionLibrary::LOCAL_getLuaState(UObject* WorldContextObject,
 	TSubclassOf<ULuaState> StateClass)
 {
+	if(!WorldContextObject)
+	{
+		return nullptr;
+	}
 	TSubclassOf<ULuaState> local_state = GetDefaultLuaState();
 	if(StateClass)
 	{
@@ -481,6 +485,12 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaRunString(UObject* WorldContextObject
 	}
 
 	return L->RunString(CodeString, CodePath);
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::LuaRunString_AsFunction(UObject* WorldContextObject,
+	TSubclassOf<ULuaState> State, const FString& CodeString, TArray<FLuaValue> Args, FString CodePath)
+{
+	return LuaValueCall(LuaRunString(WorldContextObject,State,CodeString,CodePath), Args);
 }
 
 ELuaThreadStatus ULuaBlueprintFunctionLibrary::LuaThreadGetStatus(FLuaValue Value)
@@ -2245,3 +2255,4 @@ FString ULuaValuesFunctionLibrary::LuaValueCall_String(FLuaValue Value, TArray<F
 	FLuaValue out = ULuaBlueprintFunctionLibrary::LuaValueCall(Value,Args);
 	if (out.Type==ELuaValueType::String) { return out.String; } return NilReturn;
 }
+

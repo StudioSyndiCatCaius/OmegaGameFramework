@@ -6,16 +6,30 @@
 #include "OmegaDataItem.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "OmegaLinearEventSubsystem.h"
+#include "Subsystems/OmegaSubsystem_Message.h"
+
+UObject* ULinearEvent_SimpleMessage::local_GetInstigator() const
+{
+	if(UObject* out = Instigator_Actor->Private_GetActor(GetWorld()))
+	{
+		return out;
+	}
+	if(Instigator_Asset)
+	{
+		return Instigator_Asset;
+	}
+	return nullptr;
+}
 
 FString ULinearEvent_SimpleMessage::GetLogString_Implementation() const
 {
-	FText SpeakerString;
-	if(Instigator)
+	FString SpeakerString;
+	if(local_GetInstigator())
 	{
-		SpeakerString = Instigator->DisplayName;
+		SpeakerString = local_GetInstigator()->GetName();
 	}
 
-	const FText OutText = FText::Format(FText::FromString("{0}: {1}"), SpeakerString, Message);
+	const FText OutText = FText::Format(FText::FromString("{0}: {1}"), FText::FromString(SpeakerString), Message);
 
 	return OutText.ToString();
 }
@@ -33,7 +47,7 @@ void ULinearEvent_SimpleMessage::Native_Begin()
 	
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(FName("SimpleMessage"), this);
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
-	
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->FireCustomGameplayMessage(local_GetInstigator(),Message,MessageCategory,FLuaValue());
 }
 
 void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
@@ -44,6 +58,19 @@ void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
 		Finish("");
 	}
 	
+}
+
+UObject* UFlowNode_SimpleMessage::local_GetInstigator() const
+{
+	if(UObject* out = Instigator_Actor->Private_GetActor(GetWorld()))
+	{
+		return out;
+	}
+	if(Instigator_Asset)
+	{
+		return Instigator_Asset;
+	}
+	return nullptr;
 }
 
 //####################################################
@@ -60,6 +87,7 @@ UFlowNode_SimpleMessage::UFlowNode_SimpleMessage()
 #if WITH_EDITOR
 	Category = TEXT("GameFlow");
 #endif
+	MessageLabel=GetName();
 }
 
 void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
@@ -69,7 +97,8 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	
 	ULinearEvent_SimpleMessage* LocalMessage = NewObject<ULinearEvent_SimpleMessage>(GetWorld()->GetGameInstance(), ULinearEvent_SimpleMessage::StaticClass());
 	LocalMessage->EventEnded.AddDynamic(this, &UFlowNode_SimpleMessage::LocalFinish);
-	LocalMessage->Instigator = Instigator;
+	if(Instigator_Actor) { LocalMessage->Instigator_Actor= Instigator_Actor; }
+	if(Instigator_Asset) { LocalMessage->Instigator_Asset= Instigator_Asset; }
 	LocalMessage->Message = Message;
 	LocalMessage->Native_Begin();
 	TriggerOutput("Begin", true,  EFlowPinActivationType::Default);
@@ -78,17 +107,22 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 #if WITH_EDITOR
 FString UFlowNode_SimpleMessage::GetNodeDescription() const
 {
-	FText SpeakerString;
-	if(Instigator)
+	FString SpeakerString;
+	if(local_GetInstigator())
 	{
-		SpeakerString = Instigator->DisplayName;
+		SpeakerString = local_GetInstigator()->GetName();
 	}
 
-	const FText OutText = FText::Format(FText::FromString("{0}: {1}"), SpeakerString, Message);
+	const FText OutText = FText::Format(FText::FromString("{0}: {1}"), FText::FromString(SpeakerString), Message);
 
 	return OutText.ToString();
 }
 #endif
+
+void UFlowNode_SimpleMessage::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	Label=MessageLabel;
+}
 
 void UFlowNode_SimpleMessage::LocalFinish(const FString& Flag)
 {

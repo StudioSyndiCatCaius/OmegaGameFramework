@@ -14,13 +14,13 @@ public class OmegaDemo : ModuleRules
 			"GameplayTags", 
 			"UMG",
 			"JsonUtilities",
+			"AssetRegistry",
 			"AnimGraphRuntime",
 			"OmegaGameFramework",
 			"SequencerScripting",
 			"OmegaSequence",
 			"OmegaData",
 			"Flow"
-			
 		});
  
 		PublicIncludePaths.AddRange(new string[] {"OmegaDemo/Public"});

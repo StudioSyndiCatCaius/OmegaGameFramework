@@ -18,30 +18,12 @@ enum EOmegaQuestStatus
 	Failed			UMETA(DisplayName = "Failed"),
 };
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,CollapseCategories)
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,CollapseCategories,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaQuestTypeScript : public UObject
 {
 	GENERATED_BODY()
-
-	virtual UWorld* GetWorld() const override
-	{
-		if(WorldPrivate) { return  WorldPrivate; }
-		if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
-	};
-	UFUNCTION() virtual UGameInstance* GetGameInstance() const
-	{
-		if(WorldPrivate) { return WorldPrivate->GetGameInstance();}
-		return Cast<UGameInstance>(GetOuter());
-	};
-	UOmegaQuestTypeScript(const FObjectInitializer& ObjectInitializer)
-	{
-		if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
-	}
 	
 public:
-
-	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
-	
 	UPROPERTY() UOmegaQuestComponent* REF_Comp=nullptr;
 	
 	UFUNCTION(BlueprintCallable,Category="Quest")
@@ -50,14 +32,14 @@ public:
 	UOmegaQuest* GetQuestAsset() const;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	void OnQuestStart() const;
+	void OnQuestStart(UOmegaQuestComponent* Component) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
-	void OnQuestEnd() const;
+	void OnQuestEnd(UOmegaQuestComponent* Component) const;
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
-	FJsonObjectWrapper OnSave(FJsonObjectWrapper Data) const;
+	FJsonObjectWrapper OnSave(UOmegaQuestComponent* Component, FJsonObjectWrapper Data) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
-	void OnLoad(FJsonObjectWrapper Data) const;
+	void OnLoad(UOmegaQuestComponent* Component, FJsonObjectWrapper Data) const;
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
 	bool CanQuestStart() const;
@@ -70,7 +52,10 @@ public:
 	bool IsComplete() const;
 	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Overrides")
 	void SetComplete(bool bComplete) const;
-	
+
+	//Tasks
+	UFUNCTION(BlueprintImplementableEvent,Category="Quest")
+	TArray<UObject*> GetActiveTasks(UOmegaQuestComponent* Component) const;
 };
 
 UCLASS()
@@ -146,6 +131,10 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Quest")
 	bool IsQuestComplete();
+
+	// ======== TASKS =====
+	UFUNCTION(BlueprintCallable,Category="Quest")
+	TArray<UObject*> GetActiveQuestTasks();
 
 };
 

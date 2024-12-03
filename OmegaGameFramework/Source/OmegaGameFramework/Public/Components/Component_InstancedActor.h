@@ -37,9 +37,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component", meta=(AdvancedDisplay="LocalTransform"))
 	AOmegaInstanceActor* CreateInstance(UObject* Context, const FString& Flag, FTransform LocalTransform);
-
-	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
-	AOmegaInstanceActor* GetInstanceByIndex(int32 Index);
 	
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
 	AOmegaInstanceActor* GetInstanceByContext(UObject* Context);
@@ -59,11 +56,30 @@ public:
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
 	TArray<AOmegaInstanceActor*> GetInstancesWithGameplayTags(FGameplayTagContainer Tags, bool bExclude, bool bExact);
 
-	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component")
-	bool SwapInstanceIndecies(int32 A, int32 B);
-
 	UPROPERTY(BlueprintAssignable)
 	FOnInstanceNotify OnInstanceNotify;
+
+	// ==========================================
+	// FORMATION
+	// ==========================================
+
+	UFUNCTION(BlueprintPure, Category="Instanced Actor Component", DisplayName="Get Instance by Formation Index")
+	AOmegaInstanceActor* GetInstanceByIndex(int32 Index);
+	
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Formation", DisplayName="Swap Instance Order")
+	bool SwapInstanceIndecies(int32 A, int32 B);
+
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Formation")
+	void SetInstanceOrder_ByLabels(TArray<FString> Labels);
+
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Formation")
+	TArray<FString> GetInstanceOrder_ByLabels();
+
+	// ==========================================
+	// Notify
+	// ==========================================
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Notify")
+	void TriggerNotify_OnAll(FName Notify);
 };
 
 
@@ -117,4 +133,7 @@ public:
 	//NOTIFY
 	UFUNCTION(BlueprintCallable, Category="InstanceActor")
 	void TriggerNotify(FName Notify);
+
+	UFUNCTION(BlueprintNativeEvent, Category="InstanceActor")
+	void OnNotify(FName Notify);
 };

@@ -3,7 +3,7 @@
 
 #include "AsyncAction_ActivateAbility.h"
 
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 
 void UAsyncAction_ActivateAbility::NativeShutdown(bool bCancelled)
 {

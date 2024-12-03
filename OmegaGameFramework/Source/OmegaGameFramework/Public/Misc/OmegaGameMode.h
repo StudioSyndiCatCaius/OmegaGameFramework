@@ -42,6 +42,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay Systems")
 	FGameplayTagContainer AutoBlockSystemTags;
+
 	
 private:
 	UFUNCTION()

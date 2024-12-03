@@ -9,6 +9,8 @@
 #include "UObject/Object.h"
 #include "OmegaSettings_Gameplay.generated.h"
 
+class AZoneEntityDisplayActor;
+
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const)
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMetaSettings : public UObject
 {
@@ -58,7 +60,11 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Abilities")
 	TArray<TSubclassOf<AOmegaAbility>> Abilities_NonPlayer;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="Misc")
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone")
+	TSubclassOf<AZoneEntityDisplayActor> DefaultZoneEntityDisplayActor;
+	
+	UPROPERTY()
 	TArray<UOmegaSettings_Gameplay_InputEvent*> CustomInputEvents;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Systems")

@@ -56,6 +56,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"))
 	static bool DoesObjectHaveGameplayTag(UObject* Object, FGameplayTag GameplayTag, bool bExact);
+
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
+	static bool QueryObjectGameplayTags(UObject* Object, FGameplayTagQuery Query, bool bEmptyReturnsTrue=true);
 	
 	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
 	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class,bIncludeOnEmptyTag", DeterminesOutputType="Class"))
@@ -114,10 +117,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"))
 	static TArray<UObject*> GetAllAssetsOfClass(TSubclassOf<UObject> Class);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Asset from Path")
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Sorted Asset from Path")
 	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Get Sorted Asset from Path (List)")
+	static TArray<UObject*> GetAssetList_FromPath(const TArray<FString> AssetPaths, TSubclassOf<UObject> Class);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Class from Path")
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Sorted Class from Path")
 	static UClass* GetClass_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Get Asset from Lua Field")
@@ -297,6 +303,18 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|General")	static FText GetObjectDisplayDescription(UObject* Object);
 	UFUNCTION(BlueprintPure, Category="Omega|General")	static FString GetObjectLabel(UObject* Object);
 	UFUNCTION(BlueprintPure, Category="Omega|General")	static FSlateBrush GetObjectIcon(UObject* Object);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|General")
+	static TArray<FString> GetLabelsFromObjects(TArray<UObject*> Objects);
+	UFUNCTION(BlueprintCallable,Category="Omega|General",meta=(DeterminesOutputType="Class",ExpandEnumAsExecs = "Outcome")) 
+	static UObject* SelectObjectFromLabel(TArray<UObject*> ObjectsIn, const FString& Label, TSubclassOf<UObject> Class,TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable,Category="Omega|General") 
+	static TArray<UObject*> FilterObjectsFromLabels(TArray<UObject*> ObjectsIn, TArray<FString> Labels);
+	//###############################################################################
+	// GUID
+	//###############################################################################
+	UFUNCTION(BlueprintPure,Category="Omega|GUID")
+	static FGuid GetObjectGUID(UObject* Object);
 	
 	//###############################################################################
 	// Math

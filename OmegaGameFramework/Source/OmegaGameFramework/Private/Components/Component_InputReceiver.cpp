@@ -8,9 +8,12 @@
 #include "GameFramework/Pawn.h"
 
 
-bool UOmegaInputAction::IsInputActive(APlayerController* Controller) const
+void UOmegaInputAction::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
 {
-	if(Script) { return Script->IsInputActive(Controller); } return false;
+	Name=ActionDescription;
+	Description=DisplayDescription;
+	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
 }
 
 // Sets default values for this component's properties
@@ -42,47 +45,15 @@ void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	cached_dt=DeltaTime;
-
-	//If using UE Input Action, ignore
-	if(!InputAction && GetInputAction())
-	{
-		UOmegaInputAction* REF_action = GetInputAction();
-		//If Just Pressed
-		if(!bIsInputActive && REF_action->IsInputActive(REF_OwningController))
-		{
-			bIsInputActive=true;
-			OnInputStarted.Broadcast();
-		}
-		//If Just Released
-		if(bIsInputActive && !REF_action->IsInputActive(REF_OwningController))
-		{
-			bIsInputActive=false;
-			OnInputCompleted.Broadcast();
-		}
-		if(bIsInputActive)
-		{
-			OnInputTriggered.Broadcast(DeltaTime);
-		}
-	}
 	
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
 void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)
 {
-	if(NewOwner)
+	if(NewOwner && GetWorld())
 	{
-		for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
-		{
-			if (APlayerController* PlayerController = Iterator->Get())
-			{
-				if(PlayerController->IsInputComponentInStack(NewOwner->InputComponent))
-				{
-					REF_OwningController=PlayerController;
-					break;
-				}
-			}
-		}
+		
 	}
 	if(NewOwner && InputAction)
 	{

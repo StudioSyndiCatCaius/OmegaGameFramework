@@ -56,6 +56,8 @@ public class OmegaGameFramework : ModuleRules
 				"JsonBlueprintUtilities",
 				"PCG",
 				"BinkMediaPlayer",
+				"StateTreeModule",
+				"GameplayStateTreeModule",
 				//"GameplayTasks",
 				//"GameFeatures",
 				//"ModularGameplay"

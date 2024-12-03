@@ -146,6 +146,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget", meta=(Keywords="update"))
 	void OnRefreshed(UObject* SourceAsset = nullptr, UObject* ListOwner = nullptr);
 
+	UFUNCTION()
+	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner);
+
 	//Automatically calls the "Refresh" function on a timed loop
 	UPROPERTY(EditDefaultsOnly, Category = "Refresh")
 	bool bAutoRefreshOnTimer;
@@ -223,8 +226,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "DataWidget", meta=(AdvancedDisplay="ListTags, ListFlag"))
 		void AddedToDataList(UDataList* DataList, int32 Index, const UObject* Asset, FGameplayTagContainer ListTags, const FString& ListFlag);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "DataWidget")
-		void OnNewListOwner(UObject* ListOwner);
+	UFUNCTION(BlueprintNativeEvent, Category = "DataWidget")
+	void OnNewListOwner(UObject* ListOwner);
 
 	UFUNCTION()
 		FString GetAssetLabel();
@@ -252,7 +255,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void Select();
-
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
+	void OnSelect();
+	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void Hover();
 
@@ -289,7 +294,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnWidgetRefreshed OnWidgetRefreshed;
 	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataWidget")
+	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Widget|DataWidget")
 	void OnSourceAssetChanged(UObject* Asset);
 	//Sounds
 	UPROPERTY(EditDefaultsOnly, Category="Audio")

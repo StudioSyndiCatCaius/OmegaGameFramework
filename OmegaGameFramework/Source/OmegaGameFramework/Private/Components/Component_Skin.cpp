@@ -1,9 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Components/Component_Skin.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Animation/AnimInstance.h"
 #include "SkeletalMergingLibrary.h"
-#include "Animation/Skeleton.h"
+#include "Engine/SkeletalMesh.h"
+#include "Materials/MaterialInstanceDynamic.h"
+
 
 USkinComponent::USkinComponent()
 {
@@ -23,23 +28,30 @@ void USkinComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 void USkinComponent::Update_Skin()
 {
-	const ACharacter* charRef = Cast<ACharacter>(GetOwner());
-	if(!charRef)
+	//Set mesh from character if not set already
+	if(!targetSkelMesh)
 	{
-		return;
-	}
-	const FTransform& temp_trans = charRef->GetMesh()->GetRelativeTransform();
-	if(!skinComponent)
-	{
-		skinComponent = Cast<UChildActorComponent>(GetOwner()->AddComponentByClass(UChildActorComponent::StaticClass(),false,temp_trans,false));
-	}
-	if(skinComponent)
-	{
-		skinComponent->SetChildActorClass(Skin);
-		skinComponent->SetRelativeTransform(temp_trans);
-		if(Cast<AOmegaSkin>(skinComponent->GetChildActor()))
+		if(const ACharacter* charRef = Cast<ACharacter>(GetOwner()))
 		{
-			AOmegaSkin* skin_ref = Cast<AOmegaSkin>(skinComponent->GetChildActor());
+			targetSkelMesh=charRef->GetMesh();
+		}
+	}
+	if(targetSkelMesh)
+	{
+		const FTransform& temp_trans = targetSkelMesh->GetRelativeTransform();
+		if(!skinComponent || skinComponent->IsBeingDestroyed())
+		{
+			skinComponent = Cast<UChildActorComponent>(GetOwner()->AddComponentByClass(UChildActorComponent::StaticClass(),false,temp_trans,false));
+		}
+		if(skinComponent)
+		{
+			skinComponent->SetChildActorClass(Skin);
+			skinComponent->SetRelativeTransform(temp_trans);
+			if(GetSkin())
+			{
+				GetSkin()->owning_component=this;
+				GetSkin()->BuildSkin();
+			}
 		}
 	}
 }
@@ -51,7 +63,7 @@ AOmegaSkin* USkinComponent::SetSkin(TSubclassOf<AOmegaSkin> SkinClass)
 	return GetSkin();
 }
 
-AOmegaSkin* USkinComponent::GetSkin()
+AOmegaSkin* USkinComponent::GetSkin() const
 {
 	if (skinComponent && skinComponent->GetChildActor())
 	{
@@ -60,8 +72,12 @@ AOmegaSkin* USkinComponent::GetSkin()
 	return nullptr;
 }
 
-void USkinComponent::Assemble()
+void USkinComponent::Assemble(USkeletalMeshComponent* OverrideMesh)
 {
+	if(OverrideMesh)
+	{
+		targetSkelMesh=OverrideMesh;
+	}
 	Update_Skin();
 }
 
@@ -184,16 +200,15 @@ void AOmegaSkin::local_applyModifiers(USkeletalMeshComponent* MeshComp)
 
 void AOmegaSkin::BuildSkin()
 {
-	if(Cast<ACharacter>(GetParentActor()))
+	if(owning_component && owning_component->GetTargetMesh())
 	{
-		ACharacter* charRef = Cast<ACharacter>(GetParentActor());
-
+		USkeletalMeshComponent* TargetMesh = owning_component->GetTargetMesh();
 		// create merged mesh
 		if(!MasterSkeleton)
 		{
 			return;
 		}
-		
+
 		FSkeletalMeshMergeParams MergeParams;
 		MergeParams.Skeleton=MasterSkeleton->GetSkeleton();
 		for(auto* tempComp : GetMeshMergeComponents())
@@ -205,29 +220,28 @@ void AOmegaSkin::BuildSkin()
 		}
 
 		USkeletalMesh* new_mesh=USkeletalMergingLibrary::MergeMeshes(MergeParams);
-
 		
 		// Apply mesh
 		if(bMerge && new_mesh)
 		{
-			charRef->GetMesh()->SetSkeletalMeshAsset(new_mesh);
+			TargetMesh->SetSkeletalMeshAsset(new_mesh);
+			local_applyModifiers(TargetMesh);
 			//Clean Mesh
 			for(auto* tempComp : GetMeshMergeComponents())
 			{
 				tempComp->DestroyComponent();
 			}
-			local_applyModifiers(charRef->GetMesh());
 		}
 		else
 		{
 			if(MasterSkeleton)
 			{
-				charRef->GetMesh()->SetSkeletalMeshAsset(MasterSkeleton);
+				TargetMesh->SetSkeletalMeshAsset(MasterSkeleton);
 				if(MasterSkeletonOverrideMaterial)
 				{
-					for (int i = 0; i < charRef->GetMesh()->GetMaterials().Num(); ++i)
+					for (int i = 0; i < TargetMesh->GetMaterials().Num(); ++i)
 					{
-						charRef->GetMesh()->SetMaterial(i,MasterSkeletonOverrideMaterial);
+						TargetMesh->SetMaterial(i,MasterSkeletonOverrideMaterial);
 					}
 				}
 			}
@@ -237,9 +251,10 @@ void AOmegaSkin::BuildSkin()
 				{
 					if(tempComp)
 					{
-						tempComp->SetLeaderPoseComponent(charRef->GetMesh(),true);
+						tempComp->SetLeaderPoseComponent(TargetMesh,true);
 						local_applyModifiers(tempComp);
 					}
+					
 				}
 			}
 			if(bHideBaseMesh)
@@ -250,9 +265,9 @@ void AOmegaSkin::BuildSkin()
 		}
 		
 		//Set Anim Instance
-		if(AnimationClass  && charRef->GetMesh()->GetAnimationMode()==EAnimationMode::Type::AnimationBlueprint)
+		if(AnimationClass && TargetMesh->GetAnimationMode()==EAnimationMode::Type::AnimationBlueprint)
 		{
-			charRef->GetMesh()->SetAnimInstanceClass(AnimationClass);
+			TargetMesh->SetAnimInstanceClass(AnimationClass);
 		}
 	}
 	else //Typicall for preview only

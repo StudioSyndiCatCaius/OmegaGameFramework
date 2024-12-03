@@ -64,8 +64,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFileFunctions : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 public:
 
-	UFUNCTION(BlueprintCallable,Category="Omega|File|Import")
-	static UTexture2D* OmegaImport_Texture2D(const FString& FilePath);
+	UFUNCTION(BlueprintCallable,Category="Omega|File|Import",meta=(AdvancedDisplay="MipGenSettings"))
+	static UTexture2D* OmegaImport_Texture2D(const FString& FilePath,TEnumAsByte<TextureMipGenSettings> MipGenSettings);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|File|Import")
 	static USoundWave* OmegaImport_Sound(const FString& FilePath, FString& Error);
@@ -74,18 +74,18 @@ public:
 
 
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew)
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaFileImportScript : public UObject
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditDefaultsOnly,Category="FileImport")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="FileImport")
 	UClass* ImportClass;
-	UPROPERTY(EditDefaultsOnly,Category="FileImport")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="FileImport")
 	TArray<FString> ValidExtensions;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="FileImport")
-	UObject* ImportAsObject(const FString& path, const FString& name, const FString& extension);
+	UObject* ImportAsObject(const FString& path, const FString& name, const FString& extension, UGameInstance* GameInstance=nullptr) const;
 };
 
 

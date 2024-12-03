@@ -64,7 +64,7 @@ public:
 
 	//Properties
 	//True = This module will automatically be registered and activated on game start.
-	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
+	UPROPERTY()
 	bool AutoRegisterModule;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Gameplay")

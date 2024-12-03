@@ -28,6 +28,12 @@ SynMath={
         if value < min then return min end
         if value > max then return max end
         return value
+      end,
+
+      -- random number. If in range of min, return true
+      RngBool=function (chance)
+        local val=math.random()
+        return SynLit.BOOL(val<=chance)
       end
 }
 

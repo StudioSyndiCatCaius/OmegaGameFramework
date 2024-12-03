@@ -10,8 +10,8 @@
 #include "Styling/SlateBrush.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Curves/CurveFloat.h"
-#include "Components/CombatantComponent.h"
-#include "Actors/OmegaGameplayCue.h"
+#include "Components/Component_Combatant.h"
+#include "Actors/Actor_GameplayCue.h"
 
 #include "OmegaFunctions_ScriptedEffects.generated.h"
 
@@ -28,7 +28,7 @@ public:
 };
 
 
-UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories, Abstract)
+UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories, Abstract,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffect : public UObject, public ILuaInterface
 {
 	GENERATED_BODY()

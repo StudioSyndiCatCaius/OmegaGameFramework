@@ -19,7 +19,6 @@ AOmegaGameplaySystem::AOmegaGameplaySystem()
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorHiddenInGame(true);
 	//bIsSpatiallyLoaded = false;
-	
 }
 
 // Called when the game starts or when spawned
@@ -38,6 +37,7 @@ void AOmegaGameplaySystem::BeginPlay()
 
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnTaggedGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnNewGameStarted.AddDynamic(this, &AOmegaGameplaySystem::OnNewGameStarted);
 	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueDelay>()->SetQueuedDelaySourceRegistered(this,true);
 	OMACRO_INSTALL_QUEUEDQUERY()
 

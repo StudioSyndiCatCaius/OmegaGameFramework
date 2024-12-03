@@ -3,6 +3,8 @@
 
 #include "Misc/OmegaAttribute.h"
 
+#include "Kismet/KismetTextLibrary.h"
+
 FString UOmegaAttribute::GetDesc()
 {
 	if(!AttributeDescription.ToString().IsEmpty())
@@ -81,6 +83,21 @@ FGameplayTag UOmegaAttribute::GetObjectGameplayCategory_Implementation()
 FGameplayTagContainer UOmegaAttribute::GetObjectGameplayTags_Implementation()
 {
 	return AttributeTags;
+}
+
+FText UOmegaAttribute::GetAttributeValueDisplayText(float value)
+{
+	if(Script)
+	{
+		return Script->GetDisplayText(value);
+	}
+	return UKismetTextLibrary::Conv_FloatToText(value,RoundingMode,
+		bAlwaysSign,
+		bUseGrouping,
+		MinIntegralDigits,
+		MaxIntegralDigits,
+		MinFractionalDigits,
+		MaxFractionalDigits);
 }
 
 //General

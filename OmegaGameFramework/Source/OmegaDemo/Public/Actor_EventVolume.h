@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/AdvancedVolume.h"
+#include "Actors/Actor_AdvancedVolume.h"
 #include "GameFramework/Actor.h"
 #include "OmegaLinearEventSubsystem.h"
+#include "Actors/Actor_GameplayCue.h"
+#include "Functions/OmegaFunctions_ScriptedTrace.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Actor_EventVolume.generated.h"
 
@@ -90,3 +92,5 @@ public:
 	FOmegaSaveConditions Conditions;
 	
 };
+
+

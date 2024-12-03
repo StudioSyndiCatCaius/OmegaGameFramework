@@ -1,0 +1,16 @@
+// Copyright Studio Syndicat 2021. All Rights Reserved.
+#pragma once
+
+#include "CoreMinimal.h"
+
+#include "OmegaDemo_Misc.generated.h"
+
+
+UCLASS(Abstract)
+class OMEGADEMO_API UOmegaDemoObject : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	
+};

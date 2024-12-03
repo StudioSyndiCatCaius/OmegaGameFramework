@@ -49,6 +49,14 @@ FString UFlowNode_LinearEvents::GetNodeDescription() const
 
 	return OutString;
 }
+
+void UFlowNode_LinearEvents::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
+	FText& Name, FText& Description)
+{
+	Name=NodeName;
+	Description=NodeDescription;
+	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
+}
 #endif
 
 void UFlowNode_LinearEvents::LocalFinish(const FString& Flag,UOmegaLinearEventInstance* Instance)

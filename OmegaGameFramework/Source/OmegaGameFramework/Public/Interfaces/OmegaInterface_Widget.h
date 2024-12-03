@@ -67,6 +67,6 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_Combatant
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Widget|Combatant")
 	void OnCombatantUpdated(UCombatantComponent* Combatant);
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category="Widget|Combatant")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Widget|Combatant")
 	void SetAttributeComparison(bool bComparing, UCombatantComponent* Combatant, UObject* ComparedSource, UObject* UncomparedSource);
 };

@@ -16,8 +16,8 @@
 #include "OmegaEffectFactory.h"
 #include "Actors/Actor_Environment.h"
 #include "Actor_EventVolume.h"
-#include "Actors/OmegaAbility.h"
-#include "Actors/OmegaGameplayEffect.h"
+#include "Actors/Actor_Ability.h"
+#include "Actors/Actor_GameplayEffect.h"
 #include "Actors/OmegaGameplaySystem.h"
 
 #include "Widget/DataWidget.h"
@@ -50,20 +50,15 @@ void FOmegaEditor::StartupModule()
 
 	RegisterDefaultEvent(AOmegaGameplaySystem, SystemActivated);
 	RegisterDefaultEvent(AOmegaGameplaySystem, SystemShutdown);
-
 	RegisterDefaultEvent(AOmegaAbility, AbilityActivated);
 	RegisterDefaultEvent(AOmegaAbility, AbilityFinished);
 	RegisterDefaultEvent(AOmegaAbility, ActivatedTick);
 	RegisterDefaultEvent(AOmegaAbility, OnCombatantNotify);
-
 	RegisterDefaultEvent(AOmegaGameplayEffect, EffectBeginPlay);
 	RegisterDefaultEvent(AOmegaGameplayEffect, EffectApplied);
-
 	RegisterDefaultEvent(UMenu, MenuOpened);
 	RegisterDefaultEvent(UMenu, MenuClosed);
-	
 	RegisterDefaultEvent(UHUDLayer, LayerAdded);
-	
 	RegisterDefaultEvent(UDataWidget, AddedToDataList);
 	RegisterDefaultEvent(UDataWidget, OnSourceAssetChanged);
 	RegisterDefaultEvent(UDataWidget, OnNewListOwner);
@@ -78,8 +73,11 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaFaction,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaBGM,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaDamageType,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OmegaCommonSkill,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(SubscriptCollection,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaLevelData,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaZoneData,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(ZoneLegendAsset,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(CombatantGambitAsset,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaQuest,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaAnimationEmote,OmegaAssetCategory);
@@ -156,6 +154,7 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaAnimationEmoteScript"));
 	
 	ThumnbailNames.Add(TEXT("OmegaFaction"));
+	ThumnbailNames.Add(TEXT("OmegaCommonSkill"));
 	ThumnbailNames.Add(TEXT("CombatantGambitAsset"));
 	ThumnbailNames.Add(TEXT("CombatantGambitTarget"));
 	ThumnbailNames.Add(TEXT("CombatantGambitCondition"));
@@ -167,23 +166,34 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("DynamicCameraState"));
 	ThumnbailNames.Add(TEXT("OmegaActorEnvironment"));
 	ThumnbailNames.Add(TEXT("OmegaEnvironmentPreset"));
+	ThumnbailNames.Add(TEXT("SubscriptComponent"));
+	ThumnbailNames.Add(TEXT("SubscriptCollection"));
+	ThumnbailNames.Add(TEXT("Subscript"));
 	
 	ThumnbailNames.Add(TEXT("OmegaZoneData"));
 	ThumnbailNames.Add(TEXT("OmegaLevelData"));
 	ThumnbailNames.Add(TEXT("OmegaScriptedEffect"));
+	ThumnbailNames.Add(TEXT("OmegaScriptedEffectAsset"));
 	ThumnbailNames.Add(TEXT("OmegaPlatformAsset"));
 	ThumnbailNames.Add(TEXT("OmegaAchievement"));
 	ThumnbailNames.Add(TEXT("OmegaStoryStateAsset"));
 	ThumnbailNames.Add(TEXT("GamePreference"));
 	ThumnbailNames.Add(TEXT("OmegaSettings_Gameplay"));
 	ThumnbailNames.Add(TEXT("OmegaSettings_Slate"));
+	ThumnbailNames.Add(TEXT("OmegaGameplayMetaSettings"));
 	
 	ThumnbailNames.Add(TEXT("GamePreferenceScript"));
 	ThumnbailNames.Add(TEXT("OmegaGameplayMetaSetting"));
 	ThumnbailNames.Add(TEXT("OmegaScriptedEffect"));
 	ThumnbailNames.Add(TEXT("OmegaDynamicCamera"));
 	ThumnbailNames.Add(TEXT("OmegaGameplayCue"));
+	ThumnbailNames.Add(TEXT("OmegaGameplayCue"));
 	ThumnbailNames.Add(TEXT("DataListFormat"));
+	ThumnbailNames.Add(TEXT("OmegaZoneTransit"));
+	ThumnbailNames.Add(TEXT("OmegaZonePoint"));
+	ThumnbailNames.Add(TEXT("ZoneEntityComponent"));
+	ThumnbailNames.Add(TEXT("ZoneEntityDisplayActor"));
+	ThumnbailNames.Add(TEXT("ZoneLegendAsset"));
 	
 	ThumnbailNames.Add(TEXT("OmegaCombatEncounter_Instance"));
 	ThumnbailNames.Add(TEXT("OmegaCombatEncounter_Stage"));

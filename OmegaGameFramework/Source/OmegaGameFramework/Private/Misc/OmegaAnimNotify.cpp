@@ -3,7 +3,7 @@
 
 #include "Misc/OmegaAnimNotify.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 
 void UCombatantAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {

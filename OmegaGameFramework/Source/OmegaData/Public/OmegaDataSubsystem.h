@@ -19,16 +19,9 @@ class OMEGADATA_API UOmegaDataSubsystem : public UGameInstanceSubsystem
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	UPROPERTY()
-	TArray<UOmegaDataItem*> PrivateDataItems;
-
-	UPROPERTY()
-	TMap<FString,UOmegaDataItem*> NamedItems;
-
-	UPROPERTY()
-	TMap<FGameplayTag, UOmegaDataItem*> DataItemIDs;
-
-
+	UPROPERTY() TArray<UOmegaDataItem*> PrivateDataItems;
+	UPROPERTY() TMap<FString,UOmegaDataItem*> NamedItems;
+	UPROPERTY() TMap<FGameplayTag, UOmegaDataItem*> DataItemIDs;
 public:
 
 	//###########################################################################################

@@ -11,6 +11,11 @@
 #include "Misc/PackageName.h"
 
 
+void UOmegaSubsystem_AssetHandler::ClearSortedAssets_All()
+{
+	SortedAssets.Empty();
+}
+
 TArray<UObject*> UOmegaSubsystem_AssetHandler::GetSortedAsset_All()
 {
 	TArray<UObject*> out;
@@ -32,9 +37,9 @@ UObject* UOmegaSubsystem_AssetHandler::GetSortedAsset_FromLabel(const FString& N
 	return nullptr;
 }
 
-void UOmegaSubsystem_AssetHandler::Register_SortedAsset(UObject* Asset, FString Name)
+void UOmegaSubsystem_AssetHandler::Register_SortedAsset(UObject* Asset, FString Name, bool bOverride)
 {
-	if(Asset)
+	if(Asset && (!SortedAssets.Contains(Name) || bOverride))
 	{
 		SortedAssets.Add(Name,Asset);
 	}

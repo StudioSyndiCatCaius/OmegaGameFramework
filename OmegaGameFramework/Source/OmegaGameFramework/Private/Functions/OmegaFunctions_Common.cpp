@@ -85,6 +85,17 @@ bool UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTag(UObject* Object, FG
 	return false;
 }
 
+
+bool UOmegaGameFrameworkBPLibrary::QueryObjectGameplayTags(UObject* Object, FGameplayTagQuery Query,
+                                                           bool bEmptyReturnsTrue)
+{
+	if(Object && !Query.IsEmpty() && Object->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+	{
+		return Query.Matches(IGameplayTagsInterface::Execute_GetObjectGameplayTags(Object));
+	}
+	return bEmptyReturnsTrue;
+}
+
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray<UObject*> Assets,
                                                                           FGameplayTag CategoryTag, bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag)
 {
@@ -348,6 +359,7 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<U
 	return LoadedAssets;
 }
 
+
 UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class,
                                                          TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
@@ -361,36 +373,52 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 		}
 	}
 	
-	FString in_path = AssetPath;
-	
-	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
+	TArray<FString> in_path;
+	in_path.Add(AssetPath);
+
+	//add the paths from the OmegPathSettings Asset to list that needs checking
+	if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
+    {
+		in_path.Append(path_settings->GetPathsFromAssetName(AssetPath,Class));
+    }
+
+	//Run through path check list and return first valid asset.
+	for (FString path_to_check : in_path)
 	{
-		if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
+		path_to_check=path_to_check.Replace(TEXT("///"),TEXT("/"));
+		path_to_check=path_to_check.Replace(TEXT("//"),TEXT("/"));
+		if(UObject* out = UKismetSystemLibrary::Conv_SoftObjPathToSoftObjRef(UKismetSystemLibrary::MakeSoftObjectPath(path_to_check)).LoadSynchronous())
 		{
-			if(path_settings->ClassPaths.Contains(Class))
+			if(out->GetClass()->IsChildOf(Class) || !Class)
 			{
-				const FString base_path = path_settings->ClassPaths[Class].Path;
-				in_path=base_path+AssetPath+"."+AssetPath;
+				Outcome=EOmegaFunctionResult::Success;
+				return out;
 			}
-		}
-	}
-
-
-	if(UObject* out = UKismetSystemLibrary::Conv_SoftObjPathToSoftObjRef(UKismetSystemLibrary::MakeSoftObjectPath(in_path)).LoadSynchronous())
-	{
-		if(out->GetClass()->IsChildOf(Class) || !Class)
-		{
-			Outcome=EOmegaFunctionResult::Success;
-			return out;
 		}
 	}
 	Outcome=EOmegaFunctionResult::Fail;
 	return nullptr;
 }
 
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAssetList_FromPath(const TArray<FString> AssetPaths,
+	TSubclassOf<UObject> Class)
+{
+	TArray<UObject*> out;
+	for(const FString temp_path : AssetPaths)
+	{
+		TEnumAsByte<EOmegaFunctionResult> result;
+        UObject* result_object = GetAsset_FromPath(temp_path,Class,result);
+        if(result_object && result==Success)
+        {
+        	out.Add(result_object);
+        }
+	}
+	return out;
+}
+
 
 UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, 
-	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                        TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(UClass* out_obj = UKismetSystemLibrary::Conv_SoftClassPathToSoftClassRef(UKismetSystemLibrary::MakeSoftClassPath(AssetPath)).LoadSynchronous())
 	{
@@ -401,9 +429,11 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath
 	return nullptr;
 }
 
+
 UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, const FString& Field,
 	TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
+	//If the Field string arg is empty, treat the input Lu arg as the path to check
 	FLuaValue field_data=Lua.GetField(Field);
 	if(Field.IsEmpty())
 	{
@@ -420,22 +450,8 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, cons
 	}
 	
 	FString in_path = field_data.String;
-
 	
-	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
-	{
-		if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
-		{
-			if(path_settings->ClassPaths.Contains(Class))
-			{
-				const FString base_path = path_settings->ClassPaths[Class].Path;
-				in_path=base_path+in_path+"."+in_path;
-			}
-		}
-	}
-
 	return GetAsset_FromPath(in_path,Class,Outcome);
-
 }
 
 UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromLuaField(FLuaValue Lua, const FString& Field,
@@ -458,17 +474,6 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromLuaField(FLuaValue Lua, const
 	
 	FString in_path = field_data.String;
 	
-	if(!UKismetSystemLibrary::MakeSoftObjectPath(in_path).IsValid())
-	{
-		if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
-		{
-			if(path_settings->ClassPaths.Contains(Class))
-			{
-				const FString base_path = path_settings->ClassPaths[Class].Path;
-				in_path=base_path+in_path+"."+in_path+"_c";
-			}
-		}
-	}
 
 	if(UClass* out_obj = UKismetSystemLibrary::Conv_SoftClassPathToSoftClassRef(UKismetSystemLibrary::MakeSoftClassPath(in_path)).LoadSynchronous())
 	{
@@ -1099,6 +1104,56 @@ FSlateBrush UOmegaGameFrameworkBPLibrary::GetObjectIcon(UObject* Object)
 		IDataInterface_General::Execute_GetGeneralDataImages(Object," ",nullptr,dum_txt,dum_mat,out);
 	}
 	return out;
+}
+
+TArray<FString> UOmegaGameFrameworkBPLibrary::GetLabelsFromObjects(TArray<UObject*> Objects)
+{
+	TArray<FString> out;
+	for(auto* temp_object : Objects)
+	{
+		if(temp_object)
+		{
+			out.Add(GetObjectLabel(temp_object));
+		}
+	}
+	return out;
+}
+
+UObject* UOmegaGameFrameworkBPLibrary::SelectObjectFromLabel(TArray<UObject*> ObjectsIn, const FString& Label,
+	TSubclassOf<UObject> Class,TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	for(auto* temp_object : ObjectsIn)
+	{
+		if(temp_object && (temp_object->GetClass()->IsChildOf(Class) || !Class) && GetObjectLabel(temp_object)==Label)
+		{
+			Outcome=Success;
+			return temp_object;
+		}
+	}
+	Outcome=Fail;
+	return nullptr;
+}
+
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsFromLabels(TArray<UObject*> ObjectsIn, TArray<FString> Labels)
+{
+	TArray<UObject*> out;
+	for(auto* temp_object : ObjectsIn)
+	{
+		if(temp_object && Labels.Contains(GetObjectLabel(temp_object)))
+		{
+			out.Add(temp_object);
+		}
+	}
+	return out;
+}
+
+FGuid UOmegaGameFrameworkBPLibrary::GetObjectGUID(UObject* Object)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_GUID::StaticClass()))
+	{
+		return IDataInterface_GUID::Execute_GetObjectGuid(Object);
+	}
+	return  FGuid();
 }
 
 int32 UOmegaGameFrameworkBPLibrary::GetClosestVector2dToPoint(TArray<FVector2D> Vectors, FVector2D point,

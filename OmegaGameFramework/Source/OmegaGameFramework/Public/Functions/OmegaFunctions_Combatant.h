@@ -6,8 +6,9 @@
 
 #include "CoreMinimal.h"
 #include "OmegaFunctions_ScriptedEffects.h"
-#include "Components/CombatantComponent.h"
-#include "Actors/OmegaGameplayEffect.h"
+#include "Components/Component_Combatant.h"
+#include "Actors/Actor_GameplayEffect.h"
+#include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaFunctions_Combatant.generated.h"
@@ -72,8 +73,8 @@ public:
 	UFUNCTION(BlueprintPure, Category="Attributes")
 	static TMap<UOmegaAttribute*, float> CompareAttributeModifiers(UCombatantComponent* Combatant, UObject* ComparedModifier, UObject* UncomparedModifer);
 	*/
-	UFUNCTION(BlueprintPure, Category="Omega|Attributes")
-	static float CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedSource, UObject* UncomparedSource);
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes")
+	static void CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue);
 
 	//Checks if the combatant has sufficient attributes to use skill
 	UFUNCTION(BlueprintPure, Category="Omega|Attributes")
@@ -127,24 +128,11 @@ public:
 };
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaCommonSkill : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface,
-																			public IDataInterface_Skill, public IOmegaScriptedEffectsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaCommonSkill : public UOmegaDataAsset, public IDataInterface_Skill, public IOmegaScriptedEffectsInterface
 {
 	GENERATED_BODY()
 public:
-
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="General",DisplayName="Name") FText DisplayName;
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="General",DisplayName="Icon") FSlateBrush DisplayIcon;
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="General",DisplayName="Description",meta=(MultiLine)) FText DisplayDescription;
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="General",DisplayName="Label") FString DisplayLabel;
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="General",DisplayName="Category") FGameplayTag CategoryTag;
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="General",DisplayName="Tags") FGameplayTagContainer GameplayTags;
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
-
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	TSubclassOf<UCombatantFilter> TargetFilter;
 	virtual TSubclassOf<UCombatantFilter> GetSkillTargetFilter_Implementation() override;

@@ -16,15 +16,19 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_AssetHandler : public UEngineSubsys
 	GENERATED_BODY()
 
 public:
+	
+
+	UFUNCTION(BlueprintCallable,Category="Omega|AssetHandler")
+	void ClearSortedAssets_All();
 
 	UFUNCTION(BlueprintCallable,Category="Omega|AssetHandler")
 	TArray<UObject*> GetSortedAsset_All();
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|AssetHandler")
 	UObject* GetSortedAsset_FromLabel(const FString& Name);
-
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|AssetHandler")
-	void Register_SortedAsset(UObject* Asset, FString Name);
+	void Register_SortedAsset(UObject* Asset, FString Name, bool bOverride);
 
 	UPROPERTY() TMap<FString, UObject*> SortedAssets;
 private:

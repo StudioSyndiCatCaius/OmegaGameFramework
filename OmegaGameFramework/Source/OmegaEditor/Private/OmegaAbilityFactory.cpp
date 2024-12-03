@@ -2,7 +2,7 @@
 
 #include "OmegaAbilityFactory.h"
 //The asset header file that we wish to create
-#include "Actors/OmegaAbility.h"
+#include "Actors/Actor_Ability.h"
 //The asset type categories will let us access the various asset categories inside the Editor
 #include "AssetTypeCategories.h"
 

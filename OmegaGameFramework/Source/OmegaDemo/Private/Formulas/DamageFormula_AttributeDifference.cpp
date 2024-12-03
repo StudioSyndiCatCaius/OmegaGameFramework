@@ -2,11 +2,11 @@
 
 #include "Formulas/DamageFormula_AttributeDifference.h"
 
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 
 
 void UDamageFormula_AttributeDifference::GetDamageAmount_Implementation(UCombatantComponent* Instigator, UCombatantComponent* Target,
-                                                         float& DamageOut)
+                                                                        float& DamageOut)
 {
 	if(InstigatorAttribute && TargetAttribute)
 	{

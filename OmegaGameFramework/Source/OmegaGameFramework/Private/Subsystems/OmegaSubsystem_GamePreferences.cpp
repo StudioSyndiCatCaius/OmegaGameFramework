@@ -9,6 +9,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/GameInstance.h"
+#include "GameFramework/GameUserSettings.h"
 
 
 void UGamePreferenceSubsystem::PreloadPrefs()
@@ -155,7 +156,7 @@ void UGamePreferenceSubsystem::Local_PreferenceUpdate(UGamePreference* Preferenc
 {
 	if(Preference && Preference->PreferenceScript)
 	{
-		Preference->PreferenceScript->OnPreferenceValueUpdated(nullptr, local_GetPref(Preference));
+		Preference->PreferenceScript->OnPreferenceValueUpdated(UGameUserSettings::GetGameUserSettings(), local_GetPref(Preference));
 	}
 }
 

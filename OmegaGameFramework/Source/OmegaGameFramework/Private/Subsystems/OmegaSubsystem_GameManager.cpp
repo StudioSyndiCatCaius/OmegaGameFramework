@@ -5,61 +5,18 @@
 #include "Misc/OmegaGameplayModule.h"
 #include "JsonBlueprintFunctionLibrary.h"
 #include "Engine/GameInstance.h"
+#include "Subsystems/OmegaSubsystem_AssetHandler.h"
 
 void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 {
-	/*
-	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	TArray<FAssetData> AssetData;
-	FARFilter Filter;
-	Filter.ClassNames.Add("Blueprint");
-	Filter.ClassNames.Add("OmegaGameplayModule");
-	
-	for(const FDirectoryPath NewPath : GetMutableDefault<UOmegaSettings>()->AutoModuleScanPaths)
-	{
-		FString LocalString = NewPath.Path;
-		Filter.PackagePaths.Add(FName(*LocalString));
-	}
-	
-	TSet<FName> LocalExcludedClasses;
-	LocalExcludedClasses.Add("Actor");
-	LocalExcludedClasses.Add("Widget");
-	Filter.RecursiveClassesExclusionSet = LocalExcludedClasses;
-	
-	Filter.bRecursiveClasses = true;
-	Filter.bRecursivePaths = true;
-	Filter.bIncludeOnlyOnDiskAssets = true;
-	
-	AssetRegistryModule.Get().GetAssetsByClass(UOmegaGameplayModule::StaticClass()->GetFName(),AssetData, true);
-	//AssetRegistryModule.Get().GetAssets(Filter, AssetData);
-
-	for(FAssetData TempAssetData : AssetData)
-	{
-		if(TempAssetData.GetClass())
-		{
-			UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"ModuleClassLoaded: ", TempAssetData.GetAsset());
-			TSubclassOf<UOmegaGameplayModule> TempModClass = TempAssetData.GetClass();
-			if(TempModClass && Cast<UOmegaGameplayModule>(TempModClass->GetDefaultObject())->AutoRegisterModule)
-			{
-			ActivateModuleFromClass(TempModClass);
-			}
-			
-		}
-	}
-
-	*/
-	
+	GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->ClearSortedAssets_All();
 	for(TSubclassOf<UOmegaGameplayModule> TempModule : GetMutableDefault<UOmegaSettings>()->GetGameplayModuleClasses())
 	{
 		if(TempModule)
 		{
-			//UObject* TempOuter = GetGameInstance();
 			ActivateModuleFromClass(TempModule);
 		}
 	}
-
-	//Setup timer
-	// GetGameInstance()->GetTimerManager().SetTimer(PlaytimeUpdateHandle, this, &UOmegaGameManager::UpdatePlaytime, 1.0, true);
 }
 
 void UOmegaGameManager::Deinitialize()

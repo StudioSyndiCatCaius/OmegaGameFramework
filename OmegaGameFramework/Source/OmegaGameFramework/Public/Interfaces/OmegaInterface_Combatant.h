@@ -4,45 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Actors/OmegaGameplayEffect.h"
+#include "Actors/Actor_GameplayEffect.h"
 #include "Misc/OmegaAttribute.h"
 #include "OmegaInterface_Combatant.generated.h"
 
 class UCombatantComponent;
 class UCombatantFilter;
 
-
-// This class does not need to be modified.
-UINTERFACE()
-class UActorInterface_Combatant : public UInterface
-{
-	GENERATED_BODY()
-};
-
-/**
- * 
- */
+UINTERFACE() class UActorInterface_Combatant : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IActorInterface_Combatant
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
 
 	UFUNCTION(BlueprintNativeEvent, Category="Combatant")
 	TArray<UObject*> GetAttributeModifiers();
 };
 
-// This class does not need to be modified.
-UINTERFACE()
-class UDataInterface_Combatant : public UInterface
-{
-	GENERATED_BODY()
-};
 
-/**
- * 
- */
+UINTERFACE() class UDataInterface_Combatant : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_Combatant
 {
 	GENERATED_BODY()
@@ -68,12 +49,7 @@ public:
 // ===================================================================================================================
 // Effects
 // ===================================================================================================================
-UINTERFACE(MinimalAPI)
-class UDataInterface_OmegaEffect : public UInterface
-{
-	GENERATED_BODY()
-};
-
+UINTERFACE(MinimalAPI) class UDataInterface_OmegaEffect : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_OmegaEffect
 {
 	GENERATED_BODY()
@@ -87,13 +63,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_OmegaEffect
 // ===================================================================================================================
 // Damage Modifier
 // ===================================================================================================================
-UINTERFACE()
-class UDataInterface_DamageModifier : public UInterface
-{
-	GENERATED_BODY()
-};
-
-
+UINTERFACE() class UDataInterface_DamageModifier : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_DamageModifier
 {
 	GENERATED_BODY()
@@ -105,54 +75,3 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_DamageModifier
 	float ModifyDamage(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context);
 };
 
-// ===================================================================================================================
-// Skill Source
-// ===================================================================================================================
-UINTERFACE(MinimalAPI)
-class UDataInterface_SkillSource : public UInterface
-{
-	GENERATED_BODY()
-};
-
-
-class OMEGAGAMEFRAMEWORK_API IDataInterface_SkillSource
-{
-	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-	public:
-
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant")
-	TArray<UPrimaryDataAsset*> GetSkills(UCombatantComponent* Combatant);
-};
-
-
-// ===================================================================================================================
-// Skill
-// ===================================================================================================================
-UINTERFACE(MinimalAPI)
-class UDataInterface_Skill : public UInterface
-{
-	GENERATED_BODY()
-	
-};
-
-class OMEGAGAMEFRAMEWORK_API IDataInterface_Skill
-{
-	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-public:
-	
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Skills")
-	TMap<UOmegaAttribute*, float> GetSkillAttributeCosts(UCombatantComponent* Combatant,UObject* Context);
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
-	TSubclassOf<UCombatantFilter> GetSkillTargetFilter();
-
-	// Skills are given two sequences slots: Charge is typically played first on the instigator. Execution is played second on the Target.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
-	ULevelSequence* GetSkill_Sequences(UCombatantComponent* Combatant, FGameplayTag Tag);
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
-	UAnimMontage* GetSkill_Montage(UCombatantComponent* Combatant, FGameplayTag Tag);
-};

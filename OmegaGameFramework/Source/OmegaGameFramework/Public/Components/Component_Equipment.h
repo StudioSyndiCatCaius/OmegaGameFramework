@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/OmegaInterface_Skill.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataAsset.h"
@@ -12,11 +13,26 @@
 
 class UDataAssetCollectionComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipped, UPrimaryDataAsset*, Item, FString, Slot);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUnequipped, UPrimaryDataAsset*, Item, FString, Slot);
+UINTERFACE(MinimalAPI) class UDataInterface_Equipable : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_Equipable
+{
+	GENERATED_BODY()
+
+public:
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Equipment")
+	bool CanEquipItem(UEquipmentComponent* Component);
+
+	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
+	bool CanEquipItem_InSlot(UEquipmentSlot* Slot) const;
+};
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipped, UPrimaryDataAsset*, Item, UEquipmentSlot*, Slot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUnequipped, UPrimaryDataAsset*, Item, UEquipmentSlot*, Slot);
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UEquipmentComponent : public UActorComponent, public IDataInterface_AttributeModifier
+class OMEGAGAMEFRAMEWORK_API UEquipmentComponent : public UActorComponent, public IDataInterface_AttributeModifier, public IDataInterface_SkillSource
 {
 	GENERATED_BODY()
 
@@ -34,27 +50,19 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(EditAnywhere, Category="Equipment")
+	UPROPERTY(EditAnywhere, Category="Equipment",DisplayName="Equipment")
 	TMap<UEquipmentSlot*, UPrimaryDataAsset*> Slots;
 	
-	UPROPERTY()
-	TMap<FString, UPrimaryDataAsset*> EquippedItems;
-
-	//Slot and Id converstion
-	UEquipmentSlot* GetSlotFromID(const FString& ID);
-	FString GetSlotID(const UEquipmentSlot* Slot);
-
 	UPROPERTY(EditDefaultsOnly, Instanced, Category="Equipment")
 	UEquipmentScript* Script;
 
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
-	TMap<FString, UPrimaryDataAsset*> GetEquipment();
+	TMap<UEquipmentSlot*, UPrimaryDataAsset*> GetEquipment();
+	UFUNCTION(BlueprintCallable, Category="Equipment")
+	void SetEquipment(TMap<UEquipmentSlot*, UPrimaryDataAsset*> Equipment);
 	
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
 	TArray<UPrimaryDataAsset*> GetEquippedItems();
-	
-	UFUNCTION(BlueprintCallable, Category="Equipment")
-	void SetEquipment(TMap<FString, UPrimaryDataAsset*> Equipment);
 	
 	//Determines what assets can be accepted. Blank will accept all.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
@@ -64,26 +72,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
 	FGameplayTagContainer RejectedItemTags;
 	
+
+	
 	bool IsItemAccepted(UPrimaryDataAsset* Item);
 	bool IsItemRejected(UPrimaryDataAsset* Item);
+
+	UFUNCTION(BlueprintCallable, Category="Equipment")
+	bool CanEquipItem(UPrimaryDataAsset* Item, UEquipmentSlot* Slot);
+
+	UFUNCTION(BlueprintCallable, Category="Equipment")
+	TArray<UPrimaryDataAsset*> FilterEquippableItems(TArray<UPrimaryDataAsset*> Items, UEquipmentSlot* Slot);
 	
-	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (Asset")
-	bool EquipItemToSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot);
-	
-	//UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (String)")
-	//bool EquipItem_String(const FString& Item, const FString& Slot);
-	
-	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item (Slot Label)")
-	bool EquipItem(UPrimaryDataAsset* Item, FString Slot);
+	UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equip Item")
+	bool EquipItem(UPrimaryDataAsset* Item, UEquipmentSlot* Slot);
 	
 	UFUNCTION(BlueprintCallable, Category="Equipment")
-	bool UnequipSlot(FString Slot);
+	bool UnequipSlot(UEquipmentSlot* Slot);
 	
 	UFUNCTION(BlueprintPure, Category="Equipment")
-	UPrimaryDataAsset* GetEquipmentInSlot(FString Slot, bool& bValidItem);
-
-	UFUNCTION(BlueprintPure, Category="Equipment")
-	UPrimaryDataAsset* GetEquipmentInSlot_Asset(UEquipmentSlot* Slot, bool& bValidItem);
+	UPrimaryDataAsset* GetEquipmentInSlot(UEquipmentSlot* Slot, bool& bValidItem);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnItemEquipped OnItemEquipped;
@@ -91,7 +98,13 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnItemUnequipped OnItemUnequipped;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment|Combatant")
+    bool bModifyAttributes=true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment|Combatant")
+	bool bIsSkillSource=true;
+	
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 
 	//----------------------
 	// Data Collect
@@ -134,30 +147,25 @@ class OMEGAGAMEFRAMEWORK_API UEquipmentScript : public UObject
 	UEquipmentScript(const FObjectInitializer& ObjectInitializer);
 
 public:
-	UPROPERTY()
-	UEquipmentComponent* Ref_Comp;
 	
-	UFUNCTION(BlueprintPure,Category="Equipment")
-	UEquipmentComponent* GetOwningComponent() const { return  Ref_Comp; }
-	
-	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
-	UPrimaryDataAsset* GetItemInSlot(const FString& Slot) const;
 
-	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
-	TArray<FString> GetEquipSlotsLabels() const;
-	
-	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
-	bool TryEquip(const FString& Slot, UPrimaryDataAsset* Item) const; 
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCategories)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, Abstract, CollapseCategories,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UEquipmentSlotScript : public UObject
 {
 	GENERATED_BODY()
 public:
 
+	UFUNCTION(BlueprintImplementableEvent, Category="Equipment")
+	void OnEquip(UEquipmentComponent* Component, UObject* Item) const;
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Equipment")
+	void OnUnequip(UEquipmentComponent* Component, UObject* Item) const;
+	
 	UFUNCTION(BlueprintNativeEvent, Category="Equipment")
-	bool CanEquipItem(UObject* Item, UEquipmentComponent* Component=nullptr) const; 
+	bool CanEquipItem(UObject* Item) const;
+	
 };
 
 UCLASS()
@@ -180,7 +188,8 @@ public:
 	FGameplayTagContainer RequiredTags;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Equipment")
-	UEquipmentSlotScript* SlotScript;
+	TArray<UEquipmentSlotScript*> SlotScripts;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tags")
 	FGameplayTag SlotCategory;
@@ -194,8 +203,9 @@ public:
 
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
-	
+
 	UFUNCTION(BlueprintCallable, Category="EquipmentSlot")
-	TArray<UPrimaryDataAsset*> FilterEquippableItems(TArray<UPrimaryDataAsset*> Items, UEquipmentComponent* Component=nullptr);
+	bool CanSlotEquipItem(UPrimaryDataAsset* Item);
+	
 };
 

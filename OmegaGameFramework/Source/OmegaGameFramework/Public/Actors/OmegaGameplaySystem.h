@@ -8,8 +8,8 @@
 #include "InputMappingContext.h"
 #include "Widget/HUDLayer.h"
 #include "GameplayTagContainer.h"
-#include "OmegaAbility.h"
-#include "Components/CombatantComponent.h"
+#include "Actor_Ability.h"
+#include "Components/Component_Combatant.h"
 #include "Subsystems/OmegaSubsystem_QueueDelay.h"
 #include "Subsystems/OmegaSubsystem_QueuedQuery.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
@@ -27,6 +27,7 @@ USTRUCT(BlueprintType)
 struct FGameplaySystemAbilityRules
 {
 	GENERATED_BODY()
+	
 	UPROPERTY(EditDefaultsOnly, Category="GameplaySystemRules")
 	TSubclassOf<AOmegaAbility> AbilityClass;
 	
@@ -54,7 +55,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
-	virtual bool GetQueuedQueryValue_Implementation(FGameplayTag Tag, UObject* Context=nullptr) { return true; };
+	virtual bool GetQueuedQueryValue_Implementation(FGameplayTag Tag, UObject* Context=nullptr) override { return true; };
 public:	
 
 	UPROPERTY()
@@ -105,8 +106,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|GameplaySystem", meta=(AdvancedDisplay="Context,Flag"))
 	void Restart(UObject* Context, FString Flag);
 
-	UPROPERTY()
-	bool local_InRestart;
+	UPROPERTY() bool local_InRestart;
 	
 	//-----------------------
 	// Gameplay State
@@ -114,6 +114,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnGameplayStateChange(FGameplayTag NewState);
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Save")
+	void OnNewGameStarted(UOmegaSaveGame* NewSave);
 	
 	//Context Object//
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "Omega|GameplaySystem")
@@ -124,8 +127,7 @@ public:
 	UPROPERTY()
 		FString TempFlag;
 
-	UPROPERTY()
-	bool bIsInShutdown;
+	UPROPERTY() bool bIsInShutdown;
 	UPROPERTY(BlueprintAssignable)
 	FOnShutdown OnSystemShutdown;
 

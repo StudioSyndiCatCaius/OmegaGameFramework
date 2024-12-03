@@ -52,6 +52,7 @@ UOmegaFileManagerSettings* UOmegaFileSubsystem::GetFileManagerSettings() const
 
 void UOmegaFileSubsystem::ImportFileAsOverrideAsset(const FString& path)
 {
+	
 	FString extension = UBlueprintPathsLibrary::GetExtension(path);
 	FString filename = UBlueprintPathsLibrary::GetBaseFilename(path);
 	if(GetFileManagerSettings())
@@ -60,7 +61,12 @@ void UOmegaFileSubsystem::ImportFileAsOverrideAsset(const FString& path)
 		{
 			if(TempScript && TempScript->ValidExtensions.Contains(extension))
 			{
-				UObject* new_obj = TempScript->ImportAsObject(path,filename,extension);
+				UGameInstance* in_GamInst=nullptr;
+				if(GetWorld() && GetWorld()->GetGameInstance())
+				{
+					in_GamInst = GetWorld()->GetGameInstance();
+				}
+				UObject* new_obj = TempScript->ImportAsObject(path,filename,extension,in_GamInst);
 				RegisterOverrideAsset(new_obj,filename,TempScript->ImportClass);
 			}
 		}
@@ -100,7 +106,7 @@ void UOmegaFileSubsystem::RegisterOverrideAsset(UObject* Asset, FString Name, UC
 {
 	if(Asset && !Name.IsEmpty())
 	{
-		GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(Asset,Name);
+		GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(Asset,Name,true);
 		
 		UClass* in_class=Asset->GetClass();
 		if(!Class)
@@ -125,12 +131,14 @@ void UOmegaFileSubsystem::RegisterOverrideAsset(UObject* Asset, FString Name, UC
 // ================================================================================================
 // FILE IMPORT TYPES
 // ================================================================================================
-UTexture2D* UOmegaFileFunctions::OmegaImport_Texture2D(const FString& FilePath)
+UTexture2D* UOmegaFileFunctions::OmegaImport_Texture2D(const FString& FilePath,TEnumAsByte<TextureMipGenSettings> MipGenSettings)
 {
 	UTexture2D* Texture = FImageUtils::ImportFileAsTexture2D(FilePath);;
 	if(Texture)
 	{
-		
+		//Texture->MipGenSettings=MipGenSettings;
+		Texture->RefreshSamplerStates();
+		Texture->UpdateResource();
 		return Texture;
 	}
 	return nullptr;

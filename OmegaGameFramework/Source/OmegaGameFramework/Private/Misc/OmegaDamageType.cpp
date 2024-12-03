@@ -3,7 +3,7 @@
 
 #include "Misc/OmegaDamageType.h"
 #include "Misc/OmegaAttribute.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 
 
 void UOmegaDamageType::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,

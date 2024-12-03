@@ -14,40 +14,22 @@
 class APlayerController;
 
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew, Abstract, Const)
-class OMEGAGAMEFRAMEWORK_API UOmegaInputActionScript : public UObject
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaInputAction : public UInputAction, public IDataInterface_General, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
 public:
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Input")
-	bool IsInputActive(const APlayerController* Controller) const;
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Input")
-	FVector GetAxisValue(const APlayerController* Controller) const;
-};
-
-
-
-UCLASS(EditInlineNew)
-class OMEGAGAMEFRAMEWORK_API UOmegaInputAction : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
-{
-	GENERATED_BODY()
-public:
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",DisplayName="Name") FText DisplayName;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Description") FText DisplayDescription;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FString CustomLabel;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine)) FText DisplayDescription;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTagContainer GameplayTags;
-	OMACRO_ADDPARAMS_GENERAL()
 
-	UFUNCTION(BlueprintPure, Category="InputAction")
-	bool IsInputActive(APlayerController* Controller) const;
-
-	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly,Category="Input")
-	UOmegaInputActionScript* Script;
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; };
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return GameplayTags; };
+	
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputStart);
@@ -60,7 +42,7 @@ class OMEGAGAMEFRAMEWORK_API UInputReceiverComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	bool local_isInputDown();
+	
 	UPROPERTY() float cached_dt;
 
 public:	
@@ -80,21 +62,9 @@ public:
 	FInputActionValue GetInputActionValue();
 
 	UPROPERTY() APlayerController* REF_OwningController;
-
-	UPROPERTY(EditAnywhere, Category="Input", DisplayName="Input Action")
-	UOmegaInputAction* OmegaInputAction;
-	UPROPERTY(EditAnywhere, Instanced, Category="Input", DisplayName="Input Action (Custom)")
-	UOmegaInputAction* OmegaInputAction_Custom;
-
-	UFUNCTION(BlueprintCallable,Category="Input")
-	UOmegaInputAction* GetInputAction() const
-	{
-		if(OmegaInputAction_Custom) { return OmegaInputAction_Custom; }
-		if(OmegaInputAction) { return OmegaInputAction; }
-		return nullptr;
-	}
 	
-	UPROPERTY(EditAnywhere, Category="Input", AdvancedDisplay, DisplayName="UE Input Action (Depc)")
+	
+	UPROPERTY(EditAnywhere, Category="Input", DisplayName="UE Input Action (Depc)")
 	UInputAction* InputAction;
 	
 	UPROPERTY() TArray<FEnhancedActionKeyMapping> KeyMappings;

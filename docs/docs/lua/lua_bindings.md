@@ -31,5 +31,7 @@
 ### Hooks
 |Hook|Meta Values|Description|
 |-|-|-|
-`LEVEL_OPENED`| level(string)
-`GAMEPLAY_STARTED`|
+`LEVEL_OPENED`| level_name (string) 
+`OnGameplayStart`| 
+`QUEST_STARTED` | table: `"quest" (string)`
+`QUEST_ENDED` | table: `"quest" (string)`

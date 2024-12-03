@@ -183,11 +183,3 @@ public:
 };
 
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaDynamicCameraFunctions : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-public:
-
-};

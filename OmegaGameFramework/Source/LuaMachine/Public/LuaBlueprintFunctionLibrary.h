@@ -271,9 +271,12 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
 	static FLuaValue LuaRunByteCode(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const TArray<uint8>& ByteCode, const FString& CodePath);
 
-	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State, CodePath", WorldContext = "WorldContextObject"), Category="Lua")
 	static FLuaValue LuaRunString(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& CodeString, FString CodePath="");
 
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State, CodePath", WorldContext = "WorldContextObject"), Category="Lua")
+	static FLuaValue LuaRunString_AsFunction(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& CodeString, TArray<FLuaValue> Args, FString CodePath="");
+	
 	/* Make an HTTP GET request to the specified URL to download the Lua script to run */
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject", AutoCreateRefTerm = "Headers"), Category = "Lua")
 	static void LuaRunURL(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& URL, TMap<FString, FString> Headers, const FString& SecurityHeader, const FString& SignaturePublicExponent, const FString& SignatureModulus, FLuaHttpSuccess Completed);

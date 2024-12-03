@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/OmegaGameplayEffect.h"
+#include "Actors/Actor_GameplayEffect.h"
 
 #include "DamageFormula_AttributeDifference.generated.h"
 

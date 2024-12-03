@@ -17,6 +17,8 @@ class OMEGADATA_API UOmegaDataSettings : public UDeveloperSettings
 	UOmegaDataSettings();
 
 public:
+	UPROPERTY(EditAnywhere, config, Category = "DataItems")
+	bool AutoscanOnBeginPlay;
 
 	UPROPERTY(EditAnywhere, config, Category = "DataItems")
 	TArray<FDirectoryPath> DataItemScansPath;

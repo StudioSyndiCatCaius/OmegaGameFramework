@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 #include "CombatantGambits.generated.h"
 
 USTRUCT(BlueprintType)

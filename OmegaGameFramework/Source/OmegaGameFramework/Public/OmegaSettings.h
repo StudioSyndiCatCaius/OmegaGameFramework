@@ -43,13 +43,13 @@ public:
 	UClass* GetOmegaGlobalSaveClass() const;
 
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Gameplay"))
-	FSoftObjectPath DefaultSettings_Gameplay;
+	FSoftObjectPath DefaultSettings_Gameplay{"/OmegaGameFramework/Settings/OmegaSettings_Gameplay_Demo_A.OmegaSettings_Gameplay_Demo_A"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Slate"))
-	FSoftObjectPath DefaultSettings_Slate;
+	FSoftObjectPath DefaultSettings_Slate{"/OmegaGameFramework/Settings/OmegaSettings_Slate_Demo_A.OmegaSettings_Slate_Demo_A"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Paths"), AdvancedDisplay)
-	FSoftObjectPath DefaultSettings_Paths;
+	FSoftObjectPath DefaultSettings_Paths{"/OmegaGameFramework/Settings/OmegaSettings_Paths.OmegaSettings_Paths"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaFileManagerSettings"), AdvancedDisplay)
-	FSoftObjectPath DefaultSettings_FileManager;
+	FSoftObjectPath DefaultSettings_FileManager{"/OmegaGameFramework/Settings/OmegaSettings_FileManager.OmegaSettings_FileManager"};
 	
 	//Will automatically scan these directories at startup to try and load and actiavate modules from them. NOTE: This can be a slow process. Try and only set these paths to folders containing GameplayModules.
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
@@ -114,9 +114,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "BGM")
 	bool FadeBGMOnLevelTransit = true;
-	
-	UPROPERTY(EditAnywhere, config, Category = "BGM", meta=(MetaClass="GamePreferenceFloat"))
-	FSoftObjectPath BGM_VolumePreference;
 
 	UPROPERTY(EditAnywhere, config, Category = "BGM", meta=(MetaClass="MetasoundSource"))
 	FSoftObjectPath BgmMetasound{"/OmegaGameFramework/DEMO/MetaSound/DemoMS_BGM.DemoMS_BGM"};

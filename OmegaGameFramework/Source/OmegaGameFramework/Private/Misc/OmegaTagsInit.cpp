@@ -7,8 +7,12 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Ally,"Combat.Faction.Ally");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Neutral,"Combat.Faction.Neutral");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Destructable,"Combat.Faction.Destructable");
 
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Active,"Combat.Skill.Active");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Passive,"Combat.Skill.Passive");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Active,"Skill.Active");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Passive,"Skill.Passive");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tech,"Skill.Tech");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Magic,"Skill.Magic");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tactic,"Skill.Tactic");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Damage,"Combat.Effect.Damage");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Heal,"Combat.Effect.Heal");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Buff,"Combat.Effect.Buff");
@@ -105,6 +109,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Roll,"Animation.Action.Roll");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Cast,"Animation.Action.Cast");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Impact,"Animation.Action.Impact");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Open,"Animation.Action.Open");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Close,"Animation.Action.Close");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Exp_Happy,"Animation.Expression.Happy");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Exp_Sad,"Animation.Expression.Sad");
@@ -119,6 +125,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_No,"Animation.Emote.No");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Sit,"Animation.Emote.Sit");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Wave,"Animation.Emote.Wave");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Point,"Animation.Emote.Point");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Talking,"Animation.Emote.Talking");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Listen,"Animation.Emote.Listen");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_00,"Flag.Power.0%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_10,"Flag.Power.10%");
@@ -156,6 +164,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Footstep,"Event.Physics.Footstep");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Hit,"Event.Physics.Hit");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Touch,"Event.Physics.Touch");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Break,"Event.Physics.Break");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Grab,"Event.Physics.Grab");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Climb,"Event.Physics.Climb");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Drag_Grab,"Event.Drag.Grab");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Drag_Drop,"Event.Drag.Drop");
@@ -180,6 +190,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_Start,"Event.Dialogue.Line.Start
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_End,"Event.Dialogue.Line.End");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Dlg_Line_Next,"Event.Dialogue.Line.Next");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Actor_Type_Interactable,"Actor.Type.Interactable");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Actor_Type_Destructable,"Actor.Type.Destructable");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Choice_Start,"Event.Choice.Start");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Choice_Select,"Event.Choice.Selected");
@@ -204,6 +216,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Party,"Menu.Party");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Quest,"Menu.Quest");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Journal,"Menu.Journal");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Menu_Cooking,"Menu.Cooking");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Quest_Type_Main,"Quest.Type.Main");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Quest_Type_Side,"Quest.Type.Side");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Quest_Type_Hunt,"Quest.Type.Hunt");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Exploration,"System.Exploration");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Combat,"System.Combat");
@@ -231,7 +247,23 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Query_DLG_CanPlay,"Query.Dialogue.CanPlay");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_Event_Confirm,"Input.Event.Confirm");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_Event_Cancel,"Input.Event.Cancel");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Trade_Buy,"Trade.Buy");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Trade_Sell,"Trade.Sell");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Trade_Barter,"Trade.Barter");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Trade_Cook,"Trade.Cook");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Trade_Draft,"Trade.Draft");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Amount,"Param.Amount");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Max,"Param.Max");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Min,"Param.Min");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Active,"Param.Active");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Save_Type_Manual,"Save.Type.Manual");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Save_Type_Auto,"Save.Type.Auto");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Save_Type_Quick,"Save.Type.Quick")
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_00,"Zone.Floor.00");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_01,"Zone.Floor.01");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_02,"Zone.Floor.02");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_03,"Zone.Floor.03");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_04,"Zone.Floor.04");

@@ -57,7 +57,7 @@ public:
 	virtual UGameInstance* GetGameInstance() const;
 };
 
-UCLASS()
+UCLASS(Abstract)
 class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInterface_Input
 {
 	GENERATED_BODY()
@@ -101,25 +101,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Entry", meta=(AdvancedDisplay="KeepEntires"))
 	void SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries=true);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",DisplayName="Entries (Data Assets)")
 	TArray<UPrimaryDataAsset*> DefaultAssets;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(meta=(DeprecatedProperty))
 	bool bUseCustomEntries;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Entry",DisplayName="Entries (Custom)")
 	TArray<UDataListCustomEntry*> CustomEntryObjects;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",AdvancedDisplay)
 	TArray<FCustomAssetData> CustomEntries;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "List")
 	int32 UniformGridMaxValue = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString EntryLabel;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry",DisplayName="List Gameplay Tags")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",DisplayName="List Gameplay Tags")
 	FGameplayTagContainer ListTags;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry")
@@ -151,9 +151,15 @@ public:
 	//---------------------------------------------------------------------------------------------//
 	//	Lua
 	//---------------------------------------------------------------------------------------------//
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Lua", meta=(MultiLine))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
+	FString Script_ListVisibility="return true";
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
+	FString Script_EntryVisibility="return function(label) return true end";
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
 	FLuaScriptContainer List_Script;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Lua", meta=(MultiLine))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
 	FLuaScriptContainer Entry_Script;
 	UFUNCTION(BlueprintCallable,Category="Lua")
 	FLuaValue GetListScript(TSubclassOf<ULuaState> State);

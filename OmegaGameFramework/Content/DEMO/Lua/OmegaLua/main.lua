@@ -1,12 +1,11 @@
-_={}
+_C={} -- constants
 
 
 if _D==nil then _D={} end -- Database: 
-_S={} -- Save: data save to the game file.
+if _SAV==nil then _SAV={} end  -- Save: data save to the game file.
 COMP={} --Create Components
-ALUA={}
 
-_.ENGINE={
+_C.ENGINE={
     UE={
         setup=function ()
             
@@ -19,9 +18,7 @@ _.ENGINE={
     }
 }
 
-
-
-_.COLOR={
+_C.COLOR={
     White = "#FFFFFF",
     Silver = "#C0C0C0",
     Gray = "#808080",
@@ -41,4 +38,14 @@ _.COLOR={
     Orange = "#FFA500"
 }
 
+
+SYN={
+    Math=SynMath,
+    File=SynFile,
+    Loc=SynLoc,
+    Hook=SynHook,
+    Table=SynTable,
+    String=SynString,
+    Parse=SynParse,
+}
 

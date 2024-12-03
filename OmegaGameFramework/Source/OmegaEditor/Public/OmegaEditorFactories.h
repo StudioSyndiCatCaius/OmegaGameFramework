@@ -8,7 +8,7 @@
 
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaFaction.h"
-#include "Actors/OmegaAbility.h"
+#include "Actors/Actor_Ability.h"
 #include "OmegaDataItem.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
@@ -18,8 +18,10 @@
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
 #include "Components/Component_Leveling.h"
+#include "Components/Component_Subscript.h"
 #include "Factories/BlueprintFactory.h"
 #include "Functions/OmegaFunctions_Animation.h"
+#include "Functions/OmegaFunctions_Combatant.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Subsystems/OmegaSubsystem_BGM.h"
 #include "Widget/Menu.h"
@@ -92,6 +94,21 @@ UCLASS() class OMEGAEDITOR_API UOmegaQuest_Factory : public UFactory
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaQuest,"Quest", "Asset Desc here",FColor(201, 29, 85),"Gameplay")
 
+//Skill
+UCLASS() class OMEGAEDITOR_API UOmegaCommonSkill_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaCommonSkill,"Common Skill", "Asset Desc here",FColor(255, 40, 56),"Gameplay")
+
+//Subscript
+UCLASS() class OMEGAEDITOR_API USubscriptCollection_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(SubscriptCollection,"Subscript Collection", "Asset Desc here",FColor(40, 120, 255),"Gameplay")
 
 //BGM
 UCLASS() class OMEGAEDITOR_API UOmegaBGM_Factory : public UFactory
@@ -117,6 +134,15 @@ UCLASS() class OMEGAEDITOR_API UOmegaZoneData_Factory : public UFactory
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaZoneData,"Level: Zone Data", "Asset Desc here", FColor(225, 150, 0),"World")
+
+
+//Level Data
+UCLASS() class OMEGAEDITOR_API UZoneLegendAsset_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(ZoneLegendAsset,"Level: Zone Legend", "Asset Desc here", FColor(225, 155, 40),"World")
 
 
 //Story State

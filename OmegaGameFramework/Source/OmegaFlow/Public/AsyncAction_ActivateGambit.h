@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/OmegaAbility.h"
-#include "Components/CombatantComponent.h"
+#include "Actors/Actor_Ability.h"
+#include "Components/Component_Combatant.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "AsyncAction_ActivateGambit.generated.h"
 

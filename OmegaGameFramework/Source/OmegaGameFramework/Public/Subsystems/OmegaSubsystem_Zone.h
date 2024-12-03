@@ -16,6 +16,7 @@
 #include "Engine/DataAsset.h"
 #include "Components/TextRenderComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "GameFramework/SpringArmComponent.h"
 
 #include "OmegaSubsystem_Zone.generated.h"
 
@@ -26,14 +27,107 @@ class UBillboardComponent;
 class UBoxComponent;
 class UOmegaZoneSubsystem;
 
-// =============================================================================================================
-// Zone Subsystem
-// =============================================================================================================
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlaySpawnedAtPoint, APlayerController*, Player, AOmegaZonePoint*, Point);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnZoneLoaded, UOmegaZoneData*, Zone);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnZoneUnloaded, UOmegaZoneData*, Zone);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnZoneTransitInRange, AOmegaZoneTransit*, ZoneTransit, bool, bInRange);
+
+// =============================================================================================================
+// Zone Entity
+// =============================================================================================================
+
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
+class OMEGAGAMEFRAMEWORK_API UZoneEntityComponent : public UActorComponent, public IDataInterface_General, public IGameplayTagsInterface
+{
+	GENERATED_BODY()
+
+	UZoneEntityComponent();
+
+	UPROPERTY() AZoneEntityDisplayActor* Ref_DisplayActor;
+
+public:
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Zone Entity")
+	FText DisplayName;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Zone Entity",meta=(MultiLine))
+	FText DisplayDescription;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Zone Entity",meta=(MultiLine))
+	FGameplayTagContainer ExtraTags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Zone Entity")
+	UZoneLegendAsset* LegendAsset;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Zone Entity")
+	UOmegaZoneData* CurrentZone;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone Entity")
+	TSubclassOf<AZoneEntityDisplayActor> DisplayActorClass;
+	UFUNCTION(BlueprintPure,Category="Zone Entity")
+	AZoneEntityDisplayActor* GetDisplayActor() const
+	{
+		if(Ref_DisplayActor)
+		{
+			return Ref_DisplayActor;
+		}
+		return nullptr;
+	}
+
+	
+	UFUNCTION(BlueprintPure,Category="Zone Entity")
+	FVector2D GetPosition2D();
+	UFUNCTION(BlueprintPure,Category="Zone Entity")
+	float GetRotation2D();
+
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+};
+
+UCLASS(Abstract)
+class OMEGAGAMEFRAMEWORK_API AZoneEntityDisplayActor : public AActor
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY() UZoneEntityComponent* owning_component;
+	UFUNCTION(BlueprintPure,Category="Zone Entity Display")
+	UZoneEntityComponent* GetZoneEntityComponent() const { if(owning_component) {return owning_component;} return nullptr;};
+	
+	//virtual void BeginPlay() override;
+	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+};
+
+UCLASS(Abstract)
+class OMEGAGAMEFRAMEWORK_API AZoneEntityViewCamera : public APawn
+{
+	GENERATED_BODY()
+
+	AZoneEntityViewCamera();
+
+public:
+
+	virtual void BeginPlay() override;
+	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera") USpringArmComponent* SpringArm;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera") UCameraComponent* CameraComponent;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera") USceneCaptureComponent2D* SceneCaptureComponent;
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UZoneLegendAsset : public UOmegaDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly,Category="Legend")
+	TSubclassOf<AZoneEntityDisplayActor> DefaultDisplayActor;
+};
+
+// =============================================================================================================
+// Zone Subsystem
+// =============================================================================================================
 
 UCLASS(DisplayName="Omega Subsystem: Zones")
 class OMEGAGAMEFRAMEWORK_API UOmegaZoneSubsystem : public UWorldSubsystem, public FTickableGameObject
@@ -50,9 +144,8 @@ public:
 	virtual bool IsTickableInEditor() const
 	{ return false; }
 	// FTickableGameObject End
-
-	UPROPERTY()
-	bool bIsInLevelTransit;
+	
+	UPROPERTY() bool bIsInLevelTransit;
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
@@ -85,9 +178,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPlaySpawnedAtPoint OnPlaySpawnedAtPoint;
 
-	//------------------------------------------------------------------------
+	//----------------------------------------------------------------------------------------------------------------a
 	// Level Data
-	//------------------------------------------------------------------------
+	//----------------------------------------------------------------------------------------------------------------
 	UPROPERTY()
 	UOmegaLevelData* LevelData = nullptr;
 
@@ -99,7 +192,29 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|Zone")
 	TSoftObjectPtr<UWorld> GetCurrentLevelSoftReference();
+	
+	//----------------------------------------------------------------------------------------------------------------
+	// Zone Entities
+	//----------------------------------------------------------------------------------------------------------------
+	void RegisterZoneEntity(UZoneEntityComponent* entity, bool bIsEntityRegistered)
+	{
+		if(bIsEntityRegistered && !registered_entities.Contains(entity))
+		{
+			registered_entities.AddUnique(entity);
+		}
+		if(!bIsEntityRegistered && registered_entities.Contains(entity))
+		{
+			registered_entities.Remove(entity);
+		}
+	}
+	
+	UPROPERTY() TArray<UZoneEntityComponent*> registered_entities;
+	
+	UFUNCTION(BlueprintPure,Category="Zone|Entities")
+	TArray<UZoneEntityComponent*> GetRegisteredZoneEntities() const;
 
+	UFUNCTION(BlueprintPure,Category="Zone|Entities")
+	TArray<UZoneEntityComponent*> GetRegisteredZoneEntities_OfLegend(UZoneLegendAsset* Legend) const;
 	
 protected:
 	UPROPERTY()
@@ -148,65 +263,36 @@ public:
 protected:
 
 	//That that will be falled back to if no other active zone exists
-	UPROPERTY()
-	UOmegaZoneData* FallbackZone=nullptr;
+	UPROPERTY() UOmegaZoneData* FallbackZone=nullptr;
+	UPROPERTY() bool bUnloadPreviousZones;
+	UPROPERTY() UOmegaZoneData* IncomingZone_Load;
+	UPROPERTY() AOmegaZonePoint* Incoming_SpawnPoint;
+	UPROPERTY() UOmegaZoneData* IncomingZone_Unload;
+	UPROPERTY() TArray<FName> Incoming_LoadList;
+	UPROPERTY() bool Incoming_LoadState;
+	UPROPERTY() UOmegaZoneData* Incoming_LoadTaskZone;
 	
-	UPROPERTY()
-	bool bUnloadPreviousZones;
-	UPROPERTY()
-	UOmegaZoneData* IncomingZone_Load;
-	UPROPERTY()
-	AOmegaZonePoint* Incoming_SpawnPoint;
-	UPROPERTY()
-	UOmegaZoneData* IncomingZone_Unload;
-	UPROPERTY()
-	TArray<FName> Incoming_LoadList;
-	UPROPERTY()
-	bool Incoming_LoadState;
-	UPROPERTY()
-	UOmegaZoneData* Incoming_LoadTaskZone;
-	
-	UFUNCTION()
-	void Local_OnBeginLoadTaskList(TArray<FName> Levels, bool Loaded);
-	UFUNCTION()
-	void Local_OnNextLoadEvent();
-	UFUNCTION()
-	void Local_OnFinishLoadTask(bool LoadState);
+	UFUNCTION() void Local_OnBeginLoadTaskList(TArray<FName> Levels, bool Loaded);
+	UFUNCTION() void Local_OnNextLoadEvent();
+	UFUNCTION() void Local_OnFinishLoadTask(bool LoadState);
 
-	UPROPERTY()
-	FName IncomingLevelName;
-	UPROPERTY()
-	bool Local_IsWaitForLoad;
-	UFUNCTION()
-	void Local_FinishZoneLoad();
+	UPROPERTY() FName IncomingLevelName;
+	UPROPERTY() bool Local_IsWaitForLoad;
+	UFUNCTION() void Local_FinishZoneLoad();
 
-	UFUNCTION()
-	TSubclassOf<AOmegaGameplaySystem> GetZoneGameplaySystem();
+	UFUNCTION() TSubclassOf<AOmegaGameplaySystem> GetZoneGameplaySystem();
 
 	//#############################################
 	// Transit Sequence
 	//#############################################
 
-	UFUNCTION()
-	ULevelSequence* GetTransitSequence();
-
-	UFUNCTION(BlueprintPure, Category="Zone")
-	ULevelSequencePlayer* GetTransitSequencePlayer();
-	UPROPERTY()
-	ALevelSequenceActor* LocalSeqPlayer;
-	
-	UPROPERTY()
-	bool bSequenceTransit_IsForward;
-	
-	UPROPERTY()
-	bool bSequenceTransit_IsPlaying;
-	
-	UFUNCTION()
-	void Local_OnBeginTransitSequence(bool bForward);
-
-	UFUNCTION()
-	void Local_OnFinishTransitSequence();
-	
+	UFUNCTION() ULevelSequence* GetTransitSequence();
+	UFUNCTION(BlueprintPure, Category="Zone") ULevelSequencePlayer* GetTransitSequencePlayer();
+	UPROPERTY() ALevelSequenceActor* LocalSeqPlayer;
+	UPROPERTY() bool bSequenceTransit_IsForward;
+	UPROPERTY() bool bSequenceTransit_IsPlaying;
+	UFUNCTION() void Local_OnBeginTransitSequence(bool bForward);
+	UFUNCTION() void Local_OnFinishTransitSequence();
 };
 
 // =============================================================================================================
@@ -402,7 +488,10 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	AOmegaZonePoint();
+
+	// Components
 	UPROPERTY() UArrowComponent* DirectionalArrow;
+	UPROPERTY() UZoneEntityComponent* ZoneEntityComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
 	FText PointName;
@@ -437,12 +526,11 @@ public:
 	
 	void OnLevelChanged(UWorld* World, const UWorld::InitializationValues);
 	
-	UPROPERTY()
-	bool IsInlevelTransit;
-	UPROPERTY();
-	FGameplayTag TargetSpawnPointTag;
-	UPROPERTY()
-	TSoftObjectPtr<UWorld> PreviousLevel;
+	UPROPERTY() bool bIsLoadingGame;
+	UPROPERTY() bool IsInlevelTransit;
+	
+	UPROPERTY() FGameplayTag TargetSpawnPointTag;
+	UPROPERTY() TSoftObjectPtr<UWorld> PreviousLevel;
 };
 
 
@@ -472,3 +560,18 @@ protected:
 };
 
 
+// =============================================================================================================
+// Zone Minimap
+// =============================================================================================================
+
+
+UCLASS(Abstract)
+class OMEGAGAMEFRAMEWORK_API UZoneMinimapWidget : public UUserWidget
+{
+	GENERATED_BODY()
+
+
+public:
+
+
+};

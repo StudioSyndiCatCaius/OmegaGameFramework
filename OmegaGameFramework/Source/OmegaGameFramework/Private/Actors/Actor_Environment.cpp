@@ -11,6 +11,8 @@
 #include "Components/RuntimeVirtualTextureComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Async/TaskGraphInterfaces.h"
+#include "Components/AudioComponent.h"
+#include "Engine/World.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -43,6 +45,8 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 	if(PostProcess) { PostProcess->SetupAttachment(EnvironmentRoot); }
 	SkyBox= CreateOptionalDefaultSubobject<UStaticMeshComponent>("SkyBox");
 	if(SkyBox) { SkyBox->SetupAttachment(EnvironmentRoot); }
+	Audio= CreateOptionalDefaultSubobject<UAudioComponent>("Audio");
+	if(Audio) { Audio->SetupAttachment(EnvironmentRoot); }
 	//VirtualTextureComponent= CreateOptionalDefaultSubobject<URuntimeVirtualTextureComponent>("VirtualTexture");
 	//if(VirtualTextureComponent) { VirtualTextureComponent->SetupAttachment(EnvironmentRoot); }
 
@@ -60,7 +64,7 @@ void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
 	{
 		SkyLight->RecaptureSky();
 	}
-	if(current_preset)
+	if(current_preset && !lock_preset)
 	{
 		for(auto* TempScript : current_preset->Scripts)
 		{
@@ -70,6 +74,19 @@ void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
 			}
 		}
 	}
+	if(DefaultAmbiantSound && Audio)
+	{
+		Audio->SetSound(DefaultAmbiantSound);
+	}
+}
+
+void AOmegaActorEnvironment::BeginPlay()
+{
+	if(BGM_to_autoplay)
+	{
+		GetWorld()->GetSubsystem<UOmegaBGMSubsystem>()->PlayBGM(BGM_to_autoplay,BGM_Slot,false,true);
+	}
+	Super::BeginPlay();
 }
 
 
@@ -93,6 +110,20 @@ void AOmegaActorEnvironment::AutosetVirtualTextureFromLandscape()
 	*/
 }
 
+void AOmegaActorEnvironment::SaveToPreset()
+{
+	if(current_preset)
+	{
+		for(auto* TempScript : current_preset->Scripts)
+		{
+			if(TempScript)
+			{
+				TempScript->OnSaved(this);
+			}
+		}
+	}
+}
+
 void AOmegaActorEnvironment::Set_Preset(UOmegaEnvironmentPreset* Preset)
 {
 	if(Preset)
@@ -100,5 +131,10 @@ void AOmegaActorEnvironment::Set_Preset(UOmegaEnvironmentPreset* Preset)
 		current_preset=Preset;
 		current_preset->Local_Update(this);
 	}
+}
+
+UOmegaBGM* AOmegaActorEnvironment::GetEnvironmentBGM_Implementation()
+{
+	if(BGM_to_autoplay) {return BGM_to_autoplay;} return nullptr;
 }
 

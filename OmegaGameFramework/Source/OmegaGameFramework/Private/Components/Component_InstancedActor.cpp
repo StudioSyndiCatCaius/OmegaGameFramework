@@ -184,9 +184,50 @@ bool UInstanceActorComponent::SwapInstanceIndecies(int32 A, int32 B)
 	return false;
 }
 
+void UInstanceActorComponent::SetInstanceOrder_ByLabels(TArray<FString> Labels)
+{
+	// Sort the local TArray<AActor*> by the order of the input Labels array
+	PrivateInstances.Sort([&](const AOmegaInstanceActor& A, const AOmegaInstanceActor& B) {
+		int32 IndexA = Labels.Find(A.ContextLabel);
+		int32 IndexB = Labels.Find(B.ContextLabel);
+
+		// If either actor's label is not found in the input Labels array, keep their relative order
+		if (IndexA == INDEX_NONE)
+			return false;
+		if (IndexB == INDEX_NONE)
+			return true;
+
+		// Otherwise, sort by the index of the label in the input Labels array
+		return IndexA < IndexB;
+	});
+}
+
+TArray<FString> UInstanceActorComponent::GetInstanceOrder_ByLabels()
+{
+	TArray<FString> out;
+	for(auto* TempInst : PrivateInstances)
+	{
+		out.Add(UOmegaGameFrameworkBPLibrary::GetObjectLabel(TempInst));
+	}
+	return out;
+}
+
+void UInstanceActorComponent::TriggerNotify_OnAll(FName Notify)
+{
+	for(auto* temp_inst : GetInstances())
+	{
+		if(temp_inst)
+		{
+			temp_inst->TriggerNotify(Notify);
+		}
+	}
+}
+
 // ===========================================================================================================
 // Instance Actor
 // ===========================================================================================================
+
+
 
 // Sets default values
 AOmegaInstanceActor::AOmegaInstanceActor()
@@ -282,5 +323,10 @@ void AOmegaInstanceActor::TriggerNotify(FName Notify)
 	{
 		OwningComponent->OnInstanceNotify.Broadcast(this, Notify);
 	}
+	OnNotify(Notify);
+}
+
+void AOmegaInstanceActor::OnNotify_Implementation(FName Notify)
+{
 }
 

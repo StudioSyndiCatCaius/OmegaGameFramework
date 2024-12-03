@@ -2,7 +2,7 @@
 
 #include "OmegaEffectFactory.h"
 //The asset header file that we wish to create
-#include "Actors/OmegaGameplayEffect.h"
+#include "Actors/Actor_GameplayEffect.h"
 //The asset type categories will let us access the various asset categories inside the Editor
 #include "AssetTypeCategories.h"
 #include "ThumbnailRendering/ThumbnailManager.h"

@@ -12,19 +12,6 @@
 void UOmegaGameplaySubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
 	ActiveSystems.Empty();
-	//TArray<class TSubclassOf<AOmegaGameplaySystem>> PrepGameSys = GetMutableDefault<UOmegaSettings>()->AutoActivatedGameplaySystems;
-	//static bool ValidGlobalSave;
-	//AOmegaGameplaySystem* DummySystem;
-
-	
-	//if (UGameplayStatics::GetGameInstance(this))
-	//{
-		//for (TSubclassOf<AOmegaGameplaySystem> TempSys : PrepGameSys)
-		//{
-		//	ActivateGameplaySystem(TempSys, this, "none", DummySystem);
-		//}
-	//}
-
 }
 
 AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag)
@@ -110,12 +97,12 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::GetGameplaySystem(TSubclassOf<AOm
 	}
 }
 
-TArray<AOmegaGameplaySystem*> UOmegaGameplaySubsystem::GetActiveGameplaySystems()
+TArray<AOmegaGameplaySystem*> UOmegaGameplaySubsystem::GetActiveGameplaySystems(bool bIncludeSystemsInShutdown)
 {
 	TArray<AOmegaGameplaySystem*> OutSystems;
 	for(auto* TempSystem : ActiveSystems)
 	{
-		if(TempSystem && !TempSystem->bIsInShutdown)
+		if(TempSystem && (!TempSystem->bIsInShutdown || bIncludeSystemsInShutdown))
 		{
 			OutSystems.AddUnique(TempSystem);
 		}
@@ -140,7 +127,7 @@ TArray<AOmegaGameplaySystem*> UOmegaGameplaySubsystem::GetActiveGameplaySystemsW
 FGameplayTagContainer UOmegaGameplaySubsystem::GetBlockedSystemTags()
 {
 	FGameplayTagContainer out = ExtraBlockedSystemTags;
-	for(const auto* TempSys : GetActiveGameplaySystems())
+	for(const auto* TempSys : GetActiveGameplaySystems(true))
 	{
 		out.AppendTags(TempSys->BlockSystemTags);
 	}

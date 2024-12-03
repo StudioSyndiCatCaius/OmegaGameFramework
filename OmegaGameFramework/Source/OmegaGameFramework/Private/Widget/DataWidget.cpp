@@ -237,9 +237,15 @@ void UDataWidget::Refresh()
 		LocalListOwner = GetOwningList()->ListOwner;
 	}
 	RefreshMeta();
+	Native_OnRefreshed(ReferencedAsset,LocalListOwner);
 	OnRefreshed(ReferencedAsset, LocalListOwner);
 	OnWidgetRefreshed.Broadcast(this);
 }
+
+void UDataWidget::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
+{
+}
+
 
 //----------------------NATIVE CONSTRUCT-------------------------------------------//
 
@@ -295,6 +301,10 @@ void UDataWidget::WidgetNotify(FName Notify)
 	Local_OnWidgetNotify(Notify);
 }
 
+void UDataWidget::OnNewListOwner_Implementation(UObject* ListOwner)
+{
+}
+
 FString UDataWidget::GetAssetLabel()
 {
 	FString OutString = "None";
@@ -341,7 +351,7 @@ void UDataWidget::Select()
 			PlayAnimationForward(GetSelectAnimation(), 1.0f, false);
 		}
 		OnSelected.Broadcast(this);
-		
+		OnSelect();
 		if(GetPlayerSubsystem())
 		{
 			if(SelectSound)
@@ -485,6 +495,10 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 		Refresh();
 	}
 	
+}
+
+void UDataWidget::OnSourceAssetChanged_Implementation(UObject* Asset)
+{
 }
 
 UDataTooltip* UDataWidget::GetDataTooltipWidget()

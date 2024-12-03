@@ -24,9 +24,9 @@ public:
 	virtual UGameInstance* GetGameInstance() const;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Trace")
-	FHitResult RunTrace(UObject* context,bool& Success);
+	FHitResult RunTrace(AActor* Instigator,bool& Success);
 	UFUNCTION(BlueprintImplementableEvent, Category="Trace")
-	TArray<FHitResult> RunTrace_Multi(UObject* context,bool& Success);
+	TArray<FHitResult> RunTrace_Multi(AActor* Instigator,bool& Success);
 };
 
 
@@ -47,10 +47,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTraceFunctions : public UBlueprintFun
 public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega")
-	static const FHitResult ScriptedTrace_Single(UObject* context, FOmegaScriptedTrace Trace,bool& Success);
+	static const FHitResult ScriptedTrace_Single(AActor* Instigator, FOmegaScriptedTrace Trace,bool& Success);
 
 	UFUNCTION(BlueprintCallable, Category="Omega")
-	static const TArray<FHitResult> ScriptedTrace_Multi(UObject* context, FOmegaScriptedTrace Trace,bool& Success);
+	static const TArray<FHitResult> ScriptedTrace_Multi(AActor* Instigator, FOmegaScriptedTrace Trace,bool& Success);
 };
 
 

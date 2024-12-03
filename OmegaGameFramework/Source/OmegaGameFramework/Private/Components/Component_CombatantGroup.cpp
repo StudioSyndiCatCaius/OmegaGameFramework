@@ -3,7 +3,7 @@
 #include "Components/Component_CombatantGroup.h"
 #include "Components/PrimitiveComponent.h"
 #include "JsonObjectWrapper.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 
 // Sets default values for this component's properties
 UCombatantGroupComponent::UCombatantGroupComponent()

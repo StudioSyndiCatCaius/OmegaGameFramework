@@ -5,6 +5,13 @@ SynTable={}
     Copy
 ]]
 
+function SynTable.key_length(tbl)
+    local out=0
+    for key, value in pairs(tbl) do
+        out=out+1
+    end
+    return out
+end
 
 
 function SynTable.copy_shallow(original)

@@ -2,8 +2,10 @@
 
 
 #include "Components/Component_TurnBasedManager.h"
+#include "Engine/GameInstance.h"
 
 #include "Functions/OmegaFunctions_TagEvent.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
 
 
 // Sets default values for this component's properties
@@ -26,7 +28,10 @@ void UTurnBasedManagerComponent::BeginPlay()
 	{
 		TurnManager=NewObject<UTurnManagerBase>(this,UTurnManagerBase::StaticClass());
 	}
-	
+	if(TurnManager)
+	{
+		TurnManager->TurnManagerRef=this;
+	}
 }
 
 
@@ -171,6 +176,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
 		GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnEnd);
 		UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnEnd);
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(TagEventsOnTurnEnd_Global,this);
 	}
 	
 	//If Empty and should regenerator
@@ -216,12 +222,16 @@ void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FStri
 	bool LocalSuccess;
 	Combatant->GrantAbility(Local_GetTurnAbility());
 	GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnStart);
+	
+	// TAG EVENTS
 	UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnBegin);
 	LocalTurnAbility = Combatant->ExecuteAbility(Local_GetTurnAbility(), this,LocalSuccess);
+	
 	if(LocalSuccess && LocalTurnAbility)
 	{
 		LocalTurnAbility->OnAbilityFinished.AddDynamic(this, &UTurnBasedManagerComponent::Local_TurnAbilityFinish);
 	}
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(TagEventsOnTurnBegin_Global,this);
 }
 
 void UTurnBasedManagerComponent::Local_TurnAbilityFinish(bool Cancelled)
@@ -283,7 +293,7 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetRegisteredCombatants
 	TArray<UCombatantComponent*> OutComs;
 	for(auto* TempCom : RegisteredCombatants)
 	{
-		if(TempCom)
+		if(TempCom && !TempCom->IsBeingDestroyed())
 		{
 			OutComs.Add(TempCom);
 		}

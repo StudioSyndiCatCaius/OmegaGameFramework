@@ -24,6 +24,9 @@ AOmegaCharacter::AOmegaCharacter()
 	ActorState = CreateDefaultSubobject<UActorStateComponent>(TEXT("ActorState"));
 	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
 	SubscriptComponent = CreateDefaultSubobject<USubscriptComponent>(TEXT("Subscript"));
+	SkinComponent = CreateDefaultSubobject<USkinComponent>(TEXT("Skin"));
+	GameplayPause = CreateDefaultSubobject<UGameplayPauseComponent>(TEXT("GameplayPause"));
+	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
 }
 
 void AOmegaCharacter::OnConstruction(const FTransform& Transform)
@@ -31,6 +34,10 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 	if(CharacterAsset)
 	{
 		DataItem->SetDataItem(CharacterAsset);
+	}
+	if(SkinComponent)
+	{
+		SkinComponent->Assemble();
 	}
 	Super::OnConstruction(Transform);
 }
@@ -42,7 +49,18 @@ void AOmegaCharacter::BeginPlay()
 	Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
 	Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
 	DataItem->OnDataItemChanged.AddDynamic(this, &AOmegaCharacter::Local_UpdateDataItem);
-	
+	if(DefaultEmote)
+	{
+		UOmegaAnimationFunctions::PlayEmoteAnimation(this,DefaultEmote);
+	}
+	if(Autobind_NamedGlobalEvents)
+	{
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaCharacter::OnGlobalEvent_Named);
+	}
+	if(Autobind_TaggedGlobalEvents)
+	{
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaCharacter::OnGlobalEvent_Tagged);
+	}
 }
 
 void AOmegaCharacter::Local_AddCombatantSource(UObject* Source)
@@ -69,4 +87,10 @@ void AOmegaCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 void AOmegaCharacter::Local_LevelUpdate(int32 NewLevel)
 {
 	Combatant->Level = Leveling->GetCurrentLevel();
+}
+
+void AOmegaCharacter::Local_UpdateDataItem(UOmegaDataItem* NewItem)
+{
+	Combatant->CombatantDataAsset = NewItem;
+	Combatant->Update();
 }

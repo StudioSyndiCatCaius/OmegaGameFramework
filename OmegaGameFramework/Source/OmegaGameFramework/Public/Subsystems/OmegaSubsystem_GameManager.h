@@ -7,6 +7,7 @@
 #include "OmegaSettings.h"
 #include "JsonObjectWrapper.h"
 #include "Misc/OmegaGameMode.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "OmegaSubsystem_GameManager.generated.h"
 
 class UOmegaSettings;
@@ -33,7 +34,9 @@ UCLASS(Category = "OmegaSubsystems|Instance")
 class OMEGAGAMEFRAMEWORK_API UOmegaGameManager : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
+	
 
+	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
@@ -43,7 +46,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Manager")
 	FGameplayTagContainer StateTags;
 
-
+	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
 	
 	UFUNCTION() UOmegaGameplayModule* ActivateModuleFromClass(const UClass* ModuleClass);

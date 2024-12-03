@@ -12,6 +12,7 @@
 #include "GameFramework/Character.h"
 #include "Misc/Attribute.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/OmegaInterface_Skill.h"
 
 TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByTags(
 	TArray<UCombatantComponent*> Combatants, FGameplayTagContainer Tags, bool bExact, bool bExclude)
@@ -196,17 +197,39 @@ TArray<FOmegaAttributeModifier> UCombatantFunctions::FlatAttributesToModifierVal
 	return out;
 }
 
-float UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-	UObject* ComparedSource, UObject* UncomparedSource)
+void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
+	UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue)
 {
-	if(Combatant)
+	if(Combatant && Attribute)
 	{
-		TArray<UObject*> temp_Mods=Combatant->GetAttributeModifiers();
-		if(ComparedSource) {temp_Mods.Add(ComparedSource);}
-		if(UncomparedSource && temp_Mods.Contains(UncomparedSource)) {temp_Mods.Remove(UncomparedSource);}
-		return Combatant->GetAttributeComparedValue(Attribute,temp_Mods);
+		TArray<FOmegaAttributeModifier> outMods=IDataInterface_AttributeModifier::Execute_GetModifierValues(Combatant);
+		if(UncomparedSource && UncomparedSource->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			TArray<FOmegaAttributeModifier> mods_newOut;
+			TArray<FOmegaAttributeModifier> mods_UnComp=IDataInterface_AttributeModifier::Execute_GetModifierValues(UncomparedSource);
+			for (FOmegaAttributeModifier temp_CombatantMod : outMods)
+			{
+				for (FOmegaAttributeModifier temp_UncomparedMod : mods_UnComp)
+				{
+					if(!(temp_UncomparedMod.Attribute==temp_CombatantMod.Attribute
+						&& temp_UncomparedMod.Incrementer==temp_CombatantMod.Incrementer
+						&& temp_UncomparedMod.Multiplier==temp_CombatantMod.Multiplier))
+					{
+						mods_newOut.Add(temp_CombatantMod);
+					}
+				}
+			}
+			outMods=mods_newOut;
+		}
+		if(ComparedSource && ComparedSource->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			outMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(ComparedSource));
+		}
+		
+		float curval;
+		Combatant->GetAttributeValue(Attribute,curval,OldValue);
+		NewValue=Combatant->AdjustAttributeValueByModifiers(Attribute,outMods);
 	}
-	return 0.0;
 }
 
 bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject)
@@ -389,13 +412,6 @@ void UCombatantFunctions::DoesCombatantHaveEffectWithTag(UCombatantComponent* Co
 }
 
 
-FGameplayTag UOmegaCommonSkill::GetObjectGameplayCategory_Implementation() { return CategoryTag; }
-FGameplayTagContainer UOmegaCommonSkill::GetObjectGameplayTags_Implementation() { return GameplayTags; }
-void UOmegaCommonSkill::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description) { Name=DisplayName; Description=DisplayDescription; }
-void UOmegaCommonSkill::GetGeneralAssetLabel_Implementation(FString& Label) { Label=DisplayLabel; }
-void UOmegaCommonSkill::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) { Brush=DisplayIcon; }
 
 TSubclassOf<UCombatantFilter> UOmegaCommonSkill::GetSkillTargetFilter_Implementation()
 {

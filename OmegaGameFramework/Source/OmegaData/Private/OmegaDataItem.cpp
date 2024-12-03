@@ -7,7 +7,7 @@
 #include "LuaObject.h"
 #include "LuaInterface.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
-#include "Actors/OmegaGameplayEffect.h"
+#include "Actors/Actor_GameplayEffect.h"
 #include "Functions/OmegaFunctions_Common.h"
 
 
@@ -188,18 +188,12 @@ FLuaValue UOmegaDataItem::GetKey_Implementation()
 
 FLuaValue UOmegaDataItem::GetValue_Implementation(const FString& Field)
 {
-	FLuaValue out = ULuaBlueprintFunctionLibrary::LuaCreateTable(this,ULuaState::StaticClass());
-	for(auto* temp_trait: GetAllValidTraits())
-	{
-		TArray<FLuaValue> temp_merges;
-		temp_merges.Add(out);
-		FLuaValue trait_lua_key;
-		FLuaValue trait_lua;
-		ULuaObjectFunctions::GetObjectKeyAndValue(temp_trait,trait_lua_key,trait_lua);
-		temp_merges.Add(trait_lua);
-		out = ULuaTableFunctionLibrary::MergeTables(this,ULuaState::StaticClass(),temp_merges);
-	}
-	return out;
+	return lua_val;
+}
+
+void UOmegaDataItem::SetValue_Implementation(FLuaValue Value, const FString& Field)
+{
+	lua_val=Value;
 }
 
 

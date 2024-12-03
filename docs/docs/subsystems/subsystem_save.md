@@ -1,9 +1,10 @@
 # Omega Subsystem: Saving
 Omega's save susystem provides an easy way to save and load game data to disk. There are two kinds of saves.
 
-| Game Save | Global Save |
-|-|-|
-Contains data for the current game, and can be saved to an numbered slot. A new **GameSave** is always created when the game starts up. | A single save that contains persistent game data that is automatically saved upon closing the game. On startup, a **GlobalSave** will attempt to be loaded from disk, and if unsucessful a new one will be created.
+|![](/OmegaGameFramework/Resources/Icons/OmegaSaveGame.png)| **Game Save** |Contains data for the current game, and can be saved to an numbered slot. A new **GameSave** is always created when the game starts up.
+|-|-|-|
+|![](/OmegaGameFramework/Resources/Icons/OmegaSaveGlobal.png)| **Global Save** |A single save that contains persistent game data that is automatically saved upon closing the game. On startup, a **GlobalSave** will attempt to be loaded from disk, and if unsucessful a new one will be created.
+
 
 
 ### Saving Data (Soft Property)
@@ -14,8 +15,10 @@ The easiest way to save data is to get the **Omega Save Subsystem** and then cal
 ### Saving Data (Object JSON)
 A second way to save is with the `OmegaSaveInterface`. Adding this interface to an object, you can then handle saving data to and from a json field in the main save. 
 
-![alt text](../../images/functions/interface_save/f_intf_save_JsonDataLoad.png)
-![alt text](../../images/functions/interface_save/f_intf_save_JsonDataSave.png)
+|![alt text](../../images/functions/interface_save/f_intf_save_JsonDataLoad.png)|![alt text](../../images/functions/interface_save/f_intf_save_JsonDataSave.png)
+|-|-|
+|Load JSON | Save JSON|
+
 
 `UseJsonSaveData` Must be set `true` for saving from this object to work.
 

@@ -13,46 +13,48 @@
 
 void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	const TArray<FDirectoryPath> LocalPaths = GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath;
-
-	//Scan paths
-	if(LocalPaths.IsValidIndex(0))
+	if(GetMutableDefault<UOmegaDataSettings>()->AutoscanOnBeginPlay)
 	{
-		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-		TArray<FAssetData> AssetData;
-		FARFilter Filter;
-		Filter.ClassPaths.Add(UOmegaDataItem::StaticClass()->GetClassPathName());
-	
-		for(const FDirectoryPath& NewPath : GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath)
-		{
-			FString LocalString = NewPath.Path;
-			Filter.PackagePaths.Add(FName(*LocalString));
-		}
-	
-		Filter.bRecursiveClasses = true;
-		Filter.bRecursivePaths = true;
-		AssetRegistryModule.Get().GetAssets(Filter, AssetData);
+		const TArray<FDirectoryPath> LocalPaths = GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath;
 
-		for(FAssetData TempAssetData : AssetData)
+		//Scan paths
+		if(LocalPaths.IsValidIndex(0))
 		{
-			if(Cast<UOmegaDataItem>(TempAssetData.GetAsset()))
+			const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			TArray<FAssetData> AssetData;
+			FARFilter Filter;
+			Filter.ClassPaths.Add(UOmegaDataItem::StaticClass()->GetClassPathName());
+	
+			for(const FDirectoryPath& NewPath : GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath)
 			{
-				UOmegaDataItem* TempItem = Cast<UOmegaDataItem>(TempAssetData.GetAsset());
-				PrivateDataItems.AddUnique(TempItem);
-				if(TempItem->GameplayID.IsValid())
+				FString LocalString = NewPath.Path;
+				Filter.PackagePaths.Add(FName(*LocalString));
+			}
+	
+			Filter.bRecursiveClasses = true;
+			Filter.bRecursivePaths = true;
+			AssetRegistryModule.Get().GetAssets(Filter, AssetData);
+
+			for(FAssetData TempAssetData : AssetData)
+			{
+				if(Cast<UOmegaDataItem>(TempAssetData.GetAsset()))
 				{
-					DataItemIDs.Add(TempItem->GameplayID, TempItem);
+					UOmegaDataItem* TempItem = Cast<UOmegaDataItem>(TempAssetData.GetAsset());
+					PrivateDataItems.AddUnique(TempItem);
+					if(TempItem->GameplayID.IsValid())
+					{
+						DataItemIDs.Add(TempItem->GameplayID, TempItem);
+					}
+					FString label=TempItem->GetName();
+					if(!TempItem->CustomLabel.IsEmpty())
+					{
+						label=TempItem->CustomLabel;
+					}
+					GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(TempItem,label,TempItem->bOverrideInAssetHandler);
 				}
-				FString label=TempItem->GetName();
-				if(!TempItem->CustomLabel.IsEmpty())
-				{
-					label=TempItem->CustomLabel;
-				}
-				GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->Register_SortedAsset(TempItem,label);
 			}
 		}
 	}
-	
 	Super::Initialize(Collection);
 }
 

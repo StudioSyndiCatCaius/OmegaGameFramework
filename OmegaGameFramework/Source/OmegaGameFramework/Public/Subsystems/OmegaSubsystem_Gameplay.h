@@ -10,9 +10,10 @@
 #include "UObject/Interface.h"
 #include "Tickable.h"
 #include "Engine/World.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 #include "JsonObjectWrapper.h"
 #include "LuaValue.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "OmegaSubsystem_Gameplay.generated.h"
 
 class AOmegaGameplaySystem;
@@ -37,14 +38,12 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Gameplay")
 	FGameplayTagContainer StateTags;
-
-
+	
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|")
-	FJsonObjectWrapper WorldJsonObject;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	FLuaValue LuaWorldData;
+	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|") FJsonObjectWrapper WorldJsonObject;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere) FLuaValue LuaWorldData;
 
 	UFUNCTION()
 	void NativeRemoveSystem(AOmegaGameplaySystem* System);
@@ -62,7 +61,7 @@ public:
 	class AOmegaGameplaySystem* GetGameplaySystem(class TSubclassOf<AOmegaGameplaySystem> Class, bool& bIsActive);
 
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
-	TArray<AOmegaGameplaySystem*> GetActiveGameplaySystems();
+	TArray<AOmegaGameplaySystem*> GetActiveGameplaySystems(bool bIncludeSystemsInShutdown=false);
 
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	TArray<AOmegaGameplaySystem*> GetActiveGameplaySystemsWithInterface(TSubclassOf<UInterface> Interface);

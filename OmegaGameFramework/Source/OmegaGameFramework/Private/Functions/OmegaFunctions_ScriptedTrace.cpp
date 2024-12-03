@@ -6,23 +6,23 @@
 #include "Engine/HitResult.h"
 
 
-const FHitResult UOmegaScriptedTraceFunctions::ScriptedTrace_Single(UObject* context, FOmegaScriptedTrace Trace,bool& Success)
+const FHitResult UOmegaScriptedTraceFunctions::ScriptedTrace_Single(AActor* Instigator, FOmegaScriptedTrace Trace,bool& Success)
 {
-	if(Trace.Logic && context && context->GetWorld())
+	if(Trace.Logic && Instigator)
 	{
-		Trace.Logic->WorldPrivate=context->GetWorld();
-		return Trace.Logic->RunTrace(context,Success);
+		Trace.Logic->WorldPrivate=Instigator->GetWorld();
+		return Trace.Logic->RunTrace(Instigator,Success);
 	}
 	return  FHitResult();
 }
 
-const TArray<FHitResult> UOmegaScriptedTraceFunctions::ScriptedTrace_Multi(UObject* context, FOmegaScriptedTrace Trace,bool& Success)
+const TArray<FHitResult> UOmegaScriptedTraceFunctions::ScriptedTrace_Multi(AActor* Instigator, FOmegaScriptedTrace Trace,bool& Success)
 {
 	TArray<FHitResult>  out;
-	if(Trace.Logic && context && context->GetWorld())
+	if(Trace.Logic && Instigator)
 	{
-		Trace.Logic->WorldPrivate=context->GetWorld();
-		return Trace.Logic->RunTrace_Multi(context,Success);
+		Trace.Logic->WorldPrivate=Instigator->GetWorld();
+		return Trace.Logic->RunTrace_Multi(Instigator,Success);
 	}
 	return out;
 }

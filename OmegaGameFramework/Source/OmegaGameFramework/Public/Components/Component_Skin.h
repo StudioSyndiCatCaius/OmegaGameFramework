@@ -15,10 +15,9 @@ class OMEGAGAMEFRAMEWORK_API USkinComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:
-	// Sets default values for this component's properties
 	USkinComponent();
-
+	UPROPERTY() USkeletalMeshComponent* targetSkelMesh;
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -34,21 +33,24 @@ public:
 	UFUNCTION()
 	void Update_Skin();
 
-	UPROPERTY()
-	UChildActorComponent* skinComponent;
-
+	UPROPERTY() UChildActorComponent* skinComponent;
+	
 	UFUNCTION(BlueprintCallable, Category="Omega")
 	AOmegaSkin* SetSkin(TSubclassOf<AOmegaSkin> SkinClass);
-
 	UFUNCTION(BlueprintPure,Category="Omega")
-	AOmegaSkin* GetSkin();
+	AOmegaSkin* GetSkin() const;
+
+	UFUNCTION(BlueprintPure,Category="Omega|Skin")
+	USkeletalMeshComponent* GetTargetMesh() const
+	{
+		if(targetSkelMesh) { return targetSkelMesh;} return nullptr;
+	}
 	
 	UFUNCTION(BlueprintCallable, Category="Omega", meta=(AdvancedDisplay="Preset"))
-	void Assemble();
+	void Assemble(USkeletalMeshComponent* OverrideMesh=nullptr);
 	
 	UPROPERTY()
 	TArray<USkeletalMeshComponent*> MeshComponents;
-	
 	
 };
 
@@ -98,7 +100,10 @@ class OMEGAGAMEFRAMEWORK_API AOmegaSkin : public AActor
 {
 	GENERATED_BODY()
 	AOmegaSkin();
+
+	
 public:
+	UPROPERTY() USkinComponent* owning_component;
 	virtual void OnConstruction(const FTransform& Transform) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Skin")

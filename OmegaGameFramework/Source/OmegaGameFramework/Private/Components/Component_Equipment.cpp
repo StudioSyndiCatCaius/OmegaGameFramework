@@ -2,10 +2,11 @@
 
 
 #include "Components/Component_Equipment.h"
-#include "Components/CombatantComponent.h"
+#include "Components/Component_Combatant.h"
 #include "Components/Component_Inventory.h"
 #include "Engine/DataAsset.h"
 #include "Engine/GameInstance.h"
+#include "Functions/OmegaFunctions_Common.h"
 #include "Interfaces/OmegaInterface_Common.h"
 
 
@@ -14,7 +15,7 @@ UEquipmentComponent::UEquipmentComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 
@@ -23,11 +24,7 @@ void UEquipmentComponent::BeginPlay()
 {
 	if(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
 	{
-		Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->AddAttrbuteModifier(this);
-	}
-	if(Script)
-	{
-		Script->Ref_Comp=this;
+		Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->SetMasterDataSourceActive(this,true);
 	}
 	
 	Super::BeginPlay();
@@ -53,39 +50,32 @@ void UEquipmentComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 }
 
-UEquipmentSlot* UEquipmentComponent::GetSlotFromID(const FString& ID)
+
+TMap<UEquipmentSlot*, UPrimaryDataAsset*> UEquipmentComponent::GetEquipment()
 {
-	TArray<UEquipmentSlot*> SlotsTemp;
-	for(auto* TempSlot : SlotsTemp)
+	return Slots;
+}
+
+void UEquipmentComponent::SetEquipment(TMap<UEquipmentSlot*, UPrimaryDataAsset*> Equipment)
+{
+	TArray<UEquipmentSlot*> slot_list;
+	Slots.GetKeys(slot_list);
+	for(UEquipmentSlot* temp_slot : slot_list)
 	{
-		if(GetSlotID(TempSlot)==ID)
-		{
-			return TempSlot;
-		}
+		UnequipSlot(temp_slot);
 	}
-	return nullptr;
-}
-
-FString UEquipmentComponent::GetSlotID(const UEquipmentSlot* Slot)
-{
-	if(Slot)
+	Equipment.GetKeys(slot_list);
+	for(UEquipmentSlot* temp_slot : slot_list)
 	{
-		return Slot->GetName();
+		EquipItem(Equipment[temp_slot], temp_slot);
 	}
-	return "";
 }
-
-TMap<FString, UPrimaryDataAsset*> UEquipmentComponent::GetEquipment()
-{
-	return EquippedItems;
-}
-
 
 
 TArray<UPrimaryDataAsset*> UEquipmentComponent::GetEquippedItems()
 {
 	TArray<UPrimaryDataAsset*> OutItems;
-	TArray<FString> LocalSlots;
+	TArray<UEquipmentSlot*> LocalSlots;
 	GetEquipment().GetKeys(LocalSlots);
 	for(auto TempSlot : LocalSlots)
 	{
@@ -97,10 +87,6 @@ TArray<UPrimaryDataAsset*> UEquipmentComponent::GetEquippedItems()
 	return OutItems;
 }
 
-void UEquipmentComponent::SetEquipment(TMap<FString, UPrimaryDataAsset*> Equipment)
-{
-	EquippedItems = Equipment;
-}
 
 ///ACCEPT AND REJECT ITEM
 bool UEquipmentComponent::IsItemAccepted(UPrimaryDataAsset* Item)
@@ -131,34 +117,64 @@ bool UEquipmentComponent::IsItemRejected(UPrimaryDataAsset* Item)
 	return false;
 }
 
-bool UEquipmentComponent::EquipItemToSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot)
+bool UEquipmentComponent::CanEquipItem(UPrimaryDataAsset* Item, UEquipmentSlot* Slot)
 {
-	if(Slot)
+	if(Item && Slot)
 	{
-		return EquipItem(Item,GetSlotID(Slot));
+		if(Item->GetClass()->ImplementsInterface(UDataInterface_Equipable::StaticClass()))
+		{
+			if(!IDataInterface_Equipable::Execute_CanEquipItem(Item,this)) {return false;};
+		}
+		if(!Slot->CanSlotEquipItem(Item)) { return false; }
+
+		return true; //if all succeed, return true
 	}
-	return false;	
+	return false;
 }
 
-
-bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, FString Slot)
+TArray<UPrimaryDataAsset*> UEquipmentComponent::FilterEquippableItems(TArray<UPrimaryDataAsset*> Items,
+	UEquipmentSlot* Slot)
 {
-	if(!Item)
+	TArray<UPrimaryDataAsset*> out;
+	if(Slot)
+	{
+		for(auto* tempItem: Items)
+		{
+			if(tempItem && CanEquipItem(tempItem,Slot))
+			{
+				out.Add(tempItem);
+			}
+		}
+	}
+	return out;
+}
+
+bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, UEquipmentSlot* Slot)
+{
+	if(!Item || !Slot)
 	{
 		return false;
 	}
 	if(IsItemAccepted(Item) && !IsItemRejected(Item))
 	{
+		//Check if the component script is blocking the item
 		if(Script)
 		{
-			bool success = Script->TryEquip(Slot,Item);
+			bool success = CanEquipItem(Item,Slot);
 			if(!success)
 			{
 				return false;
 			}
 		}
+		
 		UnequipSlot(Slot);
-		EquippedItems.Add(Slot, Item);
+		
+		for(auto* temp_script : Slot->SlotScripts)
+		{
+			temp_script->OnEquip(this,Item);
+		}
+		
+		Slots.Add(Slot, Item);
 		OnItemEquipped.Broadcast(Item, Slot);
 		
 		//Modify Linked Collection Component
@@ -172,75 +188,81 @@ bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, FString Slot)
 	return false;
 }
 
-bool UEquipmentComponent::UnequipSlot(FString Slot)
+bool UEquipmentComponent::UnequipSlot(UEquipmentSlot* Slot)
 {
-	if(EquippedItems.FindOrAdd(Slot))
+	if(Slot)
 	{
-		UPrimaryDataAsset* RemovedItem = EquippedItems.FindOrAdd(Slot);
-		EquippedItems.Remove(Slot);
-		OnItemUnequipped.Broadcast(RemovedItem, Slot);
-		
-		//Modify Linked Collection Component
-		if(LinkedCollectionComp)
+		if(Slots.FindOrAdd(Slot))
 		{
-			LinkedCollectionComp->AddAsset(RemovedItem,1);
-		}
+			UPrimaryDataAsset* RemovedItem = Slots.FindOrAdd(Slot);
+			if(Slot)
+			{
+				for(auto* temp_script : Slot->SlotScripts)
+				{
+					temp_script->OnUnequip(this,RemovedItem);
+				}
+			}
+			Slots.Remove(Slot);
+			OnItemUnequipped.Broadcast(RemovedItem, Slot);
+			//Modify Linked Collection Component
+			if(LinkedCollectionComp)
+			{
+				LinkedCollectionComp->AddAsset(RemovedItem,1);
+			}
 		
-		return true;
+			return true;
+		}
 	}
 	return false;
 }
 
 
 
-UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot(FString Slot, bool& bValidItem)
+UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot(UEquipmentSlot* Slot, bool& bValidItem)
 {
-	if(Script)
+	if(Slots.FindOrAdd(Slot))
 	{
 		bValidItem = true;
-		return Script->GetItemInSlot(Slot);
-	}
-	if(EquippedItems.FindOrAdd(Slot))
-	{
-		bValidItem = true;
-		return EquippedItems.FindOrAdd(Slot);
+		return Slots.FindOrAdd(Slot);
 	}
 	bValidItem = false;
 	return nullptr;
 }
 
-UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot_Asset(UEquipmentSlot* Slot, bool& bValidItem)
-{
-	return GetEquipmentInSlot(GetSlotID(Slot),bValidItem);
-}
-
 TArray<FOmegaAttributeModifier> UEquipmentComponent::GetModifierValues_Implementation()
 {
 	TArray<FOmegaAttributeModifier> OutMods;
-	TArray<UPrimaryDataAsset*> LocalItems;
-	
-	if(Script)
+	if(bModifyAttributes)
 	{
-		
-		for(FString TempString : Script->GetEquipSlotsLabels())
+		TArray<UPrimaryDataAsset*> LocalItems;
+		Slots.GenerateValueArray(LocalItems);
+		for(auto* TempAsset : LocalItems)
 		{
-			bool outbool;
-			LocalItems.Add(GetEquipmentInSlot(TempString,outbool));
-		}
-	}
-	else
-	{
-		EquippedItems.GenerateValueArray(LocalItems);
-	}
-
-	for(auto* TempAsset : LocalItems)
-	{
-		if(TempAsset && TempAsset->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
-		{
-			OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempAsset));
+			if(TempAsset && TempAsset->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+			{
+				OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempAsset));
+			}
 		}
 	}
 	return OutMods;
+}
+
+TArray<UPrimaryDataAsset*> UEquipmentComponent::GetSkills_Implementation(UCombatantComponent* Combatant)
+{
+	TArray<UPrimaryDataAsset*> out;
+	if(bIsSkillSource)
+	{
+		TArray<UPrimaryDataAsset*> item_list;
+		Slots.GenerateValueArray(item_list);
+		for(auto* temp_item : item_list)
+		{
+			if(temp_item && temp_item->GetClass()->ImplementsInterface(UDataInterface_SkillSource::StaticClass()))
+			{
+				out.Append(IDataInterface_SkillSource::Execute_GetSkills(temp_item,Combatant));
+			}
+		}
+	}
+	return out;
 }
 
 void UEquipmentComponent::LinkAssetCollectionComponent(UDataAssetCollectionComponent* Component)
@@ -275,26 +297,11 @@ UEquipmentScript::UEquipmentScript(const FObjectInitializer& ObjectInitializer)
 	if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
 }
 
-TArray<FString> UEquipmentScript::GetEquipSlotsLabels_Implementation() const
-{
-	TArray<FString> out;
-	GetOwningComponent()->EquippedItems.GetKeys(out);
-	return out;
-}
-
-UPrimaryDataAsset* UEquipmentScript::GetItemInSlot_Implementation(const FString& Slot) const
-{
-	if(GetOwningComponent()->EquippedItems.Contains(Slot))
-	{
-		return GetOwningComponent()->EquippedItems[Slot];
-	}
-	return nullptr;
-}
-
-bool UEquipmentScript::TryEquip_Implementation(const FString& Slot, UPrimaryDataAsset* Item) const
+bool UEquipmentSlotScript::CanEquipItem_Implementation(UObject* Item) const
 {
 	return true;
 }
+
 
 //##############################################################################################
 // Equipment Slot
@@ -328,40 +335,35 @@ FGameplayTagContainer UEquipmentSlot::GetObjectGameplayTags_Implementation()
 	return SlotTags;
 }
 
-TArray<UPrimaryDataAsset*> UEquipmentSlot::FilterEquippableItems(TArray<UPrimaryDataAsset*> Items, UEquipmentComponent* Component)
+bool UEquipmentSlot::CanSlotEquipItem(UPrimaryDataAsset* Item)
 {
-	TArray<UPrimaryDataAsset*> OutItems;
-	
-	for (auto* TempItem : Items)
+	if(Item)
 	{
-		if(TempItem)
+		if(Item->GetClass()->ImplementsInterface(UDataInterface_Equipable::StaticClass()))
 		{
-			FGameplayTagContainer TempTags;
-			FGameplayTag TempCategory;
-			if(TempItem->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
-			{
-				TempCategory = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempItem);
-				TempTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempItem);
-			}
+			if(!IDataInterface_Equipable::Execute_CanEquipItem_InSlot(Item,this)) { return false;};
+		}
+		FGameplayTagContainer item_tags;
+		FGameplayTag item_category;
+		if(Item->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+		{
+			item_category = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(Item);
+			item_tags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(Item);
+		}
+		if(!item_category.MatchesAny(AcceptedCategories) && !AcceptedCategories.IsEmpty()) {return false;}
+		if(!RequiredTags.IsEmpty() && !item_tags.HasAny(RequiredTags)) {return false;}
 
-			
-			if(TempCategory.MatchesAny(AcceptedCategories) || AcceptedCategories.IsEmpty())	//If item is of category OR categories are empty
+		for(auto* temp_script : SlotScripts)
+		{
+			if(!temp_script->CanEquipItem(Item))
 			{
-				if(RequiredTags.IsEmpty() || TempTags.HasAny(RequiredTags))	//If item is has tags OR categories are empty
-				{
-					if(!SlotScript || SlotScript->CanEquipItem(TempItem, Component))
-					{
-						OutItems.Add(TempItem);
-					}
-				}
+				return false;
 			}
 		}
+		
+		return true;
 	}
-	return OutItems;
+	return false;
 }
 
-bool UEquipmentSlotScript::CanEquipItem_Implementation(UObject* Item, UEquipmentComponent* Component) const
-{
-	return true;
-}
 

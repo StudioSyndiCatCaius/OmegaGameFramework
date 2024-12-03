@@ -92,7 +92,7 @@ AOmegaDynamicCamera* UOmegaDynamicCameraSubsystem::GetSourceCamera()
 		return override_camera;
 	}
 	AOmegaDynamicCamera* out=nullptr;
-	for(auto* temp_cam : source_cameras)
+	for(AOmegaDynamicCamera* temp_cam : source_cameras)
 	{
 		if(temp_cam &&
 			temp_cam!=GetDynamicCamera() &&

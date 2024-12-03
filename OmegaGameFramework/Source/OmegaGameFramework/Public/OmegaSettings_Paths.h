@@ -8,9 +8,23 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaSettings_Paths.generated.h"
 
-/**
- * 
- */
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaSortedClassPathData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,Category="SortedClassData")
+	FString AssetPrefex;
+	UPROPERTY(EditAnywhere,Category="SortedClassData")
+	FString AssetSuffex;
+	UPROPERTY(EditAnywhere,Category="SortedClassData")
+	TArray<FString> AssetPaths;
+	
+	UPROPERTY(EditAnywhere,Category="SortedClassData")
+	bool AutoscanPathsOnStartup=true;
+};
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Paths : public UPrimaryDataAsset
 {
@@ -18,8 +32,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Paths : public UPrimaryDataAsset
 
 public:
 
+	UFUNCTION(BlueprintPure,Category="Omega|Paths")
+	TArray<FString> GetPathsFromAssetName(const FString& AssetName, TSubclassOf<UObject> Class);
+
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Paths")
-	TMap<TSubclassOf<UObject>, FDirectoryPath> ClassPaths;
+	TMap<TSubclassOf<UObject>, FOmegaSortedClassPathData> ClassPaths;
 };
 
 

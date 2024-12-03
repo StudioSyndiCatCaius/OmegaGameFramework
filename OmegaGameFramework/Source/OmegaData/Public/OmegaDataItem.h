@@ -9,12 +9,13 @@
 #include "Blueprint/UserWidget.h"
 #include "Engine/DataAsset.h"
 #include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/OmegaInterface_Skill.h"
 #include "Engine/GameInstance.h"
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
 #include "Components/Component_Inventory.h"
 #include "Functions/OmegaFunctions_SoftProperty.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
 
 
 #include "OmegaDataItem.generated.h"
@@ -70,6 +71,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", AdvancedDisplay)
 	TMap<FString, FGameplayTagQuery> TagQueries;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="General", AdvancedDisplay)
+	bool bOverrideInAssetHandler;
 
 	UFUNCTION(BlueprintPure, Category="OmegaDataItem|Tags", meta=(Keywords="Gameplay, Tag"))
 	bool AreTagsAccepted(const FString& Query, FGameplayTagContainer Tags);
@@ -142,10 +146,14 @@ public:
 	TArray<FOmegaEffectContainer> Effects;
 	*/
 	//###############################################################################
-	// Gameplay Tags
+	// Lua
 	//###############################################################################
+private:
+	UPROPERTY() FLuaValue lua_val;
+public:
 	virtual FLuaValue GetKey_Implementation() override;
 	virtual FLuaValue GetValue_Implementation(const FString& Field) override;
+	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field) override;
 
 	
 	//###############################################################################

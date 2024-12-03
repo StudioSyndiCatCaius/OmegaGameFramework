@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Event/OmegaLinearEvent.h"
+#include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
 #include "UObject/Object.h"
 #include "LinearEvent_SimpleMessage.generated.h"
@@ -16,15 +17,20 @@ UCLASS(DisplayName="Event | Simple Message")
 class OMEGADEMO_API ULinearEvent_SimpleMessage : public UOmegaLinearEvent, public IDataInterface_General
 {
 	GENERATED_BODY()
-
+	
+	UObject* local_GetInstigator() const;
+	
 public:
 	virtual FString GetLogString_Implementation() const override;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(ExposeOnSpawn="true"))
-	UOmegaDataItem* Instigator;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(ExposeOnSpawn="true"),DisplayName="Instigator (Asset)")
+	UPrimaryDataAsset* Instigator_Asset;
+	UPROPERTY(Instanced, EditInstanceOnly, BlueprintReadOnly, Category="Event",DisplayName="Instigator (Actor)")
+	UOmegaActorSelector* Instigator_Actor;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn="true"))
 	FText Message;
-
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
+	FGameplayTag MessageCategory  = FGameplayTag::RequestGameplayTag(FName("Message.Event"));
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void Native_Begin() override;
@@ -34,10 +40,12 @@ public:
 };
 
 UCLASS(DisplayName="Simple Message")
-class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode
+class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IDataInterface_General
 {
 	GENERATED_BODY()
 
+	UObject* local_GetInstigator() const;
+	
 public:
 	UFlowNode_SimpleMessage();
 
@@ -47,11 +55,18 @@ public:
 	virtual FString GetNodeDescription() const override;
 #endif
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
-	UOmegaDataItem* Instigator;
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message", meta=(ExposeOnSpawn="true"),DisplayName="Instigator (Asset)")
+	UPrimaryDataAsset* Instigator_Asset;
+	UPROPERTY(Instanced, EditInstanceOnly, BlueprintReadOnly, Category="Message",DisplayName="Instigator (Actor)")
+	UOmegaActorSelector* Instigator_Actor;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message",meta=(MultiLine))
 	FText Message;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
+	FGameplayTag MessageCategory  = FGameplayTag::RequestGameplayTag(FName("Message.Event"));
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message",AdvancedDisplay)
+	FString MessageLabel;
 
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	
 	UFUNCTION()
 	void LocalFinish(const FString& Flag);

@@ -14,6 +14,7 @@
 #include "Misc/Paths.h"
 #include "Misc/Timespan.h"
 #include "GameFramework/SaveGame.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "OmegaSubsystem_Save.generated.h"
 
 class UOmegaSaveBase;
@@ -45,8 +46,9 @@ enum class EUniqueSaveFormats : uint8
 UENUM(BlueprintType)
 enum EBoolType 
 {
-	BoolType_And     UMETA(DisplayName = "AND"),
-	BoolType_Or      UMETA(DisplayName = "OR"),
+	BoolType_And     UMETA(DisplayName = "All True"),
+	BoolType_Or      UMETA(DisplayName = "One True"),
+	BoolType_NONE     UMETA(DisplayName = "None True"),
 };
 
 
@@ -68,6 +70,7 @@ public:
 // ====================================================================================================
 // Subsystem
 // ====================================================================================================
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewGameStarted, UOmegaSaveGame*, NewGame);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSaveStateChanged, FGameplayTag, NewState, bool, bGlobal);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSaveTagsEdited, FGameplayTagContainer, EditedTags, bool, Added, bool, bGlobal);
 
@@ -87,9 +90,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem")
 	TArray<UOmegaSaveGame*> GetSaveSlotList(int32 FirstIndex, int32 LastIndex = 1);
 
-	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem")
+	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem|Load",DisplayName="Load Game Object (From Slot)")
 	UOmegaSaveGame* LoadGame(int32 Slot, bool& Success);
 	
+	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem|Load",DisplayName="Load Game Object (From Name)")
+	UOmegaSaveGame* LoadGame_Named(FString Slot, bool& Success);
+    	
 	//###############################################################################################
 	// Playtime
 	//###############################################################################################
@@ -107,11 +113,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem", DisplayName="Save Game (Unique Format)")
 	bool SaveGameUnique(EUniqueSaveFormats Format);
 	
-	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem")
-	void SaveActiveGame(int32 Slot, bool& Success);
+	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem",DisplayName="Save Active Game (To Slot)")
+	void SaveActiveGame(int32 Slot,FGameplayTag SaveCategory, bool& Success);
 
+	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem",DisplayName="Save Active Game (To Name)")
+	void SaveActiveGame_Named(FString Slot,FGameplayTag SaveCategory, bool& Success);
+
+	
 	UFUNCTION()
-	bool Local_SaveGame(FString SlotName);
+	bool Local_SaveGame(FString SlotName,FGameplayTag SaveCategory);
 	
 	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem")
 		UOmegaSaveGame* CreateNewGame();
@@ -130,7 +140,6 @@ private:
 	void local_SaveLuaFields(TArray<FString> fields, UOmegaSaveBase* save);
 	void local_LoadLuaFields(TArray<FString> fields, UOmegaSaveBase* save);
 	
-
 	UPROPERTY()
 	bool Local_JsonSave;
 
@@ -142,10 +151,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem")
 	void SaveGlobalGame();
 
-	UPROPERTY(BlueprintAssignable)
-	FOnSaveStateChanged OnSaveStateChanged;
-	UPROPERTY(BlueprintAssignable)
-	FOnSaveTagsEdited OnSaveTagsEdited;
+	UPROPERTY(BlueprintAssignable) FOnSaveStateChanged OnSaveStateChanged;
+	UPROPERTY(BlueprintAssignable) FOnSaveTagsEdited OnSaveTagsEdited;
+	UPROPERTY(BlueprintAssignable) FOnNewGameStarted OnNewGameStarted;
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Tags", DisplayName="Set Save State Tag")
 	void SetStoryState(FGameplayTag StateTag, bool Global);
@@ -164,8 +172,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Tags")
 	bool SaveTagsMatchQuery(FGameplayTagQuery Query, bool Global);
-
-
 	
 	//###############################################################################################
 	// Actor
@@ -211,6 +217,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bExclude, bExact"))
 	TArray<UPrimaryDataAsset*> GetCollectedDataAssetsWithTags(FGameplayTagContainer Tags, bool bGlobal, bool bExclude, bool bExact = true);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	void SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags, bool bGlobal);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
 	void AddSaveTagsToDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal);
@@ -408,8 +417,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInte
 {
 	GENERATED_BODY()
 
+	
 public:
-
+	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
+	
 	UPROPERTY(BlueprintReadOnly, Category="Playtime")
 	FTimespan Playtime;
 
@@ -448,14 +459,18 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, DisplayName="Save State", Category="Omega|Save")
 	FGameplayTag StoryState;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, DisplayName="Save State", Category="Omega|Save")
+	FGameplayTag SaveCategory;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, DisplayName="Save Tags", Category="Omega|Save")
 	FGameplayTagContainer StoryTags;
 
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override {return SaveCategory;};
+	
 	//DataAssets
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TArray<UPrimaryDataAsset*> CollectedDataAssets;
 
-	UPROPERTY(BlueprintReadOnly, Category="Omega|Save")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TMap<UPrimaryDataAsset*, FGameplayTagContainer> SaveAssetTags;
 
 	//DataAssets
@@ -736,28 +751,26 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="State")
 	TArray<UOmegaStoryStateScript*> Scripts;
+	
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew)
+UCLASS(Blueprintable, Abstract, BlueprintType, CollapseCategories, EditInlineNew, meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaStoryStateScript : public UObject
 {
 	GENERATED_BODY()
 
-	virtual UWorld* GetWorld() const override;
-	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
-	UOmegaStoryStateScript(const FObjectInitializer& ObjectInitializer);
-	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
 public:
 
-	void OverrideWorld(UWorld* WorldNew) { if(!WorldPrivate && WorldNew){ WorldPrivate=WorldNew; } }
+	UFUNCTION(BlueprintNativeEvent, Category="State Script")
+	bool CanActivateState(UOmegaSaveSubsystem* SaveSubsystem, UOmegaStoryStateAsset* State);
 
 	UFUNCTION(BlueprintNativeEvent, Category="State Script")
-	void OnStateBegin(UOmegaStoryStateAsset* State);
+	void OnStateBegin(UOmegaSaveSubsystem* SaveSubsystem, UOmegaStoryStateAsset* State);
 
 	UFUNCTION(BlueprintNativeEvent, Category="State Script")
-	void OnStateEnd(UOmegaStoryStateAsset* State);
+	void OnStateEnd(UOmegaSaveSubsystem* SaveSubsystem, UOmegaStoryStateAsset* State);
 
 	UFUNCTION(BlueprintNativeEvent, Category="State Script")
-	void OnLevelChange(UOmegaStoryStateAsset* State, const FString& LevelName);
+	void OnLevelChange(UOmegaSaveSubsystem* SaveSubsystem, UOmegaStoryStateAsset* State, const FString& LevelName);
 	
 };

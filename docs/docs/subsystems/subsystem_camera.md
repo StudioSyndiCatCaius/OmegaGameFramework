@@ -10,7 +10,7 @@ You can activate the Dynamic Camera by calling `SetDynamicCameraActive` from the
 
 There are two main cameras running in the dynamic camera system.
 * **Master Camera**: The main camera used as your view target. This can be changed in `Project Settings > Omega: Framework > Dynamic Camera Class`
-* **Source Camera** This is the Camera the Master Camera is currently trying to blend it's transform, FOV, and spring arm length to. Normally the source camera is selected from the **active** DynamicCameraAtor with the highest priority. However, you can set a manual source camera with `SetOverrideCamera`.
+* **Source Camera** This is the Camera the Master Camera is currently trying to blend it's transform, FOV, and spring arm length to. Normally the source camera is selected from the **active** DynamicCameraActor with the highest priority. However, you can set a manual source camera with `SetOverrideCamera`.
 
 
 
