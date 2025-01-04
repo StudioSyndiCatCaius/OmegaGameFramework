@@ -128,6 +128,10 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static float GetAngle_FromRotators(FRotator A, FRotator B);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math", DisplayName="Normalize to Range (Int32)")
+	static float NormalizeToRange_int32(int32 value, int32 min, int32 max);
+
 	
 };
 

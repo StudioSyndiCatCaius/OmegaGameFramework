@@ -30,7 +30,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="OmegaSequence", DisplayName="Play Linear Choice")
-	static UAyncLinearChoice* PlayLinearChoice(UOmegaLinearEventSubsystem* Subsystem, FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass);
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true",WorldContext="WorldContextObject"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Choice")
+	static UAyncLinearChoice* PlayLinearChoice(UObject* WorldContextObject, FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass);
 
 };

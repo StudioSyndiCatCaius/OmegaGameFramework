@@ -70,7 +70,7 @@ public:
 // TYPE REACTIONS
 //##################################################################################################################
 
-UCLASS(Blueprintable, BlueprintType, Const, CollapseCategories, EditInlineNew)
+UCLASS(Blueprintable, BlueprintType, Const, CollapseCategories, EditInlineNew,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject
 {
 	GENERATED_BODY()

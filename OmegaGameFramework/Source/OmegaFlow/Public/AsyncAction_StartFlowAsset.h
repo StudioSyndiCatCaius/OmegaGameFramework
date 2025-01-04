@@ -19,25 +19,19 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnFlowTaskFinish OnFinish;
 
-	UPROPERTY()
-	const UObject* LocalWorldContext;
-
-	UPROPERTY()
-	FFlowAssetOverrideData Local_StartNode;
-	UPROPERTY()
-	bool Local_OverrideStart;
-	UPROPERTY()
-	FName Local_Input;
-	UPROPERTY()
-	bool Local_MultiInst;
-	UPROPERTY()
-	UFlowAsset* Local_FlowAsset;
+	UPROPERTY() const UObject* LocalWorldContext;
+	UPROPERTY() FFlowAssetOverrideData Local_StartNode;
+	UPROPERTY() bool Local_OverrideStart;
+	UPROPERTY() FName Local_Input;
+	UPROPERTY() bool Local_MultiInst;
+	UPROPERTY() UFlowAsset* Local_FlowAsset;
 
 	UFUNCTION()
 	void Native_OnFinishFlow(UFlowAsset* FlowAsset, FName Output, const FString& Flag);
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="bOverrideStartingNode,NewStartingNode,Input,AllowMultipleInstances")) 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject",
+		AdvancedDisplay="bOverrideStartingNode,NewStartingNode,Input,AllowMultipleInstances"),DisplayName="Ω🔷 Start Flow Asset") 
 	static UAsyncAction_StartFlowAsset* StartFlowAsset(UObject* WorldContextObject, UFlowAsset* Asset, FFlowAssetOverrideData OverrideData, FName Input, bool AllowMultipleInstances);
 	
 };

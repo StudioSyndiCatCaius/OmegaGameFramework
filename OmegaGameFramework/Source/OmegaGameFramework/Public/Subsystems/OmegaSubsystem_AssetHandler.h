@@ -42,18 +42,13 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAssetHandlerFunctions : public UBlueprintFunc
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
-	static TArray<UObject*> GetAllAssetsInPath(const FString& Path, bool bRecursive, UClass* Class);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
-	static TArray<UObject*> GetAllAssetsInPathList(TArray<FString> Paths, bool bRecursive, UClass* Class);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"),DisplayName="Ω🔴 Get All Sorted Assets (of Class)")
 	static TArray<UObject*> GetSortedAssets_OfClass(UClass* Class);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"),DisplayName="Ω🔴 Get All Sorted Assets (of Category)")
 	static TArray<UObject*> GetSortedAssets_OfCategory(FGameplayTag CategoryTag, UClass* Class);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"),DisplayName="Ω🔴 Get All Sorted Assets (with Tags)")
 	static TArray<UObject*> GetSortedAssets_WithTags(FGameplayTagContainer Tags, UClass* Class);
 };

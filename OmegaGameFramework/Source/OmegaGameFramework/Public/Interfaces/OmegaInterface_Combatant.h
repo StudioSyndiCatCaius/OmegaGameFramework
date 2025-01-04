@@ -30,6 +30,14 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Combatant
 
 public:
 
+	UFUNCTION(BlueprintNativeEvent, Category="Combatant") UCombatantGambitAsset* GetGambitAsset();
+	UFUNCTION(BlueprintNativeEvent, Category="Combatant") UOmegaFaction* GetFactionAsset();
+	UFUNCTION(BlueprintNativeEvent, Category="Combatant") TArray<UPrimaryDataAsset*> GetDefaultSkills();
+	UFUNCTION(BlueprintNativeEvent, Category="Combatant") int32 GetLevel();
+	UFUNCTION(BlueprintNativeEvent, Category="Combatant") TMap<UOmegaAttribute*, float> GetMaxAttributeOverrides();
+	UFUNCTION(BlueprintNativeEvent, Category="Combatant") FGameplayTag GetAttributeValueCategory();
+	UFUNCTION(BlueprintNativeEvent, Category="Combatant") TMap<UOmegaDamageType*,UOmegaDamageTypeReactionAsset*> GetDamageTypeReactions();
+	
 	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
 	TMap<UOmegaAttribute*, float> OverrideCurrentAttributeValues(UCombatantComponent* Combatant, bool& bOverride);
 
@@ -41,8 +49,6 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
 	int32 OverrideCombatantLevel(UCombatantComponent* Combatant, bool& bOverride);
-
-
 };
 
 

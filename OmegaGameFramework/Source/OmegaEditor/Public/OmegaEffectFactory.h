@@ -17,5 +17,7 @@ class UDataItemThumbnailRender: public UDefaultSizedThumbnailRenderer
 	// UThumbnailRenderer interface
 	virtual void Draw(UObject* Object, int32 X, int32 Y, uint32 Width, uint32 Height, FRenderTarget* Viewport, FCanvas* Canvas, bool bAdditionalViewFamily) override;
 	// End of UThumbnailRenderer interface
-	
+	virtual bool CanVisualizeAsset(UObject* Object) override;
 };
+
+

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Landscape.h"
 #include "Actor_GameplayCue.h"
+#include "PCGComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/VolumetricCloudComponent.h"
 #include "GameFramework/Actor.h"
@@ -27,7 +28,12 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
+	//~ Begin AActor Interface
+#if WITH_EDITOR
+	virtual bool GetReferencedContentObjects(TArray<UObject*>& Objects) const override;
+#endif // WITH_EDITOR
+	//~ End AActor Interface
+
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USceneComponent* EnvironmentRoot;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USkyLightComponent* SkyLight;
@@ -39,9 +45,8 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UVolumetricCloudComponent* Clouds;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UPostProcessComponent* PostProcess;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UAudioComponent* Audio;
-
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UPCGComponent* PCGComponent;
 	
-public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Environment")
 	URuntimeVirtualTextureComponent* GetVirtualTextureComponent();
 
@@ -52,9 +57,12 @@ public:
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Environment")
 	void SaveToPreset();
 
+	UPROPERTY(EditAnywhere,Category="Environment")
+	UPCGGraphInterface* PCGAsset;
+
 	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset")
 	UOmegaEnvironmentPreset* current_preset;
-	UPROPERTY(EditAnywhere,Category="Environment")
+	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset")
 	bool lock_preset;
 	UFUNCTION(BlueprintCallable,Category="Environment")
 	void Set_Preset(UOmegaEnvironmentPreset* Preset);

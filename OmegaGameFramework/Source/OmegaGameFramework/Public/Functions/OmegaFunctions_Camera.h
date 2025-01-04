@@ -14,7 +14,7 @@ class UOmegaCameraFunctions : public UBlueprintFunctionLibrary
 
 public:
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"))
+	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Ω Project World to Screen (From Camera)")
 	static FVector2D ProjectWorldToScreen_FromCamera(UObject* WorldContextObject, UCameraComponent* Camera, FVector Location,APlayerController* Player=nullptr);
 	
 };

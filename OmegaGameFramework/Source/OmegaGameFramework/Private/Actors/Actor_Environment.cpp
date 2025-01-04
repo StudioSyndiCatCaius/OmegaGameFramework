@@ -9,6 +9,7 @@
 #include "Components/PostProcessComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/RuntimeVirtualTextureComponent.h"
+#include "PCGGraph.h"
 #include "Components/SkyLightComponent.h"
 #include "Async/TaskGraphInterfaces.h"
 #include "Components/AudioComponent.h"
@@ -49,6 +50,8 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 	if(Audio) { Audio->SetupAttachment(EnvironmentRoot); }
 	//VirtualTextureComponent= CreateOptionalDefaultSubobject<URuntimeVirtualTextureComponent>("VirtualTexture");
 	//if(VirtualTextureComponent) { VirtualTextureComponent->SetupAttachment(EnvironmentRoot); }
+	
+	PCGComponent= CreateOptionalDefaultSubobject<UPCGComponent>("PCG");
 
 	if(SkyBox)
 	{
@@ -77,6 +80,12 @@ void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
 	if(DefaultAmbiantSound && Audio)
 	{
 		Audio->SetSound(DefaultAmbiantSound);
+	}
+	if(PCGComponent && PCGAsset)
+	{
+		PCGComponent->SetGraph(PCGAsset);
+		//PCGComponent->Cleanup();
+		//PCGComponent->Generate();
 	}
 }
 
@@ -138,3 +147,18 @@ UOmegaBGM* AOmegaActorEnvironment::GetEnvironmentBGM_Implementation()
 	if(BGM_to_autoplay) {return BGM_to_autoplay;} return nullptr;
 }
 
+#if WITH_EDITOR
+bool AOmegaActorEnvironment::GetReferencedContentObjects(TArray<UObject*>& Objects) const
+{
+	Super::GetReferencedContentObjects(Objects);
+	
+	if (PCGComponent)
+	{
+		if (UPCGGraph* PCGGraph = PCGComponent->GetGraph())
+		{
+			Objects.Add(PCGGraph);
+		}
+	}
+	return true;
+}
+#endif // WITH_EDITOR

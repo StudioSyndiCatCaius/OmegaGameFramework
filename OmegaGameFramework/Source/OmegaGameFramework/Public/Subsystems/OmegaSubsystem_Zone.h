@@ -479,7 +479,7 @@ protected:
 // Zone Spawn Point
 // =============================================================================================================
 
-UCLASS(DisplayName="Omega Actor: Zone Transit Spawn Point")
+UCLASS(DisplayName="Omega Actor: Zone Spawn Point")
 class OMEGAGAMEFRAMEWORK_API AOmegaZonePoint : public AActor, public IDataInterface_General
 {
 	GENERATED_BODY()

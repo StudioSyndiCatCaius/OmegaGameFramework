@@ -28,29 +28,19 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnLerpCurveFinished Finished;
 
-	UPROPERTY()
-	bool local_playing;
-	
-	UPROPERTY()
-	UCurveFloat* local_curve;
-
-	UPROPERTY()
-	float local_PlayRate;
-	UPROPERTY()
-	bool local_reversed;
-	UPROPERTY()
-	float elapsed_time;
-
-	UPROPERTY()
-	float new_value;
-	UPROPERTY()
-	float time_min;
-	UPROPERTY()
-	float time_max;
+	UPROPERTY() bool local_playing;
+	UPROPERTY() UCurveFloat* local_curve;
+	UPROPERTY() float local_PlayRate;
+	UPROPERTY() bool local_reversed;
+	UPROPERTY() float elapsed_time;
+	UPROPERTY() float new_value;
+	UPROPERTY() float time_min;
+	UPROPERTY() float time_max;
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|GameplayTasks")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",
+		DisplayName="Ω🔷 Lerp Along Curve")
 	static UAsyncAction_LerpCurve* LerpAlongCurve(UObject* WorldContextObject, UCurveFloat* Curve, float PlayRate=1.0, bool bReverse=false);
 
 	

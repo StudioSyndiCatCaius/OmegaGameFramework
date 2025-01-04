@@ -99,6 +99,16 @@ public:
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
 };
 
+
+UCLASS(Blueprintable,BlueprintType,Abstract,Const,EditInlineNew,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UOmegaInstancableObject : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	
+};
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
 {
@@ -114,5 +124,6 @@ public:
 	OMACRO_ADDPARAMS_GENERAL();
 	
 public:
+	UFUNCTION(BlueprintNativeEvent,Category="DataAsset") bool UseIconAsThumbnail();
 
 };

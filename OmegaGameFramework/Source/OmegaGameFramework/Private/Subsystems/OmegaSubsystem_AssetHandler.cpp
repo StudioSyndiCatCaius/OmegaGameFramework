@@ -46,53 +46,6 @@ void UOmegaSubsystem_AssetHandler::Register_SortedAsset(UObject* Asset, FString 
 }
 
 
-TArray<UObject*> UOmegaAssetHandlerFunctions::GetAllAssetsInPath(const FString& Path, bool bRecursive, UClass* Class)
-{
-	TArray<UObject*> AssetObjects;
-
-	// Get the AssetRegistryModule
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-
-	// Convert the path to a package path (in "/Game/..." format)
-	FString PackagePath = Path;
-	if (!PackagePath.StartsWith("/Game"))
-	{
-		PackagePath = FString::Printf(TEXT("/Game/%s"), *Path);
-	}
-
-	// Set up the filter
-	FARFilter Filter;
-	Filter.PackagePaths.Add(FName(*PackagePath));
-	Filter.bRecursivePaths = bRecursive;
-	Filter.ClassNames.Add(UObject::StaticClass()->GetFName());
-
-	// Get assets
-	TArray<FAssetData> AssetDataList;
-	AssetRegistryModule.Get().GetAssets(Filter, AssetDataList);
-
-	// Load assets
-	for (const FAssetData& AssetData : AssetDataList)
-	{
-		UObject* LoadedAsset = AssetData.GetAsset();
-		if (LoadedAsset && (LoadedAsset->GetClass()->IsChildOf(Class) || !Class))
-		{
-			AssetObjects.Add(LoadedAsset);
-		}
-	}
-
-	return AssetObjects;
-}
-
-TArray<UObject*> UOmegaAssetHandlerFunctions::GetAllAssetsInPathList(TArray<FString> Paths, bool bRecursive,
-	UClass* Class)
-{
-	TArray<UObject*> out;
-	for(FString temp_path:Paths)
-	{
-		out.Append(GetAllAssetsInPath(temp_path,bRecursive,Class));
-	}
-	return out;
-}
 
 TArray<UObject*> UOmegaAssetHandlerFunctions::GetSortedAssets_OfClass(UClass* Class)
 {

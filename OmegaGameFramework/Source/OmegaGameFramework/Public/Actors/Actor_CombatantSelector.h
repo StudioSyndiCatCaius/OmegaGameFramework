@@ -74,7 +74,8 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="")) 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay=""),
+		DisplayName="Ω🔷 Select Combatant") 
 	static UAsyncAction_CombatantSelector* AsyncSelectCombatant(UObject* WorldContextObject, TSubclassOf<AOmegaCombatantSelector> Class, const FTransform Transform, UCombatantComponent* instigator);
 
 	

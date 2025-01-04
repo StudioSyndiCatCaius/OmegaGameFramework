@@ -72,6 +72,14 @@ void UEquipmentComponent::SetEquipment(TMap<UEquipmentSlot*, UPrimaryDataAsset*>
 }
 
 
+void UEquipmentComponent::SetEquipment_FromSource(UObject* Source)
+{
+	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_EquipmentSource::StaticClass()))
+	{
+		SetEquipment(IDataInterface_EquipmentSource::Execute_GetEquipment(Source));
+	}
+}
+
 TArray<UPrimaryDataAsset*> UEquipmentComponent::GetEquippedItems()
 {
 	TArray<UPrimaryDataAsset*> OutItems;

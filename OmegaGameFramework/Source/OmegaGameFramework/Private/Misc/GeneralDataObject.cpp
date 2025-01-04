@@ -46,3 +46,8 @@ TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implement
 	}
 	return out;
 }
+
+bool UOmegaDataAsset::UseIconAsThumbnail_Implementation()
+{
+	{ return false;}
+}

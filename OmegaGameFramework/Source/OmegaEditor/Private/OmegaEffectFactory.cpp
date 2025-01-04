@@ -12,19 +12,32 @@
 #include "GlobalRenderResources.h"
 #include "Engine/Texture2D.h"
 #include "UnrealClient.h"
+#include "Misc/GeneralDataObject.h"
 
 UDataItemThumbnailRender::UDataItemThumbnailRender(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 }
 
+FSlateBrush local_GetIcon(UObject* object)
+{
+	if(UOmegaDataItem* DataItem = Cast<UOmegaDataItem>(object))
+	{
+		return DataItem->Icon;
+	}
+	if(UOmegaDataAsset* DataItem = Cast<UOmegaDataAsset>(object))
+	{
+		return DataItem->Icon;
+	}
+	return FSlateBrush();
+}
 
 void UDataItemThumbnailRender::Draw(UObject* Object, int32 X, int32 Y, uint32 Width, uint32 Height, FRenderTarget* Viewport, FCanvas* Canvas, bool bAdditionalViewFamily)
 {
-	UOmegaDataItem* DataItem = Cast<UOmegaDataItem>(Object);
-	if (DataItem != nullptr)
+	if (Object != nullptr)
 	{
-		if(UTexture2D* ResTexture = Cast<UTexture2D>(DataItem->Icon.GetResourceObject()))
+		FSlateBrush icon=local_GetIcon(Object);
+		if(UTexture2D* ResTexture = Cast<UTexture2D>(icon.GetResourceObject()))
 		{
 			UTexture2D* TileSheetTexture = ResTexture;
 		const bool bUseTranslucentBlend = TileSheetTexture->HasAlphaChannel();
@@ -58,7 +71,7 @@ void UDataItemThumbnailRender::Draw(UObject* Object, int32 X, int32 Y, uint32 Wi
 		const float TextureWidth = TileSheetTexture->GetSurfaceWidth();
 		const float TextureHeight = TileSheetTexture->GetSurfaceHeight();
 
-		const FMargin Margin = DataItem->Icon.Margin;
+		const FMargin Margin = icon.Margin;
 
 		float FinalX = (float)X;
 		float FinalY = (float)Y;
@@ -115,3 +128,13 @@ return;
 	//Super::Draw(Object, X, Y,  Width,  Height, Viewport, Canvas, bAdditionalViewFamily);
 }
 
+bool UDataItemThumbnailRender::CanVisualizeAsset(UObject* Object)
+{
+	FSlateBrush icon=local_GetIcon(Object);
+	if(icon.GetResourceObject())
+	{
+		return true;
+	}
+	return false;
+	return Super::CanVisualizeAsset(Object);
+}

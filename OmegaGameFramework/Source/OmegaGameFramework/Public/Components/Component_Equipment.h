@@ -27,6 +27,19 @@ public:
 	bool CanEquipItem_InSlot(UEquipmentSlot* Slot) const;
 };
 
+UINTERFACE(MinimalAPI) class UDataInterface_EquipmentSource : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_EquipmentSource
+{
+	GENERATED_BODY()
+
+public:
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Equipment")
+	TMap<UEquipmentSlot*,UPrimaryDataAsset*> GetEquipment();
+
+
+};
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipped, UPrimaryDataAsset*, Item, UEquipmentSlot*, Slot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUnequipped, UPrimaryDataAsset*, Item, UEquipmentSlot*, Slot);
@@ -60,6 +73,8 @@ public:
 	TMap<UEquipmentSlot*, UPrimaryDataAsset*> GetEquipment();
 	UFUNCTION(BlueprintCallable, Category="Equipment")
 	void SetEquipment(TMap<UEquipmentSlot*, UPrimaryDataAsset*> Equipment);
+	UFUNCTION(BlueprintCallable, Category="Equipment",DisplayName="Set Equipment (From Source)")
+	void SetEquipment_FromSource(UObject* Source);
 	
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
 	TArray<UPrimaryDataAsset*> GetEquippedItems();

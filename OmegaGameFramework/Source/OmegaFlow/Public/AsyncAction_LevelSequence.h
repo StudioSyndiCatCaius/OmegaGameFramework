@@ -73,6 +73,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="bOverrideInstanceData, OriginActor, OriginTransform")) 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="bOverrideInstanceData, OriginActor, OriginTransform"),
+		DisplayName="Ω🔷 Play Level Sequence") 
 	static UAsyncAction_LevelSequence* PlayLevelSequence(UObject* WorldContextObject, ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, bool bOverrideInstanceData, AActor* OriginActor, FTransform OriginTransform);
 };

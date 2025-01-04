@@ -13,4 +13,5 @@ void UOmegaAOEComponent::BeginPlay()
 
 AOmegaAOEInstance::AOmegaAOEInstance()
 {
+
 }

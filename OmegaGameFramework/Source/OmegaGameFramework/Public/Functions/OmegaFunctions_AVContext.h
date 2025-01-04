@@ -30,15 +30,15 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextAV
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
-	UFUNCTION(BlueprintNativeEvent, Category="AV")
+	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Level Sequence>")
 	ULevelSequence* GetContextAVSequences(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="AV")
+	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Sound>")
 	USoundBase* GetContextAVSounds(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="AV")
+	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Niagara>")
 	UNiagaraSystem* GetContextAVNiagara(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="AV")
+	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Montage>")
 	UAnimMontage* GetContextAVMontages(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="AV")
+	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Animation>")
 	UAnimSequence* GetContextAVAnimations(FGameplayTag ID);
 };
 

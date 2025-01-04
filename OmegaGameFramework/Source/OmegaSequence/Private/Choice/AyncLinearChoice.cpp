@@ -51,12 +51,15 @@ void UAyncLinearChoice::Activate()
 	Super::Activate();
 }
 
-UAyncLinearChoice* UAyncLinearChoice::PlayLinearChoice(UOmegaLinearEventSubsystem* Subsystem, FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass)
+UAyncLinearChoice* UAyncLinearChoice::PlayLinearChoice(UObject* WorldContextObject, FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass)
 {
-	UAyncLinearChoice* NewChoice = NewObject<UAyncLinearChoice>();
-	NewChoice->SubsystemRef = Subsystem;
-	NewChoice->ChoiceData = Choices;
-	NewChoice->InstanceClassRef = InstanceClass;
-	
-	return  NewChoice;
+	if(WorldContextObject)
+	{
+		UAyncLinearChoice* NewChoice = NewObject<UAyncLinearChoice>();
+		NewChoice->SubsystemRef = WorldContextObject->GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>();
+		NewChoice->ChoiceData = Choices;
+		NewChoice->InstanceClassRef = InstanceClass;
+		return  NewChoice;
+	}
+	return nullptr;
 }

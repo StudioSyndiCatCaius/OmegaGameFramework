@@ -3,11 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/CheckBox.h"
 #include "Components/Component_Equipment.h"
 #include "Components/Component_Leveling.h"
+#include "Components/Component_Skin.h"
+#include "Components/Slider.h"
 #include "Subsystems/OmegaSubsystem_Quest.h"
 #include "Widget/DataWidget.h"
 #include "Widget/Widget_DynamicMeter.h"
+#include "Widget/ColorWheel/ColorWidget.h"
 #include "OmegaDemo_Widgets.generated.h"
 
 class UCombatantComponent;
@@ -28,6 +32,9 @@ class OMEGADEMO_API UDataWidgetBase_Combatant : public UDataWidget
 
 public:
 
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
+	void OnCombatantNotify(UCombatantComponent* Combatant, FName Notify, const FString& Flag);
+	
 	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
@@ -58,7 +65,6 @@ public:
 	
 	UPROPERTY(EditAnywhere,Category="DataWidget|Attribute",DisplayName="Attribute")
 	UOmegaAttribute* REF_attribute;
-
 
 	UPROPERTY(EditAnywhere,Category="DataWidget|Attribute")
 	bool bUseDamageColor;
@@ -205,4 +211,36 @@ public:
 	UTextBlock* GetWidget_Text_Message();
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UDataWidget* GetDataWidget_MessageInstigator();
+};
+
+// ==============================================================================================================
+// Body Option
+// ==============================================================================================================
+
+UCLASS(Abstract)
+class OMEGADEMO_API UDataWidgetBase_BodySlot : public UDataWidget
+{
+	GENERATED_BODY()
+
+	UPROPERTY() UOmegaBodySlot* REF_Slot;
+	UPROPERTY() USkinComponent* REF_Comp;
+
+	UFUNCTION() void local_OnCheckChanged( bool bIsChecked);
+	UFUNCTION() void local_SliderValueUpdate(float value);
+	UFUNCTION() void local_onColorChange(const FLinearColor& color);
+
+public:
+	virtual void OnSourceAssetChanged_Implementation(UObject* Asset) override;
+	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
+
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UDataList* GetDataList_Options();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	USlider* GetWidget_Slider_Float();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	USlider* GetWidget_Slider_Int();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UColorWidget* GetWidget_Color();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UCheckBox* GetWidget_ToggleCheckBox();
 };

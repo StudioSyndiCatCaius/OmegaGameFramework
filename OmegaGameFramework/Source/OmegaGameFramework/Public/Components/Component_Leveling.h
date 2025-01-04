@@ -13,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXpUpdated, float, XP, float, Amo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, int32, NewLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelDown, int32, NewLevel);
 
-
+// A leveling component that manages experience points (XP) progression using customizable curves and rates, with support for level-up/down events and UI integration through widget interfaces.
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API ULevelingComponent : public UActorComponent
 {
@@ -87,9 +87,6 @@ class UActorInterface_Leveling : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class OMEGAGAMEFRAMEWORK_API IActorInterface_Leveling
 {
 	GENERATED_BODY()

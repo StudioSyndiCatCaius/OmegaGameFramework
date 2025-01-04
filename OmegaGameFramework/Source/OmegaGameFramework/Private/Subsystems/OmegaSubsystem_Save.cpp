@@ -184,7 +184,8 @@ UOmegaSaveGame* UOmegaSaveSubsystem::CreateNewGame()
 	const TSubclassOf<UOmegaSaveGame> LocalSaveClass = GetMutableDefault<UOmegaSettings>()->GetOmegaGameSaveClass(); //Get Save Game Class
 
 	UOmegaSaveGame* CreatedGame = Cast<UOmegaSaveGame>(UGameplayStatics::CreateSaveGameObject(LocalSaveClass)); // Create a new file from that save class
-	
+	CreatedGame->SaveGuid=FGuid::NewGuid();
+	CreatedGame->SaveSeed=UKismetMathLibrary::RandomIntegerInRange(0,999999999);
 	return CreatedGame;
 }
 
@@ -234,13 +235,16 @@ void UOmegaSaveSubsystem::Local_InitializeSaveObjects()
 		const TSubclassOf<UOmegaSaveGlobal> LocalGlobalSaveClass = GetMutableDefault<UOmegaSettings>()->GetOmegaGlobalSaveClass(); //Get Global Settings class
 		
 		if (UGameplayStatics::DoesSaveGameExist(LocalGlSaveName, 0))		//Is there is already a Global Save File?
-			{
+		{
 			GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::LoadGameFromSlot(LocalGlSaveName, 0)); //If yes, load it
-			}
+		}
 		else
 		{
 			GlobalSaveData = Cast<UOmegaSaveGlobal>(UGameplayStatics::CreateSaveGameObject(LocalGlobalSaveClass)); //If no, create a new one.
+			GlobalSaveData->SaveGuid=FGuid::NewGuid();
+			GlobalSaveData->SaveSeed=UKismetMathLibrary::RandomIntegerInRange(0,999999999);
 		}
+		
 	}
 	if(!ActiveSaveData)
 	{

@@ -37,7 +37,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", DisplayName="Activate Ability")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Activate Ability")
 	static UAsyncAction_ActivateAbility* ActivateAbility(UCombatantComponent* Combatant, const TSubclassOf<AOmegaAbility> Ability, UObject* Context);
 
 };

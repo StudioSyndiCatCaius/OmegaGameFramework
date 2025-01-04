@@ -16,15 +16,12 @@ FString UOmegaAttribute::GetDesc()
 
 float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGameplayTag ValueCategory)
 {
+	float FinalValue = MaxValue;
 	if(Script)
 	{
-		return Script->GetAttributeValue(Level,ValueCategory);
+		FinalValue =Script->GetAttributeValue(Level,ValueCategory);
 	}
-
-	float FinalValue = MaxValue;
-
-	//Adjust along rank curve
-	if (RankValueCurves.IsValidIndex(AttributeRank))
+	else if (RankValueCurves.IsValidIndex(AttributeRank))
 	{
 		float LevelFloat = float(Level);
 		//Get Appropriate curve by rank
@@ -32,8 +29,11 @@ float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGame
 		//Get Attribute Value by Level
 		FinalValue = TempCurve.GetRichCurve()->Eval(LevelFloat);
 	}
+
+	//Adjust along rank curve
+	
 	//Adjust Value if possible
-	if (ValueCategory.IsValid()&& ValueCategoryAdjustments.Contains(ValueCategory))
+	if (ValueCategory.IsValid() && ValueCategoryAdjustments.Contains(ValueCategory))
 	{
 		FinalValue = FinalValue * ValueCategoryAdjustments[ValueCategory];
 	}

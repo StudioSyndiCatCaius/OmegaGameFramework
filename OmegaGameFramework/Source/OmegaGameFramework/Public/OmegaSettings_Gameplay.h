@@ -11,7 +11,7 @@
 
 class AZoneEntityDisplayActor;
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const)
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const)
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMetaSettings : public UObject
 {
 	GENERATED_BODY()

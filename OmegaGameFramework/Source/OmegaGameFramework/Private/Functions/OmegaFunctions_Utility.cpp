@@ -193,6 +193,10 @@ float UOmegaMathFunctions::GetAngle_FromRotators(FRotator A, FRotator B)
 	return GetAngle_FromVectors(UKismetMathLibrary::Conv_RotatorToVector(A),UKismetMathLibrary::Conv_RotatorToVector(B));
 }
 
+float UOmegaMathFunctions::NormalizeToRange_int32(int32 value, int32 min, int32 max)
+{
+	return UKismetMathLibrary::NormalizeToRange(value,min,max);
+}
 
 
 TArray<FString> UOmegaUtilityFunctions::GetBlueprintCallableAndPureFunctions(UObject* Object)

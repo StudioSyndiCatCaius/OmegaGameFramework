@@ -417,12 +417,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInte
 {
 	GENERATED_BODY()
 
-	
 public:
-	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
-	
-	UPROPERTY(BlueprintReadOnly, Category="Playtime")
-	FTimespan Playtime;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame) FGuid SaveGuid;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame) int32 SaveSeed;
+	UPROPERTY(SaveGame) FOmegaGlobalVarsContainer GlobalVars;
+	UPROPERTY(BlueprintReadOnly, Category="Playtime") FTimespan Playtime;
 
 	UFUNCTION(BlueprintPure, Category="Playtime")
 	FString GetPlaytimeString(bool bIncludeMilliseconds);
@@ -430,7 +429,7 @@ public:
 	UFUNCTION()
 	void Local_OnLoaded();
 	
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
 	
 	//GamePreferences

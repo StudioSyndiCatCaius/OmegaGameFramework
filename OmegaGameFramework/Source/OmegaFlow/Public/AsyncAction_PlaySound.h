@@ -46,7 +46,8 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Rotation, VolumeMultiplier, PitchMultiplier, StarTime, Attenuation")) 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject",
+		AdvancedDisplay="Rotation, VolumeMultiplier, PitchMultiplier, StarTime, Attenuation"),DisplayName="Ω🔷 Play Sound") 
 	static UAsyncAction_PlaySound* PlaySoundAsync(UObject* WorldContextObject, USoundBase* Sound, bool bIs2D, FVector Location, FRotator Rotation, float VolumeMultiplier =1, float PitchMultiplier=1, float StartTime=0, USoundAttenuation* Attenuation=nullptr);
 
 	

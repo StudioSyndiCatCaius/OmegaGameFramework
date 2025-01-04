@@ -54,8 +54,11 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(EditAnywhere,Category="OmegaCharacter")
-	UOmegaDataItem* CharacterAsset;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="OmegaCharacter")
+	UPrimaryDataAsset* CharacterAsset;
+
+	UFUNCTION(BlueprintCallable, Category="OmegaCharacter")
+	void SetCharacterAsset(UPrimaryDataAsset* Asset);
 
 	UPROPERTY(EditAnywhere,Category="OmegaCharacter")
 	UOmegaAnimationEmote* DefaultEmote;
@@ -74,6 +77,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="OmegaCharacter")
 	void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
 };
+
+
 
 
 

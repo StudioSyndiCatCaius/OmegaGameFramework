@@ -35,6 +35,12 @@ UASSET={
 
         light=aget('/DEMO/DamageType/','DT_c_Light'),
         dark=aget('/DEMO/DamageType/','DT_c_Dark'),
+    },
+    TargetFilter={
+        FRIENDLY=aget('/DEMO/CombFilter/Collections/','TargetFilter_Allies'),
+        HOSTILE=aget('/DEMO/CombFilter/Collections/','TargetFilter_Enemies'),
+        SELF=aget('/DEMO/CombFilter/Collections/','TargetFilter_Allies'),
+        DEAD=aget('/DEMO/CombFilter/Collections/','TargetFilter_KO'),
     }
     
 }

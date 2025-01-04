@@ -14,15 +14,9 @@
 
 void UOmegaModSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
-	for(FString TempPath : GetModListPaths())
+	if(GetMutableDefault<UOmegaSettings>()->bAutoInitializeMods)
 	{
-		UOmegaMod* NewMod = NewObject<UOmegaMod>(this, GetModClass());
-		NewMod->ModStringData=TempPath;
-		ModList.Add(NewMod);
-
-		NewMod->OnModInitialized(TempPath);
-		
-		FString raw_path;
+		InitializeMods();
 	}
 }
 
@@ -38,6 +32,20 @@ TSubclassOf<UOmegaMod> UOmegaModSubsystem::GetModClass()
 		return mod_class;
 	}
 	return UOmegaMod::StaticClass();
+}
+
+void UOmegaModSubsystem::InitializeMods()
+{
+	for(FString TempPath : GetModListPaths())
+	{
+		UOmegaMod* NewMod = NewObject<UOmegaMod>(this, GetModClass());
+		NewMod->ModStringData=TempPath;
+		ModList.Add(NewMod);
+
+		NewMod->OnModInitialized(TempPath);
+		
+		FString raw_path;
+	}
 }
 
 TArray<FString> UOmegaModSubsystem::GetModListPaths()

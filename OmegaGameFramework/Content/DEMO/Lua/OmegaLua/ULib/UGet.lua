@@ -5,6 +5,7 @@ UGET={
     Cue=function (name) return MAC_PATH_GETCLASS('/Game/0_Main/Blueprints/Actors/Cues/',name) end, 
     Attribute=function (name) return MAC_PATH_GETASSET('/QuestalotEngine/GameData/Attributes/',name) end,
     DamageType=function (name) return MAC_PATH_GETASSET('/OmegaGameFramework/DEMO/DamageType/',name) end,
+    TargetFilter=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Data/CombatantFilter/',name) end,
 
     Menu=function(name) return MAC_PATH_GETCLASS('/Game/0_Main/Blueprints/Menus/',name) end,
 
@@ -15,3 +16,4 @@ UGET={
     Seq_FX=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Assets/sequences/FX/',name) end,
     Seq_BattleAction=function (name) return MAC_PATH_GETASSET('/Game/0_Main/Assets/sequences/BattleAction/',name) end,
 }
+

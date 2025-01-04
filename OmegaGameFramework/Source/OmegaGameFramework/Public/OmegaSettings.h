@@ -52,7 +52,8 @@ public:
 	FSoftObjectPath DefaultSettings_FileManager{"/OmegaGameFramework/Settings/OmegaSettings_FileManager.OmegaSettings_FileManager"};
 	
 	//Will automatically scan these directories at startup to try and load and actiavate modules from them. NOTE: This can be a slow process. Try and only set these paths to folders containing GameplayModules.
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
+	//UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
+	UPROPERTY()
 	TArray<FDirectoryPath> AutoModuleScanPaths;
 	
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
@@ -64,13 +65,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "OmegaSaveGame"))
 	FSoftClassPath GameSaveClass;
-	
 	UPROPERTY(EditAnywhere, config, Category = "Save")
 	FString SaveGamePrefex = "save_";
-
 	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "OmegaSaveGlobal"))
 	FSoftClassPath GlobalSaveClass;
-
 	UPROPERTY(EditAnywhere, config, Category = "Save")
 	FString GlobalSaveName = "global";
 	UPROPERTY()
@@ -149,6 +147,8 @@ public:
 	//########################################################
 	//Mods
 	//########################################################
+	UPROPERTY(EditAnywhere, config, Category = "Mods")
+	bool bAutoInitializeMods=true;
 	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaModManager"))
 	TArray<FString> ModPaths;
 	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaMod"))

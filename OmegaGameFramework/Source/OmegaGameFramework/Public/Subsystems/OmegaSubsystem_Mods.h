@@ -24,6 +24,9 @@ protected:
 	TSubclassOf<UOmegaMod> GetModClass();
 
 public:
+
+	UFUNCTION(BlueprintCallable,Category="Mods|Advanced")
+	void InitializeMods();
 	
 	UPROPERTY()
 	UOmegaModManager* ModManager;

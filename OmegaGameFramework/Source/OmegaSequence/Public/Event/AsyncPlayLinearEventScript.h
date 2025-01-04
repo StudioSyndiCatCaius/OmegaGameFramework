@@ -42,7 +42,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category="OmegaSequence", DisplayName="Play Linear Event Script")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Event Script")
 	static UAsyncPlayLinearEventScript* PlayLinearEventScript(UObject* WorldContextObject, TSubclassOf<UOmegaLinearEventScriptReader> ReaderClass, const FString& String, bool StringIsPath, int32 StartingIndex);
 
 };

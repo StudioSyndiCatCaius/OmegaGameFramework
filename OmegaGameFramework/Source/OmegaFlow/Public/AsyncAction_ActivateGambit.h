@@ -26,19 +26,16 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FAbilityGambitFailed Failed;
 	
-	UPROPERTY()
-	UCombatantComponent* CombatantRef;
-	UPROPERTY()
-	UCombatantGambitAsset* LocalGambit;
-	UPROPERTY()
-	AOmegaAbility* LocalAbility;
+	UPROPERTY() UCombatantComponent* CombatantRef;
+	UPROPERTY() UCombatantGambitAsset* LocalGambit;
+	UPROPERTY() AOmegaAbility* LocalAbility;
 	
 	UFUNCTION()
 	void NativeShutdown(bool bCancelled);
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", DisplayName="Activate Gambit")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Run Combatant Gambit")
 	static UAsyncAction_ActivateGambit* ActivateGambit(UCombatantComponent* Combatant, UCombatantGambitAsset* Gambit);
 
 };

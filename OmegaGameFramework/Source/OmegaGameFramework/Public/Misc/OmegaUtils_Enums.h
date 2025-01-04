@@ -8,10 +8,10 @@
 UENUM(Blueprintable,BlueprintType)
 enum EOmegaGlobalParamTarget
 {
-	SAVE_GAME,
-	SAVE_GLOBAL,
 	WORLD,
 	GAME_INSTANCE,
+	SAVE_GAME,
+	SAVE_GLOBAL,
 };
 
 UENUM(Blueprintable)

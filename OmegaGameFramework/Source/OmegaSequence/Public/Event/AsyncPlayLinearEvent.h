@@ -27,6 +27,6 @@ public:
 	UPROPERTY()
 	UOmegaLinearEvent* EventRef;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="OmegaSequence", DisplayName="Play Linear Event")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Event")
 	static UAsyncPlayLinearEvent* PlayLinearEvent(UOmegaLinearEvent* Event);
 };

@@ -56,7 +56,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|GameplayTasks")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",DisplayName="Ω🔷 Fade Camera")
 	static UAsyncAction_FadeCamera* FadeCameraAsync(UObject* WorldContextObject, APlayerController* Player, float TargetAlpha, float Duration, FLinearColor FadeColor, bool FadeAudio, bool HoldWhenFinished = true);
 
 	

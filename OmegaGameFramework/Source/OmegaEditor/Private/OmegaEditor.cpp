@@ -46,6 +46,7 @@ if (UClass* AssetName##Class = A##AssetName::StaticClass()) { \
 void FOmegaEditor::StartupModule()
 {
 	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaDataItem::StaticClass(), UDataItemThumbnailRender::StaticClass());
+	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaDataAsset::StaticClass(), UDataItemThumbnailRender::StaticClass());
 	//------REGISTER DEFAULT EVENTS-----////
 
 	RegisterDefaultEvent(AOmegaGameplaySystem, SystemActivated);
@@ -199,6 +200,10 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaCombatEncounter_Stage"));
 	ThumnbailNames.Add(TEXT("OmegaCombatEncounter_Component"));
 	
+	ThumnbailNames.Add(TEXT("OmegaBodyType"));
+	ThumnbailNames.Add(TEXT("OmegaBodySlot"));
+	ThumnbailNames.Add(TEXT("OmegaBodyPreset"));
+	
 	FSlateImageBrush* ThumbnailTemp;
 	FSlateImageBrush* IconTemp;
 
@@ -271,7 +276,6 @@ void FOmegaEditor::StartupModule()
 	OMACRO_ADDPLACEABLE(Omega_EventVolume,"Event Volume")
 	OMACRO_ADDPLACEABLE(OmegaZonePoint,"Zone: Spawn Point")
 	OMACRO_ADDPLACEABLE(OmegaZoneTransit,"Zone: Transit Point")
-	
 }
 
 void FOmegaEditor::ShutdownModule()

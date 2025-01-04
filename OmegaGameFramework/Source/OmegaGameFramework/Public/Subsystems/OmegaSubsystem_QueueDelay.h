@@ -76,7 +76,8 @@ public:
 
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|GameplayTasks")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|GameplayTasks",
+		DisplayName="Ω🔷 Await Queued Delay")
 	static UAsyncAction_AwaitQueuedDelay* AwaitQueuedDelay(UObject* WorldContextObject, FGameplayTag QueueTag);
 
 	

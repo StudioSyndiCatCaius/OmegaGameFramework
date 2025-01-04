@@ -37,7 +37,8 @@ public:
 	void NativeShutdown(FGameplayTagContainer CloseTags, UObject* Context, const FString OutFlag);
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player, OpenTags, OpenFlag"), Category="Omega|GameplayTasks")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player, OpenTags, OpenFlag"), Category="Omega|AsyncGameplayTasks"
+		,DisplayName="Ω🔷 Open Menu")
 	static UAsyncAction_Menu* OpenMenu(UObject* WorldContextObject, APlayerController* Player, const TSubclassOf<UMenu> MenuClass, UObject* Context, const FGameplayTagContainer OpenTags, const FString& OpenFlag);
 
 	

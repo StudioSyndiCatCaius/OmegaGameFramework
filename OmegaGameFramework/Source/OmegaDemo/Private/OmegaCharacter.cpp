@@ -3,6 +3,7 @@
 
 #include "OmegaCharacter.h"
 
+#include "Functions/OmegaFunctions_Combatant.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -33,13 +34,29 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 {
 	if(CharacterAsset)
 	{
-		DataItem->SetDataItem(CharacterAsset);
+		SetCharacterAsset(CharacterAsset);
 	}
 	if(SkinComponent)
 	{
 		SkinComponent->Assemble();
 	}
 	Super::OnConstruction(Transform);
+}
+
+void AOmegaCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)
+{
+	if(Asset)
+	{
+		this->CharacterAsset=Asset;
+		UCombatantFunctions::SetCombatantFromSource(Combatant,CharacterAsset);
+		if(CharacterAsset->GetClass()->IsChildOf(UOmegaDataItem::StaticClass()))
+		{
+			DataItem->SetDataItem(Cast<UOmegaDataItem>(CharacterAsset));
+		}
+		UOmegaSkinFunctions::SetSkinFromAsset(SkinComponent,CharacterAsset);
+		return;
+	}
+	CharacterAsset=nullptr;
 }
 
 // Called when the game starts or when spawned
