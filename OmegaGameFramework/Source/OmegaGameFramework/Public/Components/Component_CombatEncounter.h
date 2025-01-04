@@ -10,8 +10,6 @@
 #include "Subsystems/OmegaSubsystem_BGM.h"
 #include "Component_CombatEncounter.generated.h"
 
-
-
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaCombatEncounter_Stage : public AActor
 {
@@ -105,6 +103,9 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
 	TSubclassOf<ACharacter> BattlerCharacterClass;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
+	TArray<TSubclassOf<AOmegaAbility>> ExtraBattlerAbilities;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
 	ULevelSequence* Default_SequenceIntro;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")

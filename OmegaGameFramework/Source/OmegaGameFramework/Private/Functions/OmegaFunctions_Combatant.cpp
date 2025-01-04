@@ -47,8 +47,30 @@ TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByFaction(
 	return OutCombatants;
 }
 
+
+void UCombatantFunctions::SetCombatantFromSource(UCombatantComponent* Combatant, UObject* Source)
+{
+	if(Combatant && Source && Source->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+	{
+		Combatant->AttributeValueCategory=IDataInterface_Combatant::Execute_GetAttributeValueCategory(Source);
+		Combatant->OverrideMaxAttributes=IDataInterface_Combatant::Execute_GetMaxAttributeOverrides(Source);
+		Combatant->Skills=IDataInterface_Combatant::Execute_GetDefaultSkills(Source);
+		Combatant->FactionDataAsset=IDataInterface_Combatant::Execute_GetFactionAsset(Source);
+		Combatant->DamageTypeReactions=IDataInterface_Combatant::Execute_GetDamageTypeReactions(Source);
+		Combatant->DefaultGambit=IDataInterface_Combatant::Execute_GetGambitAsset(Source);
+		
+		int32 new_level = IDataInterface_Combatant::Execute_GetLevel(Source);
+		if(new_level>0) { Combatant->SetCombatantLevel(new_level,true); }
+		
+		if (UPrimaryDataAsset* in_asset = Cast<UPrimaryDataAsset>(Source))
+		{
+			Combatant->CombatantDataAsset=in_asset;
+		}
+	}
+}
+
 UCombatantComponent* UCombatantFunctions::GetCombatantWithHighestAttributeValue(TArray<UCombatantComponent*> Combatants,
-	UOmegaAttribute* Attribute, bool bUseCurrentValue)
+                                                                                UOmegaAttribute* Attribute, bool bUseCurrentValue)
 {
 	float LastHighestValue = -1.0;
 	UCombatantComponent* OutCombatant = nullptr;
@@ -413,64 +435,3 @@ void UCombatantFunctions::DoesCombatantHaveEffectWithTag(UCombatantComponent* Co
 
 
 
-TSubclassOf<UCombatantFilter> UOmegaCommonSkill::GetSkillTargetFilter_Implementation()
-{
-	return TargetFilter;
-}
-
-TMap<UOmegaAttribute*, float> UOmegaCommonSkill::GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,
-	UObject* Context)
-{
-	return AttributeUseCost;
-}
-
-FOmegaCustomScriptedEffects UOmegaCommonSkill::GetScriptedEffects_Implementation()
-{
-	return Effects_Target;
-}
-
-ULevelSequence* UOmegaCommonSkill::GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag)
-{
-	if(TaggedSequences.Contains(Tag))
-	{
-		return TaggedSequences[Tag];
-	}
-	if(DefaultSequence_Asset)
-	{
-		return DefaultSequence_Asset;
-	}
-	if(Combatant)
-	{
-		if(ACharacter* char_Ref = Cast<ACharacter>(Combatant->GetOwner()))
-		{
-			if(char_Ref->GetMesh()->GetAnimInstance())
-			{
-				return UOmegaContextAVFunctions::TryGetObjectContext_Sequence(char_Ref->GetMesh()->GetAnimInstance(),DefaultSequence_Tag);
-			}
-		}
-	}
-	return nullptr;
-}
-
-UAnimMontage* UOmegaCommonSkill::GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag)
-{
-	if(TaggedMontages.Contains(Tag))
-	{
-		return TaggedMontages[Tag];
-	}
-	if(DefaultMontage_Asset)
-	{
-		return DefaultMontage_Asset;
-	}
-	if(Combatant)
-	{
-		if(ACharacter* char_Ref = Cast<ACharacter>(Combatant->GetOwner()))
-		{
-			if(char_Ref->GetMesh()->GetAnimInstance())
-			{
-				return UOmegaContextAVFunctions::TryGetObjectContext_Montages(char_Ref->GetMesh()->GetAnimInstance(),DefaultMontage_Tag);
-			}
-		}
-	}
-	return nullptr;
-}

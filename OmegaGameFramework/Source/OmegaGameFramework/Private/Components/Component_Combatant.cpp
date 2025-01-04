@@ -25,6 +25,7 @@
 #include "Misc/OmegaFaction.h"
 
 #include "Components/PrimitiveComponent.h"
+#include "Functions/OmegaFunctions_Common.h"
 
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
@@ -568,6 +569,10 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 			UE_LOG(LogTemp, Display, TEXT("Apply reaction damage for %s"), *ReactClass->GetName());
 			FinalDamage = GetDamageReactionObject(ReactClass)->OnDamageApplied(Attribute, FinalDamage);
 		}
+		if(ReactionEffectClass && ReactClass)
+		{
+			CreateEffect(ReactionEffectClass,1.0,this,FGameplayTagContainer(),ReactClass);
+		}
 	}
 	
 	//--------------------- FINISH AND APPLY ---------------------///
@@ -1007,7 +1012,11 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetAllModifierValues()
 	TArray<UObject*> ModsLocal = GetAttributeModifiers();
 	for(auto* TempMod: ModsLocal)
 	{
-		OutModVals.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempMod));
+		if(TempMod!=nullptr && TempMod->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			TArray<FOmegaAttributeModifier> in_mods=IDataInterface_AttributeModifier::Execute_GetModifierValues(TempMod);
+			OutModVals.Append(in_mods);
+		}
 	}
 	return OutModVals;
 }
@@ -1156,7 +1165,8 @@ TArray<AOmegaGameplayEffect*> UCombatantComponent::GetEffectsWithTags(FGameplayT
 	{
 		if(TempEffect->IsValidLowLevel())
 		{
-			if (TempEffect->EffectTags.HasAnyExact(Tags))
+			
+			if (UOmegaGameFrameworkBPLibrary::GetObjectGameplayTags(TempEffect).HasAnyExact(Tags))
 			{
 				OutEffects.Add(TempEffect);
 			}
@@ -1505,6 +1515,7 @@ bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit,
 				}
 				if(successful_select)
 				{
+					AddTargetsToList(TempGambit.Gambit_TARGET->GetTargetList(this),true);
 					TSubclassOf<AOmegaAbility> IncomingAbility;
 					UObject* IncomingContext;
 					TempGambit.Gambit_THEN->RunGambitAction(this, IncomingAbility,IncomingContext);

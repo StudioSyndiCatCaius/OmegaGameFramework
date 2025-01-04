@@ -85,6 +85,27 @@ bool UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTag(UObject* Object, FG
 	return false;
 }
 
+bool UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTags(UObject* Object, const FGameplayTagContainer& GameplayTags,
+	bool bExact, bool bValidIfEmpty)
+{
+	if(Object)
+	{
+		if(GameplayTags.IsEmpty())
+		{
+			return bValidIfEmpty;
+		}
+		for(const FGameplayTag temp_tag : GameplayTags.GetGameplayTagArray())
+		{
+			if(!DoesObjectHaveGameplayTag(Object,temp_tag,bExact))
+			{
+				return false;	
+			}
+		}
+		return true;
+	}
+	return bValidIfEmpty;
+}
+
 
 bool UOmegaGameFrameworkBPLibrary::QueryObjectGameplayTags(UObject* Object, FGameplayTagQuery Query,
                                                            bool bEmptyReturnsTrue)
@@ -333,7 +354,7 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClassFromGlobalID(FGameplayTag GlobalID
 	return nullptr;
 }
 
-TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<UObject> Class)
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<UObject> Class, bool bIncludeSubclasses)
 {
 	TArray<UObject*> LoadedAssets;
 	if(Class)
@@ -343,7 +364,7 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<U
 	
 		// Query the asset registry
 		TArray<FAssetData> AssetList;
-		AssetRegistry.GetAssetsByClass(Class->GetClassPathName(),AssetList);
+		AssetRegistry.GetAssetsByClass(Class->GetClassPathName(),AssetList,bIncludeSubclasses);
 
 		// Iterate over the results and load each asset
 		for (const FAssetData& Asset : AssetList)
@@ -567,8 +588,31 @@ AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetActiveGameplaySystem(cons
 	return nullptr;
 }
 
+UActorComponent* UOmegaGameFrameworkBPLibrary::GetFirstActiveGameplaySystemWithComponent(
+	const UObject* WorldContextObject, TSubclassOf<UActorComponent> Component, FName RequiredTag, AOmegaGameplaySystem*& system, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(WorldContextObject)
+	{
+		for (AOmegaGameplaySystem* temp_sys : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetActiveGameplaySystems())
+		{
+			if(temp_sys)
+			{
+				TEnumAsByte<EOmegaFunctionResult> out_result;
+				if(UActorComponent* temp_comp = TryGetFirstComponentWithTag(temp_sys,Component,RequiredTag,out_result))
+				{
+					Outcome=Success;
+					system=temp_sys;
+					return temp_comp;
+				}
+			}
+		}
+	}
+	Outcome=Fail;
+	return nullptr;
+}
+
 UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObject* WorldContextObject,
-	TSubclassOf<UOmegaGameplayModule> ModuleClass)
+                                                                      TSubclassOf<UOmegaGameplayModule> ModuleClass)
 {
 	if(WorldContextObject && WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
 	{
@@ -828,6 +872,14 @@ UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetFirstComponentWithTag(UObje
 	
 	if(TargetActor)
 	{
+		if(Tag.IsNone())
+		{
+			if(UActorComponent* out_comp= TargetActor->GetComponentByClass(Class))
+			{
+				Outcome = EOmegaFunctionResult::Success;
+				return out_comp;
+			}
+		}
 		TArray<UActorComponent*> CompList = TargetActor->GetComponentsByTag(Class,Tag);
 		if(CompList.IsValidIndex(0))
 		{

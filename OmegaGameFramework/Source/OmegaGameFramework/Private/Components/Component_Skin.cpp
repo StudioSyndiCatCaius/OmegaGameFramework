@@ -28,6 +28,10 @@ void USkinComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 void USkinComponent::Update_Skin()
 {
+	if(!Skin)
+	{
+		return;
+	}
 	//Set mesh from character if not set already
 	if(!targetSkelMesh)
 	{
@@ -35,6 +39,10 @@ void USkinComponent::Update_Skin()
 		{
 			targetSkelMesh=charRef->GetMesh();
 		}
+	}
+	if(Appearance.BodyType && Appearance.BodyType->DefaultSkin)
+	{
+		Skin=Appearance.BodyType->DefaultSkin;
 	}
 	if(targetSkelMesh)
 	{
@@ -45,12 +53,30 @@ void USkinComponent::Update_Skin()
 		}
 		if(skinComponent)
 		{
-			skinComponent->SetChildActorClass(Skin);
+			if(!GetSkin() || GetSkin()->GetClass()!=Skin)
+			{
+				skinComponent->SetChildActorClass(Skin);
+			}
 			skinComponent->SetRelativeTransform(temp_trans);
 			if(GetSkin())
 			{
 				GetSkin()->owning_component=this;
 				GetSkin()->BuildSkin();
+			}
+		}
+		
+		TArray<UOmegaBodySlot*> BodySlot_List;
+		Appearance.Params.GetKeys(BodySlot_List);
+		for(auto* i : BodySlot_List)
+		{
+			if(i && i->Script)
+			{
+				FVector in_val=Appearance.Params.FindOrAdd(i);
+				if(GetSkin())
+				{
+					i->Script->OnApplied_ToSkin(GetSkin(),in_val);
+				}
+				i->Script->OnApplied_ToMeshComponent(targetSkelMesh,in_val);
 			}
 		}
 	}
@@ -81,8 +107,66 @@ void USkinComponent::Assemble(USkeletalMeshComponent* OverrideMesh)
 	Update_Skin();
 }
 
+void USkinComponent::SetBodyAppearanceData(FOmegaBodyAppearanceData AppearanceData)
+{
+	Appearance=AppearanceData;
+	Update_Skin();
+}
+
+void USkinComponent::SetBody_Type(UOmegaBodyType* BodyType)
+{
+	if(BodyType) {Appearance.BodyType=BodyType;}
+	Update_Skin();
+}
+
+UOmegaBodyType* USkinComponent::GetBody_Type() const
+{
+	if(Appearance.BodyType) { return Appearance.BodyType; } return nullptr;
+}
+
+void USkinComponent::SetBodyParam_Vector(UOmegaBodySlot* Param, FVector Value)
+{
+	Appearance.Params.Add(Param,Value);
+	Update_Skin();
+}
+
+FVector USkinComponent::GetBodyParam_Vector(UOmegaBodySlot* Param)
+{
+	return Appearance.Params.FindOrAdd(Param);
+}
+
+void USkinComponent::SetBodyParam_Bool(UOmegaBodySlot* Param, bool Value)
+{
+	SetBodyParam_Vector(Param,FVector(Value,0,0));
+}
+
+bool USkinComponent::GetBodyParam_Bool(UOmegaBodySlot* Param)
+{
+	return static_cast<bool>(GetBodyParam_Vector(Param).X);
+}
+
+void USkinComponent::SetBodyParam_Int(UOmegaBodySlot* Param, int32 Value)
+{
+	SetBodyParam_Vector(Param,FVector(Value,0,0));
+}
+
+int32 USkinComponent::GetBodyParam_Int(UOmegaBodySlot* Param)
+{
+	return GetBodyParam_Vector(Param).X;
+}
+
+void USkinComponent::SetBodyParam_Float(UOmegaBodySlot* Param, float Value)
+{
+	SetBodyParam_Vector(Param,FVector(Value,0,0));
+}
+
+float USkinComponent::GetBodyParam_Float(UOmegaBodySlot* Param)
+{
+	return GetBodyParam_Vector(Param).X;
+}
+
 UMaterialInstanceDynamic* USkinModifier::CreateDynamicMaterial_FromSlot(USkeletalMeshComponent* MeshComp, FName Slot,
-	bool ApplyToComponent)
+                                                                        bool ApplyToComponent)
 {
 	if(MeshComp)
 	{
@@ -169,6 +253,18 @@ USkeletalMesh* UOmegaSkinFunctions::MergeComponentMeshes_Omega(TArray<USkeletalM
 	return MergeMeshes_Omega(IncomingMeshes,BaseMesh);
 }
 
+void UOmegaSkinFunctions::SetSkinFromAsset(USkinComponent* SkinComponent, UObject* SourceAsset)
+{
+	if(SkinComponent && SourceAsset && SourceAsset->GetClass()->ImplementsInterface(UDataInterface_SkinSource::StaticClass()))
+	{
+		SkinComponent->SetSkin(IDataInterface_SkinSource::Execute_GetSkinClass(SourceAsset));
+		if(SkinComponent->GetSkin())
+		{
+			SkinComponent->GetSkin()->SkinModifiers.Append(IDataInterface_SkinSource::Execute_GetSkinModifiers(SourceAsset));
+		}
+	}
+}
+
 AOmegaSkin::AOmegaSkin()
 {
 	bForceFollowMasterComponent=true;
@@ -182,6 +278,14 @@ void AOmegaSkin::OnConstruction(const FTransform& Transform)
 {
 	BuildSkin();
 	Super::OnConstruction(Transform);
+}
+
+void AOmegaSkin::TrySetAnimation(USkeletalMeshComponent* TargetMesh)
+{
+	if(TargetMesh && AnimationClass && TargetMesh->GetAnimationMode()==EAnimationMode::Type::AnimationBlueprint)
+	{
+		TargetMesh->SetAnimInstanceClass(AnimationClass);
+	}
 }
 
 void AOmegaSkin::local_applyModifiers(USkeletalMeshComponent* MeshComp)
@@ -198,11 +302,44 @@ void AOmegaSkin::local_applyModifiers(USkeletalMeshComponent* MeshComp)
 	}
 }
 
+USkeletalMeshComponent* AOmegaSkin::GetCompressedMeshComponent_Implementation()
+{
+	if(UActorComponent* out = GetComponentByClass(USkeletalMeshComponent::StaticClass()))
+	{
+		return Cast<USkeletalMeshComponent>(out);
+	}
+	return nullptr;
+}
+
+USkeletalMeshComponent* AOmegaSkin::GetMeshComponentBySlot_Implementation(FGameplayTag Slot)
+{
+	return nullptr;
+}
+
 void AOmegaSkin::BuildSkin()
 {
 	if(owning_component && owning_component->GetTargetMesh())
 	{
 		USkeletalMeshComponent* TargetMesh = owning_component->GetTargetMesh();
+
+		if(bIsCompressedSkin)
+		{
+			if(GetCompressedMeshComponent())
+			{
+				TargetMesh->SetSkeletalMesh(GetCompressedMeshComponent()->GetSkeletalMeshAsset());
+				TArray<UMaterialInterface*> mat_list = GetCompressedMeshComponent()->GetMaterials();
+				for(UMaterialInterface* Mat : mat_list)
+				{
+					TargetMesh->SetMaterial(mat_list.Find(Mat),Mat);
+				}
+				//TargetMesh->SetRelativeLocation(GetCompressedMeshComponent()->GetRelativeLocation());
+				TargetMesh->SetRelativeScale3D(GetCompressedMeshComponent()->GetRelativeScale3D());
+				TrySetAnimation(TargetMesh);
+			}
+			K2_DestroyActor();
+			return;
+		}
+		
 		// create merged mesh
 		if(!MasterSkeleton)
 		{
@@ -263,12 +400,8 @@ void AOmegaSkin::BuildSkin()
 				//add blank material here
 			}
 		}
-		
 		//Set Anim Instance
-		if(AnimationClass && TargetMesh->GetAnimationMode()==EAnimationMode::Type::AnimationBlueprint)
-		{
-			TargetMesh->SetAnimInstanceClass(AnimationClass);
-		}
+		TrySetAnimation(TargetMesh);
 	}
 	else //Typicall for preview only
 	{
@@ -281,6 +414,31 @@ void AOmegaSkin::BuildSkin()
 			}
 		}
 	}
+	OnSkinBuildFinished();
+}
+
+FVector UOmegaBodySlot::GetDefaultValue()
+{
+
+	return FVector();
+}
+
+FVector UOmegaBodySlot::GetMaxValue()
+{
+	if(Script)
+	{
+		return Script->GetMaxValue();
+	}
+	return FVector(1,0,0);
+}
+
+EOmegaBodySlotType UOmegaBodySlot::GetSlotType()
+{
+	if(Script)
+	{
+		return Script->GetScriptSlotType();
+	}
+	return EOmegaBodySlotType::BODYSLOT_INTEGER;
 }
 
 TArray<USkeletalMeshComponent*> AOmegaSkin::GetMeshMergeComponents_Implementation()

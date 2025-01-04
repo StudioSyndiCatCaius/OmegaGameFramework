@@ -26,7 +26,7 @@ struct FCombatantGambit
 	
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitTarget : public UObject
 {
 	GENERATED_BODY()
@@ -39,7 +39,7 @@ public:
 };
 
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitCondition : public UObject
 {
 	GENERATED_BODY()
@@ -51,7 +51,7 @@ public:
 
 };
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract)
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, Const, CollapseCategories,Abstract,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitAction : public UObject
 {
 	GENERATED_BODY()
@@ -64,7 +64,7 @@ public:
 };
 
 
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType,EditInlineNew)
 class OMEGAGAMEFRAMEWORK_API UCombatantGambitAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()

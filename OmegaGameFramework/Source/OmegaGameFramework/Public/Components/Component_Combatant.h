@@ -8,16 +8,17 @@
 #include "Interfaces/OmegaInterface_Skill.h"
 #include "Engine/DataAsset.h"
 #include "JsonObjectWrapper.h"
-#include "Misc/OmegaDamageType.h"
 #include "Engine/EngineTypes.h"
 #include "Components/ActorComponent.h"
+#include "Misc/OmegaAttribute.h"
 
 #include "Component_Combatant.generated.h"
 
 class APawn;
 class ACharacter;
 class APlayerController;
-
+class UOmegaAttribute;
+class UOmegaDamageType;
 class UOmegaAttribute;
 class UOmegaAttributeSet;
 class AOmegaAbility;
@@ -85,11 +86,11 @@ public:
 	////////// -- General -- //////////
 	///////////////////////////////////
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Name"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combatant", meta = (DisplayName = "Name"))
 	FText DisplayName;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Description", MultiLine))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combatant", meta = (DisplayName = "Description", MultiLine))
 	FText CombatantDescription;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General", meta = (DisplayName = "Icon"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combatant", meta = (DisplayName = "Icon"))
 	FSlateBrush CombatantIcon;
 
 	UPROPERTY(BlueprintReadWrite, Category="Combatant", DisplayName="Metadata")
@@ -101,7 +102,7 @@ public:
 	UPROPERTY()
 	class APawn* OwnerPawn;
 
-	UFUNCTION(BlueprintCallable, Category="Combatant|DataSource", DisplayName="Set MASTER Source Active")
+	UFUNCTION(BlueprintCallable, Category="DataSource", DisplayName="Set MASTER Source Active")
 	void SetMasterDataSourceActive(UObject* Source, bool bActive);
 
 	////////////////////////////////////
@@ -119,21 +120,21 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Attributes")
 	void ChangeAttributeSet(UOmegaAttributeSet* NewSet,bool Reinitialize);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combatant")
 	class UOmegaAttributeSet* AttributeSet;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combatant")
 	int32 Level = 1;
 
 	//Forcibly Override whatever the max attributes values found in the "AttributeSet" 
-	UPROPERTY(EditAnywhere, Category = "Attributes")
+	UPROPERTY(EditAnywhere, Category = "Combatant")
 	TMap<UOmegaAttribute*, float>  OverrideMaxAttributes;
 
-	UFUNCTION(BlueprintCallable, Category="Combatant|Attributes")
+	UFUNCTION(BlueprintCallable, Category="Attributes")
 	void SetOverrideMaxAttribute(UOmegaAttribute* Attribute, float Value);
-	UFUNCTION(BlueprintCallable, Category="Combatant|Attributes")
+	UFUNCTION(BlueprintCallable, Category="Attributes")
 	void SetOverrideMaxAttributes(TMap<UOmegaAttribute*, float> Value);
-	UFUNCTION(BlueprintCallable, Category="Combatant|Attributes", DisplayName="Set Override Max Attributes (Int)")
+	UFUNCTION(BlueprintCallable, Category="Attributes", DisplayName="Set Override Max Attributes (Int)")
 	void SetOverrideMaxAttributes_Int(TMap<UOmegaAttribute*, int32> Value);
 
 	//----------------------------------------------------------------------------------------------------------------//
@@ -184,7 +185,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	void SetAttributeValueCategory(FGameplayTag CategoryTag, bool bReinitialize);
 
-	UFUNCTION(BlueprintPure, Category="Modifiers")
+	UFUNCTION(BlueprintPure, Category="Attributes")
 	int32 GetAttributeLevel(UOmegaAttribute* Attribute);
 
 	UPROPERTY()
@@ -202,9 +203,11 @@ public:
 	// -- DamageReactions -- 
 	//----------------------------------------------------------------------------------------------------------------//
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects", AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	TMap<UOmegaDamageType*,UOmegaDamageTypeReactionAsset*> DamageTypeReactions;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	TSubclassOf<AOmegaGameplayEffect> ReactionEffectClass;
+	
 protected:
 	UFUNCTION()
 	UOmegaDamageTypeReaction* GetDamageReactionObject(UOmegaDamageTypeReactionAsset* Class);
@@ -250,10 +253,10 @@ public:
 	// -- SKILLS -- 
 	//----------------------------------------------------------------------------------------------------------------//
 
-	UFUNCTION(BlueprintCallable, Category="Combatant|Skills")
+	UFUNCTION(BlueprintCallable, Category="Skills")
 	TArray<UPrimaryDataAsset*> GetAllSkills();
 	
-	UPROPERTY(EditAnywhere, Category="Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Abilities")
 	TArray<UPrimaryDataAsset*> Skills;
 
 	UFUNCTION(BlueprintCallable, Category="Skills")
@@ -262,10 +265,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Skills")
 	void RemoveSkill(UPrimaryDataAsset* Skill);
 
-	UFUNCTION(BlueprintCallable, Category="Combatant|DataSource")
+	UFUNCTION(BlueprintCallable, Category="DataSource")
 	bool SetSkillSourceActive(UObject* SkillSource, bool bActive);
 
-	UPROPERTY()
+	UPROPERTY(VisibleInstanceOnly,DisplayName="Skill Sources",Category="Modifiers")
 	TArray<UObject*> Local_SkillSources;
 	UFUNCTION()
 	TArray<UObject*> Local_GetSkillSources()
@@ -285,28 +288,28 @@ public:
 	// -- Gameplay Tags -- 
 	//----------------------------------------------------------------------------------------------------------------//
 		
-	UPROPERTY(EditAnywhere, Category = "GameplayTags")
+	UPROPERTY(EditAnywhere, Category = "Combatant")
 	FGameplayTag CategoryTags;
 
-	UPROPERTY(EditAnywhere, Category = "GameplayTags")	
+	UPROPERTY(EditAnywhere, Category = "Combatant")	
 	FGameplayTagContainer CombatantTags;
 	
-	UFUNCTION(BlueprintCallable, Category = "Combatant|Tags")
+	UFUNCTION(BlueprintCallable, Category = "Tags")
 	void AddTagsToCombatant(FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintCallable, Category = "Combatant|Tags")
+	UFUNCTION(BlueprintCallable, Category = "Tags")
 	void RemoveTagsFromCombatant(FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintPure, Category = "Combatant|Tags")
+	UFUNCTION(BlueprintPure, Category = "Tags")
 	FGameplayTagContainer GetCombatantTags();
 
-	UFUNCTION(BlueprintPure, Category = "Combatant|Tags")
+	UFUNCTION(BlueprintPure, Category = "Tags")
 	bool CombatantHasTag(FGameplayTag Tag);
 
-	UFUNCTION(BlueprintPure, Category = "Combatant|Tags,", meta=(AdvancedDisplay = "Exact"))
+	UFUNCTION(BlueprintPure, Category = "Tags,", meta=(AdvancedDisplay = "Exact"))
 	bool CombatantHasAnyTag(FGameplayTagContainer Tags, bool Exact=true);
 
-	UFUNCTION(BlueprintPure, Category = "Combatant|Tags", meta=(AdvancedDisplay = "Exact"))
+	UFUNCTION(BlueprintPure, Category = "Tags", meta=(AdvancedDisplay = "Exact"))
 	bool CombatantHasAllTag(FGameplayTagContainer Tags, bool Exact=true);
 
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -365,70 +368,70 @@ public:
 
 	///////Ability Possession
 	
-	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
+	UFUNCTION(BlueprintCallable, Category = "Ability")
 	bool GrantAbility(TSubclassOf<AOmegaAbility> AbilityClass);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
+	UFUNCTION(BlueprintCallable, Category = "Ability")
 	bool UngrantAbility(TSubclassOf<AOmegaAbility> AbilityClass);
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability", meta=(DeterminesOutputType="AbilityClass"))
+	UFUNCTION(BlueprintPure, Category = "Ability", meta=(DeterminesOutputType="AbilityClass"))
 	AOmegaAbility* GetAbility(TSubclassOf<AOmegaAbility> AbilityClass, bool& bSuccess);
 
 	///////Ability Activation
 	
-	UFUNCTION(BlueprintCallable, Category = "Ω|Ability", meta = (AdvancedDisplay = "Context", DisplayName="Activate Ability"))
+	UFUNCTION(BlueprintCallable, Category = "Ability", meta = (AdvancedDisplay = "Context", DisplayName="Activate Ability"))
 	AOmegaAbility* ExecuteAbility(class TSubclassOf<AOmegaAbility> AbilityClass, class UObject* Context, bool& bSuccess);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
+	UFUNCTION(BlueprintCallable, Category = "Ability")
 	bool StopAbility(class TSubclassOf<AOmegaAbility> AbilityClass, bool Cancel);
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	UFUNCTION(BlueprintPure, Category = "Ability")
 	bool IsAbilityActive(class TSubclassOf<AOmegaAbility> AbilityClass, class AOmegaAbility*& Ability);
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	UFUNCTION(BlueprintPure, Category = "Ability")
 	TArray<AOmegaAbility*> GetActiveAbilities();
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	UFUNCTION(BlueprintPure, Category = "Ability")
 	TArray<AOmegaAbility*> GetActiveAbilitiesWithTags(FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	UFUNCTION(BlueprintPure, Category = "Ability")
 	TArray<AOmegaAbility*> GetGrantedAbilities();
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	UFUNCTION(BlueprintPure, Category = "Ability")
 	TArray<AOmegaAbility*> GetGrantedAbilitiesWithTags(FGameplayTagContainer Tags);
 	
-	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
+	UFUNCTION(BlueprintCallable, Category = "Ability")
 	void CancelAbilitiesWithTags(FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
+	UFUNCTION(BlueprintCallable, Category = "Ability")
 	void CancelAllAbilities();
 
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability")
+	UFUNCTION(BlueprintPure, Category = "Ability")
 	bool IsAbilityTagBlocked(FGameplayTagContainer Tags);
 	
 	//----------------------------------------------------------------------------------------------------------------//
 	// -- Damage Modifiers -- 
 	//----------------------------------------------------------------------------------------------------------------//
 
-	UPROPERTY()
+	UPROPERTY(VisibleInstanceOnly,Category="Modifiers")
 	TArray<UObject*> DamageModifiers;
 
-	UFUNCTION(BlueprintCallable, Category="Combatant|DataSource")
+	UFUNCTION(BlueprintCallable, Category="DataSource")
 	bool SetDamageModifierActive(UObject* Modifier, bool bActive);
 
-	UFUNCTION(BlueprintPure, Category="Combatant|DamageModifiers")
+	UFUNCTION(BlueprintPure, Category="DamageModifiers")
 	TArray<UObject*> GetDamageModifiers();
 	
 	//----------------------------------------------------------------------------------------------------------------//
 	// -- ATTRIBUTE MODIFIERS -- 
 	//----------------------------------------------------------------------------------------------------------------//
-	UPROPERTY()
+	UPROPERTY(VisibleInstanceOnly,Category="Modifiers")
 	TArray<UObject*> AttributeModifiers;
 	
 	UFUNCTION(BlueprintCallable, Category= "Attributes|Modifiers", meta = (AdvancedDisplay = "Category, Tags"))
 	UAttributeModifierContainer* CreateAttributeModifier(UOmegaAttribute* Attribute, float Increment, float Multiplier, FGameplayTagContainer Tags);
 
-	UFUNCTION(BlueprintCallable, Category="Combatant|DataSource")
+	UFUNCTION(BlueprintCallable, Category="DataSource")
 	void SetAttributeModifierActive(UObject* Modifier, bool bActive);
 	
 	UFUNCTION(BlueprintCallable, Category= "Attributes|Modifiers")
@@ -516,43 +519,43 @@ public:
 	UPROPERTY()
 	int32 ActiveTargetIndex;
 
-	UPROPERTY(EditAnywhere, Category="Target")
+	UPROPERTY(EditAnywhere, Category="Combatant|Targeting")
 	TSubclassOf<ACombatantTargetIndicator> TargetIndicatorClass;
 
 	UPROPERTY()
 	ACombatantTargetIndicator* TargetIndicator;
 	
-	UFUNCTION(BlueprintCallable, Category="Target", DisplayName="Register Target")
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Register", DisplayName="Register Target",meta=(Keywords="Add, List"))
 	void AddTargetToList(UCombatantComponent* Combatant);
 	
-	UFUNCTION(BlueprintCallable, Category="Target")
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Register", DisplayName="Register Target (List)",meta=(Keywords="Add, List"))
 	void AddTargetsToList(TArray<UCombatantComponent*> Combatants, bool bClearListFirst);
 	
-	UFUNCTION(BlueprintCallable, Category="Target", DisplayName="Unregister Target")
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Register", DisplayName="Unregister Target",meta=(Keywords="Remove, List"))
 	void RemoveTargetFromList(UCombatantComponent* Combatant);
 	
-	UFUNCTION(BlueprintCallable, Category="Target")
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Register")
 	void ClearTargetList();
 
-	UFUNCTION(BlueprintPure, Category="Target")
+	UFUNCTION(BlueprintPure, Category="Combatant|Targeting|Register")
 	TArray<UCombatantComponent*> GetRegisteredTargetList();
 	
-	UFUNCTION(BlueprintCallable, Category="Target")
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Active")
 	void SetActiveTarget(UCombatantComponent* Combatant);
 
-	UFUNCTION(BlueprintPure, Category="Target")
+	UFUNCTION(BlueprintPure, Category="Combatant|Targeting|Active")
 	UCombatantComponent* GetActiveTarget();
 
-	UFUNCTION(BlueprintPure, Category="Target")
+	UFUNCTION(BlueprintPure, Category="Combatant|Targeting|Active")
 	int32 GetActiveTargetIndex();
 
-	UFUNCTION(BlueprintCallable, Category="Target")
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Active")
 	UCombatantComponent* CycleActiveTarget(int32 Amount);
 	
-	UFUNCTION(BlueprintCallable, Category="Target")
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Active")
 	void ClearActiveTarget();
 
-	UFUNCTION(BlueprintPure, Category="Target")
+	UFUNCTION(BlueprintPure, Category="Combatant|Targeting|Active")
 	bool IsActiveTargetValid();
 	
 	//Delegates
@@ -584,7 +587,7 @@ public:
 	///////////////////////////////////
 
 	//Fires an agonist notify across the combatant that can be recieved in abilities and the parent actor.
-	UFUNCTION(BlueprintCallable, Category="Combatant|Notify", meta=(AdvancedDisplay="Flag"))
+	UFUNCTION(BlueprintCallable, Category="Notify", meta=(AdvancedDisplay="Flag"))
 	void CombatantNotify(FName Notify, const FString& Flag);
 
 	UPROPERTY(BlueprintAssignable)
@@ -603,16 +606,16 @@ public:
 	// Gambits
 	//##################################################################################################################
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gambit")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Abilities")
 	UCombatantGambitAsset* DefaultGambit;
 	
-	UFUNCTION(BlueprintCallable, Category="Combatant|Gambit")
+	UFUNCTION(BlueprintCallable, Category="Gambit")
 	bool RunDefaultGambit();
 	
-	UFUNCTION(BlueprintCallable, Category="Combatant|Gambit")
+	UFUNCTION(BlueprintCallable, Category="Gambit")
 	bool RunGambit(UCombatantGambitAsset* Gambit, bool bReplaceDefaultGambit=false);
 
-	UFUNCTION(BlueprintPure, Category="Combatant|Gambit")
+	UFUNCTION(BlueprintPure, Category="Gambit")
 	bool GetActionDataFromGambit(UCombatantGambitAsset* Gambit, TSubclassOf<AOmegaAbility>& Ability, UObject*& Context);
 	
 };

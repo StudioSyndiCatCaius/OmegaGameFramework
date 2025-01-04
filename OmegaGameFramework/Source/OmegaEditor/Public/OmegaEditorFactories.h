@@ -8,6 +8,7 @@
 
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaFaction.h"
+#include "Misc/OmegaDemoAssets.h"
 #include "Actors/Actor_Ability.h"
 #include "OmegaDataItem.h"
 #include "Actors/OmegaGameplaySystem.h"

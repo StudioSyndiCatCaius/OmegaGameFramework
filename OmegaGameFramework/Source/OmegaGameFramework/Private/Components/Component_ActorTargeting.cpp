@@ -42,6 +42,8 @@ bool UActorTargetingComponent::SetActorRegistered(AActor* Actor, bool bRegister)
 			&& !is_valid_child(Actor,ExcludedClasses)
 			&& is_valid_tag(Actor,IncludedTags) || IncludedTags.IsEmpty()
 			&& !is_valid_tag(Actor,ExcludedTags)
+			&& UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTags(Actor,TargetGameplayTagsRequired,true)
+			&& !UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTags(Actor,TargetGameplayTagsBlocked,true,false)
 			)
 		{
 			REF_Actors.AddUnique(Actor);
@@ -56,6 +58,12 @@ bool UActorTargetingComponent::SetActorRegistered(AActor* Actor, bool bRegister)
 			OnActorRegisteredUpdate.Broadcast(Actor,false);
 			UActorTagEventFunctions::FireTagEventsOnActor(Actor,EventsOnUnregister);
 			local_setTagsOnActor(Actor,TagsOnRegister,false);
+			
+			// Cleat if Active Target
+			if(GetActiveTarget() && GetActiveTarget()==Actor)
+			{
+				SetActiveTarget(nullptr,false);
+			}
 			return true;
 		}
 	}

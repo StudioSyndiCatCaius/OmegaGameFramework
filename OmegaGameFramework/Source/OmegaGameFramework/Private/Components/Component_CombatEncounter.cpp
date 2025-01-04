@@ -143,6 +143,13 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 			ACharacter* new_char= GetWorld()->SpawnActorDeferred<ACharacter>(BattlerCharacterClass,Transform,REF_Instance);
 			if(UCombatantComponent* comb_ref = new_char->FindComponentByClass<UCombatantComponent>())
 			{
+				for(TSubclassOf<AOmegaAbility> temp_ability : ExtraBattlerAbilities)
+				{
+					if(temp_ability)
+					{
+						comb_ref->GrantAbility(temp_ability);
+					}
+				}
 				new_char->FinishSpawning(Transform);
 				REF_BattlerCombatants.Add(comb_ref);
 				if(DataAsset) { comb_ref->CombatantDataAsset=DataAsset; }

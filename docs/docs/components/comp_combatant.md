@@ -12,6 +12,11 @@ ___
 ![alt text](../../images/tutorial/components/tut_comp_comb_att_1.png)
 ![alt text](../../images/tutorial/components/tut_comp_comb_att_2.png)
 
+### Targeting
+
+Combatant's can store and cycle through a list of other combatants as targets.
+![alt text](../../images/tutorial/components/tut_comp_comb_targeting.png)
+
 
 #### Damaging/Editing Attributes
 ![alt text](../../images/tutorial/components/tut_comp_comb_s_att.png)

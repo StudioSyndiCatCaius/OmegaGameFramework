@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Actors/Actor_GameplayEffect.h"
-#include "Misc/OmegaAttribute.h"
+#include "GameplayTagContainer.h"
 #include "OmegaInterface_Skill.generated.h"
 
+class UOmegaAttribute;
 class UCombatantComponent;
 class UCombatantFilter;
+class AOmegaGameplayEffect;
+
+
 
 // ===================================================================================================================
 // Skill Source
@@ -35,7 +38,6 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Skill
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	
 	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Skills")
@@ -43,7 +45,7 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
 	TSubclassOf<UCombatantFilter> GetSkillTargetFilter();
-
+	
 	// Skills are given two sequences slots: Charge is typically played first on the instigator. Execution is played second on the Target.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
 	ULevelSequence* GetSkill_Sequences(UCombatantComponent* Combatant, FGameplayTag Tag);

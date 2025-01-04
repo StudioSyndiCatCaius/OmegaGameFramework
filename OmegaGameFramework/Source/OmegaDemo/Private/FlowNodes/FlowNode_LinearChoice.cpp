@@ -12,6 +12,7 @@ UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 	InputPins.Add(FFlowPin(TEXT("Begin")));
 	OutputPins.Empty();
 	//NodeStyle = EFlowNodeStyle::Latent;
+	//InstanceClass = LoadObject<UClass>(nullptr, TEXT("/OmegaGameFramework/DEMO/Choice/OmegaDemo_Choice_Instance.OmegaDemo_Choice_Instance"));
 #if WITH_EDITOR
 	Category = TEXT("GameFlow");
 #endif

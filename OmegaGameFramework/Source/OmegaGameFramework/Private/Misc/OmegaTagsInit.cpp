@@ -106,6 +106,7 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Jump_Loop,"Animation.Action.Jump.Loop"
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Jump_End,"Animation.Action.Jump.End");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Dodge,"Animation.Action.Dodge");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Roll,"Animation.Action.Roll");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Guard,"Animation.Action.Guard");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Cast,"Animation.Action.Cast");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Impact,"Animation.Action.Impact");
@@ -145,6 +146,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_400,"Flag.Power.400%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_500,"Flag.Power.500%");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_AI_Controlled,"AI.Controlled");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Actor_Interact,"Event.Actor.Interact");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_Begin,"Event.Ability.Begin");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_End,"Event.Ability.End");
