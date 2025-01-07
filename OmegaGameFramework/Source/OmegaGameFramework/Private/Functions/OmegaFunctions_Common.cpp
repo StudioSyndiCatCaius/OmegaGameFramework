@@ -425,7 +425,7 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAssetList_FromPath(const TArra
 	TSubclassOf<UObject> Class)
 {
 	TArray<UObject*> out;
-	for(const FString temp_path : AssetPaths)
+	for(const FString& temp_path : AssetPaths)
 	{
 		TEnumAsByte<EOmegaFunctionResult> result;
         UObject* result_object = GetAsset_FromPath(temp_path,Class,result);
