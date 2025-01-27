@@ -1,6 +1,19 @@
 
 #include "NativeGameplayTags.h"
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_HP,"Attribute.HP");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_MP,"Attribute.MP");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_PATK,"Attribute.PATK");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_PDEF,"Attribute.PDEF");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_MATK,"Attribute.MATK");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_MDEF,"Attribute.MDEF");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Speed,"Attribute.Speed");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Dex,"Attribute.Dexterity");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Agility,"Attribute.Agility");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Cunning,"Attribute.Cunning");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Wisdom,"Attribute.Wisdom");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Aggro,"Attribute.Strength");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Player,"Combat.Faction.Player");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Enemy,"Combat.Faction.Enemy");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Ally,"Combat.Faction.Ally");
@@ -18,16 +31,20 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Heal,"Combat.Effect.Heal");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Buff,"Combat.Effect.Buff");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Debuff,"Combat.Effect.Debuff");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Ailment,"Combat.Effect.Ailment");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_State_Dead,"Combat.State.Dead");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_State_Staggered,"Combat.State.Staggered");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_State_Tracking,"Combat.State.Tracking");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_State_Passive,"Combat.State.Passive");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_State_Agressive,"Combat.State.Agressive");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_One,"Combat.Target.One");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_All,"Combat.Target.All");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_Self,"Combat.Target.Self");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Stage_Default,"Combat.Stage.Default");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Stage_Boss,"Combat.Stage.Boss");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Adv_Player,"Combat.Advantage.Player");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Adv_Enemy,"Combat.Advantage.Enemy");
 
@@ -260,6 +277,9 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Amount,"Param.Amount");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Max,"Param.Max");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Min,"Param.Min");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Active,"Param.Active");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Icon_Big,"Param.Icon.Big");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Icon_Tall,"Param.Icon.Tall");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Param_Icon_Small,"Param.Icon.Small");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Save_Type_Manual,"Save.Type.Manual");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Save_Type_Auto,"Save.Type.Auto");

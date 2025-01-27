@@ -11,6 +11,15 @@
 #include "Interfaces/OmegaInterface_Skill.h"
 #include "OmegaDemoAssets.generated.h"
 
+// ============================================================================================================
+//  Prefab
+// ============================================================================================================
+UCLASS(BlueprintType)
+class OMEGAGAMEFRAMEWORK_API UOmegaActorPrefab : public UObject
+{
+	GENERATED_UCLASS_BODY()
+	
+};
 
 UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UOmegaCommonSkill : public UOmegaDataAsset, public IDataInterface_Skill, public IDataInterface_CombatantFilter, public IOmegaScriptedEffectsInterface

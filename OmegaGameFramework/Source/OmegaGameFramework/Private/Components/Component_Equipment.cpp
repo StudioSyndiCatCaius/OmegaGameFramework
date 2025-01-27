@@ -6,7 +6,6 @@
 #include "Components/Component_Inventory.h"
 #include "Engine/DataAsset.h"
 #include "Engine/GameInstance.h"
-#include "Functions/OmegaFunctions_Common.h"
 #include "Interfaces/OmegaInterface_Common.h"
 
 

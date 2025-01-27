@@ -41,13 +41,13 @@ void ULinearEvent_SimpleMessage::GetGeneralDataText_Implementation(const FString
 }
 
 
-void ULinearEvent_SimpleMessage::Native_Begin()
+void ULinearEvent_SimpleMessage::Native_Begin(const FString& Flag)
 {
 	Super::Native_Begin();
 	
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(FName("SimpleMessage"), this);
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->FireCustomGameplayMessage(local_GetInstigator(),Message,MessageCategory,FLuaValue());
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->FireCustomGameplayMessage(local_GetInstigator(),Message,MessageCategory,Tags,Brush,FLuaValue());
 }
 
 void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
@@ -100,7 +100,9 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	if(Instigator_Actor) { LocalMessage->Instigator_Actor= Instigator_Actor; }
 	if(Instigator_Asset) { LocalMessage->Instigator_Asset= Instigator_Asset; }
 	LocalMessage->Message = Message;
-	LocalMessage->Native_Begin();
+	LocalMessage->Tags=Tags;
+	LocalMessage->Brush = Brush;
+	LocalMessage->Native_Begin("");
 	TriggerOutput("Begin", true,  EFlowPinActivationType::Default);
 }
 
@@ -124,7 +126,7 @@ void UFlowNode_SimpleMessage::GetGeneralAssetLabel_Implementation(FString& Label
 	Label=MessageLabel;
 }
 
-void UFlowNode_SimpleMessage::LocalFinish(const FString& Flag)
+void UFlowNode_SimpleMessage::LocalFinish(UOmegaLinearEvent* Event, const FString& Flag)
 {
 	TriggerOutput("Finish", true, EFlowPinActivationType::Default);
 }

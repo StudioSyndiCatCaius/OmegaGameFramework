@@ -3,12 +3,17 @@
 
 #include "Event/OmegaLinearEventInstance.h"
 
+void UOmegaLinearEventInstance::on_EventEnd(UOmegaLinearEvent* Event, const FString& Flag)
+{
+	NextEvent(Flag);
+}
+
 void UOmegaLinearEventInstance::NextEvent(const FString& Flag)
 {
 	//Unbind last event
 	if(SequenceData.Events.IsValidIndex(GetCurrentEventIndex()))
 	{
-		SequenceData.Events[GetCurrentEventIndex()]->EventEnded.RemoveDynamic(this, &UOmegaLinearEventInstance::NextEvent);
+		SequenceData.Events[GetCurrentEventIndex()]->EventEnded.RemoveDynamic(this, &UOmegaLinearEventInstance::on_EventEnd);
 	}
 
 	//CHECK IF SHOULD STOP EVENT SEQUENCE
@@ -37,7 +42,7 @@ void UOmegaLinearEventInstance::NextEvent(const FString& Flag)
 	if(IncomingEvent)
 	{
 		CurrentEvent = IncomingEvent;
-		StartEvent(IncomingEvent);
+		StartEvent(IncomingEvent,Flag);
 	}
 	else
 	{
@@ -45,12 +50,30 @@ void UOmegaLinearEventInstance::NextEvent(const FString& Flag)
 	}
 }
 
-void UOmegaLinearEventInstance::StartEvent(UOmegaLinearEvent* Event)
+UOmegaLinearEvent* UOmegaLinearEventInstance::GetCurrentEvent() const
+{
+	if(CurrentEvent)
+	{
+		return CurrentEvent;
+	}
+	return nullptr;
+}
+
+int32 UOmegaLinearEventInstance::GetCurrentEventIndex() const
+{
+	if(CurrentEvent)
+	{
+		return SequenceData.Events.Find(CurrentEvent);
+	}
+	return -1;
+}
+
+void UOmegaLinearEventInstance::StartEvent(UOmegaLinearEvent* Event,const FString& Flag)
 {
 	if(Event->CanPlayEvent())
 	{
 		//Bind event so when it finishes, we go to next event
-		Event->EventEnded.AddDynamic(this, &UOmegaLinearEventInstance::NextEvent);
+		Event->EventEnded.AddDynamic(this, &UOmegaLinearEventInstance::on_EventEnd);
 		
 		//setup vars
 		Event->GameInstanceRef = SubsystemRef->GameInstanceReference;
@@ -61,7 +84,7 @@ void UOmegaLinearEventInstance::StartEvent(UOmegaLinearEvent* Event)
 		//SubsystemRef->OnLinearEventBegin.Broadcast(this,Event,GetCurrentEventIndex());
 
 		//Finally, start the event
-		Event->Native_Begin();
+		Event->Native_Begin(Flag);
 	}
 	else
 	{

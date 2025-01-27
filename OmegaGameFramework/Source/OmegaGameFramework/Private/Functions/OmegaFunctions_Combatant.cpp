@@ -370,6 +370,50 @@ bool UCombatantFunctions::IsCombatantActiveTargetInRange(UCombatantComponent* Co
 	}
 	return false;
 }
+
+TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatantsWithDataAsset(UObject* WorldContextObject,
+	UPrimaryDataAsset* Asset)
+{
+	TArray<UCombatantComponent*> out;
+	if (WorldContextObject && Asset)
+	{
+		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+		{
+			if(c && c->CombatantDataAsset==Asset)
+			{
+				out.Add(c);
+			}
+		}
+	}
+	return out;
+}
+
+UCombatantComponent* UCombatantFunctions::GetFirstCombatantWithDataAsset(UObject* WorldContextObject,
+	UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	TArray<UCombatantComponent*> list=GetAllCombatantsWithDataAsset(WorldContextObject,Asset);
+	if(list.IsValidIndex(0))
+	{
+		return list[0];
+	}
+	return nullptr;
+}
+
+UCombatantComponent* UCombatantFunctions::SelectFirstCombatantWithDataAsset(TArray<UCombatantComponent*> Combatants,
+	UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	for (auto* c : Combatants)
+	{
+		if(c && c->CombatantDataAsset==Asset)
+		{
+			Outcome=EOmegaFunctionResult::Success;
+			return  c;
+		}
+	}
+	return nullptr;
+}
+
+
 /*
 void UCombatantFunctions::IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,  float Value,
 	EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome)

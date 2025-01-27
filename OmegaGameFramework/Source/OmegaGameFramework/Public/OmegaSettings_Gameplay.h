@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Engine/DataAsset.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "UObject/Object.h"
 #include "OmegaSettings_Gameplay.generated.h"
 
+class UEquipmentSlot;
+class UOmegaAttribute;
 class AZoneEntityDisplayActor;
 
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const)
@@ -63,6 +64,16 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone")
 	TSubclassOf<AZoneEntityDisplayActor> DefaultZoneEntityDisplayActor;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataAssets")
+	TMap<FGameplayTag, UPrimaryDataAsset*> GlobalDataAssets_Common;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataAssets")
+	TMap<FGameplayTag, UOmegaAttribute*> GlobalDataAssets_Attribute;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataAssets")
+	TMap<FGameplayTag, UEquipmentSlot*> GlobalDataAssets_EquipSlot;
+	
 	
 	UPROPERTY()
 	TArray<UOmegaSettings_Gameplay_InputEvent*> CustomInputEvents;
@@ -91,5 +102,12 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay")
 	static bool OmegaGameplayInputCall(APlayerController* Player, const FKey& Key, bool End);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Common)",meta=(CompactNodeTitle="DA Common"))
+	static UPrimaryDataAsset* GetGlobalDataAsset_Common(FGameplayTag Tag);
+	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Attribute)",meta=(CompactNodeTitle="GDA Attribute"))
+    static UOmegaAttribute* GetGlobalDataAsset_Attribute(FGameplayTag Tag);
+	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Equipment Slot)",meta=(CompactNodeTitle="GDA EquipSlot"))
+	static UEquipmentSlot* GetGlobalDataAsset_EquipSlot(FGameplayTag Tag);
 
 };

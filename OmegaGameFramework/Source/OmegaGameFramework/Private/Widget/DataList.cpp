@@ -330,6 +330,17 @@ void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 	}
 }
 
+void UDataList::ClearHoveredEntry()
+{
+	for(auto* i : GetEntries())
+	{
+		if(i && i->IsHovered())
+		{
+			i->Unhover();
+		}
+	}
+}
+
 UDataWidget* UDataList::GetHoveredEntry()
 {
 	if(HoveredEntry)

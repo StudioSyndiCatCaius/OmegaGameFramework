@@ -3,7 +3,7 @@
 
 #include "LinearEvents/LinearEvent_Delay.h"
 
-void ULinearEvent_Delay::Native_Begin()
+void ULinearEvent_Delay::Native_Begin(const FString& Flag)
 {
 	GetWorld()->GetTimerManager().SetTimer(Local_TimerHandle, this, &ULinearEvent_Delay::Local_TimerEnd, Duration, false);
 	Super::Native_Begin();

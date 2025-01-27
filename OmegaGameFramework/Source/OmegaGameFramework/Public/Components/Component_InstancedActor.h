@@ -63,18 +63,24 @@ public:
 	// FORMATION
 	// ==========================================
 
-	UFUNCTION(BlueprintPure, Category="Instanced Actor Component", DisplayName="Get Instance by Formation Index")
+	UFUNCTION(BlueprintPure, Category="Instanced Actor Component", DisplayName="Get Instance by order Index")
 	AOmegaInstanceActor* GetInstanceByIndex(int32 Index);
 	
-	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Formation", DisplayName="Swap Instance Order")
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Order", DisplayName="Swap Instance Order")
 	bool SwapInstanceIndecies(int32 A, int32 B);
 
-	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Formation")
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Order",DisplayName="Set Instance Order (By Labels)")
 	void SetInstanceOrder_ByLabels(TArray<FString> Labels);
 
-	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Formation")
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Order",DisplayName="Get Instance Order (By Labels)")
 	TArray<FString> GetInstanceOrder_ByLabels();
 
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Order",DisplayName="Set Instance Order (By Context)")
+	void SetInstanceOrder_ByContexts(TArray<UObject*> Contexts);
+
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Order",DisplayName="Get Instance Order (By Context)")
+	TArray<UObject*> GetInstanceOrder_ByContexts();
+	
 	// ==========================================
 	// Notify
 	// ==========================================

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "OmegaLinearEventSubsystem.h"
+#include "Event/OmegaLinearEvent.h"
 #include "GameplayTags.h"
 #include "Flow/Public/Nodes/FlowNode.h"
 #include "UObject/Object.h"
@@ -37,6 +37,15 @@ public:
 	UPROPERTY(EditAnywhere, Category="Events")
 	FLinearEventSequence Events;
 
+	UPROPERTY(EditAnywhere,Category="Reader")
+	FOmegaLinearEventReaderData ReaderData;
+	//Will still import and use the reader LinearEvent data, event it it has 0 events.
+	UPROPERTY(EditAnywhere,Category="Reader")
+	bool StillImportIfEmpty;
+
+	UFUNCTION(CallInEditor,Category="Reader")
+	void ImportReaderEvents();
+	
 	UPROPERTY()
 	UOmegaLinearEventInstance* LocalInst;
 

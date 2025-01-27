@@ -20,6 +20,12 @@ UOmegaQuest* UOmegaQuestTypeScript::GetQuestAsset() const
 	return nullptr;
 }
 
+void UOmegaQuestTypeScript::EndQuest(bool bComplete) const
+{
+	SetComplete(bComplete);
+	GetQuestComponent()->EndQuest(bComplete);
+}
+
 void UOmegaQuestTypeScript::OnLoad_Implementation(UOmegaQuestComponent* Component, FJsonObjectWrapper Data) const
 {
 	
@@ -69,6 +75,68 @@ bool UOmegaQuestTypeScript::IsActive_Implementation() const
 	return false;
 }
 
+void UOmegaQuestSubsystem::local_RegisterQuestComponent(UOmegaQuestComponent* comp, bool comp_registered)
+{
+	if(comp)
+	{
+		if(comp_registered && !REF_QuestComps.Contains(comp))
+		{
+			REF_QuestComps.Add(comp);
+		}
+		if(!comp_registered && REF_QuestComps.Contains(comp))
+		{
+			REF_QuestComps.Remove(comp);
+		}
+	}
+}
+
+UOmegaQuestComponent* UOmegaQuestSubsystem::GetQuest_FirstWithAsset(UOmegaQuest* Quest)
+{
+	for(auto* i : REF_QuestComps)
+	{
+		if(i && i->GetQuestAsset()==Quest)
+		{
+			return i;
+		}
+	}
+	return nullptr;
+}
+
+bool UOmegaQuestSubsystem::StartQuest_FirstWithAsst(UOmegaQuest* Quest)
+{
+	if(UOmegaQuestComponent* i = GetQuest_FirstWithAsset(Quest))
+	{
+		return i->StartQuest(Quest);
+	}
+	return false;
+}
+
+TArray<UOmegaQuestComponent*> UOmegaQuestSubsystem::GetQuests_Active()
+{
+	TArray<UOmegaQuestComponent*> out;
+	for(auto* i : REF_QuestComps)
+	{
+		if(i && i->IsQuestActive())
+		{
+			out.Add(i);
+		}
+	}
+	return out;
+}
+
+TArray<UOmegaQuestComponent*> UOmegaQuestSubsystem::GetQuests_Complete()
+{
+	TArray<UOmegaQuestComponent*> out;
+	for(auto* i : REF_QuestComps)
+	{
+		if(i && i->IsQuestComplete())
+		{
+			out.Add(i);
+		}
+	}
+	return out;
+}
+
 void UOmegaQuestComponent::TryLoadFromJsonSave()
 {
 	if(QuestAsset && QuestAsset->QuestScript)
@@ -100,8 +168,20 @@ void UOmegaQuestComponent::BeginPlay()
 	{
 		TryLoadFromJsonSave();
 	}
-	
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->local_RegisterQuestComponent(this,true);
 	Super::BeginPlay();
+}
+
+void UOmegaQuestComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(EndPlayReason==EEndPlayReason::Destroyed)
+	{
+		if(GetWorld()->GetGameInstance())
+		{
+			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->local_RegisterQuestComponent(this,false);
+		}
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 
@@ -126,6 +206,8 @@ bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
 		if(QuestAsset)
 		{
 			QuestAsset->QuestScript->OnQuestStart(this);
+			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->OnQuestStart.Broadcast(this,Quest);
+			OnQuestStart.Broadcast(this,Quest);
 			return  true;
 		}
 	}
@@ -134,6 +216,11 @@ bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
 
 bool UOmegaQuestComponent::EndQuest(bool bComplete)
 {
+	if(IsQuestActive())
+	{
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->OnQuestEnd.Broadcast(this,QuestAsset);
+		OnQuestEnd.Broadcast(this,QuestAsset);
+	}
 	return false;
 }
 

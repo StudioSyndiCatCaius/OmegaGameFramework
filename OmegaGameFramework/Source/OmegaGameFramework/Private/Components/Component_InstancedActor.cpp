@@ -116,15 +116,15 @@ TArray<UObject*> UInstanceActorComponent::GetAllInstanceContexts()
 
 TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstances()
 {
-	TArray<AOmegaInstanceActor*> OutInstances;
-	for(auto* TempInst : PrivateInstances)
+	TArray<AOmegaInstanceActor*> out;
+	for(auto* i : PrivateInstances)
 	{
-		if(TempInst)
+		if(i)
 		{
-			OutInstances.Add(TempInst);
+			out.Add(i);
 		}
 	}
-	return OutInstances;
+	return out;
 }
 
 TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstancesOfCategory(FGameplayTag CategoryTag, bool bExclude, bool bExact)
@@ -208,6 +208,37 @@ TArray<FString> UInstanceActorComponent::GetInstanceOrder_ByLabels()
 	for(auto* TempInst : PrivateInstances)
 	{
 		out.Add(UOmegaGameFrameworkBPLibrary::GetObjectLabel(TempInst));
+	}
+	return out;
+}
+
+void UInstanceActorComponent::SetInstanceOrder_ByContexts(TArray<UObject*> Objects)
+{
+	// Sort the local TArray<AActor*> by the order of the input Labels array
+	PrivateInstances.Sort([&](const AOmegaInstanceActor& A, const AOmegaInstanceActor& B) {
+		int32 IndexA = Objects.Find(A.ContextObject);
+		int32 IndexB = Objects.Find(B.ContextObject);
+
+		// If either actor's label is not found in the input Labels array, keep their relative order
+		if (IndexA == INDEX_NONE)
+			return false;
+		if (IndexB == INDEX_NONE)
+			return true;
+
+		// Otherwise, sort by the index of the label in the input Labels array
+		return IndexA < IndexB;
+	});
+}
+
+TArray<UObject*> UInstanceActorComponent::GetInstanceOrder_ByContexts()
+{
+	TArray<UObject*> out;
+	for(auto* i : PrivateInstances)
+	{
+		if(i->ContextObject)
+		{
+			out.Add(i->ContextObject);
+		};
 	}
 	return out;
 }

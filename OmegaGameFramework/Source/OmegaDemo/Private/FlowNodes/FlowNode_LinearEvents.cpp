@@ -28,7 +28,8 @@ void UFlowNode_LinearEvents::ExecuteInput(const FName& PinName)
 #if WITH_EDITOR
 FString UFlowNode_LinearEvents::GetNodeDescription() const
 {
-	FString OutString;
+	FString OutString=NodeDescription.ToString();
+	OutString+=TEXT("\n______________\n");
 	int32 Index = 0; // Start an index at 0 to number the list items
 
 	for (const auto* TempEvent : Events.Events)
@@ -58,6 +59,16 @@ void UFlowNode_LinearEvents::GetGeneralDataText_Implementation(const FString& La
 	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
 }
 #endif
+
+void UFlowNode_LinearEvents::ImportReaderEvents()
+{
+	FLinearEventSequence new_seq = UOmegaLinearEventFunctions::CreateLinearEventSequence_FromReader(this,ReaderData.Reader,ReaderData.SourceString);
+	if(new_seq.Events.IsValidIndex(0) || StillImportIfEmpty)
+	{
+		Events=new_seq;
+		//MarkPackageDirty();
+	}
+}
 
 void UFlowNode_LinearEvents::LocalFinish(const FString& Flag,UOmegaLinearEventInstance* Instance)
 {

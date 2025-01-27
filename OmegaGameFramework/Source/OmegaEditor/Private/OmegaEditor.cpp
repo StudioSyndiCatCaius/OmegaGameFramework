@@ -276,6 +276,10 @@ void FOmegaEditor::StartupModule()
 	OMACRO_ADDPLACEABLE(Omega_EventVolume,"Event Volume")
 	OMACRO_ADDPLACEABLE(OmegaZonePoint,"Zone: Spawn Point")
 	OMACRO_ADDPLACEABLE(OmegaZoneTransit,"Zone: Transit Point")
+
+
+	
+	
 }
 
 void FOmegaEditor::ShutdownModule()

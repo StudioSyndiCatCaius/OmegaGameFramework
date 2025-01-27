@@ -48,11 +48,14 @@ void AOmegaCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)
 	if(Asset)
 	{
 		this->CharacterAsset=Asset;
-		UCombatantFunctions::SetCombatantFromSource(Combatant,CharacterAsset);
 		if(CharacterAsset->GetClass()->IsChildOf(UOmegaDataItem::StaticClass()))
 		{
 			DataItem->SetDataItem(Cast<UOmegaDataItem>(CharacterAsset));
 		}
+		
+		UCombatantFunctions::SetCombatantFromSource(Combatant,CharacterAsset);
+		UDataAssetCollectionFunctions::SetInventory_FromSource(Inventory,CharacterAsset);
+		Equipment->SetEquipment_FromSource(CharacterAsset);
 		UOmegaSkinFunctions::SetSkinFromAsset(SkinComponent,CharacterAsset);
 		return;
 	}

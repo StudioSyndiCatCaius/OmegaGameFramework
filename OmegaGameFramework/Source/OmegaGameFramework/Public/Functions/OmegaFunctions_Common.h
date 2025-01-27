@@ -29,7 +29,7 @@ class UOmegaInputMode;
 UENUM(Blueprintable)
 enum EOmegaFlagResult
 {
-	Flag_Active	UMETA(DisplayName = "Activate"),
+	Flag_Active		UMETA(DisplayName = "Activate"),
 	Flag_Inactive	UMETA(DisplayName = "Inactive"),
 };
 

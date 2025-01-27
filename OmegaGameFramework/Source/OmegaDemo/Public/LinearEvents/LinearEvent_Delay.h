@@ -15,7 +15,7 @@ class OMEGADEMO_API ULinearEvent_Delay : public UOmegaLinearEvent
 	GENERATED_BODY()
 
 public:
-	virtual void Native_Begin() override;
+	virtual void Native_Begin(const FString& Flag) override;
 	
 	UPROPERTY()
 	FTimerHandle Local_TimerHandle;

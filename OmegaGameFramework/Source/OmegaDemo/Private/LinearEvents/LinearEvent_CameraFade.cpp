@@ -5,7 +5,7 @@
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 
-void ULinearEvent_CameraFade::Native_Begin()
+void ULinearEvent_CameraFade::Native_Begin(const FString& Flag)
 {
 	UGameplayStatics::GetPlayerCameraManager(this, 0)->StartCameraFade(BeginAlpha, EndAlpha, Duration, Color, false, true);
 	GetWorld()->GetTimerManager().SetTimer(Local_TimerHandle, this, &ULinearEvent_CameraFade::Local_TimerEnd, Duration, false);
@@ -45,12 +45,12 @@ void UFlowNode_Camera_Fade::ExecuteInput(const FName& PinName)
 	LocalEvent->BeginAlpha = BeginAlpha;
 	LocalEvent->EndAlpha = EndAlpha;
 	
-	LocalEvent->Native_Begin();
+	LocalEvent->Native_Begin("");
 	TriggerOutput("Begin", true,  EFlowPinActivationType::Default);
 }
 
 
-void UFlowNode_Camera_Fade::LocalFinish(const FString& Flag)
+void UFlowNode_Camera_Fade::LocalFinish(UOmegaLinearEvent* Event, const FString& Flag)
 {
 	TriggerOutput("Finish", true,  EFlowPinActivationType::Default);
 }

@@ -18,6 +18,9 @@ enum EOmegaQuestStatus
 	Failed			UMETA(DisplayName = "Failed"),
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOmegaQuestStart, UOmegaQuestComponent* ,Component, UOmegaQuest*, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOmegaQuestEnd, UOmegaQuestComponent* ,Component, UOmegaQuest*, Quest);
+
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,CollapseCategories,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaQuestTypeScript : public UObject
 {
@@ -50,7 +53,9 @@ public:
 	void SetActive(bool bActive) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
 	bool IsComplete() const;
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Overrides")
+	UFUNCTION(BlueprintCallable,Category="Overrides")
+	void EndQuest(bool bComplete) const;
+	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
 	void SetComplete(bool bComplete) const;
 
 	//Tasks
@@ -84,9 +89,29 @@ class OMEGAGAMEFRAMEWORK_API UOmegaQuestSubsystem : public UGameInstanceSubsyste
 {
 	GENERATED_BODY()
 
+	TArray<UOmegaQuestComponent*> REF_QuestComps;
 public:
 
+	UFUNCTION()
+	void local_RegisterQuestComponent(UOmegaQuestComponent* comp, bool comp_registered);
+	
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestStart OnQuestStart;
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestEnd OnQuestEnd;
+
+	UFUNCTION(BlueprintCallable,Category="OmegaQuestSubsystem",DisplayName="Get Quest (First w/ Asset)")
+	UOmegaQuestComponent* GetQuest_FirstWithAsset(UOmegaQuest* Quest);
+	
+	UFUNCTION(BlueprintCallable,Category="OmegaQuestSubsystem",DisplayName="Start Quest (First w/ Asset)")
+	bool StartQuest_FirstWithAsst(UOmegaQuest* Quest);
+
+	UFUNCTION(BlueprintCallable,Category="OmegaQuestSubsystem")
+	TArray<UOmegaQuestComponent*> GetQuests_Active();
+
+	UFUNCTION(BlueprintCallable,Category="OmegaQuestSubsystem")
+	TArray<UOmegaQuestComponent*> GetQuests_Complete();
 };
+
+
 
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
@@ -109,6 +134,8 @@ public:
 	void TrySaveToJsonSave();
 	
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 	UPROPERTY(EditAnywhere,Category="Quest")
 	UOmegaQuest* QuestAsset=nullptr;
 	UPROPERTY(BlueprintReadWrite,Category="Quest")
@@ -135,6 +162,10 @@ public:
 	// ======== TASKS =====
 	UFUNCTION(BlueprintCallable,Category="Quest")
 	TArray<UObject*> GetActiveQuestTasks();
+
+	
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestStart OnQuestStart;
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestEnd OnQuestEnd;
 
 };
 

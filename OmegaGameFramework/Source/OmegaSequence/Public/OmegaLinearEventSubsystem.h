@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "Event/OmegaLinearEvent.h"
 #include "UObject/Interface.h"
 #include "Choice/OmegaLinearChoiceInstance.h"
 #include "OmegaLinearEventSubsystem.generated.h"

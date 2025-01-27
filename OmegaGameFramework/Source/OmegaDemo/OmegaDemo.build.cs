@@ -13,6 +13,7 @@ public class OmegaDemo : ModuleRules
 			"Engine", 
 			"GameplayTags", 
 			"UMG",
+			"SlateCore",
 			"JsonUtilities",
 			"AssetRegistry",
 			"AnimGraphRuntime",

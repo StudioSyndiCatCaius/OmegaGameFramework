@@ -39,19 +39,17 @@ bool UOmegaLinearEvent::CanPlayEvent_Implementation()
 	return true;
 }
 
-void UOmegaLinearEvent::Native_Begin()
+void UOmegaLinearEvent::Native_Begin(const FString& Flag)
 {
-	/*
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->AddGameplayLog(GetLogString(), "Event");
-	*/
-	OnEventBegin();
+	EventBegin.Broadcast(this,Flag);
+	OnEventBegin(Flag);
 }
 
 void UOmegaLinearEvent::Finish(const FString& Flag, const FName JumpToID)
 {
 	IncomingEventID = JumpToID;
 	OnEventEnd(Flag);
-	EventEnded.Broadcast(Flag);
+	EventEnded.Broadcast(this,Flag);
 	
 }
 
@@ -64,6 +62,26 @@ void UOmegaLinearEvent::JumpToEvent(FName Event, bool EndSequenceIfFail)
 {
 	//SetJumpPoint
 	Finish("");
+}
+
+FLinearEventSequence UOmegaLinearEventFunctions::CreateLinearEventSequence_FromReader(UObject* WorldContextObject,
+	UOmegaLinearEventReader*  Reader,const FString&  SourceString)
+{
+	if(Reader)
+	{
+		return Reader->Convert_StringToEvents(WorldContextObject,SourceString);
+	}
+	return FLinearEventSequence();
+}
+
+FString UOmegaLinearEventFunctions::CreateLinearEventString_FromReader(UObject* WorldContextObject,
+	UOmegaLinearEventReader*  Reader, FLinearEventSequence Events)
+{
+	if(Reader)
+	{
+		return Reader->Convert_EventsToString(WorldContextObject,Events);
+	}
+	return "";
 }
 
 FString UOmegaLinearEvent::GetLogString_Implementation() const

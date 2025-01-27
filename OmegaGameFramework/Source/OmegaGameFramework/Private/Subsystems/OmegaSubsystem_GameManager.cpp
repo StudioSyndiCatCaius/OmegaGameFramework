@@ -9,7 +9,9 @@
 
 void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 {
+#if !PLATFORM_ANDROID
 	GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->ClearSortedAssets_All();
+#endif
 	for(TSubclassOf<UOmegaGameplayModule> TempModule : GetMutableDefault<UOmegaSettings>()->GetGameplayModuleClasses())
 	{
 		if(TempModule)
