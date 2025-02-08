@@ -134,8 +134,8 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	//Is Entry Class Valid?
 	if (!EntryClass)
 	{
-		return nullptr;
 		UE_LOG(LogTemp, Warning, TEXT("Failed to Add Asset. Invalid Widget Class."));
+		return nullptr;
 	}
 	//check metadata
 	for(auto* TempMeta : EntryMetadata)
@@ -645,7 +645,6 @@ void UDataList::RebuildList()
 	if (!ParentPanel)
 	{
 		return;
-		UE_LOG(LogTemp, Warning, TEXT("No Valid Parent Panel"));
 	}
 
 	//Use custom list format if valid

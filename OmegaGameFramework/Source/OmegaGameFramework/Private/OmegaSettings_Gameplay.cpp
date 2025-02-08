@@ -23,7 +23,7 @@ UOmegaGameplayMetaSettings* UOmegaGameplayStyleFunctions::GetCurrentGameplayMeta
 	}
 	if(GetCurrentGameplayStyle())
 	{
-		for(auto* temp_set : GetCurrentGameplayStyle()->MetaSettings)
+		for(auto* temp_set : GetCurrentGameplayStyle()->GetAllMetaSettings())
 		{
 			if(temp_set && temp_set->GetClass()==Class)
 			{

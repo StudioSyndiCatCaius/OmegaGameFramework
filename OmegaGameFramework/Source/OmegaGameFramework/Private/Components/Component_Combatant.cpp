@@ -102,6 +102,7 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+
 // Called every frame
 void UCombatantComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -1387,8 +1388,7 @@ FLinearColor UCombatantComponent::GetFactionColor()
 	{
 		return FactionDataAsset->FactionColor;
 	}
-	const FLinearColor DumColor;
-	return DumColor;
+	return FLinearColor();
 }
 
 FGameplayTag UCombatantComponent::GetFactionTag()

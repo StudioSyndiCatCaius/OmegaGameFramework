@@ -129,6 +129,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Cast,"Animation.Action.Cast");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Impact,"Animation.Action.Impact");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Open,"Animation.Action.Open");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Close,"Animation.Action.Close");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Turn_Left,"Animation.Action.Turn.Left");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Turn_Right,"Animation.Action.Turn.Right");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Exp_Happy,"Animation.Expression.Happy");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Exp_Sad,"Animation.Expression.Sad");

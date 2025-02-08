@@ -64,7 +64,7 @@ void UCombatantFunctions::SetCombatantFromSource(UCombatantComponent* Combatant,
 		
 		if (UPrimaryDataAsset* in_asset = Cast<UPrimaryDataAsset>(Source))
 		{
-			Combatant->CombatantDataAsset=in_asset;
+			Combatant->SetSourceDataAsset(in_asset);
 		}
 	}
 }
@@ -394,8 +394,10 @@ UCombatantComponent* UCombatantFunctions::GetFirstCombatantWithDataAsset(UObject
 	TArray<UCombatantComponent*> list=GetAllCombatantsWithDataAsset(WorldContextObject,Asset);
 	if(list.IsValidIndex(0))
 	{
+		Outcome=EOmegaFunctionResult::Success;
 		return list[0];
 	}
+	Outcome=EOmegaFunctionResult::Fail;
 	return nullptr;
 }
 
@@ -410,6 +412,7 @@ UCombatantComponent* UCombatantFunctions::SelectFirstCombatantWithDataAsset(TArr
 			return  c;
 		}
 	}
+	Outcome=EOmegaFunctionResult::Fail;
 	return nullptr;
 }
 

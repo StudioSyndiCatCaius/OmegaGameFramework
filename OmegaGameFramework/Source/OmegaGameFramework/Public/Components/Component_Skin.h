@@ -28,11 +28,13 @@ class OMEGAGAMEFRAMEWORK_API USkinComponent : public UActorComponent
 	GENERATED_BODY()
 
 	USkinComponent();
-	UPROPERTY() USkeletalMeshComponent* targetSkelMesh;
+	UPROPERTY() USkeletalMeshComponent* REF_SkelMesh;
+	UPROPERTY() UChildActorComponent* REF_skinComponent;
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void Deactivate() override;
 
 public:
 	// Called every frame
@@ -41,11 +43,15 @@ public:
 	                           
 	UPROPERTY(EditAnywhere, Category="Omega")
 	TSubclassOf<AOmegaSkin> Skin;
-
+	
 	UFUNCTION()
 	void Update_Skin();
+	
+	UFUNCTION(BlueprintCallable,Category="Skin")
+	void SetupLinkedComponents(USkeletalMeshComponent* SkeletalMesh, UChildActorComponent* ChildActor);
 
-	UPROPERTY() UChildActorComponent* skinComponent;
+	UFUNCTION(BlueprintCallable,Category="Skin")
+	void SetLinkedChildActorComponent(UChildActorComponent* LinkedComp);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega")
 	AOmegaSkin* SetSkin(TSubclassOf<AOmegaSkin> SkinClass);
@@ -55,7 +61,7 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Skin")
 	USkeletalMeshComponent* GetTargetMesh() const
 	{
-		if(targetSkelMesh) { return targetSkelMesh;} return nullptr;
+		if(REF_SkelMesh) { return REF_SkelMesh;} return nullptr;
 	}
 	
 	UFUNCTION(BlueprintCallable, Category="Omega", meta=(AdvancedDisplay="Preset"))

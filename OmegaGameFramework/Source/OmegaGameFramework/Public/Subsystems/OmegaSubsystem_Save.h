@@ -219,6 +219,9 @@ public:
 	TArray<UPrimaryDataAsset*> GetCollectedDataAssetsWithTags(FGameplayTagContainer Tags, bool bGlobal, bool bExclude, bool bExact = true);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
+	TArray<UPrimaryDataAsset*> GetDataAssetsWithSavedTags(FGameplayTagContainer Tags, bool bRequireAllTags, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
 	void SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags, bool bGlobal);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets")
@@ -437,16 +440,11 @@ public:
 	TMap<UGamePreference*, FVector> PreferenceValues;
 
 	//olf pref values. will be removed long term
-	UPROPERTY()
-	TMap<class UGamePreferenceBool*, bool> BoolPrefs;
-	UPROPERTY()
-	TMap<class UGamePreferenceFloat*, float> FloatPrefs;
-	UPROPERTY()
-	TMap<class UPrimaryDataAsset*, FString> StringPrefs;
-	UPROPERTY()
-	TMap<class UPrimaryDataAsset*, FGameplayTag> TagPrefs;
-	UPROPERTY()
-	TMap<class UGamePreferenceInt*, int32> IntPrefs;
+	UPROPERTY() TMap<class UGamePreferenceBool*, bool> BoolPrefs;
+	UPROPERTY() TMap<class UGamePreferenceFloat*, float> FloatPrefs;
+	UPROPERTY() TMap<class UPrimaryDataAsset*, FString> StringPrefs;
+	UPROPERTY() TMap<class UPrimaryDataAsset*, FGameplayTag> TagPrefs;
+	UPROPERTY() TMap<class UGamePreferenceInt*, int32> IntPrefs;
 
 	//
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Omega|Save")
@@ -472,14 +470,12 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TMap<UPrimaryDataAsset*, FGameplayTagContainer> SaveAssetTags;
 
-	//DataAssets
+	//Guids
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TArray<FGuid> CollectedGuids;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Omega|Save")
 	TMap<FGuid, FGameplayTagContainer> GuidTags;
-
-
 	
 	//Soft Property
 	UPROPERTY(EditAnywhere,Category="Save")

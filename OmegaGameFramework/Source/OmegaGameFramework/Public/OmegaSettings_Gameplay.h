@@ -41,6 +41,17 @@ public:
 };
 
 UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMetaSettingsCollection : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="Systems")
+	TArray<UOmegaGameplayMetaSettings*> MetaSettings;
+};
+
+
+UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Gameplay : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
@@ -82,10 +93,23 @@ public:
 	TSubclassOf<AOmegaGameplaySystem> System_Dialogue;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Systems")
 	TSubclassOf<AOmegaGameplaySystem> System_Battle;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="Systems")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="MetaSettings")
+	TArray<UOmegaGameplayMetaSettingsCollection*> MetaSettingsCollections;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="MetaSettings")
 	TArray<UOmegaGameplayMetaSettings*> MetaSettings;
 
+	UFUNCTION()
+	TArray<UOmegaGameplayMetaSettings*> GetAllMetaSettings()
+	{
+		TArray<UOmegaGameplayMetaSettings*> out=MetaSettings;
+		for (auto* col : MetaSettingsCollections)
+		{
+			if(col) { out.Append(col->MetaSettings);}
+		}
+		return out;
+	}
 };
+
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplayStyleFunctions : public UBlueprintFunctionLibrary

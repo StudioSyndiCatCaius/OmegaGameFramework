@@ -30,7 +30,6 @@ void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 	//Setup play timer
 	FTimerHandle GameTimeHandle;
 	GetWorld()->GetTimerManager().SetTimer(GameTimeHandle, this, &UOmegaSaveSubsystem::OnPlaytimeUpdate, 0.001f, true);
-
 }
 
 void UOmegaSaveSubsystem::OnPlaytimeUpdate()
@@ -462,6 +461,26 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 	}
 	return OutAssets;
 }
+
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetDataAssetsWithSavedTags(FGameplayTagContainer Tags,
+	bool bRequireAllTags, bool bGlobal)
+{
+	TArray<UPrimaryDataAsset*> out;
+	TArray<UPrimaryDataAsset*> list;
+	GetSaveObject(bGlobal)->SaveAssetTags.GetKeys(list);
+	for(auto* asset : list)
+	{
+		if(asset && UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTags(asset,Tags,bRequireAllTags,false))
+		{
+			out.Add(asset);
+		}
+	}
+	return out;
+}
+
+// ------------------------------------------------------------------------------------------------------------
+// Data Assets
+// ------------------------------------------------------------------------------------------------------------
 
 void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags,
 	bool bGlobal)

@@ -136,6 +136,8 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("SkinComponent"));
 	ThumnbailNames.Add(TEXT("ActorStateComponent"));
 	ThumnbailNames.Add(TEXT("OmegaSaveStateComponent"));
+	ThumnbailNames.Add(TEXT("ActorIdentityComponent"));
+	ThumnbailNames.Add(TEXT("AimTargetComponent"));
 	
 	ThumnbailNames.Add(TEXT("OmegaSkin"));
 	ThumnbailNames.Add(TEXT("OmegaDataItem"));

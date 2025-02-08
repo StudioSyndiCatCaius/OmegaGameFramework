@@ -4,29 +4,37 @@
 
 #include "CoreMinimal.h"
 #include "DataItemComponent.h"
+#include "FlowAsset.h"
+#include "Components/Component_ActorIdentity.h"
 #include "Components/Component_Leveling.h"
 #include "Components/Component_Inventory.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_ActorState.h"
+#include "Components/Component_AimTargeter.h"
 #include "Components/Component_Equipment.h"
 #include "Components/Component_Skin.h"
 #include "Components/Component_Subscript.h"
 #include "Functions/OmegaFunctions_Animation.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "GameFramework/Character.h"
+#include "MuCO/CustomizableSkeletalComponent.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "Subsystems/OmegaSubsystem_Zone.h"
 #include "OmegaCharacter.generated.h"
 
 UCLASS(HideCategories=("Physics","Collision","Rendering"))
-class OMEGADEMO_API AOmegaCharacter : public ACharacter, public IGameplayTagsInterface
+class OMEGADEMO_API AOmegaCharacter : public ACharacter, public IGameplayTagsInterface, public IActorInterface_AimTarget
 {
 	GENERATED_BODY()
 
+	UFUNCTION()
+	void OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, UActorIdentityComponent* Component);
+	
 public:
-	// Sets default values for this character's properties
+	// Sets default values for this character's properties 
 	AOmegaCharacter();
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UActorIdentityComponent* ActorIdentity;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UDataItemComponent* DataItem;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UCombatantComponent* Combatant;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UEquipmentComponent* Equipment;
@@ -36,8 +44,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UOmegaSaveStateComponent* SaveVisibility;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) USubscriptComponent* SubscriptComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) USkinComponent* SkinComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UChildActorComponent* SkinTarget;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UGameplayPauseComponent* GameplayPause;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UZoneEntityComponent* ZoneEntity;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UAimTargetComponent* LookAim;
+	
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OmegaCharacter",AdvancedDisplay) UCustomizableSkeletalComponent* CustomSkeletalMesh;
 	
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
@@ -63,6 +75,12 @@ public:
 	UPROPERTY(EditAnywhere,Category="OmegaCharacter")
 	UOmegaAnimationEmote* DefaultEmote;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter")
+	UFlowAsset* DialogueFlow;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Animation")
+	FName LookAimSocketName=TEXT("LookPoint");
+	
 	UPROPERTY(EditAnywhere,Category="OmegaCharacter")
 	FGameplayTagContainer CharacterTags;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return CharacterTags; };
@@ -76,6 +94,8 @@ public:
 	void OnGlobalEvent_Named(FName Event, UObject* Context);
 	UFUNCTION(BlueprintImplementableEvent,Category="OmegaCharacter")
 	void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
+
+	virtual FVector GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const override;
 };
 
 
