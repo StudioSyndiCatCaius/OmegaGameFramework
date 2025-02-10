@@ -30,7 +30,9 @@ public:
 	UPROPERTY(EditAnywhere,Category="General") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,Category="General") FGameplayTagContainer GameplayTags;
 
+#if WITH_EDITOR
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+#endif
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override {return CategoryTag;};
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override {return GameplayTags;};
 	
