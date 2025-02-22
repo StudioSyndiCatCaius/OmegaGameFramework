@@ -354,6 +354,26 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClassFromGlobalID(FGameplayTag GlobalID
 	return nullptr;
 }
 
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::ConvertSoftToHardReferences(
+	const TArray<TSoftObjectPtr<UObject>>& SoftRefs, const TSubclassOf<UObject> ClassType)
+{
+	TArray<UObject*> HardRefs;
+	HardRefs.Reserve(SoftRefs.Num());
+    
+	for (const TSoftObjectPtr<UObject>& SoftRef : SoftRefs)
+	{
+		if (UObject* LoadedObject = SoftRef.LoadSynchronous())
+		{
+			if (!ClassType || LoadedObject->IsA(ClassType))
+			{
+				HardRefs.Add(LoadedObject);
+			}
+		}
+	}
+    
+	return HardRefs;
+}
+
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<UObject> Class, bool bIncludeSubclasses)
 {
 	TArray<UObject*> LoadedAssets;

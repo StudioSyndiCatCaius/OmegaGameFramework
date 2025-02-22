@@ -31,10 +31,11 @@ class OMEGADEMO_API UOmegaActorEvent_Teleport : public UOmegaActorEventBase
 	GENERATED_BODY()
 
 public:
-	virtual void Native_Begin() override;
+	virtual void Native_Begin(const FString& Flag) override;
 	
 	UPROPERTY(Instanced,BlueprintReadOnly,Instanced,EditAnywhere,Category="Event")
 	UOmegaActorSelector* TargetPoint;
 	
 };
+
 

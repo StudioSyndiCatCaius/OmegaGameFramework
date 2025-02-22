@@ -24,11 +24,13 @@
 		{"Name": "OmegaFlow", 			"Type": "Runtime", 		"LoadingPhase": "Default" },
 		{"Name": "OmegaSequence", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
 		{"Name": "OmegaOnline", 		"Type": "Runtime", 		"loadingPhase": "Default" },
+		{"Name": "OmegaMutable", 		"Type": "Runtime", 		"loadingPhase": "Default" },
 		{"Name": "Flow", 				"Type": "Runtime", 		"LoadingPhase": "PreDefault"},
 		{"Name": "FlowEditor", 			"Type": "Editor", 		"LoadingPhase": "Default"}
 	],
 	"Plugins": [
 		{"Name": "EnhancedInput", 			"Enabled": true},
+		{"Name": "Mutable", 				"Enabled": true},
 		{"Name": "JsonBlueprintUtilities", 	"Enabled": true},
 		{"Name": "GameFeatures", 			"Enabled": true},
 		{"Name": "ModularGameplay", 		"Enabled": true},

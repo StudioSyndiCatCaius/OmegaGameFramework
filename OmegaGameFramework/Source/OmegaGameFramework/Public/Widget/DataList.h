@@ -211,6 +211,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
 	void HoverEntry(int32 Index,bool UseLastIndex=false);
 
+	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
+	void ClearHoveredEntry();
+
 private:
 	UPROPERTY()
 	int32 remembered_hover_index;

@@ -11,6 +11,15 @@
 #include "Interfaces/OmegaInterface_Skill.h"
 #include "OmegaDemoAssets.generated.h"
 
+// ============================================================================================================
+//  Prefab
+// ============================================================================================================
+UCLASS(BlueprintType)
+class OMEGAGAMEFRAMEWORK_API UOmegaActorPrefab : public UObject
+{
+	GENERATED_UCLASS_BODY()
+	
+};
 
 UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UOmegaCommonSkill : public UOmegaDataAsset, public IDataInterface_Skill, public IDataInterface_CombatantFilter, public IOmegaScriptedEffectsInterface
@@ -53,7 +62,9 @@ UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UOmegaCombatantPreset : public UOmegaDataAsset, public IDataInterface_Combatant, public IDataInterface_SkinSource
 {
 	GENERATED_BODY()
-public:	
+public:
+
+
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Attributes") UOmegaFaction* Faction;
 	virtual UOmegaFaction* GetFactionAsset_Implementation() override { return Faction;};
@@ -81,7 +92,6 @@ public:
 		if(Gambit_Custom) { return Gambit_Custom; }
 		return nullptr;
 	};
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General") TSubclassOf<AOmegaSkin> Skin;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance") TSubclassOf<AOmegaSkin> Skin;
 	virtual TSubclassOf<AOmegaSkin> GetSkinClass_Implementation() override { return Skin;};
 };

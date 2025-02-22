@@ -24,8 +24,6 @@ public:
 	EAddRemove Action;
 	UPROPERTY(EditInstanceOnly, Category="Event")
 	bool GlobalSave;
-
 	
-
-	virtual void Native_Begin() override;
+	virtual void Native_Begin(const FString& Flag) override;
 };

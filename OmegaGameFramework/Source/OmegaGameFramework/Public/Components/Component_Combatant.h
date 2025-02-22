@@ -47,6 +47,7 @@ enum EFactionAffinity
 /// DELEGATES
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantLevelChange, int32, NewLevel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatantDataAssetChanged, UCombatantComponent*, Combatant, UPrimaryDataAsset*, NewAsset,UPrimaryDataAsset*, OldAsset);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetAdded, UCombatantComponent*, Target);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetRemoved, UCombatantComponent*, Target);
@@ -73,7 +74,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -353,8 +354,20 @@ public:
 	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
 	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "General")
-	class UPrimaryDataAsset* CombatantDataAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "General")
+	UPrimaryDataAsset* CombatantDataAsset=nullptr;
+	UFUNCTION(BlueprintCallable,Category="Combatant")
+	void SetSourceDataAsset(UPrimaryDataAsset* DataAsset)
+	{
+		if(DataAsset)
+		{
+			UPrimaryDataAsset* oldAsset=DataAsset;
+			CombatantDataAsset=DataAsset;
+			OnDataAssetChanged.Broadcast(this,DataAsset,oldAsset);
+		}
+	}
+	UFUNCTION(BlueprintPure,Category="Combatant")
+	UPrimaryDataAsset* GetSourceDataAsset() const { if(CombatantDataAsset) {return CombatantDataAsset;} return nullptr;}
 	
 	//----------------------------------------------------------------------------------------------------------------//
 	// -- ABILITIES -- 
@@ -559,28 +572,19 @@ public:
 	bool IsActiveTargetValid();
 	
 	//Delegates
-	UPROPERTY(BlueprintAssignable)
-	FOnTargetAdded OnTargetAdded;
-	UPROPERTY(BlueprintAssignable)
-	FOnTargetAdded OnTargetRemoved;
-	
-	UPROPERTY(BlueprintAssignable)
-	FOnAddedAsTarget OnAddedAsTarget;
-	UPROPERTY(BlueprintAssignable)
-	FOnRemovedAsTarget OnRemovedAsTarget;
-	
-	UPROPERTY(BlueprintAssignable)
-	FOnActiveTargetChanged OnActiveTargetChanged;
+	UPROPERTY(BlueprintAssignable) FOnCombatantDataAssetChanged OnDataAssetChanged;
+	UPROPERTY(BlueprintAssignable) FOnTargetAdded OnTargetAdded;
+	UPROPERTY(BlueprintAssignable) FOnTargetAdded OnTargetRemoved;
+	UPROPERTY(BlueprintAssignable) FOnAddedAsTarget OnAddedAsTarget;
+	UPROPERTY(BlueprintAssignable) FOnRemovedAsTarget OnRemovedAsTarget;
+	UPROPERTY(BlueprintAssignable) FOnActiveTargetChanged OnActiveTargetChanged;
 	
 	//////////////////////////////////////////////////////////////////////////////////////////
 	//////////______________________________DELEGATES______________________________//////////
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	UPROPERTY(BlueprintAssignable)
-	FOnDamaged OnDamaged;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnCombatantLevelChange OnLevelChanged;
+	UPROPERTY(BlueprintAssignable) FOnDamaged OnDamaged;
+	UPROPERTY(BlueprintAssignable) FOnCombatantLevelChange OnLevelChanged;
 
 	////////////////////////////////////
 	////////// -- NOTIFIES -- //////////

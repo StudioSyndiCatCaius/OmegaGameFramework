@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataAsset.h"
+#include "Misc/GeneralDataObject.h"
 #include "Component_Inventory.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UDataAsset*, Asset, int32, Amount, bool, IsFull);
@@ -33,9 +34,12 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Omega|Inventory")
+	UFUNCTION(BlueprintCallable, Category = "Omega|Inventory",DisplayName="Add Asset (Single)")
 	void AddAsset(UPrimaryDataAsset* Asset, int32 Amount=1);
 
+	UFUNCTION(BlueprintCallable, Category = "Omega|Inventory",DisplayName="Add Asset (Map)")
+	void AddAssets(TMap<UPrimaryDataAsset*, int32> Assets,bool bInvertAmount=false);
+	
 	UFUNCTION(BlueprintCallable, Category = "Omega|Inventory")
 	void RemoveAsset(UPrimaryDataAsset* Asset, int32 Amount=1);
 
@@ -58,46 +62,41 @@ public:
 	//UPROPERTY(BlueprintAssignable) FOnAssetRemoved OnAssetRemoved;
 
 	//TRANSFEr
-	UFUNCTION(BlueprintCallable, Category="Data Asset Collection")
+	UFUNCTION(BlueprintCallable, Category="Omega|Inventory|Transfer")
 	void TransferAssetToCollection(UDataAssetCollectionComponent* To, UPrimaryDataAsset* Asset, int32 Amount, bool bTransferAll);
 
-	UFUNCTION(BlueprintCallable, Category="Data Asset Collection")
+	UFUNCTION(BlueprintCallable, Category="Omega|Inventory|Transfer")
 	void TransferAllAssetsToCollection(UDataAssetCollectionComponent* To);
 
 	//Checks if the collection has enough of each given type of asset;
-	UFUNCTION(BlueprintPure, Category="Data Asset Collection")
+	UFUNCTION(BlueprintPure, Category="Omega|Inventory|Transfer")
 	bool HasMinimumAssets(TMap<UPrimaryDataAsset*, int32> Assets);
-	
-	// ==================================================================
-	// Trading
-	// ==================================================================
-
-		
 };
 
 
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UDataAssetCollectionInterface : public UInterface
-{
-	GENERATED_BODY()
-};
 
-/**
- * 
- */
+UINTERFACE(MinimalAPI)class UDataAssetCollectionInterface : public UInterface { GENERATED_BODY()};
 class OMEGAGAMEFRAMEWORK_API IDataAssetCollectionInterface
 {
 	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-	public:
+public:
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Omega|Inventory")
 	int32 GetMaxCollectionNumber();
 
 	UFUNCTION(BlueprintNativeEvent,Category="Omega|Inventory")
 	TMap<UPrimaryDataAsset*, int32> GetTradeAssetRequirements(FGameplayTag TradeTag);
+};
+
+
+UINTERFACE(MinimalAPI)class UDataInterface_InventorySource : public UInterface { GENERATED_BODY()};
+class OMEGAGAMEFRAMEWORK_API IDataInterface_InventorySource
+{
+	GENERATED_BODY()
+public:
+	
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Omega|Inventory")
+	TMap<UPrimaryDataAsset*,int32> GetInventory();
 };
 
 
@@ -108,17 +107,40 @@ class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionFunctions : public UBlueprintFu
 	
 public:
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+	UFUNCTION(BlueprintCallable,Category="Omega|Inventory")
+	static void SetInventory_FromSource(UDataAssetCollectionComponent* Component, UObject* Source);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Cost (Total List)")
 	static TMap<UPrimaryDataAsset*, int32> GetTotalAssetListTradeCost(TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Cost (One)")
 	static int32 GetTotalAssetListTradeCost_One(TMap<UPrimaryDataAsset*, int32> Assets, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Value (One)")
     static int32 GetDataAssetTradeValue_One(UPrimaryDataAsset* Asset, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading")
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Value (All)")
 	static TMap<UPrimaryDataAsset*, int32> GetDataAssetTradeValue_All(UPrimaryDataAsset* Asset, FGameplayTag TradeTag);
-    	
+
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Can Perform Trade?")
+	static bool CanInventoryPerformTrade_ForAsset(UDataAssetCollectionComponent* Component, UPrimaryDataAsset* Asset, FGameplayTag TradeTag);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Perform Trade")
+	static bool PerformTrade_Single(UDataAssetCollectionComponent* Component, UPrimaryDataAsset* Asset, FGameplayTag TradeTag, bool bForce=false,bool bWithholdAsset=false);
 };
 
+
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaCommonInventory : public UOmegaDataAsset, public IDataInterface_InventorySource
+{
+	GENERATED_BODY()
+
+	public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Inventory")
+	TMap<UPrimaryDataAsset*, int32> Inventory;
+
+	virtual TMap<UPrimaryDataAsset*, int32> GetInventory_Implementation() override;
+};

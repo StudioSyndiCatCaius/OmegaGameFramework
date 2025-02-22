@@ -5,6 +5,12 @@
 #include "GameFramework/Character.h"
 #include "Functions/OmegaFunctions_AVContext.h"
 
+UOmegaActorPrefab::UOmegaActorPrefab(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+
 
 TSubclassOf<UCombatantFilter> UOmegaCommonSkill::GetSkillTargetFilter_Implementation()
 {
@@ -38,7 +44,8 @@ ULevelSequence* UOmegaCommonSkill::GetSkill_Sequences_Implementation(UCombatantC
 		{
 			if(char_Ref->GetMesh()->GetAnimInstance())
 			{
-				return UOmegaContextAVFunctions::TryGetObjectContext_Sequence(char_Ref->GetMesh()->GetAnimInstance(),DefaultSequence_Tag);
+				TEnumAsByte<EOmegaFunctionResult> result;
+				return UOmegaContextAVFunctions::TryGetObjectContext_Sequence(char_Ref->GetMesh()->GetAnimInstance(),DefaultSequence_Tag,nullptr,result);
 			}
 		}
 	}
@@ -61,7 +68,8 @@ UAnimMontage* UOmegaCommonSkill::GetSkill_Montage_Implementation(UCombatantCompo
 		{
 			if(char_Ref->GetMesh()->GetAnimInstance())
 			{
-				return UOmegaContextAVFunctions::TryGetObjectContext_Montages(char_Ref->GetMesh()->GetAnimInstance(),DefaultMontage_Tag);
+				TEnumAsByte<EOmegaFunctionResult> result;
+				return UOmegaContextAVFunctions::TryGetObjectContext_Montages(char_Ref->GetMesh()->GetAnimInstance(),DefaultMontage_Tag,nullptr,result);
 			}
 		}
 	}

@@ -36,8 +36,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message")
 	void FireGameplayMessage(FOmegaGameplayMessageData Message);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message")
-	void FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory, FLuaValue meta);
+	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message",meta=(AdvancedDisplay="meta, Brush"))
+	void FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory, FGameplayTagContainer Tags, FSlateBrush Brush, FLuaValue meta);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnGameplayMessage OnGameplayMessage;
@@ -66,6 +66,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	FText GetMessageText();
 
+	UPROPERTY() FSlateBrush Temp_Brush;
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
+	FSlateBrush GetMessageBrush();
+	
 	UPROPERTY() FGameplayTag Temp_Tag;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	FGameplayTag GetMessageCategory();

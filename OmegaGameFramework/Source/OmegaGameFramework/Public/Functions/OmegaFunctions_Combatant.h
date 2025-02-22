@@ -125,6 +125,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
 	static void IsAttributeAtPercentage(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Percentage, EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome);
 */
+	//Trys Getting First Combatant With a DataAsset
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(WorldContext="WorldContextObject"))
+	static TArray<UCombatantComponent*> GetAllCombatantsWithDataAsset(UObject* WorldContextObject, UPrimaryDataAsset* Asset);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get First Combatant /w Data Asset")
+	static UCombatantComponent* GetFirstCombatantWithDataAsset(UObject* WorldContextObject,UPrimaryDataAsset* Asset,  TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Select First Combatant /w Data Asset")
+	static UCombatantComponent* SelectFirstCombatantWithDataAsset(TArray<UCombatantComponent*> Combatants,UPrimaryDataAsset* Asset,  TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	
+	
 	//Checks if the Attribute is at 100%.
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Does Combatant Have Tag")
 	static void DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag, TEnumAsByte<EOmegaBranch>& Outcome);

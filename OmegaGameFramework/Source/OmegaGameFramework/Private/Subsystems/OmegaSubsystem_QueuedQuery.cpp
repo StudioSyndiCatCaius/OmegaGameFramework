@@ -39,7 +39,7 @@ bool UOmegaSubsystem_QueuedQuery::SetQueuedQuerySourceRegistered(UObject* Source
 
 bool UOmegaFunctions_QueueQuery::CheckQueuedQuery(UObject* WorldContextObject, FGameplayTag Tag, UObject* Context)
 {
-	if(WorldContextObject)
+	if(WorldContextObject && WorldContextObject->GetWorld())
 	{
 		return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()->CheckQueuedQuery(Tag,Context);
 	}

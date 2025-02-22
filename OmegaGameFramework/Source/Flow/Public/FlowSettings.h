@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/DeveloperSettings.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "Templates/SubclassOf.h"
 #include "FlowSettings.generated.h"
 
@@ -29,4 +30,19 @@ class UFlowSettings final : public UDeveloperSettings
 	
 	UPROPERTY(Config, EditAnywhere, Category = "SaveSystem")
 	bool bWarnAboutMissingIdentityTags;
+};
+
+
+UCLASS()
+class UFlowFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Flow")
+	static TArray<UFlowAsset*> FilterFlowAssetsWithTrait(TArray<UFlowAsset*> in, TSubclassOf<UFlowAssetTrait> Trait);
+
+	UFUNCTION(BlueprintCallable,Category="Flow",meta=(ExpandEnumAsExecs="Result",DeterminesOutputType="Class"))
+	static UFlowAssetTrait* GetFirstAssetTrait(UFlowAsset* FlowAsset, TSubclassOf<UFlowAssetTrait> Class, TEnumAsByte<EOmegaFunctionResult>& Result);
 };

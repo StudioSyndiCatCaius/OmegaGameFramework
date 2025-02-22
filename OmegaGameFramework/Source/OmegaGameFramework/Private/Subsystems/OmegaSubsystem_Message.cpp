@@ -15,7 +15,7 @@ void UOmegaMessageSubsystem::FireGameplayMessage(FOmegaGameplayMessageData Messa
 	
 }
 
-void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory, FLuaValue meta)
+void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory,FGameplayTagContainer Tags, FSlateBrush Brush, FLuaValue meta)
 {
 	FOmegaGameplayMessageData LocalMessageData;
 	LocalMessageData.Message = NewObject<UOmegaGameplayMessage>(UOmegaGameplayMessage::StaticClass());
@@ -23,11 +23,18 @@ void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FTex
 	{
 		LocalMessageData.Message->Temp_Instigator = Instigator;
 	}
+	LocalMessageData.Message->Temp_Tags=Tags;
+	LocalMessageData.Message->Temp_Brush=Brush;
 	LocalMessageData.Message->Temp_Text = Text;
 	LocalMessageData.Message->Temp_Tag = MessageCategory;
 	LocalMessageData.Message->lua_val=meta;
 
 	FireGameplayMessage(LocalMessageData);
+}
+
+FSlateBrush UOmegaGameplayMessage::GetMessageBrush_Implementation()
+{
+	return  Temp_Brush;
 }
 
 FLuaValue UOmegaGameplayMessage::GetValue_Implementation(const FString& Field) { return lua_val; }

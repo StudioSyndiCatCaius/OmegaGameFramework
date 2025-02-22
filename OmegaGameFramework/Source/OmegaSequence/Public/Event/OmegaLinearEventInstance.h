@@ -13,53 +13,37 @@ class UOmegaLinearEventSubsystem;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEventSequenceFinish, const FString&, Flag, UOmegaLinearEventInstance*, Instance);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEventUpdated, UOmegaLinearEventInstance*, Instance, int32, EventIndex, UOmegaLinearEvent*, Event);
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType,Blueprintable)
 class OMEGASEQUENCE_API UOmegaLinearEventInstance : public UObject
 {
 	GENERATED_BODY()
-public:
-	UPROPERTY()
-	UOmegaLinearEventSubsystem* SubsystemRef;
+
+	UFUNCTION() void on_EventEnd(UOmegaLinearEvent* Event, const FString& Flag);
 	
-	UPROPERTY()
-	FLinearEventSequence SequenceData;
+public:
+	UPROPERTY() UOmegaLinearEventSubsystem* SubsystemRef;
+	
+	UPROPERTY() FLinearEventSequence SequenceData;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnEventSequenceFinish OnEventSequenceFinish;
 	UPROPERTY(BlueprintAssignable)
 	FOnEventUpdated OnEventUpdated;
 	
-	UFUNCTION()
-	void NextEvent(const FString& Flag);
-	UFUNCTION(BlueprintCallable,Category="LinearEvent")
-	void EndInstance(const FString& Flag);
+	UFUNCTION() void NextEvent(const FString& Flag);
+	UFUNCTION(BlueprintCallable,Category="LinearEvent") void EndInstance(const FString& Flag);
 
 	UOmegaLinearEvent* GetEventFromID(FName ID);
 
-	UPROPERTY()
-	UOmegaLinearEvent* CurrentEvent;
+	UPROPERTY() UOmegaLinearEvent* CurrentEvent;
 
 	UFUNCTION(BlueprintPure, Category="LinearEvents")
-	UOmegaLinearEvent* GetCurrentEvent() const
-	{
-		if(CurrentEvent)
-		{
-			return CurrentEvent;
-		}
-		return nullptr;
-	}
-
-	int32 GetCurrentEventIndex() const
-	{
-		if(CurrentEvent)
-		{
-			return SequenceData.Events.Find(CurrentEvent);
-		}
-		return -1;
-	}
+	UOmegaLinearEvent* GetCurrentEvent() const;
 
 	UFUNCTION()
-	void StartEvent(UOmegaLinearEvent* Event);
+	int32 GetCurrentEventIndex() const;
+
+	UFUNCTION() void StartEvent(UOmegaLinearEvent* Event,const FString& Flag);
 };
 
 
@@ -85,3 +69,6 @@ inline UOmegaLinearEvent* UOmegaLinearEventInstance::GetEventFromID(FName ID)
 	}
 	return nullptr;
 }
+
+
+

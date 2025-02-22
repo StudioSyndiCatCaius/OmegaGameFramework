@@ -13,6 +13,8 @@
 USkinComponent::USkinComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	bAutoActivate=true;
+	//ChildActorTarget.OtherActor=GetOwner();
 }
 
 void USkinComponent::BeginPlay()
@@ -20,48 +22,62 @@ void USkinComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+void USkinComponent::Deactivate()
+{
+	if(GetSkin())
+	{
+		GetSkin()->K2_DestroyActor();
+	}
+	Super::Deactivate();
+}
+
 void USkinComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                       FActorComponentTickFunction* ThisTickFunction)
+                                   FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
 void USkinComponent::Update_Skin()
 {
-	if(!Skin)
+	if(!Skin || !IsActive())
 	{
 		return;
 	}
+	
 	//Set mesh from character if not set already
-	if(!targetSkelMesh)
+	if(!REF_SkelMesh)
 	{
 		if(const ACharacter* charRef = Cast<ACharacter>(GetOwner()))
 		{
-			targetSkelMesh=charRef->GetMesh();
+			REF_SkelMesh=charRef->GetMesh();
 		}
 	}
+
 	if(Appearance.BodyType && Appearance.BodyType->DefaultSkin)
 	{
 		Skin=Appearance.BodyType->DefaultSkin;
 	}
-	if(targetSkelMesh)
+	if(REF_SkelMesh)
 	{
-		const FTransform& temp_trans = targetSkelMesh->GetRelativeTransform();
-		if(!skinComponent || skinComponent->IsBeingDestroyed())
+		const FTransform& temp_trans = REF_SkelMesh->GetRelativeTransform();
+
+		//if child actor valid
+		if(REF_skinComponent)
 		{
-			skinComponent = Cast<UChildActorComponent>(GetOwner()->AddComponentByClass(UChildActorComponent::StaticClass(),false,temp_trans,false));
-		}
-		if(skinComponent)
-		{
+			//If no skin actor OR class oes not match input class
 			if(!GetSkin() || GetSkin()->GetClass()!=Skin)
 			{
-				skinComponent->SetChildActorClass(Skin);
+				REF_skinComponent->SetChildActorClass(Skin);
 			}
-			skinComponent->SetRelativeTransform(temp_trans);
+			//REF_skinComponent->SetRelativeTransform(temp_trans);
 			if(GetSkin())
 			{
 				GetSkin()->owning_component=this;
 				GetSkin()->BuildSkin();
+				if(GetSkin()->bIsCompressedSkin)
+				{
+					REF_skinComponent->SetChildActorClass(nullptr);
+				}
 			}
 		}
 		
@@ -76,9 +92,23 @@ void USkinComponent::Update_Skin()
 				{
 					i->Script->OnApplied_ToSkin(GetSkin(),in_val);
 				}
-				i->Script->OnApplied_ToMeshComponent(targetSkelMesh,in_val);
+				i->Script->OnApplied_ToMeshComponent(REF_SkelMesh,in_val);
 			}
 		}
+	}
+}
+
+void USkinComponent::SetupLinkedComponents(USkeletalMeshComponent* SkeletalMesh, UChildActorComponent* ChildActor)
+{
+	if(SkeletalMesh) {REF_SkelMesh=SkeletalMesh;}
+	if(ChildActor) {REF_skinComponent=ChildActor;}
+}
+
+void USkinComponent::SetLinkedChildActorComponent(UChildActorComponent* LinkedComp)
+{
+	if(LinkedComp)
+	{
+		REF_skinComponent=LinkedComp;
 	}
 }
 
@@ -91,9 +121,9 @@ AOmegaSkin* USkinComponent::SetSkin(TSubclassOf<AOmegaSkin> SkinClass)
 
 AOmegaSkin* USkinComponent::GetSkin() const
 {
-	if (skinComponent && skinComponent->GetChildActor())
+	if (REF_skinComponent && REF_skinComponent->GetChildActor())
 	{
-		return Cast<AOmegaSkin>(skinComponent->GetChildActor());
+		return Cast<AOmegaSkin>(REF_skinComponent->GetChildActor());
 	}
 	return nullptr;
 }
@@ -102,7 +132,7 @@ void USkinComponent::Assemble(USkeletalMeshComponent* OverrideMesh)
 {
 	if(OverrideMesh)
 	{
-		targetSkelMesh=OverrideMesh;
+		REF_SkelMesh=OverrideMesh;
 	}
 	Update_Skin();
 }
@@ -336,7 +366,6 @@ void AOmegaSkin::BuildSkin()
 				TargetMesh->SetRelativeScale3D(GetCompressedMeshComponent()->GetRelativeScale3D());
 				TrySetAnimation(TargetMesh);
 			}
-			K2_DestroyActor();
 			return;
 		}
 		

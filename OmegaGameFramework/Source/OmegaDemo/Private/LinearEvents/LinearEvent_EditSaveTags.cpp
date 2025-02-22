@@ -5,11 +5,9 @@
 
 #include "Subsystems/OmegaSubsystem_Save.h"
 
-void ULinearEvent_EditSaveTags::Native_Begin()
+void ULinearEvent_EditSaveTags::Native_Begin(const FString& Flag)
 {
 	
-	
-
 	switch (Action)
 	{
 		case EAddRemove::Add:

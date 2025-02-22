@@ -33,6 +33,18 @@ void UDataAssetCollectionComponent::AddAsset(UPrimaryDataAsset* Asset, int32 Amo
 	OnAssetAdded.Broadcast(Asset, AmountAdded, bIsFull);
 }
 
+void UDataAssetCollectionComponent::AddAssets(TMap<UPrimaryDataAsset*, int32> Assets, bool bInvertAmount)
+{
+	TArray<UPrimaryDataAsset*> asset_keys;
+	Assets.GetKeys(asset_keys);
+	for(auto* i : asset_keys)
+	{
+		int32 multiplier=1;
+		if(bInvertAmount) {multiplier=-1;}
+		AddAsset(i,Assets[i]*multiplier);
+	}
+}
+
 void UDataAssetCollectionComponent::RemoveAsset(UPrimaryDataAsset* Asset, int32 Amount)
 {
 	AddAsset(Asset,Amount*-1);
@@ -158,6 +170,13 @@ bool UDataAssetCollectionComponent::HasMinimumAssets(TMap<UPrimaryDataAsset*, in
 }
 
 
+void UDataAssetCollectionFunctions::SetInventory_FromSource(UDataAssetCollectionComponent* Component, UObject* Source)
+{
+	if(Component && Source && Source->GetClass()->ImplementsInterface(UDataInterface_InventorySource::StaticClass()))
+	{
+		Component->SetCollectionMap(IDataInterface_InventorySource::Execute_GetInventory(Source));
+	}
+}
 
 TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetTotalAssetListTradeCost(
 	TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag)
@@ -208,5 +227,36 @@ TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetDataAssetTrade
 		return IDataAssetCollectionInterface::Execute_GetTradeAssetRequirements(Asset,TradeTag);
 	}
 	return out;
+}
+
+bool UDataAssetCollectionFunctions::CanInventoryPerformTrade_ForAsset(UDataAssetCollectionComponent* Component,
+	UPrimaryDataAsset* Asset, FGameplayTag TradeTag)
+{
+	if(Asset && Component)
+	{
+		TMap<UPrimaryDataAsset*,int32> cost=GetDataAssetTradeValue_All(Asset,TradeTag);
+		return Component->HasMinimumAssets(cost);
+	}
+	return false;
+}
+
+bool UDataAssetCollectionFunctions::PerformTrade_Single(UDataAssetCollectionComponent* Component, UPrimaryDataAsset* Asset,
+	FGameplayTag TradeTag, bool bForce,bool bWithholdAsset)
+{
+	if(Asset && Component && (bForce || CanInventoryPerformTrade_ForAsset(Component,Asset,TradeTag)))
+	{
+		Component->AddAssets(GetDataAssetTradeValue_All(Asset,TradeTag),true);
+		if(!bWithholdAsset)
+		{
+			Component->AddAsset(Asset,1);
+		}
+		return true;
+	}
+	return false;
+}
+
+TMap<UPrimaryDataAsset*, int32> UOmegaCommonInventory::GetInventory_Implementation()
+{
+	return Inventory;
 }
 

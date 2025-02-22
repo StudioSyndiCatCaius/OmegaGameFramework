@@ -3,54 +3,122 @@
 
 #include "Functions/OmegaFunctions_AVContext.h"
 #include "GameplayTagContainer.h"
+#include "Styling/SlateBrush.h"
 
-
-ULevelSequence* UOmegaContextAVFunctions::TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID,
-	ULevelSequence* Fallback)
+ULevelSequence* UOmegaContextAVFunctions::TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID, 
+	ULevelSequence* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		return IDataInterface_ContextAV::Execute_GetContextAVSequences(Object,ID);
+		Outcome=Success; 
+		if (ULevelSequence* output=IDataInterface_ContextAV::Execute_GetContextAVSequences(Object,ID))
+		{
+			return output;
+		};
 	}
-	
-	return  Fallback;
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
 }
 
-USoundBase* UOmegaContextAVFunctions::TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID, USoundBase* Fallback)
+USoundBase* UOmegaContextAVFunctions::TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID,  USoundBase* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		return IDataInterface_ContextAV::Execute_GetContextAVSounds(Object,ID);
+		Outcome=Success; 
+		if (USoundBase* output=IDataInterface_ContextAV::Execute_GetContextAVSounds(Object,ID)) { return output; }
 	}
-	return  Fallback;
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
 }
 
-UNiagaraSystem* UOmegaContextAVFunctions::TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID,
-	UNiagaraSystem* Fallback)
+UNiagaraSystem* UOmegaContextAVFunctions::TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID, 
+	UNiagaraSystem* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		return IDataInterface_ContextAV::Execute_GetContextAVNiagara(Object,ID);
+		Outcome=Success; 
+		if (UNiagaraSystem* output=IDataInterface_ContextAV::Execute_GetContextAVNiagara(Object,ID)) { return output; }
 	}
-	return  Fallback;
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
 }
 
-UAnimMontage* UOmegaContextAVFunctions::TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID,
-	UAnimMontage* Fallback)
+TSubclassOf<AActor> UOmegaContextAVFunctions::TryGetObjectContext_ActorClass(UObject* Object, FGameplayTag ID, TSubclassOf<AActor> Fallback,
+	TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
-	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextActor::StaticClass()))
 	{
-		return IDataInterface_ContextAV::Execute_GetContextAVMontages(Object,ID);
+		Outcome=Success; 
+		if (TSubclassOf<AActor> output=IDataInterface_ContextActor::Execute_GetContextAV_ActorClass(Object,ID)) { return output; }
 	}
-	return  Fallback;
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
 }
 
-UAnimSequence* UOmegaContextAVFunctions::TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID,
-	UAnimSequence* Fallback)
+UStaticMesh* UOmegaContextAVFunctions::TryGetObjectContext_StaticMesh(UObject* Object, FGameplayTag ID,
+	 UStaticMesh* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextMesh::StaticClass()))
+	{
+		Outcome=Success; 
+		if (UStaticMesh* output=IDataInterface_ContextMesh::Execute_GetContextAV_StaticMesh(Object,ID)) { return output; }
+	}
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
+}
+
+USkeletalMesh* UOmegaContextAVFunctions::TryGetObjectContext_SkelMesh(UObject* Object, FGameplayTag ID,
+	USkeletalMesh* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextMesh::StaticClass()))
+	{
+		Outcome=Success; 
+		if (USkeletalMesh* output=IDataInterface_ContextMesh::Execute_GetContextAV_SkeletalMesh(Object,ID)) { return output; }
+	}
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
+}
+
+FSlateBrush UOmegaContextAVFunctions::TryGetObjectContext_SlateBrush(UObject* Object, FGameplayTag ID,
+	FSlateBrush Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextSlate::StaticClass()))
+	{
+		FSlateBrush output=IDataInterface_ContextSlate::Execute_GetContextAV_SlateBrush(Object,ID);
+		if(output.GetResourceObject())
+		{
+			Outcome=Success;
+			return output;
+		}
+	}
+	if(Fallback.GetResourceObject())
+	{
+		Outcome=Success;
+		return Fallback;
+	}
+	Outcome=Fail; return FSlateBrush();
+}
+
+UAnimMontage* UOmegaContextAVFunctions::TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID, 
+                                                                     UAnimMontage* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		return IDataInterface_ContextAV::Execute_GetContextAVAnimations(Object,ID);
+		Outcome=Success; 
+		if (UAnimMontage* output=IDataInterface_ContextAV::Execute_GetContextAVMontages(Object,ID)) { return output; }
 	}
-	return  Fallback;
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
+}
+
+UAnimSequence* UOmegaContextAVFunctions::TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID, 
+	UAnimSequence* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
+	{
+		Outcome=Success; 
+		if (UAnimSequence* output=IDataInterface_ContextAV::Execute_GetContextAVAnimations(Object,ID)) { return output; }
+	}
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
 }

@@ -13,7 +13,7 @@ class OMEGADEMO_API ULinearEvent_CameraFade : public UOmegaLinearEvent
 	GENERATED_BODY()
 
 public:
-	virtual void Native_Begin() override;
+	virtual void Native_Begin(const FString& Flag) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade", meta=(ExposeOnSpawn))
 	float BeginAlpha = 1.0;
@@ -50,5 +50,5 @@ public:
 	
 	virtual void ExecuteInput(const FName& PinName) override;
 	UFUNCTION()
-	void LocalFinish(const FString& Flag);
+	void LocalFinish(UOmegaLinearEvent* Event, const FString& Flag);
 };

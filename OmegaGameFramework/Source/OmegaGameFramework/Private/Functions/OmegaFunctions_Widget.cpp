@@ -4,6 +4,7 @@
 #include "Functions/OmegaFunctions_Widget.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 
 void UOmegaWidgetFunctions::SetHUDLayerActive(UObject* WorldContextObject, TSubclassOf<UHUDLayer> HUD, bool bActive, UObject* Context, const FString& Flag,
@@ -32,6 +33,20 @@ void UOmegaWidgetFunctions::SetHUDLayersActive(UObject* WorldContextObject, TArr
 	{
 		SetHUDLayerActive(WorldContextObject,temp_hud,bActive,Context,Flag,Player);
 	}
+}
+
+UHUDLayer* UOmegaWidgetFunctions::TryGetHudLayer(const UObject* WorldContextObject, TSubclassOf<UHUDLayer> Class,
+	APlayerController* Player, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	APlayerController* in_player=WorldContextObject->GetWorld()->GetFirstPlayerController();
+	if(Player) { in_player=Player;}
+	if(UHUDLayer* output = in_player->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->GetHUDLayerByClass(Class))
+	{
+		Outcome=Success;
+		return output;
+	}
+	Outcome=Fail;
+	return nullptr;
 }
 
 TArray<UObject*> UOmegaWidgetFunctions::GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass)

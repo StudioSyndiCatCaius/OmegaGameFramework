@@ -6,19 +6,22 @@
 void UAsyncPlayLinearEvent::Activate()
 {
 	EventRef->EventEnded.AddDynamic(this, &UAsyncPlayLinearEvent::LocalEnd);
-	EventRef->OnEventBegin();
+	EventRef->OnEventBegin(in_flag);
 }
 
-void UAsyncPlayLinearEvent::LocalEnd(const FString& Flag)
+void UAsyncPlayLinearEvent::LocalEnd(UOmegaLinearEvent* Event,const FString& Flag)
 {
-	Finished.Broadcast(Flag);
-	SetReadyToDestroy();
+	if(Event==EventRef)
+	{
+		Finished.Broadcast(Flag);
+		SetReadyToDestroy();
+	}
 }
 
-UAsyncPlayLinearEvent* UAsyncPlayLinearEvent::PlayLinearEvent(UOmegaLinearEvent* Event)
+UAsyncPlayLinearEvent* UAsyncPlayLinearEvent::PlayLinearEvent(UOmegaLinearEvent* Event,const FString& Flag)
 {
 	UAsyncPlayLinearEvent* NewEvent = NewObject<UAsyncPlayLinearEvent>();
-	
+	NewEvent->in_flag=Flag;
 	NewEvent->EventRef = Event;
 	
 	return  NewEvent;

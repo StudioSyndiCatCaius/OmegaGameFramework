@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "Widget/DataWidget.h"
 #include "Widget/HUDLayer.h"
 #include "OmegaFunctions_Widget.generated.h"
@@ -24,6 +25,11 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI", meta=(AdvancedDisplay="Context, Flag, Player", WorldContext="WorldContextObject"))
 	static void SetHUDLayersActive(UObject* WorldContextObject, TArray<TSubclassOf<UHUDLayer>> HUDs, bool bActive, UObject* Context, const FString& Flag, APlayerController* Player);
 
+	//Get an Active Gameplay System by Class
+	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",ExpandEnumAsExecs = "Outcome",AdvancedDisplay="Player"),DisplayName="Ω🔴 Try HUD Layer")
+	static UHUDLayer* TryGetHudLayer(const UObject* WorldContextObject, TSubclassOf<UHUDLayer> Class, APlayerController* Player, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|DataList",meta=(DeterminesOutputType="ObjectClass"))
 	static TArray<UObject*> GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass);
 };

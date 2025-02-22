@@ -136,6 +136,8 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("SkinComponent"));
 	ThumnbailNames.Add(TEXT("ActorStateComponent"));
 	ThumnbailNames.Add(TEXT("OmegaSaveStateComponent"));
+	ThumnbailNames.Add(TEXT("ActorIdentityComponent"));
+	ThumnbailNames.Add(TEXT("AimTargetComponent"));
 	
 	ThumnbailNames.Add(TEXT("OmegaSkin"));
 	ThumnbailNames.Add(TEXT("OmegaDataItem"));
@@ -276,6 +278,10 @@ void FOmegaEditor::StartupModule()
 	OMACRO_ADDPLACEABLE(Omega_EventVolume,"Event Volume")
 	OMACRO_ADDPLACEABLE(OmegaZonePoint,"Zone: Spawn Point")
 	OMACRO_ADDPLACEABLE(OmegaZoneTransit,"Zone: Transit Point")
+
+
+	
+	
 }
 
 void FOmegaEditor::ShutdownModule()

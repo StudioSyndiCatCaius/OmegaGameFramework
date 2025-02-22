@@ -29,7 +29,7 @@ class UOmegaInputMode;
 UENUM(Blueprintable)
 enum EOmegaFlagResult
 {
-	Flag_Active	UMETA(DisplayName = "Activate"),
+	Flag_Active		UMETA(DisplayName = "Activate"),
 	Flag_Inactive	UMETA(DisplayName = "Inactive"),
 };
 
@@ -113,6 +113,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Omega|Object")
 	static UClass* GetClassFromGlobalID(FGameplayTag GlobalID);
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities", meta = (DeterminesOutputType = "ClassType"))
+	static TArray<UObject*> ConvertSoftToHardReferences(const TArray<TSoftObjectPtr<UObject>>& SoftRefs, const TSubclassOf<UObject> ClassType);
 	//###############################################################################
 	// Asset Getter
 	//###############################################################################

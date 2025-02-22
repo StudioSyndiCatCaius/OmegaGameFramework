@@ -7,6 +7,7 @@
 #include "Event/OmegaLinearEvent.h"
 #include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
+#include "Styling/SlateBrush.h"
 #include "UObject/Object.h"
 #include "LinearEvent_SimpleMessage.generated.h"
 
@@ -29,11 +30,15 @@ public:
 	UOmegaActorSelector* Instigator_Actor;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn="true"))
 	FText Message;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message",meta=(MultiLine))
+	FSlateBrush Brush;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
 	FGameplayTag MessageCategory  = FGameplayTag::RequestGameplayTag(FName("Message.Event"));
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
+	FGameplayTagContainer Tags;
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void Native_Begin() override;
+	virtual void Native_Begin(const FString& Flag) override;
 
 	UFUNCTION()
 	void LocalGEvent(FName Event, UObject* Context);
@@ -61,13 +66,17 @@ public:
 	UOmegaActorSelector* Instigator_Actor;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message",meta=(MultiLine))
 	FText Message;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message",meta=(MultiLine))
+	FSlateBrush Brush;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
 	FGameplayTag MessageCategory  = FGameplayTag::RequestGameplayTag(FName("Message.Event"));
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
+	FGameplayTagContainer Tags;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message",AdvancedDisplay)
 	FString MessageLabel;
 
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	
 	UFUNCTION()
-	void LocalFinish(const FString& Flag);
+	void LocalFinish(UOmegaLinearEvent* Event, const FString& Flag);
 };

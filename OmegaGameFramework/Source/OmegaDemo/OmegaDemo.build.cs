@@ -13,6 +13,8 @@ public class OmegaDemo : ModuleRules
 			"Engine", 
 			"GameplayTags", 
 			"UMG",
+			"SlateCore",
+			"CustomizableObject",
 			"JsonUtilities",
 			"AssetRegistry",
 			"AnimGraphRuntime",
@@ -20,6 +22,7 @@ public class OmegaDemo : ModuleRules
 			"SequencerScripting",
 			"OmegaSequence",
 			"OmegaData",
+			"OmegaMutable",
 			"Flow"
 		});
  

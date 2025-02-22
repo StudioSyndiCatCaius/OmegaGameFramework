@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Engine/DataAsset.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "UObject/Object.h"
 #include "OmegaSettings_Gameplay.generated.h"
 
+class UEquipmentSlot;
+class UOmegaAttribute;
 class AZoneEntityDisplayActor;
 
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const)
@@ -40,6 +41,17 @@ public:
 };
 
 UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMetaSettingsCollection : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="Systems")
+	TArray<UOmegaGameplayMetaSettings*> MetaSettings;
+};
+
+
+UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Gameplay : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
@@ -63,6 +75,16 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone")
 	TSubclassOf<AZoneEntityDisplayActor> DefaultZoneEntityDisplayActor;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataAssets")
+	TMap<FGameplayTag, UPrimaryDataAsset*> GlobalDataAssets_Common;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataAssets")
+	TMap<FGameplayTag, UOmegaAttribute*> GlobalDataAssets_Attribute;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataAssets")
+	TMap<FGameplayTag, UEquipmentSlot*> GlobalDataAssets_EquipSlot;
+	
 	
 	UPROPERTY()
 	TArray<UOmegaSettings_Gameplay_InputEvent*> CustomInputEvents;
@@ -71,10 +93,23 @@ public:
 	TSubclassOf<AOmegaGameplaySystem> System_Dialogue;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Systems")
 	TSubclassOf<AOmegaGameplaySystem> System_Battle;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="Systems")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="MetaSettings")
+	TArray<UOmegaGameplayMetaSettingsCollection*> MetaSettingsCollections;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="MetaSettings")
 	TArray<UOmegaGameplayMetaSettings*> MetaSettings;
 
+	UFUNCTION()
+	TArray<UOmegaGameplayMetaSettings*> GetAllMetaSettings()
+	{
+		TArray<UOmegaGameplayMetaSettings*> out=MetaSettings;
+		for (auto* col : MetaSettingsCollections)
+		{
+			if(col) { out.Append(col->MetaSettings);}
+		}
+		return out;
+	}
 };
+
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplayStyleFunctions : public UBlueprintFunctionLibrary
@@ -91,5 +126,12 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay")
 	static bool OmegaGameplayInputCall(APlayerController* Player, const FKey& Key, bool End);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Common)",meta=(CompactNodeTitle="DA Common"))
+	static UPrimaryDataAsset* GetGlobalDataAsset_Common(FGameplayTag Tag);
+	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Attribute)",meta=(CompactNodeTitle="GDA Attribute"))
+    static UOmegaAttribute* GetGlobalDataAsset_Attribute(FGameplayTag Tag);
+	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Equipment Slot)",meta=(CompactNodeTitle="GDA EquipSlot"))
+	static UEquipmentSlot* GetGlobalDataAsset_EquipSlot(FGameplayTag Tag);
 
 };
