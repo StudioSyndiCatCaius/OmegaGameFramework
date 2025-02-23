@@ -40,6 +40,7 @@ void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 	}
 }
 
+#if WITH_EDITOR
 void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	SetIdentitySourceAsset(IdentitySource);
@@ -53,6 +54,7 @@ void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 	}
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
+#endif
 
 void UActorIdentityComponent::BeginPlay()
 {
