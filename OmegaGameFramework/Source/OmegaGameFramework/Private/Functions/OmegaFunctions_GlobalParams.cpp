@@ -11,7 +11,7 @@
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 
-FOmegaGlobalVarsContainer& local_GetJsonFromTarget(UObject* WorldContextObject, EOmegaGlobalParamTarget Target, FOmegaGlobalVarsContainer dum)
+FOmegaGlobalVarsContainer& local_GetJsonFromTarget(UObject* WorldContextObject, EOmegaGlobalParamTarget Target, FOmegaGlobalVarsContainer& dum)
 {
 	if(WorldContextObject)
 	{
