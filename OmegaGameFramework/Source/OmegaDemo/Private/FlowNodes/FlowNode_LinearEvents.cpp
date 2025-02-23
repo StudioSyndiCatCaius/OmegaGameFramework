@@ -50,6 +50,7 @@ FString UFlowNode_LinearEvents::GetNodeDescription() const
 
 	return OutString;
 }
+#endif
 
 void UFlowNode_LinearEvents::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
 	FText& Name, FText& Description)
@@ -58,7 +59,6 @@ void UFlowNode_LinearEvents::GetGeneralDataText_Implementation(const FString& La
 	Description=NodeDescription;
 	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
 }
-#endif
 
 void UFlowNode_LinearEvents::ImportReaderEvents()
 {
