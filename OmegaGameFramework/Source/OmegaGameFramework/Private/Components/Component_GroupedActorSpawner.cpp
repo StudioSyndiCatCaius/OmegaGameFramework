@@ -19,7 +19,11 @@ UChildActorComponent* UGroupedActorSpawnerComponent::Local_GetChildACtorComp(int
 {
 	while (!ref_childActors.IsValidIndex(index))
 	{
+#if PLATFORM_ANDROID
 		FString in_name="child_comp" + FString::FromInt(ref_childActors.Num()) + FString::FromInt(1);
+#else
+		FString in_name="child_comp"+ref_childActors.Num()+1;
+#endif
 		UChildActorComponent* new_comp = Cast<UChildActorComponent>(GetOwner()->AddComponentByClass(UChildActorComponent::StaticClass(),false,FTransform(),false));
 		ref_childActors.Add(new_comp);
 	}
