@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
+#include "ScreenWidget.h"
 
 #include "HUDLayer.generated.h"
 
@@ -14,7 +15,7 @@ class UOmegaPlayerSubsystem;
  * 
  */
 UCLASS(HideFunctions = (Construct, Destruct))
-class OMEGAGAMEFRAMEWORK_API UHUDLayer : public UUserWidget
+class OMEGAGAMEFRAMEWORK_API UHUDLayer : public UOmegaScreenWidget
 {
 	GENERATED_BODY()
 
@@ -54,7 +55,7 @@ public:
 	
 	UFUNCTION() void Local_BindGlobalEvent();
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintNativeEvent)
 	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FLuaValue meta);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInputMethodChanged(bool bIsGamepad);

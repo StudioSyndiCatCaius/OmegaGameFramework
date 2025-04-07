@@ -41,6 +41,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAnimationFunctions : public UBlueprintFunctio
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable,Category="Omega|Animation",meta=(ExpandBoolAsExecs="Result"))
+	static UAnimInstance* TryGetAnimInstanceFromObject(UObject* Object, TSubclassOf<UAnimInstance> AnimClass, bool& Result);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Animation")
 	static void PlayMontage_ByTag(USkeletalMeshComponent* Mesh, FGameplayTag MontageTag);

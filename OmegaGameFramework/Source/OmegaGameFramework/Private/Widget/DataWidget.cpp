@@ -27,13 +27,29 @@ bool UDataWidgetMetadata::CanAddObjectToList_Implementation(UObject* SourceObjec
 void UDataWidget::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-
+	
 	bIsFocusable = true;
 	if(GetNameTextWidget())
 	{
 		GetNameTextWidget()->SetText(NameText);
+		if(OverrideTextStyle_Name)
+		{
+			if(UCommonTextBlock* _txt = Cast<UCommonTextBlock>(GetNameTextWidget()))
+			{
+				_txt->SetStyle(OverrideTextStyle_Name);
+			}
+		}
 	}
-	
+	if(GetDescriptionTextWidget())
+	{
+		if(OverrideTextStyle_Description)
+		{
+			if(UCommonTextBlock* _txt = Cast<UCommonTextBlock>(GetDescriptionTextWidget()))
+			{
+				_txt->SetStyle(OverrideTextStyle_Description);
+			}
+		}
+	}
 	//Setup Source Asset
 	SetSourceAsset(ReferencedAsset);
 	SetIsEnabled(!IsEntityDisabled(ReferencedAsset));
@@ -43,7 +59,7 @@ void UDataWidget::NativePreConstruct()
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,0);
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,0);
 	}
-
+	Refresh();
 	RefreshMeta();
 }
 
@@ -59,34 +75,67 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 	Unhover();
 }
 
+void UDataWidget::LC_UpdateBlendStateVal(bool& bBlending, bool bTarget, float& val, float DT, float max_time, UCurveFloat* curve, FName MatParamName, int type)
+{
+	if(bBlending)
+	{
+		float _dir=DT;
+		if(!bTarget)
+		{
+			_dir=DT*-1;
+		}
+		//add delta to value
+		val=UKismetMathLibrary::FClamp(_dir+val,0,max_time);
+
+		// if value exceeds max/min, marking blending for STOP
+		if(bTarget)
+		{
+			if(val>=max_time)
+			{
+				bBlending=false;
+			}
+		}
+		else
+		{
+			if(val<=0)
+			{
+				bBlending=false;
+			}
+		}
+
+		//Apply Blend Values
+		float _input=UKismetMathLibrary::NormalizeToRange(val,0,max_time);
+		if(curve)
+		{
+			_input=curve->GetFloatValue(val);
+		}
+		_input=UKismetMathLibrary::FClamp(_input,0,1);
+		if(GetHoveredMaterialInstance())
+		{
+			GetHoveredMaterialInstance()->SetScalarParameterValue(MatParamName,_input);
+		}
+		LC_CallBlendUpdate(type,_input);
+	}
+}
+
+void UDataWidget::LC_CallBlendUpdate(int val, float input)
+{
+	if(val==0) { OnHoverUpdate(input); }
+	if(val==1) { OnHighlightUpdate(input); }
+}
+
 void UDataWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	const float HoverValue_target = IsDataWidgetHovered();
-
-	if(HoverValue_current!=HoverValue_target)
+	if(IsRendered())
 	{
-		HoverValue_current=UKismetMathLibrary::FInterpTo_Constant(HoverValue_current, HoverValue_target, InDeltaTime, (1.0f/HoverWidgetSpeed));
-		if(GetHoveredMaterialInstance())
-		{
-			GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,HoverValue_current);
-		}
-		OnHoverUpdate(HoverValue_current);
+		LC_UpdateBlendStateVal(_b_PlayingAnim_hover,b_IsHovered,_f_BlendTimeHover,InDeltaTime,HoverWidgetSpeed, _u_curveHover,HoverWidgetPropertyName,0);
+		LC_UpdateBlendStateVal(_b_PlayingAnim_highlight,b_IsHighlighted,_f_BlendTimeHighlight,InDeltaTime,HighlightWidgetSpeed,_u_curveHighlight,HighlightWidgetPropertyName,1);
 	}
-	const float HighlightValue_target = bIsHighlighted;
-	if(HighlightValue_current!=HighlightValue_target)
+	else
 	{
-
-		HighlightValue_current=UKismetMathLibrary::FInterpTo_Constant(HighlightValue_current, HighlightValue_target, InDeltaTime, (1.0f/HighlightWidgetSpeed));
-		
-		if(GetHoveredMaterialInstance())
-		{
-			GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,HighlightValue_current);
-		}
-		OnHighlightUpdate(HighlightValue_current);
+		_b_PlayingAnim_highlight=false;
+		_b_PlayingAnim_hover=false;
 	}
-	
-	
-	
 
 	Super::NativeTick(MyGeometry, InDeltaTime);
 }
@@ -126,6 +175,8 @@ UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 	return nullptr;	
 }
 
+
+
 UDataWidgetMetadata* UDataWidget::GetWidgetMetadata_FromClass(TSubclassOf<UDataWidgetMetadata> Class)
 {
 	for(auto* tempMeta : WidgetMetadata)
@@ -150,15 +201,6 @@ void UDataWidget::RefreshMeta()
 	}
 }
 
-FLuaValue UDataWidget::GetWidgetScript(TSubclassOf<ULuaState> State)
-{
-	return ULuaObjectFunctions::RunLuaScriptContainer(this,Script,State);
-}
-
-FLuaValue UDataWidget::WidgetScriptKeyCall(const FString& key, TArray<FLuaValue> args, TSubclassOf<ULuaState> State)
-{
-	return ULuaBlueprintFunctionLibrary::LuaTableKeyCall(GetWidgetScript(State),key,args);
-}
 
 void UDataWidget::private_refresh(UDataWidget* widget)
 {
@@ -167,13 +209,11 @@ void UDataWidget::private_refresh(UDataWidget* widget)
 		if(ReferencedAsset != widget->ReferencedAsset)
 		{
 			ReferencedAsset=widget->ReferencedAsset;
-			OnSourceAssetChanged(ReferencedAsset);
 		}
 		
 		if (widget->ParentList && widget->ParentList != ParentList)
 		{
 			ParentList=widget->ParentList;
-			OnNewListOwner(ParentList);
 		}
 		
 	}
@@ -196,30 +236,44 @@ void UDataWidget::Refresh()
 		{
 			GetDescriptionTextWidget()->SetText(LocalDesc);
 		}
-			
+
+		//get source asset images
 		UTexture2D* LocalTexture = nullptr;
 		UMaterialInterface* LocalMat = nullptr;
 		FSlateBrush LocalBrush;
 		IDataInterface_General::Execute_GetGeneralDataImages(ReferencedAsset, AssetLabel, this, LocalTexture, LocalMat, LocalBrush);
+		
+		
 		if(GetTextureImage()&&LocalTexture)
 		{
 			GetTextureImage()->SetBrushFromTexture(LocalTexture);
 		}
 		if(GetMaterialImage()&&LocalMat)
 		{
-				
 			GetMaterialImage()->SetBrushFromMaterial(LocalMat);
 		}
 		bool Local_OverrideSize;
 		FVector2D Local_NewSize;
 		if(GetBrushImage(Local_OverrideSize, Local_NewSize) && LocalBrush.GetResourceObject())
 		{
-				
 			if(Local_OverrideSize)
 			{
 				LocalBrush.ImageSize = Local_NewSize;
 			}
 			GetBrushImage(Local_OverrideSize, Local_NewSize)->SetBrush(LocalBrush);
+		}
+
+		//try set material image.
+		if(!LocalTexture)
+		{
+			if(UTexture2D* _txtr = Cast<UTexture2D>(LocalBrush.GetResourceObject()) )
+			{
+				LocalTexture=_txtr;
+			}
+		}
+		if(LocalTexture && GetWidget_IconMaterial())
+		{
+			GetWidget_IconMaterial()->GetDynamicMaterial()->SetTextureParameterValue(MaterialParamName_IconTexture,LocalTexture);
 		}
 			
 	}//Finish widget setup
@@ -238,23 +292,79 @@ void UDataWidget::Refresh()
 	}
 	RefreshMeta();
 	Native_OnRefreshed(ReferencedAsset,LocalListOwner);
-	OnRefreshed(ReferencedAsset, LocalListOwner);
 	OnWidgetRefreshed.Broadcast(this);
+}
+
+void UDataWidget::Native_OnSourceAssetChanged(UObject* SourceAsset)
+{
+	OnSourceAssetChanged(ReferencedAsset);
+}
+
+void UDataWidget::Native_OnListOwnerChanged(UObject* ListOwner)
+{
+	OnNewListOwner(ListOwner);
 }
 
 void UDataWidget::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
+	OnRefreshed(SourceAsset,ListOwner,IsDesignTime());
 }
+
+void UDataWidget::Native_SetHovered(bool bHovered)
+{
+	if(bHovered!=b_IsHovered)
+	{
+		b_IsHovered=bHovered;
+		_b_PlayingAnim_hover=true;
+		if(bHovered)
+		{
+			// IF NOT RUNTIME, change state and end.
+			if(GetOwningLocalPlayer())
+			{
+				// -------- SOUNDS
+				UE_LOG(LogTemp, Warning, TEXT("Success Hover"));
+				if(HoverSound)
+				{
+					GetPlayerSubsystem()->PlayUiSound(HoverSound);
+				}
+				else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+				{
+					GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Hover);
+				}
+	
+				if (GetHoverAnimation())
+				{
+					PlayAnimationForward(GetHoverAnimation(), 1.0f, false);
+				}
+				OnHovered.Broadcast(this, true);
+			}
+		
+			OnHoverStateChange(true);
+		}
+		else
+		{
+			if (GetHoverAnimation())
+			{
+				PlayAnimationReverse(GetHoverAnimation(), 1.0f, false);
+			}
+		
+			OnHovered.Broadcast(this, false);
+			OnHoverStateChange(false);
+		}
+	}
+}
+
 
 
 //----------------------NATIVE CONSTRUCT-------------------------------------------//
 
 void UDataWidget::NativeConstruct()
 {
-	Super::NativeConstruct();
-
-	//Create default metadata if invalid
-
+	if(HoverBlendCurve.IsValid()) { _u_curveHover=Cast<UCurveFloat>(HoverBlendCurve.TryLoad()); }
+	if(HighlightBlendCurve.IsValid()) { _u_curveHighlight=Cast<UCurveFloat>(HighlightBlendCurve.TryLoad()); }
+	
+	if(_u_curveHover) { _u_curveHover->GetTimeRange(_f_HoverBlend_Min,_f_HoverBlend_Max); }
+	if(_u_curveHighlight) { _u_curveHighlight->GetTimeRange(_f_HighBlend_Min,_f_HighBlend_Max); }
 	
 	if (GetButtonWidget())
 	{
@@ -287,12 +397,18 @@ void UDataWidget::NativeConstruct()
 
 	if(IsDesignTime())
 	{
-		
 		const double moddedval = FMath::RandRange(RefreshVariance*-1.0f,RefreshVariance);
 		refresh_val= moddedval+RefreshFrequency;
 		
 		GetWorld()->GetTimerManager().SetTimer(refresh_timer, this, &UDataWidget::Refresh, refresh_val, true);
 	}
+
+	if(GetOwningLocalPlayer() && SlotID.IsValid())
+	{
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SlottedDataWidgets.Add(SlotID,this);
+	}
+	
+	Super::NativeConstruct();
 }
 
 void UDataWidget::WidgetNotify(FName Notify)
@@ -382,77 +498,34 @@ void UDataWidget::Select()
 
 void UDataWidget::Hover()
 {
-	if(!GetPlayerSubsystem())
+	if(GetOwningLocalPlayer())
 	{
-		OnHoverStateChange(true);
-		return;
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCurrentHoverWidget(this);
 	}
-	//Cancel if already hovered
-	if(IsDataWidgetHovered())
-	{
-		return;
-	}
-
-	if(GetPlayerSubsystem()->HoveredWidget)
-	{
-		GetPlayerSubsystem()->HoveredWidget->Unhover();
-	}
-	
-	if(UUserWidget* TempWidget = GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->HoveredWidget)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Attempt Unhvover"));
-		Cast<UDataWidget>(TempWidget)->Unhover();
-	}
-	
-	UE_LOG(LogTemp, Warning, TEXT("Success Hover"));
-	if(HoverSound)
-	{
-		GetPlayerSubsystem()->PlayUiSound(HoverSound);
-	}
-	else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-	{
-		GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Hover);
-	}
-	
-	if (GetHoverAnimation())
-	{
-		PlayAnimationForward(GetHoverAnimation(), 1.0f, false);
-	}
-	OnHovered.Broadcast(this, true);
-	GetPlayerSubsystem()->HoveredWidget=this;
-	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->HoveredWidget = this;
-	OnHoverStateChange(true);
 }
 
 void UDataWidget::Unhover()
 {
-	if(!IsDataWidgetHovered())
+	if(GetOwningLocalPlayer())
 	{
-		OnHoverStateChange(false);
-		return;
+		UOmegaPlayerSubsystem* _sys =GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+		_sys->TryUnhoverWidget(this);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Success Unhover"));
-	OnHovered.Broadcast(this, false);
-	if (GetHoverAnimation())
-	{
-		PlayAnimationReverse(GetHoverAnimation(), 1.0f, false);
-	}
-	OnHoverStateChange(false);
-	//bIsHovered = false;
 }
 
 void UDataWidget::SetHighlighted(bool Highlighted)
 {
 	//Check if already highlighted
-	if (bIsHighlighted != Highlighted)
+	if (b_IsHighlighted != Highlighted)
 	{
 		//Set new State
-		bIsHighlighted = Highlighted;
+		b_IsHighlighted = Highlighted;
+		_b_PlayingAnim_highlight=true;
 		//Check if Valid Highlight Anim exists
 		if (GetHighlightAnimation())
 		{
 			//play correct animation
-			if (bIsHighlighted)
+			if (b_IsHighlighted)
 			{
 				PlayAnimationForward(GetHighlightAnimation(), 1.0f, false);
 			}
@@ -473,9 +546,9 @@ bool UDataWidget::GetIsEntitySelectable()
 
 bool UDataWidget::IsDataWidgetHovered()
 {
-	if(GetPlayerSubsystem() && GetPlayerSubsystem()->HoveredWidget==this)
+	if(GetOwningLocalPlayer())
 	{
-		return true;
+		return GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->GetCurrentHoverWidget()==this;
 	}
 	return false;
 }
@@ -484,14 +557,12 @@ void UDataWidget::SetSourceAsset(UObject* Asset)
 {
 	if (Asset)	 //Only if valid asset
 	{
-		
-		
 		//Set Tooltip Asset
 		Local_UpdateTooltip(Asset);
 			
 		ReferencedAsset = Asset;
 
-		OnSourceAssetChanged(Asset);
+		Native_OnSourceAssetChanged(ReferencedAsset);
 		Refresh();
 	}
 	

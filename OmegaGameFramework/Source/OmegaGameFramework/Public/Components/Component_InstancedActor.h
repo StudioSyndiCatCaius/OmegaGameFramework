@@ -16,34 +16,35 @@ class OMEGAGAMEFRAMEWORK_API UInstanceActorComponent : public UActorComponent, p
 {
 	GENERATED_BODY()
 
-public:
-	// Sets default values for this component's properties
-	UInstanceActorComponent();
-	
+
+
 protected:
-	// Called when the game starts
+
 	virtual void BeginPlay() override;
-
+	UInstanceActorComponent();
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
 public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
-
+	UPROPERTY(VisibleInstanceOnly,Category="Instanced Actor Component") TArray<AOmegaInstanceActor*> _instanceOrder;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Instanced Actor Component", meta=(ExposeOnSpawn))
 	TSubclassOf<AOmegaInstanceActor> InstancedActorClass;
-
-	UPROPERTY()
-	TArray<AOmegaInstanceActor*> PrivateInstances;
 	
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component", meta=(AdvancedDisplay="LocalTransform"))
 	AOmegaInstanceActor* CreateInstance(UObject* Context, const FString& Flag, FTransform LocalTransform);
 	
-	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component", meta=(AdvancedDisplay="LocalTransform"))
+	void CreateInstances(TArray<UObject*> Contexts, const FString& Flag, FTransform LocalTransform);
+	
+	UFUNCTION(BlueprintPure, Category="Instanced Actor Component",DisplayName="Get Instance (By Context)")
 	AOmegaInstanceActor* GetInstanceByContext(UObject* Context);
 
-	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
+	UFUNCTION(BlueprintPure, Category="Instanced Actor Component",DisplayName="Get Instance (By Name)")
 	AOmegaInstanceActor* GetInstanceByName(const FString& Name);
 
+	UFUNCTION(BlueprintPure, Category="Instanced Actor Component",DisplayName="Get Instance (by order Index)")
+	AOmegaInstanceActor* GetInstanceByIndex(int32 Index);
+	
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
 	TArray<UObject*> GetAllInstanceContexts();
 
@@ -62,9 +63,6 @@ public:
 	// ==========================================
 	// FORMATION
 	// ==========================================
-
-	UFUNCTION(BlueprintPure, Category="Instanced Actor Component", DisplayName="Get Instance by order Index")
-	AOmegaInstanceActor* GetInstanceByIndex(int32 Index);
 	
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component|Order", DisplayName="Swap Instance Order")
 	bool SwapInstanceIndecies(int32 A, int32 B);
@@ -109,16 +107,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="InstanceActor")
 	void OnInstanceCreated(UObject* Context, const FString& Flag);
 	
-	UPROPERTY(BlueprintReadOnly, Category="InstanceActor", VisibleInstanceOnly)
-	UObject* ContextObject = nullptr;
-	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
-	FString ContextLabel;
-	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
-	FText Context_Name;
-	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
-	FSlateBrush Context_Icon;
-	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly)
-	FText Context_Description;
+	UPROPERTY(BlueprintReadOnly, Category="InstanceActor", VisibleInstanceOnly) UObject* ContextObject = nullptr;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly) FString ContextLabel;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly) FText Context_Name;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly) FSlateBrush Context_Icon;
+	UPROPERTY(Category="InstanceActor", VisibleInstanceOnly) FText Context_Description;
 
 	
 	UPROPERTY(BlueprintReadOnly, Category="InstanceActor")
@@ -126,7 +119,6 @@ public:
 
 	// INTERFACES
 	bool Local_SourceHasInterface() const;
-	
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;

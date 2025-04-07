@@ -140,6 +140,8 @@ public:
 	TSubclassOf<UHUDLayer> HUD_Exploration;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="HUD")
 	TSubclassOf<UHUDLayer> HUD_Dialogue;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="HUD")
+	TSubclassOf<UHUDLayer> HUD_Battle;
 };
 
 UENUM()

@@ -12,10 +12,10 @@
 void UHUDLayer::NativeConstruct()
 {
 	Local_BindGlobalEvent();
-	Super::NativeConstruct();
 	GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UHUDLayer::OnGameplayMessage);
 	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UHUDLayer::OnInputMethodChanged);
 	PlayAnimationForward(GetAppearAnimation());
+	Super::NativeConstruct();
 }
 
 void UHUDLayer::OnAnimationFinished_Implementation(const UWidgetAnimation* Animation)
@@ -56,6 +56,11 @@ void UHUDLayer::Local_BindGlobalEvent()
 {
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UHUDLayer::OnGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UHUDLayer::OnTaggedGlobalEvent);
+}
+
+void UHUDLayer::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
+	FLuaValue meta)
+{
 }
 
 void UHUDLayer::Local_RemoveAnimFinished()

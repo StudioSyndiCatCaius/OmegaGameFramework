@@ -439,14 +439,6 @@ public:
 	UPROPERTY(EditAnywhere,Category="Preferences")
 	TMap<UGamePreference*, FVector> PreferenceValues;
 
-	//olf pref values. will be removed long term
-	UPROPERTY() TMap<class UGamePreferenceBool*, bool> BoolPrefs;
-	UPROPERTY() TMap<class UGamePreferenceFloat*, float> FloatPrefs;
-	UPROPERTY() TMap<class UPrimaryDataAsset*, FString> StringPrefs;
-	UPROPERTY() TMap<class UPrimaryDataAsset*, FGameplayTag> TagPrefs;
-	UPROPERTY() TMap<class UGamePreferenceInt*, int32> IntPrefs;
-
-	//
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Omega|Save")
 	FJsonObjectWrapper JsonSaveObject;
 	UPROPERTY(BlueprintReadWrite, Category="Omega|Save")
@@ -460,6 +452,9 @@ public:
 	FGameplayTag SaveCategory;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, DisplayName="Save Tags", Category="Omega|Save")
 	FGameplayTagContainer StoryTags;
+
+	UPROPERTY(EditAnywhere, SaveGame, Category="Preferences")
+	TMap<FGameplayTag, int32> TagVars_int;
 
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override {return SaveCategory;};
 	

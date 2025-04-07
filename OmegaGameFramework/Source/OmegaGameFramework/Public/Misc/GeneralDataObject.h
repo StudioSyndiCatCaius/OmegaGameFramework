@@ -110,18 +110,32 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface,
+																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",DisplayName="Name") FText DisplayName;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Description") FText DisplayDescription;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FString CustomLabel;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTag CategoryTag;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTagContainer GameplayTags;
+	UOmegaDataAsset();
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="Name") FText DisplayName;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Description") FText DisplayDescription;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General") FGameplayTag CategoryTag;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General") FGameplayTagContainer GameplayTags;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FGuid Guid;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) FString CustomLabel;
 	OMACRO_ADDPARAMS_GENERAL();
+	
+	virtual FGuid GetObjectGuid_Implementation() { return Guid; }
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) UPrimaryDataAsset* ParentAsset;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TArray<UPrimaryDataAsset*> ChildAssets;
+
+	virtual UObject* GetObject_Parent_Implementation() const override;
+	virtual TArray<UObject*> GetObject_Children_Implementation() const override;
 	
 public:
 	UFUNCTION(BlueprintNativeEvent,Category="DataAsset") bool UseIconAsThumbnail();

@@ -6,6 +6,7 @@
 #include "Internationalization/Internationalization.h"
 #include "CoreGlobals.h"
 #include "GameFramework/GameUserSettings.h"
+#include "Engine/AssetManager.h"
 #include "HAL/IConsoleManager.h"
 #include "Sound/SoundClass.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -14,14 +15,13 @@
 
 bool UOmegaUtilityFunctions::AreShadersCompiling()
 {
-	// Create an instance of FShaderCompilingManager
-	return GShaderCompilingManager->IsCompiling();
+	return false;
 }
 
 int32 UOmegaUtilityFunctions::GetShaderCompilationRemaining()
 {
 	// Get the number of remaining shader jobs
-	return GShaderCompilingManager->GetNumRemainingJobs();
+	return 0;
 
 }
 
@@ -193,9 +193,41 @@ float UOmegaMathFunctions::GetAngle_FromRotators(FRotator A, FRotator B)
 	return GetAngle_FromVectors(UKismetMathLibrary::Conv_RotatorToVector(A),UKismetMathLibrary::Conv_RotatorToVector(B));
 }
 
+FRotator UOmegaMathFunctions::Conv_VectorToRot_Flat(FVector Vector)
+{
+	FRotator _out;
+	_out.Pitch=Vector.Y;
+	_out.Roll=Vector.X;
+	_out.Yaw=Vector.Z;
+	return _out;
+}
+
 float UOmegaMathFunctions::NormalizeToRange_int32(int32 value, int32 min, int32 max)
 {
 	return UKismetMathLibrary::NormalizeToRange(value,min,max);
+}
+
+int32 UOmegaMathFunctions::GetSeedFromGuid(FGuid Guid)
+{
+	return Guid.A+Guid.B+Guid.C+Guid.D;
+}
+
+bool UOmegaMathFunctions::RNG_RollFromFloat(float chance, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	float _rand = UKismetMathLibrary::RandomFloat();
+	if(_rand==0.0 || _rand>chance)
+	{
+		Outcome=Fail;
+		return false;
+	}
+	Outcome=Success;
+	return true;
+}
+
+float UOmegaMathFunctions::Variate_Float(float in, float amount, bool bAmountIsScale)
+{
+	float _offset = UKismetMathLibrary::RandomFloatInRange(amount*-1,amount);
+	if(bAmountIsScale) { return in+(_offset*in);} return in+_offset;
 }
 
 

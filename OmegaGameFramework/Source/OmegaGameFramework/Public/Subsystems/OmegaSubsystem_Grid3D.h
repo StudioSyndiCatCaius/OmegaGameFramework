@@ -6,11 +6,50 @@
 #include "UObject/Object.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Engine/DataAsset.h"
+#include "Misc/GeneralDataObject.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "OmegaSubsystem_Grid3D.generated.h"
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaGrid3DPath
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FIntVector> PathPoints;
+
+	UPROPERTY()
+	int32 distance;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaGrid3DPathfindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FOmegaGrid3DPath> paths;
+
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaGrid3DPathfindMeta
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AOmegaGrid3D_Tile* Tile=nullptr;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AActor* ContextActor=nullptr;
+};
+
 
 // ===============================================================================================================================
 // Tilemap Component
 // ===============================================================================================================================
+
+class UOmegaGrid3D_Occupant;
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Map : public USceneComponent
@@ -35,8 +74,6 @@ public:
 	void DestroyTiles();
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
 	void GenerateTiles();
-	UFUNCTION(BlueprintCallable,Category="Grid3D")
-	TArray<AOmegaGrid3D_Tile*> GetTiles();
 	
 	UPROPERTY(EditAnywhere,Category="Grid3D")
 	UOmegaGrid3DTileType* DefaultTileType;
@@ -60,10 +97,20 @@ public:
 	FVector GetVectorFromCoordinate(FIntVector Coordinate);
 	
 	// Get Tile
+	UFUNCTION(BlueprintCallable,Category="Grid3D")
+	TArray<AOmegaGrid3D_Tile*> GetTiles();
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3D")
+	TArray<AOmegaGrid3D_Tile*> GetTilesFromCoordinates(TArray<FIntVector> Coordinates);
 	UFUNCTION(BlueprintPure,Category="Grid3D")
 	AOmegaGrid3D_Tile* GetTileFromVector(FVector Vector);
 	UFUNCTION(BlueprintPure,Category="Grid3D")
 	AOmegaGrid3D_Tile* GetTileFromCoordinate(FIntVector Coordinate);
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3D",DisplayName="Get Tile w/ Occupant (Component)")
+	AOmegaGrid3D_Tile* GetTile_OfOccupant_Comp(UOmegaGrid3D_Occupant* Occupant);
+	UFUNCTION(BlueprintCallable,Category="Grid3D",DisplayName="Get Tile w/ Occupant (Actor)")
+	AOmegaGrid3D_Tile* GetTile_OfOccupant_Actor(AActor* Occupant);
 
 };
 
@@ -185,6 +232,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	void SetTileType(UOmegaGrid3DTileType* Type);
+	
 	UFUNCTION(BlueprintPure,Category="Grid3D Tile")
 	UOmegaGrid3DTileType* GetTileType() const;
 
@@ -194,15 +242,22 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",meta=(AdvancedDisplay="bSnap"))
 	void SetOccupantOnTile(UOmegaGrid3D_Occupant* Occupant, bool bIsOnTile, bool bClearPrevious, bool bSnap=true);
+	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	TArray<UOmegaGrid3D_Occupant*> GetOccupants() const;
+	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	UOmegaGrid3D_Occupant* GetFirstOccupant() const;
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",meta=(DeterminesOutputType="Class",ExpandEnumAsExecs="Result"))
+    AActor* GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Result);
+	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	bool HasOccupant(UOmegaGrid3D_Occupant* Occupant) const;
 	
 	UFUNCTION(BlueprintPure,Category="Grid3d Tile")
-	UOmegaGrid3D_Map* GetOwningGridmap();	
+	UOmegaGrid3D_Map* GetOwningGridmap();
+	
 	UFUNCTION(BlueprintPure,Category="Grid3d Tile")
 	FIntVector GetTileCoordinate();
 };
@@ -221,4 +276,83 @@ public:
 	UPROPERTY() TArray<UOmegaGrid3D_Map*> REF_Tilemaps;
 	
 	UFUNCTION() void Register_TileMap(UOmegaGrid3D_Map* Tilemap, bool bRegistered);
+};
+
+
+// =====================================================================================================
+// Functions
+// =====================================================================================================
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaGrid3DFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(AdvancedDisplay="x,y,z"))
+	TArray<FIntVector> GetAdjacentCoordinates(FIntVector in);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(AdvancedDisplay="x,y,z"))
+	TArray<FIntVector> GetCoordinatesInDistance(FIntVector in, int32 distance);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(AdvancedDisplay="metadata, Modifier, x,y,z"))
+	static FOmegaGrid3DPathfindResult Pathfind3D_AllPossiblePaths(
+		const FIntVector& StartPoint,
+		int32 MaxDistance,
+		UObject* Modifier,
+		FOmegaGrid3DPathfindMeta metadata,
+		bool x=true,bool y=true,bool z=false);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D")
+	static TArray<FIntVector> GetCoordinatesFromPathfindResult(FOmegaGrid3DPathfindResult in);
+	
+};
+
+// ===============================================================================================================================
+// pATHFIND
+// ===============================================================================================================================
+
+UINTERFACE(MinimalAPI)
+class UDataInterface_Pathfind3D : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_Pathfind3D
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Pathfind")
+	int32 ModifyDistance(FOmegaGrid3DPathfindMeta metadata, int32 in) const;
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|Pathfind")
+	bool CanAddCoordinate(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate) const;
+};
+
+
+
+UCLASS(Blueprintable,BlueprintType,Const,EditInlineNew,Abstract,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_PathfindScript : public UObject
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintNativeEvent,Category="Pathfind")
+	int32 ModifyDistance(int32 distance, FOmegaGrid3DPathfindMeta metadata) const;
+	UFUNCTION(BlueprintNativeEvent,Category="Pathfind")
+	bool CanAddCoordinate(FOmegaGrid3DPathfindMeta metadata,FIntVector coord) const;
+
+};
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_PathfindAction : public UOmegaDataAsset, public IDataInterface_Pathfind3D
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="Pathfind")
+	TArray<UOmegaGrid3D_PathfindScript*> Scripts;
+
+	virtual int32 ModifyDistance_Implementation(FOmegaGrid3DPathfindMeta metadata, int32 in) const override;
+	virtual bool CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate) const override;
+
 };

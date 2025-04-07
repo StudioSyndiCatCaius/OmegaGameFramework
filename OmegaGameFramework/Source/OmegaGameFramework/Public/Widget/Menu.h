@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
+#include "ScreenWidget.h"
 #include "Subsystems/OmegaSubsystem_Message.h"
 #include "Interfaces/OmegaInterface_Widget.h"
+#include "Misc/GeneralDataObject.h"
 
 #include "Menu.generated.h"
 
@@ -14,12 +16,41 @@ class APlayerController;
 class UWidgetAnimation;
 class AOmegaGameplaySystem;
 class UOmegaInputMode;
+class UDataListCustomEntry;
+
+
+UINTERFACE(MinimalAPI) class UDataInterface_CommonMenu : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_CommonMenu
+{
+	GENERATED_BODY()
+
+	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+public:
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Menu")
+	TArray<UObject*> GetDataListEntries(UMenu* Menu);
+};
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaCommonMenuDefinition : public UOmegaDataAsset, public IDataInterface_CommonMenu
+{
+	GENERATED_BODY()
+	
+public:UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menu")
+	TArray<UPrimaryDataAsset*> CustomEntry_Assets;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Menu")
+	TArray<UDataListCustomEntry*> CustomEntry_Objects;
+	
+	virtual TArray<UObject*> GetDataListEntries_Implementation(UMenu* Menu) override;
+};
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
 
 UCLASS(HideFunctions=(Construct, RemoveFromParent))
-class OMEGAGAMEFRAMEWORK_API UMenu : public UUserWidget, public IWidgetInterface_Input
+class OMEGAGAMEFRAMEWORK_API UMenu : public UOmegaScreenWidget, public IWidgetInterface_Input
 {
 	GENERATED_BODY()
 
@@ -29,7 +60,10 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 public:
-
+	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
+	UDataList* GetDefaultDataList();
+	
+	UPROPERTY() FGameplayTagContainer TempTags;
 	//----------------------------------------------------------------------
 	// Menu
 	//----------------------------------------------------------------------
@@ -56,9 +90,6 @@ private:
 public:
 	
 	void Native_CompleteClose();
-
-	UPROPERTY()
-	FGameplayTagContainer TempTags;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
 		void MenuOpened(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
@@ -70,10 +101,7 @@ public:
 	// Reset
 	//----------------------------------------------------------------------
 	UFUNCTION(BlueprintCallable,Category="Menu")
-	void Reset()
-	{
-		OnReset();
-	}
+	void Reset() { OnReset(); }
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
 	void OnReset();
 	//----------------------------------------------------------------------
@@ -87,10 +115,8 @@ public:
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Input")
 	float InputBlockDelay=0.2;
 private:
-	UPROPERTY()
-	float InputBlock_Remaining;
-	UPROPERTY()
-	bool PrivateInputBlocked;
+	UPROPERTY() float InputBlock_Remaining;
+	UPROPERTY() bool PrivateInputBlocked;
 public:
 	UFUNCTION() bool IsInputBlocked() const { return PrivateInputBlocked || bIsClosing || !bIsOpen || InputBlock_Remaining > 0.0; }
 	
@@ -105,10 +131,8 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animations")
 	float OpenCloseInterpTime=0.2;
-	UPROPERTY()
-	float OpenCloseInterp_Value;
-	UPROPERTY()
-	bool isPlayingOpenCloseInterp;
+	UPROPERTY() float OpenCloseInterp_Value;
+	UPROPERTY() bool isPlayingOpenCloseInterp;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animations")
 	bool AutoInterpOpacityOnOpenClose;
 	UFUNCTION(BlueprintImplementableEvent,Category="Animations")
@@ -154,7 +178,7 @@ public:
 	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
 	UFUNCTION() void Local_BindGlobalEvent();
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintNativeEvent)
 	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FLuaValue meta);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInputMethodChanged(bool bIsGamepad);

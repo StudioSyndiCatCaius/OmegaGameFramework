@@ -30,12 +30,14 @@ class OMEGADEMO_API UDataWidgetBase_Combatant : public UDataWidget
 
 	UPROPERTY() UCombatantComponent* REF_combatant;
 
+	virtual void Native_OnSourceAssetChanged(UObject* SourceAsset) override;
+	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	void OnCombatantNotify(UCombatantComponent* Combatant, FName Notify, const FString& Flag);
 	
-	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
+
 
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	UDataList* GetDataList_Attributes();
@@ -54,12 +56,14 @@ class OMEGADEMO_API UDataWidgetBase_Attribute : public UDataWidget, public IWidg
 {
 	GENERATED_BODY()
 
-	void local_UpdateColor();
+	void local_Update();
 	
 	UPROPERTY() UCombatantComponent* REF_Combatant;
 	UFUNCTION() void local_OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
 
 public:
+	virtual void Native_OnSourceAssetChanged(UObject* SourceAsset) override;
+	virtual void Native_OnListOwnerChanged(UObject* ListOwner) override;
 	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 	virtual void NativePreConstruct() override;
 	
@@ -70,6 +74,11 @@ public:
 	bool bUseDamageColor;
 	UPROPERTY(EditAnywhere,Category="DataWidget|Attribute")
 	float DamageColorPercentChange=0.3;
+
+	UFUNCTION(BlueprintCallable,Category="DataWidget|Attribute")
+	void SetCombatant(UCombatantComponent* Combatant);
+	UFUNCTION(BlueprintPure,Category="DataWidget|Attribute")
+	UCombatantComponent* GetCombatant() const;
 	
 	UFUNCTION(BlueprintCallable,Category="DataWidget|Attribute")
 	void SetAttribute(UOmegaAttribute* Attribute);
@@ -202,15 +211,39 @@ class OMEGADEMO_API UDataWidgetBase_Message : public UDataWidget
 {
 	GENERATED_BODY()
 
+	UPROPERTY() bool __bTextIsUpdating;
+	UPROPERTY() float __TextWriteTime;
+	UPROPERTY() TArray<FString> __stringsRemaining;
+	UPROPERTY() int32 __stringAmount;
+
+	
 	UPROPERTY() UOmegaGameplayMessage* REF_message;
-
+	UPROPERTY() UObject* REF_lastInstigator=nullptr;
 public:
-	virtual void OnSourceAssetChanged_Implementation(UObject* Asset) override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual void Native_OnSourceAssetChanged(UObject* SourceAsset) override;
 
+	UPROPERTY(EditAnywhere,Category="Message")
+	bool bWriteTextOverTime;
+	UPROPERTY(EditAnywhere,Category="Message")
+	float TextWriteFrequency=0.02;
+	
+	UFUNCTION(BlueprintPure,Category="DataWidget")
+	UOmegaGameplayMessage* GetCurrentMessage() const;
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
+	void OnMessageUpdate(UOmegaGameplayMessage* Message);
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
+	void OnInstigatorChange(UObject* New=nullptr,UObject* Old=nullptr);
+	
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UTextBlock* GetWidget_Text_Message();
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UDataWidget* GetDataWidget_MessageInstigator();
+
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UImage* GetImage_InstigatorBrush();
 };
 
 // ==============================================================================================================

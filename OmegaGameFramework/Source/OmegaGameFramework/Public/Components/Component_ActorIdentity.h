@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
+#include "Functions/OmegaFunctions_TagEvent.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Component_ActorIdentity.generated.h"
@@ -16,7 +17,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorIdentityChanged, UPrimaryDataAsset*, IdentityAsset, UActorIdentityComponent*, Component);
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UActorIdentityComponent : public UActorComponent, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UActorIdentityComponent : public UActorComponent, public IGameplayTagsInterface, public IActorTagEventInterface
 {
 	GENERATED_BODY()
 
@@ -31,8 +32,6 @@ public:
 	
 	UPROPERTY(BlueprintAssignable) FOnActorIdentityChanged OnActorIdentityChanged;
 
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; };
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return GameplayTags; };
 
 	UFUNCTION(BlueprintCallable,Category="Actor Identity")
 	void SetIdentitySourceAsset(UPrimaryDataAsset* SourceAsset);
@@ -41,10 +40,15 @@ public:
 	{
 		if(IdentitySource) {return IdentitySource;} return nullptr;
 	};
+
+	
+	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; };
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return GameplayTags; };
+	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;
 	
 	
 protected:
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -65,13 +69,20 @@ public:
 	TArray<UActorIdentityScript*> GetIdentityScripts();
 
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	void OnActorConstruction(AActor* Actor);
+	bool OnIdentityInit(AActor* Actor);
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	void OnActorBeginPlay(AActor* Actor);
+	bool OnActorConstruction(AActor* Actor);
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	void OnActorTick(AActor* Actor, float DeltaTime);
+	bool OnActorBeginPlay(AActor* Actor);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
+	bool OnActorTick(AActor* Actor, float DeltaTime);
+
+	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
+	bool OnActorTagEvent(AActor* Actor, FGameplayTag Event);
+	
 };
 
 // =======================================================================================================================
@@ -118,26 +129,7 @@ public:
 	void OnActorTick(AActor* Actor, float DeltaTime) const;
 };
 
-// =======================================================================================================================
-// SUBSYSTEM
-// =======================================================================================================================
 
-
-UCLASS(DisplayName="Omega Subsystem: Actor Identity")
-class OMEGAGAMEFRAMEWORK_API UOmegaActorSubsystem : public UWorldSubsystem
-{
-	GENERATED_BODY()
-
-	
-	UPROPERTY() TArray<UActorIdentityComponent*> REF_ActorIdComps;
-public:
-
-	void local_RegisterActorIdComp(UActorIdentityComponent* Component, bool bIsRegister);
-
-	UFUNCTION(BlueprintCallable,Category="Actor Identity Subsystem")
-	TArray<UActorIdentityComponent*> GetAllActorIdentityComponents();
-	
-};
 
 // =======================================================================================================================
 // FUNCTIONS

@@ -16,6 +16,15 @@ void USubscript::Tick_Implementation(float Delta,USubscriptComponent* OwningComp
 {
 }
 
+
+void USubscriptComponent::_Subscripts_BeginPlay(TArray<USubscript*> ss)
+{
+	for(auto* s : ss)
+	{
+		if(s) { s->OnBeginPlay(this);}
+	}
+}
+
 USubscriptComponent::USubscriptComponent()
 {
 	PrimaryComponentTick.bCanEverTick=true;
@@ -25,17 +34,11 @@ USubscriptComponent::USubscriptComponent()
 
 void USubscriptComponent::BeginPlay()
 {
+	_hasBegun=true;
 	PrimaryComponentTick.bCanEverTick=true;
 	SetComponentTickEnabled(true);
 	RegisterComponent();
-	for(const auto* TempScript : GetAllSubscripts())
-	{
-		if(TempScript)
-		{
-			//TempScript->OwnerComp = this;
-			TempScript->OnBeginPlay(this);
-		}
-	}
+	_Subscripts_BeginPlay( GetAllSubscripts());
 	GetOwner()->OnActorBeginOverlap.AddDynamic(this, &USubscriptComponent::OnActorBeginOverlap);
 	GetOwner()->OnActorEndOverlap.AddDynamic(this, &USubscriptComponent::OnActorEndOverlap);
 	GetOwner()->OnActorHit.AddDynamic(this, &USubscriptComponent::OnActorHit);
@@ -129,6 +132,25 @@ void USubscriptComponent::OnActorHit(AActor* SelfActor, AActor* OtherActor, FVec
 		if(TempScript && TempScript->bCanTick)
 		{
 			TempScript->ActorHit(this,SelfActor,OtherActor,Vector,hit);
+		}
+	}
+}
+
+void USubscriptComponent::SetSubscriptCollectionActive(USubscriptCollection* SubscriptCollection, bool is_active)
+{
+	if(SubscriptCollection)
+	{
+		if(is_active && !SubscriptCollections.Contains(SubscriptCollection))
+		{
+			SubscriptCollections.AddUnique(SubscriptCollection);
+			if(_hasBegun)
+			{
+				_Subscripts_BeginPlay(SubscriptCollection->Subscripts);
+			}
+		}
+		if(!is_active && SubscriptCollections.Contains(SubscriptCollection))
+		{
+			SubscriptCollections.Remove(SubscriptCollection);
 		}
 	}
 }

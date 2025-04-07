@@ -6,6 +6,40 @@
 #include "GameFramework/Actor.h"
 #include "Actor_RandomizedMesh.generated.h"
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaRandomizedMeshInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
+	FVector Scale_Min=FVector::One();
+	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
+	FVector Scale_Max=FVector::One();
+	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
+	FRotator Rotation_Range;
+	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
+	TArray<UStaticMesh*> Meshes;
+	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
+	TMap<FName,UMaterialInterface*> MaterialSlotOverrides;
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaRandomizedMeshPreset : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,Category="RandomizedMesh")
+	FOmegaRandomizedMeshInfo Settings;
+	
+	UPROPERTY() FVector Scale_Min=FVector::One();
+	UPROPERTY() FVector Scale_Max=FVector::One();
+	UPROPERTY() FRotator Rotation_Range;
+	UPROPERTY() TArray<UStaticMesh*> Meshes;
+	UPROPERTY() TMap<FName,UMaterialInterface*> MaterialSlotOverrides;
+};
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaRandomizedMeshActor : public AActor
 {
@@ -20,18 +54,16 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 public:
-	UPROPERTY(EditDefaultsOnly,Category="Randomized Mesh",DisplayName="Seed",AdvancedDisplay)
+	UPROPERTY(EditAnywhere,Category="Randomized Mesh",DisplayName="Seed",AdvancedDisplay)
 	FRandomStream stream_seed;
-	//UPROPERTY(EditDefaultsOnly,Category="Randomized Mesh",AdvancedDisplay) int32 mesh_index;
 	
 	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
 	bool bSeedFromLocation;
 	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
-	float Scale_Min=1.0;
+	UOmegaRandomizedMeshPreset* Preset;
+
 	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
-	float Scale_Max=1.0;
-	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
-	FRotator Rotation_Range;
-	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
-	TArray<UStaticMesh*> Meshes;
+	FOmegaRandomizedMeshInfo Settings;
+	
+
 };

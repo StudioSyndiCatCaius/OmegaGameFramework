@@ -6,6 +6,10 @@ public class OmegaDemo : ModuleRules
 	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+        bUseUnity = false;
+
+        PrecompileForTargets = PrecompileTargetsType.Any;
+        
 		PublicDependencyModuleNames.AddRange(new string[] { 
 			"Core", 
 			"CoreUObject", 

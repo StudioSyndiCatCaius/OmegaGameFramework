@@ -7,36 +7,21 @@
 #include "Kismet/GameplayStatics.h"
 
 
-// Sets default values for this component's properties
+
 UInstanceActorComponent::UInstanceActorComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
 	InstancedActorClass = AOmegaInstanceActor::StaticClass();
-	// ...
 }
 
-
-// Called when the game starts
 void UInstanceActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
-	// ...
-	
 }
 
-
-// Called every frame
-void UInstanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                            FActorComponentTickFunction* ThisTickFunction)
+void UInstanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 
 AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, const FString& Flag, FTransform LocalTransform)
@@ -59,9 +44,18 @@ AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, c
 	LocalActor->SetActorRelativeTransform(LocalTransform);
 	LocalActor->OnInstanceCreated(LocalContext, Flag);
 
-	PrivateInstances.AddUnique(LocalActor);
+	_instanceOrder.AddUnique(LocalActor);
 	
 	return LocalActor;
+}
+
+void UInstanceActorComponent::CreateInstances(TArray<UObject*> Contexts, const FString& Flag,
+	FTransform LocalTransform)
+{
+	for(auto* i : Contexts)
+	{
+		if(i) { CreateInstance(i,Flag,LocalTransform);}
+	}
 }
 
 AOmegaInstanceActor* UInstanceActorComponent::GetInstanceByIndex(int32 Index)
@@ -103,26 +97,23 @@ AOmegaInstanceActor* UInstanceActorComponent::GetInstanceByName(const FString& N
 
 TArray<UObject*> UInstanceActorComponent::GetAllInstanceContexts()
 {
-	TArray<UObject*> OutObjs;
+	TArray<UObject*> out;
 	for(auto* TempObj : GetInstances())
 	{
 		if(TempObj)
 		{
-			OutObjs.Add(TempObj->ContextObject);
+			out.Add(TempObj->ContextObject);
 		}
 	}
-	return OutObjs;
+	return out;
 }
 
 TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstances()
 {
 	TArray<AOmegaInstanceActor*> out;
-	for(auto* i : PrivateInstances)
+	for(auto* i : _instanceOrder)
 	{
-		if(i)
-		{
-			out.Add(i);
-		}
+		if(i) { out.Add(i);}
 	}
 	return out;
 }
@@ -178,7 +169,7 @@ bool UInstanceActorComponent::SwapInstanceIndecies(int32 A, int32 B)
 {
 	if(GetInstances().IsValidIndex(A) &&GetInstances().IsValidIndex(B))
 	{
-		PrivateInstances.Swap(A, B);
+		_instanceOrder.Swap(A, B);
 		return true;
 	}
 	return false;
@@ -187,7 +178,7 @@ bool UInstanceActorComponent::SwapInstanceIndecies(int32 A, int32 B)
 void UInstanceActorComponent::SetInstanceOrder_ByLabels(TArray<FString> Labels)
 {
 	// Sort the local TArray<AActor*> by the order of the input Labels array
-	PrivateInstances.Sort([&](const AOmegaInstanceActor& A, const AOmegaInstanceActor& B) {
+	_instanceOrder.Sort([&](const AOmegaInstanceActor& A, const AOmegaInstanceActor& B) {
 		int32 IndexA = Labels.Find(A.ContextLabel);
 		int32 IndexB = Labels.Find(B.ContextLabel);
 
@@ -205,7 +196,7 @@ void UInstanceActorComponent::SetInstanceOrder_ByLabels(TArray<FString> Labels)
 TArray<FString> UInstanceActorComponent::GetInstanceOrder_ByLabels()
 {
 	TArray<FString> out;
-	for(auto* TempInst : PrivateInstances)
+	for(auto* TempInst : _instanceOrder)
 	{
 		out.Add(UOmegaGameFrameworkBPLibrary::GetObjectLabel(TempInst));
 	}
@@ -215,7 +206,7 @@ TArray<FString> UInstanceActorComponent::GetInstanceOrder_ByLabels()
 void UInstanceActorComponent::SetInstanceOrder_ByContexts(TArray<UObject*> Objects)
 {
 	// Sort the local TArray<AActor*> by the order of the input Labels array
-	PrivateInstances.Sort([&](const AOmegaInstanceActor& A, const AOmegaInstanceActor& B) {
+	_instanceOrder.Sort([&](const AOmegaInstanceActor& A, const AOmegaInstanceActor& B) {
 		int32 IndexA = Objects.Find(A.ContextObject);
 		int32 IndexB = Objects.Find(B.ContextObject);
 
@@ -233,7 +224,7 @@ void UInstanceActorComponent::SetInstanceOrder_ByContexts(TArray<UObject*> Objec
 TArray<UObject*> UInstanceActorComponent::GetInstanceOrder_ByContexts()
 {
 	TArray<UObject*> out;
-	for(auto* i : PrivateInstances)
+	for(auto* i : _instanceOrder)
 	{
 		if(i->ContextObject)
 		{

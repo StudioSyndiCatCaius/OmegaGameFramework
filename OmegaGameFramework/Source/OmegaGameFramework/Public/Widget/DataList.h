@@ -41,20 +41,12 @@ enum class EDataListFormat : uint8
 };
 
 
-UCLASS(BlueprintType, Blueprintable, Abstract, editinlinenew, CollapseCategories)
-class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UObject, public IDataInterface_General
+UCLASS(BlueprintType, Blueprintable, Abstract, editinlinenew, CollapseCategories,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UPrimaryDataAsset, public IDataInterface_General
 {
 	GENERATED_BODY()
 public:
-	UDataListCustomEntry(const FObjectInitializer& ObjectInitializer);
-	virtual UWorld* GetWorld() const override;
 
-	UPROPERTY()
-	UWorld* WorldPrivate = nullptr;
-	UPROPERTY()
-	UGameInstance* GameInstanceRef = nullptr;
-	UFUNCTION()
-	virtual UGameInstance* GetGameInstance() const;
 };
 
 UCLASS(Abstract)
@@ -143,26 +135,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Entry")
 	void RefreshAllEntries();
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry")
+	UPROPERTY(EditAnywhere,Category="EntryOverrides")
 	bool bCanOverrideSize;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry",meta=(EditCondition="bCanOverrideSize"))
+	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideSize"))
 	FVector2D OverrideSize;
-	
-	//---------------------------------------------------------------------------------------------//
-	//	Lua
-	//---------------------------------------------------------------------------------------------//
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
-	FString Script_ListVisibility="return true";
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
-	FString Script_EntryVisibility="return function(label) return true end";
-	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
-	FLuaScriptContainer List_Script;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="DataList|Lua", meta=(MultiLine))
-	FLuaScriptContainer Entry_Script;
-	UFUNCTION(BlueprintCallable,Category="Lua")
-	FLuaValue GetListScript(TSubclassOf<ULuaState> State);
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	UCurveVector* OverrideHoverOffset_Curve;
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	FVector OverrideHoverOffset_Scale=FVector::One();
 
 private:
 	UFUNCTION()

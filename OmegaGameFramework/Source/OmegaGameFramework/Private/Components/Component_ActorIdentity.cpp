@@ -4,6 +4,7 @@
 #include "Components/Component_ActorIdentity.h"
 
 #include "Misc/OmegaUtils_Enums.h"
+#include "Subsystems/OmegaSubsystem_Actors.h"
 
 bool UActorIdentityComponent::Local_IsSourceAssetValid() const
 {
@@ -31,6 +32,13 @@ void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 		if(SourceAsset)
 		{
 			IdentitySource=SourceAsset;
+			if(IdentitySource)
+			{
+				if(Local_IsSourceAssetValid())
+				{
+					IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner());
+				}
+			}
 		}
 		else
 		{
@@ -38,6 +46,15 @@ void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 		}
 		OnActorIdentityChanged.Broadcast(IdentitySource,this);
 	}
+}
+
+void UActorIdentityComponent::OnTagEvent_Implementation(FGameplayTag Event)
+{
+	if(Local_IsSourceAssetValid())
+	{
+		IDataInterface_ActorIdentitySource::Execute_OnActorTagEvent(IdentitySource,GetOwner(),Event);
+	}
+	IActorTagEventInterface::OnTagEvent_Implementation(Event);
 }
 
 void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -51,7 +68,7 @@ void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 			if(i) { i->OnActorConstruction(GetOwner()); }
 		}
 	}
-	Super::PostEditChangeProperty(PropertyChangedEvent);
+	//Super::PostEditChangeProperty(PropertyChangedEvent);
 }
 
 void UActorIdentityComponent::BeginPlay()
@@ -109,30 +126,6 @@ TArray<UActorIdentityScript*> UActorIdentityPreset::GetIdentityScripts_Implement
 	return out;
 }
 
-void UOmegaActorSubsystem::local_RegisterActorIdComp(UActorIdentityComponent* Component, bool bIsRegister)
-{
-	if(Component)
-	{
-		if(bIsRegister && !REF_ActorIdComps.Contains(Component))
-		{
-			REF_ActorIdComps.Add(Component);
-		}
-		if(!bIsRegister && REF_ActorIdComps.Contains(Component))
-		{
-			REF_ActorIdComps.Remove(Component);
-		}
-	}
-}
-
-TArray<UActorIdentityComponent*> UOmegaActorSubsystem::GetAllActorIdentityComponents()
-{
-	TArray<UActorIdentityComponent*>out;
-	for(auto* i : REF_ActorIdComps)
-	{
-		if(i) {out.Add(i);}
-	}
-	return out;
-}
 
 TArray<AActor*> UOmegaActorIdentityFunctions::GetAllActorsWithIdentity(UObject* WorldContextObject,
                                                                        UPrimaryDataAsset* Asset, TSubclassOf<AActor> FilterClass)

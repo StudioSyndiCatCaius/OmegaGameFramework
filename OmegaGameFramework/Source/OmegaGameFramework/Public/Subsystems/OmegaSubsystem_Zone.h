@@ -418,19 +418,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zone", meta=(EditCondition="bTransitToLevel"))
 	FGameplayTag LevelTransitID;
 
-	UPROPERTY(EditDefaultsOnly, Category="Zone")
-	UBoxComponent* Box_Transit;
-	UPROPERTY(EditDefaultsOnly, Category="Zone")
-	UBoxComponent* Box_Notify;
-	UPROPERTY()
-	UTextRenderComponent* TextComponent;
-	UPROPERTY()
-	USceneComponent* Spawn_Point_Ref;
+	UPROPERTY(EditDefaultsOnly, Category="Zone") UBoxComponent* Box_Transit;
+	UPROPERTY(EditDefaultsOnly, Category="Zone") UBoxComponent* Box_Notify;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UTextRenderComponent* TextComponent;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UInstancedStaticMeshComponent* DisplayMesh;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UArrowComponent* DirectionalArrow;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") USceneComponent* Spawn_Point_Ref;
 
-	UPROPERTY(EditAnywhere, Category="Display")
-	float Box_X = 500;
-	UPROPERTY(EditAnywhere, Category="Display")
-	float Box_Y = 500;
+	
+	UPROPERTY(EditAnywhere, Category="Display") int32 DisplayPoint_Count = 4;
+	UPROPERTY(EditAnywhere, Category="Display",AdvancedDisplay) float DisplayPoint_Distance = 100;
+	UPROPERTY(EditAnywhere, Category="Display") float Box_X = 500;
+	UPROPERTY(EditAnywhere, Category="Display") float Box_Y = 500;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone")
 	FGameplayTagContainer AcceptedPlayerTags;
@@ -555,23 +555,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Zone")
 	void OnZoneTransitEnd(AOmegaZonePoint* ZonePoint);
 
-protected:
-	//virtual void NativeConstruct() override;
 };
 
 
-// =============================================================================================================
-// Zone Minimap
-// =============================================================================================================
-
-
-UCLASS(Abstract)
-class OMEGAGAMEFRAMEWORK_API UZoneMinimapWidget : public UUserWidget
-{
-	GENERATED_BODY()
-
-
-public:
-
-
-};

@@ -80,8 +80,12 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsyste
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 
 	
+	UPROPERTY() UDataWidget* HoveredWidget = nullptr;
+	UPROPERTY() UOmegaHoverCursor* hover_cursor;
+	
+	
 public:
-
+	UPROPERTY() TMap<FGameplayTag, UDataWidget*> SlottedDataWidgets;
 	// UPROPERTY() FOnInputKeyEvent OnInputKeyEvent;
 
 	// -- Menus -- //
@@ -196,26 +200,20 @@ public:
 	UPROPERTY()
 	FClearHoveredWidgets ClearHoveredWidgets;
 
-	// -- Data Widgets -- //
-	UPROPERTY()
-	UDataWidget* HoveredWidget = nullptr;
+	// -- Data Widgets -- //a
 
+	UFUNCTION(BlueprintCallable,Category="Widget")
+	void SetCurrentHoverWidget(UDataWidget* Widget);
+
+	UFUNCTION(BlueprintCallable,Category="Widget")
+	void TryUnhoverWidget(UDataWidget* Widget);
+	
 	UFUNCTION(BlueprintPure,Category="Widgets")
-	UDataWidget* GetCurrentHoverWidget() const
-	{
-		if(HoveredWidget)
-		{
-			return HoveredWidget;
-		}
-		return nullptr;
-	};
+	UDataWidget* GetCurrentHoverWidget() const;
 
 	// -----------
 	// Hover Cursor
 
-private:
-	UPROPERTY()
-	UOmegaHoverCursor* hover_cursor;
 public:
 	
 	UFUNCTION(BlueprintPure, Category="Omega|HoverCursor")

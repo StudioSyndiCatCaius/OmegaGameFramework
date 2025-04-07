@@ -70,7 +70,10 @@ void UGamePreferenceSubsystem::local_SetPref(UGamePreference* Preference, FVecto
 		else
 		{
 			GetSaveSubsystem()->GetSaveObject(Preference->bGlobal)->PreferenceValues.Add(Preference,value);
-			Local_PreferenceUpdate(Preference);
+			if(Preference->PreferenceScript)
+			{
+				Preference->PreferenceScript->OnPreferenceValueUpdated(UGameUserSettings::GetGameUserSettings(), value);
+			}
 		}
 		OnPreferenceUpdated.Broadcast(Preference,value);
 	}
@@ -81,14 +84,14 @@ FVector UGamePreferenceSubsystem::local_GetPref(UGamePreference* Preference)
 	if(Preference)
 	{
 		UOmegaSaveBase* save_obj = GetSaveSubsystem()->GetSaveObject(Preference->bGlobal);
-		
+		FVector out;
 
 		// FIRST: Try get from config file
         if(Preference->PreferenceScript && Preference->bSaveToConfig)
         {
         	FString in_label=Preference->PreferenceLabel;
         	FString in_section=Preference->PreferenceCategory.ToString();
-        	FVector out;
+ 
         	FString dump_val;
         	if(GConfig->GetValue(*in_section,*in_label,dump_val,ConfigFilePath))
         	{
@@ -109,20 +112,24 @@ FVector UGamePreferenceSubsystem::local_GetPref(UGamePreference* Preference)
         			out.X=static_cast<float>(temp_int);
         			break;
         		}
-        		
-        		return out;
         	}
         }
 		// SECOND: Try get from save object
-        if(save_obj->PreferenceValues.Contains(Preference))
+        else if(save_obj->PreferenceValues.Contains(Preference))
         {
-        	return save_obj->PreferenceValues[Preference];
+        	out=save_obj->PreferenceValues[Preference];
         }
 		// THIRD: Get default value
+		else if(Preference->PreferenceScript)
+		{
+			out=Preference->PreferenceScript->GetDefaultValue();
+		}
+
 		if(Preference->PreferenceScript)
 		{
-			return Preference->PreferenceScript->GetDefaultValue();
+			return Preference->PreferenceScript->GetCurrentValue(out);
 		}
+		return out;
 	}
 	return FVector();
 }
@@ -198,7 +205,7 @@ void UGamePreferenceSubsystem::SetGamePreferenceFloat(UGamePreference* Preferenc
 {
 	if(Preference)
 	{
-		FVector new_val;
+		FVector new_val=FVector();
 		new_val.X = Value;
 		local_SetPref(Preference,new_val);
 	}
@@ -207,10 +214,7 @@ void UGamePreferenceSubsystem::SetGamePreferenceFloat(UGamePreference* Preferenc
 //Int////////////////////////
 int32 UGamePreferenceSubsystem::GetGamePreferenceInt(UGamePreference* Preference)
 {
-	if(!Preference)
-	{
-		return 0;
-	}
+	if(!Preference) { return 0;}
 	return static_cast<int32>(local_GetPref(Preference).X);
 }
 
@@ -226,11 +230,28 @@ void UGamePreferenceSubsystem::SetGamePreferenceInt(UGamePreference* Preference,
 
 FString UGamePreferenceSubsystem::GetGamePreference_String(UGamePreference* Preference)
 {
-	if(Preference && Preference->PreferenceScript)
+	if(Preference)
 	{
-		return Preference->PreferenceScript->GetValueString(local_GetPref(Preference));
+		TArray<FString> opts=Preference->GetPreferenceStringOptions();
+		int32 ind=GetGamePreferenceInt(Preference);
+		if(opts.IsValidIndex(ind))
+		{
+			return opts[ind];
+		}
 	}
 	return "";
+}
+
+void UGamePreferenceSubsystem::SetGamePreference_String(UGamePreference* Preference, FString Value)
+{
+	if(Preference)
+	{
+		TArray<FString> opts=Preference->GetPreferenceStringOptions();
+		if(opts.Contains(Value))
+		{
+			SetGamePreferenceInt(Preference,opts.Find(Value));
+		}
+	}
 }
 
 FText UGamePreferenceSubsystem::GetGamePreference_Text(UGamePreference* Preference)
@@ -240,6 +261,32 @@ FText UGamePreferenceSubsystem::GetGamePreference_Text(UGamePreference* Preferen
 		return Preference->PreferenceScript->GetValueText(local_GetPref(Preference));
 	}
 	return FText();
+}
+
+bool UOmegaPreferencesFunctions::CheckGamePreference_Bool(const UObject* WorldContextObject,
+	UGamePreference* Preference, TEnumAsByte<EOmegaBranch>& Outcome)
+{
+	if(WorldContextObject && Preference)
+	{
+		Outcome=Yes;
+		return WorldContextObject->GetWorld()->GetSubsystem<UGamePreferenceSubsystem>()->GetGamePreferenceBool(Preference);
+	}
+	Outcome=No;
+	return false;
+}
+
+int32 UOmegaPreferencesFunctions::CheckGamePreference_Int(const UObject* WorldContextObject,
+	UGamePreference* Preference, int32 CheckValue, TEnumAsByte<EOmegaComparisonMethodSimple>& Outcome)
+{
+	int32 out=0;
+	if(WorldContextObject && Preference)
+	{
+		out=WorldContextObject->GetWorld()->GetSubsystem<UGamePreferenceSubsystem>()->GetGamePreferenceInt(Preference);
+	}
+	if(out<CheckValue) { Outcome=IsLess; }
+	else if(out==CheckValue) { Outcome=IsEqual; }
+	else if(out>CheckValue) { Outcome=IsGreater; }
+	return out;
 }
 
 
@@ -252,9 +299,26 @@ EGamePreferenceType UGamePreference::GetPreferenceType() const
 	return EGamePreferenceType::PrefType_Bool;
 }
 
+TArray<FString> UGamePreference::GetPreferenceStringOptions() const
+{
+	TArray<FString> out;
+	if(PreferenceScript) { out=PreferenceScript->GetValueStringOptions();}
+	return out;
+}
+
 FGameplayTag UGamePreference::GetObjectGameplayCategory_Implementation() { return PreferenceCategory; }
 FGameplayTagContainer UGamePreference::GetObjectGameplayTags_Implementation() { return PreferenceTags; }
 void UGamePreference::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
 	FText& Description) { Name = PrefernceName; }
 void UGamePreference::GetGeneralAssetLabel_Implementation(FString& Label) { Label = PreferenceLabel; }
+
+FVector UGamePreferenceScript::GetCurrentValue_Implementation(FVector Value) const
+{
+	return Value;
+}
+
+// ========================================================================================================================
+// Function Lib
+// ========================================================================================================================
+
 

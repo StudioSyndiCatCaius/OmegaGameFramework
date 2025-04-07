@@ -6,16 +6,15 @@
 #include "Components/Component_Combatant.h"
 #include "Components/ProgressBar.h"
 #include "Functions/OmegaFunctions_Common.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Widget/DataList.h"
 
 
 UActorComponent* local_GetComponentFromObject(UObject* object, TSubclassOf<UActorComponent> Class)
 {
-	if(!Class || !object)
-	{
-		return nullptr;
-	}
+	if(!Class || !object) { return nullptr; }
 	UActorComponent* local_comp=nullptr;
+	
 	if(object->GetClass()->IsChildOf(UActorComponent::StaticClass()))
 	{
 		local_comp=Cast<UActorComponent>(object);
@@ -34,18 +33,21 @@ UActorComponent* local_GetComponentFromObject(UObject* object, TSubclassOf<UActo
 	return nullptr;
 }
 
-void UDataWidgetBase_Combatant::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
+void UDataWidgetBase_Combatant::Native_OnSourceAssetChanged(UObject* SourceAsset)
 {
-	Super::Native_OnRefreshed(SourceAsset, ListOwner);
-	
-	//TEnumAsByte<EOmegaFunctionResult> out_result;
-	//UActorComponent* temp_comp=
-		
 	if(UActorComponent* ref_comp = local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass()))
 	{
 		REF_combatant=Cast<UCombatantComponent>(ref_comp);
-		REF_combatant->OnCombatantNotify.AddDynamic(this, &UDataWidgetBase_Combatant::OnCombatantNotify);
+		if(REF_combatant)
+		{
+			REF_combatant->OnCombatantNotify.AddDynamic(this, &UDataWidgetBase_Combatant::OnCombatantNotify);
+		}
 	}
+	Super::Native_OnSourceAssetChanged(SourceAsset);
+}
+
+void UDataWidgetBase_Combatant::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
+{
 	if(GetDataList_Attributes())
 	{
 		GetDataList_Attributes()->SetListOwner(SourceAsset);
@@ -59,42 +61,55 @@ void UDataWidgetBase_Combatant::Native_OnRefreshed(UObject* SourceAsset, UObject
 		}
 		//GetDataList_Attributes()->AddAssetsToList(REF_combatant->AttributeSet->Attributes,"")
 	}
+	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 }
 
-void UDataWidgetBase_Attribute::local_UpdateColor()
+// ==============================================================================================================
+// Attribute
+// ==============================================================================================================
+
+void UDataWidgetBase_Attribute::local_Update()
 {
 	if(REF_attribute)
 	{
+		//set bar color
 		FLinearColor in_color=REF_attribute->AttributeColor;
 		if(REF_Combatant && bUseDamageColor && REF_Combatant->GetAttributePercentage(REF_attribute)<DamageColorPercentChange)
 		{
 			in_color=REF_attribute->DamageColor;
 		}
 		
-		if(GetWidget_ProgressBar_Attribute())
+		if(UProgressBar* _bar =  GetWidget_ProgressBar_Attribute())
 		{
 			if(REF_Combatant)
 			{
-				GetWidget_ProgressBar_Attribute()->SetPercent(REF_Combatant->GetAttributePercentage(REF_attribute));
+				_bar->SetPercent(REF_Combatant->GetAttributePercentage(REF_attribute));
 			}
-			GetWidget_ProgressBar_Attribute()->SetFillColorAndOpacity(in_color);
+			_bar->SetFillColorAndOpacity(in_color);
 		}
-		if(GetWidget_DynamicMeter_Attribute())
+		if(UDynamicProgressMeter* _dmeter = GetWidget_DynamicMeter_Attribute())
 		{
 			if(REF_Combatant)
 			{
-				GetWidget_DynamicMeter_Attribute()->SetPercent_Progress(REF_Combatant->GetAttributePercentage(REF_attribute));
+				_dmeter->SetPercent_Progress(REF_Combatant->GetAttributePercentage(REF_attribute));
 			}
-			GetWidget_DynamicMeter_Attribute()->SetProgress_Color(in_color);
+			_dmeter->SetProgress_Color(in_color);
 		}
+		
 		float val_cur;
 		float val_max;
 		if(REF_Combatant)
 		{
 			REF_Combatant->GetAttributeValue(REF_attribute,val_cur,val_max);
 		}
-		if(GetWidget_Text_CurrentValue()) { GetWidget_Text_CurrentValue()->SetText(REF_attribute->GetAttributeValueDisplayText(val_cur)); }
-		if(GetWidget_Text_MaxValue()) { GetWidget_Text_MaxValue()->SetText(REF_attribute->GetAttributeValueDisplayText(val_max)); }
+		if(UTextBlock* _txt = GetWidget_Text_CurrentValue())
+		{
+			_txt->SetText(REF_attribute->GetAttributeValueDisplayText(val_cur));
+		}
+		if(UTextBlock* _txt = GetWidget_Text_MaxValue())
+		{
+			_txt->SetText(REF_attribute->GetAttributeValueDisplayText(val_max));
+		}
 	}
 }
 
@@ -103,38 +118,38 @@ void UDataWidgetBase_Attribute::local_OnAttributeDamaged(UCombatantComponent* Co
 {
 	if(Combatant==REF_Combatant && Attribute==REF_attribute)
 	{
-		local_UpdateColor();
+		local_Update();
 	}
 
 }
 
-void UDataWidgetBase_Attribute::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
+void UDataWidgetBase_Attribute::Native_OnSourceAssetChanged(UObject* SourceAsset)
 {
-	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 	if(SourceAsset && SourceAsset->GetClass()->IsChildOf(UOmegaAttribute::StaticClass()))
 	{
 		SetAttribute(Cast<UOmegaAttribute>(SourceAsset));
 	}
-	UCombatantComponent* temp_comp =nullptr;
-	if(UActorComponent* ref_comp = local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass()))
+	else if(UActorComponent* ref_comp = local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass()))
 	{
-		temp_comp=Cast<UCombatantComponent>(ref_comp);
-		
-	}
-	if(UActorComponent* ref_compB = local_GetComponentFromObject(ListOwner,UCombatantComponent::StaticClass()))
-    {
-		temp_comp=Cast<UCombatantComponent>(ref_compB);
-    }
-	if(temp_comp)
-	{
-		if(temp_comp!=REF_Combatant && REF_attribute)
-		{
-			REF_Combatant=temp_comp;
-			REF_Combatant->OnDamaged.AddDynamic(this, &UDataWidgetBase_Attribute::local_OnAttributeDamaged);
-		}
+		SetCombatant(Cast<UCombatantComponent>(ref_comp));
 	}
 	
-	local_UpdateColor();
+	Super::Native_OnSourceAssetChanged(SourceAsset);
+}
+
+void UDataWidgetBase_Attribute::Native_OnListOwnerChanged(UObject* ListOwner)
+{
+	if(UActorComponent* ref_comp = local_GetComponentFromObject(ListOwner,UCombatantComponent::StaticClass()))
+	{
+		SetCombatant(Cast<UCombatantComponent>(ref_comp));
+	}
+	Super::Native_OnListOwnerChanged(ListOwner);
+}
+
+void UDataWidgetBase_Attribute::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
+{
+	local_Update();
+	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 }
 
 void UDataWidgetBase_Attribute::NativePreConstruct()
@@ -143,14 +158,35 @@ void UDataWidgetBase_Attribute::NativePreConstruct()
 	Super::NativePreConstruct();
 }
 
+void UDataWidgetBase_Attribute::SetCombatant(UCombatantComponent* Combatant)
+{
+	if(Combatant)
+	{
+		if(REF_Combatant)
+		{
+			Combatant->OnDamaged.RemoveDynamic(this,&UDataWidgetBase_Attribute::local_OnAttributeDamaged);
+		}
+		REF_Combatant=Combatant;
+		Combatant->OnDamaged.AddDynamic(this, &UDataWidgetBase_Attribute::local_OnAttributeDamaged);
+	}
+	else
+	{
+		REF_Combatant=nullptr;
+	}
+}
+
+UCombatantComponent* UDataWidgetBase_Attribute::GetCombatant() const
+{
+	if(REF_Combatant) {return REF_Combatant;} return nullptr;
+}
+
 void UDataWidgetBase_Attribute::SetAttribute(UOmegaAttribute* Attribute)
 {
 	if(Attribute)
 	{
-		REF_attribute=Attribute;
 		if(GetWidget_Panel_MetricValue())
 		{
-			if(REF_attribute->bIsValueStatic)
+			if(Attribute->bIsValueStatic)
 			{
 				GetWidget_Panel_MetricValue()->SetVisibility(PanelVisibility_OnStatic);
 			}
@@ -160,8 +196,12 @@ void UDataWidgetBase_Attribute::SetAttribute(UOmegaAttribute* Attribute)
 				GetWidget_Panel_MetricValue()->SetVisibility(PanelVisibility_OnMetric);
 			}
 		}
-		local_UpdateColor();
-		OnAttributeChanged(REF_attribute);
+		if(REF_attribute!=Attribute)
+		{
+			OnAttributeChanged(Attribute);
+		}
+		REF_attribute=Attribute;
+		Refresh();
 	}
 }
 
@@ -203,8 +243,6 @@ void UDataWidgetBase_Leveling::OnSourceAssetChanged_Implementation(UObject* Asse
 
 void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
-	Super::Native_OnRefreshed(SourceAsset, ListOwner);
-
 	if(REF_Comp && REF_Comp->LevelingAsset)
 	{
 		if(GetWidget_ProgressBar())
@@ -224,6 +262,7 @@ void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject*
 			GetWidget_Text_CurrentValue()->SetText(FText::AsNumber(REF_Comp->GetCurrentLevelMaxXP()));
 		}
 	}
+	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 }
 
 // ==============================================================================================================
@@ -319,25 +358,90 @@ void UDataWidgetBase_EquipmentSlot::Native_OnRefreshed(UObject* SourceAsset, UOb
 	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 }
 
+
+
 // ==============================================================================================================
 // Message
 // ==============================================================================================================
 
-void UDataWidgetBase_Message::OnSourceAssetChanged_Implementation(UObject* Asset)
+void UDataWidgetBase_Message::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	if(Asset && Asset->GetClass()->IsChildOf(UOmegaGameplayMessage::StaticClass()))
+	if(bWriteTextOverTime && __bTextIsUpdating)
 	{
-		REF_message=Cast<UOmegaGameplayMessage>(Asset);
+		//if count is over max strings, end
+		if(!__stringsRemaining.IsValidIndex(__stringAmount))
+		{
+			__bTextIsUpdating=false;
+		}
+		else
+		{
+			if(__TextWriteTime>=TextWriteFrequency)
+			{
+				__TextWriteTime=0.0;
+				if(UTextBlock* _text = GetWidget_Text_Message())
+				{
+					FString _inStr=_text->GetText().ToString()+__stringsRemaining[__stringAmount];
+					_text->SetText(FText::FromString(_inStr));
+				}
+				__stringAmount+=1;
+			}
+			else
+			{
+				__TextWriteTime+=InDeltaTime;
+			}
+		}
+	}
+	Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
+void UDataWidgetBase_Message::Native_OnSourceAssetChanged(UObject* SourceAsset)
+{
+	if(SourceAsset && SourceAsset->GetClass()->IsChildOf(UOmegaGameplayMessage::StaticClass()))
+	{
+		REF_message=Cast<UOmegaGameplayMessage>(SourceAsset);
+		OnMessageUpdate(REF_message);
 		if(GetWidget_Text_Message())
 		{
-			GetWidget_Text_Message()->SetText(REF_message->GetMessageText());
+			FText _txt = REF_message->GetMessageText();
+			if(bWriteTextOverTime)
+			{
+				GetWidget_Text_Message()->SetText(FText::FromString(""));
+				__stringsRemaining=UKismetStringLibrary::GetCharacterArrayFromString(_txt.ToString());
+				__stringAmount=0;
+				
+				__bTextIsUpdating=true;
+			}
+			else
+			{
+				GetWidget_Text_Message()->SetText(_txt);
+			}
 		}
 		if(GetDataWidget_MessageInstigator())
 		{
 			GetDataWidget_MessageInstigator()->SetSourceAsset(REF_message->GetMessageInstigator());	
 		}
+		if(REF_message->GetMessageInstigator()!=REF_lastInstigator)
+		{
+			OnInstigatorChange(REF_message->GetMessageInstigator(),REF_lastInstigator);
+		}
+		if(REF_lastInstigator)
+		{
+			if(REF_lastInstigator->GetClass()->ImplementsInterface(UDataInterface_MessageInstigator::StaticClass()))
+			{
+				if(UImage* _img = GetImage_InstigatorBrush())
+				{
+					_img->SetBrush(IDataInterface_MessageInstigator::Execute_GetMessageBrush(_img,REF_message));
+				}
+			}
+		}
 	}
-	Super::OnSourceAssetChanged_Implementation(Asset);
+	Super::Native_OnSourceAssetChanged(SourceAsset);
+}
+
+
+UOmegaGameplayMessage* UDataWidgetBase_Message::GetCurrentMessage() const
+{
+	if(REF_message) { return REF_message; } return nullptr;
 }
 
 // ==============================================================================================================

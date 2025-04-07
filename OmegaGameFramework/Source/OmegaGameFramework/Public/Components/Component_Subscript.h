@@ -31,8 +31,10 @@ class OMEGAGAMEFRAMEWORK_API USubscriptComponent : public UActorComponent, publi
 {
 	GENERATED_BODY()
 
-	UPROPERTY() TMap<FName,FVector> param_data;
+	void _Subscripts_BeginPlay(TArray<USubscript*> ss);
 
+	UPROPERTY() TMap<FName,FVector> param_data;
+	UPROPERTY() bool _hasBegun;
 public:
 	// Sets default values for this component's properties
 	USubscriptComponent();
@@ -65,6 +67,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category="Default")
 	FJsonObjectWrapper SubscriptData;
 
+	UFUNCTION(BlueprintCallable,Category="Subscripts")
+	void SetSubscriptCollectionActive(USubscriptCollection* SubscriptCollection, bool is_active);
+	
 	// Params
 	UFUNCTION(BlueprintCallable,Category="Subscript|Params") void SetSubscriptParam_Float(FName Param, float value);
 	UFUNCTION(BlueprintCallable,Category="Subscript|Params") float GetSubscriptParam_Float(FName Param);

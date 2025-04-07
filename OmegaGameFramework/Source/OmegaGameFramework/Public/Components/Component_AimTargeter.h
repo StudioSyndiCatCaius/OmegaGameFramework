@@ -26,18 +26,19 @@ class OMEGAGAMEFRAMEWORK_API UAimTargetComponent : public UActorComponent
 	GENERATED_BODY()
 
 	FVector local_GetTargetLoc(AActor* target_actor) const;
-
-protected:
-	// Called when the game starts
-	//virtual void BeginPlay() override;
 	
 public:
 
 	UPROPERTY(EditAnywhere,Category="Aim Targeter")
 	AActor* AimTarget;
-
+	UPROPERTY(EditAnywhere,Category="Aim Targeter")
+	FRotator RotationOffset;
+	
 	UFUNCTION(BlueprintCallable,Category="Aim Target")
 	FVector GetSelf_AimRootLocation() const;
+
+	UFUNCTION(BlueprintCallable,Category="Aim Target")
+	FVector GetSelf_AimNormal() const;
 	
 	UFUNCTION(BlueprintCallable,Category="Aim Target")
 	FVector GetTarget_AimLocation() const;

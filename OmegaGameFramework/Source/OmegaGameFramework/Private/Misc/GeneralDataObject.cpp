@@ -47,6 +47,26 @@ TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implement
 	return out;
 }
 
+UOmegaDataAsset::UOmegaDataAsset()
+{
+	if(!Guid.IsValid()) { Guid= FGuid::NewGuid();}
+}
+
+UObject* UOmegaDataAsset::GetObject_Parent_Implementation() const
+{
+	return ParentAsset;
+}
+
+TArray<UObject*> UOmegaDataAsset::GetObject_Children_Implementation() const
+{
+	TArray<UObject*> out;
+	for(auto* c : ChildAssets)
+	{
+		if(c) { out.Add(c); }
+	}
+	return out;
+}
+
 bool UOmegaDataAsset::UseIconAsThumbnail_Implementation()
 {
 	{ return false;}

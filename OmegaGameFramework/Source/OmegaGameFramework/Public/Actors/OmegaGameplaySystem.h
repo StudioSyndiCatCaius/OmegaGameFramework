@@ -196,12 +196,7 @@ public:
 	////////////////////////////////////
 	////////////--Preferences--/////////////
 	////////////////////////////////////
-
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|GamePreferences")
-	void GamePreferenceUpdatedBool(class UGamePreferenceBool* Preference, bool Value);
-
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|GamePreferences")
-	void GamePreferenceUpdatedFloat(class UGamePreferenceFloat* Preference, float Value);
+	
 
 	////////////////////////////////////
 	////////////--Save--/////////////

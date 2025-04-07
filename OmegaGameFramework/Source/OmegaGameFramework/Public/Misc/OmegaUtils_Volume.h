@@ -8,7 +8,6 @@
 
 UENUM(BlueprintType)
 enum class EVolumeShape : uint8
-
 {
 	OmegaVolume_Sphere          UMETA(DisplayName = "Sphere"),
 	OmegaVolume_Box				UMETA(DisplayName = "Box"),

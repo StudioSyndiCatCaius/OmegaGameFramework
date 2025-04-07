@@ -59,7 +59,6 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FSoftClassPath> RegisteredGameplayModules;
 	
-	
 	//SAVE
 	UClass* GetOmegaGameSaveClass() const;
 	

@@ -7,7 +7,7 @@
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Subsystems/OmegaSubsystem_BGM.h"
-
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
@@ -25,7 +25,6 @@
 #include "Components/ArrowComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Kismet/KismetMathLibrary.h"
-
 
 UZoneEntityComponent::UZoneEntityComponent()
 {
@@ -753,9 +752,6 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 	//Setup Root Billboard
 	UBillboardComponent* RootRef = CreateDefaultSubobject<UBillboardComponent>("RootBillboard");
 	
-	//UTexture2D* TextureBill = LoadObject<UTexture2D>(GetTransientPackage(), TEXT("/OmegaGameFramework/Textures/Kenny/icons/board/structurehouse.structurehouse"));
-	//RootRef->SetSprite(TextureBill);
-	
 	Box_Transit = CreateOptionalDefaultSubobject<UBoxComponent>("Transit Box");
 	Box_Notify = CreateOptionalDefaultSubobject<UBoxComponent>("Notify Box");
 	Spawn_Point_Ref= CreateOptionalDefaultSubobject<USceneComponent>("SpawnPointReference");
@@ -788,6 +784,23 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 		TextComponent->SetHorizontalAlignment(EHTA_Center);
 		TextComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
 		TextComponent->SetHiddenInGame(true);
+	}
+	
+	DirectionalArrow=CreateOptionalDefaultSubobject<UArrowComponent>("TransitDirection");
+	if(DirectionalArrow)
+	{
+		DirectionalArrow->SetupAttachment(RootRef);
+		DirectionalArrow->ArrowColor=FColor::Yellow;
+		DirectionalArrow->SetComponentTickEnabled(false);
+	}
+	DisplayMesh=CreateOptionalDefaultSubobject<UInstancedStaticMeshComponent>("Display Mesh");
+	if(DisplayMesh)
+	{
+		DisplayMesh->SetupAttachment(RootRef);
+		DisplayMesh->SetRelativeLocation(FVector(0,0,45));
+		DisplayMesh->SetComponentTickEnabled(false);
+		DisplayMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DisplayMesh->CastShadow=0;
 	}
 }
 
@@ -856,7 +869,25 @@ void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 		}
 		// Set the text for TextComponent
 		Text = FString::Printf(TEXT("Transit Zone: %s"), *TempTransitName);
-		
+	}
+
+	if(DisplayMesh)
+	{
+		if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+		{
+			DisplayMesh->SetStaticMesh(set->ZoneTransitDisplayMesh);
+		}
+		DisplayMesh->ClearInstances();
+		DisplayMesh->AddInstance(FTransform());
+		for (int i = 1; i <= DisplayPoint_Count; ++i)
+		{
+			FTransform R=FTransform();
+			R.SetLocation(FVector(0,i*DisplayPoint_Distance,0));
+			FTransform L=FTransform();
+			L.SetLocation(FVector(0,i*DisplayPoint_Distance*-1,0));
+			DisplayMesh->AddInstance(R);
+			DisplayMesh->AddInstance(L);
+		}
 	}
 	
 	TextComponent->SetText(FText::FromString(Text));
@@ -965,6 +996,7 @@ void AOmegaZonePoint::BeginPlay()
 void AOmegaZonePoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->ZonePoints.Remove(this);
+	Super::EndPlay(EndPlayReason);
 }
 
 AOmegaZonePoint::AOmegaZonePoint()

@@ -62,10 +62,12 @@ public:
 
 	UFUNCTION() virtual void Native_Begin(const FString& Flag="");
 	
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnEventBegin(const FString& Flag);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnEventEnd(const FString& Flag);
+	UFUNCTION(BlueprintImplementableEvent) void OnEventBegin(const FString& Flag);
+	UFUNCTION(BlueprintImplementableEvent) void OnEventEnd(const FString& Flag);
+
+	
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context);
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="JumpToID"))
 	void Finish(const FString& Flag, const FName JumpToID = FName(""));

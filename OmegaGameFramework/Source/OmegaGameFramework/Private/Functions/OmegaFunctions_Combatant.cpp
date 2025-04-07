@@ -47,6 +47,21 @@ TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByFaction(
 	return OutCombatants;
 }
 
+AOmegaGameplayEffect* UCombatantFunctions::SelectFirstEffectWithContext(TArray<AOmegaGameplayEffect*> Effects,
+	UObject* Context, bool& Result)
+{
+	for(auto* e : Effects)
+	{
+		if(e && e->EffectContext==Context)
+		{
+			Result=true;
+			return e;
+		}
+	}
+	Result=false;
+	return nullptr;
+}
+
 
 void UCombatantFunctions::SetCombatantFromSource(UCombatantComponent* Combatant, UObject* Source)
 {
@@ -108,7 +123,7 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetCombatantFromTargetSelectio
 			OutTargets.Add(Instigator);
 			break;
 		case Target_ActiveTarget:
-			OutTargets.Add(Instigator->GetActiveTarget());
+			OutTargets.Add(Instigator->Native_GetActiveTarget());
 			break;
 		case Target_AllTargets:
 			OutTargets=Instigator->GetRegisteredTargetList();
@@ -183,6 +198,19 @@ void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObje
 	}
 }
 
+void UCombatantFunctions::NotifyCombatant_FactionOfTag(const UObject* WorldContextObject, FGameplayTag Tag,
+	FName Notify)
+{
+	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants();
+
+	for(auto* TempComb : LocalList)
+	{
+		if(TempComb->GetCombatantTags().HasTagExact(Tag))
+		{
+			TempComb->CombatantNotify(Notify,"");
+		}
+	}
+}
 
 
 UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
@@ -355,9 +383,9 @@ float UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* 
 
 float UCombatantFunctions::GetCombatantDistantToActiveTarget(UCombatantComponent* Combatant)
 {
-	if(Combatant && Combatant->GetActiveTarget())
+	if(Combatant && Combatant->Native_GetActiveTarget())
 	{
-		return Combatant->GetActiveTarget()->GetOwner()->GetDistanceTo(Combatant->GetOwner());
+		return Combatant->Native_GetActiveTarget()->GetOwner()->GetDistanceTo(Combatant->GetOwner());
 	}
 	return 0;
 }
@@ -371,8 +399,20 @@ bool UCombatantFunctions::IsCombatantActiveTargetInRange(UCombatantComponent* Co
 	return false;
 }
 
+void UCombatantFunctions::IsCombatantOfFaction(UCombatantComponent* Combatant, UOmegaFaction* Faction,
+	TEnumAsByte<EOmegaBranch>& Outcome)
+{
+	if(Combatant && Combatant->FactionDataAsset==Faction)
+	{
+		Outcome=Yes;
+		return;
+	}
+	Outcome=No;
+	return;
+}
+
 TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatantsWithDataAsset(UObject* WorldContextObject,
-	UPrimaryDataAsset* Asset)
+                                                                                UPrimaryDataAsset* Asset)
 {
 	TArray<UCombatantComponent*> out;
 	if (WorldContextObject && Asset)
@@ -401,8 +441,25 @@ UCombatantComponent* UCombatantFunctions::GetFirstCombatantWithDataAsset(UObject
 	return nullptr;
 }
 
+TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatants_OfFaction(UObject* WorldContextObject,
+	UOmegaFaction* Faction)
+{
+	TArray<UCombatantComponent*> out;
+	if (WorldContextObject && Faction)
+	{
+		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+		{
+			if(c && c->FactionDataAsset==Faction)
+			{
+				out.Add(c);
+			}
+		}
+	}
+	return out;
+}
+
 UCombatantComponent* UCombatantFunctions::SelectFirstCombatantWithDataAsset(TArray<UCombatantComponent*> Combatants,
-	UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                            UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	for (auto* c : Combatants)
 	{
@@ -415,6 +472,22 @@ UCombatantComponent* UCombatantFunctions::SelectFirstCombatantWithDataAsset(TArr
 	Outcome=EOmegaFunctionResult::Fail;
 	return nullptr;
 }
+
+UCombatantComponent* UCombatantFunctions::SelectFirstCombatant_WithTag(TArray<UCombatantComponent*> Combatants,
+	FGameplayTag Tag, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	for (auto* c : Combatants)
+	{
+		if(c && c->CombatantHasTag(Tag))
+		{
+			Outcome=Success;
+			return  c;
+		}
+	}
+	Outcome=Fail;
+	return nullptr;
+}
+
 
 
 /*
@@ -479,6 +552,7 @@ void UCombatantFunctions::DoesCombatantHaveEffectWithTag(UCombatantComponent* Co
 		Outcome = EOmegaBranch::No;
 	}
 }
+
 
 
 

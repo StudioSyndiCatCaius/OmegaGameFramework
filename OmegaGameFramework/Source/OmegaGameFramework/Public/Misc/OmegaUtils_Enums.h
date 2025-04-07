@@ -49,6 +49,14 @@ enum EOmegaComparisonMethod
 	Compare_LessEqual	UMETA(DisplayName = "<="),
 };
 
+UENUM(Blueprintable)
+enum EOmegaComparisonMethodSimple
+{
+	IsGreater		UMETA(DisplayName = ">"),
+	IsEqual			UMETA(DisplayName = "="),
+	IsLess			UMETA(DisplayName = "<"),
+};
+
 UENUM(BlueprintType)
 enum class EAddRemove : uint8
 {

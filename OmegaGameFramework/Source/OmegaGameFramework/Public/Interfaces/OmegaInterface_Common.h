@@ -9,13 +9,36 @@
 #include "Engine/DataAsset.h"
 #include "OmegaInterface_Common.generated.h"
 
+UINTERFACE(MinimalAPI)
+class UDataInterface_ObjectHierarchy : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_ObjectHierarchy
+{
+	GENERATED_BODY()
+public:
+	
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Omega|GUID")
+	TArray<UObject*> GetObject_Children() const;
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Omega|GUID")
+	UObject* GetObject_Parent() const;
+};
+
+
+
 // ===================================================================================================================
 // General Info
 // ===================================================================================================================
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UDataInterface_General : public UInterface { GENERATED_BODY() };
+class UDataInterface_General : public UInterface
+{
+	GENERATED_BODY()
+
+public:
+	static FText GetObjectName(UObject* obj);
+	static FText GetObjectDesc(UObject* obj);
+};
+
 
 class OMEGAGAMEFRAMEWORK_API IDataInterface_General
 {
@@ -35,6 +58,30 @@ public:
 	void GetGeneralAssetLabel(FString& Label);
 
 };
+
+
+inline FText UDataInterface_General::GetObjectName(UObject* obj)
+{
+	FText out_name;
+	if(obj && obj->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		FText out_desc;
+		IDataInterface_General::Execute_GetGeneralDataText(obj,"",nullptr,out_name,out_desc);
+	}
+	return out_name;
+}
+
+inline FText UDataInterface_General::GetObjectDesc(UObject* obj)
+{
+	FText out;
+	if(obj && obj->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		FText out_desc;
+		IDataInterface_General::Execute_GetGeneralDataText(obj,"",nullptr,out_desc,out);
+	}
+	return out;
+}
+
 
 UINTERFACE(MinimalAPI)
 class UDataInterface_GUID : public UInterface { GENERATED_BODY() };

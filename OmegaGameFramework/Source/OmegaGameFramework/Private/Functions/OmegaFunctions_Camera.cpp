@@ -6,6 +6,20 @@
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 
 
+APlayerController* _TryGetPlayer(UObject* Context, APlayerController* lit) 
+{
+	if(lit)
+	{
+		return lit;
+	}
+	if(Context && Context->GetWorld())
+	{
+		return Context->GetWorld()->GetFirstPlayerController();
+	}
+	return nullptr;
+}
+
+
 FVector2D UOmegaCameraFunctions::ProjectWorldToScreen_FromCamera(UObject* WorldContextObject, UCameraComponent* Camera,
                                                                  FVector Location, APlayerController* Player)
 {
@@ -78,4 +92,52 @@ void UOmegaCameraFunctions::SetViewTarget_ActorSelector(UObject* WorldContextObj
 {
 	AActor* in_actor=UOmegaActorUtilFunctions::GetSelectedActor(WorldContextObject,Selector);
 	SetViewTarget_Actor(WorldContextObject,in_actor,BlendTime,Player);
+}
+
+AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Master(UObject* WorldContextObject, TEnumAsByte<EOmegaFunctionResult>& Outcome, 
+	APlayerController* Player)
+{
+	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+	{
+		Outcome=Success;
+		return _player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetDynamicCamera();
+	}
+	Outcome=Fail;
+	return nullptr;
+}
+
+AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Source(UObject* WorldContextObject, TEnumAsByte<EOmegaFunctionResult>& Outcome, 
+	APlayerController* Player)
+{
+	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+	{
+		Outcome=Success;
+		return _player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetSourceCamera();
+	}
+	Outcome=Fail;
+	return nullptr;
+}
+
+bool UOmegaCameraFunctions::SetDynamicCamera_Override(UObject* WorldContextObject, AOmegaDynamicCamera* SourceCamera,
+	APlayerController* Player)
+{
+	if(SourceCamera)
+	{
+		if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+		{
+			_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SetOverrideCamera(SourceCamera);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UOmegaCameraFunctions::ClearDynamicCamera_Override(UObject* WorldContextObject, APlayerController* Player)
+{
+	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+	{
+		_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->ClearOverrideCamera();
+		return true;
+	}
+	return false;
 }
