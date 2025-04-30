@@ -49,6 +49,20 @@ UHUDLayer* UOmegaWidgetFunctions::TryGetHudLayer(const UObject* WorldContextObje
 	return nullptr;
 }
 
+UDataWidget* UOmegaWidgetFunctions::TryGetDataWidget_FromSlot(const UObject* WorldContextObject, FGameplayTag SlotID,
+	APlayerController* Player, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	APlayerController* in_player=WorldContextObject->GetWorld()->GetFirstPlayerController();
+	if(Player) { in_player=Player;}
+	if(UDataWidget* output = in_player->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SlottedDataWidgets.FindOrAdd(SlotID))
+	{
+		Outcome=Success;
+		return output;
+	}
+	Outcome=Fail;
+	return nullptr;
+}
+
 TArray<UObject*> UOmegaWidgetFunctions::GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass)
 {
 	TArray<UObject*> out;

@@ -43,20 +43,19 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 {
 	//CollectGarbage(EObjectFlags::RF_Garbage);
 	bool bIsMenuOpen = false;
-	UMenu* DumMenu = GetMenu(MenuClass, bIsMenuOpen);
+	if(UMenu* DumMenu = GetMenu(MenuClass, bIsMenuOpen))
+	{
+		DumMenu->RemoveFromParent(); //Remove Residual menu (just in case)
+	}
 
 	if (!bIsMenuOpen)	//If menu is already open, don't open it again.
 	{
-        if(DumMenu)
-        {
-            DumMenu->RemoveFromParent(); //Remove Residual menu (just in case)
-        }
-        
-		class UMenu* LocalMenu = Cast<UMenu>(CreateWidget(GetWorld(), MenuClass));	//Create a new Menu Widget
+		UMenu* LocalMenu = Cast<UMenu>(CreateWidget(GetWorld(), MenuClass));	//Create a new Menu Widget
 
 		if (LocalMenu != nullptr)
 		{
 			OpenMenus.Add(LocalMenu);
+			LocalMenu->ContextObject=Context;
 			LocalMenu->OpenMenu(Tags, Context, ParentPlayerController, Flag);	//Set Menu Context, Tags, and Player Controller
 			bool MultiMenu = OpenMenus.IsValidIndex(1);
 			OnMenuOpened.Broadcast(LocalMenu, Tags, MultiMenu);
@@ -67,15 +66,8 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 			}
 			return LocalMenu;
 		}
-		else
-		{
-			return nullptr;
-		}
 	}
-	else
-	{
-		return nullptr;
-	}
+	return nullptr;
 }
 
 bool UOmegaPlayerSubsystem::CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
@@ -209,14 +201,15 @@ bool UOmegaPlayerSubsystem::CanInterfaceInput() const
 UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass, UObject* Context)
 {
 	CleanHUDLayers();
-	class UHUDLayer* LocalLayer = Cast<UHUDLayer>(CreateWidget(GetWorld(), LayerClass));
+	UHUDLayer* LocalLayer = Cast<UHUDLayer>(CreateWidget(GetWorld(), LayerClass));
 	if (LocalLayer != nullptr)
 	{
 		ActiveHUDLayers.Add(LocalLayer);
 		
 		LocalLayer->SetOwningLocalPlayer(GetLocalPlayer());
-		LocalLayer->LayerAdded(GetLocalPlayer()->GetPlayerController(GetWorld()), Context);
+		LocalLayer->ContextObject=Context;
 		LocalLayer->AddToPlayerScreen(LocalLayer->SlateLayerIndex);
+		LocalLayer->LayerAdded(GetLocalPlayer()->GetPlayerController(GetWorld()), Context);
 		return LocalLayer;
 	}
 	return nullptr;
@@ -341,6 +334,40 @@ APlayerController* UOmegaPlayerSubsystem::Local_GetPlayerController()
 		}
 	}
 	return ParentPlayerController;
+}
+
+void UOmegaPlayerSubsystem::SetCurrentHoverWidget(UDataWidget* Widget)
+{
+	if(HoveredWidget!=Widget)
+	{
+		if(HoveredWidget)
+		{
+			HoveredWidget->Native_SetHovered(false);
+		}
+		HoveredWidget=nullptr;
+		if(Widget)
+		{
+			HoveredWidget=Widget;
+			Widget->Native_SetHovered(true);
+		}
+	}
+}
+
+void UOmegaPlayerSubsystem::TryUnhoverWidget(UDataWidget* Widget)
+{
+	if(Widget==HoveredWidget)
+	{
+		SetCurrentHoverWidget(nullptr);
+	}
+}
+
+UDataWidget* UOmegaPlayerSubsystem::GetCurrentHoverWidget() const
+{
+	if(HoveredWidget)
+	{
+		return HoveredWidget;
+	}
+	return nullptr;
 }
 
 UOmegaHoverCursor* UOmegaPlayerSubsystem::GetHoverCursor()

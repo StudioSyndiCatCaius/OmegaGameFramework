@@ -72,6 +72,10 @@ public:
 	static TArray<UObject*> FilterObjectsByGameplayTags(TArray<UObject*> Assets, FGameplayTagContainer GameplayTags,
 		bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag);
 
+
+	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExclude, Class", DeterminesOutputType="Class"))
+	static TArray<UObject*> FilterObjectsWithInterface(TArray<UObject*> Objects, TSubclassOf<UInterface> Interface, bool bExclude, TSubclassOf<UObject> Class);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static FGameplayTagContainer FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn);
 
@@ -99,6 +103,11 @@ public:
 	//###############################################################################
 	// Object
 	//###############################################################################
+	UFUNCTION(BlueprintCallable, Category="Omega|Object",meta=(DeterminesOutputType="Class"))
+	static TArray<UObject*> ResolveSoftArray_Object(TArray<TSoftObjectPtr<UObject>> List, TSubclassOf<UObject> Class);
+	UFUNCTION(BlueprintCallable, Category="Omega|Object",meta=(DeterminesOutputType="Class"))
+	static TArray<TSubclassOf<UObject>> ResolveSoftArray_Class(TArray<TSoftClassPtr<UObject>> List);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
 	static TArray<UObject*> FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude);
 	
@@ -125,7 +134,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Asset (from Path)")
 	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Ω Get Sorted Asset from Path (List)")
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Ω🔴 Get Assets List (from Path)")
 	static TArray<UObject*> GetAssetList_FromPath(const TArray<FString> AssetPaths, TSubclassOf<UObject> Class);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Class (from Path)")
@@ -196,8 +205,12 @@ public:
 	// Actor
 	//###############################################################################
 	
+	
 	UFUNCTION(BlueprintCallable, Category="Omega|Tags")
 	static void SetActorTagActive(AActor* Actor, FName Tag, bool bIsActive);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Tags")
+	static void SetActorTagListActive(AActor* Actor, TArray<FName> Tags, bool bIsActive);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Tags")
 	static void SetComponentTagActive(UActorComponent* Component, FName Tag, bool bIsActive);
@@ -229,6 +242,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="ExcludedActors"))
 	static TArray<AActor*> FilterActorsWithComponents(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass, TArray<AActor*> ExcludedActors);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Actor (From Object)")
+	static AActor* TryGetActorFromObject(UObject* Object, TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 
 	//Will attempt to get a component, casting the object as component, and actor, or a sibling component.
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Component (From Object)")

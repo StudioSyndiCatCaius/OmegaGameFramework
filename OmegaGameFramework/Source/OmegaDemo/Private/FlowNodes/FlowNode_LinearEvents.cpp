@@ -60,6 +60,7 @@ void UFlowNode_LinearEvents::GetGeneralDataText_Implementation(const FString& La
 	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
 }
 
+
 void UFlowNode_LinearEvents::ImportReaderEvents()
 {
 	FLinearEventSequence new_seq = UOmegaLinearEventFunctions::CreateLinearEventSequence_FromReader(this,ReaderData.Reader,ReaderData.SourceString);
@@ -76,31 +77,3 @@ void UFlowNode_LinearEvents::LocalFinish(const FString& Flag,UOmegaLinearEventIn
 }
 
 
-
-//-----------------------------------------
-// Edit Save Tags
-//-----------------------------------------
-
-UFlowNode_EditSaveTags::UFlowNode_EditSaveTags()
-{
-#if WITH_EDITOR
-	Category = TEXT("GameFlow");
-#endif
-}
-
-void UFlowNode_EditSaveTags::ExecuteInput(const FName& PinName)
-{
-	UOmegaSaveSubsystem* SubsysRef = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
-	
-	switch (Action)
-	{
-	case EAddRemove::Add:
-		SubsysRef->AddStoryTags(Tags, GlobalSave);
-		break;
-	case EAddRemove::Remove:
-		SubsysRef->RemoveStoryTags(Tags, GlobalSave);
-		break;
-	default: ;
-	}
-	TriggerFirstOutput(true);
-}

@@ -12,7 +12,6 @@
 
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_GameplayEffect.h"
-#include "Actors/CombatantTargetIndicator.h"
 
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 
@@ -63,19 +62,6 @@ void UCombatantComponent::BeginPlay()
 		GrantAbility(TempAbClass);
 	}
 
-	if (TargetIndicatorClass)
-	{
-		TargetIndicator = GetWorld()->SpawnActorDeferred<ACombatantTargetIndicator>(
-			TargetIndicatorClass, GetOwner()->GetTransform(), nullptr
-		);
-		if (TargetIndicator)
-		{
-			TargetIndicator->CombatantOwner = this;
-			UGameplayStatics::FinishSpawningActor(TargetIndicator, GetOwner()->GetTransform());
-			TargetIndicator->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-		}
-	}
-
 	InitializeAttributes();
 }
 
@@ -100,15 +86,6 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		TempAb->K2_DestroyActor();
 	}
-}
-
-
-// Called every frame
-void UCombatantComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 
 void UCombatantComponent::SetMasterDataSourceActive(UObject* Source, bool bActive)
@@ -623,6 +600,14 @@ int32 UCombatantComponent::GetAttributeLevel(UOmegaAttribute* Attribute)
 	return AttributeLevels.FindOrAdd(Attribute);
 }
 
+void UCombatantComponent::Local_CacheAttributeMods()
+{
+	if(bCacheAttributeModifierValues)
+	{
+		CachedAttributeModValues=GetAllModifierValues();
+	}
+}
+
 //////////////////
 /// Skills //////
 ////////////////
@@ -662,11 +647,11 @@ bool UCombatantComponent::SetSkillSourceActive(UObject* SkillSource, bool bActiv
 	{
 		if(bActive)
 		{
-			Local_SkillSources.AddUnique(SkillSource);
+			SOURCES_Skills.AddUnique(SkillSource);
 		}
 		else
 		{
-			Local_SkillSources.Remove(SkillSource);
+			SOURCES_Skills.Remove(SkillSource);
 		}
 	}
 	return true;
@@ -683,11 +668,11 @@ bool UCombatantComponent::SetDamageModifierActive(UObject* Modifier, bool bActiv
 	{
 		if(bActive)
 		{
-			DamageModifiers.Add(Modifier);
+			SOURCES_DamageMods.Add(Modifier);
 		}
 		else
 		{
-			DamageModifiers.Remove(Modifier);
+			SOURCES_DamageMods.Remove(Modifier);
 		}
 	}
 	return false;
@@ -696,7 +681,7 @@ bool UCombatantComponent::SetDamageModifierActive(UObject* Modifier, bool bActiv
 TArray<UObject*> UCombatantComponent::GetDamageModifiers()
 {
 	TArray<UObject*> OutMods;
-	for(auto* TempMod : DamageModifiers)
+	for(auto* TempMod : SOURCES_DamageMods)
 	{
 		if(TempMod && TempMod->Implements<UDataInterface_DamageModifier>())
 		{
@@ -865,6 +850,19 @@ void UCombatantComponent::InitializeAttributes()
 	}
 }
 
+// =============================================================================================================================================
+// Attribute Modifiers
+// =============================================================================================================================================
+
+TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implementation()
+{
+	if(bCacheAttributeModifierValues)
+	{
+		return CachedAttributeModValues;
+	}
+	return GetAllModifierValues();
+}
+
 UAttributeModifierContainer* UCombatantComponent::CreateAttributeModifier(UOmegaAttribute* Attribute, float Increment, float Multiplier, FGameplayTagContainer Tags)
 {
 	UAttributeModifierContainer* NewMod = NewObject<UAttributeModifierContainer>(this, UAttributeModifierContainer::StaticClass());
@@ -878,22 +876,28 @@ UAttributeModifierContainer* UCombatantComponent::CreateAttributeModifier(UOmega
 
 void UCombatantComponent::SetAttributeModifierActive(UObject* Modifier, bool bActive)
 {
-	if(bActive)
+	if(Modifier)
 	{
-		AddAttrbuteModifier(Modifier);
+		if(bActive && !SOURCES_AttributeMods.Contains(Modifier))
+		{
+			SOURCES_AttributeMods.Add(Modifier);
+			Local_CacheAttributeMods();
+			Update();
+		}
+		else if(!bActive && SOURCES_AttributeMods.Contains(Modifier))
+		{
+			SOURCES_AttributeMods.Remove(Modifier);
+			Local_CacheAttributeMods();
+			Update();
+		}
 	}
-	else
-	{
-		RemoveAttributeModifier(Modifier);
-	}
-	
 }
 
 bool UCombatantComponent::AddAttrbuteModifier(UObject* Modifier)
 {
 	if(Modifier->Implements<UDataInterface_AttributeModifier>())
 	{
-		AttributeModifiers.Add(Modifier);
+		SOURCES_AttributeMods.Add(Modifier);
 		return true;
 	}
 	return false;
@@ -901,21 +905,13 @@ bool UCombatantComponent::AddAttrbuteModifier(UObject* Modifier)
 
 bool UCombatantComponent::RemoveAttributeModifier(UObject* Modifier)
 {
-	if(!Modifier)
-	{
-		return false;
-	}
-	if(AttributeModifiers.Contains(Modifier))
-	{
-		AttributeModifiers.Remove(Modifier);
-		return true;
-	}
+	SetAttributeModifierActive(Modifier,false);
 	return false;
 }
 
 void UCombatantComponent::RemoveAttributeModifersWithTags(FGameplayTagContainer Tags)
 {
-	for(UObject* TempMod : AttributeModifiers)
+	for(UObject* TempMod : SOURCES_AttributeMods)
 	{
 		if(IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempMod).HasAnyExact(Tags))
 		{
@@ -936,7 +932,7 @@ float UCombatantComponent::GetAttributeComparedValue(UOmegaAttribute* Attribute,
 const TArray<UObject*> UCombatantComponent::GetAttributeModifiers()
 {
 	//Base Modifiers
-	TArray<UObject*> LocalMods = AttributeModifiers;
+	TArray<UObject*> LocalMods = SOURCES_AttributeMods;
 	
 	//LocalMods.Append(static_cast<TArray<UObject*>>(Skills));
 	//Add Skill Modifiers
@@ -1234,55 +1230,44 @@ void UCombatantComponent::RemoveEffectsWithTags(FGameplayTagContainer EffectTags
 ///////////////////
 /// Targeting ////
 /////////////////
-void UCombatantComponent::AddTargetToList(UCombatantComponent* Combatant)
+
+void UCombatantComponent::SetTargetRegistered(UCombatantComponent* Combatant, bool IsRegistered)
 {
-	if(!Combatant)
+	if(Combatant)
 	{
-		return;
-	}
-	if(!TargetList.Contains(Combatant))
-	{
-		TargetList.AddUnique(Combatant);
-		OnTargetAdded.Broadcast(Combatant);
-		Combatant->OnAddedAsTarget.Broadcast(this);
+		bool _has = GetRegisteredTargetList().Contains(Combatant);
+		if(IsRegistered && !_has)
+		{
+			TargetList.Add(Combatant);
+			Combatant->OnAddedAsTarget.Broadcast(Combatant,this,true);
+			OnTargetAdded.Broadcast(this,Combatant,true);
+		}
+		else if(!IsRegistered && _has)
+		{
+			TargetList.Remove(Combatant);
+			Combatant->OnAddedAsTarget.Broadcast(Combatant,this,false);
+			OnTargetAdded.Broadcast(this,Combatant,false);
+		}
 	}
 }
 
-void UCombatantComponent::AddTargetsToList(TArray<UCombatantComponent*> Combatants, bool bClearListFirst)
+void UCombatantComponent::SetTargetsRegistered(TArray<UCombatantComponent*> Combatants, bool IsRegistered,
+	bool ClearListFirst)
 {
-	if(bClearListFirst)
+	if(ClearListFirst)
 	{
 		ClearTargetList();
 	}
-
-	for(UCombatantComponent* TempTarget : Combatants)
+	for(auto* c : Combatants)
 	{
-		if(TempTarget){AddTargetToList(TempTarget);}
-		
+		if(c) { SetTargetRegistered(c,IsRegistered);}
 	}
 }
 
-void UCombatantComponent::RemoveTargetFromList(UCombatantComponent* Combatant)
-{
-	if(!Combatant)
-	{
-		return;
-	}
-	if(TargetList.Contains(Combatant))
-	{
-		TargetList.Remove(Combatant);
-		OnTargetRemoved.Broadcast(Combatant);
-		Combatant->OnRemovedAsTarget.Broadcast(this);
-	}
-}
 
 void UCombatantComponent::ClearTargetList()
 {
-	TArray<UCombatantComponent*> LocalCombatants = TargetList;
-	for(UCombatantComponent* TempTarget : LocalCombatants)
-	{
-		RemoveTargetFromList(TempTarget);
-	}
+	SetTargetsRegistered(TargetList,false,false);
 	TargetList.Empty();
 }
 
@@ -1305,16 +1290,25 @@ void UCombatantComponent::SetActiveTarget(UCombatantComponent* Combatant)
 	OnActiveTargetChanged.Broadcast(ActiveTarget, true);
 }
 
-UCombatantComponent* UCombatantComponent::GetActiveTarget()
+UCombatantComponent* UCombatantComponent::GetActiveTarget(bool& IsValid)
 {
-	return ActiveTarget;
+	if(ActiveTarget)
+	{
+		IsValid=true;
+		return ActiveTarget;
+	}
+	IsValid=false;
+	return nullptr;
 }
+
+
 
 int32 UCombatantComponent::GetActiveTargetIndex()
 {
-	if(GetActiveTarget() && GetRegisteredTargetList().Contains(GetActiveTarget()))
+
+	if(Native_GetActiveTarget() && GetRegisteredTargetList().Contains(Native_GetActiveTarget()))
 	{
-		return GetRegisteredTargetList().Find(GetActiveTarget());
+		return GetRegisteredTargetList().Find(Native_GetActiveTarget());
 	}
 	return 0;
 }
@@ -1323,9 +1317,9 @@ UCombatantComponent* UCombatantComponent::CycleActiveTarget(int32 Amount)
 {
 	//Get Start Index
 	int32 StartIndex = 0;
-	if(GetRegisteredTargetList().Contains(GetActiveTarget()))
+	if(GetRegisteredTargetList().Contains(Native_GetActiveTarget()))
 	{
-		StartIndex = GetRegisteredTargetList().Find(GetActiveTarget());
+		StartIndex = GetRegisteredTargetList().Find(Native_GetActiveTarget());
 	}
 
 	int32 NewIndex = StartIndex+Amount;
@@ -1349,17 +1343,14 @@ UCombatantComponent* UCombatantComponent::CycleActiveTarget(int32 Amount)
 
 void UCombatantComponent::ClearActiveTarget()
 {
-	if(IsActiveTargetValid())
+	
+	if(Native_GetActiveTarget())
 	{
 		ActiveTarget = nullptr;
 		OnActiveTargetChanged.Broadcast(nullptr, false);
 	}
 }
 
-bool UCombatantComponent::IsActiveTargetValid()
-{
-	return ActiveTarget->IsValidLowLevel();
-}
 
 void UCombatantComponent::CombatantNotify(FName Notify, const FString& Payload)
 {
@@ -1371,11 +1362,21 @@ void UCombatantComponent::CombatantNotify(FName Notify, const FString& Payload)
 /// Faction ////
 /////////////////
 
+void UCombatantComponent::SetFaction_Asset(UOmegaFaction* Faction)
+{
+	UOmegaFaction* new_fact=nullptr;
+	UOmegaFaction* old_fact=nullptr;
+	if(Faction) {new_fact=Faction;}
+	if(FactionDataAsset) {old_fact=FactionDataAsset;}
+	FactionDataAsset=Faction;
+	OnFactionChanged.Broadcast(this,new_fact,old_fact);
+}
+
 FText UCombatantComponent::GetFactionName()
 {
 	if(FactionDataAsset)
 	{
-		return FactionDataAsset->Name;
+		return FactionDataAsset->FactionName;
 	}
 	FText DumText;
 	return DumText;
@@ -1397,16 +1398,17 @@ FGameplayTag UCombatantComponent::GetFactionTag()
 	{
 		return FactionDataAsset->FactionTag;
 	}
-	return FactionTag;
+	return FGameplayTag();
 }
 
 TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> UCombatantComponent::GetFactionAffinities()
 {
+	TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> out;
 	if(FactionDataAsset)
 	{
 		return FactionDataAsset->FactionAffinities;
 	}
-	return FactionAffinities;
+	return out;
 }
 
 EFactionAffinity UCombatantComponent::GetAffinityToCombatant(UCombatantComponent* CheckedCombatant)
@@ -1450,14 +1452,6 @@ TArray<UCombatantComponent*> UCombatantComponent::FilterCombatantsByAffinity(TAr
 	return OutCombatants;
 }
 
-///////////////////////////////////
-////////// -- REDIRECT DATA -- //////////
-///////////////////////////////////
-
-TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implementation()
-{
-	return GetAllModifierValues();
-}
 
 TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation(UCombatantComponent* Combatant)
 {
@@ -1541,3 +1535,22 @@ bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit,
 }
 
 
+//##################################################################################################################
+// Deprecated
+//##################################################################################################################
+	
+
+void UCombatantComponent::AddTargetToList(UCombatantComponent* Combatant)
+{
+	SetTargetRegistered(Combatant,true);
+}
+
+void UCombatantComponent::AddTargetsToList(TArray<UCombatantComponent*> Combatants, bool bClearListFirst)
+{
+	SetTargetsRegistered(Combatants,true,bClearListFirst);
+}
+
+void UCombatantComponent::RemoveTargetFromList(UCombatantComponent* Combatant)
+{
+	SetTargetRegistered(Combatant,false);
+}

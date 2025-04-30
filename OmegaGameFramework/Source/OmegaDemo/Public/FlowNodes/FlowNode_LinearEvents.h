@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "Event/OmegaLinearEvent.h"
 #include "GameplayTags.h"
-#include "Flow/Public/Nodes/FlowNode.h"
 #include "UObject/Object.h"
-#include "Misc/OmegaUtils_Enums.h"
+#include "Interfaces/OmegaInterface_Common.h"
+#include "Nodes/FlowNode.h"
 #include "FlowNode_LinearEvents.generated.h"
 
 	
@@ -53,24 +53,3 @@ public:
 	void LocalFinish(const FString& Flag,UOmegaLinearEventInstance* Instance=nullptr);
 };
 
-UCLASS(DisplayName="Edit Save Tags",meta=(DeprecatedNode))
-class OMEGADEMO_API UFlowNode_EditSaveTags : public UFlowNode
-{
-	GENERATED_BODY()
-
-public:
-	UFlowNode_EditSaveTags();
-
-	virtual void ExecuteInput(const FName& PinName) override;
-
-#if WITH_EDITOR
-	//virtual FString GetNodeDescription() const override;
-#endif
-	
-	UPROPERTY(EditInstanceOnly, Category="Event")
-	FGameplayTagContainer Tags;
-	UPROPERTY(EditInstanceOnly, Category="Event")
-	EAddRemove Action;
-	UPROPERTY(EditInstanceOnly, Category="Event")
-	bool GlobalSave;
-};

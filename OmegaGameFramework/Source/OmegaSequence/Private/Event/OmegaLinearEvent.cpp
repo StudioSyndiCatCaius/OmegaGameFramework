@@ -3,6 +3,7 @@
 
 #include "Event/OmegaLinearEvent.h"
 #include "Engine/GameInstance.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
 
 UOmegaLinearEvent::UOmegaLinearEvent(const FObjectInitializer& ObjectInitializer)
 {
@@ -42,11 +43,21 @@ bool UOmegaLinearEvent::CanPlayEvent_Implementation()
 void UOmegaLinearEvent::Native_Begin(const FString& Flag)
 {
 	EventBegin.Broadcast(this,Flag);
+	if(WorldPrivate)
+	{
+		WorldPrivate->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UOmegaLinearEvent::OnGlobalEvent_Named);
+		WorldPrivate->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaLinearEvent::OnGlobalEvent_Tagged);
+	}
 	OnEventBegin(Flag);
 }
 
 void UOmegaLinearEvent::Finish(const FString& Flag, const FName JumpToID)
 {
+	if(WorldPrivate)
+	{
+		WorldPrivate->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.RemoveDynamic(this, &UOmegaLinearEvent::OnGlobalEvent_Named);
+		WorldPrivate->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.RemoveDynamic(this, &UOmegaLinearEvent::OnGlobalEvent_Tagged);
+	}
 	IncomingEventID = JumpToID;
 	OnEventEnd(Flag);
 	EventEnded.Broadcast(this,Flag);

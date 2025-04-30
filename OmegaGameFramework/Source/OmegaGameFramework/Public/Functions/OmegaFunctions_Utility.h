@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Slate/WidgetTransform.h"
 #include "Math/Vector2D.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "OmegaFunctions_Utility.generated.h"
 
 UCLASS()
@@ -85,7 +86,7 @@ class UOmegaAudioFunctions : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable,Category="Omega|Audio")
 	static void SetSoundWaveVolume(USoundWave* SoundWave, float NewVolume) { if(SoundWave) { SoundWave->Volume=NewVolume;  }}
 
-		/**
+	/**
 	* Sets the volume of a Sound Class.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Low Entry|Extended Standard Library|Utilities|Sound Class", Meta = (DisplayName = "Set Volume"))
@@ -129,9 +130,26 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static float GetAngle_FromRotators(FRotator A, FRotator B);
 
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FRotator Conv_VectorToRot_Flat(FVector Vector);
+
 	UFUNCTION(BlueprintPure,Category="Omega|Math", DisplayName="Normalize to Range (Int32)")
 	static float NormalizeToRange_int32(int32 value, int32 min, int32 max);
 
-	
-};
+	// Seed Randomization
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static int32 GetSeedFromGuid(FGuid Guid);
 
+	UFUNCTION(BlueprintPure,Category="Omega|Math|Curve")
+	static float GetCurve_Value(FFloatCurve Curve, float time)
+	{
+		return  Curve.Evaluate(time);
+	}
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Math",meta=(ExpandEnumAsExecs="Outcome"))
+	static bool RNG_RollFromFloat(float chance, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static float Variate_Float(float in, float amount, bool bAmountIsScale);
+};

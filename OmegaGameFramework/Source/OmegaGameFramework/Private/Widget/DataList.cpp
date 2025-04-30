@@ -21,31 +21,7 @@
 #include "Kismet/KismetMathLibrary.h"
 
 
-UDataListCustomEntry::UDataListCustomEntry(const FObjectInitializer& ObjectInitializer)
-{
-	if (const UObject* Owner = GetOuter())
-	{
-		WorldPrivate = Owner->GetWorld();
-	}
-}
 
-UWorld* UDataListCustomEntry::GetWorld() const
-{
-	if(WorldPrivate)
-    {
-    	return WorldPrivate;
-    }
-    else if(GetGameInstance())
-    {
-    	return GetGameInstance()->GetWorld();
-    }
-    return nullptr;
-}
-
-UGameInstance* UDataListCustomEntry::GetGameInstance() const
-{
-	return GameInstanceRef;
-}
 
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
@@ -70,10 +46,7 @@ void UDataList::Native_WidgetNotify(UDataWidget* Widget, FName Notify)
 	OnEntryNotifed.Broadcast(Widget,Notify);
 }
 
-FLuaValue UDataList::GetListScript(TSubclassOf<ULuaState> State)
-{
-	return ULuaObjectFunctions::RunLuaScriptContainer(this,List_Script,State);
-}
+
 
 void UDataList::SetNewControl(UUserWidget* NewWidget)
 {
@@ -152,6 +125,11 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	TempEntry->WidgetMetadata=EntryMetadata;
 	TempEntry->bCanOverrideSize=bCanOverrideSize;
 	TempEntry->OverrideSize=OverrideSize;
+	if(OverrideHoverOffset_Curve)
+	{
+		TempEntry->HoverOffset_Curve=OverrideHoverOffset_Curve;
+		TempEntry->HoverOffset_Scale*=OverrideHoverOffset_Scale;
+	}
 	
 	if(OverrideEntryTooltip)
 	{
@@ -170,8 +148,7 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	{
 		TempEntry->ReferencedAsset = Asset;
 	}
-	TempEntry->Script=Entry_Script;
-	
+
 	// Bind Delegates
 	TempEntry->OnSelected.AddDynamic(this, &UDataList::NativeEntitySelect);
 	TempEntry->OnHovered.AddDynamic(this, &UDataList::NativeEntityHover);
@@ -620,7 +597,7 @@ void UDataList::SetListOwner(UObject* NewOwner)
 		ListOwner = NewOwner;
 		for(UDataWidget* TempEntry: Entries)
 		{
-			TempEntry->OnNewListOwner(ListOwner);
+			TempEntry->Native_OnListOwnerChanged(ListOwner);
 			TempEntry->Refresh();
 		}
 	}

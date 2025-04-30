@@ -8,6 +8,7 @@
 #include "Interfaces/OmegaInterface_Common.h"
 #include "GameplayTagContainer.h"
 #include "Curves/CurveFloat.h"
+#include "Functions/OmegaFunctions_AVContext.h"
 #include "OmegaAttribute.generated.h"
 
 class UCombatantComponent;
@@ -26,7 +27,7 @@ struct FOmegaAttributeModifier
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaAttribute : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaAttribute : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_ContextString
 {
 	GENERATED_BODY()
 
@@ -125,26 +126,20 @@ public:
 
 	
 //DataInterface
-
-	//Texts
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
-	void GetGeneralDataText(const FString& Label, const class UObject* Context,	FText& Name, FText& Description);
+	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const class UObject* Context, FText& Name, FText& Description);
-
-	//Images
-	//UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
 	virtual void GetGeneralDataImages_Implementation(const FString& Label, const class UObject* Context, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush);
-
-
-	//Color
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
-	void GetGeneralAssetColor(FLinearColor& Color);
 	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color);
-
-	//AssetLabel
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General")
-	void GetGeneralAssetLabel(FString& Label);
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label);
+	
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Contex")
+    	TMap<FGameplayTag,FText> Context_Text;
+    
+    	virtual FText GetContextAV_Text_Implementation(FGameplayTag ID) override
+    	{
+    		if(Context_Text.Contains(ID)) {return Context_Text[ID];} return FText();
+    	}
 };
 
 UCLASS(EditInlineNew, Blueprintable, BlueprintType, Abstract, CollapseCategories)

@@ -5,12 +5,53 @@
 #include "CoreMinimal.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Engine/DataAsset.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "UObject/Object.h"
 #include "OmegaSettings_Gameplay.generated.h"
 
 class UEquipmentSlot;
 class UOmegaAttribute;
 class AZoneEntityDisplayActor;
+class UOmegaCharacterConfig;
+class UOmegaActorConfig;
+class USubscriptCollection;
+class AOmegaActorProcessor;
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Data Asset MetaSettings
+// ------------------------------------------------------------------------------------------------------------------------
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaDataAssetMetaSettingsInfo
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Settings")
+	UPrimaryDataAsset* DataAsset;
+	UPROPERTY(EditAnywhere,Instanced, BlueprintReadOnly,Category="Settings")
+	TArray<UOmegaDataAssetMetaSetting*> Settings;
+};
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const,CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UOmegaDataAssetMetaSetting : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaDataAssetMetaSettingCollection : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="DataAsset")
+	TArray<FOmegaDataAssetMetaSettingsInfo> Settings;
+};
+
 
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const)
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMetaSettings : public UObject
@@ -65,6 +106,25 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Maps")
 	TSoftObjectPtr<UWorld> Map_NewGame;
 	
+	// ---------------------------------------------------------------------------
+	// Actor
+	// ---------------------------------------------------------------------------
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	TArray<TSubclassOf<AOmegaActorProcessor>> ActorProcessors;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor",DisplayName="Subscripts (Character)")
+	TArray<USubscriptCollection*> SubscriptCollections_Character;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	UOmegaCharacterConfig* DefaultActorConfig_Character;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	UOmegaActorConfig* DefaultActorConfig_FloatingCombatant;
+	
+	// ---------------------------------------------------------------------------
+	// Abilities
+	// ---------------------------------------------------------------------------
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Abilities")
 	TArray<TSubclassOf<AOmegaAbility>> Abilities_Character;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Abilities")
@@ -75,7 +135,29 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone")
 	TSubclassOf<AZoneEntityDisplayActor> DefaultZoneEntityDisplayActor;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone")
+	UStaticMesh* ZoneTransitDisplayMesh=nullptr;
 
+	// ---------------------------------------------------------------------------
+	// Data Asset
+	// ---------------------------------------------------------------------------
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="DataAssets")
+	TArray<UOmegaDataAssetMetaSettingCollection*> DataAssetSettingCollections;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="DataAssets")
+	TArray<FOmegaDataAssetMetaSettingsInfo> DataAssetSettings;
+
+	UFUNCTION()
+	TArray<FOmegaDataAssetMetaSettingsInfo> GetAllDataAssetMetaSettings()
+	{
+		TArray<FOmegaDataAssetMetaSettingsInfo> out=DataAssetSettings;
+		for (auto* col : DataAssetSettingCollections)
+		{
+			if(col) { out.Append(col->Settings);}
+		}
+		return out;
+	}
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="DataAssets")
 	TMap<FGameplayTag, UPrimaryDataAsset*> GlobalDataAssets_Common;
 	
@@ -93,10 +175,12 @@ public:
 	TSubclassOf<AOmegaGameplaySystem> System_Dialogue;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Systems")
 	TSubclassOf<AOmegaGameplaySystem> System_Battle;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="MetaSettings")
 	TArray<UOmegaGameplayMetaSettingsCollection*> MetaSettingsCollections;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Instanced, Category="MetaSettings")
 	TArray<UOmegaGameplayMetaSettings*> MetaSettings;
+
 
 	UFUNCTION()
 	TArray<UOmegaGameplayMetaSettings*> GetAllMetaSettings()
@@ -108,6 +192,8 @@ public:
 		}
 		return out;
 	}
+	
+
 };
 
 
@@ -133,5 +219,9 @@ public:
     static UOmegaAttribute* GetGlobalDataAsset_Attribute(FGameplayTag Tag);
 	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Equipment Slot)",meta=(CompactNodeTitle="GDA EquipSlot"))
 	static UEquipmentSlot* GetGlobalDataAsset_EquipSlot(FGameplayTag Tag);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay",meta=(DeterminesOutputType="Class", ExpandEnumAsExecs="Result"))
+	static UOmegaDataAssetMetaSetting* GetDataAssetMetaSetting(UPrimaryDataAsset* DataAsset, TSubclassOf<UOmegaDataAssetMetaSetting> Class, TEnumAsByte<EOmegaFunctionResult>& Result);
 
 };
+

@@ -192,6 +192,24 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByGameplayTags(TArra
 	return OutAssets;
 }
 
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsWithInterface(TArray<UObject*> Objects,
+	TSubclassOf<UInterface> Interface, bool bExclude, TSubclassOf<UObject> Class)
+{
+	TArray<UObject*> out;
+	if(Interface)
+	{
+		return out;
+	}
+	for(auto* o : Objects)
+	{
+		if(o && o->GetClass()->ImplementsInterface(Interface)!=bExclude && (!Class || o->GetClass()->IsChildOf(Class)))
+		{
+			out.Add(o);
+		}
+	}
+	return out;
+}
+
 FGameplayTagContainer UOmegaGameFrameworkBPLibrary::FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn)
 {
 	FGameplayTagContainer OutTags;
@@ -248,6 +266,38 @@ void UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(const UObject* World
 			SetGameplaySystemActive(WorldContextObject, TempClass, bActive, Flag, Context);
 		}
 	}
+}
+
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::ResolveSoftArray_Object(TArray<TSoftObjectPtr<UObject>> List,
+	TSubclassOf<UObject> Class)
+{
+	TArray<UObject*> out;
+	TSubclassOf<UObject> _inclass=UObject::StaticClass();
+	if(Class) { _inclass=Class;}
+	for(TSoftObjectPtr<UObject> o : List)
+	{
+		if(UObject* _in = o.LoadSynchronous())
+		{
+			if(_in->GetClass()->IsChildOf(_inclass))
+			{
+				out.Add(_in);
+			}
+		}
+	}
+	return out;
+}
+
+TArray<TSubclassOf<UObject>> UOmegaGameFrameworkBPLibrary::ResolveSoftArray_Class(TArray<TSoftClassPtr<UObject>> List)
+{
+	TArray<TSubclassOf<UObject>> out;
+	for(TSoftClassPtr<UObject> o : List)
+	{
+		if(TSubclassOf<UObject> _in = o.LoadSynchronous())
+		{
+			out.Add(_in);
+		}
+	}
+	return out;
 }
 
 /*
@@ -691,6 +741,17 @@ void UOmegaGameFrameworkBPLibrary::SetActorTagActive(AActor* Actor, FName Tag, b
 	}
 }
 
+void UOmegaGameFrameworkBPLibrary::SetActorTagListActive(AActor* Actor, TArray<FName> Tags, bool bIsActive)
+{
+	if(Actor)
+	{
+		for(FName n : Tags)
+		{
+			SetActorTagActive(Actor,n,bIsActive);
+		}
+	}
+}
+
 void UOmegaGameFrameworkBPLibrary::SetComponentTagActive(UActorComponent* Component, FName Tag, bool bIsActive)
 {
 	if(Component)
@@ -834,8 +895,32 @@ TArray<AActor*> UOmegaGameFrameworkBPLibrary::FilterActorsWithComponents(TArray<
 	return OutActors;
 }
 
+AActor* UOmegaGameFrameworkBPLibrary::TryGetActorFromObject(UObject* Object, TSubclassOf<AActor> Class,
+	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(!Object)
+	{
+		Outcome = EOmegaFunctionResult::Fail;
+		return nullptr;
+	}
+	TSubclassOf<AActor> _target_class=AActor::StaticClass();
+	if(Class) { _target_class=Class;}
+	UObject* _check_object=Object;
+	if(UActorComponent* _comp = Cast<UActorComponent>(Object))
+	{
+		_check_object=_comp->GetOwner();
+	}
+	if(_check_object && _check_object->GetClass()->IsChildOf(_target_class))
+	{
+		Outcome=Success;
+		return Cast<AActor>(_check_object);
+	}
+	Outcome=Fail;
+	return nullptr;
+}
+
 UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(UObject* Object,
-	TSubclassOf<UActorComponent> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                         TSubclassOf<UActorComponent> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(!Object || !Class)
 	{
@@ -1169,8 +1254,8 @@ FString UOmegaGameFrameworkBPLibrary::GetObjectLabel(UObject* Object)
 FSlateBrush UOmegaGameFrameworkBPLibrary::GetObjectIcon(UObject* Object)
 {
 	FSlateBrush out;
-	UTexture2D* dum_txt;
-	UMaterialInterface* dum_mat;
+	UTexture2D* dum_txt=nullptr;
+	UMaterialInterface* dum_mat=nullptr;
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
 		IDataInterface_General::Execute_GetGeneralDataImages(Object," ",nullptr,dum_txt,dum_mat,out);

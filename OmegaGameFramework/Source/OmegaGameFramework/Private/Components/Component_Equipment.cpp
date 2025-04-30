@@ -6,6 +6,7 @@
 #include "Components/Component_Inventory.h"
 #include "Engine/DataAsset.h"
 #include "Engine/GameInstance.h"
+#include "Functions/OmegaFunctions_Common.h"
 #include "Interfaces/OmegaInterface_Common.h"
 
 
@@ -371,6 +372,25 @@ bool UEquipmentSlot::CanSlotEquipItem(UPrimaryDataAsset* Item)
 		return true;
 	}
 	return false;
+}
+
+UPrimaryDataAsset* UOmegaEquipmentFunctions::TryGetEquipmentInSlot(UObject* Target, UEquipmentSlot* Slot,
+	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(Slot)
+	{
+		if(UActorComponent* _equipComp = UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(Target,UEquipmentComponent::StaticClass(),Outcome))
+		{
+			bool _boolReturn;
+			if(UPrimaryDataAsset* _out = Cast<UEquipmentComponent>(_equipComp)->GetEquipmentInSlot(Slot,_boolReturn))
+			{
+				Outcome=Success;
+				return _out;
+			}
+		}
+	}
+	Outcome=Fail;
+	return nullptr;
 }
 
 

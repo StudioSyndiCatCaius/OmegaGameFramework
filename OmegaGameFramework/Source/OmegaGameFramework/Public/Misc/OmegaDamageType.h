@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "Engine/DataAsset.h"
+#include "Functions/OmegaFunctions_AVContext.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaDamageType.generated.h"
@@ -16,7 +17,7 @@ class UOmegaAttribute;
 class UCombatantComponent;
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaDamageType : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaDamageType : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_ContextString
 
 {
 	GENERATED_BODY()
@@ -49,7 +50,13 @@ public:
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Contex")
+	TMap<FGameplayTag,FText> Context_Text;
 
+	virtual FText GetContextAV_Text_Implementation(FGameplayTag ID) override
+	{
+		if(Context_Text.Contains(ID)) {return Context_Text[ID];} return FText();
+	}
 };
 
 UCLASS(Blueprintable, BlueprintType, Const, EditInlineNew)

@@ -112,6 +112,19 @@ TArray<AOmegaGrid3D_Tile*> UOmegaGrid3D_Map::GetTiles()
 	return REF_Tiles;
 }
 
+TArray<AOmegaGrid3D_Tile*> UOmegaGrid3D_Map::GetTilesFromCoordinates(TArray<FIntVector> Coordinates)
+{
+	TArray<AOmegaGrid3D_Tile*> out;
+	for(auto* tile : GetTiles())
+	{
+		if(tile && Coordinates.Contains(tile->GetTileCoordinate()))
+		{
+			out.Add(tile);
+		}
+	}
+	return out;
+}
+
 FIntVector UOmegaGrid3D_Map::GetCoordinateFromVector(FVector Vector)
 {
 	FVector local_vector=(Vector-GetOwner()->GetActorLocation())/TileOffset;
@@ -139,6 +152,50 @@ AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTileFromCoordinate(FIntVector Coordinate
 		if(tempTile && tempTile->GetTileCoordinate()==Coordinate)
 		{
 			return tempTile;
+		}
+	}
+	return nullptr;
+}
+
+
+
+AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTile_OfOccupant_Comp(UOmegaGrid3D_Occupant* Occupant)
+{
+	if(Occupant)
+	{
+		for (auto* _tile : GetTiles())
+		{
+			for(auto* _occ : _tile->Occupants)
+			{
+				if(_occ)
+				{
+					if(_occ==Occupant)
+					{
+						return _tile;
+					}
+				}
+			}
+		}
+	}
+	return nullptr;
+}
+
+AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTile_OfOccupant_Actor(AActor* Occupant)
+{
+	if(Occupant)
+	{
+		for (auto* _tile : GetTiles())
+		{
+			for(auto* _occ : _tile->Occupants)
+			{
+				if(_occ)
+				{
+					if(_occ->GetOwner()==Occupant)
+					{
+						return _tile;
+					}
+				}
+			}
 		}
 	}
 	return nullptr;
@@ -337,6 +394,21 @@ UOmegaGrid3D_Occupant* AOmegaGrid3D_Tile::GetFirstOccupant() const
 	return nullptr;
 }
 
+AActor* AOmegaGrid3D_Tile::GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class,
+	TEnumAsByte<EOmegaFunctionResult>& Result)
+{
+	for(auto* oc : GetOccupants())
+	{
+		if(oc && (!Class || oc->GetOwner()->GetClass()->IsChildOf(Class)))
+		{
+			Result=Success;
+			return oc->GetOwner();
+		}
+	}
+	Result=Fail;
+	return nullptr;
+}
+
 bool AOmegaGrid3D_Tile::HasOccupant(UOmegaGrid3D_Occupant* Occupant) const
 {
 	
@@ -378,4 +450,201 @@ void UOmegaSubsystem_Grid3D::Register_TileMap(UOmegaGrid3D_Map* Tilemap, bool bR
 			REF_Tilemaps.Remove(Tilemap);
 		}
 	}
+}
+
+TArray<FIntVector> UOmegaGrid3DFunctions::GetAdjacentCoordinates(FIntVector in)
+{
+	TArray<FIntVector> out;
+	TArray<FIntVector> _checks;
+	
+	int32 _inputs[2] = {1,-1};
+
+	for (int32 t_x : _inputs)
+	{
+		for (int32 t_y : _inputs)
+		{
+			for (int32 t_z : _inputs)
+			{
+				_checks.AddUnique(FIntVector(t_x,t_y,t_z));
+			}
+		}
+	}
+
+	for (FIntVector vec_to_check : _checks)
+	{
+		out.AddUnique(vec_to_check+in);
+	}
+
+	return out;
+}
+
+TArray<FIntVector> UOmegaGrid3DFunctions::GetCoordinatesInDistance(FIntVector in, int32 distance)
+{
+	TArray<FIntVector> out;
+	
+	int32 remaining_distance=distance;
+	TArray<FIntVector> evaluated;
+	
+	evaluated.Add(in);
+
+	for(FIntVector current_coord : evaluated)
+	{
+		TArray<FIntVector> Added;
+		Added=GetAdjacentCoordinates(current_coord);
+	}
+	
+	return out;
+}
+
+FOmegaGrid3DPathfindResult UOmegaGrid3DFunctions::Pathfind3D_AllPossiblePaths(const FIntVector& StartPoint, int32 MaxDistance,
+	UObject* Modifier,FOmegaGrid3DPathfindMeta metadata, bool x,bool y,bool z)
+{
+	FOmegaGrid3DPathfindResult out;
+	TArray<FOmegaGrid3DPath> AllPaths;
+    
+    // Define possible movement directions (only adjacent, no diagonals)
+    // Up, Down, North, South, East, West
+	TArray<FIntVector> Directions;
+
+	if(x)
+	{
+		Directions.Add(FIntVector(1, 0, 0) );
+		Directions.Add(FIntVector(-1, 0, 0) );
+	}
+	if(y)
+	{
+		Directions.Add(FIntVector(0, 1, 0) );
+		Directions.Add(FIntVector(0, -1, 0) );
+	}
+	if(z)
+	{
+		Directions.Add(FIntVector(0, 0, 1) );
+		Directions.Add(FIntVector(0, 0, -1) );
+	}
+    
+    // Helper function for recursive path finding
+    struct FPathFinder
+    {
+        TSet<FIntVector> Visited;
+        TArray<FOmegaGrid3DPath>& OutPaths;
+        const TArray<FIntVector>& Dirs;
+        int32 MaxDist;
+        
+        FPathFinder(TArray<FOmegaGrid3DPath>& InPaths, const TArray<FIntVector>& InDirs, int32 InMaxDist)
+            : OutPaths(InPaths), Dirs(InDirs), MaxDist(InMaxDist) {}
+        
+        void FindPaths(const FIntVector& CurrentPos, FOmegaGrid3DPath CurrentPath, int32 StepsRemaining,UObject* Modifier,FOmegaGrid3DPathfindMeta metadata)
+        {
+            // Add current position to the path
+            CurrentPath.PathPoints.Add(CurrentPos);
+            
+            // If we've reached the maximum distance, add this path to our results
+            if (StepsRemaining <= 0)
+            {
+                OutPaths.Add(CurrentPath);
+                return;
+            }
+            
+            // Mark current position as visited for this path
+            Visited.Add(CurrentPos);
+            
+            // Try each direction
+            for (const FIntVector& Dir : Dirs)
+            {
+                FIntVector NextPos = CurrentPos + Dir;
+
+            	//skip if blocked by modifier
+				if(Modifier && Modifier->GetClass()->ImplementsInterface(UDataInterface_Pathfind3D::StaticClass()))
+				{
+					if(!IDataInterface_Pathfind3D::Execute_CanAddCoordinate(Modifier,metadata,NextPos))
+					{
+						continue;
+					}
+				}
+            	
+                // Skip if we've already visited this position in the current path
+                if (Visited.Contains(NextPos))
+                {
+                    continue;
+                }
+                
+                // Create a new path branching from here
+                FOmegaGrid3DPath NewPath = CurrentPath;
+                
+                // Recursively find paths from the new position
+                TSet<FIntVector> VisitedCopy = Visited;
+                FindPaths(NextPos, NewPath, StepsRemaining - 1,Modifier,metadata);
+                Visited = VisitedCopy;
+            }
+            
+            // We're done exploring from this position, remove it from visited
+            Visited.Remove(CurrentPos);
+        }
+    };
+
+	int32 in_distance=MaxDistance;
+	//skip if blocked by modifier
+	if(Modifier && Modifier->GetClass()->ImplementsInterface(UDataInterface_Pathfind3D::StaticClass()))
+	{
+		in_distance=IDataInterface_Pathfind3D::Execute_ModifyDistance(Modifier,metadata,in_distance);
+	}
+	
+    // Start the recursive path finding
+    FOmegaGrid3DPath InitialPath;
+    FPathFinder PathFinder(AllPaths, Directions, in_distance);
+    PathFinder.FindPaths(StartPoint, InitialPath, in_distance,Modifier,metadata);
+
+	out.paths=AllPaths;
+    return out;
+}
+
+TArray<FIntVector> UOmegaGrid3DFunctions::GetCoordinatesFromPathfindResult(FOmegaGrid3DPathfindResult in)
+{
+	TArray<FIntVector> out;
+	for(FOmegaGrid3DPath path : in.paths)
+	{
+		for(FIntVector vec : path.PathPoints)
+		{
+			out.Add(vec);
+		}
+	}
+	return out;
+}
+
+int32 UOmegaGrid3D_PathfindScript::ModifyDistance_Implementation(int32 distance, FOmegaGrid3DPathfindMeta metadata) const
+{
+	return distance;
+}
+
+bool UOmegaGrid3D_PathfindScript::CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coord) const
+{
+	return true;
+}
+
+int32 UOmegaGrid3D_PathfindAction::ModifyDistance_Implementation(FOmegaGrid3DPathfindMeta metadata, int32 in) const
+{
+	int32 out=in;
+	for(auto* s : Scripts)
+	{
+		if(s)
+		{
+			out=s->ModifyDistance(in,metadata);
+		}
+	}
+	return out;
+}
+
+bool UOmegaGrid3D_PathfindAction::CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate) const
+{
+	for(auto* s : Scripts)
+	{
+		if(s)
+		{
+			if(!s->CanAddCoordinate(metadata,coordinate))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
 }

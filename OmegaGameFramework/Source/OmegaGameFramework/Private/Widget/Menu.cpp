@@ -3,18 +3,25 @@
 
 #include "Widget/Menu.h"
 
-#include "..\..\Public\OmegaSettings_Slate.h"
+#include "OmegaSettings_Slate.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
+#include "Widget/DataList.h"
 
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
+	if(Context) { ContextObject=Context;}
+	AddToPlayerScreen(200);
 	
+	if(GetDefaultDataList() && ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_CommonMenu::StaticClass()))
+	{
+		GetDefaultDataList()->AddAssetsToList(IDataInterface_CommonMenu::Execute_GetDataListEntries(ContextObject,this),"");
+	}
 	SetOwningPlayer(PlayerRef);
 	if (!bIsOpen)
 	{
@@ -32,7 +39,6 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		SetVisibility(VisibilityOnOpen);
 		
 		OnOpened.Broadcast(Tags, Flag);
-		AddToPlayerScreen(200);
 		MenuOpened(Tags, Context, Flag);
 		//ANIMATION
 
@@ -130,6 +136,14 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 	}
 }
 
+TArray<UObject*> UOmegaCommonMenuDefinition::GetDataListEntries_Implementation(UMenu* Menu)
+{
+	TArray<UObject*> out;
+	for(auto* i : CustomEntry_Assets) { if(i){ out.Add(i);} }
+	for(auto* i : CustomEntry_Objects) { if(i){ out.Add(i);} }
+	return out;
+}
+
 void UMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* MovieSceneBlends)
 {
 	if(MovieSceneBlends==GetOpenAnimation() && !bIsClosing)
@@ -222,4 +236,9 @@ void UMenu::Local_BindGlobalEvent()
 {
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UMenu::OnGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UMenu::OnTaggedGlobalEvent);
+}
+
+void UMenu::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
+	FLuaValue meta)
+{
 }

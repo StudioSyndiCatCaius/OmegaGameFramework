@@ -79,8 +79,20 @@ USkeletalMesh* UOmegaContextAVFunctions::TryGetObjectContext_SkelMesh(UObject* O
 	Outcome=Fail; return nullptr;
 }
 
+TSubclassOf<UAnimInstance> UOmegaContextAVFunctions::TryGetObjectContext_AnimClass(UObject* Object, FGameplayTag ID,
+	TSubclassOf<UAnimInstance>  Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAnimation::StaticClass()))
+	{
+		Outcome=Success; 
+		if (TSubclassOf<UAnimInstance> output=IDataInterface_ContextAnimation::Execute_GetContextAV_AnimClass(Object,ID)) { return output; }
+	}
+	if(Fallback) { Outcome=Success; return Fallback; };
+	Outcome=Fail; return nullptr;
+}
+
 FSlateBrush UOmegaContextAVFunctions::TryGetObjectContext_SlateBrush(UObject* Object, FGameplayTag ID,
-	FSlateBrush Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                     FSlateBrush Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextSlate::StaticClass()))
 	{
@@ -97,6 +109,26 @@ FSlateBrush UOmegaContextAVFunctions::TryGetObjectContext_SlateBrush(UObject* Ob
 		return Fallback;
 	}
 	Outcome=Fail; return FSlateBrush();
+}
+
+FText UOmegaContextAVFunctions::TryGetObjectContext_Text(UObject* Object, FGameplayTag ID, FText Fallback,
+	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+{
+	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextSlate::StaticClass()))
+	{
+		FText output=IDataInterface_ContextString::Execute_GetContextAV_Text(Object,ID);
+		if(!output.IsEmpty())
+		{
+			Outcome=Success;
+			return output;
+		}
+	}
+	if(!Fallback.IsEmpty())
+	{
+		Outcome=Success;
+		return Fallback;
+	}
+	Outcome=Fail; return FText();
 }
 
 UAnimMontage* UOmegaContextAVFunctions::TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID, 

@@ -83,10 +83,14 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaQuest,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaAnimationEmote,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaStoryStateAsset,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OmegaLevelingAsset,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OmegaActorConfig,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OmegaCharacterConfig,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaDataItems,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaGameplaySystem,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaAbility, OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaGameplayModule,OmegaAssetCategory);
+
 	//OMACRO_REGISTERASSETTYPE(OmegaGameSave,	OmegaAssetCategory_Gameplay);
 	//OMACRO_REGISTERASSETTYPE(OmegaGlobalSave,OmegaAssetCategory_Gameplay);
 
@@ -205,6 +209,11 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaBodyType"));
 	ThumnbailNames.Add(TEXT("OmegaBodySlot"));
 	ThumnbailNames.Add(TEXT("OmegaBodyPreset"));
+	
+	ThumnbailNames.Add(TEXT("OmegaDebugProfile"));
+	
+	ThumnbailNames.Add(TEXT("OmegaActorConfig"));
+	ThumnbailNames.Add(TEXT("OmegaCharacterConfig"));
 	
 	FSlateImageBrush* ThumbnailTemp;
 	FSlateImageBrush* IconTemp;

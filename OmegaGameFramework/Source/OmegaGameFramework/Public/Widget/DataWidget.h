@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CommonBorder.h"
 #include "CommonTextBlock.h"
 #include "DataTooltip.h"
 #include "GameplayTagContainer.h"
@@ -14,6 +15,7 @@
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/SizeBox.h"
+#include "Curves/CurveVector.h"
 #include "DataWidget.generated.h"
 
 class UDataList;
@@ -39,7 +41,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Meta")
 	void OnMetaApplied(UDataWidget* widget) const;
 	
-			
 	UFUNCTION(BlueprintNativeEvent, Category="Meta")
 	bool CanAddObjectToList(UObject* SourceObject) const;
 };
@@ -49,7 +50,7 @@ UCLASS()
 class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
-
+	
 	void Local_SetVisFromBool(UWidget* widget, bool val) const
 	{
 		if(widget)
@@ -72,6 +73,40 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget, public IUserObjec
 			Cast<UCommonTextBlock>(text)->SetStyle(style);
 		}
 	}
+
+	void LC_UpdateBlendStateVal(bool& bBlending, bool bTarget,float& val, float DT, float max_time, UCurveFloat* curve, FName MatParamName, int type);
+	void LC_CallBlendUpdate(int val, float input);
+
+	float _DirFromBool(bool val) const
+	{
+		if(val) { return 1.0f;} return -1.0;
+	}
+	float _TargetFromBool(bool val) const
+	{
+		if(val) { return 1.0f;} return 0.0;
+	}
+	
+	UPROPERTY() bool b_IsHovered;
+	UPROPERTY() bool b_IsHighlighted;
+	
+	UPROPERTY() bool _b_PlayingAnim_hover;
+	UPROPERTY() bool _b_PlayingAnim_highlight;
+	
+	UPROPERTY() float _f_BlendTimeHover;
+	UPROPERTY() float _f_BlendTimeHighlight;
+	
+	UPROPERTY() float _f_HoverBlend_Min=0.0f;
+	UPROPERTY() float _f_HoverBlend_Max=1.0f;
+	
+	UPROPERTY() float _f_HighBlend_Min=0.0f;
+	UPROPERTY() float _f_HighBlend_Max=1.0f;
+	
+	UPROPERTY() float refresh_val;
+	UPROPERTY() FTimerHandle refresh_timer;
+
+	UPROPERTY() UCurveFloat* _u_curveHover;
+	UPROPERTY() UCurveFloat* _u_curveHighlight;
+	
 	
 protected:
 	virtual void NativePreConstruct() override;
@@ -83,9 +118,12 @@ protected:
 	
 	UOmegaPlayerSubsystem* GetPlayerSubsystem() const;
 public:
-	UPROPERTY()
-	UDataList* ParentList = nullptr;
-
+	
+	UPROPERTY() UDataList* ParentList = nullptr;
+	
+	UPROPERTY(EditAnywhere, Category="DataWidget")
+	FGameplayTag SlotID;
+	
 	UPROPERTY(EditAnywhere, Category="DataWidget")
 	FText NameText;
 	
@@ -99,7 +137,7 @@ public:
 	int32 ListIndex;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget")
-	UMaterialInstanceDynamic* GetHoveredMaterialInstance();
+	UMaterialInstanceDynamic* GetHoveredMaterialInstance() const;
 
 	//---------------------------------------------------------------------------------------------//
 	//	Meta
@@ -123,17 +161,6 @@ public:
 	void MetaRefreshed();
 	
 	//---------------------------------------------------------------------------------------------//
-	//	Lua
-	//---------------------------------------------------------------------------------------------//
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Lua", meta=(MultiLine))
-	FLuaScriptContainer Script;
-	
-	UFUNCTION(BlueprintCallable,Category="Lua",meta=(AdvancedDisplay="State"))
-	FLuaValue GetWidgetScript(TSubclassOf<ULuaState> State);
-	UFUNCTION(BlueprintCallable,Category="Lua",meta=(AdvancedDisplay="State"))
-	FLuaValue WidgetScriptKeyCall(const FString& key, TArray<FLuaValue> args, TSubclassOf<ULuaState> State);
-	
-	//---------------------------------------------------------------------------------------------//
 	//	Highlight
 	//---------------------------------------------------------------------------------------------//
 private:
@@ -144,11 +171,13 @@ public:
 	void Refresh();
 
 	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget", meta=(Keywords="update"))
-	void OnRefreshed(UObject* SourceAsset = nullptr, UObject* ListOwner = nullptr);
+	void OnRefreshed(UObject* SourceAsset = nullptr, UObject* ListOwner = nullptr, bool bIsDesignTime=false);
 
-	UFUNCTION()
-	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner);
-
+	UFUNCTION() virtual void Native_OnSourceAssetChanged(UObject* SourceAsset);
+	UFUNCTION() virtual void Native_OnListOwnerChanged(UObject* ListOwner);
+	UFUNCTION() virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner);
+	UFUNCTION() virtual void Native_SetHovered(bool bHovered);
+	
 	//Automatically calls the "Refresh" function on a timed loop
 	UPROPERTY(EditDefaultsOnly, Category = "Refresh")
 	bool bAutoRefreshOnTimer;
@@ -160,11 +189,6 @@ public:
 	//Offsets the refresh variance by a random about of this multiplier. (E.G. if RefreshFrequency=0.5, RefreshVariance=0.1, the final refresh value will be between 0.4-0.6.) This will help all avoid refreshes being called on the same tick.
 	UPROPERTY(EditDefaultsOnly, Category = "Refresh")
 	double RefreshVariance = 0;
-private:
-	UPROPERTY()
-	float refresh_val;
-	UPROPERTY()
-	FTimerHandle refresh_timer;
 
 public:
 	
@@ -174,12 +198,13 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	void OnHighlightStateChange(bool bHighlight);
-	
-	UPROPERTY(BlueprintReadOnly, Category = "DataWidget")
-	bool bIsHighlighted;
+
+	UFUNCTION(BlueprintPure,Category="DataWidget")
+	bool IsHighlighted() const {return b_IsHighlighted;}
+	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="CurveFloat"))
+	FSoftObjectPath HighlightBlendCurve{"/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"};
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Highlight Widget Duration")
 	float HighlightWidgetSpeed = 0.1;
-
 	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)
 	FName HighlightWidgetPropertyName = "Highlight";
 	//---------------------------------------------------------------------------------------------//
@@ -189,24 +214,23 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	void OnHoverStateChange(bool bHovered);
 	
+	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="CurveFloat"))
+	FSoftObjectPath HoverBlendCurve{"/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"};
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Hover Widget Duration")
 	float HoverWidgetSpeed = 0.1;
 	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)
 	FName HoverWidgetPropertyName = "Hover";
-
-	UPROPERTY()
-	float HoverValue_current;
-	UPROPERTY()
-	float HighlightValue_current;
+	UPROPERTY(EditDefaultsOnly, Category="Display")
+	UCurveVector* HoverOffset_Curve;
+	UPROPERTY(EditDefaultsOnly, Category="Display")
+	FVector HoverOffset_Scale=FVector::One();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Hover")
 	void OnHoverUpdate(float HoverValue);
 	UFUNCTION(BlueprintImplementableEvent, Category="Hover")
 	void OnHighlightUpdate(float HoverValue);
 	
-private:
-	UPROPERTY()
-	float hover_value;
+
 public:
 	//---------------------------------------------------------------------------------------------//
 	//	Notify
@@ -281,15 +305,13 @@ public:
 
 	//source asset
 
-	UPROPERTY()
-	UDataWidget* OwnerDataWidget;
+	UPROPERTY() UDataWidget* OwnerDataWidget;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "DataWidget")
 	bool UpdateSourceAssetFromParent;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void SetSourceAsset(UObject* Asset);
-
 
 	UPROPERTY(BlueprintAssignable)
 	FOnWidgetRefreshed OnWidgetRefreshed;
@@ -323,6 +345,18 @@ public:
 	
 //BINDABLE WIDGETS
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides")
+	bool bCanOverrideSize;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides",meta=(EditCondition="bCanOverrideSize"))
+	FVector2D OverrideSize;
+
+	UPROPERTY(EditInstanceOnly,BlueprintReadOnly="Overrides")
+	TSubclassOf<UCommonBorderStyle> OverrideBorderStyle;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides")
+	TSubclassOf<UCommonTextStyle> OverrideTextStyle_Name;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides")
+	TSubclassOf<UCommonTextStyle> OverrideTextStyle_Description;
+	
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - Root")
 	UTextBlock* GetRootPanelWidget();
 
@@ -334,11 +368,7 @@ public:
 
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget (Button) - Select")
 	UButton* GetButtonWidget();
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry")
-	bool bCanOverrideSize;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Entry",meta=(EditCondition="bCanOverrideSize"))
-	FVector2D OverrideSize;
+	
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - SizeBox")
 	USizeBox* GetWidget_SizeBox();
 	
@@ -348,8 +378,13 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
 	UImage* GetMaterialImage();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget - Brush Icon")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget (Image) - Brush Icon")
 	UImage* GetBrushImage(bool& bOverrideSize, FVector2D& Size);
+
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget (Image) - Icon Material")
+	UImage* GetWidget_IconMaterial();
+	UPROPERTY(EditDefaultsOnly,Category="DataWidget",DisplayName="Icon Texture Param Name")
+	FName MaterialParamName_IconTexture=TEXT("Texture");
 	
 //BINDABLE Anims
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")

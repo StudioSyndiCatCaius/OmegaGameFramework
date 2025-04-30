@@ -22,6 +22,20 @@ struct FOmegaGameplayMessageData
 	FText MessageLog_Text;
 };
 
+// ===================================================================================================================
+// Instigator
+// ===================================================================================================================
+UINTERFACE(MinimalAPI) class UDataInterface_MessageInstigator : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageInstigator
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	FSlateBrush GetMessageBrush(UOmegaGameplayMessage* Message);
+};
+
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnGameplayMessage, UOmegaGameplayMessage*, Message, FGameplayTag, MessageCategory, FLuaValue, meta);
 
 UCLASS(DisplayName="Omega Subsystem: Message")
@@ -30,9 +44,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaMessageSubsystem : public UGameInstanceSubsys
 	GENERATED_BODY()
 
 public:
-
-	//virtual void Initialize(FSubsystemCollectionBase& Colection) override;
-
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message")
 	void FireGameplayMessage(FOmegaGameplayMessageData Message);
 

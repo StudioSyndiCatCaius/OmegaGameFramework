@@ -5,6 +5,7 @@
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 FVector UAimTargetComponent::local_GetTargetLoc(AActor* target_actor) const
@@ -23,6 +24,14 @@ FVector UAimTargetComponent::local_GetTargetLoc(AActor* target_actor) const
 FVector UAimTargetComponent::GetSelf_AimRootLocation() const
 {
 	return local_GetTargetLoc(GetOwner());
+}
+
+FVector UAimTargetComponent::GetSelf_AimNormal() const
+{
+	FRotator in_rot=UKismetMathLibrary::ComposeRotators(GetOwner()->GetActorRotation(),RotationOffset);
+	FRotator look_rot=UKismetMathLibrary::FindLookAtRotation(GetSelf_AimRootLocation(),GetTarget_AimLocation());
+	FVector look_normal=UKismetMathLibrary::Conv_RotatorToVector(look_rot);
+	return in_rot.RotateVector(look_normal);
 }
 
 FVector UAimTargetComponent::GetTarget_AimLocation() const

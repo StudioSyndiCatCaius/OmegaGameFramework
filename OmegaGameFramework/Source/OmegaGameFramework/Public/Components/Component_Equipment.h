@@ -9,6 +9,7 @@
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataAsset.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "Component_Equipment.generated.h"
 
 class UDataAssetCollectionComponent;
@@ -224,3 +225,14 @@ public:
 	
 };
 
+UCLASS()
+class UOmegaEquipmentFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Equipment", meta=(ExpandEnumAsExecs = "Outcome"))
+	static UPrimaryDataAsset* TryGetEquipmentInSlot(UObject* Target,UEquipmentSlot* Slot, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	
+};

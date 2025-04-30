@@ -11,6 +11,8 @@
 #include "Misc/OmegaDemoAssets.h"
 #include "Actors/Actor_Ability.h"
 #include "OmegaDataItem.h"
+#include "OmegaDebug_Functions.h"
+#include "Actors/Actor_Character.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Subsystems/OmegaSubsystem_Quest.h"
@@ -21,6 +23,7 @@
 #include "Components/Component_Leveling.h"
 #include "Components/Component_Subscript.h"
 #include "Factories/BlueprintFactory.h"
+#include "Functions/OmegaFunctions_Actor.h"
 #include "Functions/OmegaFunctions_Animation.h"
 #include "Functions/OmegaFunctions_Combatant.h"
 #include "Misc/OmegaGameplayModule.h"
@@ -170,6 +173,27 @@ UCLASS() class OMEGAEDITOR_API UOmegaLevelingAsset_Factory : public UFactory
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaLevelingAsset,"Leveling Asset", "Asset Desc here", FColor(0, 225, 110),"Gameplay")
+
+
+//Config Actor
+UCLASS() class OMEGAEDITOR_API UOmegaActorConfig_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaActorConfig,"Actor Config", "Asset Desc here", FColor(50, 50, 50),"Util")
+
+
+//Config Character
+UCLASS() class OMEGAEDITOR_API UOmegaCharacterConfig_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaCharacterConfig,"Character Config", "Asset Desc here", FColor(50, 50, 50),"Util")
+
+inline FColor _color_debug=FColor(200,200,200);
+
 
 
 

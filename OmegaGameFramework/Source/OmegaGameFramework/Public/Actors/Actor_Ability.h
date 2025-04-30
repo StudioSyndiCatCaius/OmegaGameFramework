@@ -295,9 +295,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
 	void OnActiveTargetChanged(UCombatantComponent* ActiveTarget, bool Valid);
 	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
-	void OnRegisteredTarget(UCombatantComponent* Target);
-	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
-	void OnUnregisteredTarget(UCombatantComponent* Target);
+	void OnRegisteredTarget(UCombatantComponent* OwnerCombatant, UCombatantComponent* Target, bool bRegistered);
+
 /*
 	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
 	void OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, UObject* Instigator);

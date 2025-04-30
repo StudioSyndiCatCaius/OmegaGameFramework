@@ -10,14 +10,15 @@
 #include "OmegaFaction.generated.h"
 
 UCLASS(BlueprintType, Blueprintable)
-class OMEGAGAMEFRAMEWORK_API UOmegaFaction : public UPrimaryDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaFaction : public UPrimaryDataAsset, public IDataInterface_General
 {
 	GENERATED_BODY()
+
 
 public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="General")
-	FText Name;
+	FText FactionName;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="General")
 	FSlateBrush FactionIcon;
@@ -30,6 +31,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Tag")
 	TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> FactionAffinities;
-	
+
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
+
+private:
 	
 };
+

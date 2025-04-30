@@ -112,9 +112,11 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter_
 {
 	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
-		return StartEncounter(
+		AOmegaCombatEncounter_Instance* new_inst =StartEncounter(
 			IDataInterface_CombatEncounter::Execute_GetCombatEncounter_InstanceClass(Source),
 			GetStageFromID(IDataInterface_CombatEncounter::Execute_GetCombatEncounter_StageID(Source)));
+		IDataInterface_CombatEncounter::Execute_OnEncounterBegin(Source,this);
+		return new_inst;
 	}
 	return nullptr;
 }
@@ -152,8 +154,8 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 				}
 				new_char->FinishSpawning(Transform);
 				REF_BattlerCombatants.Add(comb_ref);
-				if(DataAsset) { comb_ref->CombatantDataAsset=DataAsset; }
-				if(Faction) { comb_ref->FactionDataAsset=Faction; }
+				if(DataAsset) { comb_ref->SetSourceDataAsset(DataAsset); }
+				if(Faction) { comb_ref->SetFaction_Asset(Faction); }
 				if(EncounterManagerScript)
 				{
 					EncounterManagerScript->OnBattlerSpawned(new_char,comb_ref);
@@ -175,4 +177,14 @@ AOmegaCombatEncounter_Stage* UOmegaCombatEncounter_Component::GetCurrent_Stage()
 AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::GetCurrent_Encounter() const
 {
 	return REF_Instance;
+}
+
+bool UOmegaEncounter_Asset::OnEncounterBegin_Implementation(UOmegaCombatEncounter_Component* Component)
+{
+	if(Script)
+	{
+		Script->OnEncounterBegin(Component);
+		return true;
+	}
+	return false;
 }

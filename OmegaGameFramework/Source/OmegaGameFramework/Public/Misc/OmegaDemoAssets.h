@@ -63,8 +63,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaCombatantPreset : public UOmegaDataAsset, pub
 {
 	GENERATED_BODY()
 public:
-
-
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Attributes") UOmegaFaction* Faction;
 	virtual UOmegaFaction* GetFactionAsset_Implementation() override { return Faction;};

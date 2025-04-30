@@ -20,8 +20,7 @@
 AOmegaActorEnvironment::AOmegaActorEnvironment()
 {
 	EnvironmentRoot = CreateDefaultSubobject<USceneComponent>("VolumeRoot");
-
-
+	
 	SkyLight = CreateOptionalDefaultSubobject<USkyLightComponent>("SkyLight");
 	if(SkyLight)
 	{

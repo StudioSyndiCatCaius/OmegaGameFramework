@@ -3,8 +3,10 @@
 
 #include "OmegaCharacter.h"
 
+#include "Components/AudioComponent.h"
 #include "Functions/OmegaFunctions_Combatant.h"
 #include "OmegaMutable_Functions.h"
+#include "OmegaSettings_Gameplay.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -21,12 +23,24 @@ void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, U
 		UDataAssetCollectionFunctions::SetInventory_FromSource(Inventory,IdentityAsset);
 		Equipment->SetEquipment_FromSource(IdentityAsset);
 		UOmegaSkinFunctions::SetSkinFromAsset(SkinComponent,IdentityAsset);
+		if(IdentityAsset && IdentityAsset->GetClass()->ImplementsInterface(UDataInterface_MutableSource::StaticClass()))
+		{
+			if(UCustomizableObjectInstance* inst = IDataInterface_MutableSource::Execute_GetCustomizableObjectInstance(IdentityAsset))
+			{
+				if(USkeletalMesh* _mesh = inst->GetComponentMeshSkeletalMesh(MutableComponentName))
+				{
+					GetMesh()->SetSkeletalMeshAsset(_mesh);
+				}
+				//if(CustomSkelMesh) { CustomSkelMesh->SetCustomizableObjectInstance(inst); }
+			}
+		}
 	}
 }
 
 // Sets default values
 AOmegaCharacter::AOmegaCharacter()
 {
+	//Super AOmegaCharacter();
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -48,11 +62,17 @@ AOmegaCharacter::AOmegaCharacter()
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
 	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
 
-	//CustomSkeletalMesh=CreateOptionalDefaultSubobject<UCustomizableSkeletalComponent>(TEXT("Custom Skeletal Mesh"));
-	//CustomSkeletalMesh->SetupAttachment(GetMesh());
+	//CustomSkelMesh=CreateOptionalDefaultSubobject<UCustomizableSkeletalComponent>(TEXT("CustomSkelMesh"));
+	//CustomSkelMesh->SetupAttachment(GetMesh());
+	//CustomSkelMesh->ComponentIndex=-1;
+	//CustomSkelMesh->SetComponentName(FName("Body"));
+	
 	SkinTarget=CreateOptionalDefaultSubobject<UChildActorComponent>(TEXT("SkinTarget"));
 	SkinTarget->SetupAttachment(GetMesh());
 
+	AudioComponent=CreateOptionalDefaultSubobject<UAudioComponent>(TEXT("Audio"));
+	AudioComponent->SetupAttachment(GetMesh());
+	
 	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
 	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
 
@@ -77,19 +97,22 @@ void AOmegaCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)
 {
 	if(Asset)
 	{
-		this->CharacterAsset=Asset;
+		CharacterAsset=Asset;
 	}
 	else
 	{
 		CharacterAsset=nullptr;
 	}
 	ActorIdentity->SetIdentitySourceAsset(CharacterAsset);
+	OnActorIdentityChanged(CharacterAsset,ActorIdentity);
 }
 
 FVector AOmegaCharacter::GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const
 {
 	return GetMesh()->GetSocketLocation(LookAimSocketName);
 }
+
+
 
 // Called when the game starts or when spawned
 void AOmegaCharacter::BeginPlay()
@@ -109,6 +132,11 @@ void AOmegaCharacter::BeginPlay()
 	if(Autobind_TaggedGlobalEvents)
 	{
 		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaCharacter::OnGlobalEvent_Tagged);
+	}
+	_ActivateSubscriptCol(SubscriptCollections);
+	if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	{
+		_ActivateSubscriptCol(set->SubscriptCollections_Character);
 	}
 }
 
@@ -142,4 +170,33 @@ void AOmegaCharacter::Local_UpdateDataItem(UOmegaDataItem* NewItem)
 {
 	Combatant->CombatantDataAsset = NewItem;
 	Combatant->Update();
+}
+
+
+AOmegaEncounterCharacter::AOmegaEncounterCharacter()
+{
+	StageID=FGameplayTag::RequestGameplayTag(FName("Combat.Stage.Default"));
+}
+
+void AOmegaEncounterCharacter::OnConstruction(const FTransform& Transform)
+{
+	//BoundsComponent->SetOverlayColor(FColor::Red);
+	Super::OnConstruction(Transform);
+}
+
+AOmegaReferenceCharacter::AOmegaReferenceCharacter()
+{
+	CustomTimeDilation=0;
+	SetActorEnableCollision(false);
+	//bIsSpatiallyLoaded=false;
+	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
+	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MatRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Female_blue.SK_MannequinDemo_Female_blue"));
+	GetMesh()->SetSkeletalMeshAsset(MatRef.Object);
+}
+
+void AOmegaReferenceCharacter::BeginPlay()
+{
+	SetActorHiddenInGame(true);
+	Super::BeginPlay();
 }

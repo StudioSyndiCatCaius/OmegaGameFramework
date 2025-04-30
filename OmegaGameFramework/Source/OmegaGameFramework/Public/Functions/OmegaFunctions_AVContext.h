@@ -33,6 +33,8 @@ public:
 	UAnimSequence* GetContextAVAnimations(FGameplayTag ID);
 };
 
+
+
 UINTERFACE(MinimalAPI) class UDataInterface_ContextActor : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextActor
 {
@@ -53,6 +55,17 @@ public:
 	USkeletalMesh* GetContextAV_SkeletalMesh(FGameplayTag ID);
 };
 
+UINTERFACE(MinimalAPI) class UDataInterface_ContextAnimation : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextAnimation
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Animation Class>")
+	TSubclassOf<UAnimInstance> GetContextAV_AnimClass(FGameplayTag ID);
+};
+
+
 UINTERFACE(MinimalAPI) class UDataInterface_ContextSlate : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextSlate
 {
@@ -63,6 +76,16 @@ public:
 
 };
 
+
+UINTERFACE(MinimalAPI) class UDataInterface_ContextString : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextString
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION(BlueprintNativeEvent, Category="Omega|String", DisplayName="Ω Get Context AV <Text>")
+	FText GetContextAV_Text(FGameplayTag ID);
+
+};
 
 UCLASS()
 class UOmegaContextAVFunctions : public UBlueprintFunctionLibrary
@@ -90,9 +113,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Skeletal Mesh>")
 	static USkeletalMesh* TryGetObjectContext_SkelMesh(UObject* Object, FGameplayTag ID, USkeletalMesh* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
-
+	
+	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Anim Class>")
+	static TSubclassOf<UAnimInstance> TryGetObjectContext_AnimClass(UObject* Object, FGameplayTag ID, TSubclassOf<UAnimInstance> Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	
 	UFUNCTION(BlueprintCallable, Category="Context|Slate",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <SlateBrush>")
 	static FSlateBrush TryGetObjectContext_SlateBrush(UObject* Object, FGameplayTag ID, FSlateBrush Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+
+	// =============================================================================
+	// Text
+	// =============================================================================
+	UFUNCTION(BlueprintCallable, Category="Context|String",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Text>")
+	static FText TryGetObjectContext_Text(UObject* Object, FGameplayTag ID, FText Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
 
 };
 

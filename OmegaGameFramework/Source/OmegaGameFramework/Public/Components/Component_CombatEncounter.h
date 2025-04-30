@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "GameFramework/Actor.h"
+#include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaFaction.h"
 #include "Subsystems/OmegaSubsystem_BGM.h"
 #include "Component_CombatEncounter.generated.h"
@@ -38,6 +39,9 @@ public:
 	UOmegaBGM* OverrideBGM;
 	
 };
+
+
+
 
 //
 UCLASS(Blueprintable,BlueprintType,Abstract,EditInlineNew,Const)
@@ -106,9 +110,9 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
 	TArray<TSubclassOf<AOmegaAbility>> ExtraBattlerAbilities;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter")
 	ULevelSequence* Default_SequenceIntro;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter")
 	UOmegaBGM* Default_BGM;
 
 	UFUNCTION(BlueprintPure,Category="Encounter")
@@ -142,9 +146,43 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_CombatEncounter
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Encounter")
+	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
 	TSubclassOf<AOmegaCombatEncounter_Instance> GetCombatEncounter_InstanceClass();
-	UFUNCTION(BlueprintImplementableEvent,Category="Encounter")
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
 	FGameplayTag GetCombatEncounter_StageID();
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
+	bool OnEncounterBegin(UOmegaCombatEncounter_Component* Component);
+};
 
+UCLASS(Blueprintable,BlueprintType,Const,Abstract,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UOmegaEncounter_AssetScript : public UObject
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Encounter")
+	void OnEncounterBegin(UOmegaCombatEncounter_Component* Component) const;
+	
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaEncounter_Asset : public UOmegaDataAsset, public IDataInterface_CombatEncounter
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Encounter")
+	TSubclassOf<AOmegaCombatEncounter_Instance> InstanceClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Encounter")
+	FGameplayTag StageTag;
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite,Category="Encounter")
+	UOmegaEncounter_AssetScript* Script;
+
+	virtual TSubclassOf<AOmegaCombatEncounter_Instance> GetCombatEncounter_InstanceClass_Implementation() override { return InstanceClass;}
+	virtual FGameplayTag GetCombatEncounter_StageID_Implementation() override { return StageTag;};
+	virtual bool OnEncounterBegin_Implementation(UOmegaCombatEncounter_Component* Component) override;
+	
 };
