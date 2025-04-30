@@ -48,6 +48,7 @@ void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 	}
 }
 
+
 void UActorIdentityComponent::OnTagEvent_Implementation(FGameplayTag Event)
 {
 	if(Local_IsSourceAssetValid())
@@ -57,6 +58,7 @@ void UActorIdentityComponent::OnTagEvent_Implementation(FGameplayTag Event)
 	IActorTagEventInterface::OnTagEvent_Implementation(Event);
 }
 
+#if WITH_EDITOR
 void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	SetIdentitySourceAsset(IdentitySource);
@@ -70,6 +72,7 @@ void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 	}
 	//Super::PostEditChangeProperty(PropertyChangedEvent);
 }
+#endif
 
 void UActorIdentityComponent::BeginPlay()
 {
