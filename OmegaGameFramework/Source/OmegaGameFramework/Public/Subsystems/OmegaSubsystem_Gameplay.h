@@ -144,8 +144,8 @@ public:
 	////////////--Actor Binding--/////////////
 	////////////////////////////////////
 
-	UPROPERTY()
-	TMap<FName, AActor*> GlobalActorBindingRefs;
+	UPROPERTY() TMap<FName, AActor*> ActorBindings_Named;
+	UPROPERTY() TMap<FGameplayTag, AActor*> ActorBindings_Tagged;
 	
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay Subsystem|Actors")
 	void SetGlobalActorBinding(FName Binding, AActor* Actor);

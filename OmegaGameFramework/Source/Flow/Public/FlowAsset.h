@@ -362,3 +362,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="FlowAsset")
 	void NotifyFlow(FName Notify, UObject* Context = nullptr);
 };
+
+
+UINTERFACE(MinimalAPI) class UDataInterface_FlowAsset : public UInterface { GENERATED_BODY() };
+class FLOW_API IDataInterface_FlowAsset
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="FlowAsset")
+	UFlowAsset* GetFlowAsset(FGameplayTag Tag);
+};

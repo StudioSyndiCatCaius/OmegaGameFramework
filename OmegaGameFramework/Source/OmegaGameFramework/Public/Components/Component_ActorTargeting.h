@@ -27,6 +27,7 @@ private:
 	// Called when the game starts
 	//  void BeginPlay() override;
 	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	static void local_setTagsOnActor(AActor* Actor, TArray<FName> tags, bool bActive)
 	{
@@ -43,6 +44,16 @@ public:
 
 	UPROPERTY(BlueprintAssignable) FOnActorRegisteredUpdate OnActorRegisteredUpdate;
 	UPROPERTY(BlueprintAssignable) FOnActorTargetUpdate OnActorTargetUpdate;
+
+	//Classes that are required to be added to target registry. Blank will allow all classes.
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mouse")
+	bool bTargetFromMouseCursor;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mouse")
+	int32 Mouse_PlayerIndex;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mouse")
+	float Mouse_TraceRadius=20;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mouse")
+	TEnumAsByte<ETraceTypeQuery> Mouse_TraceChannel;
 
 	//Classes that are required to be added to target registry. Blank will allow all classes.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|Classes")
@@ -86,7 +97,7 @@ public:
 	bool SetActorRegistered(AActor* Actor, bool bRegister);
 
 	UFUNCTION(BlueprintCallable,Category="ActorTargeting", DisplayName="Set Actor Registered (List)")
-	void SetActorRegistered_List(TArray<AActor*> Actors, bool bEmptyFirst);
+	void SetActorRegistered_List(TArray<AActor*> Actors, bool bRegister, bool bEmptyFirst);
 
 	UFUNCTION(BlueprintCallable,Category="ActorTargeting")
 	void ClearRegisteredTargets();
@@ -102,6 +113,9 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="ActorTargeting")
 	AActor* CycleTarget(int32 CycleAmount);
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|Sound") USoundBase* Sound_ChangeTarget;
+	
 };
 
 

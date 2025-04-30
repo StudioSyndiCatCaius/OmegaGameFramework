@@ -32,10 +32,8 @@ public:
 	UFUNCTION()
 	void Local_Finish();
 	
-	
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"), DisplayName="Ω🔷 Wait for Manager Flag State") 
 	static UAsyncAction_WaitForFlag* WaitForFlagState(UObject* WorldContextObject, const FString& Flag, bool bState);
-
 	
 };

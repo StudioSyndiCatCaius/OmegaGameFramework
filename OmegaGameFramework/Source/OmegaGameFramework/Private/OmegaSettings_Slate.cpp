@@ -145,3 +145,21 @@ void UOmegaSlateFunctions::SetSlateStyle_ComboBox(UComboBoxString* widget)
 	}
 }
 
+FLinearColor UOmegaSlateFunctions::GetSlateColor_ByIndex(int32 index)
+{
+	if(GetCurrentSlateStyle())
+	{
+		if(index==0) {return GetCurrentSlateStyle()->Color_1; }
+		if(index==1) {return GetCurrentSlateStyle()->Color_2; }
+		if(index==2) {return GetCurrentSlateStyle()->Color_3; }
+		if(index==3) {return GetCurrentSlateStyle()->Color_4; }
+	}
+	return FLinearColor();
+}
+
+FLinearColor UOmegaSlateFunctions::GetSlateColor_ByTag(FGameplayTag Tag, FLinearColor Fallback)
+{
+	if(GetCurrentSlateStyle()->Colors_Tagged.Contains(Tag)){ return GetCurrentSlateStyle()->Colors_Tagged.FindOrAdd(Tag);}
+	return Fallback;
+}
+

@@ -16,8 +16,6 @@ UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UCombatantSquadComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
-
 public:
 
 	UPROPERTY(BlueprintAssignable)

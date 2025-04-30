@@ -9,14 +9,21 @@
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaFaction.h"
 #include "Misc/OmegaDemoAssets.h"
-#include "Actors/Actor_Ability.h"
 #include "OmegaDataItem.h"
 #include "OmegaDebug_Functions.h"
+
+#include "Actors/Actor_Ability.h"
 #include "Actors/Actor_Character.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Subsystems/OmegaSubsystem_Quest.h"
 #include "Subsystems/OmegaSubsystem_Zone.h"
+
+#include "DataAssets/DA_CommonCharacter.h"
+#include "DataAssets/DA_CommonItem.h"
+#include "DataAssets/DA_CommonSkill.h"
+#include "DataAssets/DA_CommonInteractable.h"
+
 #include "Misc/CombatantGambits.h"
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
@@ -98,13 +105,8 @@ UCLASS() class OMEGAEDITOR_API UOmegaQuest_Factory : public UFactory
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaQuest,"Quest", "Asset Desc here",FColor(201, 29, 85),"Gameplay")
 
-//Skill
-UCLASS() class OMEGAEDITOR_API UOmegaCommonSkill_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-};
-OMACRO_ASSETTYPE_HEADERFIELD(OmegaCommonSkill,"Common Skill", "Asset Desc here",FColor(255, 40, 56),"Gameplay")
+
+
 
 //Subscript
 UCLASS() class OMEGAEDITOR_API USubscriptCollection_Factory : public UFactory
@@ -388,4 +390,67 @@ public:
 private:
 	EAssetTypeCategories::Type OmegaAssetCategory;
 };
+
+
+// =====================================================================================================================
+// COMMON TYPES
+// =====================================================================================================================
+
+const FColor col_common=FColor(255, 30, 30);
+
+//Skill
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonSkill_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonSkill,"Common Skill", "Asset Desc here",col_common,"Common")
+
+//Character
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonCharacter_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonCharacter,"Common Character", "Asset Desc here",col_common,"Common")
+
+//Item
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonItem_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonItem,"Common Item", "Asset Desc here",col_common,"Common")
+
+//Interactables
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonInteractable_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonInteractable,"Common Interactable", "Asset Desc here",col_common,"Common")
+
+
+// =====================================================================================================================
+// Asset Libraries
+// =====================================================================================================================
+
+const FColor col_asLib=FColor(150, 100, 255);
+
+//Anim
+UCLASS() class OMEGAEDITOR_API UOmegaAssetLibrary_Animation_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaAssetLibrary_Animation,"Animation Library", "Asset Desc here",col_asLib,"Asset Library")
+
+//Sound
+UCLASS() class OMEGAEDITOR_API UOmegaAssetLibrary_Sound_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaAssetLibrary_Sound,"Sound Library", "Asset Desc here",col_asLib,"Asset Library")
+
 

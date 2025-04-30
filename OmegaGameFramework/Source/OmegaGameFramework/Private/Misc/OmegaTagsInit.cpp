@@ -1,6 +1,10 @@
 
 #include "NativeGameplayTags.h"
 
+// --------------------------------------------------------------------------------------------------------
+// Attribute
+// --------------------------------------------------------------------------------------------------------
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_HP,"Attribute.HP");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_MP,"Attribute.MP");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_PATK,"Attribute.PATK");
@@ -14,17 +18,26 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Cunning,"Attribute.Cunning");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Wisdom,"Attribute.Wisdom");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Attribute_Aggro,"Attribute.Strength");
 
+// --------------------------------------------------------------------------------------------------------
+// Skill
+// --------------------------------------------------------------------------------------------------------
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Active,"Skill.Type.Active");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Passive,"Skill.Type.Passive");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tech,"Skill.Type.Tech");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Magic,"Skill.Type.Magic");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tactic,"Skill.Type.Tactic");
+
+// --------------------------------------------------------------------------------------------------------
+// Combat
+// --------------------------------------------------------------------------------------------------------
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Player,"Combat.Faction.Player");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Enemy,"Combat.Faction.Enemy");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Ally,"Combat.Faction.Ally");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Neutral,"Combat.Faction.Neutral");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Faction_Destructable,"Combat.Faction.Destructable");
-
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Active,"Skill.Active");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Passive,"Skill.Passive");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tech,"Skill.Tech");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Magic,"Skill.Magic");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tactic,"Skill.Tactic");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Enemy_Type_Grunt,"Combat.Enemy.Type.Grunt");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Enemy_Type_Boss,"Combat.Enemy.Type.Boss");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Damage,"Combat.Effect.Damage");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Heal,"Combat.Effect.Heal");
@@ -47,6 +60,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Stage_Boss,"Combat.Stage.Boss");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Adv_Player,"Combat.Advantage.Player");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Adv_Enemy,"Combat.Advantage.Enemy");
+
+// --------------------------------------------------------------------------------------------------------
+// Item
+// --------------------------------------------------------------------------------------------------------
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Consumable,"Item.Consumable");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Key,"Item.Key");
@@ -108,6 +125,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_18,"Story.Chapter.18");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_19,"Story.Chapter.19");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_20,"Story.Chapter.20");
 
+// --------------------------------------------------------------------------------------------------------
+// Animation
+// --------------------------------------------------------------------------------------------------------
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_00,"Animation.Action.Attack.Combo.00");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_01,"Animation.Action.Attack.Combo.01");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Act_Attack_Combo_02,"Animation.Action.Attack.Combo.02");
@@ -148,6 +169,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Point,"Animation.Emote.Point");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Talking,"Animation.Emote.Talking");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Anim_Emote_Listen,"Animation.Emote.Listen");
 
+// --------------------------------------------------------------------------------------------------------
+// Flags
+// --------------------------------------------------------------------------------------------------------
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_00,"Flag.Power.0%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_10,"Flag.Power.10%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_20,"Flag.Power.20%");
@@ -164,8 +189,17 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_300,"Flag.Power.300%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_400,"Flag.Power.400%");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Power_500,"Flag.Power.500%");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Snap,"Flag.Snap");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_MoveToTarget,"Flag.MoveToTarget");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_TargetAll,"Flag.TargetAll");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_SelectFirst,"Flag.SelectFirst");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Flag_Consumable,"Flag.Consumable");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_AI_Controlled,"AI.Controlled");
 
+// --------------------------------------------------------------------------------------------------------
+// Event
+// --------------------------------------------------------------------------------------------------------
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Actor_Interact,"Event.Actor.Interact");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_Begin,"Event.Ability.Begin");
@@ -198,6 +232,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_Open,"Event.Misc.Open");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_Close,"Event.Misc.Close");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_On,"Event.Misc.On");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_Off,"Event.Misc.Off");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_Start,"Event.Misc.Start");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_Stop,"Event.Misc.Stop");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_Reset,"Event.Misc.Reset");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Misc_Kill,"Event.Misc.Kill");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Msg_Start,"Event.Message.Start");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Msg_Next,"Event.Message.Next");
@@ -292,3 +330,4 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_01,"Zone.Floor.01");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_02,"Zone.Floor.02");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_03,"Zone.Floor.03");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Zone_Floor_04,"Zone.Floor.04");
+

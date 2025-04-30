@@ -33,5 +33,6 @@ public:
 	UPROPERTY(EditAnywhere,Category="DynamicImage") FVector2D Size_Min;
 	UPROPERTY(EditAnywhere,Category="DynamicImage") FVector2D Size_Max;
 	
-	
+	UPROPERTY(EditAnywhere,Category="DynamicImage") TMap<FName,float> MaterialParams_scalar;
+	UPROPERTY(EditAnywhere,Category="DynamicImage") TMap<FName,FLinearColor> MaterialParams_vector;
 };

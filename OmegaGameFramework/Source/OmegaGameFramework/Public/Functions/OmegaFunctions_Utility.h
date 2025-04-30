@@ -62,8 +62,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "LOmega|Utilities|Viewport", Meta = (DisplayName = "Set Window Mode", Keywords = "screen fullscreen windowed"))
 	static void SetWindowMode(const bool Fullscreen, const bool IsFullscreenWindowed);
-
-	
 };
 
 UCLASS()
@@ -133,6 +131,9 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static FRotator Conv_VectorToRot_Flat(FVector Vector);
 
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FWidgetTransform Conv_Transform3DToTransformWidget(const FTransform Transform);
+	
 	UFUNCTION(BlueprintPure,Category="Omega|Math", DisplayName="Normalize to Range (Int32)")
 	static float NormalizeToRange_int32(int32 value, int32 min, int32 max);
 
@@ -148,8 +149,14 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Math",meta=(ExpandEnumAsExecs="Outcome"))
 	static bool RNG_RollFromFloat(float chance, TEnumAsByte<EOmegaFunctionResult>& Outcome);
-
-
+	
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static float Variate_Float(float in, float amount, bool bAmountIsScale);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Offset_Vector(FVector Vector, FRotator Rotation, FVector Offset);
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Offset_ActorLocation(AActor* Actor, FVector Offset);
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Offset_PawnLocationFromControl(APawn* Pawn, FVector Offset);
 };

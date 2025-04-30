@@ -26,7 +26,8 @@
 class UAudioComponent;
 
 UCLASS()
-class OMEGADEMO_API AOmegaCharacter : public AOmegaBaseCharacter, public IGameplayTagsInterface, public IActorInterface_AimTarget
+class OMEGADEMO_API AOmegaCharacter : public AOmegaBaseCharacter, public IGameplayTagsInterface, public IActorInterface_AimTarget,
+										public IDataInterface_FlowAsset, public IDataInterface_General, public IDataInterface_Traits
 {
 	GENERATED_BODY()
 
@@ -40,6 +41,8 @@ class OMEGADEMO_API AOmegaCharacter : public AOmegaBaseCharacter, public IGamepl
 			if(s) { SubscriptComponent->SetSubscriptCollectionActive(s,true);}
 		}
 	}
+
+	bool b_IdentityHasGeneralInterface();
 
 	
 public:
@@ -58,9 +61,10 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	UPROPERTY(EditAnywhere,Category="Mesh")
-	FName MutableComponentName=TEXT("Body");
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="0_OmegaCharacter")
+	TArray<UOmegaObjectTrait*> Traits;
+	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="0_OmegaCharacter")
 	UPrimaryDataAsset* CharacterAsset;
@@ -71,8 +75,10 @@ public:
 	UPROPERTY(EditAnywhere,Category="Animation")
 	UOmegaAnimationEmote* DefaultEmote;
 
+	// DIALOGUE
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="0_OmegaCharacter")
-	UFlowAsset* DialogueFlow;
+	UFlowAsset* DialogueFlow=nullptr;
+	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override { return DialogueFlow; };
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="0_OmegaCharacter",DisplayName="Subscripts")
 	TArray<USubscriptCollection*> SubscriptCollections;
@@ -97,7 +103,7 @@ public:
 	virtual FVector GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UActorIdentityComponent* ActorIdentity;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataItemComponent* DataItem;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataItemComponent* DataItem;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UCombatantComponent* Combatant;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UEquipmentComponent* Equipment;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataAssetCollectionComponent* Inventory;
@@ -111,8 +117,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UGameplayPauseComponent* GameplayPause;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UZoneEntityComponent* ZoneEntity;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAimTargetComponent* LookAim;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UCustomizableSkeletalComponent* CustomSkelMesh;
 
+	
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 };
 
 // ========================================================================================================

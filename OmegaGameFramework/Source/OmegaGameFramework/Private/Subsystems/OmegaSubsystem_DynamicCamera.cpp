@@ -159,6 +159,7 @@ void UOmegaDynamicCameraSubsystem::InterpToTarget(AOmegaDynamicCamera* cam_sourc
 		cam_master->comp_spring->SetRelativeRotation(UKismetMathLibrary::RInterpTo(cam_master->comp_spring->GetRelativeRotation(),cam_source->comp_spring->GetRelativeRotation(),last_delta,speed));
 		cam_master->comp_spring->SocketOffset=UKismetMathLibrary::VInterpTo(cam_master->comp_spring->SocketOffset,cam_source->comp_spring->SocketOffset,last_delta,speed);
 		cam_master->comp_spring->TargetOffset=UKismetMathLibrary::VInterpTo(cam_master->comp_spring->TargetOffset,cam_source->comp_spring->TargetOffset,last_delta,speed);
+		cam_master->comp_spring->bDoCollisionTest=cam_source->comp_spring->bDoCollisionTest;
 	}
 }
 
@@ -248,6 +249,7 @@ FTransform AOmegaDynamicCamera::LOCAL_Average_Transform(TArray<FTransform> input
 
 	return FTransform(interpolatedRotation, interpolatedLocation, interpolatedScale);
 }
+
 
 void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 {

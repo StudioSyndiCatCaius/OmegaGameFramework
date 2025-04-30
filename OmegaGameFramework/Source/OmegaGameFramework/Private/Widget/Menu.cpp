@@ -40,6 +40,8 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		
 		OnOpened.Broadcast(Tags, Flag);
 		MenuOpened(Tags, Context, Flag);
+		Native_UpdateState();
+		
 		//ANIMATION
 
 		if(CustomInputMode)
@@ -238,7 +240,25 @@ void UMenu::Local_BindGlobalEvent()
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UMenu::OnTaggedGlobalEvent);
 }
 
+void UMenu::Native_UpdateState()
+{
+	if(UWidgetSwitcher* _switch=GetWidget_WidgetSwitcher_State())
+	{
+		_switch->SetActiveWidgetIndex(menu_state);
+	}
+	OnMenuStateChanged(menu_state);
+}
+
+void UMenu::SetMenuState(int32 state)
+{
+	if(state!=menu_state)
+	{
+		menu_state=state;
+		Native_UpdateState();
+	}
+}
+
 void UMenu::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
-	FLuaValue meta)
+                                             FLuaValue meta)
 {
 }

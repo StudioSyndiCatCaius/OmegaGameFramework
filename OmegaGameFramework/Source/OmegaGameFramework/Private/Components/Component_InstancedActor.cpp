@@ -348,6 +348,55 @@ void AOmegaInstanceActor::TriggerNotify(FName Notify)
 	OnNotify(Notify);
 }
 
+AOmegaInstanceActor* UOmegaInstancedActorFunctions::GetFirstInstanceActorOfContext(UObject* WorldContextObject,
+	UObject* Context, TSubclassOf<AOmegaInstanceActor> Class, bool& result)
+{
+	if(WorldContextObject)
+	{
+		TArray<AActor*> _instAcs;
+		UGameplayStatics::GetAllActorsOfClass(WorldContextObject,AOmegaInstanceActor::StaticClass(),_instAcs);
+		for(auto* a : _instAcs)
+		{
+			if(a && (a->GetClass()->IsChildOf(Class) || !Class))
+			{
+				if(AOmegaInstanceActor* _instA = Cast<AOmegaInstanceActor>(a))
+				{
+					if(_instA->ContextObject==Context)
+					{
+						result=true;
+						return _instA;
+					}
+				}
+			}
+		}
+	}
+	result=false;
+	return nullptr;
+}
+
+TArray<AOmegaInstanceActor*> UOmegaInstancedActorFunctions::GetInstanceActorsFromContexts(UObject* WorldContextObject,
+	TArray<UObject*> Contexts, TSubclassOf<AOmegaInstanceActor> Class)
+{
+	TArray<AOmegaInstanceActor*> out;
+	
+	TArray<AActor*> _instAcs;
+	UGameplayStatics::GetAllActorsOfClass(WorldContextObject,AOmegaInstanceActor::StaticClass(),_instAcs);
+	for(auto* a : _instAcs)
+	{
+		if(a && (a->GetClass()->IsChildOf(Class) || !Class))
+		{
+			if(AOmegaInstanceActor* _instA = Cast<AOmegaInstanceActor>(a))
+			{
+				if(Contexts.Contains(_instA->ContextObject))
+				{
+					out.Add(_instA);
+				}
+			}
+		}
+	}
+	return out;
+}
+
 void AOmegaInstanceActor::OnNotify_Implementation(FName Notify)
 {
 }

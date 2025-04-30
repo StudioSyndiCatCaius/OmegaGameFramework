@@ -7,17 +7,14 @@
 #include "Functions/OmegaFunctions_Combatant.h"
 #include "OmegaMutable_Functions.h"
 #include "OmegaSettings_Gameplay.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Interfaces/OmegaInterface_ObjectTraits.h"
 
 
 void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, UActorIdentityComponent* Component)
 {
 	if(IdentityAsset)
 	{
-		if(IdentityAsset->GetClass()->IsChildOf(UOmegaDataItem::StaticClass()))
-		{
-			DataItem->SetDataItem(Cast<UOmegaDataItem>(IdentityAsset));
-		}
+		//if(IdentityAsset->GetClass()->IsChildOf(UOmegaDataItem::StaticClass())) { DataItem->SetDataItem(Cast<UOmegaDataItem>(IdentityAsset)); }
 		Combatant->SetSourceDataAsset(IdentityAsset);
 		UCombatantFunctions::SetCombatantFromSource(Combatant,IdentityAsset);
 		UDataAssetCollectionFunctions::SetInventory_FromSource(Inventory,IdentityAsset);
@@ -27,14 +24,26 @@ void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, U
 		{
 			if(UCustomizableObjectInstance* inst = IDataInterface_MutableSource::Execute_GetCustomizableObjectInstance(IdentityAsset))
 			{
-				if(USkeletalMesh* _mesh = inst->GetComponentMeshSkeletalMesh(MutableComponentName))
-				{
-					GetMesh()->SetSkeletalMeshAsset(_mesh);
-				}
+				//if(USkeletalMesh* _mesh = inst->GetComponentMeshSkeletalMesh(MutableComponentName))
+				//{
+				//	GetMesh()->SetSkeletalMeshAsset(_mesh);
+				//}
 				//if(CustomSkelMesh) { CustomSkelMesh->SetCustomizableObjectInstance(inst); }
 			}
 		}
 	}
+}
+
+bool AOmegaCharacter::b_IdentityHasGeneralInterface()
+{
+	if(UPrimaryDataAsset* _da=ActorIdentity->GetIdentitySourceAsset())
+	{
+		if(_da && _da->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 // Sets default values
@@ -46,11 +55,8 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	ActorIdentity = CreateDefaultSubobject<UActorIdentityComponent>(TEXT("Actor Identity"));
 	Combatant = CreateDefaultSubobject<UCombatantComponent>(TEXT("Combatant"));
-	DataItem = CreateDefaultSubobject<UDataItemComponent>(TEXT("DataItem"));
-	if(DataItem)
-	{
-		DataItem->FlagOnApplied="SetCharacter";
-	}
+	//DataItem = CreateDefaultSubobject<UDataItemComponent>(TEXT("DataItem"));
+	//if(DataItem){ DataItem->FlagOnApplied="SetCharacter"; }
 	Equipment = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
 	Inventory = CreateDefaultSubobject<UDataAssetCollectionComponent>(TEXT("Inventory"));
 	Leveling = CreateDefaultSubobject<ULevelingComponent>(TEXT("Leveling"));
@@ -120,7 +126,7 @@ void AOmegaCharacter::BeginPlay()
 	Super::BeginPlay();
 	Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
 	Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
-	DataItem->OnDataItemChanged.AddDynamic(this, &AOmegaCharacter::Local_UpdateDataItem);
+	//DataItem->OnDataItemChanged.AddDynamic(this, &AOmegaCharacter::Local_UpdateDataItem);
 	if(DefaultEmote)
 	{
 		UOmegaAnimationFunctions::PlayEmoteAnimation(this,DefaultEmote);
@@ -145,7 +151,7 @@ void AOmegaCharacter::Local_AddCombatantSource(UObject* Source)
 	if(Source)
 	{
 		Combatant->AddAttrbuteModifier(Source);
-		Combatant->SetSkillSourceActive(DataItem, true);
+		Combatant->SetSkillSourceActive(Source, true);
 	}
 }
 
@@ -161,6 +167,17 @@ void AOmegaCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
+TArray<UOmegaObjectTrait*> AOmegaCharacter::GetTraits_Implementation()
+{
+	TArray<UOmegaObjectTrait*> out;
+	if(UPrimaryDataAsset* _asset = ActorIdentity->GetIdentitySourceAsset())
+	{
+		out.Append(UDataInterface_Traits::GetObjectTraits(_asset));
+	}
+	return out;
+}
+
+
 void AOmegaCharacter::Local_LevelUpdate(int32 NewLevel)
 {
 	Combatant->Level = Leveling->GetCurrentLevel();
@@ -171,6 +188,40 @@ void AOmegaCharacter::Local_UpdateDataItem(UOmegaDataItem* NewItem)
 	Combatant->CombatantDataAsset = NewItem;
 	Combatant->Update();
 }
+
+
+void AOmegaCharacter::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	if(b_IdentityHasGeneralInterface())
+	{
+		Execute_GetGeneralDataText(ActorIdentity->GetIdentitySourceAsset(),"",this,Name,Description);
+	}
+	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
+}
+
+void AOmegaCharacter::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	if(b_IdentityHasGeneralInterface())
+	{
+		Execute_GetGeneralDataImages(ActorIdentity->GetIdentitySourceAsset(),"",this,Texture,Material,Brush);
+	}
+	IDataInterface_General::GetGeneralDataImages_Implementation(Label, Context, Texture, Material, Brush);
+}
+
+void AOmegaCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	if(b_IdentityHasGeneralInterface())
+	{
+		Execute_GetGeneralAssetLabel(ActorIdentity->GetIdentitySourceAsset(),Label);
+	}
+	IDataInterface_General::GetGeneralAssetLabel_Implementation(Label);
+}
+
+// ========================================================================================================
+// Encounter Character
+// ========================================================================================================
 
 
 AOmegaEncounterCharacter::AOmegaEncounterCharacter()

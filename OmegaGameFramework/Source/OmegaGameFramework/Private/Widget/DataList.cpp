@@ -429,7 +429,7 @@ TArray<UDataWidget*> UDataList::GetEntiresWithTag(FName Tag, bool bInvertGet)
 	{
 		if(TempEntry)
 		{
-			if(TempEntry->DataWidgetHasTag(Tag) != bInvertGet)
+			if(TempEntry->WidgetHasTag(Tag) != bInvertGet)
 			{
 				OutWidgets.Add(TempEntry);
 			}
@@ -443,7 +443,7 @@ bool UDataList::AnyEntryHasTag(FName Tag)
 {
 	for(auto TempEntry : GetEntries())
 	{
-		if(TempEntry->DataWidgetHasTag(Tag))
+		if(TempEntry->WidgetHasTag(Tag))
 		{
 			return true;
 		}

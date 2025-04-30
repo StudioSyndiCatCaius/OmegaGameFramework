@@ -29,6 +29,10 @@ void UOmegaGameplayModule::Native_Initialize()
 		REF_OwningManager->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnTaggedGlobalEvent);
 		REF_OwningManager->OnNewLevel.AddDynamic(this, &UOmegaGameplayModule::Native_OnLevelOpened);
 	}
+	if(UOmegaSaveSubsystem* _sys = GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>())
+	{
+		_sys->OnNewGameStarted.AddDynamic(this, &UOmegaGameplayModule::GameFileStarted);
+	}
 	
 	Initialized();
 }

@@ -36,7 +36,7 @@ void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 			{
 				if(Local_IsSourceAssetValid())
 				{
-					IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner());
+					IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner(),this);
 				}
 			}
 		}
@@ -48,12 +48,11 @@ void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 	}
 }
 
-
 void UActorIdentityComponent::OnTagEvent_Implementation(FGameplayTag Event)
 {
 	if(Local_IsSourceAssetValid())
 	{
-		IDataInterface_ActorIdentitySource::Execute_OnActorTagEvent(IdentitySource,GetOwner(),Event);
+		IDataInterface_ActorIdentitySource::Execute_OnActorTagEvent(IdentitySource,GetOwner(),this,Event);
 	}
 	IActorTagEventInterface::OnTagEvent_Implementation(Event);
 }
@@ -64,10 +63,10 @@ void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 	SetIdentitySourceAsset(IdentitySource);
 	if(Local_IsSourceAssetValid())
 	{
-		IDataInterface_ActorIdentitySource::Execute_OnActorConstruction(IdentitySource,GetOwner());
+		IDataInterface_ActorIdentitySource::Execute_OnActorConstruction(IdentitySource,GetOwner(),this);
 		for(auto* i : Local_GetScripts())
 		{
-			if(i) { i->OnActorConstruction(GetOwner()); }
+			if(i) { i->OnActorConstruction(GetOwner(),this); }
 		}
 	}
 	//Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -79,10 +78,10 @@ void UActorIdentityComponent::BeginPlay()
 	GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,true);
 	if(Local_IsSourceAssetValid())
 	{
-		IDataInterface_ActorIdentitySource::Execute_OnActorBeginPlay(IdentitySource,GetOwner());
+		IDataInterface_ActorIdentitySource::Execute_OnActorBeginPlay(IdentitySource,GetOwner(),this);
 		for(auto* i : Local_GetScripts())
 		{
-			if(i) { i->OnActorBeginPlay(GetOwner()); }
+			if(i) { i->OnActorBeginPlay(GetOwner(),this); }
 		}
 	}
 	Super::BeginPlay();
@@ -102,10 +101,10 @@ void UActorIdentityComponent::TickComponent(float DeltaTime, ELevelTick TickType
 {
 	if(Local_IsSourceAssetValid())
 	{
-		IDataInterface_ActorIdentitySource::Execute_OnActorTick(IdentitySource,GetOwner(),DeltaTime);
+		IDataInterface_ActorIdentitySource::Execute_OnActorTick(IdentitySource,GetOwner(),this,DeltaTime);
 		for(auto* i : Local_GetScripts())
 		{
-			if(i) { i->OnActorTick(GetOwner(),DeltaTime); }
+			if(i) { i->OnActorTick(GetOwner(),this,DeltaTime); }
 		}
 	}
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);

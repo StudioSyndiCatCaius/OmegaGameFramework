@@ -428,8 +428,21 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatantsWithDataAsset(
 	return out;
 }
 
+TArray<UPrimaryDataAsset*> UCombatantFunctions::GetDataAssetsFromCombatants(TArray<UCombatantComponent*> Combatants)
+{
+	TArray<UPrimaryDataAsset*> out;
+	for(auto* c : Combatants)
+	{
+		if(c && c->GetSourceDataAsset())
+		{
+			out.Add(c->GetSourceDataAsset());
+		}
+	}
+	return out;
+}
+
 UCombatantComponent* UCombatantFunctions::GetFirstCombatantWithDataAsset(UObject* WorldContextObject,
-	UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                         UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
 {
 	TArray<UCombatantComponent*> list=GetAllCombatantsWithDataAsset(WorldContextObject,Asset);
 	if(list.IsValidIndex(0))

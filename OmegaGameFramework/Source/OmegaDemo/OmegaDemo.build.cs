@@ -20,6 +20,7 @@ public class OmegaDemo : ModuleRules
 			"SlateCore",
 			"CustomizableObject",
 			"JsonUtilities",
+			"LevelSequence",
 			"AssetRegistry",
 			"AnimGraphRuntime",
 			"OmegaGameFramework",

@@ -646,15 +646,48 @@ AActor* UOmegaGameFrameworkBPLibrary::GetGlobalActorBinding(const UObject* World
 	return WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGlobalActorBinding(Binding);
 }
 
+void UOmegaGameFrameworkBPLibrary::SetTaggedActorBinding(const UObject* WorldContextObject, FGameplayTag Binding,
+	AActor* Actor)
+{
+	if(WorldContextObject && Actor)
+	{
+		WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActorBindings_Tagged.Add(Binding,Actor);
+	}
+}
+
+AActor* UOmegaGameFrameworkBPLibrary::CheckTaggedActorBinding(const UObject* WorldContextObject, FGameplayTag Binding,
+	TSubclassOf<AActor> Class, bool& result)
+{
+	if(WorldContextObject)
+	{
+	 	AActor* _actor = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActorBindings_Tagged.FindOrAdd(Binding);
+		if(_actor && (!Class || _actor->GetClass()->IsChildOf(Class)))
+		{
+			result=true;
+			return _actor;
+		}
+	}
+	result=false;
+	return nullptr;
+}
+
 // QUICK ACCESS
 AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetActiveGameplaySystem(const UObject* WorldContextObject,
-	TSubclassOf<AOmegaGameplaySystem> SystemClass)
+	TSubclassOf<AOmegaGameplaySystem> SystemClass, bool& result)
 {
 	bool LocalIsActive;
-	if(WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGameplaySystem(SystemClass, LocalIsActive))
+	if(WorldContextObject && WorldContextObject->GetWorld())
 	{
-		return WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGameplaySystem(SystemClass, LocalIsActive);
+		if(UOmegaGameplaySubsystem* _sub=WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>())
+		{
+			if(AOmegaGameplaySystem* _sys=_sub->GetGameplaySystem(SystemClass, LocalIsActive))
+			{
+				result=true;
+				return _sys;
+			}
+		}
 	}
+	result=false;
 	return nullptr;
 }
 

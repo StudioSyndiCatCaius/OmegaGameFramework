@@ -10,6 +10,8 @@
 #include "LuaInterface.h"
 #include "OmegaSubsystem_Message.generated.h"
 
+class UOAsset_TransformPreset;
+
 USTRUCT(BlueprintType, Atomic)
 struct FOmegaGameplayMessageData
 {
@@ -17,7 +19,7 @@ struct FOmegaGameplayMessageData
 
 	UPROPERTY(BlueprintReadWrite, Category="Message", instanced, EditAnywhere)
 	UOmegaGameplayMessage* Message;
-
+	
 	UPROPERTY()
 	FText MessageLog_Text;
 };
@@ -31,9 +33,22 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageInstigator
 	GENERATED_BODY()
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Gameplay|Message")
 	FSlateBrush GetMessageBrush(UOmegaGameplayMessage* Message);
 };
+
+UINTERFACE(MinimalAPI) class UDataInterface_MessageContext : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageContext
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Gameplay|Message")
+	UOAsset_TransformPreset* GetMessage_TransformPreset();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Gameplay|Message")
+	USoundBase* GetMessage_SoundClip();
+};
+
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnGameplayMessage, UOmegaGameplayMessage*, Message, FGameplayTag, MessageCategory, FLuaValue, meta);
@@ -48,7 +63,7 @@ public:
 	void FireGameplayMessage(FOmegaGameplayMessageData Message);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message",meta=(AdvancedDisplay="meta, Brush"))
-	void FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory, FGameplayTagContainer Tags, FSlateBrush Brush, FLuaValue meta);
+	void FireCustomGameplayMessage(UObject* Instigator, FText Text, FGameplayTag MessageCategory, FGameplayTagContainer Tags, FSlateBrush Brush, FLuaValue meta,UObject* Context=nullptr);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnGameplayMessage OnGameplayMessage;
@@ -70,6 +85,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayMessage : public UObject, public IDat
 public:
 	
 	UPROPERTY() UObject* Temp_Instigator = nullptr;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UObject* Context = nullptr;
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	UObject* GetMessageInstigator();
 

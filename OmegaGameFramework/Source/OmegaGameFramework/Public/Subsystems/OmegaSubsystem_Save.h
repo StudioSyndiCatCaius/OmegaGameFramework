@@ -70,7 +70,7 @@ public:
 // ====================================================================================================
 // Subsystem
 // ====================================================================================================
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewGameStarted, UOmegaSaveGame*, NewGame);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewGameStarted, UOmegaSaveGame*, NewGame, FGameplayTagContainer, Tags);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSaveStateChanged, FGameplayTag, NewState, bool, bGlobal);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSaveTagsEdited, FGameplayTagContainer, EditedTags, bool, Added, bool, bGlobal);
 
@@ -612,20 +612,12 @@ public:
 // Save Conditions
 // ====================================================================================================
 
-UCLASS(BlueprintType, Blueprintable, Const, abstract, editinlinenew, hidecategories=Object, CollapseCategories)
+UCLASS(BlueprintType, Blueprintable, Const, abstract, editinlinenew, hidecategories=Object, CollapseCategories,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveCondition : public UObject
 {
 	GENERATED_BODY()
 
 public:
-
-	UPROPERTY(Transient)
-	mutable UWorld* WorldPrivate = nullptr;
-	
-	UOmegaSaveCondition(const FObjectInitializer& ObjectInitializer);
-	virtual UWorld* GetWorld() const override;
-	UFUNCTION()
-	virtual UGameInstance* GetGameInstance() const;
 	
 	UFUNCTION(BlueprintNativeEvent, Category="OmegaSaveCondition")
 	bool CheckSaveCondition(UOmegaSaveSubsystem* SaveSubsystem) const;
@@ -640,7 +632,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveConditionCollection : public UPrimaryData
 public:
 	
 	UPROPERTY(BlueprintReadOnly, Category="OmegaSaveConditions", instanced, EditAnywhere)
-	TArray<class UOmegaSaveCondition*> Conditions;
+	TArray<UOmegaSaveCondition*> Conditions;
 };
 
 
@@ -655,14 +647,11 @@ class UOmegaSaveInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class OMEGAGAMEFRAMEWORK_API IOmegaSaveInterface
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+
 	public:
 
 	UFUNCTION(BlueprintNativeEvent, Category ="Omega|Save")

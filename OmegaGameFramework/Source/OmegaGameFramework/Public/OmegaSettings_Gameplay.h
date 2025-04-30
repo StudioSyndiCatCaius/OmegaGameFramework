@@ -117,7 +117,8 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
 	UOmegaCharacterConfig* DefaultActorConfig_Character;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	UOmegaActorConfig* DefaultActorConfig_Interactable;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
 	UOmegaActorConfig* DefaultActorConfig_FloatingCombatant;
 	

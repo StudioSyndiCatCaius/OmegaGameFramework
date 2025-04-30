@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
 #include "ScreenWidget.h"
+#include "Components/WidgetSwitcher.h"
 #include "Subsystems/OmegaSubsystem_Message.h"
 #include "Interfaces/OmegaInterface_Widget.h"
 #include "Misc/GeneralDataObject.h"
@@ -182,5 +183,23 @@ public:
 	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FLuaValue meta);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInputMethodChanged(bool bIsGamepad);
+
+	//----------------------------------------------------------------------
+	// State
+	//----------------------------------------------------------------------
+private:
+	UPROPERTY() int32 menu_state;
+	void Native_UpdateState();
+public:
+	UFUNCTION(BlueprintImplementableEvent,Category="Menu|State")
+	void OnMenuStateChanged(int32 new_state);
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Menu|State")
+	UWidgetSwitcher* GetWidget_WidgetSwitcher_State();
 	
+	UFUNCTION(BlueprintCallable,Category="Menu|State")
+	void SetMenuState(int32 state);
+
+	UFUNCTION(BlueprintCallable,Category="Menu|State")
+	int32 GetMenuState() const { return menu_state;};
 };

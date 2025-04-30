@@ -8,6 +8,8 @@
 
 #include "OmegaInterface_Widget.generated.h"
 
+class UUserWidget;
+
 // This class does not need to be modified.
 UINTERFACE()
 class UWidgetInterface_Input : public UInterface
@@ -38,21 +40,10 @@ public:
 };
 
 
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UWidgetInterface_Combatant : public UInterface
-{
-	GENERATED_BODY()
-};
-
-/**
- * 
- */
+UINTERFACE(MinimalAPI) class UWidgetInterface_Combatant : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IWidgetInterface_Combatant
 {
 	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Widget|Combatant")
@@ -69,4 +60,23 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_Combatant
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Widget|Combatant")
 	void SetAttributeComparison(bool bComparing, UCombatantComponent* Combatant, UObject* ComparedSource, UObject* UncomparedSource);
+};
+
+UINTERFACE(MinimalAPI) class UDataInterface_WidgetTrait : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_WidgetTrait
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent,Category="WidgetState")
+	void OnTraitInit(UUserWidget* Widget);
+
+	UFUNCTION(BlueprintNativeEvent,Category="WidgetState")
+	void OnWidgetTick(UUserWidget* Widget,float Delta);
+
+	UFUNCTION(BlueprintNativeEvent,Category="WidgetState")
+	void OnWidgetConstruct(UUserWidget* Widget);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="WidgetState")
+	void OnWidgetDestruct(UUserWidget* Widget);
 };

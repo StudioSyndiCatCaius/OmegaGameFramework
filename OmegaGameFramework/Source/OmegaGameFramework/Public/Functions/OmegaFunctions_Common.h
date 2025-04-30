@@ -172,13 +172,19 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject"))
 	static AActor* GetGlobalActorBinding(const UObject* WorldContextObject, FName Binding);
 
+	
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject"))
+	static void SetTaggedActorBinding(const UObject* WorldContextObject, FGameplayTag Binding, AActor* Actor);
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject",ExpandBoolAsExecs="result",DeterminesOutputType="Class"))
+	static AActor* CheckTaggedActorBinding(const UObject* WorldContextObject, FGameplayTag Binding, TSubclassOf<AActor> Class, bool& result);
+	
 	//###############################################################################
 	// Quick Get
 	//###############################################################################
 
 	//Get an Active Gameplay System by Class
-	UFUNCTION(BlueprintPure, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="SystemClass", CompactNodeTitle="Gameplay System"))
-	static AOmegaGameplaySystem* GetActiveGameplaySystem(const UObject* WorldContextObject, TSubclassOf<AOmegaGameplaySystem> SystemClass);
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="SystemClass", ExpandBoolAsExecs="result"))
+	static AOmegaGameplaySystem* GetActiveGameplaySystem(const UObject* WorldContextObject, TSubclassOf<AOmegaGameplaySystem> SystemClass, bool& result);
 
 	//Get an Active Gameplay System by Class
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Component",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Gameplay System (w/ Component)")

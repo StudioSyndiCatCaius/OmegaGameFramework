@@ -202,6 +202,15 @@ FRotator UOmegaMathFunctions::Conv_VectorToRot_Flat(FVector Vector)
 	return _out;
 }
 
+FWidgetTransform UOmegaMathFunctions::Conv_Transform3DToTransformWidget(const FTransform Transform)
+{
+	FWidgetTransform _ts;
+	_ts.Translation=UKismetMathLibrary::Conv_VectorToVector2D(Transform.GetLocation());
+	_ts.Angle=Transform.GetRotation().Rotator().Roll;
+	_ts.Scale=UKismetMathLibrary::Conv_VectorToVector2D(Transform.GetScale3D());
+	return _ts;
+}
+
 float UOmegaMathFunctions::NormalizeToRange_int32(int32 value, int32 min, int32 max)
 {
 	return UKismetMathLibrary::NormalizeToRange(value,min,max);
@@ -228,6 +237,32 @@ float UOmegaMathFunctions::Variate_Float(float in, float amount, bool bAmountIsS
 {
 	float _offset = UKismetMathLibrary::RandomFloatInRange(amount*-1,amount);
 	if(bAmountIsScale) { return in+(_offset*in);} return in+_offset;
+}
+
+FVector UOmegaMathFunctions::Offset_Vector(FVector Vector, FRotator Rotation, FVector Offset)
+{
+	return Vector+
+		(UKismetMathLibrary::GetForwardVector(Rotation)*Offset.X)+
+		(UKismetMathLibrary::GetRightVector(Rotation)*Offset.Y)+
+		(UKismetMathLibrary::GetUpVector(Rotation)*Offset.Z);
+}
+
+FVector UOmegaMathFunctions::Offset_ActorLocation(AActor* Actor, FVector Offset)
+{
+	if(Actor)
+	{
+		return Offset_Vector(Actor->GetActorLocation(),Actor->GetActorRotation(),Offset);
+	}
+	return FVector();
+}
+
+FVector UOmegaMathFunctions::Offset_PawnLocationFromControl(APawn* Pawn, FVector Offset)
+{
+	if(Pawn)
+	{
+		return Offset_Vector(Pawn->GetActorLocation(),Pawn->GetControlRotation(),Offset);
+	}
+	return FVector();
 }
 
 

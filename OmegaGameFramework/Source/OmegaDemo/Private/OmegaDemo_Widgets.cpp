@@ -221,6 +221,11 @@ void UDataWidgetBase_Attribute::SetAttributeComparison_Implementation(bool bComp
 // Leveling
 // ==============================================================================================================
 
+void UDataWidgetBase_Leveling::local_OnXp(float xp, float changed)
+{
+	Refresh();
+}
+
 void UDataWidgetBase_Leveling::OnSourceAssetChanged_Implementation(UObject* Asset)
 {
 	if(UActorComponent* temp_comp = local_GetComponentFromObject(Asset,ULevelingComponent::StaticClass()))
@@ -236,6 +241,7 @@ void UDataWidgetBase_Leveling::OnSourceAssetChanged_Implementation(UObject* Asse
 			{
 				GetWidget_Text_XpName()->SetText(REF_Comp->LevelingAsset->XPName);
 			}
+			REF_Comp->OnXPUpdated.AddDynamic(this, &UDataWidgetBase_Leveling::local_OnXp);
 		}
 	}
 	Super::OnSourceAssetChanged_Implementation(Asset);

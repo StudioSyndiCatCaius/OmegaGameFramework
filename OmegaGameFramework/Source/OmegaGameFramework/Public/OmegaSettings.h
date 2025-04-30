@@ -19,6 +19,7 @@ class UOmegaGameplayModule;
 class UGamePreferenceFloat;
 class UOmegaSlateStyle;
 class UOmegaGameplayStyle;
+class UOmegaSettings_Preferences;
 
 UENUM(BlueprintType)
 enum class EOmegaInputModeType : uint8
@@ -42,10 +43,16 @@ public:
 	UPROPERTY() TArray<FString> LuaFields_AutoSavedToGame;
 	UClass* GetOmegaGlobalSaveClass() const;
 
+
+	// Settings
+
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Gameplay"))
 	FSoftObjectPath DefaultSettings_Gameplay{"/OmegaGameFramework/Settings/OmegaSettings_Gameplay_Demo_A.OmegaSettings_Gameplay_Demo_A"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Slate"))
 	FSoftObjectPath DefaultSettings_Slate{"/OmegaGameFramework/Settings/OmegaSettings_Slate_Demo_A.OmegaSettings_Slate_Demo_A"};
+	
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Preferences"),AdvancedDisplay)
+	FSoftObjectPath DefaultSettings_Preferences{""};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Paths"), AdvancedDisplay)
 	FSoftObjectPath DefaultSettings_Paths{"/OmegaGameFramework/Settings/OmegaSettings_Paths.OmegaSettings_Paths"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaFileManagerSettings"), AdvancedDisplay)

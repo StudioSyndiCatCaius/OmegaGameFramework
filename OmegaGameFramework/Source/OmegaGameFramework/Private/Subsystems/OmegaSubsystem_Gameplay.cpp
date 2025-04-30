@@ -77,7 +77,7 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::GetGameplaySystem(TSubclassOf<AOm
 {
 	AOmegaGameplaySystem* DummyObject = nullptr;
 
-	for (class AOmegaGameplaySystem* TempSystem : ActiveSystems)
+	for (AOmegaGameplaySystem* TempSystem : GetActiveGameplaySystems())
 	{
 		if (TempSystem->GetClass()->IsChildOf(Class) && !DummyObject)
 		{
@@ -259,20 +259,20 @@ void UOmegaGameplaySubsystem::SetGlobalActorBinding(FName Binding, AActor* Actor
 {
 	if(Actor)
 	{
-		GlobalActorBindingRefs.Add(Binding, Actor);
+		ActorBindings_Named.Add(Binding, Actor);
 	}
 }
 
 void UOmegaGameplaySubsystem::ClearGlobalActorBinding(FName Binding)
 {
-	GlobalActorBindingRefs.Remove(Binding);
+	ActorBindings_Named.Remove(Binding);
 }
 
 AActor* UOmegaGameplaySubsystem::GetGlobalActorBinding(FName Binding)
 {
-	if(GlobalActorBindingRefs.Contains(Binding))
+	if(ActorBindings_Named.Contains(Binding))
 	{
-		return GlobalActorBindingRefs.FindOrAdd(Binding);
+		return ActorBindings_Named.FindOrAdd(Binding);
 	}
 	return nullptr;
 }

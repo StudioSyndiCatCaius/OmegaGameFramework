@@ -13,6 +13,8 @@
 
 class UOmegaSaveSubsystem;
 
+
+
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UDynamicCameraState : public UPrimaryDataAsset
 {
@@ -31,6 +33,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Dynamic Camera")
 	void GetTargetData(UOmegaDynamicCameraSubsystem* Subsystem, FVector& TargetLocation, FRotator& TargetRotation, float& FOV, float& InterpSpeed, float& TrackingRotationLerp) const;
 };
+
+// ========================================================================================================================
+// SUBSYSTEM
+// ========================================================================================================================
 
 UCLASS(DisplayName="Omega Subsystem: Dynamic Camera")
 class OMEGAGAMEFRAMEWORK_API UOmegaDynamicCameraSubsystem : public ULocalPlayerSubsystem, public FTickableGameObject
@@ -101,6 +107,11 @@ public:
 	void SetAllCamerasWithTags_Active(FGameplayTagContainer Tags, bool bActive);
 };
 
+
+// ========================================================================================================================
+// Actor
+// ========================================================================================================================
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaDynamicCamera : public APawn, public IGameplayTagsInterface
 {
@@ -126,12 +137,13 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	UOmegaDynamicCameraSubsystem* REF_Subsystem=nullptr;
-	UPROPERTY()
-	APlayerController* REF_SourcePlayer=nullptr;
+	UPROPERTY() UOmegaDynamicCameraSubsystem* REF_Subsystem=nullptr;
+	UPROPERTY() APlayerController* REF_SourcePlayer=nullptr;
 
 public:
+
+
+	
 	virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(BlueprintImplementableEvent,Category="DynamicCamera")

@@ -537,9 +537,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Active")
 	void SetActiveTarget(UCombatantComponent* Combatant);
 
-	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Active",meta=(ExpandBoolAsExecs="IsValid"))
-	UCombatantComponent* GetActiveTarget(bool&  IsValid);
+	UFUNCTION(BlueprintPure, Category="Combatant|Targeting|Active")
+	UCombatantComponent* GetActiveTarget() const;
 
+	UFUNCTION(BlueprintCallable, Category="Combatant|Targeting|Active",meta=(ExpandBoolAsExecs="IsValid"))
+	UCombatantComponent* TryGetActiveTarget(bool&  IsValid);
+	
 	UFUNCTION(BlueprintPure, Category="Combatant|Targeting|Active")
 	int32 GetActiveTargetIndex();
 

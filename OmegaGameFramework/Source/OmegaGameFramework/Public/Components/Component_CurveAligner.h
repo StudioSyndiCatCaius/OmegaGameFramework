@@ -23,8 +23,9 @@ class OMEGAGAMEFRAMEWORK_API UCurveAlignerComponent : public USceneComponent
 public:
 	UCurveAlignerComponent();
 	
-	UPROPERTY(VisibleInstanceOnly,Category="CurveAligner") TArray<AActor*> REF_Actors;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	UPROPERTY(VisibleInstanceOnly,Category="CurveAligner") TArray<AActor*> REF_Actors;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CurveAligner") UCurveVector* Offset_Curve;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CurveAligner") float Offset_InterpTime=1.0;

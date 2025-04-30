@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Components/Component_Combatant.h"
+#include "Misc/GeneralDataObject.h"
 #include "OmegaFunctions_CombatantFilter.generated.h"
 
 // ================================================================================================================
@@ -24,7 +25,7 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UCombatantFilterCollection : public UPrimaryDataAsset
+class OMEGAGAMEFRAMEWORK_API UCombatantFilterCollection : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 public:

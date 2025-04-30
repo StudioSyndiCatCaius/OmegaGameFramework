@@ -21,3 +21,28 @@ struct FOmegaGlobalVarsContainer
 // Configs
 // ==============================================================================================================
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmega_CameraConfig
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Camera")
+	bool invertX;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Camera")
+	bool invertY;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Camera")
+	float scale=1.0;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaBoolVector
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Bool Vector")
+	bool X=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Bool Vector")
+	bool Y=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Bool Vector")
+	bool Z=true;
+};

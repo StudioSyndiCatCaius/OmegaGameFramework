@@ -59,13 +59,16 @@ public:
 	static TArray<UCombatantComponent*> GetCombatantFromTargetSelection(UCombatantComponent* Instigator, EOmegaCombatTarget Selection);
 	
 	//Trys Getting First Combatant With a DataAsset
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(WorldContext="WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"))
 	static TArray<UCombatantComponent*> GetAllCombatantsWithDataAsset(UObject* WorldContextObject, UPrimaryDataAsset* Asset);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant")
+	static TArray<UPrimaryDataAsset*> GetDataAssetsFromCombatants(TArray<UCombatantComponent*> Combatants);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get First Combatant /w Data Asset")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(WorldContext="WorldContextObject",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get First Combatant /w Data Asset")
 	static UCombatantComponent* GetFirstCombatantWithDataAsset(UObject* WorldContextObject,UPrimaryDataAsset* Asset,  TEnumAsByte<EOmegaFunctionResult>& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(WorldContext="WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"))
 	static TArray<UCombatantComponent*> GetAllCombatants_OfFaction(UObject* WorldContextObject, UOmegaFaction* Faction);
 	
 	//-----------------------------------------------------------------------------------

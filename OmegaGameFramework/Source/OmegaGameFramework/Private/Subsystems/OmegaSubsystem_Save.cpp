@@ -222,7 +222,7 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->bIsLoadingGame=true;
 		GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToLevel_Name(*ActiveSaveData->ActiveLevelName,EmptyPoint);
 	}
-	OnNewGameStarted.Broadcast(GameData);
+	OnNewGameStarted.Broadcast(GameData,Tags);
 	//GetGameInstance()->GetSubsystem<UGamePreferenceSubsystem>()->Local_PreferenceUpdateAll();
 }
 
@@ -633,14 +633,6 @@ bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Condition
 	{
 		LocalConditionList.Append(TempCol->Conditions);
 	}
-	
-	for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
-	{
-		if(TempCondition)
-		{
-			TempCondition->WorldPrivate = GetWorld();
-		}
-	}
 
 	switch (Conditions.CheckType) {
 	case BoolType_And:
@@ -942,31 +934,6 @@ bool UOmegaSaveCondition::CheckSaveCondition_Implementation(UOmegaSaveSubsystem*
 	return true;
 }
 
-UOmegaSaveCondition::UOmegaSaveCondition(const FObjectInitializer& ObjectInitializer)
-{
-	if (const UObject* Owner = GetOuter())
-	{
-		WorldPrivate = Owner->GetWorld();
-	}
-}
-
-UWorld* UOmegaSaveCondition::GetWorld() const
-{
-	if(GetGameInstance())
-	{
-		return GetGameInstance()->GetWorld();
-	}
-	return nullptr;
-}
-
-UGameInstance* UOmegaSaveCondition::GetGameInstance() const
-{
-	if(WorldPrivate)
-	{
-		return WorldPrivate->GetWorld()->GetGameInstance();
-	}
-	return Cast<UGameInstance>(GetOuter());
-}
 
 //#############################################################################################################################################
 // SAVE STATE COMPONENT

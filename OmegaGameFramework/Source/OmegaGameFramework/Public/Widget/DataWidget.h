@@ -7,13 +7,10 @@
 #include "CommonTextBlock.h"
 #include "DataTooltip.h"
 #include "GameplayTagContainer.h"
-#include "LuaBlueprintFunctionLibrary.h"
-#include "LuaObject.h"
 #include "Math/Vector2D.h"
-#include "Interfaces/OmegaInterface_Widget.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Blueprint/IUserObjectListEntry.h"
-#include "Blueprint/UserWidget.h"
+#include "Widget/OmegaUserWidget.h"
 #include "Components/SizeBox.h"
 #include "Curves/CurveVector.h"
 #include "DataWidget.generated.h"
@@ -47,7 +44,7 @@ public:
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget, public IUserObjectListEntry
+class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
 	
@@ -106,8 +103,7 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UUserWidget, public IUserObjec
 
 	UPROPERTY() UCurveFloat* _u_curveHover;
 	UPROPERTY() UCurveFloat* _u_curveHighlight;
-	
-	
+
 protected:
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
@@ -131,7 +127,7 @@ public:
 	FString AssetLabel;
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, meta=(ExposeOnSpawn = "true", DisplayName="Source Asset"), Category = "DataWidget")
-	UObject* ReferencedAsset;
+	UObject* ReferencedAsset=nullptr;
 
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "DataWidget")
 	int32 ListIndex;
@@ -229,7 +225,7 @@ public:
 	void OnHoverUpdate(float HoverValue);
 	UFUNCTION(BlueprintImplementableEvent, Category="Hover")
 	void OnHighlightUpdate(float HoverValue);
-	
+
 
 public:
 	//---------------------------------------------------------------------------------------------//
@@ -262,18 +258,7 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="DataWidget")
 	UDataList* GetOwningList() const;
-
-	//---------------------------------------------------------------------------------------------//
-	//	Tags
-	//---------------------------------------------------------------------------------------------//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataWidget")
-    TArray<FName> WidgetTags;
 	
-	UFUNCTION(BlueprintCallable, Category="DataWidget")
-	void SetWidgetTagActive(FName Tag, bool bActive);
-	
-	UFUNCTION(BlueprintPure, Category="DataWidget")
-	bool DataWidgetHasTag(FName Tag);
 
 //FUNCTIONS
 

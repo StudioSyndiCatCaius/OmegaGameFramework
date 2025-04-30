@@ -271,10 +271,17 @@ void UDataWidget::Refresh()
 				LocalTexture=_txtr;
 			}
 		}
-		if(LocalTexture && GetWidget_IconMaterial())
+		if(GetWidget_IconMaterial())
 		{
-			GetWidget_IconMaterial()->GetDynamicMaterial()->SetTextureParameterValue(MaterialParamName_IconTexture,LocalTexture);
+			if(UMaterialInstanceDynamic* _dynaMat = GetWidget_IconMaterial()->GetDynamicMaterial())
+			{
+				if(LocalTexture && GetWidget_IconMaterial())
+				{
+					_dynaMat->SetTextureParameterValue(MaterialParamName_IconTexture,LocalTexture);
+				}
+			}
 		}
+		
 			
 	}//Finish widget setup
 
@@ -387,10 +394,11 @@ void UDataWidget::NativeConstruct()
 
 	if(UpdateSourceAssetFromParent)
 	{
-		if(Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass())))
+		if(UDataWidget* _parentDW= Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass())))
 		{
-			OwnerDataWidget = Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass()));
+			OwnerDataWidget = _parentDW;
 			OwnerDataWidget->OnWidgetRefreshed.AddDynamic(this, &UDataWidget::private_refresh);
+			SetSourceAsset(OwnerDataWidget->ReferencedAsset);
 		}
 	}
 	Local_UpdateTooltip(ReferencedAsset);
@@ -440,23 +448,6 @@ UDataList* UDataWidget::GetOwningList() const
 	return nullptr;
 }
 
-void UDataWidget::SetWidgetTagActive(FName Tag, bool bActive)
-{
-	if(bActive)
-	{
-		WidgetTags.AddUnique(Tag);
-	}
-	else
-	{
-		WidgetTags.Remove(Tag);
-	}
-	
-}
-
-bool UDataWidget::DataWidgetHasTag(FName Tag)
-{
-	return WidgetTags.Contains(Tag);
-}
 
 void UDataWidget::Select()
 {

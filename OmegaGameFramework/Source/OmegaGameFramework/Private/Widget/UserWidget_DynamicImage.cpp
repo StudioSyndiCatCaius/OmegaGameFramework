@@ -8,7 +8,21 @@ void UDynamicImage_Widget::NativePreConstruct()
 	if(ImageMaterial && ImageTexture && GetWidget_Image())
 	{
 		GetWidget_Image()->SetBrushFromMaterial(ImageMaterial);
-		GetWidget_Image()->GetDynamicMaterial()->SetTextureParameterValue(ImageParamName,ImageTexture);
+		if(UMaterialInstanceDynamic* _DynaMat=GetWidget_Image()->GetDynamicMaterial())
+		{
+			_DynaMat->SetTextureParameterValue(ImageParamName,ImageTexture);
+			TArray<FName> _paramKeys;
+			MaterialParams_scalar.GetKeys(_paramKeys);
+			for(FName k : _paramKeys)
+			{
+				_DynaMat->SetScalarParameterValue(k,MaterialParams_scalar.FindOrAdd(k));
+			}
+			MaterialParams_vector.GetKeys(_paramKeys);
+			for(FName k : _paramKeys)
+			{
+				_DynaMat->SetVectorParameterValue(k,MaterialParams_vector.FindOrAdd(k));
+			}
+		}
 	}
 	if(USizeBox* _sb = GetWidget_SizeBox())
 	{

@@ -16,7 +16,7 @@
 
 
 UCLASS()
-class OMEGADEMO_API AFloatingCombatant : public AActor
+class OMEGADEMO_API AFloatingCombatant : public AActor, public IDataInterface_FlowAsset
 {
 	GENERATED_BODY()
 
@@ -33,11 +33,11 @@ public:
 	UTextRenderComponent* NameText;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="FloatingCombatant")
-	UFlowAsset* DialogueFlow;
+	UFlowAsset* DialogueFlow=nullptr;
+	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override { return DialogueFlow;};
 	
 	UPROPERTY(EditAnywhere,AdvancedDisplay,Category="FloatingCombatant")
 	UOmegaActorConfig* Config;
-
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;

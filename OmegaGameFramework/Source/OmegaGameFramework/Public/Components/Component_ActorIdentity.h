@@ -48,11 +48,9 @@ public:
 	
 	
 protected:
-
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
-
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -73,19 +71,19 @@ public:
 	TArray<UActorIdentityScript*> GetIdentityScripts();
 
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	bool OnIdentityInit(AActor* Actor);
+	bool OnIdentityInit(AActor* Actor, UActorIdentityComponent* Component);
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	bool OnActorConstruction(AActor* Actor);
+	bool OnActorConstruction(AActor* Actor, UActorIdentityComponent* Component);
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	bool OnActorBeginPlay(AActor* Actor);
+	bool OnActorBeginPlay(AActor* Actor, UActorIdentityComponent* Component);
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	bool OnActorTick(AActor* Actor, float DeltaTime);
+	bool OnActorTick(AActor* Actor, UActorIdentityComponent* Component, float DeltaTime);
 
 	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
-	bool OnActorTagEvent(AActor* Actor, FGameplayTag Event);
+	bool OnActorTagEvent(AActor* Actor, UActorIdentityComponent* Component, FGameplayTag Event);
 	
 };
 
@@ -124,13 +122,13 @@ class OMEGAGAMEFRAMEWORK_API UActorIdentityScript : public UObject
 public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor Identity")
-	void OnActorConstruction(AActor* Actor) const;
+	void OnActorConstruction(AActor* Actor, UActorIdentityComponent* Component) const;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor Identity")
-	void OnActorBeginPlay(AActor* Actor) const;
+	void OnActorBeginPlay(AActor* Actor, UActorIdentityComponent* Component) const;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor Identity")
-	void OnActorTick(AActor* Actor, float DeltaTime) const;
+	void OnActorTick(AActor* Actor, UActorIdentityComponent* Component, float DeltaTime) const;
 };
 
 

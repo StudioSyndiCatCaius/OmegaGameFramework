@@ -11,6 +11,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Subsystems/OmegaSubsystem_GameManager.h"
 
 AAdvancedVolume::AAdvancedVolume()
 {
@@ -72,6 +73,8 @@ void AAdvancedVolume::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+
+
 void AAdvancedVolume::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
@@ -116,3 +119,37 @@ void AAdvancedVolume::OnConstruction(const FTransform& Transform)
 	}
 	
 }
+
+// ====================================================================================================
+// Global Event
+// ====================================================================================================
+
+
+AVolumeTrigger_GlobalEvent::AVolumeTrigger_GlobalEvent()
+{
+	Color=FColor::Magenta;
+}
+
+void AVolumeTrigger_GlobalEvent::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	if(APawn* _pawn = Cast<APawn>(OtherActor))
+	{
+		if(_pawn->IsPlayerControlled())
+		{
+			UOmegaGameManager* _sys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
+			if(Event_Named.IsValid())
+			{
+				_sys->FireGlobalEvent(Event_Named,this);
+			}
+			if(Event_Tag.IsValid())
+			{
+				_sys->FireTaggedGlobalEvent(Event_Tag,this);
+			}
+		}
+	}
+	Super::NotifyActorBeginOverlap(OtherActor);
+}
+
+// ====================================================================================================
+// Flow Asset
+// ====================================================================================================
