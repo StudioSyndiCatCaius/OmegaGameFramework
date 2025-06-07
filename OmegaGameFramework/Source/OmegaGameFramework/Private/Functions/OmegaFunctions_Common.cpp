@@ -263,6 +263,7 @@ void UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(const UObject* World
 	{
 		if(TempClass)
 		{
+			
 			SetGameplaySystemActive(WorldContextObject, TempClass, bActive, Flag, Context);
 		}
 	}
@@ -452,14 +453,14 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<U
 
 
 UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class,
-                                                         TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                         bool& Outcome)
 {
 	//use imported override file if it exits.
 	if(UObject* override_file = GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->GetSortedAsset_FromLabel(AssetPath))
 	{
 		if(override_file->GetClass()->IsChildOf(Class) || !Class)
 		{
-			Outcome=Success;
+			Outcome=true;
 			return override_file;
 		}
 	}
@@ -482,12 +483,12 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 		{
 			if(out->GetClass()->IsChildOf(Class) || !Class)
 			{
-				Outcome=EOmegaFunctionResult::Success;
+				Outcome=true;
 				return out;
 			}
 		}
 	}
-	Outcome=EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return nullptr;
 }
 
@@ -497,9 +498,9 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAssetList_FromPath(const TArra
 	TArray<UObject*> out;
 	for(const FString& temp_path : AssetPaths)
 	{
-		TEnumAsByte<EOmegaFunctionResult> result;
+		bool result;
         UObject* result_object = GetAsset_FromPath(temp_path,Class,result);
-        if(result_object && result==Success)
+        if(result_object && result==true)
         {
         	out.Add(result_object);
         }
@@ -509,20 +510,20 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAssetList_FromPath(const TArra
 
 
 UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, 
-                                                        TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                        bool& Outcome)
 {
 	if(UClass* out_obj = UKismetSystemLibrary::Conv_SoftClassPathToSoftClassRef(UKismetSystemLibrary::MakeSoftClassPath(AssetPath)).LoadSynchronous())
 	{
-		Outcome=EOmegaFunctionResult::Success;
+		Outcome=true;
 		return out_obj;
 	}
-	Outcome=EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return nullptr;
 }
 
 
 UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, const FString& Field,
-	TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	TSubclassOf<UObject> Class, bool& Outcome)
 {
 	//If the Field string arg is empty, treat the input Lu arg as the path to check
 	FLuaValue field_data=Lua.GetField(Field);
@@ -535,7 +536,7 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, cons
 	{
 		if(lua_found_obj->GetClass()->IsChildOf(Class) || !Class)
 		{
-			Outcome=Success;
+			Outcome=true;
 			return lua_found_obj;
 		}
 	}
@@ -546,7 +547,7 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromLuaField(FLuaValue Lua, cons
 }
 
 UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromLuaField(FLuaValue Lua, const FString& Field,
-	TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	TSubclassOf<UObject> Class, bool& Outcome)
 {
 	FLuaValue field_data=Lua.GetField(Field);
 	if(Field.IsEmpty())
@@ -558,7 +559,7 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromLuaField(FLuaValue Lua, const
 	{
 		if(lua_found_obj->IsChildOf(Class) || !Class)
 		{
-			Outcome=Success;
+			Outcome=true;
 			return lua_found_obj;
 		}
 	}
@@ -568,15 +569,15 @@ UClass* UOmegaGameFrameworkBPLibrary::GetClass_FromLuaField(FLuaValue Lua, const
 
 	if(UClass* out_obj = UKismetSystemLibrary::Conv_SoftClassPathToSoftClassRef(UKismetSystemLibrary::MakeSoftClassPath(in_path)).LoadSynchronous())
 	{
-		Outcome=EOmegaFunctionResult::Success;
+		Outcome=true;
 		return out_obj;
 	}
-	Outcome=EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return nullptr;
 }
 
 
-AActor* UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius)
+AActor* UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(const APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius)
 {
 	FVector LocalStart;
 	FVector LocalEnd;
@@ -611,7 +612,7 @@ void UOmegaGameFrameworkBPLibrary::SetPlayerCustomInputMode(const UObject* World
 	TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(InputMode);
 }
 
-float UOmegaGameFrameworkBPLibrary::GetPlayerCameraFadeAmount(APlayerController* Player)
+float UOmegaGameFrameworkBPLibrary::GetPlayerCameraFadeAmount(const APlayerController* Player)
 {
 	if(Player)
 	{
@@ -620,7 +621,7 @@ float UOmegaGameFrameworkBPLibrary::GetPlayerCameraFadeAmount(APlayerController*
 	return 0;
 }
 
-FLinearColor UOmegaGameFrameworkBPLibrary::GetPlayerCameraFadeColor(APlayerController* Player)
+FLinearColor UOmegaGameFrameworkBPLibrary::GetPlayerCameraFadeColor(const APlayerController* Player)
 {
 	FLinearColor LocalColor;
 	if(Player)
@@ -646,20 +647,53 @@ AActor* UOmegaGameFrameworkBPLibrary::GetGlobalActorBinding(const UObject* World
 	return WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGlobalActorBinding(Binding);
 }
 
+void UOmegaGameFrameworkBPLibrary::SetTaggedActorBinding(const UObject* WorldContextObject, FGameplayTag Binding,
+	AActor* Actor)
+{
+	if(WorldContextObject && Actor)
+	{
+		WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActorBindings_Tagged.Add(Binding,Actor);
+	}
+}
+
+AActor* UOmegaGameFrameworkBPLibrary::CheckTaggedActorBinding(const UObject* WorldContextObject, FGameplayTag Binding,
+	TSubclassOf<AActor> Class, bool& result)
+{
+	if(WorldContextObject)
+	{
+	 	AActor* _actor = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActorBindings_Tagged.FindOrAdd(Binding);
+		if(_actor && (!Class || _actor->GetClass()->IsChildOf(Class)))
+		{
+			result=true;
+			return _actor;
+		}
+	}
+	result=false;
+	return nullptr;
+}
+
 // QUICK ACCESS
 AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetActiveGameplaySystem(const UObject* WorldContextObject,
-	TSubclassOf<AOmegaGameplaySystem> SystemClass)
+	TSubclassOf<AOmegaGameplaySystem> SystemClass, bool& result)
 {
 	bool LocalIsActive;
-	if(WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGameplaySystem(SystemClass, LocalIsActive))
+	if(WorldContextObject && WorldContextObject->GetWorld())
 	{
-		return WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGameplaySystem(SystemClass, LocalIsActive);
+		if(UOmegaGameplaySubsystem* _sub=WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>())
+		{
+			if(AOmegaGameplaySystem* _sys=_sub->GetGameplaySystem(SystemClass, LocalIsActive))
+			{
+				result=true;
+				return _sys;
+			}
+		}
 	}
+	result=false;
 	return nullptr;
 }
 
 UActorComponent* UOmegaGameFrameworkBPLibrary::GetFirstActiveGameplaySystemWithComponent(
-	const UObject* WorldContextObject, TSubclassOf<UActorComponent> Component, FName RequiredTag, AOmegaGameplaySystem*& system, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	const UObject* WorldContextObject, TSubclassOf<UActorComponent> Component, FName RequiredTag, AOmegaGameplaySystem*& system, bool& Outcome)
 {
 	if(WorldContextObject)
 	{
@@ -667,17 +701,17 @@ UActorComponent* UOmegaGameFrameworkBPLibrary::GetFirstActiveGameplaySystemWithC
 		{
 			if(temp_sys)
 			{
-				TEnumAsByte<EOmegaFunctionResult> out_result;
+				bool out_result;
 				if(UActorComponent* temp_comp = TryGetFirstComponentWithTag(temp_sys,Component,RequiredTag,out_result))
 				{
-					Outcome=Success;
+					Outcome=true;
 					system=temp_sys;
 					return temp_comp;
 				}
 			}
 		}
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }
 
@@ -767,18 +801,20 @@ void UOmegaGameFrameworkBPLibrary::SetComponentTagActive(UActorComponent* Compon
 	}
 }
 
-TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromComponents(TArray<UActorComponent*> Components)
+TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromComponents(TArray<UActorComponent*> Components,
+	TSubclassOf<UActorComponent> Class)
 {
 	TArray<AActor*> OutActors;
 	for(const auto* TempComp : Components)
 	{
-		if(TempComp)
+		if(TempComp && (!Class || TempComp->GetClass()->IsChildOf(Class)))
 		{
 			OutActors.AddUnique(TempComp->GetOwner());
 		}
 	}
 	return OutActors;
 }
+
 
 TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromChildActorComponents(
 	TArray<UChildActorComponent*> Components, TSubclassOf<AActor> ActorClass)
@@ -896,11 +932,11 @@ TArray<AActor*> UOmegaGameFrameworkBPLibrary::FilterActorsWithComponents(TArray<
 }
 
 AActor* UOmegaGameFrameworkBPLibrary::TryGetActorFromObject(UObject* Object, TSubclassOf<AActor> Class,
-	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	bool& Outcome)
 {
 	if(!Object)
 	{
-		Outcome = EOmegaFunctionResult::Fail;
+		Outcome=false;
 		return nullptr;
 	}
 	TSubclassOf<AActor> _target_class=AActor::StaticClass();
@@ -912,25 +948,25 @@ AActor* UOmegaGameFrameworkBPLibrary::TryGetActorFromObject(UObject* Object, TSu
 	}
 	if(_check_object && _check_object->GetClass()->IsChildOf(_target_class))
 	{
-		Outcome=Success;
+		Outcome=true;
 		return Cast<AActor>(_check_object);
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }
 
 UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(UObject* Object,
-                                                                         TSubclassOf<UActorComponent> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                         TSubclassOf<UActorComponent> Class, bool& Outcome)
 {
 	if(!Object || !Class)
 	{
-		Outcome = EOmegaFunctionResult::Fail;
+		Outcome=false;
 		return nullptr;
 	}
 	
 	if (Cast<AActor>(Object) && Cast<AActor>(Object)->GetComponentByClass(Class))
 	{
-		Outcome = EOmegaFunctionResult::Success;
+		Outcome=true;
 		return Cast<AActor>(Object)->GetComponentByClass(Class);
 	}
 	
@@ -940,26 +976,26 @@ UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(UObject
 		
 		if(TempComp->GetClass()->IsChildOf(Class))
 		{
-			Outcome = EOmegaFunctionResult::Success;
+			Outcome=true;
 			return TempComp;
 		}
 		
 		if (TempComp->GetOwner()->GetComponentByClass(Class))
 		{
-			Outcome = EOmegaFunctionResult::Success;
+			Outcome=true;
 			return TempComp->GetOwner()->GetComponentByClass(Class);
 		}
 	}
-	Outcome = EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return  nullptr;
 }
 
 UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetFirstComponentWithTag(UObject* Object,
-	TSubclassOf<UActorComponent> Class, FName Tag, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	TSubclassOf<UActorComponent> Class, FName Tag, bool& Outcome)
 {
 	if(!Object || !Class)
 	{
-		Outcome = EOmegaFunctionResult::Fail;
+		Outcome=false;
 		return nullptr;
 	}
 
@@ -981,19 +1017,19 @@ UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetFirstComponentWithTag(UObje
 		{
 			if(UActorComponent* out_comp= TargetActor->GetComponentByClass(Class))
 			{
-				Outcome = EOmegaFunctionResult::Success;
+				Outcome=true;
 				return out_comp;
 			}
 		}
 		TArray<UActorComponent*> CompList = TargetActor->GetComponentsByTag(Class,Tag);
 		if(CompList.IsValidIndex(0))
 		{
-			Outcome = EOmegaFunctionResult::Success;
+			Outcome=true;
 			return CompList[0];
 		}
 	}
 	
-	Outcome = EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return  nullptr;
 }
 
@@ -1057,14 +1093,14 @@ void UOmegaGameFrameworkBPLibrary::SetActorInputEnabled(UObject* WorldContextObj
 }
 
 AActor* UOmegaGameFrameworkBPLibrary::TryGetChildActorAsClass(UChildActorComponent* ChildActor, TSubclassOf<AActor> Class,
-	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	bool& Outcome)
 {
 	if(ChildActor && ChildActor->GetChildActor() && ChildActor->GetChildActorClass()->IsChildOf(Class))
 	{
-		Outcome = EOmegaFunctionResult::Success;
+		Outcome=true;
 		return ChildActor->GetChildActor();
 	}
-	Outcome = EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return nullptr;
 }
 
@@ -1177,16 +1213,16 @@ void UOmegaGameFrameworkBPLibrary::SetTagsAddedToSaveGame(const UObject* WorldCo
 }
 
 void UOmegaGameFrameworkBPLibrary::SwitchOnSaveTagQuery(const UObject* WorldContextObject, FGameplayTagQuery TagQuery, bool bGlobal,
-	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	bool& Outcome)
 {
 	UOmegaSaveSubsystem* SubsysRef = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
 	if(SubsysRef->SaveTagsMatchQuery(TagQuery, bGlobal))
 	{
-		Outcome = EOmegaFunctionResult::Success;
+		Outcome=true;
 	}
 	else
 	{
-		Outcome = EOmegaFunctionResult::Fail;
+		Outcome=false;
 	}
 }
 
@@ -1277,17 +1313,17 @@ TArray<FString> UOmegaGameFrameworkBPLibrary::GetLabelsFromObjects(TArray<UObjec
 }
 
 UObject* UOmegaGameFrameworkBPLibrary::SelectObjectFromLabel(TArray<UObject*> ObjectsIn, const FString& Label,
-	TSubclassOf<UObject> Class,TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	TSubclassOf<UObject> Class,bool& Outcome)
 {
 	for(auto* temp_object : ObjectsIn)
 	{
 		if(temp_object && (temp_object->GetClass()->IsChildOf(Class) || !Class) && GetObjectLabel(temp_object)==Label)
 		{
-			Outcome=Success;
+			Outcome=true;
 			return temp_object;
 		}
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }
 

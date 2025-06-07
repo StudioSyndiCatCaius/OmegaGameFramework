@@ -3,7 +3,7 @@
 
 #include "Functions/OmegaFunctions_Input.h"
 
-UObject* UOmegaInputFunctions::GetFirstObjectWithContextInputKey(TArray<UObject*> Objects, FKey Key, TEnumAsByte<EOmegaFunctionResult>& Outcome,
+UObject* UOmegaInputFunctions::GetFirstObjectWithContextInputKey(TArray<UObject*> Objects, FKey Key, bool& Outcome,
 	FGameplayTag ContextTag)
 {
 	for(auto* temp_obj: Objects)
@@ -12,10 +12,10 @@ UObject* UOmegaInputFunctions::GetFirstObjectWithContextInputKey(TArray<UObject*
 			&& temp_obj->GetClass()->ImplementsInterface(UDataInterface_Input::StaticClass())
 			&& IDataInterface_Input::Execute_GetContext_InputKey(temp_obj,ContextTag)==Key)
 		{
-			Outcome=Success;
+			Outcome=true;
 			return temp_obj;
 		}
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }

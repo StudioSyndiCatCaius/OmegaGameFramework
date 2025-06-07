@@ -34,9 +34,9 @@ TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implement
 	FLuaValue mod_list = ILuaInterface::Execute_GetValue(this,"").GetField(Param_AttributeMods);
 	for(FLuaValue att_name : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(mod_list))
 	{
-		TEnumAsByte<EOmegaFunctionResult> result;
+		bool result;
 		UObject* output = UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(att_name.String,UOmegaAttribute::StaticClass(),result);
-		if(output && result==Success)
+		if(output && result)
 		{
 			FOmegaAttributeModifier new_mod;
 			new_mod.Attribute=Cast<UOmegaAttribute>(output);

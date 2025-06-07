@@ -116,6 +116,7 @@ class OMEGADEMO_API UDataWidgetBase_Leveling : public UDataWidget
 	GENERATED_BODY()
 
 	UPROPERTY() ULevelingComponent* REF_Comp;
+	UFUNCTION() void local_OnXp(ULevelingComponent* comp,float xp,float changed);
 
 public:
 	virtual void OnSourceAssetChanged_Implementation(UObject* Asset) override;

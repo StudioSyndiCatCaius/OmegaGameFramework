@@ -3,6 +3,7 @@
 #include "Nodes/FlowNode.h"
 
 #include "FlowAsset.h"
+#include "FlowAssetTrait.h"
 #include "FlowModule.h"
 #include "FlowSubsystem.h"
 #include "FlowTypes.h"
@@ -505,6 +506,15 @@ void UFlowNode::TriggerOutput(FName PinName, const bool bFinish /*= false*/, con
 	{
 		const FConnectedPin FlowPin = GetConnection(PinName);
 		GetFlowAsset()->TriggerInput(FlowPin.NodeGuid, FlowPin.PinName);
+	}
+
+	
+	for(auto* t : GetFlowAsset()->Traits)
+	{
+		if(t)
+		{
+			t->NodeInput(this,PinName);
+		}
 	}
 	
 }

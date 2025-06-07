@@ -6,151 +6,151 @@
 #include "Styling/SlateBrush.h"
 
 ULevelSequence* UOmegaContextAVFunctions::TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID, 
-	ULevelSequence* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	ULevelSequence* Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (ULevelSequence* output=IDataInterface_ContextAV::Execute_GetContextAVSequences(Object,ID))
 		{
 			return output;
 		};
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
-USoundBase* UOmegaContextAVFunctions::TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID,  USoundBase* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+USoundBase* UOmegaContextAVFunctions::TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID,  USoundBase* Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (USoundBase* output=IDataInterface_ContextAV::Execute_GetContextAVSounds(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
 UNiagaraSystem* UOmegaContextAVFunctions::TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID, 
-	UNiagaraSystem* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	UNiagaraSystem* Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (UNiagaraSystem* output=IDataInterface_ContextAV::Execute_GetContextAVNiagara(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
 TSubclassOf<AActor> UOmegaContextAVFunctions::TryGetObjectContext_ActorClass(UObject* Object, FGameplayTag ID, TSubclassOf<AActor> Fallback,
-	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextActor::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (TSubclassOf<AActor> output=IDataInterface_ContextActor::Execute_GetContextAV_ActorClass(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
 UStaticMesh* UOmegaContextAVFunctions::TryGetObjectContext_StaticMesh(UObject* Object, FGameplayTag ID,
-	 UStaticMesh* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	 UStaticMesh* Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextMesh::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (UStaticMesh* output=IDataInterface_ContextMesh::Execute_GetContextAV_StaticMesh(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
 USkeletalMesh* UOmegaContextAVFunctions::TryGetObjectContext_SkelMesh(UObject* Object, FGameplayTag ID,
-	USkeletalMesh* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	USkeletalMesh* Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextMesh::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (USkeletalMesh* output=IDataInterface_ContextMesh::Execute_GetContextAV_SkeletalMesh(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
 TSubclassOf<UAnimInstance> UOmegaContextAVFunctions::TryGetObjectContext_AnimClass(UObject* Object, FGameplayTag ID,
-	TSubclassOf<UAnimInstance>  Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	TSubclassOf<UAnimInstance>  Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAnimation::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (TSubclassOf<UAnimInstance> output=IDataInterface_ContextAnimation::Execute_GetContextAV_AnimClass(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
 FSlateBrush UOmegaContextAVFunctions::TryGetObjectContext_SlateBrush(UObject* Object, FGameplayTag ID,
-                                                                     FSlateBrush Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                     FSlateBrush Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextSlate::StaticClass()))
 	{
 		FSlateBrush output=IDataInterface_ContextSlate::Execute_GetContextAV_SlateBrush(Object,ID);
 		if(output.GetResourceObject())
 		{
-			Outcome=Success;
+			Outcome=true;
 			return output;
 		}
 	}
 	if(Fallback.GetResourceObject())
 	{
-		Outcome=Success;
+		Outcome=true;
 		return Fallback;
 	}
-	Outcome=Fail; return FSlateBrush();
+	Outcome=false; return FSlateBrush();
 }
 
 FText UOmegaContextAVFunctions::TryGetObjectContext_Text(UObject* Object, FGameplayTag ID, FText Fallback,
-	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextSlate::StaticClass()))
 	{
 		FText output=IDataInterface_ContextString::Execute_GetContextAV_Text(Object,ID);
 		if(!output.IsEmpty())
 		{
-			Outcome=Success;
+			Outcome=true;
 			return output;
 		}
 	}
 	if(!Fallback.IsEmpty())
 	{
-		Outcome=Success;
+		Outcome=true;
 		return Fallback;
 	}
-	Outcome=Fail; return FText();
+	Outcome=false; return FText();
 }
 
 UAnimMontage* UOmegaContextAVFunctions::TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID, 
-                                                                     UAnimMontage* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                     UAnimMontage* Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (UAnimMontage* output=IDataInterface_ContextAV::Execute_GetContextAVMontages(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }
 
 UAnimSequence* UOmegaContextAVFunctions::TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID, 
-	UAnimSequence* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	UAnimSequence* Fallback,bool& Outcome)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_ContextAV::StaticClass()))
 	{
-		Outcome=Success; 
+		Outcome=true; 
 		if (UAnimSequence* output=IDataInterface_ContextAV::Execute_GetContextAVAnimations(Object,ID)) { return output; }
 	}
-	if(Fallback) { Outcome=Success; return Fallback; };
-	Outcome=Fail; return nullptr;
+	if(Fallback) { Outcome=true; return Fallback; };
+	Outcome=false; return nullptr;
 }

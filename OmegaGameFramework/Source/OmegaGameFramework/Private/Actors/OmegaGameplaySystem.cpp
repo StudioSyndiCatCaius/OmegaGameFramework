@@ -40,7 +40,6 @@ void AOmegaGameplaySystem::BeginPlay()
 	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnNewGameStarted.AddDynamic(this, &AOmegaGameplaySystem::OnNewGameStarted);
 	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueDelay>()->SetQueuedDelaySourceRegistered(this,true);
 	OMACRO_INSTALL_QUEUEDQUERY()
-
 	
 	for (AActor* TempActor : FoundPlayers)
 	{

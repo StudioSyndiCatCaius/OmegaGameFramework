@@ -202,6 +202,15 @@ FRotator UOmegaMathFunctions::Conv_VectorToRot_Flat(FVector Vector)
 	return _out;
 }
 
+FWidgetTransform UOmegaMathFunctions::Conv_Transform3DToTransformWidget(const FTransform Transform)
+{
+	FWidgetTransform _ts;
+	_ts.Translation=UKismetMathLibrary::Conv_VectorToVector2D(Transform.GetLocation());
+	_ts.Angle=Transform.GetRotation().Rotator().Roll;
+	_ts.Scale=UKismetMathLibrary::Conv_VectorToVector2D(Transform.GetScale3D());
+	return _ts;
+}
+
 float UOmegaMathFunctions::NormalizeToRange_int32(int32 value, int32 min, int32 max)
 {
 	return UKismetMathLibrary::NormalizeToRange(value,min,max);
@@ -212,15 +221,15 @@ int32 UOmegaMathFunctions::GetSeedFromGuid(FGuid Guid)
 	return Guid.A+Guid.B+Guid.C+Guid.D;
 }
 
-bool UOmegaMathFunctions::RNG_RollFromFloat(float chance, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+bool UOmegaMathFunctions::RNG_RollFromFloat(float chance, bool& Outcome)
 {
 	float _rand = UKismetMathLibrary::RandomFloat();
 	if(_rand==0.0 || _rand>chance)
 	{
-		Outcome=Fail;
+		Outcome=true;
 		return false;
 	}
-	Outcome=Success;
+	Outcome=false;
 	return true;
 }
 
@@ -228,6 +237,50 @@ float UOmegaMathFunctions::Variate_Float(float in, float amount, bool bAmountIsS
 {
 	float _offset = UKismetMathLibrary::RandomFloatInRange(amount*-1,amount);
 	if(bAmountIsScale) { return in+(_offset*in);} return in+_offset;
+}
+
+FVector UOmegaMathFunctions::Offset_Vector(FVector Vector, const FRotator& Rotation, FVector Offset)
+{
+	return Vector+
+		(UKismetMathLibrary::GetForwardVector(Rotation)*Offset.X)+
+		(UKismetMathLibrary::GetRightVector(Rotation)*Offset.Y)+
+		(UKismetMathLibrary::GetUpVector(Rotation)*Offset.Z);
+}
+
+FVector UOmegaMathFunctions::Offset_ActorLocation(const AActor* Actor, FVector Offset)
+{
+	if(Actor)
+	{
+		return Offset_Vector(Actor->GetActorLocation(),Actor->GetActorRotation(),Offset);
+	}
+	return FVector();
+}
+
+FVector UOmegaMathFunctions::Offset_PawnLocationFromControl(const APawn* Pawn, FVector Offset)
+{
+	if(Pawn)
+	{
+		return Offset_Vector(Pawn->GetActorLocation(),Pawn->GetControlRotation(),Offset);
+	}
+	return FVector();
+}
+
+FVector UOmegaMathFunctions::Random_VectorInRange(FVector Min, FVector Max)
+{
+	FVector _out;
+	_out.X=UKismetMathLibrary::RandomFloatInRange(Min.X,Max.X);
+	_out.Y=UKismetMathLibrary::RandomFloatInRange(Min.Y,Max.Y);
+	_out.Z=UKismetMathLibrary::RandomFloatInRange(Min.Z,Max.Z);
+	return _out;
+}
+
+FRotator UOmegaMathFunctions::Random_RotatorInRange(const FRotator& Min, const FRotator& Max)
+{
+	FRotator _out;
+	_out.Yaw=UKismetMathLibrary::RandomFloatInRange(Min.Yaw,Max.Yaw);
+	_out.Pitch=UKismetMathLibrary::RandomFloatInRange(Min.Pitch,Max.Pitch);
+	_out.Roll=UKismetMathLibrary::RandomFloatInRange(Min.Roll,Max.Roll);
+	return _out;
 }
 
 
@@ -384,4 +437,13 @@ double UOmegaAudioFunctions::SoundClass_GetPitch(USoundClass* SoundClass)
 		return 0;
 	}
 	return SoundClass->Properties.Pitch;
+}
+
+FTransform UOmegaMathFunctions::AddTransforms(const FTransform A, const FTransform B)
+{
+	FTransform out;
+	out.SetLocation(A.GetLocation()+B.GetLocation());
+	out.SetScale3D(A.GetScale3D()+B.GetScale3D());
+	out.SetRotation(UKismetMathLibrary::ComposeRotators(A.GetRotation().Rotator(),B.GetRotation().Rotator()).Quaternion());
+	return out;
 }

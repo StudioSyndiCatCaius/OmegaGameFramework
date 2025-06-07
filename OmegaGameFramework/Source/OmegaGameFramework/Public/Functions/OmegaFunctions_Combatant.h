@@ -59,13 +59,16 @@ public:
 	static TArray<UCombatantComponent*> GetCombatantFromTargetSelection(UCombatantComponent* Instigator, EOmegaCombatTarget Selection);
 	
 	//Trys Getting First Combatant With a DataAsset
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(WorldContext="WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"))
 	static TArray<UCombatantComponent*> GetAllCombatantsWithDataAsset(UObject* WorldContextObject, UPrimaryDataAsset* Asset);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant")
+	static TArray<UPrimaryDataAsset*> GetDataAssetsFromCombatants(TArray<UCombatantComponent*> Combatants);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get First Combatant /w Data Asset")
-	static UCombatantComponent* GetFirstCombatantWithDataAsset(UObject* WorldContextObject,UPrimaryDataAsset* Asset,  TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(WorldContext="WorldContextObject",ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Get First Combatant /w Data Asset")
+	static UCombatantComponent* GetFirstCombatantWithDataAsset(UObject* WorldContextObject,UPrimaryDataAsset* Asset,  bool& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(WorldContext="WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"))
 	static TArray<UCombatantComponent*> GetAllCombatants_OfFaction(UObject* WorldContextObject, UOmegaFaction* Faction);
 	
 	//-----------------------------------------------------------------------------------
@@ -139,31 +142,31 @@ public:
 	//-----------------------------------------------------------------------------------
 /*
 	//Checks if the Current Attribute Value is at given value
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
-	static void IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Value, EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"))
+	static void IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Value, EComparisonMethod Method, bool& Outcome);
 
 	//Checks if the Current Attribute Value is at a given percentage
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"))
-	static void IsAttributeAtPercentage(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Percentage, EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"))
+	static void IsAttributeAtPercentage(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Percentage, EComparisonMethod Method, bool& Outcome);
 */
 
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Is Combatant Of Faction")
-	static void IsCombatantOfFaction(UCombatantComponent* Combatant, UOmegaFaction* Faction, TEnumAsByte<EOmegaBranch>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Is Combatant Of Faction")
+	static void IsCombatantOfFaction(UCombatantComponent* Combatant, UOmegaFaction* Faction, bool& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Select First Combatant (/w Data Asset)")
-	static UCombatantComponent* SelectFirstCombatantWithDataAsset(TArray<UCombatantComponent*> Combatants,UPrimaryDataAsset* Asset,  TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Select First Combatant (/w Data Asset)")
+	static UCombatantComponent* SelectFirstCombatantWithDataAsset(TArray<UCombatantComponent*> Combatants,UPrimaryDataAsset* Asset,  bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Select First Combatant (/w Tag)")
-	static UCombatantComponent* SelectFirstCombatant_WithTag(TArray<UCombatantComponent*> Combatants, FGameplayTag Tag, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Select First Combatant (/w Tag)")
+	static UCombatantComponent* SelectFirstCombatant_WithTag(TArray<UCombatantComponent*> Combatants, FGameplayTag Tag, bool& Outcome);
 	
 	//Checks if the Attribute is at 100%.
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Does Combatant Have Tag")
-	static void DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag, TEnumAsByte<EOmegaBranch>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Does Combatant Have Tag")
+	static void DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag, bool& Outcome);
 	
 	//Checks if the Attribute is at 100%.
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Does Combatant Have Effect With Tag")
-	static void DoesCombatantHaveEffectWithTag(UCombatantComponent* Combatant, FGameplayTagContainer Tags, TEnumAsByte<EOmegaBranch>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Does Combatant Have Effect With Tag")
+	static void DoesCombatantHaveEffectWithTag(UCombatantComponent* Combatant, FGameplayTagContainer Tags, bool& Outcome);
 
 
 };

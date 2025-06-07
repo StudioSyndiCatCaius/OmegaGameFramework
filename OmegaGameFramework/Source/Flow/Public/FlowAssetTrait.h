@@ -6,50 +6,33 @@
 #include "UObject/Object.h"
 #include "FlowAssetTrait.generated.h"
 
+class UFlowNode;
+class UFlowAsset;
 class UWorld;
 class UGameInstance;
 
-UCLASS(Blueprintable, BlueprintType, Abstract, EditInlineNew)
+UCLASS(Blueprintable, BlueprintType, Abstract, EditInlineNew,meta=(ShowWorldContextPin), const)
 class FLOW_API UFlowAssetTrait : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	explicit UFlowAssetTrait(const FObjectInitializer& ObjectInitializer);
 	
-	UPROPERTY()
-	UGameInstance* GameInstanceRef = nullptr;
-	UPROPERTY()
-	UWorld* WorldPrivate = nullptr;
 	
-	virtual UWorld* GetWorld() const override;
-	virtual UGameInstance* GetGameInstance() const;
-	
-	//UPROPERTY()
-	//UWorld* WorldPrivate = nullptr;
-	
-	void Native_FlowBegin(UGameInstance* GameInstance);
-	void Native_FlowEnd(FName Output, const FString& Flag);
+	void Native_FlowBegin(UFlowAsset* FlowInstance) const;
+	void Native_FlowEnd(UFlowAsset* FlowInstance, FName Output, const FString& Flag) const;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
-	void FlowBegin() const; 
+	void FlowBegin(UFlowAsset* FlowInstance) const; 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
-	void FlowEnd(FName Output, const FString& Flag) const;
+	void FlowEnd(UFlowAsset* FlowInstance,FName Output, const FString& Flag) const;
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
-	void FlowNotified(FName Notify, UObject* Context) const;
+	void FlowNotified(UFlowAsset* FlowInstance,FName Notify, UObject* Context) const;
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
+	void NodeInput(UFlowNode* FlowNode,FName Pin) const;
+	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
+	void NodeOutput(UFlowNode* FlowNode,FName Pin) const;
 };
 
 
-inline void UFlowAssetTrait::Native_FlowBegin(UGameInstance* GameInstance)
-{
-	if(!GameInstanceRef)
-	{
-		GameInstanceRef = GameInstance;
-	}
-	FlowBegin();
-}
-
-inline void UFlowAssetTrait::Native_FlowEnd(FName Output, const FString& Flag)
-{
-	FlowEnd(Output, Flag);
-}

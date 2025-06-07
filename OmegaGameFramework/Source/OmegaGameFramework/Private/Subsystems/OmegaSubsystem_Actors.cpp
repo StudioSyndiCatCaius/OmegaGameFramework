@@ -14,9 +14,10 @@ void UOmegaActorSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		{
 			if(c)
 			{
-				AOmegaActorProcessor* _new = GetWorld()->SpawnActorDeferred<AOmegaActorProcessor>(c,FTransform());
-				_new->FinishSpawning(FTransform());
-				active_processors.AddUnique(_new);
+				AOmegaActorProcessor* _newproc = GetWorld()->SpawnActorDeferred<AOmegaActorProcessor>(c,FTransform());
+				_newproc->FinishSpawning(FTransform());
+				active_processors.Add(c,_newproc);
+				UE_LOG(LogTemp, Warning, TEXT("Created Actor Processor: %s"), *_newproc->GetName());
 			}
 		}
 	}
@@ -53,20 +54,15 @@ void UOmegaActorSubsystem::RegisterActorToProcessor(AActor* Actor, TSubclassOf<A
 {
 	if(Actor && Processor)
 	{
-		for(auto* a : active_processors)
+		UE_LOG(LogTemp, Warning, TEXT("Attempting - Register %s to processor %s"), *Actor->GetName(), *Processor->GetName());
+		if(AOmegaActorProcessor* temp_proc=active_processors.FindOrAdd(Processor))
 		{
-			if(a)
-			{
-				if(a->GetClass()==Processor)
-				{
-					a->SetActorRegisteredToProcessor(Actor,true);
-				}
-				//else
-				//{
-				//	a->SetActorRegisteredToProcessor(Actor,false);
-				//}
-				return;
-			}
+			temp_proc->SetActorRegisteredToProcessor(Actor,true);
+			UE_LOG(LogTemp, Warning, TEXT("SUCCESS - Registered %s to processor %s"), *Actor->GetName(), *temp_proc->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FAILED - invalid processor actor"));
 		}
 	}
 }
@@ -81,4 +77,64 @@ void UOmegaActorSubsystem::PerformInteraction(AActor* Instigator, AActor* Target
 		}
 		OnActorInteraction.Broadcast(Instigator,TargetActor,Tag,Context);
 	}
+}
+
+bool UOmegaActorSubsystem::IsActorInGroup(FGameplayTag GroupTag, AActor* Actor) const
+{
+	return GetActorsInGroup(GroupTag).Contains(Actor);
+}
+
+void UOmegaActorSubsystem::SetActorRegisteredToGroup(FGameplayTag GroupTag, AActor* Actor, bool registered)
+{
+	if (!Actor)
+	{
+		return;
+	}
+
+	if (registered)
+	{
+		// Make sure the group exists in the map
+		if (!actorGroups.Contains(GroupTag))
+		{
+			actorGroups.Add(GroupTag, FOmegaActorGroupData());
+		}
+
+		// Add the actor to the group if not already present
+		actorGroups[GroupTag].Actors.AddUnique(Actor);
+	}
+	else
+	{
+		// Remove the actor from the group if the group exists
+		if (actorGroups.Contains(GroupTag))
+		{
+			actorGroups[GroupTag].Actors.Remove(Actor);
+		}
+	}
+}
+
+void UOmegaActorSubsystem::SetActorsRegisteredToGroup(FGameplayTag GroupTag, TArray<AActor*> Actors, bool registered)
+{
+	for(auto* a : Actors)
+	{
+		SetActorRegisteredToGroup(GroupTag,a,registered);
+	}
+}
+
+void UOmegaActorSubsystem::ClearActorGroup(FGameplayTag GroupTag)
+{
+	if (actorGroups.Contains(GroupTag))
+	{
+		actorGroups[GroupTag].Actors.Empty();
+	}
+}
+
+TArray<AActor*> UOmegaActorSubsystem::GetActorsInGroup(FGameplayTag GroupTag) const
+{
+	if (actorGroups.Contains(GroupTag))
+	{
+		return actorGroups[GroupTag].Actors;
+	}
+    
+	// Return an empty array if the group doesn't exist
+	return TArray<AActor*>();
 }

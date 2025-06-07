@@ -47,7 +47,7 @@ void UOmegaAnimationFunctions::PlayMontage_ByTag(USkeletalMeshComponent* Mesh, F
 {
 	if(Mesh && Mesh->GetAnimInstance())
 	{
-		TEnumAsByte<EOmegaFunctionResult> result;
+		bool result;
 		if(UAnimMontage* ref_montage=UOmegaContextAVFunctions::TryGetObjectContext_Montages(Mesh->GetAnimInstance(), MontageTag,nullptr,result))
 		{
 			Mesh->GetAnimInstance()->Montage_Play(ref_montage);
@@ -59,7 +59,7 @@ void UOmegaAnimationFunctions::StopMontage_ByTag(USkeletalMeshComponent* Mesh, F
 {
 	if(Mesh && Mesh->GetAnimInstance())
 	{
-		TEnumAsByte<EOmegaFunctionResult> result;
+		bool result;
 		if(UAnimMontage* ref_montage=UOmegaContextAVFunctions::TryGetObjectContext_Montages(Mesh->GetAnimInstance(), MontageTag,nullptr,result))
 		{
 			Mesh->GetAnimInstance()->Montage_StopWithBlendSettings(blend_settings,ref_montage);

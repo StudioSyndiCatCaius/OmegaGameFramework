@@ -3,9 +3,23 @@
 
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Misc/OmegaGameplayModule.h"
-#include "JsonBlueprintFunctionLibrary.h"
+#include "OmegaSettings_Gameplay.h"
 #include "Engine/GameInstance.h"
 #include "Subsystems/OmegaSubsystem_AssetHandler.h"
+
+
+UOmegaGameplayModule* UOmegaGameManager::ModuleInit(UOmegaGameplayModule* NewModule)
+{
+	if(NewModule)
+	{
+		ActiveModules.Add(NewModule);
+		NewModule->Native_Initialize();
+		
+		UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"Gameplay Module Activated: ", NewModule->GetClass());
+		return NewModule;
+	}
+	return nullptr;
+}
 
 void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 {
@@ -17,6 +31,17 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 		if(TempModule)
 		{
 			ActivateModuleFromClass(TempModule);
+		}
+	}
+	if(UOmegaSettings_Gameplay* _set=Cast<UOmegaSettings_Gameplay>(GetMutableDefault<UOmegaSettings>()->DefaultSettings_Gameplay.TryLoad()))
+	{
+		for(auto* c : _set->ScriptedModules)
+		{
+			if(c)
+			{
+				UOmegaGameplayModule* new_mod=DuplicateObject(c,GetGameInstance());
+				ModuleInit(new_mod);
+			}
 		}
 	}
 }
@@ -48,11 +73,7 @@ UOmegaGameplayModule* UOmegaGameManager::ActivateModuleFromClass(const UClass* M
 		}
 	
 		UOmegaGameplayModule* NewModule = NewObject<UOmegaGameplayModule>(GetGameInstance(), ModuleClass);
-		ActiveModules.Add(NewModule);
-		NewModule->Native_Initialize();
-	
-		UE_LOG(LogTemp, Display, TEXT("%hs_%p"),"Gameplay Module Activated: ", NewModule->GetClass());
-		return NewModule;
+		return ModuleInit(NewModule);
 	}
 	return nullptr;
 }

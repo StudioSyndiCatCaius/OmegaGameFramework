@@ -7,6 +7,8 @@
 #include "Interfaces/OmegaInterface_Common.h"
 #include "GameplayTagContainer.h"
 #include "LuaObject.h"
+#include "Functions/OmegaFunctions_ObjectTraits.h"
+#include "Interfaces/OmegaInterface_AssetThumbnail.h"
 #include "Misc/OmegaAttribute.h"
 #include "GeneralDataObject.generated.h"
 
@@ -25,10 +27,6 @@ if(UOmegaSubsystem_QueuedQuery* REF_QuerySubsystem = GetWorld()->GetGameInstance
 { \
 	REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); \
 } \
-
-
-
-
 
 
 
@@ -109,12 +107,11 @@ public:
 	
 };
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface,
-																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy
+UCLASS(meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_AssetThumbnail,
+																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy, public IDataInterface_Traits
 {
 	GENERATED_BODY()
-
 public:
 	UOmegaDataAsset();
 
@@ -131,13 +128,18 @@ public:
 	
 	virtual FGuid GetObjectGuid_Implementation() { return Guid; }
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="General",AdvancedDisplay) TArray<UOmegaObjectTrait*> Traits;
+	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override { return Traits; };
+	//virtual// void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override{ Traits=NewTraits; };
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) UPrimaryDataAsset* ParentAsset;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TArray<UPrimaryDataAsset*> ChildAssets;
 
 	virtual UObject* GetObject_Parent_Implementation() const override;
 	virtual TArray<UObject*> GetObject_Children_Implementation() const override;
 	
-public:
 	UFUNCTION(BlueprintNativeEvent,Category="DataAsset") bool UseIconAsThumbnail();
 
+	virtual FSlateBrush GetThumbnail_Brush_Implementation() override { return Icon;};
+	virtual FText GetThumbnail_Text_Implementation() override { return DisplayName;};
 };

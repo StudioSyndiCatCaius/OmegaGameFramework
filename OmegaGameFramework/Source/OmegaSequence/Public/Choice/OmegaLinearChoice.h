@@ -20,14 +20,10 @@ public:
 	UOmegaLinearChoice(const FObjectInitializer& ObjectInitializer);
 	virtual UWorld* GetWorld() const override;
 
-	UPROPERTY()
-	UWorld* WorldPrivate = nullptr;
-	UPROPERTY()
-	UGameInstance* GameInstanceRef = nullptr;
-	UFUNCTION()
-	virtual UGameInstance* GetGameInstance() const;
-	UPROPERTY()
-	UOmegaLinearEventSubsystem* SubsystemRef;
+	UPROPERTY() UWorld* WorldPrivate = nullptr;
+	UPROPERTY() UGameInstance* GameInstanceRef = nullptr;
+	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
+	UPROPERTY() UOmegaLinearEventSubsystem* SubsystemRef;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Choice")
 	bool IsChoiceAvailable() const;

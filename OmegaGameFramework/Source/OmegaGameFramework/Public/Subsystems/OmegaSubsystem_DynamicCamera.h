@@ -13,6 +13,8 @@
 
 class UOmegaSaveSubsystem;
 
+
+
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UDynamicCameraState : public UPrimaryDataAsset
 {
@@ -32,6 +34,10 @@ public:
 	void GetTargetData(UOmegaDynamicCameraSubsystem* Subsystem, FVector& TargetLocation, FRotator& TargetRotation, float& FOV, float& InterpSpeed, float& TrackingRotationLerp) const;
 };
 
+// ========================================================================================================================
+// SUBSYSTEM
+// ========================================================================================================================
+
 UCLASS(DisplayName="Omega Subsystem: Dynamic Camera")
 class OMEGAGAMEFRAMEWORK_API UOmegaDynamicCameraSubsystem : public ULocalPlayerSubsystem, public FTickableGameObject
 {
@@ -42,9 +48,10 @@ protected:
 
 	UPROPERTY() float time_SinceLastCheck;
 	UPROPERTY() bool is_DynamicCamerActive;
+	UPROPERTY() APlayerController* REF_Controller;
 
 public:
-	
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual ETickableTickType GetTickableTickType() const override
@@ -91,7 +98,7 @@ public:
 
 	//Overrides the Source camera with a specific camera. Doing this will active that camera. Deactivating it will ignore its override.
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
-	void SetOverrideCamera(AOmegaDynamicCamera* Camera);
+	void SetOverrideCamera(AOmegaDynamicCamera* Camera, bool bSnapTo);
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void ClearOverrideCamera();
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
@@ -100,6 +107,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Dynamic Camera")
 	void SetAllCamerasWithTags_Active(FGameplayTagContainer Tags, bool bActive);
 };
+
+
+// ========================================================================================================================
+// Actor
+// ========================================================================================================================
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaDynamicCamera : public APawn, public IGameplayTagsInterface
@@ -126,16 +138,16 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	UOmegaDynamicCameraSubsystem* REF_Subsystem=nullptr;
-	UPROPERTY()
-	APlayerController* REF_SourcePlayer=nullptr;
+	UPROPERTY() UOmegaDynamicCameraSubsystem* REF_Subsystem=nullptr;
+	UPROPERTY() APlayerController* REF_SourcePlayer=nullptr;
 
 public:
+	
 	virtual void Tick(float DeltaSeconds) override;
 
+	//Tick when this is the Source Camera for a player
 	UFUNCTION(BlueprintImplementableEvent,Category="DynamicCamera")
-	void ActiveTick(float deltaTime, bool IsSourceCamera, APlayerController* SourcePlayer);
+	void SourceTick(float deltaTime, APlayerController* SourcePlayer, UOmegaDynamicCameraSubsystem* Subsystem);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DynamicCamera")
 	USpringArmComponent* comp_spring;

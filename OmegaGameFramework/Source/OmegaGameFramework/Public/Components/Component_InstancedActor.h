@@ -135,3 +135,19 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category="InstanceActor")
 	void OnNotify(FName Notify);
 };
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaInstancedActorFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Omega|InstancesActor",meta=(WorldContext="WorldContextObject",DeterminesOutputType="Class", ExpandBoolAsExecs="result"))
+	static AOmegaInstanceActor* GetFirstInstanceActorOfContext(UObject* WorldContextObject, UObject* Context, TSubclassOf<AOmegaInstanceActor> Class,bool& result);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|InstancesActor",meta=(WorldContext="WorldContextObject",DeterminesOutputType="Class"))
+	static TArray<AOmegaInstanceActor*> GetInstanceActorsFromContexts(UObject* WorldContextObject, TArray<UObject*> Contexts, TSubclassOf<AOmegaInstanceActor> Class);
+	
+};

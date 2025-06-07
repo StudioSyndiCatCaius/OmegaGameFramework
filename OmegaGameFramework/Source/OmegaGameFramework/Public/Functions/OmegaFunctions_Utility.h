@@ -62,8 +62,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "LOmega|Utilities|Viewport", Meta = (DisplayName = "Set Window Mode", Keywords = "screen fullscreen windowed"))
 	static void SetWindowMode(const bool Fullscreen, const bool IsFullscreenWindowed);
-
-	
 };
 
 UCLASS()
@@ -118,6 +116,9 @@ class UOmegaMathFunctions : public UBlueprintFunctionLibrary
 
 public:
 
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FTransform AddTransforms(const FTransform A, const FTransform B);
+
 	UFUNCTION(BlueprintPure,Category="Omega|Widget")
 	static FWidgetTransform LerpWidgetTransform(FWidgetTransform a, FWidgetTransform b, float alpha);
 
@@ -133,6 +134,9 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static FRotator Conv_VectorToRot_Flat(FVector Vector);
 
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FWidgetTransform Conv_Transform3DToTransformWidget(const FTransform Transform);
+	
 	UFUNCTION(BlueprintPure,Category="Omega|Math", DisplayName="Normalize to Range (Int32)")
 	static float NormalizeToRange_int32(int32 value, int32 min, int32 max);
 
@@ -145,11 +149,22 @@ public:
 	{
 		return  Curve.Evaluate(time);
 	}
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Math",meta=(ExpandEnumAsExecs="Outcome"))
-	static bool RNG_RollFromFloat(float chance, TEnumAsByte<EOmegaFunctionResult>& Outcome);
-
-
+	UFUNCTION(BlueprintCallable,Category="Omega|Math",meta=(ExpandBoolAsExecs="Outcome"))
+	static bool RNG_RollFromFloat(float chance, bool& Outcome);
+	
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static float Variate_Float(float in, float amount, bool bAmountIsScale);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Offset_Vector(FVector Vector, const FRotator& Rotation, FVector Offset);
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Offset_ActorLocation(const AActor* Actor, FVector Offset);
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Offset_PawnLocationFromControl(const APawn* Pawn, FVector Offset);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Random_VectorInRange(FVector Min, FVector Max);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FRotator Random_RotatorInRange(const FRotator& Min, const FRotator& Max);
 };

@@ -17,14 +17,14 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_StandardInput
 public:
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable,Category="Input")
-	void OnReceiveInput_Movement(FVector2D Value);
+	void OnReceiveInput_Movement(FVector2D Value, APlayerController* Controller);
 	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="Input")
-	void OnReceiveInput_Control(FVector2D Value);
+	void OnReceiveInput_Control(FVector2D Value, APlayerController* Controller);
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Input")
-	void OnReceiveInput_PageShoulder(int32 Value, bool bActive);
+	void OnReceiveInput_PageShoulder(int32 Value, bool bActive, APlayerController* Controller);
 	UFUNCTION(BlueprintImplementableEvent,Category="Input")
-	void OnReceiveInput_PageTrigger(float Value, bool bActive);
+	void OnReceiveInput_PageTrigger(float Value, bool bActive, APlayerController* Controller);
 };
 
 

@@ -9,11 +9,11 @@ void UActorConfigComponent::BeginPlay()
 {
 	if(DefaultConfig)
 	{
-		for(TSubclassOf<AOmegaActorProcessor> p : DefaultConfig->TargetProcessors)
+		for(TSoftClassPtr<AOmegaActorProcessor> p : DefaultConfig->TargetProcessors)
 		{
 			if(p)
 			{
-				GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->RegisterActorToProcessor(GetOwner(),p);
+				GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->RegisterActorToProcessor(GetOwner(),p.LoadSynchronous());
 			}
 		}
 	}

@@ -32,14 +32,14 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Ω Set View Target (From Actor Selector)")
     static void SetViewTarget_ActorSelector(UObject* WorldContextObject, FOmegaActorSelectorData Selector, float BlendTime, APlayerController* Player=nullptr);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω Dynamic Camera - Get Master")
-    static AOmegaDynamicCamera* GetDynamicCamera_Master(UObject* WorldContextObject, TEnumAsByte<EOmegaFunctionResult>& Outcome, APlayerController* Player=nullptr);
+	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω Dynamic Camera - Get Master")
+    static AOmegaDynamicCamera* GetDynamicCamera_Master(UObject* WorldContextObject, bool& Outcome, APlayerController* Player=nullptr);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω Dynamic Camera - Get Source")
-	static AOmegaDynamicCamera* GetDynamicCamera_Source(UObject* WorldContextObject,TEnumAsByte<EOmegaFunctionResult>& Outcome, APlayerController* Player=nullptr);
+	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω Dynamic Camera - Get Source")
+	static AOmegaDynamicCamera* GetDynamicCamera_Source(UObject* WorldContextObject,bool& Outcome, APlayerController* Player=nullptr);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Ω Dynamic Camera - Set Override")
-	static bool SetDynamicCamera_Override(UObject* WorldContextObject, AOmegaDynamicCamera* SourceCamera, APlayerController* Player=nullptr);
+	static bool SetDynamicCamera_Override(UObject* WorldContextObject, AOmegaDynamicCamera* SourceCamera, bool bSnapTo, APlayerController* Player=nullptr);
 	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Ω Dynamic Camera - Clear Override")
 	static bool ClearDynamicCamera_Override(UObject* WorldContextObject, APlayerController* Player=nullptr);
 };

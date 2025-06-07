@@ -232,7 +232,7 @@ class UOmegaEquipmentFunctions : public UBlueprintFunctionLibrary
 
 public:
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Equipment", meta=(ExpandEnumAsExecs = "Outcome"))
-	static UPrimaryDataAsset* TryGetEquipmentInSlot(UObject* Target,UEquipmentSlot* Slot, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable,Category="Omega|Equipment", meta=(ExpandBoolAsExecs = "Outcome"))
+	static UPrimaryDataAsset* TryGetEquipmentInSlot(UObject* Target,UEquipmentSlot* Slot, bool& Outcome);
 	
 };

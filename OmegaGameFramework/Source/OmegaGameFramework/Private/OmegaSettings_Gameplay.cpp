@@ -88,7 +88,7 @@ UEquipmentSlot* UOmegaGameplayStyleFunctions::GetGlobalDataAsset_EquipSlot(FGame
 }
 
 UOmegaDataAssetMetaSetting* UOmegaGameplayStyleFunctions::GetDataAssetMetaSetting(UPrimaryDataAsset* DataAsset,
-	TSubclassOf<UOmegaDataAssetMetaSetting> Class, TEnumAsByte<EOmegaFunctionResult>& Result)
+	TSubclassOf<UOmegaDataAssetMetaSetting> Class, bool& Result)
 {
 	for(FOmegaDataAssetMetaSettingsInfo i : GetCurrentGameplayStyle()->GetAllDataAssetMetaSettings())
 	{
@@ -98,13 +98,13 @@ UOmegaDataAssetMetaSetting* UOmegaGameplayStyleFunctions::GetDataAssetMetaSettin
 			{
 				if(s && s->GetClass()==Class)
 				{
-					Result=Success;
+					Result=true;
 					return s;
 				}
 			}
 		}
 	}
-	Result=Fail;
+	Result=false;
 	return nullptr;
 }
 

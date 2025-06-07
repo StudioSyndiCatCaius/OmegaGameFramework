@@ -14,6 +14,10 @@ void UOmegaDebugSubsystem::StartDebugProfile(UOmegaDebugProfile* Profile)
 {
 	if(Profile)
 	{
+		if(UOmegaSaveGame* sav = Cast<UOmegaSaveGame>(Profile->DebugSave.LoadSynchronous()))
+		{
+			GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->StartGame(sav,Profile->Save_LoadLevel,Profile->Save_Tags);
+		}
 		for(auto* i : Profile->Scripts)
 		{
 			if(i)

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "LevelSequence.h"
 #include "LevelSequencePlayer.h"
+#include "OmegaSubsystem_Actors.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Subsystems/OmegaSubsystem_BGM.h"
 #include "Engine/GameInstance.h"
@@ -384,26 +385,26 @@ public:
 // Zone Transit Point
 // =============================================================================================================
 UCLASS(DisplayName="Omega Actor: Zone Transit Volume")
-class OMEGAGAMEFRAMEWORK_API AOmegaZoneTransit : public AActor
+class OMEGAGAMEFRAMEWORK_API AOmegaZoneTransit : public AActor, public IActorInterface_Interactable
 {
 	GENERATED_BODY()
-
-public:
-	// Sets default values for this actor's properties
+	
 	AOmegaZoneTransit();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	//virtual void OnConstruction(const FTransform& Transform) override;
-
 	virtual void OnConstruction(const FTransform& Transform) override;
-	
+	virtual void OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, UObject* Context) override;
 public:
-	// Called every frame
-	//virtual void Tick(float DeltaTime) override;
-
+		
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
+	bool bTransit_OnOverlap=true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
+	bool bTransit_OnInteract;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
+	bool bShow_DisplayPoint=true;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone", meta=(EditCondition="!bTransitToLevel"),DisplayName="Transition Spawn Point")
 	AOmegaZonePoint* TransitPoint;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone", meta=(EditCondition="!bTransitToLevel"),DisplayName="Transition Transit Point")
@@ -435,6 +436,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone")
 	FGameplayTagContainer AcceptedPlayerTags;
 
+	UFUNCTION(BlueprintCallable,Category="Zone")
+	void TriggerTransit(APlayerController* Player);
+	
 	UFUNCTION()
 	bool CanPlayerTransit(APawn* PlayerPawn) const
 	{

@@ -9,8 +9,11 @@
 
 void UAsyncAction_FadeCamera::Tick(float DeltaTime)
 {
-	if(PlayerRef && PlayerRef->PlayerCameraManager->FadeAmount == TargetFadeState && !LocalIsFinishing)
+	if(ending) {return;}
+	time_elapsed+=DeltaTime;
+	if(time_elapsed>=time_target)
 	{
+		ending=true;
 		LocalIsFinishing = true;
 		Finished.Broadcast();
 		SetReadyToDestroy();
@@ -21,7 +24,8 @@ void UAsyncAction_FadeCamera::Activate()
 {
 	if(PlayerRef)
 	{
-		PlayerRef->PlayerCameraManager->StartCameraFade(PlayerRef->PlayerCameraManager->FadeAmount, TargetFadeState, TargetDuration, TargetFadeColor, Local_FadeAudio, Local_HoldOnFinish);
+		PlayerRef->PlayerCameraManager->StopCameraFade();
+		PlayerRef->PlayerCameraManager->StartCameraFade(PlayerRef->PlayerCameraManager->FadeAmount, TargetFadeState, time_target, TargetFadeColor, Local_FadeAudio, Local_HoldOnFinish);
 	}
 	else
 	{
@@ -49,7 +53,8 @@ UAsyncAction_FadeCamera* UAsyncAction_FadeCamera::FadeCameraAsync(UObject* World
 	NewNode->TargetFadeColor = FadeColor;
 	NewNode->Local_HoldOnFinish = HoldWhenFinished;
 	NewNode->Local_FadeAudio = FadeAudio;
-	NewNode->TargetDuration = Duration;
+	NewNode->time_target = Duration;
+	NewNode->time_elapsed=0.0f;
 	return NewNode;
 }
 

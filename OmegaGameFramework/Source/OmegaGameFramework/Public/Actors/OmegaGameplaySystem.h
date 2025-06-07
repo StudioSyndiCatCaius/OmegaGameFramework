@@ -116,7 +116,7 @@ public:
 	void OnGameplayStateChange(FGameplayTag NewState);
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Save")
-	void OnNewGameStarted(UOmegaSaveGame* NewSave);
+	void OnNewGameStarted(UOmegaSaveGame* NewSave, FGameplayTagContainer GameplayTags);
 	
 	//Context Object//
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "Omega|GameplaySystem")

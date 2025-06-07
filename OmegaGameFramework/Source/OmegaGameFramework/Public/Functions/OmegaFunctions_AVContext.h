@@ -92,39 +92,39 @@ class UOmegaContextAVFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable, Category="Context|Animation",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <LevelSequence>")
-	static ULevelSequence* TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID, ULevelSequence* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
-	UFUNCTION(BlueprintCallable, Category="Context|Animation",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Montage>")
-	static UAnimMontage* TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID, UAnimMontage* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
-	UFUNCTION(BlueprintCallable, Category="Context|Animation",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Anim Sequence>")
-	static UAnimSequence* TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID, UAnimSequence* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Animation",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <LevelSequence>")
+	static ULevelSequence* TryGetObjectContext_Sequence(UObject* Object, FGameplayTag ID, ULevelSequence* Fallback, bool& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Animation",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Montage>")
+	static UAnimMontage* TryGetObjectContext_Montages(UObject* Object, FGameplayTag ID, UAnimMontage* Fallback, bool& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Animation",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Anim Sequence>")
+	static UAnimSequence* TryGetObjectContext_AnimSequence(UObject* Object, FGameplayTag ID, UAnimSequence* Fallback, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Context|Sound",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Sound>")
-	static USoundBase* TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID, USoundBase* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Sound",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Sound>")
+	static USoundBase* TryGetObjectContext_Sounds(UObject* Object, FGameplayTag ID, USoundBase* Fallback, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Context|Particle",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Niagara>")
-	static UNiagaraSystem* TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID, UNiagaraSystem* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Particle",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Niagara>")
+	static UNiagaraSystem* TryGetObjectContext_Niagara(UObject* Object, FGameplayTag ID, UNiagaraSystem* Fallback, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Context|Actor",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Actor Class>")
-	static TSubclassOf<AActor> TryGetObjectContext_ActorClass(UObject* Object, FGameplayTag ID, TSubclassOf<AActor> Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Actor",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Actor Class>")
+	static TSubclassOf<AActor> TryGetObjectContext_ActorClass(UObject* Object, FGameplayTag ID, TSubclassOf<AActor> Fallback, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Static Mesh>")
-	static UStaticMesh* TryGetObjectContext_StaticMesh(UObject* Object, FGameplayTag ID, UStaticMesh* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Static Mesh>")
+	static UStaticMesh* TryGetObjectContext_StaticMesh(UObject* Object, FGameplayTag ID, UStaticMesh* Fallback, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Skeletal Mesh>")
-	static USkeletalMesh* TryGetObjectContext_SkelMesh(UObject* Object, FGameplayTag ID, USkeletalMesh* Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Skeletal Mesh>")
+	static USkeletalMesh* TryGetObjectContext_SkelMesh(UObject* Object, FGameplayTag ID, USkeletalMesh* Fallback, bool& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Anim Class>")
-	static TSubclassOf<UAnimInstance> TryGetObjectContext_AnimClass(UObject* Object, FGameplayTag ID, TSubclassOf<UAnimInstance> Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Mesh",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Anim Class>")
+	static TSubclassOf<UAnimInstance> TryGetObjectContext_AnimClass(UObject* Object, FGameplayTag ID, TSubclassOf<UAnimInstance> Fallback, bool& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Context|Slate",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <SlateBrush>")
-	static FSlateBrush TryGetObjectContext_SlateBrush(UObject* Object, FGameplayTag ID, FSlateBrush Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|Slate",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <SlateBrush>")
+	static FSlateBrush TryGetObjectContext_SlateBrush(UObject* Object, FGameplayTag ID, FSlateBrush Fallback, bool& Outcome);
 
 	// =============================================================================
 	// Text
 	// =============================================================================
-	UFUNCTION(BlueprintCallable, Category="Context|String",meta=(ExpandEnumAsExecs="Outcome"),DisplayName="Try Get Object Context <Text>")
-	static FText TryGetObjectContext_Text(UObject* Object, FGameplayTag ID, FText Fallback, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Context|String",meta=(ExpandBoolAsExecs="Outcome"),DisplayName="Try Get Object Context <Text>")
+	static FText TryGetObjectContext_Text(UObject* Object, FGameplayTag ID, FText Fallback, bool& Outcome);
 
 };
 

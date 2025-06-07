@@ -58,3 +58,23 @@ public:
 	UPROPERTY()
 	UBillboardComponent* IconDisplay;
 };
+
+// ====================================================================================================
+// Global Event
+// ====================================================================================================
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API AVolumeTrigger_GlobalEvent : public AAdvancedVolume
+{
+	GENERATED_BODY()
+
+	AVolumeTrigger_GlobalEvent();
+	
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+
+public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GlobalEvent") FName Event_Named;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GlobalEvent") FGameplayTag Event_Tag;
+	
+};

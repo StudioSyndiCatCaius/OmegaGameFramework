@@ -627,15 +627,38 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
 	return OutSkills;
 }
 
-void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill)
+void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill, bool Added)
 {
-	Skills.Add(Skill);
+	if(Skill)
+	{
+		bool has_interface=Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass());
+		if(Added)
+		{
+			Skills.Add(Skill);
+			if(has_interface)
+			{
+				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,true);
+			}
+		}
+		else
+		{
+			Skills.Remove(Skill);
+			if(has_interface)
+			{
+				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,false);
+			}
+		}
+	}
 }
 
-void UCombatantComponent::RemoveSkill(UPrimaryDataAsset* Skill)
+void UCombatantComponent::AddSkills(TArray<UPrimaryDataAsset*> skill_list, bool Added)
 {
-	Skills.Remove(Skill);
+	for(auto* i : skill_list)
+	{
+		AddSkill(i,Added);
+	}
 }
+
 
 bool UCombatantComponent::SetSkillSourceActive(UObject* SkillSource, bool bActive)
 {
@@ -768,14 +791,12 @@ void UCombatantComponent::SetOverrideMaxAttributes(TMap<UOmegaAttribute*, float>
 
 void UCombatantComponent::SetOverrideMaxAttributes_Int(TMap<UOmegaAttribute*, int32> Value)
 {
-	// Assume sourceMap is your TMap<UObject*, int32>
-	TMap<UOmegaAttribute*, int32> sourceMap;
-
+	
 	// Your target TMap with float values
 	TMap<UOmegaAttribute*, float> targetMap;
 
 	// Iterate over the sourceMap
-	for (const TPair<UOmegaAttribute*, int32>& KVP : sourceMap)
+	for (const TPair<UOmegaAttribute*, int32>& KVP : Value)
 	{
 		// Cast the int32 to float and insert into targetMap
 		targetMap.Add(KVP.Key, (float)KVP.Value);
@@ -1290,7 +1311,13 @@ void UCombatantComponent::SetActiveTarget(UCombatantComponent* Combatant)
 	OnActiveTargetChanged.Broadcast(ActiveTarget, true);
 }
 
-UCombatantComponent* UCombatantComponent::GetActiveTarget(bool& IsValid)
+UCombatantComponent* UCombatantComponent::GetActiveTarget() const
+{
+	if(ActiveTarget) { return ActiveTarget;}  return nullptr;
+}
+
+
+UCombatantComponent* UCombatantComponent::TryGetActiveTarget(bool& IsValid)
 {
 	if(ActiveTarget)
 	{
@@ -1300,8 +1327,6 @@ UCombatantComponent* UCombatantComponent::GetActiveTarget(bool& IsValid)
 	IsValid=false;
 	return nullptr;
 }
-
-
 
 int32 UCombatantComponent::GetActiveTargetIndex()
 {

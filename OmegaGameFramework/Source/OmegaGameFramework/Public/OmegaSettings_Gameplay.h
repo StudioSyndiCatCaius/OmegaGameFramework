@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Engine/DataAsset.h"
+#include "Misc/OmegaGameplayModule.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "UObject/Object.h"
 #include "OmegaSettings_Gameplay.generated.h"
@@ -99,6 +100,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Gameplay : public UPrimaryDataAsset
 
 public:
 	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Modules")
+	TArray<UOmegaGameplayModule*> ScriptedModules;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Maps")
 	TSoftObjectPtr<UWorld> Map_Splash;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Maps")
@@ -117,7 +121,8 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
 	UOmegaCharacterConfig* DefaultActorConfig_Character;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	UOmegaActorConfig* DefaultActorConfig_Interactable;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
 	UOmegaActorConfig* DefaultActorConfig_FloatingCombatant;
 	
@@ -220,8 +225,8 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Gameplay|GlobalDataAssets",DisplayName="Get Global DataAsset (Equipment Slot)",meta=(CompactNodeTitle="GDA EquipSlot"))
 	static UEquipmentSlot* GetGlobalDataAsset_EquipSlot(FGameplayTag Tag);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay",meta=(DeterminesOutputType="Class", ExpandEnumAsExecs="Result"))
-	static UOmegaDataAssetMetaSetting* GetDataAssetMetaSetting(UPrimaryDataAsset* DataAsset, TSubclassOf<UOmegaDataAssetMetaSetting> Class, TEnumAsByte<EOmegaFunctionResult>& Result);
+	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay",meta=(DeterminesOutputType="Class", ExpandBoolAsExecs="Result"))
+	static UOmegaDataAssetMetaSetting* GetDataAssetMetaSetting(UPrimaryDataAsset* DataAsset, TSubclassOf<UOmegaDataAssetMetaSetting> Class, bool& Result);
 
 };
 

@@ -3,26 +3,16 @@
 #include "FlowAssetTrait.h"
 #include "Engine/GameInstance.h"
 
-UFlowAssetTrait::UFlowAssetTrait(const FObjectInitializer& ObjectInitializer)
+
+
+void UFlowAssetTrait::Native_FlowBegin(UFlowAsset* FlowInstance) const
 {
-	if (const UObject* Owner = GetOuter())
-	{
-		WorldPrivate = Owner->GetWorld();
-	}
+	FlowBegin(FlowInstance);
+}
+
+void UFlowAssetTrait::Native_FlowEnd(UFlowAsset* FlowInstance, FName Output, const FString& Flag) const
+{
+	FlowEnd(FlowInstance,Output,Flag);
 }
 
 
-
-UWorld* UFlowAssetTrait::GetWorld() const
-{
-	if(GameInstanceRef)
-	{
-		return GetGameInstance()->GetWorld();
-	}
-	return WorldPrivate;
-}
-
-UGameInstance* UFlowAssetTrait::GetGameInstance() const
-{
-	return GameInstanceRef;
-}

@@ -12,7 +12,14 @@
 #include "OmegaSubsystem_Actors.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorInteraction, AActor*, Instigator, AActor*, Target, FGameplayTag, Tag,UObject*, Context);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorInteraction, AActor*, InteractInstigator, AActor*, Target, FGameplayTag, Tag,UObject*, Context);
+
+USTRUCT()
+struct FOmegaActorGroupData
+{
+	GENERATED_BODY()
+	UPROPERTY() TArray<AActor*> Actors;
+};
 
 UINTERFACE(MinimalAPI) class UActorInterface_Interactable : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IActorInterface_Interactable
@@ -21,7 +28,7 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Interactable
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Interaction")
-	void OnInteraction(AActor* Instigator, FGameplayTag Tag, UObject* Context);
+	void OnInteraction(AActor* InteractInstigator, FGameplayTag Tag, UObject* Context);
 };
 
 
@@ -37,9 +44,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSubsystem : public UWorldSubsystem
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
-	UPROPERTY() TArray<AOmegaActorProcessor*> active_processors;
-	
+	UPROPERTY() TMap<TSubclassOf<AOmegaActorProcessor>,AOmegaActorProcessor*> active_processors;
 	UPROPERTY() TArray<UActorIdentityComponent*> REF_ActorIdComps;
+	UPROPERTY() TMap<FGameplayTag, FOmegaActorGroupData> actorGroups;
 public:
 
 	void local_RegisterActorIdComp(UActorIdentityComponent* Component, bool bIsRegister);
@@ -57,4 +64,22 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Interaction")
 	void PerformInteraction(AActor* Instigator, AActor* TargetActor, FGameplayTag Tag, UObject* Context);
+
+	// ---------------------------------------------------------------------------------
+	// Groups
+	// ---------------------------------------------------------------------------------
+	UFUNCTION(BlueprintPure,Category="ActorSubsystem|Groups")
+	bool IsActorInGroup(FGameplayTag GroupTag, AActor* Actor) const;
+	
+	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Groups")
+	void SetActorRegisteredToGroup(FGameplayTag GroupTag, AActor* Actor, bool registered);
+
+	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Groups")
+	void SetActorsRegisteredToGroup(FGameplayTag GroupTag, TArray<AActor*> Actors, bool registered);
+	
+	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Groups")
+	void ClearActorGroup(FGameplayTag GroupTag);
+	
+	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Groups")
+	TArray<AActor*> GetActorsInGroup(FGameplayTag GroupTag) const;
 };

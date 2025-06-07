@@ -80,7 +80,7 @@ public:
 	UFUNCTION()
 	void SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass);
 	
-	UPROPERTY(EditAnywhere,Instanced="TurnManager",DisplayName="Turn Manager")
+	UPROPERTY(EditAnywhere,Instanced,DisplayName="Turn Manager")
 	UTurnManagerBase* TurnManager;
 	
 	//Prevents Combatants with these tags from being allowed to have a turn.

@@ -32,6 +32,21 @@ bool is_valid_tag(AActor* actor_ref, TArray<FName> tags_ref)
 	return false;
 }
 
+void UActorTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	if(bTargetFromMouseCursor)
+	{
+		AActor* in_actor=UOmegaGameFrameworkBPLibrary::GetPlayerMouseOverActor(
+			UGameplayStatics::GetPlayerController(this,Mouse_PlayerIndex),Mouse_TraceChannel,Mouse_TraceRadius);
+		if(GetActiveTarget()!=in_actor)
+		{
+			SetActiveTarget(in_actor,true);
+		}
+	}
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
 bool UActorTargetingComponent::SetActorRegistered(AActor* Actor, bool bRegister)
 {
 	if(Actor)
@@ -70,7 +85,7 @@ bool UActorTargetingComponent::SetActorRegistered(AActor* Actor, bool bRegister)
 	return false;
 }
 
-void UActorTargetingComponent::SetActorRegistered_List(TArray<AActor*> Actors, bool bEmptyFirst)
+void UActorTargetingComponent::SetActorRegistered_List(TArray<AActor*> Actors, bool bRegister, bool bEmptyFirst)
 {
 	if(bEmptyFirst)
 	{
@@ -78,7 +93,7 @@ void UActorTargetingComponent::SetActorRegistered_List(TArray<AActor*> Actors, b
 	}
 	for (auto* TempActor : Actors)
 	{
-		SetActorRegistered(TempActor,true);
+		SetActorRegistered(TempActor,bRegister);
 	}
 }
 
@@ -117,6 +132,10 @@ void UActorTargetingComponent::SetActiveTarget(AActor* Actor, bool bAutoRegister
 		local_setTagsOnActor(Actor,TagsOnTarget,true);
 		REF_TargetActor=Actor;
 		OnActorTargetUpdate.Broadcast(Actor,true);
+		if(Sound_ChangeTarget)
+		{
+			UGameplayStatics::PlaySound2D(this,Sound_ChangeTarget);
+		}
 	}
 }
 

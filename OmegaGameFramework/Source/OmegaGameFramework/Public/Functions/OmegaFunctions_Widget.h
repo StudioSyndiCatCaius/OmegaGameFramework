@@ -26,12 +26,12 @@ public:
 	static void SetHUDLayersActive(UObject* WorldContextObject, TArray<TSubclassOf<UHUDLayer>> HUDs, bool bActive, UObject* Context, const FString& Flag, APlayerController* Player);
 
 	//Get an Active Gameplay System by Class
-	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",ExpandEnumAsExecs = "Outcome",AdvancedDisplay="Player"),DisplayName="Ω🔴 Try Get HUD Layer")
-	static UHUDLayer* TryGetHudLayer(const UObject* WorldContextObject, TSubclassOf<UHUDLayer> Class, APlayerController* Player, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",ExpandBoolAsExecs = "Outcome",AdvancedDisplay="Player"),DisplayName="Ω🔴 Try Get HUD Layer")
+	static UHUDLayer* TryGetHudLayer(const UObject* WorldContextObject, TSubclassOf<UHUDLayer> Class, APlayerController* Player, bool& Outcome);
 
 	//Get an Active Gameplay System by Class
-	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",ExpandEnumAsExecs = "Outcome",AdvancedDisplay="Player"),DisplayName="Ω🔴 Try Get Data Widget (from slot)")
-	static UDataWidget* TryGetDataWidget_FromSlot(const UObject* WorldContextObject, FGameplayTag SlotID, APlayerController* Player, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",ExpandBoolAsExecs = "Outcome",AdvancedDisplay="Player"),DisplayName="Ω🔴 Try Get Data Widget (from slot)")
+	static UDataWidget* TryGetDataWidget_FromSlot(const UObject* WorldContextObject, FGameplayTag SlotID, APlayerController* Player, bool& Outcome);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|DataList",meta=(DeterminesOutputType="ObjectClass"))
 	static TArray<UObject*> GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass);

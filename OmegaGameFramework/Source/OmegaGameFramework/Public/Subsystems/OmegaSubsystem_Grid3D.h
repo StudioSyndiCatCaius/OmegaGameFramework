@@ -200,6 +200,66 @@ public:
 	void ClearRegisteredTiles();
 };
 
+// =====================================================================================================
+// Mover
+// =====================================================================================================
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DMover_StateChange_Move, UOmegaGrid3D_Mover*, Component, bool, Moving);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DMover_StateChange_Rotate, UOmegaGrid3D_Mover*, Component, bool, Moving);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DMover_MoveUpdate, UOmegaGrid3D_Mover*, Component,float, DeltaTime);
+
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
+class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Mover : public UActorComponent
+{
+	GENERATED_BODY()
+
+	UPROPERTY() float InputRange=90.0f;
+	UPROPERTY() UOmegaGrid3D_Occupant* REF_occupant;
+
+	UPROPERTY() int32 move_state=0;
+	UPROPERTY() float move_alpha;
+	
+	UPROPERTY() FVector target_loc;
+	UPROPERTY() FRotator target_rot;
+	UPROPERTY() FVector origin_loc;
+	UPROPERTY() FRotator origin_rot;
+	
+public:
+	UOmegaGrid3D_Mover();
+
+	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	UPROPERTY(BlueprintAssignable) FOnGrid3DMover_StateChange_Move OnGrid3DMover_StateChange_Move;
+	UPROPERTY(BlueprintAssignable) FOnGrid3DMover_StateChange_Rotate OnGrid3DMover_StateChange_Rotate;
+	UPROPERTY(BlueprintAssignable) FOnGrid3DMover_MoveUpdate OnGrid3DMover_MoveUpdate;
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover")
+	void SetLinkedOccupant(UOmegaGrid3D_Occupant* Occupant);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover")
+	bool IsMoving() const;
+
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
+	float MoveTime=0.5f;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
+	float MoveDistance=100;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
+	bool bShouldTraceToBlockMovement;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
+	TEnumAsByte<ETraceTypeQuery> BlockMovement_TraceChanel;
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover",meta=(AdvancedDisplay="bOverrideDirection,DirectionOverride"))
+	void AddInput_Movement(int32 X, int32 Y, int32 Z, FRotator DirectionOverride);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover")
+	void AddInput_Rotation(int32 X, int32 Y, int32 Z);
+};
+
+
 
 // =====================================================================================================
 // Tile Type
@@ -250,7 +310,7 @@ public:
 	UOmegaGrid3D_Occupant* GetFirstOccupant() const;
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",meta=(DeterminesOutputType="Class",ExpandEnumAsExecs="Result"))
-    AActor* GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Result);
+    AActor* GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, bool& Result);
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	bool HasOccupant(UOmegaGrid3D_Occupant* Occupant) const;
@@ -305,7 +365,21 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D")
 	static TArray<FIntVector> GetCoordinatesFromPathfindResult(FOmegaGrid3DPathfindResult in);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(DeterminesOutputType="TileClass",ExpandBoolAsExecs="result"))
+	static AOmegaGrid3D_Tile* GetGrid3DTileInfo(UObject* Object, TSubclassOf<AOmegaGrid3D_Tile> TileClass, UOmegaGrid3D_Occupant*& Occupant, bool& result);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D")
+	static TArray<AOmegaGrid3D_Tile*> GetTilesFromPath(UOmegaGrid3D_Map* Tilemap, FOmegaGrid3DPath Path);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D")
+	static TArray<AOmegaGrid3D_Tile*> GetTilesFromPathfind(UOmegaGrid3D_Map* Tilemap, FOmegaGrid3DPathfindResult Path, bool bOnlyLast);
 	
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(ExpandBoolAsExecs="result"))
+	static FOmegaGrid3DPath GetShortestPath_ToCoordinate(FOmegaGrid3DPathfindResult pathfind,FIntVector coord, bool& result);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(ExpandBoolAsExecs="result"))
+	static FOmegaGrid3DPath GetShortestPath_ToTile(FOmegaGrid3DPathfindResult pathfind,AOmegaGrid3D_Tile* tile, bool& result);
 };
 
 // ===============================================================================================================================

@@ -21,42 +21,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorPrefab : public UObject
 	
 };
 
-UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaCommonSkill : public UOmegaDataAsset, public IDataInterface_Skill, public IDataInterface_CombatantFilter, public IOmegaScriptedEffectsInterface
-{
-	GENERATED_BODY()
-public:
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FCombatantFilterData TargetFilterData;
-	virtual FCombatantFilterData GetSkillTargetFilterData_Implementation() override {return TargetFilterData;} ;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill",AdvancedDisplay)
-	TSubclassOf<UCombatantFilter> TargetFilter;
-	virtual TSubclassOf<UCombatantFilter> GetSkillTargetFilter_Implementation() override;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	TMap<UOmegaAttribute*, float> AttributeUseCost;
-	virtual TMap<UOmegaAttribute*, float> GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,UObject* Context) override;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FOmegaCustomScriptedEffects Effects_Target;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FOmegaCustomScriptedEffects Effects_Instigator;
-	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation() override;
-	
-	//ANIMATIOn
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") UAnimMontage* DefaultMontage_Asset;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") FGameplayTag DefaultMontage_Tag;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") TMap<FGameplayTag, UAnimMontage*> TaggedMontages;
-	virtual ULevelSequence* GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag) override;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") ULevelSequence* DefaultSequence_Asset;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") FGameplayTag DefaultSequence_Tag;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") TMap<FGameplayTag, ULevelSequence*> TaggedSequences;
-	virtual UAnimMontage* GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag) override;
-};
 
 UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UOmegaCombatantPreset : public UOmegaDataAsset, public IDataInterface_Combatant, public IDataInterface_SkinSource

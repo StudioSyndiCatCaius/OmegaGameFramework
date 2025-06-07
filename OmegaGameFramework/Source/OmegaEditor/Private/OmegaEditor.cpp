@@ -20,6 +20,10 @@
 #include "Actors/Actor_GameplayEffect.h"
 #include "Actors/OmegaGameplaySystem.h"
 
+#include "DataAssets/DA_CommonSkill.h"
+#include "DataAssets/DA_CommonCharacter.h"
+#include "DataAssets/DA_CommonItem.h"
+
 #include "Widget/DataWidget.h"
 #include "Widget/Menu.h"
 #include "Widget/HUDLayer.h"
@@ -74,7 +78,6 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaFaction,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaBGM,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaDamageType,OmegaAssetCategory);
-	OMACRO_REGISTERASSETTYPE(OmegaCommonSkill,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(SubscriptCollection,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaLevelData,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaZoneData,OmegaAssetCategory);
@@ -90,6 +93,12 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaGameplaySystem,OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaAbility, OmegaAssetCategory);
 	OMACRO_REGISTERASSETTYPE(OmegaGameplayModule,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OAsset_CommonCharacter,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OAsset_CommonSkill,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OAsset_CommonItem,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OAsset_CommonInteractable,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OmegaAssetLibrary_Animation,OmegaAssetCategory);
+	OMACRO_REGISTERASSETTYPE(OmegaAssetLibrary_Sound,OmegaAssetCategory);
 
 	//OMACRO_REGISTERASSETTYPE(OmegaGameSave,	OmegaAssetCategory_Gameplay);
 	//OMACRO_REGISTERASSETTYPE(OmegaGlobalSave,OmegaAssetCategory_Gameplay);
@@ -161,7 +170,7 @@ void FOmegaEditor::StartupModule()
 	ThumnbailNames.Add(TEXT("OmegaAnimationEmoteScript"));
 	
 	ThumnbailNames.Add(TEXT("OmegaFaction"));
-	ThumnbailNames.Add(TEXT("OmegaCommonSkill"));
+	ThumnbailNames.Add(TEXT("OAsset_CommonSkill"));
 	ThumnbailNames.Add(TEXT("CombatantGambitAsset"));
 	ThumnbailNames.Add(TEXT("CombatantGambitTarget"));
 	ThumnbailNames.Add(TEXT("CombatantGambitCondition"));

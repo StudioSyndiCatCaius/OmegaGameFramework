@@ -60,11 +60,6 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
 	TSubclassOf<UCommonTextStyle> Text_Tiny;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Widgets")
-	TSubclassOf<UDataWidget> DataWidget_SaveSlot;
-	UPROPERTY(EditAnywhere, Category = "Widgets", meta=(MetaClass="OmegaHoverCursor"))
-	FSoftClassPath HoverCursorClass;
-	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Border")
 	TSubclassOf<UCommonBorderStyle> Border_Big;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Border")
@@ -77,6 +72,17 @@ public:
 	TSubclassOf<UCommonBorderStyle> Border_Minimal;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Border")
 	TSubclassOf<UCommonBorderStyle> Border_Background;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Color")
+	FLinearColor Color_1=FLinearColor::Red;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Color")
+	FLinearColor Color_3=FLinearColor::Green;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Color")
+	FLinearColor Color_2=FLinearColor::Blue;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Color")
+	FLinearColor Color_4=FLinearColor::White;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Color")
+	TMap<FGameplayTag,FLinearColor> Colors_Tagged;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Elements")
 	UOmegaSlateStyle_ProgressBar* ProgressBar_Default;
@@ -89,6 +95,11 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Elements")
 	UOmegaSlateStyle_ComboBox*  ComboBox_Default;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Widgets")
+	TSubclassOf<UDataWidget> DataWidget_SaveSlot;
+	UPROPERTY(EditAnywhere, Category = "Widgets", meta=(MetaClass="OmegaHoverCursor"))
+	FSoftClassPath HoverCursorClass;
+	
 	// Images
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
 	FSlateBrush LogoDefault;
@@ -99,12 +110,13 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
 	FSlateBrush GenericMenu_Background;
 
-
 	// SOUNDS
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Hover;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Select;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
+	USoundBase* Sound_Cycle;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Error;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
@@ -199,9 +211,13 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
 	static void SetSlateStyle_Checkbox(UCheckBox* widget);
-
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
 	static void SetSlateStyle_ComboBox(UComboBoxString* widget);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
+	static FLinearColor GetSlateColor_ByIndex(int32 index);	
+	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
+	static FLinearColor GetSlateColor_ByTag(FGameplayTag Tag, FLinearColor Fallback);
 };
 
 // ============================================

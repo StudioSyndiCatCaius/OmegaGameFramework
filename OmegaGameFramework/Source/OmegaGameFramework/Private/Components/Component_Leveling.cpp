@@ -41,6 +41,14 @@ void ULevelingComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 }
 
+void ULevelingComponent::SetLevelingAsset(UOmegaLevelingAsset* Asset)
+{
+	if (Asset)
+	{
+		LevelingAsset=Asset;
+	}
+}
+
 
 void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler)
 {
@@ -52,22 +60,22 @@ void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler)
 	//If new level is greater than last level
 	if(GetCurrentLevel()>LastLevel)
 	{
-		OnLevelUp.Broadcast(GetCurrentLevel());
+		OnLevelUp.Broadcast(this,GetCurrentLevel());
 	}
 	//If Level is less than last level, level down.
 	else if (GetCurrentLevel()<LastLevel)
 	{
-		OnLevelDown.Broadcast(GetCurrentLevel());
+		OnLevelDown.Broadcast(this,GetCurrentLevel());
 	}
 
-	OnXPUpdated.Broadcast(XP, Amount);
+	OnXPUpdated.Broadcast(this,XP, Amount);
 	Native_Update();
 }
 
 void ULevelingComponent::SetXP(float NewValue, bool bUseRateMultipler)
 {
 	XP = NewValue;
-	OnXPUpdated.Broadcast(XP, XP);
+	OnXPUpdated.Broadcast(this,XP, XP);
 	Native_Update();
 }
 

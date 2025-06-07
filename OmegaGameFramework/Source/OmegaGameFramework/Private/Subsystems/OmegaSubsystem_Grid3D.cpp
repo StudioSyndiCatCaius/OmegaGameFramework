@@ -3,6 +3,7 @@
 
 #include "Subsystems/OmegaSubsystem_Grid3D.h"
 #include "Engine/World.h"
+#include "Functions/OmegaFunctions_Utility.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -338,6 +339,112 @@ void UOmegaGrid3D_Selector::ClearRegisteredTiles()
 	}
 }
 
+// =====================================================================================================
+// Mover
+// =====================================================================================================
+
+UOmegaGrid3D_Mover::UOmegaGrid3D_Mover()
+{
+	PrimaryComponentTick.bCanEverTick=true;
+	PrimaryComponentTick.bStartWithTickEnabled=true;
+}
+
+void UOmegaGrid3D_Mover::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void UOmegaGrid3D_Mover::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	if(move_state!=0)
+	{
+		move_alpha+=DeltaTime;
+		float normalized_alpha=UKismetMathLibrary::FClamp(move_alpha/MoveTime,0,1);
+		if(move_state==1)
+		{
+			if(UKismetMathLibrary::Vector_Distance(GetOwner()->GetActorLocation(),target_loc)<=0.01)
+			{
+				move_state=0;
+				GetOwner()->SetActorLocation(target_loc);
+				OnGrid3DMover_StateChange_Move.Broadcast(this,false);
+			}
+			else
+			{
+				GetOwner()->SetActorLocation(UKismetMathLibrary::VLerp(origin_loc,target_loc,normalized_alpha));
+				//OnGrid3DMover_MoveUpdate.Broadcast(this,DeltaTime);
+			}
+		}
+		if(move_state==2)
+		{
+			if(UKismetMathLibrary::EqualEqual_RotatorRotator(GetOwner()->GetActorRotation(),target_rot,0.01))
+			{
+				move_state=0;
+				GetOwner()->SetActorRotation(target_rot);
+				OnGrid3DMover_StateChange_Rotate.Broadcast(this,false);
+			}
+			else
+			{
+				GetOwner()->SetActorRotation(UKismetMathLibrary::RLerp(origin_rot,target_rot,normalized_alpha,true));
+				//OnGrid3DMover_MoveUpdate.Broadcast(this,DeltaTime);
+			}
+		}
+	}
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void UOmegaGrid3D_Mover::SetLinkedOccupant(UOmegaGrid3D_Occupant* Occupant)
+{
+	REF_occupant=nullptr;
+	if(Occupant)
+	{
+		REF_occupant=Occupant;
+	}
+}
+
+bool UOmegaGrid3D_Mover::IsMoving() const
+{
+	if(move_state==0) { return false;} return true;
+}
+
+
+void UOmegaGrid3D_Mover::AddInput_Movement(int32 X, int32 Y, int32 Z,
+	FRotator DirectionOverride)
+{
+	
+	if(!IsMoving())
+	{
+		move_alpha=0.0;
+		origin_loc=GetOwner()->GetActorLocation();
+		target_loc=UOmegaMathFunctions::Offset_Vector(GetOwner()->GetActorLocation(),DirectionOverride,(FVector(X,Y,Z)*MoveDistance));
+		TArray<AActor*> _ignoredActors;
+		_ignoredActors.Add(GetOwner());
+		FHitResult _hit=FHitResult();
+		if(bShouldTraceToBlockMovement && UKismetSystemLibrary::LineTraceSingle(this,origin_loc,target_loc,BlockMovement_TraceChanel,true,_ignoredActors,EDrawDebugTrace::None,_hit,true))
+		{
+			return;
+		}
+		else
+		{
+			OnGrid3DMover_StateChange_Move.Broadcast(this,true);
+			move_state=1;
+		}
+		
+	}
+}
+
+void UOmegaGrid3D_Mover::AddInput_Rotation(int32 X, int32 Y, int32 Z)
+{
+	if(!IsMoving())
+	{
+		move_alpha=0.0;
+		origin_rot=GetOwner()->GetActorRotation();
+		target_rot=UKismetMathLibrary::ComposeRotators(FRotator(Y*InputRange,Z*InputRange,X*InputRange),GetOwner()->GetActorRotation());
+		OnGrid3DMover_StateChange_Rotate.Broadcast(this,true);
+		move_state=2;
+	}
+}
+
 
 void AOmegaGrid3D_Tile::SetTileType(UOmegaGrid3DTileType* Type)
 {
@@ -395,17 +502,17 @@ UOmegaGrid3D_Occupant* AOmegaGrid3D_Tile::GetFirstOccupant() const
 }
 
 AActor* AOmegaGrid3D_Tile::GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class,
-	TEnumAsByte<EOmegaFunctionResult>& Result)
+	bool& Result)
 {
 	for(auto* oc : GetOccupants())
 	{
 		if(oc && (!Class || oc->GetOwner()->GetClass()->IsChildOf(Class)))
 		{
-			Result=Success;
+			Result=true;
 			return oc->GetOwner();
 		}
 	}
-	Result=Fail;
+	Result=false;
 	return nullptr;
 }
 
@@ -609,6 +716,115 @@ TArray<FIntVector> UOmegaGrid3DFunctions::GetCoordinatesFromPathfindResult(FOmeg
 		}
 	}
 	return out;
+}
+
+AOmegaGrid3D_Tile* UOmegaGrid3DFunctions::GetGrid3DTileInfo(UObject* Object, TSubclassOf<AOmegaGrid3D_Tile> TileClass,
+	UOmegaGrid3D_Occupant*& Occupant, bool& result)
+{
+	AOmegaGrid3D_Tile* tile_out = nullptr;
+	if(Object)
+	{
+		if(AActor* _actor=Cast<AActor>(Object))
+		{
+			if(AOmegaGrid3D_Tile* _tile = Cast<AOmegaGrid3D_Tile>(_actor))
+			{
+				tile_out=_tile;
+			}
+			if(UOmegaGrid3D_Occupant* _occ=Cast<UOmegaGrid3D_Occupant>(_actor->GetComponentByClass(UOmegaGrid3D_Occupant::StaticClass())))
+			{
+				tile_out=_occ->GetTile();
+			}	
+		}
+		if(UOmegaGrid3D_Occupant* _occ=Cast<UOmegaGrid3D_Occupant>(Object))
+		{
+			tile_out=_occ->GetTile();
+		}	
+	}
+	if(tile_out && (!TileClass || tile_out->GetClass()->IsChildOf(TileClass)))
+	{
+		Occupant=tile_out->GetFirstOccupant();
+		result=true;
+		return tile_out;
+	}
+	result=false;
+	Occupant=nullptr;
+	return nullptr;
+}
+
+TArray<AOmegaGrid3D_Tile*> UOmegaGrid3DFunctions::GetTilesFromPath(UOmegaGrid3D_Map* Tilemap, FOmegaGrid3DPath Path)
+{
+	TArray<AOmegaGrid3D_Tile*> out;
+	if(Tilemap)
+	{
+		for(FIntVector p : Path.PathPoints)
+		{
+			if(AOmegaGrid3D_Tile* _tile = Tilemap->GetTileFromCoordinate(p))
+			{
+				out.Add(_tile);
+			}
+		}
+	}
+	return out;
+}
+
+TArray<AOmegaGrid3D_Tile*> UOmegaGrid3DFunctions::GetTilesFromPathfind(UOmegaGrid3D_Map* Tilemap,
+	FOmegaGrid3DPathfindResult Path, bool bOnlyLast)
+{
+	TArray<AOmegaGrid3D_Tile*> out;
+	if(Tilemap)
+	{
+		for(FOmegaGrid3DPath p : Path.paths)
+		{
+			TArray<AOmegaGrid3D_Tile*> _tempTiles=GetTilesFromPath(Tilemap,p);
+			if(bOnlyLast)
+			{
+				if(_tempTiles.IsValidIndex(0)) { out.Add(_tempTiles[0]);}
+			}
+			else
+			{
+				out.Append(_tempTiles);
+			}
+		}
+	}
+	return out;
+}
+
+
+FOmegaGrid3DPath UOmegaGrid3DFunctions::GetShortestPath_ToCoordinate(FOmegaGrid3DPathfindResult pathfind,
+                                                                     FIntVector coord, bool& result)
+{
+	bool is_init=false;
+	FOmegaGrid3DPath out=FOmegaGrid3DPath();
+	
+	for(FOmegaGrid3DPath p : pathfind.paths)
+	{
+		if(p.PathPoints.Last()==coord)
+		{
+			result=true;
+			if(!is_init || p.PathPoints.Num()<out.PathPoints.Num())
+			{
+				is_init=true;
+				out=p;
+			}
+		}
+	}
+	if(result)
+	{
+		return out;
+	}
+	result=false;
+	return  FOmegaGrid3DPath();
+}
+
+FOmegaGrid3DPath UOmegaGrid3DFunctions::GetShortestPath_ToTile(FOmegaGrid3DPathfindResult pathfind,
+	AOmegaGrid3D_Tile* tile, bool& result)
+{
+	if(tile)
+	{
+		return GetShortestPath_ToCoordinate(pathfind,tile->GetTileCoordinate(),result);
+	}
+	result=false;
+	return  FOmegaGrid3DPath();
 }
 
 int32 UOmegaGrid3D_PathfindScript::ModifyDistance_Implementation(int32 distance, FOmegaGrid3DPathfindMeta metadata) const

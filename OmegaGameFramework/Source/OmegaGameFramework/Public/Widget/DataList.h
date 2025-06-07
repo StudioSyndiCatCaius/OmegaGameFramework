@@ -139,7 +139,8 @@ public:
 	bool bCanOverrideSize;
 	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideSize"))
 	FVector2D OverrideSize;
-
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
+	UMaterialInterface* Override_IconMaterial;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	UCurveVector* OverrideHoverOffset_Curve;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")

@@ -15,34 +15,28 @@ void UOmegaDynamicCameraSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 	Super::Initialize(Collection);
 }
 
+void UOmegaDynamicCameraSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
+{
+	if(NewPlayerController)
+	{
+		REF_Controller=NewPlayerController;
+	}
+	Super::PlayerControllerChanged(NewPlayerController);
+}
+
 void UOmegaDynamicCameraSubsystem::Tick(float DeltaTime)
 {
 	last_delta=DeltaTime;
-	if(AOmegaDynamicCamera* cam_source = GetSourceCamera())
+	if(REF_Controller)
 	{
-		if(AOmegaDynamicCamera* cam_master = GetDynamicCamera())
+		if(AOmegaDynamicCamera* cam_source = GetSourceCamera())
 		{
-			InterpToTarget(cam_source,cam_master,cam_source->InterpSpeed);
-		}
-	}
-	if(is_DynamicCamerActive)
-	{
-		if(time_SinceLastCheck>0.0)
-		{
-			time_SinceLastCheck=time_SinceLastCheck-DeltaTime;
-		}
-		else
-		{
-			/*
-			APlayerController* local_playerController = GetLocalPlayer()->GetPlayerController(GetLocalPlayer()->GetWorld());
-			if(local_playerController->GetViewTarget() != GetDynamicCamera())
+			if(AOmegaDynamicCamera* cam_master = GetDynamicCamera())
 			{
-				local_playerController->SetViewTarget(GetDynamicCamera());
+				InterpToTarget(cam_source,cam_master,cam_source->InterpSpeed);
+				cam_source->SourceTick(DeltaTime,REF_Controller,this);
 			}
-			time_SinceLastCheck=0.5;
-			*/
 		}
-			 
 	}
 }
 
@@ -159,15 +153,20 @@ void UOmegaDynamicCameraSubsystem::InterpToTarget(AOmegaDynamicCamera* cam_sourc
 		cam_master->comp_spring->SetRelativeRotation(UKismetMathLibrary::RInterpTo(cam_master->comp_spring->GetRelativeRotation(),cam_source->comp_spring->GetRelativeRotation(),last_delta,speed));
 		cam_master->comp_spring->SocketOffset=UKismetMathLibrary::VInterpTo(cam_master->comp_spring->SocketOffset,cam_source->comp_spring->SocketOffset,last_delta,speed);
 		cam_master->comp_spring->TargetOffset=UKismetMathLibrary::VInterpTo(cam_master->comp_spring->TargetOffset,cam_source->comp_spring->TargetOffset,last_delta,speed);
+		cam_master->comp_spring->bDoCollisionTest=cam_source->comp_spring->bDoCollisionTest;
 	}
 }
 
-void UOmegaDynamicCameraSubsystem::SetOverrideCamera(AOmegaDynamicCamera* Camera)
+void UOmegaDynamicCameraSubsystem::SetOverrideCamera(AOmegaDynamicCamera* Camera, bool bSnapTo)
 {
 	if(Camera)
 	{
 		Camera->CameraActive=true;
 		override_camera=Camera;
+		if(bSnapTo)
+		{
+			SnapToCurrentSource();
+		}
 	}
 	else
 	{
@@ -248,6 +247,7 @@ FTransform AOmegaDynamicCamera::LOCAL_Average_Transform(TArray<FTransform> input
 
 	return FTransform(interpolatedRotation, interpolatedLocation, interpolatedScale);
 }
+
 
 void AOmegaDynamicCamera::Tick(float DeltaSeconds)
 {

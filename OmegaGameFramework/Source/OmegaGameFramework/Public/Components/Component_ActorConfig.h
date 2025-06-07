@@ -31,7 +31,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorConfig : public UPrimaryDataAsset
 public:
 		
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Actors")
-	TArray<TSubclassOf<AOmegaActorProcessor>> TargetProcessors;
+	TArray<TSoftClassPtr<AOmegaActorProcessor>> TargetProcessors;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Actors")
 	TArray<UOmegaActorConfigScript*> Scripts;
