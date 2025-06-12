@@ -14,19 +14,6 @@ enum EOmegaGlobalParamTarget
 	SAVE_GLOBAL,
 };
 
-UENUM(Blueprintable)
-enum EOmegaFunctionResult
-{
-	Success		UMETA(DisplayName = "Success"),
-	Fail		UMETA(DisplayName = "Fail"),
-};
-
-UENUM(Blueprintable)
-enum EOmegaBranch
-{
-	Yes	UMETA(DisplayName = "Yes"),
-	No	UMETA(DisplayName = "No"),
-};
 
 UENUM(Blueprintable)
 enum EOmegaStarRank
@@ -90,3 +77,37 @@ enum class EOmegaGamepad_Shoulder : uint8
 	Shoulder_R            UMETA(DisplayName = "Right"),
 };
 // =============================
+
+UENUM(Blueprintable)
+enum EOmegaQuestStatus
+{
+	Unstarted		UMETA(DisplayName = "Unstarted"),
+	Active			UMETA(DisplayName = "Active"),
+	Complete		UMETA(DisplayName = "Complete"),
+	Failed			UMETA(DisplayName = "Failed"),
+};
+
+UENUM(BlueprintType)
+enum class ELevelOpenType : uint8
+{
+	LvlOp_None		UMETA(DisplayName = "N/A"),
+	LvlOp_Save		UMETA(DisplayName = "Saved"),
+	LvlOp_Custom	UMETA(DisplayName = "Custom"),
+};
+
+UENUM(BlueprintType)
+enum class EUniqueSaveFormats : uint8
+{
+	SaveFormat_Quicksave		UMETA(DisplayName = "Quicksave"),
+	SaveFormat_Autosave			UMETA(DisplayName = "Autosave"),
+	
+};
+
+UENUM(BlueprintType)
+enum EBoolType 
+{
+	BoolType_And     UMETA(DisplayName = "All True"),
+	BoolType_Or      UMETA(DisplayName = "One True"),
+	BoolType_NONE     UMETA(DisplayName = "None True"),
+};
+

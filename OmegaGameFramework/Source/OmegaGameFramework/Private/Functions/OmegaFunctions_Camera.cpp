@@ -94,38 +94,38 @@ void UOmegaCameraFunctions::SetViewTarget_ActorSelector(UObject* WorldContextObj
 	SetViewTarget_Actor(WorldContextObject,in_actor,BlendTime,Player);
 }
 
-AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Master(UObject* WorldContextObject, TEnumAsByte<EOmegaFunctionResult>& Outcome, 
+AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Master(UObject* WorldContextObject, bool& Outcome, 
 	APlayerController* Player)
 {
 	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 	{
-		Outcome=Success;
+		Outcome=true;
 		return _player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetDynamicCamera();
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }
 
-AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Source(UObject* WorldContextObject, TEnumAsByte<EOmegaFunctionResult>& Outcome, 
+AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Source(UObject* WorldContextObject, bool& Outcome, 
 	APlayerController* Player)
 {
 	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 	{
-		Outcome=Success;
+		Outcome=true;
 		return _player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetSourceCamera();
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }
 
-bool UOmegaCameraFunctions::SetDynamicCamera_Override(UObject* WorldContextObject, AOmegaDynamicCamera* SourceCamera,
+bool UOmegaCameraFunctions::SetDynamicCamera_Override(UObject* WorldContextObject, AOmegaDynamicCamera* SourceCamera, bool bSnapTo,
 	APlayerController* Player)
 {
 	if(SourceCamera)
 	{
 		if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 		{
-			_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SetOverrideCamera(SourceCamera);
+			_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SetOverrideCamera(SourceCamera,bSnapTo);
 			return true;
 		}
 	}

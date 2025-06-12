@@ -31,6 +31,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Traits")
 	TArray<UOmegaObjectTrait*> GetTraits();
+
+	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Traits")
+	//void SetTraits(TArray<UOmegaObjectTrait*> NewTraits);
 };
 
 inline TArray<UOmegaObjectTrait*> UDataInterface_Traits::GetObjectTraits(UObject* Object)

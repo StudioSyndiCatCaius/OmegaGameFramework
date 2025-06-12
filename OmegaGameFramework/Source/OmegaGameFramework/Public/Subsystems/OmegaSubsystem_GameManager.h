@@ -35,7 +35,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameManager : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	
-
+	UOmegaGameplayModule* ModuleInit(UOmegaGameplayModule* NewModule);
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
@@ -151,7 +151,5 @@ public:
 	TArray<FString> GetGameplayLog();
 	UFUNCTION(BlueprintPure, Category="OmegaGameManager")
 	TArray<FString> GetGameplayLogOfCategory(const FString& LogCategory);
-	
-
 	
 };

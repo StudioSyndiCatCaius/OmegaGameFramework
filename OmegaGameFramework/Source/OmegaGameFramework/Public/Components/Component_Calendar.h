@@ -39,10 +39,13 @@ public:
 	UPROPERTY(BlueprintAssignable) FOnMonthChanged OnMonthChanged;
 	UPROPERTY(BlueprintAssignable) FOnYearChanged OnYearChanged;
 	
-	UPROPERTY(BlueprintReadOnly,Category="Calendar") FOmegaCalendarData CalendarData;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Calendar") FOmegaCalendarData CalendarData;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Calendar")
 	UOAsset_Calendar* CalendarAsset;
 
+	UFUNCTION(BlueprintPure,Category="Calendar")
+	FOmegaCalendarData GetCurrentTime(int32 offset) const;
+	
 	UFUNCTION(BlueprintCallable,Category="Calendar")
 	void AdvanceTime();
 

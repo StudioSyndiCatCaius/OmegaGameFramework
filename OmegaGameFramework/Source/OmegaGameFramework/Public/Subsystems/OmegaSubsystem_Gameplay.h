@@ -40,6 +40,7 @@ public:
 	FGameplayTagContainer StateTags;
 	
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|") FJsonObjectWrapper WorldJsonObject;

@@ -55,7 +55,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	void Local_AddCombatantSource(UObject* Source);
-	UFUNCTION() void Local_LevelUpdate(int32 NewLevel);
+	UFUNCTION() void Local_LevelUpdate(ULevelingComponent* comp,int32 NewLevel);
 	UFUNCTION() void Local_UpdateDataItem(UOmegaDataItem* NewItem);
 
 public:
@@ -65,6 +65,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="0_OmegaCharacter")
 	TArray<UOmegaObjectTrait*> Traits;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override;
+	//virtual void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override { Traits=NewTraits; };
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="0_OmegaCharacter")
 	UPrimaryDataAsset* CharacterAsset;
@@ -77,8 +78,8 @@ public:
 
 	// DIALOGUE
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="0_OmegaCharacter")
-	UFlowAsset* DialogueFlow=nullptr;
-	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override { return DialogueFlow; };
+	TSoftObjectPtr<UFlowAsset> DialogueFlow=nullptr;
+	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override { return DialogueFlow.LoadSynchronous(); };
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="0_OmegaCharacter",DisplayName="Subscripts")
 	TArray<USubscriptCollection*> SubscriptCollections;

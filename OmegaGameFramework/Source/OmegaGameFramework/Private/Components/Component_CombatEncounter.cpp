@@ -179,6 +179,21 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::GetCurrent_Enco
 	return REF_Instance;
 }
 
+void UOmegaCombatEncounter_Component::SetXP(float xp)
+{
+	encounter_xp=xp;
+}
+
+void UOmegaCombatEncounter_Component::AddXP(float xp)
+{
+	SetXP(encounter_xp+xp);
+}
+
+float UOmegaCombatEncounter_Component::GetXP() const
+{
+	return encounter_xp;
+}
+
 bool UOmegaEncounter_Asset::OnEncounterBegin_Implementation(UOmegaCombatEncounter_Component* Component)
 {
 	if(Script)

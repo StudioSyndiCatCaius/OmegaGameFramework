@@ -9,6 +9,7 @@
 #include "OmegaDebug_Functions.generated.h"
 
 
+class UOmegaSaveGame;
 class UOmegaQuest;
 class UGamePreference;
 
@@ -35,6 +36,12 @@ class UOmegaDebugProfile : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere,Category="Quests")
+	TSoftClassPtr<UOmegaSaveGame> DebugSave;
+	UPROPERTY(EditAnywhere,Category="Quests")
+	bool Save_LoadLevel;
+	UPROPERTY(EditAnywhere,Category="Quests")
+	FGameplayTagContainer Save_Tags;
 	UPROPERTY(EditAnywhere,Category="Quests")
 	bool bAutostartQuests;
 	UPROPERTY(EditAnywhere,Category="Quests")

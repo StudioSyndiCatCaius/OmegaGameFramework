@@ -107,7 +107,7 @@ public:
 	
 };
 
-UCLASS()
+UCLASS(meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_AssetThumbnail,
 																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy, public IDataInterface_Traits
 {
@@ -130,6 +130,7 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="General",AdvancedDisplay) TArray<UOmegaObjectTrait*> Traits;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override { return Traits; };
+	//virtual// void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override{ Traits=NewTraits; };
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) UPrimaryDataAsset* ParentAsset;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TArray<UPrimaryDataAsset*> ChildAssets;

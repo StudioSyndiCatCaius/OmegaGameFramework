@@ -844,9 +844,6 @@ void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 {
 	UpdateBoxes();
 
-	// Set the material for TextComponent
-	
-	
 	FString Text;
 	if (bTransitToLevel)
 	{
@@ -873,6 +870,7 @@ void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 
 	if(DisplayMesh)
 	{
+		DisplayMesh->SetVisibility(bShow_DisplayPoint);
 		if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
 		{
 			DisplayMesh->SetStaticMesh(set->ZoneTransitDisplayMesh);
@@ -892,6 +890,15 @@ void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 	
 	TextComponent->SetText(FText::FromString(Text));
 	Super::OnConstruction(Transform);
+}
+
+void AOmegaZoneTransit::OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, UObject* Context)
+{
+	if(bTransit_OnInteract && InteractInstigator==GetWorld()->GetFirstPlayerController()->GetPawnOrSpectator())
+	{
+		TriggerTransit(GetWorld()->GetFirstPlayerController());
+	}
+	IActorInterface_Interactable::OnInteraction_Implementation(InteractInstigator, Tag, Context);
 }
 
 // BEGIN TRANSITION
@@ -923,30 +930,11 @@ void AOmegaZoneTransit::OnBoxTransitOverlapBegin(class UPrimitiveComponent* Over
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("Begin Zone Transit"));
-	if (MyPlayerController)
+	if (MyPlayerController && bTransit_OnOverlap)
 	{
 		if (OtherActor == PlayerPawn)
 		{
-			if(bTransitToLevel)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Attempt Level Transit: %s"), *TransitLevel.GetAssetName());
-				SubsysRef->TransitPlayerToLevel(TransitLevel,LevelTransitID);
-			}
-			else
-			{
-				AOmegaZonePoint* incoming_point=TransitPoint;
-				if(TransitPoint_Linked && TransitPoint_Linked->GetLinkedSpawnPoint())
-				{
-					incoming_point= TransitPoint_Linked->GetLinkedSpawnPoint();
-				}
-				if(incoming_point)
-				{
-					const FString TransitAppendName = incoming_point->GetName();
-					UE_LOG(LogTemp, Warning, TEXT("Attempt Spawn Transit: %s"), *TransitAppendName);
-					SubsysRef->TransitPlayerToPoint(incoming_point,MyPlayerController);
-				}
-				
-			}
+			TriggerTransit(MyPlayerController);
 		}
 	}
 }
@@ -965,6 +953,30 @@ void AOmegaZoneTransit::OnBoxNotifyOverlapEnd(UPrimitiveComponent* OverlappedCom
 	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->OnZoneTransitInRange.Broadcast(this,false);
 }
 
+
+void AOmegaZoneTransit::TriggerTransit(APlayerController* Player)
+{
+	if(bTransitToLevel)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempt Level Transit: %s"), *TransitLevel.GetAssetName());
+		SubsysRef->TransitPlayerToLevel(TransitLevel,LevelTransitID);
+	}
+	else
+	{
+		AOmegaZonePoint* incoming_point=TransitPoint;
+		if(TransitPoint_Linked && TransitPoint_Linked->GetLinkedSpawnPoint())
+		{
+			incoming_point= TransitPoint_Linked->GetLinkedSpawnPoint();
+		}
+		if(incoming_point)
+		{
+			const FString TransitAppendName = incoming_point->GetName();
+			UE_LOG(LogTemp, Warning, TEXT("Attempt Spawn Transit: %s"), *TransitAppendName);
+			SubsysRef->TransitPlayerToPoint(incoming_point,Player);
+		}
+				
+	}
+}
 
 AOmegaZonePoint* AOmegaZoneTransit::GetLinkedSpawnPoint()
 {

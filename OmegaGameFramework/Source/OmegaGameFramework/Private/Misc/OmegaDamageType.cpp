@@ -10,6 +10,7 @@ void UOmegaDamageType::GetGeneralDataText_Implementation(const FString& Label, c
                                                          FText& Description)
 {
 	Name = DamageTypeName;
+	Description= DisplayDescription;
 }
 
 void UOmegaDamageType::GetGeneralAssetColor_Implementation(FLinearColor& Color)

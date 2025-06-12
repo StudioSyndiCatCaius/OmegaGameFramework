@@ -37,16 +37,19 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Skill
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintImplementableEvent,Category="Skill")
+	void OnSkillAddedToCombatant(UCombatantComponent* Combatant, bool Added);
 	
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Skills")
+	
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Skill")
 	TMap<UOmegaAttribute*, float> GetSkillAttributeCosts(UCombatantComponent* Combatant,UObject* Context);
 	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Skill")
 	TSubclassOf<UCombatantFilter> GetSkillTargetFilter();
 	
 	// Skills are given two sequences slots: Charge is typically played first on the instigator. Execution is played second on the Target.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Skill")
 	ULevelSequence* GetSkill_Sequences(UCombatantComponent* Combatant, FGameplayTag Tag);
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Skill")
 	UAnimMontage* GetSkill_Montage(UCombatantComponent* Combatant, FGameplayTag Tag);
 };

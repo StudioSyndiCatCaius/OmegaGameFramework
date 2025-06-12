@@ -14,9 +14,10 @@ void UOmegaActorSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		{
 			if(c)
 			{
-				AOmegaActorProcessor* _new = GetWorld()->SpawnActorDeferred<AOmegaActorProcessor>(c,FTransform());
-				_new->FinishSpawning(FTransform());
-				active_processors.AddUnique(_new);
+				AOmegaActorProcessor* _newproc = GetWorld()->SpawnActorDeferred<AOmegaActorProcessor>(c,FTransform());
+				_newproc->FinishSpawning(FTransform());
+				active_processors.Add(c,_newproc);
+				UE_LOG(LogTemp, Warning, TEXT("Created Actor Processor: %s"), *_newproc->GetName());
 			}
 		}
 	}
@@ -53,20 +54,15 @@ void UOmegaActorSubsystem::RegisterActorToProcessor(AActor* Actor, TSubclassOf<A
 {
 	if(Actor && Processor)
 	{
-		for(auto* a : active_processors)
+		UE_LOG(LogTemp, Warning, TEXT("Attempting - Register %s to processor %s"), *Actor->GetName(), *Processor->GetName());
+		if(AOmegaActorProcessor* temp_proc=active_processors.FindOrAdd(Processor))
 		{
-			if(a)
-			{
-				if(a->GetClass()==Processor)
-				{
-					a->SetActorRegisteredToProcessor(Actor,true);
-				}
-				//else
-				//{
-				//	a->SetActorRegisteredToProcessor(Actor,false);
-				//}
-				return;
-			}
+			temp_proc->SetActorRegisteredToProcessor(Actor,true);
+			UE_LOG(LogTemp, Warning, TEXT("SUCCESS - Registered %s to processor %s"), *Actor->GetName(), *temp_proc->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FAILED - invalid processor actor"));
 		}
 	}
 }

@@ -37,7 +37,7 @@ class UOmegaInputFunctions : public UBlueprintFunctionLibrary
 
 public:
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Input", meta=(ExpandEnumAsExecs = "Outcome"))
-	static UObject* GetFirstObjectWithContextInputKey(TArray<UObject*> Objects,FKey Key, TEnumAsByte<EOmegaFunctionResult>& Outcome, FGameplayTag ContextTag=FGameplayTag());
+	UFUNCTION(BlueprintCallable,Category="Omega|Input", meta=(ExpandBoolAsExecs = "Outcome"))
+	static UObject* GetFirstObjectWithContextInputKey(TArray<UObject*> Objects,FKey Key, bool& Outcome, FGameplayTag ContextTag=FGameplayTag());
 	
 };

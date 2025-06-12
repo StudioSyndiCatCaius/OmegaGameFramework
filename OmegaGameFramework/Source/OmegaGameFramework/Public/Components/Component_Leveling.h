@@ -9,9 +9,9 @@
 #include "Components/ActorComponent.h"
 #include "Component_Leveling.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXpUpdated, float, XP, float, AmountChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, int32, NewLevel);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelDown, int32, NewLevel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnXpUpdated, ULevelingComponent*, Component, float, XP, float, AmountChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelUp, ULevelingComponent*, Component, int32, NewLevel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelDown, ULevelingComponent*, Component, int32, NewLevel);
 
 // A leveling component that manages experience points (XP) progression using customizable curves and rates, with support for level-up/down events and UI integration through widget interfaces.
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
@@ -35,6 +35,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling", meta=(ExposeOnSpawn="true"))
 	UOmegaLevelingAsset* LevelingAsset;
 
+	UFUNCTION(BlueprintCallable,Category="Leveling")
+	void SetLevelingAsset(UOmegaLevelingAsset* Asset);
+	
 	//Multiplier used to offset xp when "Add XP" is called. E.G., a rate multiplier of "0.75" when using AddXP, 100 XP becomes 75 XP.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling", meta=(ExposeOnSpawn="true"))
 	float XPGainRate = 1.0;

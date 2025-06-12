@@ -400,14 +400,14 @@ bool UCombatantFunctions::IsCombatantActiveTargetInRange(UCombatantComponent* Co
 }
 
 void UCombatantFunctions::IsCombatantOfFaction(UCombatantComponent* Combatant, UOmegaFaction* Faction,
-	TEnumAsByte<EOmegaBranch>& Outcome)
+	bool& Outcome)
 {
 	if(Combatant && Combatant->FactionDataAsset==Faction)
 	{
-		Outcome=Yes;
+		Outcome=true;
 		return;
 	}
-	Outcome=No;
+	Outcome=false;
 	return;
 }
 
@@ -442,15 +442,15 @@ TArray<UPrimaryDataAsset*> UCombatantFunctions::GetDataAssetsFromCombatants(TArr
 }
 
 UCombatantComponent* UCombatantFunctions::GetFirstCombatantWithDataAsset(UObject* WorldContextObject,
-                                                                         UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                         UPrimaryDataAsset* Asset, bool& Outcome)
 {
 	TArray<UCombatantComponent*> list=GetAllCombatantsWithDataAsset(WorldContextObject,Asset);
 	if(list.IsValidIndex(0))
 	{
-		Outcome=EOmegaFunctionResult::Success;
+		Outcome=true;
 		return list[0];
 	}
-	Outcome=EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return nullptr;
 }
 
@@ -472,32 +472,32 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatants_OfFaction(UOb
 }
 
 UCombatantComponent* UCombatantFunctions::SelectFirstCombatantWithDataAsset(TArray<UCombatantComponent*> Combatants,
-                                                                            UPrimaryDataAsset* Asset, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+                                                                            UPrimaryDataAsset* Asset, bool& Outcome)
 {
 	for (auto* c : Combatants)
 	{
 		if(c && c->CombatantDataAsset==Asset)
 		{
-			Outcome=EOmegaFunctionResult::Success;
+			Outcome=true;
 			return  c;
 		}
 	}
-	Outcome=EOmegaFunctionResult::Fail;
+	Outcome=false;
 	return nullptr;
 }
 
 UCombatantComponent* UCombatantFunctions::SelectFirstCombatant_WithTag(TArray<UCombatantComponent*> Combatants,
-	FGameplayTag Tag, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	FGameplayTag Tag, bool& Outcome)
 {
 	for (auto* c : Combatants)
 	{
 		if(c && c->CombatantHasTag(Tag))
 		{
-			Outcome=Success;
+			Outcome=true;
 			return  c;
 		}
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }
 
@@ -505,7 +505,7 @@ UCombatantComponent* UCombatantFunctions::SelectFirstCombatant_WithTag(TArray<UC
 
 /*
 void UCombatantFunctions::IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,  float Value,
-	EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome)
+	EComparisonMethod Method, bool& Outcome)
 {
 	if(Combatant)
 	{
@@ -525,7 +525,7 @@ void UCombatantFunctions::IsAttributeAtValue(UCombatantComponent* Combatant, UOm
 }
 
 void UCombatantFunctions::IsAttributeAtPercentage(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-	float Percentage, EComparisonMethod Method, TEnumAsByte<EOmegaBranch>& Outcome)
+	float Percentage, EComparisonMethod Method, bool& Outcome)
 {
 	if(Combatant)
 	{
@@ -541,28 +541,28 @@ void UCombatantFunctions::IsAttributeAtPercentage(UCombatantComponent* Combatant
 }
 */
 void UCombatantFunctions::DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag,
-                                               TEnumAsByte<EOmegaBranch>& Outcome)
+                                               bool& Outcome)
 {
 	if(Combatant && Combatant->CombatantHasTag(Tag))
 	{
-		Outcome = EOmegaBranch::Yes;
+		Outcome=true;
 	}
 	else
 	{
-		Outcome = EOmegaBranch::No;
+		Outcome=false;
 	}
 }
 
 void UCombatantFunctions::DoesCombatantHaveEffectWithTag(UCombatantComponent* Combatant, FGameplayTagContainer Tags,
-	TEnumAsByte<EOmegaBranch>& Outcome)
+	bool& Outcome)
 {
 	if(Combatant && Combatant->HasEffectWithTags(Tags))
 	{
-		Outcome = EOmegaBranch::Yes;
+		Outcome=true;
 	}
 	else
 	{
-		Outcome = EOmegaBranch::No;
+		Outcome=false;
 	}
 }
 

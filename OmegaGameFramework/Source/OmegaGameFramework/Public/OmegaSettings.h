@@ -57,6 +57,10 @@ public:
 	FSoftObjectPath DefaultSettings_Paths{"/OmegaGameFramework/Settings/OmegaSettings_Paths.OmegaSettings_Paths"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaFileManagerSettings"), AdvancedDisplay)
 	FSoftObjectPath DefaultSettings_FileManager{"/OmegaGameFramework/Settings/OmegaSettings_FileManager.OmegaSettings_FileManager"};
+
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Localization"), AdvancedDisplay)
+	FSoftObjectPath DefaultSettings_Localization;
+	
 	
 	//Will automatically scan these directories at startup to try and load and actiavate modules from them. NOTE: This can be a slow process. Try and only set these paths to folders containing GameplayModules.
 	//UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))

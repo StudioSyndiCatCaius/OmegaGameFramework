@@ -147,15 +147,39 @@ TArray<AActor*> UOmegaActorIdentityFunctions::GetAllActorsWithIdentity(UObject* 
 }
 
 AActor* UOmegaActorIdentityFunctions::GetFirstActorWithIdentity(UObject* WorldContextObject, UPrimaryDataAsset* Asset,
-	TSubclassOf<AActor> FilterClass, TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	TSubclassOf<AActor> FilterClass, bool& Outcome)
 {
 	TArray<AActor*> list=GetAllActorsWithIdentity(WorldContextObject,Asset,FilterClass);
 	if(list.IsValidIndex(0))
 	{
-		Outcome=EOmegaFunctionResult::Success;
+		Outcome=true;
 		return list[0];
 	}
-	Outcome=EOmegaFunctionResult::Fail;
+	Outcome=false;
+	return nullptr;
+}
+
+UPrimaryDataAsset* UOmegaActorIdentityFunctions::GetActorIdentityAsset(AActor* Actor, bool& result,
+	TSubclassOf<UPrimaryDataAsset> Class)
+{
+	TSubclassOf<UPrimaryDataAsset> in_class=UPrimaryDataAsset::StaticClass();
+	if(Class) { in_class=Class;}
+
+	if(Actor)
+	{
+		if(UActorIdentityComponent* _comp = Cast<UActorIdentityComponent>(Actor->GetComponentByClass(UActorIdentityComponent::StaticClass())))
+		{
+			if(UPrimaryDataAsset* _asset=_comp->GetIdentitySourceAsset())
+			{
+				if(_asset->GetClass()->IsChildOf(in_class))
+				{
+					result=true;
+					return _asset;
+				}
+			}
+		}
+	}
+	result=false;
 	return nullptr;
 }
 

@@ -9,24 +9,41 @@
 #include "DataAssets/DA_DayPeriod.h"
 
 
+FOmegaCalendarData UOmegaCalendarComponent::GetCurrentTime(int32 offset) const
+{
+	FOmegaCalendarData out=CalendarData;
+	out.Period+=offset;
+	out.Day+=offset;
+	out.Month+=offset;
+	out.Year+=offset;
+	return out;
+}
+
 void UOmegaCalendarComponent::AdvanceTime()
 {
 	if(CalendarAsset)
 	{
-		SetDay(CalendarData.Day+1);
-		//Wrap Month
-		if(GetMonth_Asset() && GetMonth_Asset()->NumberOfDays<GetDay_Number())
+		CalendarData.Period+=1;
+		if(CalendarAsset->DayPeriods.Num()<=CalendarData.Period)
 		{
-			CalendarData.Day=0;
-			SetMonth(CalendarData.Month+1);
-			
-			//Wrap Year
-			if(CalendarAsset->Months.Num()<=CalendarData.Month)
+			CalendarData.Period=0;
+			CalendarData.Day+=1;
+			//Wrap Month
+			if(GetMonth_Asset() && GetMonth_Asset()->NumberOfDays<GetDay_Number())
 			{
-				CalendarData.Month=0;
-				SetYear(CalendarData.Year+1);
+				CalendarData.Day=0;
+				CalendarData.Month+=1;
+				//Wrap Year
+				if(CalendarAsset->Months.Num()<=CalendarData.Month)
+				{
+					CalendarData.Month=0;
+					SetYear(CalendarData.Year+1);
+				}
+				SetMonth(CalendarData.Month+1);
 			}
+			SetDay(CalendarData.Day);
 		}
+		SetPeriod(CalendarData.Period);
 	}
 }
 
@@ -35,8 +52,8 @@ void UOmegaCalendarComponent::SetTime(int32 period, int32 day, int32 month, int3
 {
 	if(period>=0) { SetPeriod(period);}
 	if(day>=0) { SetDay(day);}
-	if(month>=0) { SetDay(month);}
-	if(year>=0) { SetDay(year);}
+	if(month>=0) { SetMonth(month);}
+	if(year>=0) { SetYear(year);}
 }
 
 
@@ -52,6 +69,7 @@ bool UOmegaCalendarComponent::IsCurrentTime_InBetween(FOmegaCalendarData A, FOme
 void UOmegaCalendarComponent::SetPeriod(int32 index)
 {
 	CalendarData.Period=index;
+	OnPeriodChanged.Broadcast(this,CalendarData.Period);
 }
 
 int32 UOmegaCalendarComponent::GetPeriod_Number() const

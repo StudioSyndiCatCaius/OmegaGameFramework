@@ -54,7 +54,9 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	FGuid AssetGuid;
-public:	
+public:
+
+	UPROPERTY() TMap<FName, FVector> FlowParams;
 
 	virtual FGuid GetObjectGuid_Implementation() const  override { return AssetGuid; };
 

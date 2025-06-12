@@ -47,6 +47,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSettings_PathFunctions : public UBlueprintFun
 
 public:
 
-	UFUNCTION(BlueprintPure,Category="Omega|Paths")
+	UFUNCTION(BlueprintPure,Category="Omega|Settings", DisplayName="Get OMEGA Settings (Path)")
 	static UOmegaSettings_Paths* GetOmegaPathSettings();
 };

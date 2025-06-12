@@ -28,6 +28,11 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Assets")
 	TMap<FGameplayTag, ULevelSequence*> LevelSequences;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Assets")
+	UBlendSpace* Default_BlendSpace=nullptr;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Assets")
+	TMap<FGameplayTag, UBlendSpace*> BlendSpaces;
+	
 	virtual UAnimSequence* GetContextAVAnimations_Implementation(FGameplayTag ID) override
 	{
 		if(AnimSequences.Contains(ID)) { return AnimSequences[ID];} return Default_AnimSequence;

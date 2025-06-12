@@ -92,6 +92,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	UObject* GetMessageInstigator();
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay Message",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="result"))
+	UObject* TryGetMessageInstigator(TSubclassOf<UObject> Class, bool& result);
+	
 	UPROPERTY() FText Temp_Text;
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Gameplay Message")
 	FText GetMessageText();

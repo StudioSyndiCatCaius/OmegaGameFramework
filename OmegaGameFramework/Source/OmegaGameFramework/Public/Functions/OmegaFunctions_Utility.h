@@ -116,6 +116,9 @@ class UOmegaMathFunctions : public UBlueprintFunctionLibrary
 
 public:
 
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FTransform AddTransforms(const FTransform A, const FTransform B);
+
 	UFUNCTION(BlueprintPure,Category="Omega|Widget")
 	static FWidgetTransform LerpWidgetTransform(FWidgetTransform a, FWidgetTransform b, float alpha);
 
@@ -146,17 +149,22 @@ public:
 	{
 		return  Curve.Evaluate(time);
 	}
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Math",meta=(ExpandEnumAsExecs="Outcome"))
-	static bool RNG_RollFromFloat(float chance, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable,Category="Omega|Math",meta=(ExpandBoolAsExecs="Outcome"))
+	static bool RNG_RollFromFloat(float chance, bool& Outcome);
 	
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static float Variate_Float(float in, float amount, bool bAmountIsScale);
 
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FVector Offset_Vector(FVector Vector, FRotator Rotation, FVector Offset);
+	static FVector Offset_Vector(FVector Vector, const FRotator& Rotation, FVector Offset);
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FVector Offset_ActorLocation(AActor* Actor, FVector Offset);
+	static FVector Offset_ActorLocation(const AActor* Actor, FVector Offset);
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FVector Offset_PawnLocationFromControl(APawn* Pawn, FVector Offset);
+	static FVector Offset_PawnLocationFromControl(const APawn* Pawn, FVector Offset);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FVector Random_VectorInRange(FVector Min, FVector Max);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static FRotator Random_RotatorInRange(const FRotator& Min, const FRotator& Max);
 };

@@ -266,7 +266,7 @@ public:
 	UPROPERTY(VisibleInstanceOnly,DisplayName="Skill Sources",Category="Modifiers")
 	TArray<UObject*> SOURCES_Skills;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Abilities")
 	TArray<UPrimaryDataAsset*> Skills;
 
 	
@@ -274,10 +274,10 @@ public:
 	TArray<UPrimaryDataAsset*> GetAllSkills();
 	
 	UFUNCTION(BlueprintCallable, Category="Skills")
-	void AddSkill(UPrimaryDataAsset* Skill);
-
+	void AddSkill(UPrimaryDataAsset* Skill, bool Added);
 	UFUNCTION(BlueprintCallable, Category="Skills")
-	void RemoveSkill(UPrimaryDataAsset* Skill);
+	void AddSkills(TArray<UPrimaryDataAsset*> skill_list, bool Added);
+
 
 	UFUNCTION(BlueprintCallable, Category="DataSource")
 	bool SetSkillSourceActive(UObject* SkillSource, bool bActive);

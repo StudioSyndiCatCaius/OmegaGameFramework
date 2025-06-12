@@ -18,6 +18,7 @@
 #include "Misc/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "Microsoft/AllowMicrosoftPlatformTypes.h"
 
 // ====================================================================================================
 // Initialize
@@ -54,16 +55,6 @@ void UOmegaSaveSubsystem::Deinitialize()
 	SaveGlobalGame();
 }
 
-void UOmegaSaveSubsystem::OnLevelChanged(UWorld* World, const UWorld::InitializationValues)
-{
-	for(auto* TempState : GetActiveStoryStates())
-	{
-		for(auto* TempScript : TempState->Scripts)
-		{
-			TempScript->OnLevelChange(this, TempState,UGameplayStatics::GetCurrentLevelName(this));
-		}
-	}
-}
 
 void UOmegaSaveSubsystem::GetSaveSlotName(int32 Slot, FString& OutName)
 {
@@ -275,7 +266,7 @@ void UOmegaSaveSubsystem::local_LoadLuaFields(TArray<FString> fields, UOmegaSave
 	}
 }
 
-UOmegaSaveBase* UOmegaSaveSubsystem::GetSaveObject(bool Global)
+UOmegaSaveBase* UOmegaSaveSubsystem::GetSaveObject(bool Global) const
 {
 	if(Global)
 	{
@@ -386,11 +377,15 @@ void UOmegaSaveSubsystem::SetDataAssetCollected(UPrimaryDataAsset* Asset, bool b
 {
 	if(Collected)
 	{
-		AddDataAssetToSaveCollection(Asset, bGlobal);
+		GetSaveObject(bGlobal)->CollectedDataAssets.AddUnique(Asset);
 	}
 	else
 	{
-		RemoveDataAssetFromSaveCollection(Asset, bGlobal);
+		UOmegaSaveBase* _sav=GetSaveObject(bGlobal);
+		if(_sav->CollectedDataAssets.Contains(Asset))
+		{
+			_sav->CollectedDataAssets.Remove(Asset);
+		}
 	}
 }
 
@@ -405,27 +400,17 @@ void UOmegaSaveSubsystem::SetDataAssetsCollected(TArray<UPrimaryDataAsset*> Asse
 	}
 }
 
-void UOmegaSaveSubsystem::AddDataAssetToSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
-{
-	GetSaveObject(bGlobal)->CollectedDataAssets.AddUnique(Asset);
-}
-
-void UOmegaSaveSubsystem::RemoveDataAssetFromSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
-{
-	GetSaveObject(bGlobal)->CollectedDataAssets.Remove(Asset);
-}
-
-bool UOmegaSaveSubsystem::IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal)
+bool UOmegaSaveSubsystem::IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal) const
 {
 	return GetSaveObject(bGlobal)->CollectedDataAssets.Contains(Asset);
 }
 
-TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssets(bool bGlobal)
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssets(bool bGlobal) const
 {
 	return GetSaveObject(bGlobal)->CollectedDataAssets;
 }
 
-TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsOfCategory(FGameplayTag CategoryTag, bool bGlobal)
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsOfCategory(FGameplayTag CategoryTag, bool bGlobal) const
 {
 	TArray<UPrimaryDataAsset*> OutAssets;
 
@@ -444,7 +429,7 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsOfCategory
 }
 
 TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(FGameplayTagContainer Tags, bool bGlobal,
-	bool bExclude, bool bExact)
+	bool bExclude, bool bExact) const
 {
 	TArray<UPrimaryDataAsset*> OutAssets;
 
@@ -462,15 +447,15 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 	return OutAssets;
 }
 
-TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetDataAssetsWithSavedTags(FGameplayTagContainer Tags,
-	bool bRequireAllTags, bool bGlobal)
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetDataAssetsWithSavedTags(FGameplayTagContainer Tags, bool bExact,
+	 bool bGlobal)
 {
 	TArray<UPrimaryDataAsset*> out;
 	TArray<UPrimaryDataAsset*> list;
-	GetSaveObject(bGlobal)->SaveAssetTags.GetKeys(list);
+	GetSaveObject(bGlobal)->Vars_Assets.GetKeys(list);
 	for(auto* asset : list)
 	{
-		if(asset && UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTags(asset,Tags,bRequireAllTags,false))
+		if(asset && DoesDataAssetHaveSaveTags(asset,Tags,bExact,bGlobal))
 		{
 			out.Add(asset);
 		}
@@ -485,47 +470,61 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetDataAssetsWithSavedTags(FGame
 void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags,
 	bool bGlobal)
 {
-	FGameplayTagContainer TempTags;
-	if(GetSaveObject(bGlobal)->SaveAssetTags.Contains(Asset))
+	if(Asset)
 	{
-		TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
-	}
-	if(bHasTags)
-	{
-		TempTags.AppendTags(Tags);
-	}
-	else
-	{
-		TempTags.RemoveTags(Tags);
-	}
-	GetSaveObject(bGlobal)->SaveAssetTags.Add(Asset, TempTags);
-}
-
-void UOmegaSaveSubsystem::AddSaveTagsToDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal)
-{
-	SetSaveTagsOnDataAsset(Asset,Tags,true,bGlobal);
-}
-
-void UOmegaSaveSubsystem::RemoveSaveTagsFromDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bGlobal)
-{
-	SetSaveTagsOnDataAsset(Asset,Tags,false,bGlobal);
-}
-
-bool UOmegaSaveSubsystem::DoesDataAssetHaveSaveTags(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bExact, bool bGlobal)
-{
-	if(GetSaveObject(bGlobal)->SaveAssetTags.Contains(Asset))
-	{
-		FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->SaveAssetTags.FindOrAdd(Asset);
-		if(bExact)
+		FOmegaSaveVars asset_data=GetSaveObject(bGlobal)->Vars_Assets.FindOrAdd(Asset);
+		if(bHasTags)
 		{
-			return TempTags.HasAnyExact(Tags);
+			asset_data.Tags.AppendTags(Tags);
 		}
 		else
 		{
-			return TempTags.HasAny(Tags);
+			asset_data.Tags.RemoveTags(Tags);
+		}
+		GetSaveObject(bGlobal)->Vars_Assets[Asset]=asset_data;
+	}
+}
+
+void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset_List(TArray<UPrimaryDataAsset*> Assets, FGameplayTagContainer Tags,
+	bool bHasTags, bool bGlobal)
+{
+	for(auto* i : Assets)
+	{
+		SetSaveTagsOnDataAsset(i,Tags,bHasTags,bGlobal);
+	}
+}
+
+
+bool UOmegaSaveSubsystem::DoesDataAssetHaveSaveTags(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
+{
+	if(Asset)
+	{
+		FOmegaSaveVars asset_data=GetSaveObject(bGlobal)->Vars_Assets.FindOrAdd(Asset);
+		if(bExact)
+		{
+			return asset_data.Tags.HasAllExact(Tags);
+		}
+		else
+		{
+			return asset_data.Tags.HasAny(Tags);
 		}
 	}
 	return false;
+}
+
+TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetSaveAssets_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
+{
+	TArray<UPrimaryDataAsset*> out;
+	TArray<UPrimaryDataAsset*> keys;
+	GetSaveObject(bGlobal)->Vars_Assets.GetKeys(keys);
+	for(UPrimaryDataAsset* i : keys)
+	{
+		if(DoesDataAssetHaveSaveTags(i,Tags,bExact,bGlobal))
+		{
+			out.Add(i);
+		}
+	}
+	return out;
 }
 
 void UOmegaSaveSubsystem::SetGuidCollected(FGuid Guid, bool Collected, bool bGlobal)
@@ -540,31 +539,58 @@ void UOmegaSaveSubsystem::SetGuidCollected(FGuid Guid, bool Collected, bool bGlo
 	}
 }
 
-bool UOmegaSaveSubsystem::GetIsGuidCollected(FGuid Guid, bool bGlobal)
+bool UOmegaSaveSubsystem::GetIsGuidCollected(FGuid Guid, bool bGlobal) const
 {
 	return GetSaveObject(bGlobal)->CollectedGuids.Contains(Guid);
 }
 
 void UOmegaSaveSubsystem::SetGuidHasTags(FGuid Guid, FGameplayTagContainer Tags, bool HasTags, bool bGlobal)
 {
-	FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->GuidTags.FindOrAdd(Guid);
+	FOmegaSaveVars asset_data=GetSaveObject(bGlobal)->Vars_Guid.FindOrAdd(Guid);
 	if(HasTags)
 	{
-		TempTags.AppendTags(Tags);
+		asset_data.Tags.AppendTags(Tags);
 	}
 	else
 	{
-		TempTags.RemoveTags(Tags);
+		asset_data.Tags.RemoveTags(Tags);
 	}
-	GetSaveObject(bGlobal)->GuidTags.Add(Guid,TempTags);
+	GetSaveObject(bGlobal)->Vars_Guid[Guid]=asset_data;
+}
+
+void UOmegaSaveSubsystem::SetGuidHasTags_List(TArray<FGuid> Guids, FGameplayTagContainer Tags, bool HasTags,
+	bool bGlobal)
+{
+	for(FGuid i : Guids)
+	{
+		SetGuidHasTags(i,Tags,HasTags,bGlobal);
+	}
 }
 
 
-
-bool UOmegaSaveSubsystem::GetDoesGuidHaveTags(FGuid Guid, FGameplayTagContainer Tags, bool bGlobal)
+bool UOmegaSaveSubsystem::GetDoesGuidHaveTags(FGuid Guid, FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
 {
-	const FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->GuidTags.FindOrAdd(Guid);
-	return TempTags.HasAllExact(Tags);
+	const FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->Vars_Guid.FindOrAdd(Guid).Tags;
+	if(bExact)
+	{
+		return TempTags.HasAllExact(Tags);
+	}
+	return TempTags.HasAll(Tags);
+}
+
+TArray<FGuid> UOmegaSaveSubsystem::GetSaveGuids_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
+{
+	TArray<FGuid> out;
+	TArray<FGuid> keys;
+	GetSaveObject(bGlobal)->Vars_Guid.GetKeys(keys);
+	for(FGuid i : keys)
+	{
+		if(GetDoesGuidHaveTags(i,Tags,bExact,bGlobal))
+		{
+			out.Add(i);
+		}
+	}
+	return out;
 }
 
 //////////////
@@ -628,7 +654,7 @@ UPrimaryDataAsset* UOmegaSaveSubsystem::GetSoftProperty_DataAsset(const FString&
 bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Conditions)
 {
 	TArray<UOmegaSaveCondition*> LocalConditionList = Conditions.Conditions;
-
+	if(LocalConditionList.IsEmpty()) { return true; }
 	for(const auto* TempCol : Conditions.ConditionCollections)
 	{
 		LocalConditionList.Append(TempCol->Conditions);
@@ -786,6 +812,7 @@ int32 UOmegaSaveSubsystem::GetDynamicVariableValue(UOmegaDynamicSaveVariable* Va
 {
 	return FCString::Atoi(*GetSaveObject(bGlobal)->DynamicVariableValues.FindOrAdd(Variable));
 }
+
 
 // ====================================================================================================
 // Story State

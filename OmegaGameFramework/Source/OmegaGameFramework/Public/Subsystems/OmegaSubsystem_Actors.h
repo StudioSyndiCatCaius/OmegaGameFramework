@@ -12,7 +12,7 @@
 #include "OmegaSubsystem_Actors.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorInteraction, AActor*, Instigator, AActor*, Target, FGameplayTag, Tag,UObject*, Context);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorInteraction, AActor*, InteractInstigator, AActor*, Target, FGameplayTag, Tag,UObject*, Context);
 
 USTRUCT()
 struct FOmegaActorGroupData
@@ -28,7 +28,7 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Interactable
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Interaction")
-	void OnInteraction(AActor* Instigator, FGameplayTag Tag, UObject* Context);
+	void OnInteraction(AActor* InteractInstigator, FGameplayTag Tag, UObject* Context);
 };
 
 
@@ -44,7 +44,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSubsystem : public UWorldSubsystem
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
-	UPROPERTY() TArray<AOmegaActorProcessor*> active_processors;
+	UPROPERTY() TMap<TSubclassOf<AOmegaActorProcessor>,AOmegaActorProcessor*> active_processors;
 	UPROPERTY() TArray<UActorIdentityComponent*> REF_ActorIdComps;
 	UPROPERTY() TMap<FGameplayTag, FOmegaActorGroupData> actorGroups;
 public:

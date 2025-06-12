@@ -33,6 +33,20 @@ void UOmegaMessageSubsystem::FireCustomGameplayMessage(UObject* Instigator, FTex
 	FireGameplayMessage(LocalMessageData);
 }
 
+UObject* UOmegaGameplayMessage::TryGetMessageInstigator(TSubclassOf<UObject> Class, bool& result)
+{
+	if(UObject* _temp=GetMessageInstigator())
+	{
+		if(!Class || _temp->GetClass()->IsChildOf(Class))
+		{
+			result=true;
+			return _temp;
+		}
+	}
+	result=false;
+	return nullptr;
+}
+
 FSlateBrush UOmegaGameplayMessage::GetMessageBrush_Implementation()
 {
 	return  Temp_Brush;

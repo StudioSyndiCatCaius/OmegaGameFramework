@@ -85,6 +85,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaCombatEncounter_Component : public UActorComp
 
 	UPROPERTY()
 	TArray<UCombatantComponent*> REF_BattlerCombatants;
+
+	UPROPERTY() float encounter_xp;
 	
 protected:
 	// Called when the game starts
@@ -136,7 +138,13 @@ public:
 	AOmegaCombatEncounter_Stage* GetCurrent_Stage() const;
 	UFUNCTION(BlueprintPure,Category="Encounter")
 	AOmegaCombatEncounter_Instance* GetCurrent_Encounter() const;
-	
+
+	UFUNCTION(BlueprintCallable,Category="Encounter")
+	void SetXP(float xp);
+	UFUNCTION(BlueprintCallable,Category="Encounter")
+	void AddXP(float xp);
+	UFUNCTION(BlueprintPure,Category="Encounter")
+	float GetXP() const;
 };
 
 UINTERFACE(MinimalAPI)

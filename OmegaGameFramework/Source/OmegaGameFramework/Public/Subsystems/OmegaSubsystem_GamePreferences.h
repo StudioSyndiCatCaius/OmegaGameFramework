@@ -193,9 +193,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPreferencesFunctions : public UBlueprintFunct
 {
 	GENERATED_BODY()
 public:
-	
-	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Check Preference (Bool)")
-	static bool CheckGamePreference_Bool(const UObject* WorldContextObject, UGamePreference* Preference, TEnumAsByte<EOmegaBranch>& Outcome);
+	 
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject",ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Check Preference (Bool)")
+	static bool CheckGamePreference_Bool(const UObject* WorldContextObject, UGamePreference* Preference, bool& Outcome);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Check Preference (Int)")
 	static int32 CheckGamePreference_Int(const UObject* WorldContextObject, UGamePreference* Preference, int32 CheckValue, TEnumAsByte<EOmegaComparisonMethodSimple>& Outcome);

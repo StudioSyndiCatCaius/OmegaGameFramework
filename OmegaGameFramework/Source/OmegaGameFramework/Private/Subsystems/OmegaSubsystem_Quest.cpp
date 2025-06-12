@@ -3,6 +3,7 @@
 
 #include "Subsystems/OmegaSubsystem_Quest.h"
 #include "Engine/World.h"
+#include "Functions/OmegaFunctions_Save.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 
@@ -20,60 +21,19 @@ UOmegaQuest* UOmegaQuestTypeScript::GetQuestAsset() const
 	return nullptr;
 }
 
-void UOmegaQuestTypeScript::EndQuest(bool bComplete) const
+UOmegaQuest::UOmegaQuest()
 {
-	SetComplete(bComplete);
-	GetQuestComponent()->EndQuest(bComplete);
+	if(!Guid.IsValid()) { Guid= FGuid::NewGuid();}
 }
 
-void UOmegaQuestTypeScript::OnLoad_Implementation(UOmegaQuestComponent* Component, FJsonObjectWrapper Data) const
-{
-	
-}
 
-FJsonObjectWrapper UOmegaQuestTypeScript::OnSave_Implementation(UOmegaQuestComponent* Component, FJsonObjectWrapper Data) const
-{
-	return Data;
-}
 
 bool UOmegaQuestTypeScript::CanQuestStart_Implementation() const
 {
 	return true;
 }
 
-void UOmegaQuestTypeScript::SetComplete_Implementation(bool bComplete) const
-{
-	if(GetQuestComponent())
-	{
-		GetQuestComponent()->JsonSaveData.JsonObject->SetBoolField("complete",bComplete);
-	}
-}
 
-void UOmegaQuestTypeScript::SetActive_Implementation(bool bActive) const
-{
-	if(GetQuestComponent())
-	{
-		GetQuestComponent()->JsonSaveData.JsonObject->SetBoolField("active",bActive);
-	}
-}
-
-bool UOmegaQuestTypeScript::IsComplete_Implementation() const
-{
-	if(GetQuestComponent())
-	{
-		return GetQuestComponent()->JsonSaveData.JsonObject->GetBoolField("complete");
-	}
-	return false;
-}
-
-bool UOmegaQuestTypeScript::IsActive_Implementation() const
-{
-	if(GetQuestComponent())
-	{
-		return GetQuestComponent()->JsonSaveData.JsonObject->GetBoolField("active");
-	}
-	return false;
-}
 
 void UOmegaQuestSubsystem::local_RegisterQuestComponent(UOmegaQuestComponent* comp, bool comp_registered)
 {
@@ -94,7 +54,7 @@ UOmegaQuestComponent* UOmegaQuestSubsystem::GetQuest_FirstWithAsset(UOmegaQuest*
 {
 	for(auto* i : REF_QuestComps)
 	{
-		if(i && i->GetQuestAsset()==Quest)
+		if(i && i->IsValidLowLevel() && i->GetQuestAsset()==Quest)
 		{
 			return i;
 		}
@@ -137,21 +97,38 @@ TArray<UOmegaQuestComponent*> UOmegaQuestSubsystem::GetQuests_Complete()
 	return out;
 }
 
-void UOmegaQuestComponent::TryLoadFromJsonSave()
+void UOmegaQuestComponent::LoadQuestData(FOmegaQuestData Data)
 {
-	if(QuestAsset && QuestAsset->QuestScript)
+	QuestData=Data;
+	if(QuestAsset->QuestScript)
 	{
-		JsonSaveData=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData->DataAsset_Json.FindOrAdd(QuestAsset);
-		QuestAsset->QuestScript->OnLoad(this, JsonSaveData);
+		QuestAsset->QuestScript->OnLoad(this);
 	}
 }
 
-void UOmegaQuestComponent::TrySaveToJsonSave()
+void UOmegaQuestComponent::TryLoad_Auto()
 {
-	if(QuestAsset && QuestAsset->QuestScript)
+	if(QuestAsset)
 	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()
-			->ActiveSaveData->DataAsset_Json.Add(QuestAsset,QuestAsset->QuestScript->OnSave(this, JsonSaveData));
+		if(UOmegaSaveGame* _save=UOmegaSaveFunctions::GetSave_Game(this))
+		{
+			LoadQuestData(_save->quest_data.FindOrAdd(QuestAsset));
+		}
+	}
+}
+
+void UOmegaQuestComponent::TrySave_Auto()
+{
+	if(QuestAsset)
+	{
+		if(UOmegaSaveGame* _save=UOmegaSaveFunctions::GetSave_Game(this))
+		{
+			_save->quest_data.Add(QuestAsset,QuestData);
+			if(QuestAsset->QuestScript)
+			{
+				QuestAsset->QuestScript->OnSave(this);
+			}
+		}
 	}
 }
 
@@ -166,7 +143,7 @@ void UOmegaQuestComponent::BeginPlay()
 	}
 	if(bAutoLoadFromSaveJson)
 	{
-		TryLoadFromJsonSave();
+		TryLoad_Auto();
 	}
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->local_RegisterQuestComponent(this,true);
 	Super::BeginPlay();
@@ -174,7 +151,7 @@ void UOmegaQuestComponent::BeginPlay()
 
 void UOmegaQuestComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if(EndPlayReason==EEndPlayReason::Destroyed)
+	if(EndPlayReason==EEndPlayReason::Destroyed || EndPlayReason==EEndPlayReason::LevelTransition)
 	{
 		if(GetWorld()->GetGameInstance())
 		{
@@ -197,7 +174,7 @@ void UOmegaQuestComponent::SetQuestAsset(UOmegaQuest* Quest)
 
 bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
  {
-	if(!IsQuestActive() && !IsQuestComplete())
+	if(CanQuestStart())
 	{
 		if(Quest || !QuestAsset)
 		{
@@ -205,6 +182,7 @@ bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
 		}
 		if(QuestAsset)
 		{
+			QuestData.Status=Active;
 			QuestAsset->QuestScript->OnQuestStart(this);
 			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->OnQuestStart.Broadcast(this,Quest);
 			OnQuestStart.Broadcast(this,Quest);
@@ -220,24 +198,53 @@ bool UOmegaQuestComponent::EndQuest(bool bComplete)
 	{
 		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->OnQuestEnd.Broadcast(this,QuestAsset);
 		OnQuestEnd.Broadcast(this,QuestAsset);
+		if (bComplete)
+		{
+			SetQuestStatus(Complete);
+		}
+		else
+		{
+			SetQuestStatus(Failed);
+		}
 	}
 	return false;
 }
 
-bool UOmegaQuestComponent::IsQuestActive()
+void UOmegaQuestComponent::SetQuestStatus(EOmegaQuestStatus NewStatus)
 {
-	if(QuestAsset && QuestAsset->QuestScript)
+	if(QuestData.Status!=NewStatus)
 	{
-		return QuestAsset->QuestScript->IsActive();
+		QuestData.Status=NewStatus;
+		OnQuestStatusChanged.Broadcast(this,NewStatus);
+	}
+}
+
+bool UOmegaQuestComponent::IsQuestActive() const
+{
+	if(QuestAsset)
+	{
+		return QuestData.Status==Active;
 	}
 	return false;
 }
 
-bool UOmegaQuestComponent::IsQuestComplete()
+bool UOmegaQuestComponent::IsQuestComplete() const
 {
-	if(QuestAsset && QuestAsset->QuestScript)
+	
+	if(QuestAsset)
 	{
-		return QuestAsset->QuestScript->IsComplete();
+		return QuestData.Status==Complete;
+	}
+	return false;
+}
+
+bool UOmegaQuestComponent::CanQuestStart() const
+{
+	if(QuestAsset)
+	{
+		return !IsQuestActive() &&
+			!IsQuestComplete() &&
+			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(QuestAsset->Condition_ToStart);
 	}
 	return false;
 }

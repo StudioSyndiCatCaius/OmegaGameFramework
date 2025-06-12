@@ -502,17 +502,17 @@ UOmegaGrid3D_Occupant* AOmegaGrid3D_Tile::GetFirstOccupant() const
 }
 
 AActor* AOmegaGrid3D_Tile::GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class,
-	TEnumAsByte<EOmegaFunctionResult>& Result)
+	bool& Result)
 {
 	for(auto* oc : GetOccupants())
 	{
 		if(oc && (!Class || oc->GetOwner()->GetClass()->IsChildOf(Class)))
 		{
-			Result=Success;
+			Result=true;
 			return oc->GetOwner();
 		}
 	}
-	Result=Fail;
+	Result=false;
 	return nullptr;
 }
 
@@ -663,7 +663,7 @@ FOmegaGrid3DPathfindResult UOmegaGrid3DFunctions::Pathfind3D_AllPossiblePaths(co
             	//skip if blocked by modifier
 				if(Modifier && Modifier->GetClass()->ImplementsInterface(UDataInterface_Pathfind3D::StaticClass()))
 				{
-					if(!IDataInterface_Pathfind3D::Execute_CanAddCoordinate(Modifier,metadata,NextPos))
+					if(!IDataInterface_Pathfind3D::Execute_CanAddCoordinate(Modifier,metadata,NextPos,StepsRemaining))
 					{
 						continue;
 					}
@@ -832,7 +832,7 @@ int32 UOmegaGrid3D_PathfindScript::ModifyDistance_Implementation(int32 distance,
 	return distance;
 }
 
-bool UOmegaGrid3D_PathfindScript::CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coord) const
+bool UOmegaGrid3D_PathfindScript::CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coord, int32 MovesRemaining) const
 {
 	return true;
 }
@@ -850,13 +850,13 @@ int32 UOmegaGrid3D_PathfindAction::ModifyDistance_Implementation(FOmegaGrid3DPat
 	return out;
 }
 
-bool UOmegaGrid3D_PathfindAction::CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate) const
+bool UOmegaGrid3D_PathfindAction::CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate, int32 MovesRemaining) const
 {
 	for(auto* s : Scripts)
 	{
 		if(s)
 		{
-			if(!s->CanAddCoordinate(metadata,coordinate))
+			if(!s->CanAddCoordinate(metadata,coordinate,MovesRemaining))
 			{
 				return false;
 			}

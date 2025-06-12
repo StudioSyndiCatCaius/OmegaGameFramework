@@ -32,7 +32,7 @@ UObject* UOmegaSubsystem_AssetHandler::GetSortedAsset_FromLabel(const FString& N
 {
 	if(SortedAssets.Contains(Name))
 	{
-		return SortedAssets[Name];
+		return SortedAssets[Name].LoadSynchronous();
 	}
 	return nullptr;
 }
@@ -91,4 +91,17 @@ TArray<UObject*> UOmegaAssetHandlerFunctions::GetSortedAssets_WithTags(FGameplay
 		}
 	}
 	return out;
+}
+
+UObject* UOmegaAssetHandlerFunctions::GetSortedAsset_FromName(const FString& Name, UClass* Class, bool& result)
+{
+	
+	UObject* _temp=GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>()->GetSortedAsset_FromLabel(Name);
+	if(_temp && (!Class || _temp->GetClass()->IsChildOf(Class)))
+	{
+		result=true;
+		return nullptr;
+	}
+	result=false;
+	return nullptr;
 }

@@ -147,7 +147,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(WorldContext="WorldContextObject",DeterminesOutputType="FilterClass"))
 	static TArray<AActor*> GetAllActorsWithIdentity(UObject* WorldContextObject, UPrimaryDataAsset* Asset, TSubclassOf<AActor> FilterClass);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject",ExpandEnumAsExecs = "Outcome",DeterminesOutputType="FilterClass"),DisplayName="Ω🔴 Get First Actor /w Identity")
-	static AActor* GetFirstActorWithIdentity(UObject* WorldContextObject,UPrimaryDataAsset* Asset, TSubclassOf<AActor> FilterClass,  TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject",ExpandBoolAsExecs = "Outcome",DeterminesOutputType="FilterClass"),DisplayName="Ω🔴 Get First Actor /w Identity")
+	static AActor* GetFirstActorWithIdentity(UObject* WorldContextObject,UPrimaryDataAsset* Asset, TSubclassOf<AActor> FilterClass,  bool& Outcome);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandBoolAsExecs = "result",DeterminesOutputType="Class"))
+	static UPrimaryDataAsset* GetActorIdentityAsset(AActor* Actor, bool& result,TSubclassOf<UPrimaryDataAsset> Class=nullptr);
 
 };

@@ -116,6 +116,8 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Select;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
+	USoundBase* Sound_Cycle;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Error;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sound")
 	USoundBase* Sound_Menu_Open;
@@ -183,7 +185,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSlateFunctions : public UBlueprintFunctionLib
 
 public:
 
-	UFUNCTION(BlueprintPure,Category="Omega|Slate", DisplayName="Get Slate Settings")
+	UFUNCTION(BlueprintPure,Category="Omega|Settings", DisplayName="Get OMEGA Settings (Slate)")
 	static UOmegaSettings_Slate* GetCurrentSlateStyle();
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate")

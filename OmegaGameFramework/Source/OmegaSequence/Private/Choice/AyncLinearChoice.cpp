@@ -26,6 +26,8 @@ UWorld* UOmegaLinearChoice::GetWorld() const
 	return nullptr;
 }
 
+
+
 UGameInstance* UOmegaLinearChoice::GetGameInstance() const
 {
 	return GameInstanceRef;

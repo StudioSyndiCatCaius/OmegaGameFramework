@@ -375,7 +375,7 @@ bool UEquipmentSlot::CanSlotEquipItem(UPrimaryDataAsset* Item)
 }
 
 UPrimaryDataAsset* UOmegaEquipmentFunctions::TryGetEquipmentInSlot(UObject* Target, UEquipmentSlot* Slot,
-	TEnumAsByte<EOmegaFunctionResult>& Outcome)
+	bool& Outcome)
 {
 	if(Slot)
 	{
@@ -384,12 +384,12 @@ UPrimaryDataAsset* UOmegaEquipmentFunctions::TryGetEquipmentInSlot(UObject* Targ
 			bool _boolReturn;
 			if(UPrimaryDataAsset* _out = Cast<UEquipmentComponent>(_equipComp)->GetEquipmentInSlot(Slot,_boolReturn))
 			{
-				Outcome=Success;
+				Outcome=true;
 				return _out;
 			}
 		}
 	}
-	Outcome=Fail;
+	Outcome=false;
 	return nullptr;
 }
 

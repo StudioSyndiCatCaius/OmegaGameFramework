@@ -178,14 +178,14 @@ TArray<UOmegaObjectTrait*> AOmegaCharacter::GetTraits_Implementation()
 }
 
 
-void AOmegaCharacter::Local_LevelUpdate(int32 NewLevel)
+void AOmegaCharacter::Local_LevelUpdate(ULevelingComponent* comp,int32 NewLevel)
 {
 	Combatant->Level = Leveling->GetCurrentLevel();
 }
 
 void AOmegaCharacter::Local_UpdateDataItem(UOmegaDataItem* NewItem)
 {
-	Combatant->CombatantDataAsset = NewItem;
+//	Combatant->CombatantDataAsset = NewItem;
 	Combatant->Update();
 }
 

@@ -51,6 +51,7 @@ AOmegaInteractable::AOmegaInteractable()
 	ActorID=CreateOptionalDefaultSubobject<UActorIdentityComponent>("ActorID");
 	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
 	NameText=CreateOptionalDefaultSubobject<UTextRenderComponent>("Text");
+	NameText->bHiddenInGame=true;
 	NameText->HorizontalAlignment=EHTA_Center;
 	NameText->SetupAttachment(RangeBox);
 	SpringArm=CreateOptionalDefaultSubobject<USpringArmComponent>("SpringArm");
@@ -60,7 +61,9 @@ AOmegaInteractable::AOmegaInteractable()
 		Camera=CreateOptionalDefaultSubobject<UCameraComponent>("Camera");
 		Camera->FieldOfView=50;
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> SOFT_CamMesh(TEXT("/OmegaGameFramework/Meshes/util/sm_UTIL_CameraMini.sm_UTIL_CameraMini"));
+#if WITH_EDITOR
 		Camera->SetCameraMesh(SOFT_CamMesh.Object);
+#endif
 		Camera->SetupAttachment(SpringArm);
 		SpringArm->TargetArmLength=300;
 	}

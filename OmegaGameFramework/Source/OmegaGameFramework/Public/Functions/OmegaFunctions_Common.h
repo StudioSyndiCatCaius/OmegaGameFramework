@@ -131,35 +131,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Ω Get All Assets of Class")
 	static TArray<UObject*> GetAllAssetsOfClass(TSubclassOf<UObject> Class, bool bIncludeSubclasses);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Asset (from Path)")
-	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Get Asset (from Path)")
+	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, bool& Outcome);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Ω🔴 Get Assets List (from Path)")
 	static TArray<UObject*> GetAssetList_FromPath(const TArray<FString> AssetPaths, TSubclassOf<UObject> Class);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Class (from Path)")
-	static UClass* GetClass_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Get Class (from Path)")
+	static UClass* GetClass_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Asset (from Lua Field)")
-	static UObject* GetAsset_FromLuaField(FLuaValue Lua, const FString& Field, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Get Asset (from Lua Field)")
+	static UObject* GetAsset_FromLuaField(FLuaValue Lua, const FString& Field, TSubclassOf<UObject> Class, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Class (from Lua Field)")
-	static UClass* GetClass_FromLuaField(FLuaValue Lua, const FString& Field, TSubclassOf<UObject> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Get Class (from Lua Field)")
+	static UClass* GetClass_FromLuaField(FLuaValue Lua, const FString& Field, TSubclassOf<UObject> Class, bool& Outcome);
 	
 	//###############################################################################
 	// Player
 	//###############################################################################
 	UFUNCTION(BlueprintPure, Category="Omega|Gameplay|Player")
-	static AActor* GetPlayerMouseOverActor(APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius);
+	static AActor* GetPlayerMouseOverActor(const APlayerController* Player, ETraceTypeQuery TraceChannel, float TraceSphereRadius);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay|Player", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Player"))
 	static void SetPlayerCustomInputMode(const UObject* WorldContextObject, APlayerController* Player,  UOmegaInputMode* InputMode);
 
 	UFUNCTION(BlueprintPure, Category="Omega|Gameplay|Player")
-	static float  GetPlayerCameraFadeAmount(APlayerController* Player);
+	static float  GetPlayerCameraFadeAmount(const APlayerController* Player);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Gameplay|Player")
-	static FLinearColor  GetPlayerCameraFadeColor(APlayerController* Player);
+	static FLinearColor  GetPlayerCameraFadeColor(const APlayerController* Player);
 	
 	//###############################################################################
 	// Actor Binding
@@ -187,8 +187,8 @@ public:
 	static AOmegaGameplaySystem* GetActiveGameplaySystem(const UObject* WorldContextObject, TSubclassOf<AOmegaGameplaySystem> SystemClass, bool& result);
 
 	//Get an Active Gameplay System by Class
-	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Component",ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Get Gameplay System (w/ Component)")
-	static UActorComponent* GetFirstActiveGameplaySystemWithComponent(const UObject* WorldContextObject, TSubclassOf<UActorComponent> Component, FName RequiredTag, AOmegaGameplaySystem*& system, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Component",ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Get Gameplay System (w/ Component)")
+	static UActorComponent* GetFirstActiveGameplaySystemWithComponent(const UObject* WorldContextObject, TSubclassOf<UActorComponent> Component, FName RequiredTag, AOmegaGameplaySystem*& system, bool& Outcome);
 	
 	//Get an Active Gameplay Module by Class
 	UFUNCTION(BlueprintPure, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="ModuleClass"))
@@ -204,7 +204,7 @@ public:
 	//###############################################################################
 
 	//Reutrns "Inactive" until game flag is Active, then sets the flag back to "Inactive"
-	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", DisplayName="Ω🔴 Switch on Flag Active", meta=(WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", DisplayName="Ω🔴 Switch on Flag Active", meta=(WorldContext = "WorldContextObject", ExpandBoolAsExecs = "Outcome"))
 	static void OnFlagActiveReset(const UObject* WorldContextObject, const FString& Flag, bool bDeactivateFlagOnActive, TEnumAsByte<EOmegaFlagResult>& Outcome);
 
 	//###############################################################################
@@ -221,8 +221,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Tags")
 	static void SetComponentTagActive(UActorComponent* Component, FName Tag, bool bIsActive);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors")
-	static TArray<AActor*> GetActorsFromComponents(TArray<UActorComponent*> Components);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(DeterminesOutputType="Class"))
+	static TArray<AActor*> GetActorsFromComponents(TArray<UActorComponent*> Components,TSubclassOf<UActorComponent> Class=nullptr);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(DeterminesOutputType="ActorClass"))
 	static TArray<AActor*> GetActorsFromChildActorComponents(TArray<UChildActorComponent*> Components, TSubclassOf<AActor> ActorClass);
@@ -249,15 +249,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="ExcludedActors"))
 	static TArray<AActor*> FilterActorsWithComponents(TArray<AActor*> Actors, TSubclassOf<UActorComponent> ComponentClass, TArray<AActor*> ExcludedActors);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Actor (From Object)")
-	static AActor* TryGetActorFromObject(UObject* Object, TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Actor (From Object)")
+	static AActor* TryGetActorFromObject(UObject* Object, TSubclassOf<AActor> Class, bool& Outcome);
 
 	//Will attempt to get a component, casting the object as component, and actor, or a sibling component.
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Component (From Object)")
-	static UActorComponent* TryGetComponentFromObject(UObject* Object, TSubclassOf<UActorComponent> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Component (From Object)")
+	static UActorComponent* TryGetComponentFromObject(UObject* Object, TSubclassOf<UActorComponent> Class, bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Component (First with Tag)")
-	static UActorComponent* TryGetFirstComponentWithTag(UObject* Object, TSubclassOf<UActorComponent> Class, FName Tag, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Component (First with Tag)")
+	static UActorComponent* TryGetFirstComponentWithTag(UObject* Object, TSubclassOf<UActorComponent> Class, FName Tag, bool& Outcome);
 
 	UFUNCTION(BlueprintPure, Category="Omega|Actors", meta=(DeterminesOutputType="Class", AdvancedDisplay="ExcludedActors"))
 	static TArray<AActor*> FilterActorsWithTag(TArray<AActor*> Actors, FName Tag, bool bExclude,TSubclassOf<AActor> Class);
@@ -271,8 +271,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(WorldContext="WorldContextObject", AdvancedDisplay="Player"))
 	static void SetActorInputEnabled(UObject* WorldContextObject, AActor* Actor, bool bEnabled, APlayerController* Player);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Child Actor As Class")
-	static AActor* TryGetChildActorAsClass(UChildActorComponent* ChildActor, TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Try Get Child Actor As Class")
+	static AActor* TryGetChildActorAsClass(UChildActorComponent* ChildActor, TSubclassOf<AActor> Class, bool& Outcome);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class"),DisplayName="Ω Get Actors (from Hit Results)")
 	static TArray<AActor*> GetActorsFromHitResults(TArray<FHitResult> Hits, TSubclassOf<AActor> Class);
@@ -314,8 +314,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta=(WorldContext = "WorldContextObject"))
 	static void SetTagsAddedToSaveGame(const UObject* WorldContextObject, FGameplayTagContainer Tags, bool Saved, bool bGlobal);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta=(WorldContext = "WorldContextObject", ExpandEnumAsExecs = "Outcome"),DisplayName="Ω🔴 Check Save Tag Query")
-	static void SwitchOnSaveTagQuery(const UObject* WorldContextObject, FGameplayTagQuery TagQuery, bool bGlobal, TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta=(WorldContext = "WorldContextObject", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Check Save Tag Query")
+	static void SwitchOnSaveTagQuery(const UObject* WorldContextObject, FGameplayTagQuery TagQuery, bool bGlobal, bool& Outcome);
 
 	//###############################################################################
 	// Json
@@ -341,8 +341,8 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|General",DisplayName="Ω Get Labels (From Object List)")
 	static TArray<FString> GetLabelsFromObjects(TArray<UObject*> Objects);
-	UFUNCTION(BlueprintCallable,Category="Omega|General",meta=(DeterminesOutputType="Class",ExpandEnumAsExecs = "Outcome"), DisplayName="Ω🔴 Select Object (From Label)") 
-	static UObject* SelectObjectFromLabel(TArray<UObject*> ObjectsIn, const FString& Label, TSubclassOf<UObject> Class,TEnumAsByte<EOmegaFunctionResult>& Outcome);
+	UFUNCTION(BlueprintCallable,Category="Omega|General",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs = "Outcome"), DisplayName="Ω🔴 Select Object (From Label)") 
+	static UObject* SelectObjectFromLabel(TArray<UObject*> ObjectsIn, const FString& Label, TSubclassOf<UObject> Class,bool& Outcome);
 	UFUNCTION(BlueprintCallable,Category="Omega|General", DisplayName="Ω Filter Objects (By Labels)") 
 	static TArray<UObject*> FilterObjectsFromLabels(TArray<UObject*> ObjectsIn, TArray<FString> Labels);
 	//###############################################################################

@@ -310,7 +310,7 @@ public:
 	UOmegaGrid3D_Occupant* GetFirstOccupant() const;
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",meta=(DeterminesOutputType="Class",ExpandEnumAsExecs="Result"))
-    AActor* GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, TEnumAsByte<EOmegaFunctionResult>& Result);
+    AActor* GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, bool& Result);
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	bool HasOccupant(UOmegaGrid3D_Occupant* Occupant) const;
@@ -366,6 +366,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D")
 	static TArray<FIntVector> GetCoordinatesFromPathfindResult(FOmegaGrid3DPathfindResult in);
 
+	//Will attempt to get the tile info and possible occupant, from an actor if need be
 	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(DeterminesOutputType="TileClass",ExpandBoolAsExecs="result"))
 	static AOmegaGrid3D_Tile* GetGrid3DTileInfo(UObject* Object, TSubclassOf<AOmegaGrid3D_Tile> TileClass, UOmegaGrid3D_Occupant*& Occupant, bool& result);
 
@@ -396,7 +397,7 @@ public:
 	int32 ModifyDistance(FOmegaGrid3DPathfindMeta metadata, int32 in) const;
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Omega|Pathfind")
-	bool CanAddCoordinate(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate) const;
+	bool CanAddCoordinate(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate, int32 MovesRemaining) const;
 };
 
 
@@ -411,7 +412,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent,Category="Pathfind")
 	int32 ModifyDistance(int32 distance, FOmegaGrid3DPathfindMeta metadata) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Pathfind")
-	bool CanAddCoordinate(FOmegaGrid3DPathfindMeta metadata,FIntVector coord) const;
+	bool CanAddCoordinate(FOmegaGrid3DPathfindMeta metadata,FIntVector coord, int32 MovesRemaining) const;
 
 };
 
@@ -427,6 +428,6 @@ public:
 	TArray<UOmegaGrid3D_PathfindScript*> Scripts;
 
 	virtual int32 ModifyDistance_Implementation(FOmegaGrid3DPathfindMeta metadata, int32 in) const override;
-	virtual bool CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate) const override;
+	virtual bool CanAddCoordinate_Implementation(FOmegaGrid3DPathfindMeta metadata, FIntVector coordinate, int32 MovesRemaining) const override;
 
 };

@@ -264,14 +264,14 @@ FText UGamePreferenceSubsystem::GetGamePreference_Text(UGamePreference* Preferen
 }
 
 bool UOmegaPreferencesFunctions::CheckGamePreference_Bool(const UObject* WorldContextObject,
-	UGamePreference* Preference, TEnumAsByte<EOmegaBranch>& Outcome)
+	UGamePreference* Preference, bool& Outcome)
 {
 	if(WorldContextObject && Preference)
 	{
-		Outcome=Yes;
+		Outcome=true;
 		return WorldContextObject->GetWorld()->GetSubsystem<UGamePreferenceSubsystem>()->GetGamePreferenceBool(Preference);
 	}
-	Outcome=No;
+	Outcome=false;
 	return false;
 }
 

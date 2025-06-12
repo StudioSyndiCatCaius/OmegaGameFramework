@@ -28,6 +28,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Interactable")
 	TArray<UOmegaObjectTrait*> Traits;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override;
+//	virtual void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override { Traits=NewTraits; };
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable",DisplayName="Name")
 	FText DisplayName;

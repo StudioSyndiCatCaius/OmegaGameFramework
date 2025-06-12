@@ -38,21 +38,16 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnAsyncFadeCamReached Finished;
-	
-	UPROPERTY()
-	APlayerController* PlayerRef;
-	UPROPERTY()
-	bool LocalIsFinishing;
-	UPROPERTY()
-	float TargetFadeState;
-	UPROPERTY()
-	FLinearColor TargetFadeColor;
-	UPROPERTY()
-	float TargetDuration;
-	UPROPERTY()
-	bool Local_FadeAudio;
-	UPROPERTY()
-	bool Local_HoldOnFinish;
+
+	UPROPERTY() bool ending;
+	UPROPERTY() APlayerController* PlayerRef;
+	UPROPERTY() bool LocalIsFinishing;
+	UPROPERTY() float TargetFadeState;
+	UPROPERTY() FLinearColor TargetFadeColor;
+	UPROPERTY() float time_target;
+	UPROPERTY() float time_elapsed;
+	UPROPERTY() bool Local_FadeAudio;
+	UPROPERTY() bool Local_HoldOnFinish;
 	
 	virtual void Activate() override;
 	

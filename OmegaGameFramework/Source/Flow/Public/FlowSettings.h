@@ -44,5 +44,5 @@ public:
 	static TArray<UFlowAsset*> FilterFlowAssetsWithTrait(TArray<UFlowAsset*> in, TSubclassOf<UFlowAssetTrait> Trait);
 
 	UFUNCTION(BlueprintCallable,Category="Flow",meta=(ExpandEnumAsExecs="Result",DeterminesOutputType="Class"))
-	static UFlowAssetTrait* GetFirstAssetTrait(UFlowAsset* FlowAsset, TSubclassOf<UFlowAssetTrait> Class, TEnumAsByte<EOmegaFunctionResult>& Result);
+	static UFlowAssetTrait* GetFirstAssetTrait(UFlowAsset* FlowAsset, TSubclassOf<UFlowAssetTrait> Class, bool& Result);
 };

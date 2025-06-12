@@ -32,6 +32,7 @@ void UOmegaGameplayModule::Native_Initialize()
 	if(UOmegaSaveSubsystem* _sys = GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>())
 	{
 		_sys->OnNewGameStarted.AddDynamic(this, &UOmegaGameplayModule::GameFileStarted);
+		GameFileStarted(_sys->ActiveSaveData,FGameplayTagContainer());
 	}
 	
 	Initialized();

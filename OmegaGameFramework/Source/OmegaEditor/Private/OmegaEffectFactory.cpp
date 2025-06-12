@@ -23,9 +23,13 @@ UDataItemThumbnailRender::UDataItemThumbnailRender(const FObjectInitializer& Obj
 
 FSlateBrush local_GetIcon(UObject* object)
 {
-	if(object && object->GetClass()->ImplementsInterface(UDataInterface_AssetThumbnail::StaticClass()))
+	if(!FUObjectThreadContext::Get().IsRoutingPostLoad)
 	{
-		return IDataInterface_AssetThumbnail::Execute_GetThumbnail_Brush(object);
+		if(object && !object->HasAllFlags(RF_NeedPostLoadSubobjects) &&  object->GetClass()->ImplementsInterface(UDataInterface_AssetThumbnail::StaticClass()))
+		{
+		
+			return IDataInterface_AssetThumbnail::Execute_GetThumbnail_Brush(object);
+		}
 	}
 	return FSlateBrush();
 }

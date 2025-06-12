@@ -30,7 +30,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|AssetHandler")
 	void Register_SortedAsset(UObject* Asset, FString Name, bool bOverride);
 
-	UPROPERTY() TMap<FString, UObject*> SortedAssets;
+	UPROPERTY() TMap<FString, TSoftObjectPtr<UObject>> SortedAssets;
 private:
 	
 };
@@ -51,4 +51,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class"),DisplayName="Ω🔴 Get All Sorted Assets (with Tags)")
 	static TArray<UObject*> GetSortedAssets_WithTags(FGameplayTagContainer Tags, UClass* Class);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|SortedAssets",meta=(DeterminesOutputType="Class", ExpandBoolAsExecs="result"),DisplayName="Ω🔴 Get All Sorted Assets (with Tags)")
+	static UObject* GetSortedAsset_FromName(const FString& Name, UClass* Class, bool& result);
 };

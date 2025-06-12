@@ -273,6 +273,10 @@ void UDataWidget::Refresh()
 		}
 		if(GetWidget_IconMaterial())
 		{
+			if(Override_IconMaterial)
+			{
+				GetWidget_IconMaterial()->SetBrushFromMaterial(Override_IconMaterial);
+			}
 			if(UMaterialInstanceDynamic* _dynaMat = GetWidget_IconMaterial()->GetDynamicMaterial())
 			{
 				if(LocalTexture && GetWidget_IconMaterial())

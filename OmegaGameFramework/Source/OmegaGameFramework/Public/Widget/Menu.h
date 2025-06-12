@@ -125,9 +125,9 @@ public:
 	//----------------------------------------------------------------------
 	// ANIMATIONS
 	//----------------------------------------------------------------------
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations",DisplayName="Get Widget Animation (Open)")
 	UWidgetAnimation* GetOpenAnimation();
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations",DisplayName="Get Widget Animation (Close)")
 	UWidgetAnimation* GetCloseAnimation();
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animations")

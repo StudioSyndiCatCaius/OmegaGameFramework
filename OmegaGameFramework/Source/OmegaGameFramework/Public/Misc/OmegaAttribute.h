@@ -127,10 +127,10 @@ public:
 	
 //DataInterface
 	
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const class UObject* Context, FText& Name, FText& Description);
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const class UObject* Context, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush);
-	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color);
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label);
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const class UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const class UObject* Context, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Contex")

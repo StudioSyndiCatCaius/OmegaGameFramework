@@ -26,9 +26,10 @@ public:
 	//General
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Name")
 	FText DamageTypeName;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Icon")
 	FSlateBrush DamageTypeIcon;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Description",meta=(MultiLine))
+	FText DisplayDescription;	
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Color")
 	FLinearColor DamageTypeColor;

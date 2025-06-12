@@ -33,7 +33,7 @@ TArray<UFlowAsset*> UFlowFunctions::FilterFlowAssetsWithTrait(TArray<UFlowAsset*
 }
 
 UFlowAssetTrait* UFlowFunctions::GetFirstAssetTrait(UFlowAsset* FlowAsset, TSubclassOf<UFlowAssetTrait> Class,
-	TEnumAsByte<EOmegaFunctionResult>& Result)
+	bool& Result)
 {
 	if(FlowAsset)
 	{
@@ -41,11 +41,11 @@ UFlowAssetTrait* UFlowFunctions::GetFirstAssetTrait(UFlowAsset* FlowAsset, TSubc
 		{
 			if(trait && trait->GetClass()->IsChildOf(Class))
 			{
-				Result=Success;
+				Result=true;
 				return trait;
 			}
 		}
 	}
-	Result=Fail;
+	Result=false;
 	return nullptr;
 }

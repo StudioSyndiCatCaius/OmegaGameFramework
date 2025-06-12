@@ -23,7 +23,9 @@ public:
 	FOmegaLinearChoices Choices;
 	UPROPERTY(EditAnywhere, Category="Choice")
 	TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass = AOmegaLinearChoiceInstance::StaticClass();
-
+	UPROPERTY(EditAnywhere, Category="Choice")
+	FGameplayTag SaveParamToSet;
+	
 	UPROPERTY()
 	AOmegaLinearChoiceInstance* ChoiceInst;
 	UFUNCTION()

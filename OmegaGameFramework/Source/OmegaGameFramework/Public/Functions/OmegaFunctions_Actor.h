@@ -15,6 +15,8 @@
 // ACTOR
 // =====================================================================================================================
 
+class UArrowComponent;
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaActorFunctions : public UBlueprintFunctionLibrary
 {
@@ -39,6 +41,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(AdvancedDisplay="player"))
 	static TArray<AActor*> FilterActors_OnScreen(TArray<AActor*> actors, float ScreenEdgeTolerance, bool invert, APlayerController* player);
+	
 	
 };
 
@@ -74,9 +77,15 @@ class OMEGAGAMEFRAMEWORK_API UOmegaComponentFunctions : public UBlueprintFunctio
 public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Component")
-	static void LerpSceneComponentTransform(USceneComponent* component, FTransform A, FTransform B, float lerp, bool bWorld);
-
+	static void InterpComponentRotation_FromVector(USceneComponent* component, FVector Vector, float InterpSpeed, bool bWorldSpace);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Component")
+	static void LerpSceneComponentTransform(USceneComponent* component, FTransform A, FTransform B, float lerp, bool bWorld);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Component")
 	static void LerpSceneComponentBetweenComponents(USceneComponent* component, USceneComponent* A, USceneComponent* B, float lerp, bool bWorld);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Component")
+	static void PointArrowComponentToTarget(UArrowComponent* Component, FVector Target);
+
 };

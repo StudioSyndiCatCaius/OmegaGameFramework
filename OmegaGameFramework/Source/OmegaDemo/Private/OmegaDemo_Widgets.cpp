@@ -221,7 +221,7 @@ void UDataWidgetBase_Attribute::SetAttributeComparison_Implementation(bool bComp
 // Leveling
 // ==============================================================================================================
 
-void UDataWidgetBase_Leveling::local_OnXp(float xp, float changed)
+void UDataWidgetBase_Leveling::local_OnXp(ULevelingComponent* comp, float xp, float changed)
 {
 	Refresh();
 }

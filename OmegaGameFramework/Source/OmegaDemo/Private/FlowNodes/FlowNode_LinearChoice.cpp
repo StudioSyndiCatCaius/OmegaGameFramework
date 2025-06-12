@@ -5,6 +5,7 @@
 #include "FlowTypes.h"
 #include "OmegaLinearEventSubsystem.h"
 #include "Engine/World.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 
 UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 {
@@ -20,6 +21,10 @@ UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 
 void UFlowNode_LinearChoice::LocalChoiceSelect(UOmegaLinearChoice* Choice, int32 Index)
 {
+	if(SaveParamToSet.IsValid())
+	{
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData->TagVars_int.Add(SaveParamToSet,Index);
+	}
 	FString OutputLocalName = FString::FromInt(Index);
 	TriggerOutput(FName(OutputLocalName));
 }

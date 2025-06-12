@@ -627,15 +627,38 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
 	return OutSkills;
 }
 
-void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill)
+void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill, bool Added)
 {
-	Skills.Add(Skill);
+	if(Skill)
+	{
+		bool has_interface=Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass());
+		if(Added)
+		{
+			Skills.Add(Skill);
+			if(has_interface)
+			{
+				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,true);
+			}
+		}
+		else
+		{
+			Skills.Remove(Skill);
+			if(has_interface)
+			{
+				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,false);
+			}
+		}
+	}
 }
 
-void UCombatantComponent::RemoveSkill(UPrimaryDataAsset* Skill)
+void UCombatantComponent::AddSkills(TArray<UPrimaryDataAsset*> skill_list, bool Added)
 {
-	Skills.Remove(Skill);
+	for(auto* i : skill_list)
+	{
+		AddSkill(i,Added);
+	}
 }
+
 
 bool UCombatantComponent::SetSkillSourceActive(UObject* SkillSource, bool bActive)
 {

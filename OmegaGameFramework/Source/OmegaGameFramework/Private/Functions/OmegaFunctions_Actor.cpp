@@ -3,7 +3,9 @@
 
 #include "Functions/OmegaFunctions_Actor.h"
 
+#include "Components/ArrowComponent.h"
 #include "Components/Component_ActorIdentity.h"
+#include "Functions/OmegaFunctions_Utility.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -54,6 +56,7 @@ void UOmegaActorFunctions::ApplyActorConfigAsset(AActor* Actor, UOmegaActorConfi
 AActor* UOmegaActorFunctions::ConfigureChildActor(UChildActorComponent* ChildActor, TSubclassOf<AActor> NewClass,
 	UPrimaryDataAsset* NewIdentity, AActor* NewOwner)
 {
+	
 	if(ChildActor)
 	{
 		if(NewClass)
@@ -208,8 +211,24 @@ void UOmegaPawnFunctions::GetPawnControlVectors(APawn* Pawn, bool X, bool Y, boo
 	}
 }
 
+void UOmegaComponentFunctions::InterpComponentRotation_FromVector(USceneComponent* component, FVector Vector, float InterpSpeed,
+	bool bWorldSpace)
+{
+	if(component)
+	{
+		FRotator _start=component->GetRelativeRotation();
+		if(bWorldSpace) { _start=component->GetComponentRotation();}
+		FRotator _inRot=UKismetMathLibrary::RInterpTo(_start,
+			UKismetMathLibrary::ComposeRotators(UOmegaMathFunctions::Conv_VectorToRot_Flat(Vector),_start)
+			,UGameplayStatics::GetWorldDeltaSeconds(component),InterpSpeed);
+
+		if(bWorldSpace) { component->SetWorldRotation(_inRot);}
+		else { component->SetRelativeRotation(_inRot);}
+	}
+}
+
 void UOmegaComponentFunctions::LerpSceneComponentTransform(USceneComponent* component, FTransform A, FTransform B,
-	float lerp, bool bWorld)
+                                                           float lerp, bool bWorld)
 {
 	if(component)
 	{
@@ -237,5 +256,16 @@ void UOmegaComponentFunctions::LerpSceneComponentBetweenComponents(USceneCompone
 		{
 			LerpSceneComponentTransform(component,A->GetRelativeTransform(),B->GetRelativeTransform(),lerp,bWorld);
 		}
+	}
+}
+
+void UOmegaComponentFunctions::PointArrowComponentToTarget(UArrowComponent* Component, FVector Target)
+{
+	if(Component)
+	{
+		FRotator rot_arrow=UKismetMathLibrary::FindLookAtRotation(Component->GetRelativeLocation(),Target);
+		float distance_toArrow=UKismetMathLibrary::Vector_Distance(Component->GetRelativeLocation(),Target);
+		Component->SetRelativeRotation(rot_arrow);
+		Component->ArrowLength=distance_toArrow/Component->ArrowSize;
 	}
 }

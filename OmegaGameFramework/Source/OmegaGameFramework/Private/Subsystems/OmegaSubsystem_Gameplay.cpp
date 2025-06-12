@@ -14,6 +14,19 @@ void UOmegaGameplaySubsystem::Initialize(FSubsystemCollectionBase& Colection)
 	ActiveSystems.Empty();
 }
 
+void UOmegaGameplaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
+{
+	Super::OnWorldBeginPlay(InWorld);
+	UOmegaSaveSubsystem* _sys=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+	for(auto* TempState : _sys->GetActiveStoryStates())
+	{
+		for(auto* TempScript : TempState->Scripts)
+		{
+			TempScript->OnLevelChange(_sys, TempState,UGameplayStatics::GetCurrentLevelName(_sys));
+		}
+	}
+}
+
 AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag)
 {
 	if (Class)

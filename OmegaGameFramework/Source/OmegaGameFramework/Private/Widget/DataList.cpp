@@ -130,6 +130,10 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		TempEntry->HoverOffset_Curve=OverrideHoverOffset_Curve;
 		TempEntry->HoverOffset_Scale*=OverrideHoverOffset_Scale;
 	}
+	if(Override_IconMaterial)
+	{
+		TempEntry->Override_IconMaterial=Override_IconMaterial;
+	}
 	
 	if(OverrideEntryTooltip)
 	{

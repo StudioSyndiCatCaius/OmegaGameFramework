@@ -6,7 +6,23 @@
 #include "GameplayTagContainer.h"
 #include "JsonObjectWrapper.h"
 #include "Dom/JsonObject.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "OmegaUtils_Structs.generated.h"
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaParsedParams
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<FName, FString> params;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaParsedTable
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Table") TMap<FName,FOmegaParsedParams> params;
+};
+
 
 USTRUCT()
 struct FOmegaGlobalVarsContainer
@@ -17,6 +33,49 @@ struct FOmegaGlobalVarsContainer
 	UPROPERTY() TMap<FGameplayTag, FJsonObjectWrapper> vars_tag;
 };
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaCommonMeta
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") UObject* Context;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FString> params;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FGameplayTagContainer Tags;
+};
+
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaSaveVars
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FGameplayTag,int32> params_int32;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FGameplayTagContainer Tags;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FJsonObjectWrapper JsonData;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaCustomObjectData
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FText Name;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FSlateBrush Icon;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FText Description;
+	
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FVector> Params_num;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FString> Params_string;
+};
+
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaQuestData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TEnumAsByte<EOmegaQuestStatus> Status;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") int32 state;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TMap<FGameplayTag,int32> params_int;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") FGameplayTagContainer Tags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TArray<FGuid> active_guids;
+};
 // ==============================================================================================================
 // Configs
 // ==============================================================================================================
@@ -45,4 +104,38 @@ struct FOmegaBoolVector
 	bool Y=true;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Bool Vector")
 	bool Z=true;
+};
+
+
+// ==============================================================================================================
+// Lists
+// ==============================================================================================================
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaList_Actors
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<AActor*> List;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaList_DataAsset
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<UPrimaryDataAsset*> List;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaList_Int
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<int32> List;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaList_Names
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<FName> List;
+	
 };

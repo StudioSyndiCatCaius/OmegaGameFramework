@@ -330,16 +330,17 @@ public:
 	
 //BINDABLE WIDGETS
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	bool bCanOverrideSize;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides",meta=(EditCondition="bCanOverrideSize"))
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides",meta=(EditCondition="bCanOverrideSize"))
 	FVector2D OverrideSize;
-
-	UPROPERTY(EditInstanceOnly,BlueprintReadOnly="Overrides")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
+	UMaterialInterface* Override_IconMaterial;
+	UPROPERTY(EditInstanceOnly,BlueprintReadOnly,Category="Overrides")
 	TSubclassOf<UCommonBorderStyle> OverrideBorderStyle;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	TSubclassOf<UCommonTextStyle> OverrideTextStyle_Name;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly="Overrides")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	TSubclassOf<UCommonTextStyle> OverrideTextStyle_Description;
 	
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - Root")

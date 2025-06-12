@@ -378,7 +378,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 	{
 		if(TempTrait)
 		{
-			TempTrait->Native_FlowBegin(GameInstance);
+			TempTrait->Native_FlowBegin(this);
 		}
 	}
 	
@@ -411,7 +411,7 @@ void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool b
 	{
 		if(TempTrait)
 		{
-			TempTrait->Native_FlowEnd("Finish","");
+			TempTrait->Native_FlowEnd(this,"Finish","");
 		}
 	}
 	
@@ -470,6 +470,13 @@ void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, bool 
 		{
 			ActiveNodes.Add(Node);
 			RecordedNodes.Add(Node);
+		}
+		for(auto* t : Traits)
+		{
+			if(t)
+			{
+				t->NodeInput(Node,PinName);
+			}
 		}
 		if(bForce && !Node->HasPin(PinName,true))
 		{
@@ -708,7 +715,7 @@ void UFlowAsset::NotifyFlow(FName Notify, UObject* Context)
 	{
 		if(TempTrait)
 		{
-			TempTrait->FlowNotified(Notify,Context);
+			TempTrait->FlowNotified(this,Notify,Context);
 		}
 	}
 	for(auto* TempNode : GetAllNodes())
