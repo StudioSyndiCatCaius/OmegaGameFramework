@@ -17,7 +17,7 @@ class OMEGADEMO_API UTrait_AttributeModifiers : public UOmegaDataTrait, public I
 
 public:
 
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
 	TArray<FOmegaAttributeModifier> AttributeModifiers;

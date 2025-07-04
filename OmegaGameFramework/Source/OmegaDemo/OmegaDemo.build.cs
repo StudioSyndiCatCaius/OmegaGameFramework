@@ -28,7 +28,8 @@ public class OmegaDemo : ModuleRules
 			"OmegaSequence",
 			"OmegaData",
 			"OmegaMutable",
-			"Flow"
+			"Flow",
+			"GameplayStateTreeModule",
 		});
  
 		PublicIncludePaths.AddRange(new string[] {"OmegaDemo/Public"});

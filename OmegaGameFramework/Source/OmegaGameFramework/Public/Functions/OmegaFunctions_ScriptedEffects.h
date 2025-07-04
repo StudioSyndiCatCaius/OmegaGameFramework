@@ -102,5 +102,5 @@ class OMEGAGAMEFRAMEWORK_API IOmegaScriptedEffectsInterface
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Omega|ScriptedEffects")
-	FOmegaCustomScriptedEffects GetScriptedEffects();
+	FOmegaCustomScriptedEffects GetScriptedEffects(FGameplayTag Tag);
 };

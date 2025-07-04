@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "LuaObject.h"
 #include "Functions/OmegaFunctions_ObjectTraits.h"
+#include "Functions/OmegaFunctions_SoftProperty.h"
 #include "Interfaces/OmegaInterface_AssetThumbnail.h"
 #include "Misc/OmegaAttribute.h"
 #include "GeneralDataObject.generated.h"
@@ -94,7 +95,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly,Category="FieldNames") FString Param_AttributeMods="attributes";
 
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 };
 
 
@@ -109,7 +110,8 @@ public:
 
 UCLASS(meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_AssetThumbnail,
-																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy, public IDataInterface_Traits
+																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy, public IDataInterface_Traits,
+																			public IOmegaSoftPropertyInterface 
 {
 	GENERATED_BODY()
 public:
@@ -124,11 +126,13 @@ public:
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FGuid Guid;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) FString CustomLabel;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TMap<FString,FString> ExtraParams;
 	OMACRO_ADDPARAMS_GENERAL();
 	
 	virtual FGuid GetObjectGuid_Implementation() { return Guid; }
+	virtual TMap<FString, FString> GetSoftPropertyMap_Implementation() override { return ExtraParams; };
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="General",AdvancedDisplay) TArray<UOmegaObjectTrait*> Traits;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="General") TArray<UOmegaObjectTrait*> Traits;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override { return Traits; };
 	//virtual// void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override{ Traits=NewTraits; };
 	

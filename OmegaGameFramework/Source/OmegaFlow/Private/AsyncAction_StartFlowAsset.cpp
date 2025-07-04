@@ -14,7 +14,7 @@ void UAsyncAction_StartFlowAsset::Native_OnFinishFlow(UFlowAsset* FlowAsset, FNa
 	
 	if(SubsystemRef->GetRootFlow(this) == FlowAsset)
 	{
-		OnFinish.Broadcast(Output, Flag);
+		OnFinish.Broadcast(Local_FlowInst,Output, Flag);
 		SetReadyToDestroy();
 	}
 }
@@ -27,7 +27,8 @@ void UAsyncAction_StartFlowAsset::Activate()
 	if(SubsystemRef)
 	{
 		SubsystemRef->OnFlowEventFinish.AddDynamic(this, &UAsyncAction_StartFlowAsset::Native_OnFinishFlow);
-		SubsystemRef->StartRootFlow(this, Local_FlowAsset, Local_StartNode, Local_Input, Local_MultiInst);
+		Local_FlowInst=SubsystemRef->StartRootFlow(this, Local_FlowAsset, Local_StartNode, Local_Input, Local_MultiInst);
+		Begin.Broadcast(Local_FlowInst);
 	}
 }
 

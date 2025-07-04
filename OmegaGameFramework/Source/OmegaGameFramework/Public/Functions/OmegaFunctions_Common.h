@@ -20,6 +20,7 @@
 #include "LevelInstance/LevelInstanceActor.h"
 #include "OmegaFunctions_Common.generated.h"
 
+class UEquipmentSlot;
 class APlayerController;
 class UEnhancedInputLocalPlayerSubsystem;
 class UOmegaPlayerSubsystem;
@@ -31,6 +32,26 @@ enum EOmegaFlagResult
 {
 	Flag_Active		UMETA(DisplayName = "Activate"),
 	Flag_Inactive	UMETA(DisplayName = "Inactive"),
+};
+
+USTRUCT(BlueprintType)
+struct FOmegaCommonCharacterSaveData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Data")
+	TMap<UOmegaAttribute*,float> AttributeValues;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Data")
+	TArray<UPrimaryDataAsset*> Skills;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Data")
+	float XP;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Data")
+	TMap<UPrimaryDataAsset*,int32> inventory;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Data")
+	TMap<UEquipmentSlot*,UPrimaryDataAsset*> equipment;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Data")
+	TArray<FName> tags;
 };
 
 

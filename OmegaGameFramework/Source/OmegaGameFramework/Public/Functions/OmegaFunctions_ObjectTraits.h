@@ -18,10 +18,10 @@ class UOmegaObjectTraitsFunctions : public UBlueprintFunctionLibrary
 
 public:
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Traits",meta=(ExpandBoolAsExecs="result", DeterminesOutputType="Class"))
-	static UOmegaObjectTrait* TryGetObjectTrait(UObject* Object, TSubclassOf<UOmegaObjectTrait> Class,bool& result);
+	UFUNCTION(BlueprintCallable,Category="Omega|Traits",meta=(ExpandBoolAsExecs="result", DeterminesOutputType="Class"),DisplayName="Traits - Try Get (Of Class)")
+	static UOmegaObjectTrait* TryGetObjectTrait(UObject* Object, TSubclassOf<UOmegaObjectTrait> Class,bool FallbackToDefault,bool& result);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Traits")
+	UFUNCTION(BlueprintCallable,Category="Omega|Traits",DisplayName="Traits - Get All")
 	static TArray<UOmegaObjectTrait*> GetObjectTraits(UObject* Object);
 };
 

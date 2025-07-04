@@ -110,6 +110,21 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		UE_LOG(LogTemp, Warning, TEXT("Failed to Add Asset. Invalid Widget Class."));
 		return nullptr;
 	}
+	if(Asset->GetClass()->ImplementsInterface(UDataInterface_DataWidget::StaticClass()))
+	{
+		if(IDataInterface_DataWidget::Execute_ShouldBlockFromDataList(Asset,this))
+		{
+			return nullptr;
+		}
+		FOmegaSaveConditions cond=IDataInterface_DataWidget::Execute_GetRequiredSaveConditions(Asset);
+		if(GetWorld() && GetWorld()->GetGameInstance())
+		{
+			if(!GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(cond))
+			{
+				return nullptr;
+			}
+		}
+	}
 	//check metadata
 	for(auto* TempMeta : EntryMetadata)
 	{

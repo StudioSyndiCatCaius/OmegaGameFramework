@@ -157,6 +157,10 @@ void UOmegaQuestComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->local_RegisterQuestComponent(this,false);
 		}
+		if(QuestAsset && QuestAsset->QuestScript)
+		{
+			QuestAsset->QuestScript->OnComponentEndPlay(this);
+		}
 	}
 	Super::EndPlay(EndPlayReason);
 }

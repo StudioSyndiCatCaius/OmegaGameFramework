@@ -83,13 +83,13 @@ void UDataItemComponent::ApplyToActor(const FString& Flag, FGameplayTagContainer
 	}
 }
 
-TArray<FOmegaAttributeModifier> UDataItemComponent::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UDataItemComponent::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	if(DataItem)
 	{
-		return IDataInterface_AttributeModifier::Execute_GetModifierValues(DataItem);
+		return IDataInterface_AttributeModifier::Execute_GetModifierValues(DataItem,CombatantComponent);
 	}
-	return IDataInterface_AttributeModifier::GetModifierValues_Implementation();
+	return IDataInterface_AttributeModifier::GetModifierValues_Implementation(CombatantComponent);
 }
 
 TArray<UPrimaryDataAsset*> UDataItemComponent::GetSkills_Implementation(UCombatantComponent* Combatant)

@@ -17,10 +17,16 @@ TMap<UOmegaAttribute*, float> UOAsset_CommonSkill::GetSkillAttributeCosts_Implem
 	return AttributeUseCost;
 }
 
-FOmegaCustomScriptedEffects UOAsset_CommonSkill::GetScriptedEffects_Implementation()
+FOmegaCustomScriptedEffects UOAsset_CommonSkill::GetScriptedEffects_Implementation(FGameplayTag Tag)
 {
-	return Effects_Target;
+	if(Effects_Tagged.Contains(Tag))
+	{
+		return Effects_Tagged[Tag];
+	}
+	return Effects_Default;
 }
+
+
 
 ULevelSequence* UOAsset_CommonSkill::GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag)
 {

@@ -31,10 +31,12 @@ AOmega_EventVolume::AOmega_EventVolume()
 
 void AOmega_EventVolume::Local_TryPlay() const
 {
-	if(Event && GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(Conditions))
-	{;
-		UOmegaLinearEventSubsystem* REF_subsystem=GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>();
-		REF_subsystem->PlayLinearEvent(Event->GetEventSequence(REF_subsystem),0);
+	if(GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(Conditions))
+	{
+		for(auto* a : Events)
+		{
+			if(a) { a->OnEventTriggered(this);}
+		}
 	}
 }
 

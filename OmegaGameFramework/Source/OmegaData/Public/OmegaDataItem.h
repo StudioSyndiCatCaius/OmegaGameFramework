@@ -174,7 +174,7 @@ public:
 	//###############################################################################
 	// Combatant
 	//###############################################################################
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual TArray<FOmegaEffectContainer> GetOmegaEffects_Implementation() override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	

@@ -5,15 +5,22 @@
 
 
 
-UOmegaObjectTrait* UOmegaObjectTraitsFunctions::TryGetObjectTrait(UObject* Object, TSubclassOf<UOmegaObjectTrait> Class,
+UOmegaObjectTrait* UOmegaObjectTraitsFunctions::TryGetObjectTrait(UObject* Object, TSubclassOf<UOmegaObjectTrait> Class,bool FallbackToDefault,
                                                                   bool& result)
 {
-	for(auto* t : GetObjectTraits(Object))
+	if(Class)
 	{
-		if(t && t->GetClass()->IsChildOf(Class))
+		for(auto* t : GetObjectTraits(Object))
 		{
-			result=true;
-			return t;
+			if(t && t->GetClass()->IsChildOf(Class))
+			{
+				result=true;
+				return t;
+			}
+		}
+		if(FallbackToDefault)
+		{
+			return Class.GetDefaultObject();
 		}
 	}
 	result=false;

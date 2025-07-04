@@ -6,6 +6,17 @@
 #include "Misc/OmegaUtils_Enums.h"
 #include "Subsystems/OmegaSubsystem_Actors.h"
 
+void UActorIdentityComponent::L_Init()
+{
+	if(IdentitySource)
+	{
+		if(Local_IsSourceAssetValid())
+		{
+			IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner(),this);
+		}
+	}
+}
+
 bool UActorIdentityComponent::Local_IsSourceAssetValid() const
 {
 	if(IdentitySource && IdentitySource->GetClass()->ImplementsInterface(UDataInterface_ActorIdentitySource::StaticClass()))
@@ -32,13 +43,7 @@ void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 		if(SourceAsset)
 		{
 			IdentitySource=SourceAsset;
-			if(IdentitySource)
-			{
-				if(Local_IsSourceAssetValid())
-				{
-					IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner(),this);
-				}
-			}
+			L_Init();
 		}
 		else
 		{
@@ -68,6 +73,10 @@ void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 		{
 			if(i) { i->OnActorConstruction(GetOwner(),this); }
 		}
+	}
+	if(PropertyChangedEvent.GetPropertyName()=="IdentitySource")
+	{
+		L_Init();
 	}
 	//Super::PostEditChangeProperty(PropertyChangedEvent);
 }

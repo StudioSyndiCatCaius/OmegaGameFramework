@@ -15,18 +15,10 @@ UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UActorTargetingComponent : public UActorComponent
 {
 	GENERATED_BODY()
+	
+	UPROPERTY(VisibleInstanceOnly,Category="Actors") TArray<AActor*> REF_Actors;
+	UPROPERTY(VisibleInstanceOnly,Category="Actors") AActor* REF_TargetActor;
 
-public:
-	// Sets default values for this component's properties
-	//UOmegaAOEComponent();
-
-	UPROPERTY() TArray<AActor*> REF_Actors;
-	UPROPERTY() AActor* REF_TargetActor;
-
-private:
-	// Called when the game starts
-	//  void BeginPlay() override;
-	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	static void local_setTagsOnActor(AActor* Actor, TArray<FName> tags, bool bActive)

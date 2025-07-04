@@ -280,7 +280,7 @@ void FOmegaEditor::StartupModule()
 	int Priority = 42;
 	FPlacementCategoryInfo OmegaGameFramework( LOCTEXT("OmegaGameFramework", "Omega Game Framework"), "OmegaGameFramework", TEXT("PMOmegaGameFramework"), Priority);
 	IPlacementModeModule::Get().RegisterPlacementCategory(OmegaGameFramework);
-	
+	/*
 	// Find and register actors to category
 	UBlueprint* OmegaCharacter = Cast<UBlueprint>(FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/OmegaDemoCharacter.OmegaDemoCharacter")).TryLoad());
 	if (OmegaCharacter) {
@@ -291,7 +291,11 @@ void FOmegaEditor::StartupModule()
 #endif
 			TOptional<FLinearColor>(), TOptional<int32>(), NSLOCTEXT("PlacementMode", "Character", "Character")
 		))); }
-	
+	*/
+	OMACRO_ADDPLACEABLE(OmegaCharacter,"Character")
+	OMACRO_ADDPLACEABLE(OmegaEncounterCharacter,"Character - Encounter")
+	OMACRO_ADDPLACEABLE(OmegaReferenceCharacter,"Character - Reference")
+	OMACRO_ADDPLACEABLE(OmegaCinematicCharacter,"Character - Cutscene")
 	OMACRO_ADDPLACEABLE(OmegaActorEnvironment,"Environment")
 	OMACRO_ADDPLACEABLE(Omega_EventVolume,"Event Volume")
 	OMACRO_ADDPLACEABLE(OmegaZonePoint,"Zone: Spawn Point")

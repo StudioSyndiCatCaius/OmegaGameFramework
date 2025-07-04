@@ -3,6 +3,8 @@
 #include "Actors/Actor_Character.h"
 
 #include "OmegaSettings_Gameplay.h"
+#include "Components/StateTreeComponent.h"
+#include "DataAssets/DA_ActorModifierCollection.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void AOmegaBaseCharacter::OnConstruction(const FTransform& Transform)
@@ -14,6 +16,10 @@ void AOmegaBaseCharacter::OnConstruction(const FTransform& Transform)
 	else if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
 	{
 		ActorConfig->SetConfig(set->DefaultActorConfig_Character);
+		if(UOAsset_ActorModifierCollection* col=set->ActorMods_Character)
+		{
+			col->ApplyAllModifiers(this);
+		}
 	}
 	Super::OnConstruction(Transform);
 	FVector bound_origin;
@@ -27,5 +33,9 @@ AOmegaBaseCharacter::AOmegaBaseCharacter()
 {
 	// BoundsComponent=CreateOptionalDefaultSubobject<UBoxComponent>("Bounds");
 	// BoundsComponent->SetupAttachment(RootComponent);
+	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
+	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
+	
 	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
+	StateTree=CreateDefaultSubobject<UStateTreeComponent>(TEXT("State Tree"));
 }

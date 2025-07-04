@@ -55,6 +55,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_One,"Combat.Target.One");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_All,"Combat.Target.All");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Target_Self,"Combat.Target.Self");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Instigator,"Combat.Instigator");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Stage_Default,"Combat.Stage.Default");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Stage_Boss,"Combat.Stage.Boss");
 
@@ -200,6 +202,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_AI_Controlled,"AI.Controlled");
 // --------------------------------------------------------------------------------------------------------
 // Event
 // --------------------------------------------------------------------------------------------------------
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Actor_Initialize,"Event.Initialize");
+
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Actor_Interact,"Event.Actor.Interact");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Ability_Begin,"Event.Ability.Begin");

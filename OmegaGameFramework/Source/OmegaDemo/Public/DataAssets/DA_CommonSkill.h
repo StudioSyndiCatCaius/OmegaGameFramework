@@ -10,6 +10,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "DA_CommonSkill.generated.h"
 
+class UOAsset_EffectsPreset;
 class ULevelSequence;
 class UAnimMontage;
 
@@ -35,10 +36,10 @@ public:
 	virtual TMap<UOmegaAttribute*, float> GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,UObject* Context) override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FOmegaCustomScriptedEffects Effects_Target;
+	FOmegaCustomScriptedEffects Effects_Default;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FOmegaCustomScriptedEffects Effects_Instigator;
-	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation() override;
+	TMap<FGameplayTag,FOmegaCustomScriptedEffects> Effects_Tagged;
+	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation(FGameplayTag Tag) override;
 	
 	//ANIMATIOn
 	
@@ -56,4 +57,5 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Relative") UOmegaAttribute* Related_Attribute;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Relative") UOmegaDamageType* Related_DamageType;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Relative") UCombatantFilterCollection* Related_TargetFilter;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Relative") UOAsset_EffectsPreset* Related_Effect;
 };

@@ -54,7 +54,6 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	FGuid AssetGuid;
-public:
 
 	UPROPERTY() TMap<FName, FVector> FlowParams;
 
@@ -126,6 +125,10 @@ private:
 	TArray<FName> CustomOutputs;
 
 public:
+
+	UFUNCTION(BlueprintCallable,Category="Flow|Editor")
+	TArray<UFlowNode*> GetNodes_OrderedByPosition();
+    	
 #if WITH_EDITOR
 	FFlowAssetEvent OnSubGraphReconstructionRequested;
 
@@ -136,6 +139,9 @@ public:
 
 	// Processes all nodes and creates map of all pin connections
 	void HarvestNodeConnections();
+
+
+	
 #endif
 
 	TMap<FGuid, UFlowNode*> GetNodes() const { return Nodes; }
@@ -362,7 +368,13 @@ public:
 	// NOTIFY
 	//--------------------------------------------------------//
 	UFUNCTION(BlueprintCallable, Category="FlowAsset")
-	void NotifyFlow(FName Notify, UObject* Context = nullptr);
+	void FireFlowSignal(FName Signal, UObject* Context = nullptr);
+
+		
+	//--------------------------------------------------------//
+	// EDITOR
+	//--------------------------------------------------------//
+
 };
 
 

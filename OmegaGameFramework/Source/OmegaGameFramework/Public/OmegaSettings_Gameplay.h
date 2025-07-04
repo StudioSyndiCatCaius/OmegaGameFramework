@@ -10,6 +10,7 @@
 #include "UObject/Object.h"
 #include "OmegaSettings_Gameplay.generated.h"
 
+class UOAsset_ActorModifierCollection;
 class UEquipmentSlot;
 class UOmegaAttribute;
 class AZoneEntityDisplayActor;
@@ -125,6 +126,11 @@ public:
 	UOmegaActorConfig* DefaultActorConfig_Interactable;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
 	UOmegaActorConfig* DefaultActorConfig_FloatingCombatant;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Actor")
+	UOAsset_ActorModifierCollection* ActorMods_Character;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Actor")
+	UOAsset_ActorModifierCollection* ActorMods_Interactable;
 	
 	// ---------------------------------------------------------------------------
 	// Abilities

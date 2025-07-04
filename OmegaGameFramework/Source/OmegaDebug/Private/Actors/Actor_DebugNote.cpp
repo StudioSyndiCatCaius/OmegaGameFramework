@@ -24,7 +24,7 @@ AOmegaDebugNote::AOmegaDebugNote()
 	Arrow->SetupAttachment(RootComponent);
 	Arrow->ArrowSize=2;
 	Text=CreateOptionalDefaultSubobject<UTextRenderComponent>("TEXT");
-	Text->SetMaterial(0,LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/m_UnlitText.m_UnlitText")));
+	Text->SetMaterial(0,LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/m_OutlineText.m_OutlineText")));
 	Text->SetupAttachment(RootComponent);
 	Text->HorizontalAlignment=EHTA_Center;
 	Text->SetRelativeLocation(FVector(0,0,50.0));

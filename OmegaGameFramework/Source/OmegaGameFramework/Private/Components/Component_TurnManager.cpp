@@ -5,6 +5,7 @@
 #include "Engine/GameInstance.h"
 
 #include "Functions/OmegaFunctions_TagEvent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 
 
@@ -116,7 +117,7 @@ void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combat
 		return;
 	}
 	TurnOrder.Remove(Combatant);
-	OnRemovedFromTurnOrder.Broadcast(Combatant, Flag, Tags);
+	OnRemovedFromTurnOrder.Broadcast(this,Combatant, Flag, Tags);
 	if(DoesCombatantUseInterface(Combatant))
 	{
 		IActorInterface_TurnOrderCombatant::Execute_OnRemovedFromTurnOrder(Combatant->GetOwner(), this, Flag, Tags);
@@ -172,7 +173,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 	//END CURRENT TURN
 	if(GetActiveTurnMember() != nullptr)		//If active turn member is valid
 	{
-		OnTurnEnd.Broadcast(GetActiveTurnMember(), Flag, Tags);
+		OnTurnEnd.Broadcast(this,GetActiveTurnMember(), Flag, Tags);
 		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
 		GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnEnd);
 		UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnEnd);
@@ -218,7 +219,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 
 void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
 {
-	OnTurnStart.Broadcast(Combatant, Flag, Tags);
+	OnTurnStart.Broadcast(this,Combatant, Flag, Tags);
 	bool LocalSuccess;
 	Combatant->GrantAbility(Local_GetTurnAbility());
 	GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnStart);
@@ -332,5 +333,61 @@ void UTurnBasedManagerComponent::ClearRegisteredCombatants(UCombatantComponent* 
 	}
 }
 
+bool UTurnTrackerComponent::usesInterface(const UObject* obj) const
+{
+	if(obj)
+	{
+		return obj->GetClass()->ImplementsInterface(UDataInterface_TurnTrackerSource::StaticClass());
+	}
+	return false;
+}
+
+void UTurnTrackerComponent::L_OnTurnUpdate(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant,
+	FString Flag, FGameplayTagContainer Tags)
+{
+	if(Combatant==linked_combatant)
+	{
+		SetTurnsElapsed(-1,true);
+	}
+}
 
 
+void UTurnTrackerComponent::LinkToTurnManager(UTurnBasedManagerComponent* TurnManager, UCombatantComponent* combatant)
+{
+	if(combatant)
+	{
+		linked_combatant=combatant;
+	}
+	if(TurnManager)
+	{
+		TurnManager->OnTurnStart.AddDynamic(this, &UTurnTrackerComponent::L_OnTurnUpdate);
+	}
+}
+
+void UTurnTrackerComponent::SetSource(UObject* Source, bool bInitTurns)
+{
+	if(Source && usesInterface(Source))
+	{
+		tracker_source=Source;
+		if(bInitTurns)
+		{
+			InitTurns(true);
+		}
+	}
+}
+
+void UTurnTrackerComponent::InitTurns(bool AddToCurrent)
+{
+	SetTurnsElapsed(IDataInterface_TurnTrackerSource::Execute_GetTurns_Init(tracker_source),AddToCurrent);
+}
+
+void UTurnTrackerComponent::SetTurnsElapsed(int32 value, bool Added)
+{
+	if(Added) { TurnsElapsed+=value;}
+	else { TurnsElapsed=value; }
+	if(usesInterface(tracker_source))
+	{
+		TurnsElapsed=UKismetMathLibrary::Clamp(TurnsElapsed,0,IDataInterface_TurnTrackerSource::Execute_GetTurns_Max(tracker_source));
+	}
+	OnTurnValueChanged.Broadcast(this,TurnsElapsed);
+}

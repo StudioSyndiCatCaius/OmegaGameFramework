@@ -5,8 +5,30 @@
 
 #include "Kismet/KismetMathLibrary.h"
 
+void UOmegaComponentModifierFunctions::ApplyModifierTo_Actor(FActorModifiers mods, AActor* Actor)
+{
+	if(Actor)
+	{
+		for(auto* c : mods.Script)
+		{
+			if(c) { c->OnAppliedToActor(Actor); }
+		}
+	}
+}
+
+void UOmegaComponentModifierFunctions::ApplyModifierTo_Component(FComponentMods mod, UActorComponent* Component)
+{
+	if(Component)
+	{
+		for(auto* c : mod.Script)
+		{
+			if(c) { c->OnAppliedToComponent(Component); }
+		}
+	}
+}
+
 void UOmegaComponentModifierFunctions::ApplyModifierTo_SkeletalMesh(FComponentMod_SkeletalMesh mod,
-	USkeletalMeshComponent* Component)
+                                                                    USkeletalMeshComponent* Component)
 {
 	if(Component && mod.Script)
 	{

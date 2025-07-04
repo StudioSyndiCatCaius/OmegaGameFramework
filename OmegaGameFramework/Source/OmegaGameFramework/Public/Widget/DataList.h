@@ -14,6 +14,7 @@
 #include "Math/Vector2D.h"
 #include "Components/CanvasPanel.h"
 #include "Misc/GeneralDataObject.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 
 #include "DataList.generated.h"
 
@@ -335,6 +336,21 @@ protected:
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
 	bool AnyEntryHasTag(FName Tag);
 };
+
+UINTERFACE(MinimalAPI) class UDataInterface_DataWidget : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_DataWidget
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="DataWidget")
+	bool ShouldBlockFromDataList(UDataList* DataList);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="DataWidget")
+	FOmegaSaveConditions GetRequiredSaveConditions();
+};
+
 
 
 UCLASS(EditInlineNew, Blueprintable,BlueprintType,CollapseCategories,Abstract)

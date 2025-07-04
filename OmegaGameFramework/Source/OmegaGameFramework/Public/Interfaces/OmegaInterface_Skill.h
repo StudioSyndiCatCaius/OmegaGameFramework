@@ -53,3 +53,36 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Skill")
 	UAnimMontage* GetSkill_Montage(UCombatantComponent* Combatant, FGameplayTag Tag);
 };
+
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const,Abstract)
+class UOmegaScripted_SkillSource : public UObject, public IDataInterface_SkillSource
+{
+	GENERATED_BODY()
+
+public:
+
+	
+};
+
+
+USTRUCT(BlueprintType)
+struct FOmegaScripted_SkillSources
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="AttributeModifiers")
+	TArray<UOmegaScripted_SkillSource*> Modifiers;
+
+	TArray<UPrimaryDataAsset*> GatherSkills(UCombatantComponent* CombatantComponent) const
+	{
+		TArray<UPrimaryDataAsset*> out;
+		for(auto* i : Modifiers)
+		{
+			if(i)
+			{
+				out.Append(IDataInterface_SkillSource::Execute_GetSkills(i,CombatantComponent));
+			}
+		}
+		return out;
+	};
+};

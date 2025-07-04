@@ -4,6 +4,7 @@
 #include "Components/Component_Equipment.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_Inventory.h"
+#include "Condition/Condition_DataAsset.h"
 #include "Engine/DataAsset.h"
 #include "Engine/GameInstance.h"
 #include "Functions/OmegaFunctions_Common.h"
@@ -131,7 +132,7 @@ bool UEquipmentComponent::CanEquipItem(UPrimaryDataAsset* Item, UEquipmentSlot* 
 	{
 		if(Item->GetClass()->ImplementsInterface(UDataInterface_Equipable::StaticClass()))
 		{
-			if(!IDataInterface_Equipable::Execute_CanEquipItem(Item,this)) {return false;};
+			if(!IDataInterface_Equipable::Execute_CanEquipItem(Item,this,Slot)) {return false;};
 		}
 		if(!Slot->CanSlotEquipItem(Item)) { return false; }
 
@@ -183,7 +184,7 @@ bool UEquipmentComponent::EquipItem(UPrimaryDataAsset* Item, UEquipmentSlot* Slo
 		}
 		
 		Slots.Add(Slot, Item);
-		OnItemEquipped.Broadcast(Item, Slot);
+		OnItemEquipped.Broadcast(this,Item, Slot);
 		
 		//Modify Linked Collection Component
 		if(LinkedCollectionComp)
@@ -211,7 +212,7 @@ bool UEquipmentComponent::UnequipSlot(UEquipmentSlot* Slot)
 				}
 			}
 			Slots.Remove(Slot);
-			OnItemUnequipped.Broadcast(RemovedItem, Slot);
+			OnItemUnequipped.Broadcast(this,RemovedItem, Slot);
 			//Modify Linked Collection Component
 			if(LinkedCollectionComp)
 			{
@@ -237,7 +238,7 @@ UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot(UEquipmentSlot* Slot,
 	return nullptr;
 }
 
-TArray<FOmegaAttributeModifier> UEquipmentComponent::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UEquipmentComponent::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	TArray<FOmegaAttributeModifier> OutMods;
 	if(bModifyAttributes)
@@ -248,7 +249,7 @@ TArray<FOmegaAttributeModifier> UEquipmentComponent::GetModifierValues_Implement
 		{
 			if(TempAsset && TempAsset->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
 			{
-				OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempAsset));
+				OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempAsset, CombatantComponent));
 			}
 		}
 	}
@@ -347,19 +348,18 @@ bool UEquipmentSlot::CanSlotEquipItem(UPrimaryDataAsset* Item)
 {
 	if(Item)
 	{
-		if(Item->GetClass()->ImplementsInterface(UDataInterface_Equipable::StaticClass()))
-		{
-			if(!IDataInterface_Equipable::Execute_CanEquipItem_InSlot(Item,this)) { return false;};
-		}
-		FGameplayTagContainer item_tags;
-		FGameplayTag item_category;
-		if(Item->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
-		{
-			item_category = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(Item);
-			item_tags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(Item);
-		}
-		if(!item_category.MatchesAny(AcceptedCategories) && !AcceptedCategories.IsEmpty()) {return false;}
-		if(!RequiredTags.IsEmpty() && !item_tags.HasAny(RequiredTags)) {return false;}
+		FOmegaConditions_DataAsset con;
+		con.Conditions=EquipConditions;
+		if(!con.CheckConditions(Item)) { return false; }
+//		FGameplayTagContainer item_tags;
+//		FGameplayTag item_category;
+		//if(Item->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
+		//{
+		//	item_category = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(Item);
+		//	item_tags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(Item);
+		//}
+	//	if(!item_category.MatchesAny(AcceptedCategories) && !AcceptedCategories.IsEmpty()) {return false;}
+	//	if(!RequiredTags.IsEmpty() && !item_tags.HasAny(RequiredTags)) {return false;}
 
 		for(auto* temp_script : SlotScripts)
 		{
@@ -391,6 +391,20 @@ UPrimaryDataAsset* UOmegaEquipmentFunctions::TryGetEquipmentInSlot(UObject* Targ
 	}
 	Outcome=false;
 	return nullptr;
+}
+
+TArray<UPrimaryDataAsset*> UOmegaEquipmentFunctions::GetEquippableItems_FromInventory(UEquipmentComponent* Equipment,
+	UDataAssetCollectionComponent* Inventory, UEquipmentSlot* Slot)
+{
+	TArray<UPrimaryDataAsset*>  out;
+	if(Equipment && Inventory)
+	{
+		TArray<UPrimaryDataAsset*> items;
+		Inventory->GetCollectionMap().GetKeys(items);
+		Equipment->FilterEquippableItems(items,Slot);
+	}
+	return  out;
+		
 }
 
 

@@ -639,6 +639,10 @@ AActor* UFlowNode::GetActorToFocus()
 }
 #endif
 
+void UFlowNode::FlowNotified_Implementation(FName Notify, UObject* Context)
+{
+}
+
 FString UFlowNode::GetIdentityTagDescription(const FGameplayTag& Tag)
 {
 	return Tag.IsValid() ? Tag.ToString() : MissingIdentityTag;

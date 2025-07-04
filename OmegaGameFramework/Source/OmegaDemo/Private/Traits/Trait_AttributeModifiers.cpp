@@ -3,7 +3,7 @@
 
 #include "Traits/Trait_AttributeModifiers.h"
 
-TArray<FOmegaAttributeModifier> UTrait_AttributeModifiers::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UTrait_AttributeModifiers::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	return AttributeModifiers;
 }

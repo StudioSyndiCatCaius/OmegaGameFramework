@@ -6,12 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Blueprint/UserWidget.h"
-#include "Misc/OmegaDamageType.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "Actor_GameplayEffect.generated.h"
 
 class AOmegaGameplayEffect;
 class CombatantComponent;
+class UOmegaDamageType;
 
 // ==============================================================================
 // Formula

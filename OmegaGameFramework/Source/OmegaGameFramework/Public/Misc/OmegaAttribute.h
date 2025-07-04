@@ -200,8 +200,42 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_AttributeModifier
 public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Attributes|Modifiers")
-	TArray<FOmegaAttributeModifier> GetModifierValues();
+	TArray<FOmegaAttributeModifier> GetModifierValues(UCombatantComponent* CombatantComponent);
 };
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const,Abstract)
+class UOmegaScripted_AttributeModifier : public UObject, public IDataInterface_AttributeModifier
+{
+	GENERATED_BODY()
+
+public:
+
+	
+};
+
+
+USTRUCT(BlueprintType)
+struct FOmegaScripted_AttributeModifiers
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="AttributeModifiers")
+	TArray<UOmegaScripted_AttributeModifier*> Modifiers;
+
+	TArray<FOmegaAttributeModifier> GatherModifiers(UCombatantComponent* CombatantComponent) const
+	{
+		TArray<FOmegaAttributeModifier> out;
+		for(auto* i : Modifiers)
+		{
+			if(i)
+			{
+				out.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(i,CombatantComponent));
+			}
+		}
+		return out;
+	};
+};
+
+
 
 // ==================================================================================================================
 // Modifier Container
@@ -213,7 +247,7 @@ class OMEGAGAMEFRAMEWORK_API UAttributeModifierContainer : public UObject, publi
 	GENERATED_BODY()
 
 public:
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 
 	UPROPERTY() UOmegaAttribute* Attribute;
 	UPROPERTY() float IncValue;

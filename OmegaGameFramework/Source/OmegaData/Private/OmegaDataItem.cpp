@@ -278,14 +278,14 @@ int32 UOmegaDataItem::GetMaxCollectionNumber_Implementation()
 	return MaxCollectionAmount;
 }
 
-TArray<FOmegaAttributeModifier> UOmegaDataItem::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UOmegaDataItem::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	TArray<FOmegaAttributeModifier> OutMods;
 	for(auto* TempTrait : GetAllValidTraits())
 	{
 		if(TempTrait->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
 		{
-			OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempTrait));
+			OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempTrait,CombatantComponent));
 		}
 	}
 	return OutMods;

@@ -71,6 +71,7 @@ void UFlowComponent::BeginPlay()
 
 	GetFlowSubsystem()->OnFlowEventFinish.AddDynamic(this, &UFlowComponent::Local_OnFlowEnd);
 	GetFlowSubsystem()->OnFlowNodeEntered.AddDynamic(this, &UFlowComponent::Local_OnFlowEnter);
+	GetFlowSubsystem()->OnFlowSignal.AddDynamic(this, &UFlowComponent::Local_OnFlowSignal);
 }
 
 void UFlowComponent::Local_OnFlowEnd(UFlowAsset* FlowAsset, FName Output, const FString& Flag)
@@ -86,6 +87,14 @@ void UFlowComponent::Local_OnFlowEnter(UFlowAsset* FlowAsset, UFlowNode* Node, F
 	if(FlowAsset == GetRootFlowInstance())
 	{
 		OnNodeEntered.Broadcast(Node, Input);
+	}
+}
+
+void UFlowComponent::Local_OnFlowSignal(UFlowAsset* FlowAsset, FName Notify, UObject* Context)
+{
+	if(FlowAsset == GetRootFlowInstance())
+	{
+		OnFlowSignal.Broadcast(FlowAsset,Notify,Context);
 	}
 }
 

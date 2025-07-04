@@ -13,9 +13,6 @@ class UFlowAsset;
 class UFlowSubsystem;
 class UFlowNode;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFlowFinish, FName, Output, const FString&, Flag);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNodeEntered, UFlowNode*, Node, FName, Input);
-
 USTRUCT()
 struct FNotifyTagReplication
 {
@@ -36,10 +33,16 @@ struct FNotifyTagReplication
 	}
 };
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFlowFinish, FName, Output, const FString&, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNodeEntered, UFlowNode*, Node, FName, Input);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowComponentTagsReplicated, class UFlowComponent*, FlowComponent, const FGameplayTagContainer&, CurrentTags);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FFlowComponentNotify, class UFlowComponent*, const FGameplayTag&);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowComponentDynamicNotify, class UFlowComponent*, FlowComponent, const FGameplayTag&, NotifyTag);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FFlowComponentSignal, UFlowAsset*, FlowAsset, FName, Signal, UObject*, Context);
 
 /**
 * Base component of Flow System - makes possible to communicate between Actor, Flow Subsystem and Flow Graphs
@@ -70,10 +73,9 @@ private:
 
 protected:
 
-	UFUNCTION()
-	void Local_OnFlowEnd(UFlowAsset* FlowAsset, FName Output, const FString& Flag);
-	UFUNCTION()
-	void Local_OnFlowEnter(UFlowAsset* FlowAsset, UFlowNode* Node, FName Input);
+	UFUNCTION() void Local_OnFlowEnd(UFlowAsset* FlowAsset, FName Output, const FString& Flag);
+	UFUNCTION() void Local_OnFlowEnter(UFlowAsset* FlowAsset, UFlowNode* Node, FName Input);
+	UFUNCTION() void Local_OnFlowSignal(UFlowAsset* FlowAsset, FName Notify, UObject* Context);
 	
 public:
 	virtual void BeginPlay() override;
@@ -91,10 +93,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void RemoveIdentityTags(FGameplayTagContainer Tags, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
-	UPROPERTY(BlueprintAssignable)
-	FOnFlowFinish OnFlowFinish;
-	UPROPERTY(BlueprintAssignable)
-	FOnNodeEntered OnNodeEntered;
+	UPROPERTY(BlueprintAssignable) FOnFlowFinish OnFlowFinish;
+	UPROPERTY(BlueprintAssignable) FOnNodeEntered OnNodeEntered;
+	UPROPERTY(BlueprintAssignable) FFlowComponentSignal OnFlowSignal;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Flow") FFlowComponentTagsReplicated OnIdentityTagsAdded;
+	UPROPERTY(BlueprintAssignable, Category = "Flow") FFlowComponentTagsReplicated OnIdentityTagsRemoved;
+	// Receive notification from Flow graph or another Flow Component
+	UPROPERTY(BlueprintAssignable, Category = "Flow") FFlowComponentDynamicNotify ReceiveNotify;
 	
 private:
 	UFUNCTION()
@@ -104,12 +110,6 @@ private:
 	void OnRep_RemovedIdentityTags();
 
 public:
-	UPROPERTY(BlueprintAssignable, Category = "Flow")
-	FFlowComponentTagsReplicated OnIdentityTagsAdded;
-
-	UPROPERTY(BlueprintAssignable, Category = "Flow")
-	FFlowComponentTagsReplicated OnIdentityTagsRemoved;
-
 public:
 	void VerifyIdentityTags() const;
 		
@@ -160,9 +160,6 @@ private:
 	void OnRep_NotifyTagsFromGraph();
 
 public:
-	// Receive notification from Flow graph or another Flow Component
-	UPROPERTY(BlueprintAssignable, Category = "Flow")
-	FFlowComponentDynamicNotify ReceiveNotify;
 
 //////////////////////////////////////////////////////////////////////////
 // Sending Notify Tags between Flow components

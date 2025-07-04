@@ -367,6 +367,10 @@ TArray<UObject*> AOmegaDynamicCamera::GetValidSources()
 void AOmegaDynamicCamera::BeginPlay()
 {
 	UGameplayStatics::GetPlayerController(this,0)->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SetCameraSourceRegistered(this,true);
+	if(GlobalBinding.IsValid())
+	{
+		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->SetGlobalActorBinding(GlobalBinding,this);
+	}
 	Super::BeginPlay();
 }
 

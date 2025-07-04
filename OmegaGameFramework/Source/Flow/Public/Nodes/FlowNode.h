@@ -370,7 +370,7 @@ protected:
 	}
 
 public:
-	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
+	UFUNCTION(BlueprintNativeEvent, Category="FlowNode",DisplayName="Received Signal")
 	void FlowNotified(FName Notify, UObject* Context);
 
 	

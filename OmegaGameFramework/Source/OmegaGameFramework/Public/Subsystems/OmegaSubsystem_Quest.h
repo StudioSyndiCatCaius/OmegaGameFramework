@@ -38,7 +38,8 @@ public:
 	FJsonObjectWrapper OnSave(UOmegaQuestComponent* Component) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Overrides")
 	void OnLoad(UOmegaQuestComponent* Component) const;
-	
+	UFUNCTION(BlueprintImplementableEvent,Category="Overrides")
+	void OnComponentEndPlay(UOmegaQuestComponent* Component) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Overrides")
 	bool CanQuestStart() const;
 

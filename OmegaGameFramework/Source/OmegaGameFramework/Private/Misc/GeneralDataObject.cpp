@@ -28,7 +28,7 @@ void UGeneralDataObject::GetGeneralAssetLabel_Implementation(FString& Label)
 }
 
 
-TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	TArray<FOmegaAttributeModifier> out;
 	FLuaValue mod_list = ILuaInterface::Execute_GetValue(this,"").GetField(Param_AttributeMods);

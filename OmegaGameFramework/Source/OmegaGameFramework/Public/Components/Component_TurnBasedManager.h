@@ -40,12 +40,10 @@ public:
 };
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTurnStart, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTurnEnd, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnTurnDelegate, UTurnBasedManagerComponent*, Component, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnFail, FString, Reason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAddedToTurnOrder, UCombatantComponent*, Combatant, int32, Index, FString, Flag, FGameplayTagContainer, Tags);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRemovedFromTurnOrder, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnOrderGenerated, UTurnBasedManagerComponent*, Component);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnComponentDelegate, UTurnBasedManagerComponent*, Component);
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UTurnBasedManagerComponent : public UActorComponent
@@ -53,18 +51,14 @@ class OMEGAGAMEFRAMEWORK_API UTurnBasedManagerComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	UTurnBasedManagerComponent();
-
-protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
-
-public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
-
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	UPROPERTY(BlueprintAssignable) FOnTurnDelegate OnTurnStart;
+	UPROPERTY(BlueprintAssignable) FOnTurnDelegate OnTurnEnd;
+	UPROPERTY(BlueprintAssignable) FOnAddedToTurnOrder OnAddedToTurnOrder;
+	UPROPERTY(BlueprintAssignable) FOnTurnDelegate OnRemovedFromTurnOrder;
 	
 	///////////////
 	///// Turn ////
@@ -73,9 +67,6 @@ public:
 	//###########################################
 	// Turn Manager
 	//###########################################
-	
-	UPROPERTY(meta=(DeprecatedProperty))
-	TSubclassOf<UTurnManagerBase> TurnManagerClass = UTurnManagerBase::StaticClass();
 
 	UFUNCTION()
 	void SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass);
@@ -131,7 +122,7 @@ public:
 	//###########################################
 
 	UPROPERTY(BlueprintAssignable)
-	FOnTurnOrderGenerated OnTurnOrderGenerated;
+	FOnTurnComponentDelegate OnTurnOrderGenerated;
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased")
 	TArray<UCombatantComponent*> GenerateTurnOrder();
@@ -235,17 +226,6 @@ public:
 	///// Delegates ////
 	//////////////
 
-	UPROPERTY(BlueprintAssignable)
-	FOnTurnStart OnTurnStart;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnTurnEnd OnTurnEnd;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnAddedToTurnOrder OnAddedToTurnOrder;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnRemovedFromTurnOrder OnRemovedFromTurnOrder;
 };
 
 
@@ -294,3 +274,48 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_TurnOrderCombatant
 	void OnRemovedFromTurnOrder(UTurnBasedManagerComponent* TurnManager, FString& Flag, FGameplayTagContainer Tags);
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTurnTrackerDelegate,UTurnTrackerComponent*, Component, int32, TurnsElapsed);
+
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
+class OMEGAGAMEFRAMEWORK_API UTurnTrackerComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+	bool usesInterface(const UObject* obj) const;
+
+	UFUNCTION()
+	void L_OnTurnUpdate(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+
+	UPROPERTY() UObject* tracker_source;
+	UPROPERTY() int32 TurnsElapsed;
+	UPROPERTY() UCombatantComponent* linked_combatant;
+	
+public:
+	UPROPERTY(BlueprintAssignable) FTurnTrackerDelegate OnTurnValueChanged;
+
+	UFUNCTION(BlueprintCallable,Category="Turn Tracker")
+	void LinkToTurnManager(UTurnBasedManagerComponent* TurnManager, UCombatantComponent* combatant);
+	
+	UFUNCTION(BlueprintCallable,Category="Turn Tracker")
+	void SetSource(UObject* Source, bool bInitTurns);
+	UFUNCTION(BlueprintCallable,Category="Turn Tracker")
+	void InitTurns(bool AddToCurrent);
+		
+	UFUNCTION(BlueprintCallable,Category="Turn Tracker")
+	void SetTurnsElapsed(int32 value, bool Added);
+	
+};
+
+UINTERFACE(MinimalAPI)
+class UDataInterface_TurnTrackerSource : public UInterface
+{
+	GENERATED_BODY()
+};
+
+class OMEGAGAMEFRAMEWORK_API IDataInterface_TurnTrackerSource
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Omega|TurnTracker") int32 GetTurns_Init();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Omega|TurnTracker") int32 GetTurns_Max();
+};

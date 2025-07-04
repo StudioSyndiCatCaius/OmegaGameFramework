@@ -21,6 +21,7 @@ class OMEGAGAMEFRAMEWORK_API UActorIdentityComponent : public UActorComponent, p
 {
 	GENERATED_BODY()
 
+	void L_Init();
 	bool Local_IsSourceAssetValid() const;
 	TArray<UActorIdentityScript*> Local_GetScripts() const;
 

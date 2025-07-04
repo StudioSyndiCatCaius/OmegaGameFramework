@@ -26,7 +26,7 @@ public:
 	void FlowBegin(UFlowAsset* FlowInstance) const; 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
 	void FlowEnd(UFlowAsset* FlowInstance,FName Output, const FString& Flag) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
+	UFUNCTION(BlueprintImplementableEvent, Category="Trait", DisplayName="On Flow Signal")
 	void FlowNotified(UFlowAsset* FlowInstance,FName Notify, UObject* Context) const;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")

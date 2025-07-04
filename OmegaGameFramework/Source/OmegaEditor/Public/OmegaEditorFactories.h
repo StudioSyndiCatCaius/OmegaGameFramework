@@ -25,6 +25,7 @@
 #include "DataAssets/DA_CommonInteractable.h"
 
 #include "Misc/CombatantGambits.h"
+#include "Misc/OmegaDamageType.h"
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
 #include "Components/Component_Leveling.h"

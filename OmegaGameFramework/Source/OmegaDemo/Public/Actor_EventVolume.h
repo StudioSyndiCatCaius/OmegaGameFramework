@@ -11,7 +11,7 @@
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Actor_EventVolume.generated.h"
 
-UCLASS(EditInlineNew,Abstract,BlueprintType,Blueprintable,CollapseCategories)
+UCLASS(EditInlineNew,Abstract,BlueprintType,Blueprintable,CollapseCategories,meta=(ShowWorldContextPin))
 class OMEGADEMO_API UOmegaEventVolumeTriggerScript : public UObject
 {
 	GENERATED_BODY()
@@ -42,25 +42,24 @@ public:
 	void TriggerEvent() const;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="TriggerScript")
-	void OnBeginPlay(AOmega_EventVolume* Owner) const;
+	void OnBeginPlay(AOmega_EventVolume* Owner);
 
 	UFUNCTION(BlueprintImplementableEvent,Category="TriggerScript")
 	FLinearColor GetVolumeColor() const;
 };
 
-UCLASS(EditInlineNew,Abstract,BlueprintType,Blueprintable,CollapseCategories)
+UCLASS(EditInlineNew,Abstract,BlueprintType,Blueprintable,CollapseCategories,Const,meta=(ShowWorldContextPin))
 class OMEGADEMO_API UOmegaEventVolumeSequenceScript : public UObject
 {
 	GENERATED_BODY()
-	
-	
+
 public:
 	
 	UFUNCTION(BlueprintPure,Category="SequenceScript")
 	AOmega_EventVolume* GetOwningActor() const;
 
 	UFUNCTION(BlueprintImplementableEvent,Category="SequenceScript")
-	FLinearEventSequence GetEventSequence(UOmegaLinearEventSubsystem* Subsystem);
+	void OnEventTriggered(const AActor* Owner) const;
 	
 };
 
@@ -87,7 +86,7 @@ public:
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="EventVolume")
 	UOmegaEventVolumeTriggerScript* TriggerScript;
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="EventVolume")
-	UOmegaEventVolumeSequenceScript* Event;
+	TArray<UOmegaEventVolumeSequenceScript*> Events;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="EventVolume")
 	FOmegaSaveConditions Conditions;
 	

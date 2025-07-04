@@ -224,8 +224,7 @@ public:
 	TSubclassOf<AOmegaGameplayEffect> ReactionEffectClass;
 	
 protected:
-	UFUNCTION()
-	UOmegaDamageTypeReaction* GetDamageReactionObject(UOmegaDamageTypeReactionAsset* Class);
+
 	UPROPERTY()
 	TArray<UOmegaDamageTypeReaction*> LocalDamageReactions;
 public:
@@ -563,7 +562,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable) FOnCombatantNotify OnCombatantNotify;
 
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 
 	//##################################################################################################################

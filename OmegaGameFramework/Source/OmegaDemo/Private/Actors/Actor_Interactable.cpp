@@ -6,6 +6,7 @@
 #include "Components/Component_ActorConfig.h"
 #include "Interfaces/OmegaInterface_ObjectTraits.h"
 #include "Components/TextRenderComponent.h"
+#include "DataAssets/DA_ActorModifierCollection.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void AOmegaInteractable::OnConstruction(const FTransform& Transform)
@@ -21,16 +22,6 @@ void AOmegaInteractable::OnConstruction(const FTransform& Transform)
 	{
 		NameText->SetText(UDataInterface_General::GetObjectName(this));
 	}
-	if(UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
-	{
-		if(UOmegaActorConfig* _cfg=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle()->DefaultActorConfig_Interactable)
-		{
-			if(ActorConfig && !ActorConfig->DefaultConfig)
-			{
-				ActorConfig->DefaultConfig=_cfg;
-			}
-		}
-	}
 	if(SpringArm)
 	{
 		FRotator _rot =UKismetMathLibrary::FindLookAtRotation(CameraDirection,SpringArm->GetRelativeLocation());
@@ -38,6 +29,23 @@ void AOmegaInteractable::OnConstruction(const FTransform& Transform)
 		float _dis=UKismetMathLibrary::Vector_Distance(SpringArm->GetRelativeLocation(),CameraDirection);
 		SpringArm->TargetArmLength=_dis;
 	}
+
+	//Apply Gameplay Settings
+	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	{
+		if(UOmegaActorConfig* _cfg=set->DefaultActorConfig_Interactable)
+		{
+			if(ActorConfig && !ActorConfig->DefaultConfig)
+			{
+				ActorConfig->DefaultConfig=_cfg;
+			}
+		}
+		if(UOAsset_ActorModifierCollection* col=set->ActorMods_Interactable)
+		{
+			col->ApplyAllModifiers(this);
+		}
+	}
+	
 	Super::OnConstruction(Transform);
 }
 

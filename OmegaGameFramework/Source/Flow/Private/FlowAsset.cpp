@@ -105,7 +105,7 @@ void UFlowAsset::RegisterNode(const FGuid& NewGuid, UFlowNode* NewNode)
 {
 	NewNode->SetGuid(NewGuid);
 	Nodes.Emplace(NewGuid, NewNode);
-
+	
 	HarvestNodeConnections();
 }
 
@@ -206,7 +206,47 @@ void UFlowAsset::HarvestNodeConnections()
 		}
 	}
 }
+
+UEdGraphNode* GetGraphNodeFromFlowNode(UEdGraph* graph, const UFlowNode* node)
+{
+	if(node)
+	{
+		for(TObjectPtr<UEdGraphNode> gnode : graph->Nodes)
+		{
+			if(gnode->NodeGuid==node->GetGuid())
+			{
+				return gnode;
+			}
+		}
+	}
+	return nullptr;
+}
+
+
 #endif
+
+TArray<UFlowNode*> UFlowAsset::GetNodes_OrderedByPosition()
+{
+	TArray<UFlowNode*> out_nodes = GetAllNodes();
+#if WITH_EDITOR
+
+	// Sort by score in ascending order
+	out_nodes.Sort([this](const UFlowNode& A, const UFlowNode& B) {
+		int32 a_val=0;
+		int32 b_val=0;
+		if(UEdGraphNode* gnode = GetGraphNodeFromFlowNode(GetGraph(),&A))
+		{
+			a_val=gnode->NodePosY+gnode->NodePosX;
+		}
+		if(UEdGraphNode* gnode = GetGraphNodeFromFlowNode(GetGraph(),&B))
+		{
+			b_val=gnode->NodePosY+gnode->NodePosX;
+		}
+		return a_val < b_val;
+	});
+#endif
+	return out_nodes;
+}
 
 void UFlowAsset::AddInstance(UFlowAsset* Instance)
 {
@@ -709,20 +749,25 @@ void UFlowAsset::ForceActivateNode(FGuid NodeGuid, FName InputName)
 	TriggerInput(NodeGuid, InputName);
 }
 
-void UFlowAsset::NotifyFlow(FName Notify, UObject* Context)
+void UFlowAsset::FireFlowSignal(FName Signal, UObject* Context)
 {
 	for(auto* TempTrait : Traits)
 	{
 		if(TempTrait)
 		{
-			TempTrait->FlowNotified(this,Notify,Context);
+			TempTrait->FlowNotified(this,Signal,Context);
 		}
 	}
 	for(auto* TempNode : GetAllNodes())
 	{
 		if(TempNode)
 		{
-			TempNode->FlowNotified(Notify,Context);
+			TempNode->FlowNotified(Signal,Context);
 		}
 	}
+	if(UFlowSubsystem* subsystem=GetFlowSubsystem())
+	{
+		subsystem->OnFlowSignal.Broadcast(this,Signal,Context);
+	}
 }
+

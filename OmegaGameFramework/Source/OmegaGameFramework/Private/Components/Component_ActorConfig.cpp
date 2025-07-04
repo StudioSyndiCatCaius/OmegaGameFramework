@@ -9,11 +9,19 @@ void UActorConfigComponent::BeginPlay()
 {
 	if(DefaultConfig)
 	{
-		for(TSoftClassPtr<AOmegaActorProcessor> p : DefaultConfig->TargetProcessors)
+		if(UOmegaActorSubsystem* sub=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
 		{
-			if(p)
+			for(FGameplayTag t : DefaultConfig->AutoregisterToGroups)
 			{
-				GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->RegisterActorToProcessor(GetOwner(),p.LoadSynchronous());
+				sub->SetActorRegisteredToGroup(t,GetOwner(),true);
+			}
+			
+			for(TSoftClassPtr<AOmegaActorProcessor> p : DefaultConfig->TargetProcessors)
+			{
+				if(p)
+				{
+					sub->RegisterActorToProcessor(GetOwner(),p.LoadSynchronous());
+				}
 			}
 		}
 	}

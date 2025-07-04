@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Actors/Actor_ActorProcessor.h"
 
 #include "Component_ActorConfig.generated.h"
@@ -32,6 +33,9 @@ public:
 		
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Actors")
 	TArray<TSoftClassPtr<AOmegaActorProcessor>> TargetProcessors;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Actors")
+	TArray<FGameplayTag> AutoregisterToGroups;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Actors")
 	TArray<UOmegaActorConfigScript*> Scripts;

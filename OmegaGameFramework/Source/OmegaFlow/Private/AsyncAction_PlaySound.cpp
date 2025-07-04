@@ -23,8 +23,15 @@ void UAsyncAction_PlaySound::Activate()
 	{
 		Local_AudioComp = UGameplayStatics::SpawnSoundAtLocation(LocalWorldContext, Local_Sound, Local_Loc, Local_Rot, Local_volume, Local_pitch, Local_start, Local_atten);
 	}
-	Local_AudioComp->OnAudioFinished.AddDynamic(this, &UAsyncAction_PlaySound::Local_Finish);
-	Local_AudioComp->Play(Local_start);
+	if(Local_AudioComp)
+	{
+		Local_AudioComp->OnAudioFinished.AddDynamic(this, &UAsyncAction_PlaySound::Local_Finish);
+		Local_AudioComp->Play(Local_start);
+	}
+	else
+	{
+		Failed.Broadcast();
+	}
 }
 
 UAsyncAction_PlaySound* UAsyncAction_PlaySound::PlaySoundAsync(UObject* WorldContextObject, USoundBase* Sound,

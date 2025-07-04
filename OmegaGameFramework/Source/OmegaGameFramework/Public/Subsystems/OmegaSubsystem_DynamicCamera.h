@@ -153,7 +153,9 @@ public:
 	USpringArmComponent* comp_spring;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DynamicCamera")
 	UCameraComponent* comp_camera;
-	
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
+	FName GlobalBinding;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
 	int32 Priority;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")

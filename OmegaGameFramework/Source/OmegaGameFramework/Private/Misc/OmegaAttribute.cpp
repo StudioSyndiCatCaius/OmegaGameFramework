@@ -161,7 +161,7 @@ TArray<UOmegaAttribute*> UOmegaAttributeSet::Local_GetAtt(bool bStatic)
 }
 
 
-TArray<FOmegaAttributeModifier> UAttributeModifierContainer::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UAttributeModifierContainer::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	FOmegaAttributeModifier LocalMod;
 	LocalMod.Attribute = Attribute;

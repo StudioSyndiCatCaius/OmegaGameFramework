@@ -252,11 +252,11 @@ void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* C
 {
 	if(Combatant && Attribute)
 	{
-		TArray<FOmegaAttributeModifier> outMods=IDataInterface_AttributeModifier::Execute_GetModifierValues(Combatant);
+		TArray<FOmegaAttributeModifier> outMods=IDataInterface_AttributeModifier::Execute_GetModifierValues(Combatant,Combatant);
 		if(UncomparedSource && UncomparedSource->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
 		{
 			TArray<FOmegaAttributeModifier> mods_newOut;
-			TArray<FOmegaAttributeModifier> mods_UnComp=IDataInterface_AttributeModifier::Execute_GetModifierValues(UncomparedSource);
+			TArray<FOmegaAttributeModifier> mods_UnComp=IDataInterface_AttributeModifier::Execute_GetModifierValues(UncomparedSource,Combatant);
 			for (FOmegaAttributeModifier temp_CombatantMod : outMods)
 			{
 				for (FOmegaAttributeModifier temp_UncomparedMod : mods_UnComp)
@@ -273,7 +273,7 @@ void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* C
 		}
 		if(ComparedSource && ComparedSource->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
 		{
-			outMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(ComparedSource));
+			outMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(ComparedSource,Combatant));
 		}
 		
 		float curval;

@@ -138,3 +138,28 @@ TArray<AActor*> UOmegaActorSubsystem::GetActorsInGroup(FGameplayTag GroupTag) co
 	// Return an empty array if the group doesn't exist
 	return TArray<AActor*>();
 }
+
+void UOmegaActorSubsystem::SetActorTaggedTarget(AActor* Instigator, FGameplayTag Tag, AActor* Target)
+{
+	if(Instigator)
+	{
+		FOmegaActorMeta temp_meta=actors_meta.FindOrAdd(Instigator);
+		if(AActor* previous = temp_meta.TaggedTargets.FindOrAdd(Tag))
+		{
+			OnActorTaggedTargetChange.Broadcast(Instigator,Tag,previous,false);
+		}
+		OnActorTaggedTargetChange.Broadcast(Instigator,Tag,Target,true);
+	}
+}
+
+AActor* UOmegaActorSubsystem::GetActorTaggedTarget(AActor* Instigator, FGameplayTag Tag)
+{
+	if(Instigator)
+	{
+		if(AActor* out=actors_meta.FindOrAdd(Instigator).TaggedTargets.FindOrAdd(Tag))
+		{
+			return out;
+		}
+	}
+	return nullptr;
+}

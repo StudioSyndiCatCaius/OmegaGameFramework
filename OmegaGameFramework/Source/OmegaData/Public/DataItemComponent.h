@@ -53,7 +53,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="DataItem")
 	void ApplyToActor(const FString& Flag, FGameplayTagContainer Tags);
 
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 
 	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;

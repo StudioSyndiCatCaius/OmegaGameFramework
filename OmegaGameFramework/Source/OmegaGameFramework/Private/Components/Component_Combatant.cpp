@@ -542,10 +542,9 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 	if(DamageType && DamageTypeReactions.Contains(DamageType))
 	{
 		UOmegaDamageTypeReactionAsset* ReactClass = DamageTypeReactions.FindOrAdd(DamageType);
-		if(GetDamageReactionObject(ReactClass))
+		if(ReactClass)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Apply reaction damage for %s"), *ReactClass->GetName());
-			FinalDamage = GetDamageReactionObject(ReactClass)->OnDamageApplied(Attribute, FinalDamage);
+			IDataInterface_DamageModifier::Execute_ModifyDamage(ReactClass, Attribute, this, Instigator, BaseDamage, LocalDamageType, Context); //Apply Damage Modifier
 		}
 		if(ReactionEffectClass && ReactClass)
 		{
@@ -875,7 +874,7 @@ void UCombatantComponent::InitializeAttributes()
 // Attribute Modifiers
 // =============================================================================================================================================
 
-TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	if(bCacheAttributeModifierValues)
 	{
@@ -994,7 +993,7 @@ float UCombatantComponent::GatherAttributeModifiers(TArray<UObject*> Modifiers, 
 			if(TempObject->Implements<UDataInterface_AttributeModifier>())
 			{
 				//Gather Attributes from Object
-				TArray<FOmegaAttributeModifier> NewMods = IDataInterface_AttributeModifier::Execute_GetModifierValues(TempObject);
+				TArray<FOmegaAttributeModifier> NewMods = IDataInterface_AttributeModifier::Execute_GetModifierValues(TempObject,this);
 				TempModList.Append(NewMods);
 				
 			}
@@ -1032,21 +1031,13 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetAllModifierValues()
 	{
 		if(TempMod!=nullptr && TempMod->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
 		{
-			TArray<FOmegaAttributeModifier> in_mods=IDataInterface_AttributeModifier::Execute_GetModifierValues(TempMod);
+			TArray<FOmegaAttributeModifier> in_mods=IDataInterface_AttributeModifier::Execute_GetModifierValues(TempMod,this);
 			OutModVals.Append(in_mods);
 		}
 	}
 	return OutModVals;
 }
 
-UOmegaDamageTypeReaction* UCombatantComponent::GetDamageReactionObject(UOmegaDamageTypeReactionAsset* Class)
-{
-	if(Class && Class->ReactionScript)
-	{
-		return Class->ReactionScript;
-	}
-	return nullptr;
-}
 
 ////////////////////////////////////
 ////////// -- Effects -- /////////

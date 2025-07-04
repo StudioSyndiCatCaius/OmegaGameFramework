@@ -15,6 +15,7 @@
 #include "Functions/OmegaFunctions_Common.h"
 #include "Engine/EngineTypes.h"
 #include "OmegaSettings.h"
+#include "DataAssets/DA_Campaign.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
@@ -105,12 +106,12 @@ void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, FGameplayTag SaveCategory, 
 {
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
-	Success = Local_SaveGame(SlotName,SaveCategory);
+	Success = L_SaveGame(SlotName,SaveCategory);
 }
 
 void UOmegaSaveSubsystem::SaveActiveGame_Named(FString Slot, FGameplayTag SaveCategory, bool& Success)
 {
-	Success = Local_SaveGame(Slot,SaveCategory);
+	Success = L_SaveGame(Slot,SaveCategory);
 }
 
 
@@ -121,7 +122,7 @@ bool UOmegaSaveSubsystem::SaveGameUnique(EUniqueSaveFormats Format)
 
 
 
-bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName,FGameplayTag SaveCategory)
+bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory)
 {
 	//LocalActiveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
 
@@ -163,7 +164,10 @@ bool UOmegaSaveSubsystem::Local_SaveGame(FString SlotName,FGameplayTag SaveCateg
 
 	const FString fileName = Local_GetScreenshotPath(SlotName);
 	FScreenshotRequest::RequestScreenshot(fileName, false, false);
-	
+	if(ActiveSaveData->Campaign)
+	{
+		ActiveSaveData->Campaign->ScriptEvent(3,this);
+	}
 	return UGameplayStatics::SaveGameToSlot(ActiveSaveData, SlotName, 0);
 }
 
@@ -179,7 +183,7 @@ UOmegaSaveGame* UOmegaSaveSubsystem::CreateNewGame()
 	return CreatedGame;
 }
 
-void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSavedLevel, FGameplayTagContainer Tags)
+void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSavedLevel, FGameplayTagContainer Tags, bool NewGame, UOAsset_Campaign* NewCampaign)
 {
 	if (!GameData) { return; }
 	
@@ -213,8 +217,24 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->bIsLoadingGame=true;
 		GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToLevel_Name(*ActiveSaveData->ActiveLevelName,EmptyPoint);
 	}
+	if(NewGame)
+	{
+		if(NewCampaign)
+		{
+			// Campaign event - New
+			GameData->Campaign=NewCampaign;
+			GameData->Campaign->ScriptEvent(0,this);
+		}
+	}
+	else
+	{
+		if(GameData->Campaign)
+		{
+			// Campaign event - Loaded
+			GameData->Campaign->ScriptEvent(2,this);
+		}
+	}
 	OnNewGameStarted.Broadcast(GameData,Tags);
-	//GetGameInstance()->GetSubsystem<UGamePreferenceSubsystem>()->Local_PreferenceUpdateAll();
 }
 
 void UOmegaSaveSubsystem::Local_InitializeSaveObjects()

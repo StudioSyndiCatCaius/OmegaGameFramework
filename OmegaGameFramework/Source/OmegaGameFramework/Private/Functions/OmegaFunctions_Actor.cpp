@@ -170,6 +170,15 @@ TArray<AActor*> UOmegaActorFunctions::FilterActors_OnScreen(TArray<AActor*> acto
 	return filteredActors;
 }
 
+
+float UOmegaActorFunctions::GetActorWeight(AActor* Actor, FActorWeighter Weighter, float fallback)
+{
+	if(Actor) { return Weighter.GetWeight(Actor);}
+	return fallback;
+}
+
+
+
 // =====================================================================================================================
 // PAWN
 // =====================================================================================================================

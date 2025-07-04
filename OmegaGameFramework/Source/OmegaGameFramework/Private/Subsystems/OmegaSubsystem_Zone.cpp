@@ -302,7 +302,8 @@ void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 	AOmegaZonePoint* TempPoint = nullptr;
 	UOmegaGameManager* GameManager = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
 	UOmegaSaveSubsystem* SaveSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
-    
+
+	//SPAWN AT - Load Point
 	if (GamInstSubsys->bIsLoadingGame)
 	{
 		GamInstSubsys->bIsLoadingGame=false;
@@ -323,7 +324,7 @@ void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 		for (AActor* TempActor : TempPoints)
 		{
 			AOmegaZonePoint* CheckedPoint = Cast<AOmegaZonePoint>(TempActor);
-			if (CheckedPoint && CheckedPoint->FromLevel == GamInstSubsys->PreviousLevel 
+			if (CheckedPoint && (CheckedPoint->FromLevel == GamInstSubsys->PreviousLevel || CheckedPoint->FromLevel.IsNull())
 				&& GamInstSubsys->TargetSpawnPointTag == CheckedPoint->ZonePointID)
 			{
 				TempPoint = CheckedPoint;
@@ -1021,6 +1022,8 @@ AOmegaZonePoint::AOmegaZonePoint()
 	{
 		CapsuleComponent->InitCapsuleSize(45,90);
 	}
+
+	//bIsSpatiallyLoaded=false;
 }
 
 void AOmegaZonePoint::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,

@@ -42,6 +42,14 @@ struct FOmegaCommonMeta
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FGameplayTagContainer Tags;
 };
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaActorMeta
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FGameplayTag,AActor*> TaggedTargets;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FGameplayTagContainer Tags;
+};
+
 
 USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaSaveVars
@@ -125,6 +133,15 @@ struct FOmegaList_DataAsset
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<UPrimaryDataAsset*> List;
 };
 
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaList_Guids
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<FGuid> List;
+};
+
+
 USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaList_Int
 {
@@ -138,4 +155,20 @@ struct FOmegaList_Names
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<FName> List;
 	
+};
+
+// ==============================================================================================================
+// Entity
+// ==============================================================================================================
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaCommonEntity
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data")
+	FName id;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data")
+	FText Name;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data")
+	FGameplayTagContainer Tags;
 };

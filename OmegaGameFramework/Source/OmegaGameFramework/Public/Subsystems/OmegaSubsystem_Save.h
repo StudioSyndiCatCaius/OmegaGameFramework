@@ -17,6 +17,7 @@
 #include "Misc/OmegaUtils_Structs.h"
 #include "OmegaSubsystem_Save.generated.h"
 
+class UOAsset_Campaign;
 class UOmegaQuest;
 class UOmegaSaveBase;
 class UOmegaSaveGame;
@@ -55,10 +56,20 @@ UCLASS(DisplayName = "Omega Subsystem: Save")
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
-
+	
+	UFUNCTION() bool L_SaveGame(FString SlotName,FGameplayTag SaveCategory);
+	UFUNCTION() void OnPlaytimeUpdate();
+	
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
+	
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
+	class UOmegaSaveGame* ActiveSaveData;
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
+	class UOmegaSaveGlobal* GlobalSaveData;
+	
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|SaveSubsystem")
 	void GetSaveSlotName(int32 Slot, FString& OutName);
@@ -75,9 +86,6 @@ public:
 	//###############################################################################################
 	// Playtime
 	//###############################################################################################
-	UFUNCTION()
-	void OnPlaytimeUpdate();
-
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem")
 	FTimespan GetSavePlaytime(bool bGlobal);
 
@@ -94,21 +102,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem",DisplayName="Save Active Game (To Name)")
 	void SaveActiveGame_Named(FString Slot,FGameplayTag SaveCategory, bool& Success);
-
 	
-	UFUNCTION()
-	bool Local_SaveGame(FString SlotName,FGameplayTag SaveCategory);
 	
 	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem")
 		UOmegaSaveGame* CreateNewGame();
 
-	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem", meta = (AdvancedDisplay = "Tags"))
-		void StartGame(class UOmegaSaveGame* GameData, bool LoadSavedLevel, FGameplayTagContainer Tags);
+	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem", meta = (AdvancedDisplay = "Tags, NewGame, NewCampaign"))
+		void StartGame(class UOmegaSaveGame* GameData, bool LoadSavedLevel, FGameplayTagContainer Tags,
+			bool NewGame=false, UOAsset_Campaign* NewCampaign=nullptr);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
-		class UOmegaSaveGame* ActiveSaveData;
-	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
-		class UOmegaSaveGlobal* GlobalSaveData;
 
 private:
 
@@ -398,8 +400,8 @@ public:
 	
 	UFUNCTION() void Local_OnLoaded();
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save")  FGuid SaveGuid;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save")  int32 SaveSeed;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Base")  FGuid SaveGuid;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Base")  int32 SaveSeed;
 	
 	UPROPERTY()  FOmegaGlobalVarsContainer GlobalVars;
 	
@@ -407,6 +409,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame) TMap<UPrimaryDataAsset*,FOmegaSaveVars> Vars_Assets;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame) TMap<FGuid,FOmegaSaveVars> Vars_Guid;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame) TMap<FGameplayTag,FOmegaList_DataAsset> Lists_Assets;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame) TMap<FGameplayTag,FOmegaList_Guids> Lists_Guids;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame) TMap<UOmegaQuest*,FOmegaQuestData> quest_data;
 	//GamePreferences
@@ -438,49 +443,49 @@ public:
 	
 
 	//Soft Property
-	UPROPERTY(EditAnywhere,Category="Save")
+	UPROPERTY(EditAnywhere,Category="Properties")
 	TMap<FName, bool> Prop_bool;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Bool(const FString& Name, bool Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	bool GetSaveProperty_Bool(const FString& Name);
 	
-	UPROPERTY(EditAnywhere,Category="Save")
+	UPROPERTY(EditAnywhere,Category="Properties")
 	TMap<FName, float> Prop_float;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Float(const FString& Name, float Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	float GetSaveProperty_Float(const FString& Name);
 	
-	UPROPERTY(EditAnywhere,Category="Save")
+	UPROPERTY(EditAnywhere,Category="Properties")
 	TMap<FName, int32> Prop_int;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Int(const FString& Name, int32 Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	int32 GetSaveProperty_Int(const FString& Name);
 	
-	UPROPERTY(EditAnywhere,Category="Save")
+	UPROPERTY(EditAnywhere,Category="Properties")
 	TMap<FName, FString> Prop_string;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_String(const FString& Name, const FString& Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FString GetSaveProperty_String(const FString& Name);
 	
-	UPROPERTY(EditAnywhere,Category="Save")
+	UPROPERTY(EditAnywhere,Category="Properties")
 	TMap<FName, FGameplayTag> Prop_Tag;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Tag(const FString& Name, FGameplayTag Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FGameplayTag GetSaveProperty_Tag(const FString& Name);
 
-	UPROPERTY(EditAnywhere,Category="Save")
+	UPROPERTY(EditAnywhere,Category="Properties")
 	TMap<FName, FGameplayTagContainer> Prop_Tags;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Tags(const FString& Name, FGameplayTagContainer Value);
 	UFUNCTION(BlueprintPure, Category="OmegaSave")
 	FGameplayTagContainer GetSaveProperty_Tags(const FString& Name);
 	
-	UPROPERTY(EditAnywhere,Category="Save")
+	UPROPERTY(EditAnywhere,Category="Properties")
 	TMap<FName, UPrimaryDataAsset*> Prop_Asset;
 	UFUNCTION(BlueprintCallable, Category="OmegaSave")
 	void SetSaveProperty_Asset(const FString& Name, UPrimaryDataAsset* Value);
@@ -538,6 +543,9 @@ public:
 	UPROPERTY() FString ActiveLevelName;
 	UPROPERTY() FTransform SavedPlayerTransform;
 	UPROPERTY() UOmegaZoneData* ActiveZone;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Save")
+	UOAsset_Campaign* Campaign;
 
 	UPROPERTY(BlueprintReadOnly, Category="Save")
 	FDateTime SaveDate;

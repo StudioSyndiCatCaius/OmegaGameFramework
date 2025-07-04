@@ -39,6 +39,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component",DisplayName="Get Instance (By Context)")
 	AOmegaInstanceActor* GetInstanceByContext(UObject* Context);
 
+	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
+	TArray<AOmegaInstanceActor*> GetInstancesByContexts(TArray<UObject*> Contexts);
+
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component",DisplayName="Get Instance (By Name)")
 	AOmegaInstanceActor* GetInstanceByName(const FString& Name);
 

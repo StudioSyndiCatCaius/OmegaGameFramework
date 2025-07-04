@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "UObject/Object.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Misc/GeneralDataObject.h"
 #include "OmegaSettings_Localization.generated.h"
 
 
@@ -25,7 +26,7 @@ public:
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOAsset_Localization : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOAsset_Localization : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 

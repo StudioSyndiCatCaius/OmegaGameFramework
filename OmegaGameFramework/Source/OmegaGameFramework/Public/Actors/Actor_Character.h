@@ -11,6 +11,9 @@
 #include "Actor_Character.generated.h"
 
 
+class UStateTreeComponent;
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaCharacterConfig : public UOmegaActorConfig
 {
@@ -22,7 +25,7 @@ public:
 
 
 
-UCLASS()
+UCLASS(HideCategories=("Skeletal Mesh, Physics,"))
 class OMEGAGAMEFRAMEWORK_API AOmegaBaseCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -37,4 +40,5 @@ public:
 
 	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UBoxComponent* BoundsComponent;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UStateTreeComponent* StateTree;
 };

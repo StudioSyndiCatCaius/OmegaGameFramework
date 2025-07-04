@@ -7,7 +7,13 @@
 #include "Functions/OmegaFunctions_Combatant.h"
 #include "OmegaMutable_Functions.h"
 #include "OmegaSettings_Gameplay.h"
+#include "Camera/CameraComponent.h"
+#include "Components/BillboardComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/Component_CombatantExtension.h"
+#include "Components/StateTreeComponent.h"
 #include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, UActorIdentityComponent* Component)
@@ -46,6 +52,20 @@ bool AOmegaCharacter::b_IdentityHasGeneralInterface()
 	return false;
 }
 
+void AOmegaCharacter::L_Camera_Update()
+{
+	if(UseCameraPull)
+	{
+		if(CameraBoom)
+		{
+			FRotator _rot =UKismetMathLibrary::FindLookAtRotation(CameraPull,CameraBoom->GetRelativeLocation());
+			CameraBoom->SetRelativeRotation(_rot);
+			float _dis=UKismetMathLibrary::Vector_Distance(CameraBoom->GetRelativeLocation(),CameraPull);
+			CameraBoom->TargetArmLength=_dis;
+		}
+	}
+}
+
 // Sets default values
 AOmegaCharacter::AOmegaCharacter()
 {
@@ -55,8 +75,7 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	ActorIdentity = CreateDefaultSubobject<UActorIdentityComponent>(TEXT("Actor Identity"));
 	Combatant = CreateDefaultSubobject<UCombatantComponent>(TEXT("Combatant"));
-	//DataItem = CreateDefaultSubobject<UDataItemComponent>(TEXT("DataItem"));
-	//if(DataItem){ DataItem->FlagOnApplied="SetCharacter"; }
+
 	Equipment = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
 	Inventory = CreateDefaultSubobject<UDataAssetCollectionComponent>(TEXT("Inventory"));
 	Leveling = CreateDefaultSubobject<ULevelingComponent>(TEXT("Leveling"));
@@ -67,11 +86,22 @@ AOmegaCharacter::AOmegaCharacter()
 	GameplayPause = CreateDefaultSubobject<UGameplayPauseComponent>(TEXT("GameplayPause"));
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
 	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
-
-	//CustomSkelMesh=CreateOptionalDefaultSubobject<UCustomizableSkeletalComponent>(TEXT("CustomSkelMesh"));
-	//CustomSkelMesh->SetupAttachment(GetMesh());
-	//CustomSkelMesh->ComponentIndex=-1;
-	//CustomSkelMesh->SetComponentName(FName("Body"));
+	
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("Camera Boom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	MainCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Main Camera"));
+	MainCamera->SetupAttachment(CameraBoom);
+	
+	Text_Name = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Text Name"));
+	Text_Name->SetupAttachment(RootComponent);
+	Text_Name->SetMaterial(0,LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/m_OutlineText.m_OutlineText")));
+	Text_Name->HorizontalAlignment=EHTA_Center;
+	Text_Name->WorldSize=80;
+	Text_Name->VerticalAlignment=EVRTA_TextBottom;
+	Text_Name->bHiddenInGame=true;
+	
+	Icon_Faction = CreateDefaultSubobject<UBillboardComponent>(TEXT("Icon Faction"));
+	Icon_Faction->SetupAttachment(RootComponent);
 	
 	SkinTarget=CreateOptionalDefaultSubobject<UChildActorComponent>(TEXT("SkinTarget"));
 	SkinTarget->SetupAttachment(GetMesh());
@@ -83,10 +113,26 @@ AOmegaCharacter::AOmegaCharacter()
 	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
 
 	ActorIdentity->OnActorIdentityChanged.AddDynamic(this, &AOmegaCharacter::OnActorIdentityChanged);
+
+	if(GetMesh())
+	{
+		FVector bounds_loc=GetMesh()->GetLocalBounds().BoxExtent;
+		Text_Name->SetRelativeLocation(bounds_loc+FVector(0,0,140));
+		Icon_Faction->SetRelativeLocation(bounds_loc+FVector(0,0,110));
+	}
+
+	GetCapsuleComponent()->ShapeColor=FColor::Cyan;
+
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MatRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male"));
+	GetMesh()->SetSkeletalMeshAsset(MatRef.Object);
+
+	//static ConstructorHelpers::FClassFinder<UAnimInstance> AnmRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Animations/ABP_OmegaDemo_Mannequin.ABP_OmegaDemo_Mannequin_c"));
+	//GetMesh()->SetAnimInstanceClass(AnmRef.Class);
 }
 
 void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 {
+	L_Camera_Update();
 	if(CharacterAsset)
 	{
 		SetCharacterAsset(CharacterAsset);
@@ -96,6 +142,19 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 		SkinComponent->SetupLinkedComponents(GetMesh(),SkinTarget);
 		SkinComponent->Assemble();
 	}
+
+	if(Combatant && Combatant->FactionDataAsset)
+	{
+		Icon_Faction->SetVisibility(false);
+		if(UTexture2D* texture =Cast<UTexture2D>(Combatant->FactionDataAsset->FactionIcon.GetResourceObject()))
+		{
+			Text_Name->SetTextRenderColor(Combatant->FactionDataAsset->FactionColor.ToFColorSRGB());
+			Icon_Faction->SetVisibility(true);
+			Icon_Faction->SetSprite(texture);
+		}
+	}
+	Text_Name->SetText(L_GetDisplayName());
+	
 	Super::OnConstruction(Transform);
 }
 
@@ -167,6 +226,13 @@ void AOmegaCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
+void AOmegaCharacter::Camera_Front()
+{
+	CameraPull=FVector(200,0,0)+CameraOffset;
+	UseCameraPull=true;
+	L_Camera_Update();
+}
+
 TArray<UOmegaObjectTrait*> AOmegaCharacter::GetTraits_Implementation()
 {
 	TArray<UOmegaObjectTrait*> out;
@@ -190,13 +256,37 @@ void AOmegaCharacter::Local_UpdateDataItem(UOmegaDataItem* NewItem)
 }
 
 
-void AOmegaCharacter::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
+FText AOmegaCharacter::L_GetDisplayName()
 {
+	FText text_out;
+	FText desc_out;
+	if(!OverrideName.IsEmpty())
+	{
+		return OverrideName;
+	}
+	if(b_IdentityHasGeneralInterface())
+    {
+    	Execute_GetGeneralDataText(ActorIdentity->GetIdentitySourceAsset(),"",this,text_out,desc_out);
+    }
+	return text_out;
+}
+
+FText AOmegaCharacter::L_GetDisplayDescript()
+{
+	FText text_out;
+	FText desc_out;
 	if(b_IdentityHasGeneralInterface())
 	{
-		Execute_GetGeneralDataText(ActorIdentity->GetIdentitySourceAsset(),"",this,Name,Description);
+		Execute_GetGeneralDataText(ActorIdentity->GetIdentitySourceAsset(),"",this,text_out,desc_out);
 	}
+	return desc_out;
+}
+
+void AOmegaCharacter::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+                                                        FText& Description)
+{
+	Name=L_GetDisplayName();
+	Description=L_GetDisplayDescript();
 	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
 }
 
@@ -226,7 +316,22 @@ void AOmegaCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
 
 AOmegaEncounterCharacter::AOmegaEncounterCharacter()
 {
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MatRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male_BlackRed.SK_MannequinDemo_Male_BlackRed"));
+	GetMesh()->SetSkeletalMeshAsset(MatRef.Object);
+	//static ConstructorHelpers::FClassFinder<UAnimInstance> AnmRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Animations/ABP_OmegaDemo_Mannequin.ABP_OmegaDemo_Mannequin_c"));
+	//GetMesh()->SetAnimInstanceClass(AnmRef.Class);
+	
+	ActorIdentity = CreateDefaultSubobject<UActorIdentityComponent>(TEXT("Actor Identity"));
+	ActorState = CreateDefaultSubobject<UActorStateComponent>(TEXT("ActorState"));
+	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
+	SubscriptComponent = CreateDefaultSubobject<USubscriptComponent>(TEXT("Subscript"));
+	SkinComponent = CreateDefaultSubobject<USkinComponent>(TEXT("Skin"));
+	GameplayPause = CreateDefaultSubobject<UGameplayPauseComponent>(TEXT("GameplayPause"));
+	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
+	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
+	
 	StageID=FGameplayTag::RequestGameplayTag(FName("Combat.Stage.Default"));
+	GetCapsuleComponent()->ShapeColor=FColor::Red;
 }
 
 void AOmegaEncounterCharacter::OnConstruction(const FTransform& Transform)
@@ -250,4 +355,16 @@ void AOmegaReferenceCharacter::BeginPlay()
 {
 	SetActorHiddenInGame(true);
 	Super::BeginPlay();
+}
+
+AOmegaCinematicCharacter::AOmegaCinematicCharacter()
+{
+	ActorIdentityComponent=CreateOptionalDefaultSubobject<UActorIdentityComponent>("ActorID");
+
+	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
+	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MatRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male_green.SK_MannequinDemo_Male_green"));
+	GetMesh()->SetSkeletalMeshAsset(MatRef.Object);
+	//static ConstructorHelpers::FClassFinder<UAnimInstance> AnmRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Animations/ABP_OmegaDemo_Mannequin.ABP_OmegaDemo_Mannequin_c"));
+	//GetMesh()->SetAnimInstanceClass(AnmRef.Class);
 }

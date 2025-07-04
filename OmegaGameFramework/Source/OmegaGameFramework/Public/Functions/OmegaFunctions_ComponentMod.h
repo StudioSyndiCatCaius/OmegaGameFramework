@@ -10,12 +10,61 @@
 #include "OmegaFunctions_ComponentMod.generated.h"
 
 // =====================================================================================================================
+// ACtor Modifiers
+// =====================================================================================================================
+
+UCLASS(BlueprintType,Blueprintable,Abstract,Const,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UActorModifierScript : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintImplementableEvent,Category="Script")
+	bool OnAppliedToActor(AActor* Actor) const;
+	
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FActorModifiers
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
+	TArray<UActorModifierScript*> Script;
+};
+
+
+// =====================================================================================================================
 // Component Modifiers
 // =====================================================================================================================
+
+UCLASS(BlueprintType,Blueprintable,Abstract,Const,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UComponentModScript : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintImplementableEvent,Category="Script")
+	bool OnAppliedToComponent(UActorComponent* Component) const;
+	
+};
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FComponentMods
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
+	TArray<UComponentModScript*> Script;
+};
+
 
 // --------------------------------------------------------------------
 // Skeletal Mesh
 // --------------------------------------------------------------------
+
 
 UCLASS(BlueprintType,Blueprintable,Abstract,Const,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UComponentModScript_SkeletalMesh : public UObject
@@ -102,7 +151,13 @@ class OMEGAGAMEFRAMEWORK_API UOmegaComponentModifierFunctions : public UBlueprin
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
+	static void ApplyModifierTo_Actor(FActorModifiers mods, AActor* Actor);
 
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
+	static void ApplyModifierTo_Component(FComponentMods mod, UActorComponent* Component);
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
 	static void ApplyModifierTo_SkeletalMesh(FComponentMod_SkeletalMesh mod, USkeletalMeshComponent* Component);	
 	
