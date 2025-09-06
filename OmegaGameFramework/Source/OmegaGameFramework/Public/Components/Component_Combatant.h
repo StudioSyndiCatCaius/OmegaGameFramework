@@ -8,10 +8,12 @@
 #include "Interfaces/OmegaInterface_Skill.h"
 #include "Engine/DataAsset.h"
 #include "JsonObjectWrapper.h"
+#include "OmegaGameplayComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Components/ActorComponent.h"
+#include "Interfaces/OmegaInterface_Combatant.h"
 #include "Misc/OmegaAttribute.h"
-
+#include "Misc/OmegaUtils_Enums.h"
 #include "Component_Combatant.generated.h"
 
 class APawn;
@@ -35,15 +37,6 @@ class UInputComponent;
 class UEnhancedInputComponent;
 class UInputAction;
 
-
-UENUM(Blueprintable, BlueprintType)
-enum EFactionAffinity
-{
-	NeutralAffinity			UMETA(DisplayName = "Neutral"),
-	FriendlyAffinity		UMETA(DisplayName = "Friendly"),
-	HostileAffinity			UMETA(DisplayName = "Hostile"),
-};
-
 /// DELEGATES
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantLevelChange, int32, NewLevel);
@@ -59,10 +52,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatantNotify, UCombatantCom
 	(GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, ErrorText))
 
 UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent), CollapseCategories="Sockets,Component Tick,Component Replication,Activation,Cooking" )
-class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UActorComponent, public IDataInterface_General, public IDataInterface_SkillSource,
-																			public IDataInterface_AttributeModifier
+class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UOmegaGameplayComponent, public IDataInterface_General, public IDataInterface_SkillSource,
+																			public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier
 {
 	GENERATED_BODY()
+
+	float L_ModifyDamage(UOmegaAttribute* Attribute,UObject* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context);
 	
 	UPROPERTY() UEnhancedInputComponent* OwnerInputComp;
 	UPROPERTY() APawn* OwnerPawn;
@@ -73,7 +68,8 @@ public:
 	
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override; 
+	
 	// ------------------------------------------------------------------------------------------------------------------------
 	// General
 	// ------------------------------------------------------------------------------------------------------------------------
@@ -89,9 +85,14 @@ public:
 	FJsonObjectWrapper JsonMetadata;
 	
 		//		--- FUNCTION ---
+	UPROPERTY(VisibleInstanceOnly,Category="Modifiers")
+	TArray<UObject*> SOURCES_Master;
 	UFUNCTION(BlueprintCallable, Category="DataSource", DisplayName="Set MASTER Source Active")
 	void SetMasterDataSourceActive(UObject* Source, bool bActive);
 
+	UPROPERTY(EditAnywhere, Category = "Flags")
+	bool bUseSkillsAsMasterSource=true;
+	
 	// ------------------------------------------------------------------------------------------------------------------------
 	// Attributes
 	// ------------------------------------------------------------------------------------------------------------------------
@@ -283,18 +284,7 @@ public:
 
 
 	UFUNCTION()
-	TArray<UObject*> Local_GetSkillSources()
-	{
-		TArray<UObject*> OutSkills;
-		for(auto* TempSource : SOURCES_Skills)
-		{
-			if(TempSource && TempSource->GetClass()->ImplementsInterface(UDataInterface_SkillSource::StaticClass()))
-			{
-				OutSkills.AddUnique(TempSource);
-			}
-		}
-		return OutSkills;
-	}
+	TArray<UObject*> Local_GetSkillSources();
 	
 	//----------------------------------------------------------------------------------------------------------------------------------------------//
 	// -- Gameplay Tags -- 
@@ -580,29 +570,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Gambit")
 	bool GetActionDataFromGambit(UCombatantGambitAsset* Gambit, TSubclassOf<AOmegaAbility>& Ability, UObject*& Context);
-
-	//##################################################################################################################
-	// Deprecated
-	//##################################################################################################################
 	
-	// --- DEPRECATED ---
-	UFUNCTION(BlueprintCallable, Category= "Attributes|Modifiers",meta=(DeprecatedFunction))
-	bool AddAttrbuteModifier(UObject* Modifier);
-
-	// --- DEPRECATED ---
-	UFUNCTION(BlueprintCallable, Category= "Attributes|Modifiers",meta=(DeprecatedFunction))
-	bool RemoveAttributeModifier(UObject* Modifier);
-
-	// --- DEPRECATED ---
-	UFUNCTION(BlueprintCallable, meta=(DeprecatedFunction))
-	void AddTargetToList(UCombatantComponent* Combatant);
-
-	// --- DEPRECATED ---
-	UFUNCTION(BlueprintCallable, meta=(DeprecatedFunction))
-	void AddTargetsToList(TArray<UCombatantComponent*> Combatants, bool bClearListFirst);
-
-	// --- DEPRECATED ---
-	UFUNCTION(BlueprintCallable, meta=(DeprecatedFunction))
-	void RemoveTargetFromList(UCombatantComponent* Combatant);
 	
 };

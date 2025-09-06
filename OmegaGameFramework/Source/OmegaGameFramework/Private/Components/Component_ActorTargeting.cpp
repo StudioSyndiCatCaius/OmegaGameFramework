@@ -2,10 +2,13 @@
 
 
 #include "Components/Component_ActorTargeting.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Condition/Condition_Actor.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
+#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/OmegaFunctions_ComponentMod.h"
 #include "Functions/OmegaFunctions_TagEvent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 bool is_valid_child(AActor* actor_ref, TArray<TSubclassOf<AActor>> classes_ref)
@@ -47,32 +50,47 @@ void UActorTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+void UActorTargetingComponent::L_setTagsOnActor(AActor* Actor, TArray<FName> tags, bool bActive)
+{
+	if(Actor)
+	{
+		for (FName TempTag : tags)
+		{
+			UOmegaGameFrameworkBPLibrary::SetActorTagActive(Actor, TempTag,bActive);
+		}
+	}
+}
+
 bool UActorTargetingComponent::SetActorRegistered(AActor* Actor, bool bRegister)
 {
 	if(Actor)
 	{
-		if (bRegister
-			&& !GetRegisteredTargets().Contains(Actor)
-			&& (is_valid_child(Actor,IncludedClasses) || IncludedClasses.IsEmpty())
-			&& !is_valid_child(Actor,ExcludedClasses)
-			&& (is_valid_tag(Actor,IncludedTags) || IncludedTags.IsEmpty())
-			&& !is_valid_tag(Actor,ExcludedTags)
-			&& UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTags(Actor,TargetGameplayTagsRequired,true)
-			&& !UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTags(Actor,TargetGameplayTagsBlocked,true,false)
-			)
+		FOmegaConditions_Actor con;
+		con.Conditions=Conditions_CanRegister;
+		if (bRegister && !IsActorRegistered(Actor) && con.CheckConditions(Actor))
 		{
 			REF_Actors.AddUnique(Actor);
+			
+			FActorModifiers mod;
+			mod.Script=ActorMods_OnRegister;
+			mod.ApplyMods(Actor);
+
+			UActorTagEventFunctions::FireTagEventsOnActor(Actor,TagEvents_OnRegister);
+			
 			OnActorRegisteredUpdate.Broadcast(Actor,true);
-			UActorTagEventFunctions::FireTagEventsOnActor(Actor,EventsOnRegister);
-			local_setTagsOnActor(Actor,TagsOnRegister,true);
 			return true;
 		}
-		if(!bRegister && GetRegisteredTargets().Contains(Actor))
+		if(!bRegister && IsActorRegistered(Actor))
 		{
 			REF_Actors.Remove(Actor);
+			
+			FActorModifiers mod;
+			mod.Script=ActorMods_OnUnregister;
+			mod.ApplyMods(Actor);
+			
+			UActorTagEventFunctions::FireTagEventsOnActor(Actor,TagEvents_OnUnregister);
+			
 			OnActorRegisteredUpdate.Broadcast(Actor,false);
-			UActorTagEventFunctions::FireTagEventsOnActor(Actor,EventsOnUnregister);
-			local_setTagsOnActor(Actor,TagsOnRegister,false);
 			
 			// Cleat if Active Target
 			if(GetActiveTarget() && GetActiveTarget()==Actor)
@@ -105,6 +123,15 @@ void UActorTargetingComponent::ClearRegisteredTargets()
 	}
 }
 
+bool UActorTargetingComponent::IsActorRegistered(AActor* Actor) const
+{
+	if(Actor && REF_Actors.Contains(Actor))
+	{
+		return true;
+	}
+	return false;
+}
+
 TArray<AActor*> UActorTargetingComponent::GetRegisteredTargets()
 {
 	TArray<AActor*> out;
@@ -117,8 +144,12 @@ void UActorTargetingComponent::SetActiveTarget(AActor* Actor, bool bAutoRegister
 {
 	if(REF_TargetActor)
 	{
-		UActorTagEventFunctions::FireTagEventsOnActor(REF_TargetActor,EventsOnUntarget);
-		local_setTagsOnActor(Actor,TagsOnTarget,false);
+		FActorModifiers mod;
+		mod.Script=ActorMods_OnTargeted;
+		mod.ApplyMods(Actor);
+
+		UActorTagEventFunctions::FireTagEventsOnActor(Actor,TagEvents_OnTargeted);
+		
 		OnActorTargetUpdate.Broadcast(REF_TargetActor,false);
 		REF_TargetActor=nullptr;
 	}
@@ -128,9 +159,15 @@ void UActorTargetingComponent::SetActiveTarget(AActor* Actor, bool bAutoRegister
 		{
 			SetActorRegistered(Actor,true);
 		}
-		UActorTagEventFunctions::FireTagEventsOnActor(Actor,EventsOnTarget);
-		local_setTagsOnActor(Actor,TagsOnTarget,true);
+		
 		REF_TargetActor=Actor;
+		
+		FActorModifiers mod;
+		mod.Script=ActorMods_OnTargeted;
+		mod.ApplyMods(Actor);
+
+		UActorTagEventFunctions::FireTagEventsOnActor(Actor,TagEvents_OnUntargeted);
+		
 		OnActorTargetUpdate.Broadcast(Actor,true);
 		if(Sound_ChangeTarget)
 		{
@@ -139,7 +176,7 @@ void UActorTargetingComponent::SetActiveTarget(AActor* Actor, bool bAutoRegister
 	}
 }
 
-AActor* UActorTargetingComponent::GetActiveTarget()
+AActor* UActorTargetingComponent::GetActiveTarget() const
 {
 	if(REF_TargetActor)
 	{

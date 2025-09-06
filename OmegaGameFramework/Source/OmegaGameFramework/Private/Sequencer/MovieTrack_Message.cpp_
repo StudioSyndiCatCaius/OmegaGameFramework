@@ -1,0 +1,9 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Sequencer/MovieTrack_Message.h"
+
+UMovieTrack_Message::UMovieTrack_Message()
+{
+	
+}

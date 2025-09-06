@@ -12,8 +12,7 @@
 
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOmegaQuestStart, UOmegaQuestComponent* ,Component, UOmegaQuest*, Quest);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOmegaQuestEnd, UOmegaQuestComponent* ,Component, UOmegaQuest*, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOmegaQuestDelegate, UOmegaQuestComponent* ,Component, UOmegaQuest*, Quest);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnQuestStatusChanged, UOmegaQuestComponent* ,Component, EOmegaQuestStatus, NewStatus);
 
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,CollapseCategories,meta=(ShowWorldContextPin))
@@ -84,8 +83,8 @@ public:
 	UFUNCTION()
 	void local_RegisterQuestComponent(UOmegaQuestComponent* comp, bool comp_registered);
 	
-	UPROPERTY(BlueprintAssignable) FOnOmegaQuestStart OnQuestStart;
-	UPROPERTY(BlueprintAssignable) FOnOmegaQuestEnd OnQuestEnd;
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuestStart;
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuestEnd;
 
 	UFUNCTION(BlueprintCallable,Category="OmegaQuestSubsystem",DisplayName="Get Quest (First w/ Asset)")
 	UOmegaQuestComponent* GetQuest_FirstWithAsset(UOmegaQuest* Quest);
@@ -113,8 +112,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaQuestComponent : public UActorComponent
 	UPROPERTY() UObject* QuestContextObject=nullptr;
 	
 public:	
-	UPROPERTY(BlueprintAssignable) FOnOmegaQuestStart OnQuestStart;
-	UPROPERTY(BlueprintAssignable) FOnOmegaQuestEnd OnQuestEnd;
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuestStart;
+	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuestEnd;
 	UPROPERTY(BlueprintAssignable) FOnQuestStatusChanged OnQuestStatusChanged;
 	
 	virtual void BeginPlay() override;

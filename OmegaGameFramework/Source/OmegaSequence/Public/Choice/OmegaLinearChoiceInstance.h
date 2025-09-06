@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "OmegaLinearChoice.h"
+#include "Actors/Actor_ChoiceBase.h"
 #include "OmegaLinearChoiceInstance.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnChoiceSelected, UOmegaLinearChoice*, Choice, int32, SelectedChoice);
@@ -19,8 +20,8 @@ struct FOmegaLinearChoices
 	
 };
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class OMEGASEQUENCE_API AOmegaLinearChoiceInstance : public AActor
+UCLASS()
+class OMEGASEQUENCE_API AOmegaLinearChoiceInstance : public AOmegaActor_ChoiceBASE
 {
 	GENERATED_BODY()
 

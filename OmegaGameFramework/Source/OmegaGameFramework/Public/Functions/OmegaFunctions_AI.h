@@ -6,10 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "StateTree.h"
 #include "OmegaFunctions_AI.generated.h"
-
-
 
 UCLASS()
 class UOmegaAIFunctions : public UBlueprintFunctionLibrary

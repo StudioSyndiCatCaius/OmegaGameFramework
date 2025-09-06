@@ -3,6 +3,7 @@
 
 #include "Functions/OmegaFunctions_Camera.h"
 #include "IPlatformFilePak.h"
+#include "Subsystems/OmegaSubsystem_DynamicCamera.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 
 

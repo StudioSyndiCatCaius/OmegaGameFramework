@@ -52,6 +52,14 @@ void UHUDLayer::RemoveHUDLayer()
 }
 
 
+void UHUDLayer::OnGlobalEvent_Implementation(FName Event, UObject* Context)
+{
+}
+
+void UHUDLayer::OnTaggedGlobalEvent_Implementation(FGameplayTag Event, UObject* Context)
+{
+}
+
 void UHUDLayer::Local_BindGlobalEvent()
 {
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UHUDLayer::OnGlobalEvent);
@@ -59,7 +67,7 @@ void UHUDLayer::Local_BindGlobalEvent()
 }
 
 void UHUDLayer::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
-	FLuaValue meta)
+	FOmegaGameplayMessageMeta meta)
 {
 }
 

@@ -212,6 +212,37 @@ void AOmegaGameplayEffect::TriggerEffect()
 	
 }
 
+void AOmegaGameplayEffect::RemoveEffects_OfThisClass()
+{
+	if(TargetedCombatant)
+	{
+		for(auto* e : TargetedCombatant->GetAllEffects())
+		{
+			if(e && e!=this && e->GetClass()==GetClass())
+			{
+				e->K2_DestroyActor();
+			}
+		}
+	}
+}
+
+AOmegaGameplayEffect* AOmegaGameplayEffect::TryGetEffect_OfThisClass(bool& result)
+{
+	if(TargetedCombatant)
+	{
+		for(auto* e : TargetedCombatant->GetAllEffects())
+		{
+			if(e && e!=this && e->GetClass()==GetClass())
+			{
+				result=true;
+				return e;
+			}
+		}
+	}
+	result=false;
+	return nullptr;
+}
+
 UOmegaDamageType* AOmegaGameplayEffect::GetDamageType_Implementation(UObject* Context)
 {
 	return nullptr;

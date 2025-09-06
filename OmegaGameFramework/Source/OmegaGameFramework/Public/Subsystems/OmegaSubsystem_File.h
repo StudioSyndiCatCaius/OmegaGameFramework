@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Misc/OmegaUtils_Structs.h"
 #include "Sound/SoundBase.h"
 #include "OmegaSubsystem_File.generated.h"
 

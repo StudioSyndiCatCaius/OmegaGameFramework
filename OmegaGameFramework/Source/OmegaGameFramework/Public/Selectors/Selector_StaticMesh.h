@@ -6,11 +6,6 @@
 #include "Misc/GeneralDataObject.h"
 #include "Selector_StaticMesh.generated.h"
 
-
-
-
-
-
 USTRUCT(BlueprintType)
 struct FOmegaSelect_StaticMesh
 {

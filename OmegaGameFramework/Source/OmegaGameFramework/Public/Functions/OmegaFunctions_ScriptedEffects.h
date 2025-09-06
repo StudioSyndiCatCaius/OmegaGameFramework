@@ -6,14 +6,13 @@
 #include "LuaInterface.h"
 #include "LuaValue.h"
 #include "Engine/DataAsset.h"
-
 #include "Styling/SlateBrush.h"
 #include "Interfaces/OmegaInterface_Common.h"
-#include "Curves/CurveFloat.h"
-#include "Components/Component_Combatant.h"
-#include "Actors/Actor_GameplayCue.h"
-
 #include "OmegaFunctions_ScriptedEffects.generated.h"
+
+class UCombatantComponent;
+class AOmegaGameplayCue;
+class UCurveFloat;
 
 USTRUCT(BlueprintType)
 struct FOmegaCustomScriptedEffects
@@ -25,15 +24,18 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect")
 	TArray<UOmegaScriptedEffect*> CustomEffects;
+
+	TArray<UOmegaScriptedEffect*> GetAllEffects();
 };
 
 
 UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories, Abstract,meta=(ShowWorldContextPin))
-class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffect : public UObject, public ILuaInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffect : public UObject, public ILuaInterface, public IDataInterface_General
 {
 	GENERATED_BODY()
 
 public:
+	
 	UFUNCTION(BlueprintNativeEvent, Category="Scripted Effect")
 	bool CanApplyEffect(UCombatantComponent* Target, UCombatantComponent* Instigator);
 	
@@ -69,6 +71,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category="Effect")
 	TArray<TSubclassOf<AOmegaGameplayCue>> GameplayCues;
+	
 };
 
 
@@ -78,12 +81,18 @@ class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffectFunctions : public UBlueprintFu
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable, Category="Omega|Combat")
+	static FText GetEffects_Description(FOmegaCustomScriptedEffects effects, const FString& delimiter=" ");
+	
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="Apply Scripted Effects")
-	static void ApplyEffectScriptToCombatant(TArray<UOmegaScriptedEffect*> Effects, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);
+	static void ApplyScriptedEffects_List(TArray<UOmegaScriptedEffect*> Effects, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="Apply Scripted Effects (Asset)")
-	static void ApplyScriptedEffectToCombatant(UOmegaScriptedEffectAsset* EffectAsset, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);
+	static void ApplyScriptedEffects_Asset(UOmegaScriptedEffectAsset* EffectAsset, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="Apply Scripted Effects (Asset)")
+	static void ApplyScriptedEffects_Source(UObject* EffectAsset, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr,FGameplayTag Tag=FGameplayTag());
+	
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="Apply Scripted Effects (Custom)")
 	static void ApplyCustomScriptedEffectToCombatant(FOmegaCustomScriptedEffects Effects, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);
 
@@ -101,6 +110,8 @@ class OMEGAGAMEFRAMEWORK_API IOmegaScriptedEffectsInterface
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Omega|ScriptedEffects")
-	FOmegaCustomScriptedEffects GetScriptedEffects(FGameplayTag Tag);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|ScriptedEffects",DisplayName="Effect - Get Effects")
+	FOmegaCustomScriptedEffects GetScriptedEffects(FName Name);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|ScriptedEffects",DisplayName="Effect - On Applied")
+	FOmegaCustomScriptedEffects OnEffectsApplied(UCombatantComponent* Target,UCombatantComponent* Instigator,FGameplayTag Tag);
 };

@@ -4,13 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "GameplayTagContainer.h"
 #include "OmegaInterface_AssetThumbnail.generated.h"
-
-class UOmegaAttribute;
-class UCombatantComponent;
-class UCombatantFilter;
-class AOmegaGameplayEffect;
 
 // ===================================================================================================================
 // Skill Source
@@ -21,6 +15,8 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_AssetThumbnail
 	GENERATED_BODY()
 	public:
 
+	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") UTexture2D* GetThumbnailBack_Texture();
+	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") FLinearColor GetThumbnailBack_Tint();
 	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") FSlateBrush GetThumbnail_Brush();
 	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") FText GetThumbnail_Text();
 };

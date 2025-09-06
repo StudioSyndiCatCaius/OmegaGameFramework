@@ -1,14 +1,17 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Subsystems//OmegaSubsystem_DynamicCamera.h"
+#include "Subsystems/OmegaSubsystem_DynamicCamera.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "OmegaSettings.h"
 #include "GameFramework/Pawn.h"
 #include "Engine/LocalPlayer.h"
 #include "Functions/OmegaFunctions_Common.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Subsystems/OmegaSubsystem_Gameplay.h"
 
 void UOmegaDynamicCameraSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -26,15 +29,28 @@ void UOmegaDynamicCameraSubsystem::PlayerControllerChanged(APlayerController* Ne
 
 void UOmegaDynamicCameraSubsystem::Tick(float DeltaTime)
 {
-	last_delta=DeltaTime;
-	if(REF_Controller)
+	if(GetWorld() && REF_Controller)
 	{
-		if(AOmegaDynamicCamera* cam_source = GetSourceCamera())
+		last_delta=DeltaTime;
+		if(REF_Controller)
 		{
-			if(AOmegaDynamicCamera* cam_master = GetDynamicCamera())
+			if(AOmegaDynamicCamera* _newCam = GetSourceCamera())
 			{
-				InterpToTarget(cam_source,cam_master,cam_source->InterpSpeed);
-				cam_source->SourceTick(DeltaTime,REF_Controller,this);
+				if(AOmegaDynamicCamera* cam_master = GetDynamicCamera())
+				{
+					//if current SourceCam does not match the one last frame, then call change
+					if(l_PreviousCam!=_newCam)
+					{
+						if(l_PreviousCam)
+						{
+							l_PreviousCam->OnEndAsTargetCamera(REF_Controller);
+						}
+						l_PreviousCam=_newCam;
+						_newCam->OnBeginAsTargetCamera(REF_Controller);
+					}
+					InterpToTarget(_newCam,cam_master,_newCam->InterpSpeed);
+					_newCam->SourceTick(DeltaTime,REF_Controller,this);
+				}
 			}
 		}
 	}
@@ -184,12 +200,14 @@ AOmegaDynamicCamera::AOmegaDynamicCamera()
 	//Setup Root Billboard
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("CameraRoot"));
 	comp_spring = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	comp_spring->TargetArmLength=0.0;
 	comp_spring->SetupAttachment(RootComponent);
 	comp_camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	comp_camera->SetupAttachment(comp_spring);
+	comp_camera->PostProcessSettings.MotionBlurAmount=0.1f;
 }
 
-FVector AOmegaDynamicCamera::LOCAL_Average_Vector(TArray<FVector> inputs, FVector CurrentValue, float DeltaTime)
+FVector AOmegaDynamicCamera::L_Average_Vector(TArray<FVector> inputs, FVector CurrentValue, float DeltaTime) const
 {
 	FVector sum = FVector::ZeroVector;
 	if (inputs.Num() == 0)
@@ -204,7 +222,7 @@ FVector AOmegaDynamicCamera::LOCAL_Average_Vector(TArray<FVector> inputs, FVecto
 }
 
 
-float AOmegaDynamicCamera::LOCAL_Average_Float(TArray<float> inputs, float CurrentValue, float DeltaTime)
+float AOmegaDynamicCamera::L_Average_Float(TArray<float> inputs, float CurrentValue, float DeltaTime)
 {
 	float sum = 0.0f;
 	if (inputs.Num() == 0)
@@ -218,7 +236,7 @@ float AOmegaDynamicCamera::LOCAL_Average_Float(TArray<float> inputs, float Curre
 	return FMath::FInterpTo(CurrentValue, average, DeltaTime, InterpSpeed); // Using 1.0f as interp speed, adjust as necessary
 }
 
-FTransform AOmegaDynamicCamera::LOCAL_Average_Transform(TArray<FTransform> inputs, FTransform CurrentValue, float DeltaTime)
+FTransform AOmegaDynamicCamera::L_Average_Transform(TArray<FTransform> inputs, FTransform CurrentValue, float DeltaTime)
 {
 	if (inputs.Num() == 0)
 		return CurrentValue;

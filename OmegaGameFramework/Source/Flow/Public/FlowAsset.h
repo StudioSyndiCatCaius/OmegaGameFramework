@@ -5,6 +5,7 @@
 #include "Interfaces/OmegaInterface_Common.h"
 #include "FlowSave.h"
 #include "FlowTypes.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "Templates/SubclassOf.h"
 #include "FlowAsset.generated.h"
 
@@ -55,8 +56,16 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	FGuid AssetGuid;
 
-	UPROPERTY() TMap<FName, FVector> FlowParams;
+	UPROPERTY() FOmegaCommonMeta FlowMeta;
+	UFUNCTION(BlueprintPure,Category="FlowAsset") FOmegaCommonMeta GetFlowMeta() const { return FlowMeta; }
+	
+	UPROPERTY() TMap<FName, int32> FlowParams;
+	UFUNCTION(BlueprintCallable,Category="Flow Asset | Params") void SetLocalParam_Bool(FName Param, bool val);
+	UFUNCTION(BlueprintCallable,Category="Flow Asset | Params") void SetLocalParam_Int(FName Param, int32 val, bool Add=false);
+	UFUNCTION(BlueprintPure,Category="Flow Asset | Params") bool GetLocalParam_Bool(FName Param);
+	UFUNCTION(BlueprintPure,Category="Flow Asset | Params") int32 GetLocalParam_Int(FName Param);
 
+	
 	virtual FGuid GetObjectGuid_Implementation() const  override { return AssetGuid; };
 
 	
@@ -387,3 +396,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="FlowAsset")
 	UFlowAsset* GetFlowAsset(FGameplayTag Tag);
 };
+
+/*
+UCLASS()
+class FLOW_API UQuestFlowAsset : public UFlowAsset 
+{
+	GENERATED_UCLASS_BODY()
+	
+};
+*/

@@ -10,8 +10,19 @@
 #include "HAL/IConsoleManager.h"
 #include "Sound/SoundClass.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+
+bool UOmegaUtilityFunctions::AreStreamedLevelsLoading(UObject* WorldContextObject)
+{
+	if(WorldContextObject)
+	{
+		return OGF_Load::LevelStream_IsLoading(WorldContextObject->GetWorld());
+	}
+	return true;
+}
 
 bool UOmegaUtilityFunctions::AreShadersCompiling()
 {
@@ -124,6 +135,53 @@ void UOmegaUtilityFunctions::SetWindowMode(const bool Fullscreen, const bool IsF
 	*/
 }
 
+TArray<UObject*> UOmegaUtilityFunctions::SortObjectsByDisplayName(TArray<UObject*> Objects)
+{
+	Objects.Sort([](const UObject& A, const UObject& B)
+	{
+		return IsObjectNameFirst(const_cast<UObject*>(&A), const_cast<UObject*>(&B));
+	});
+    
+	return Objects;
+}
+
+bool UOmegaStringFunctions::IsStringFirst(const FString& A, const FString& B)
+{
+	return A.Compare(B, ESearchCase::IgnoreCase) < 0;
+}
+
+TMap<FName, FString> UOmegaStringFunctions::ParseStringIntroParams(const FString& string,
+	const FString& param_delimiter, const FString& value_delimiter)
+{
+	TMap<FName, FString> out;
+	TArray<FString> string_list=UKismetStringLibrary::ParseIntoArray(string,param_delimiter);
+	for(FString s : string_list)
+	{
+		FString s_param;
+		FString s_val;
+		UKismetStringLibrary::Split(s,value_delimiter,s_param,s_val);
+
+		out.Add(FName(s_param),s_val);
+	}
+	return out;
+}
+
+bool UOmegaUtilityFunctions::IsObjectNameFirst(UObject* A, UObject* B)
+{
+	if (!A || !B)
+	{
+		// Handle null objects - null objects go to the end
+		return A && !B;
+	}
+    
+	// Get display names for comparison
+	FString NameA = A->GetName();
+	FString NameB = B->GetName();
+    
+	// Compare alphabetically (case-insensitive)
+	return NameA.Compare(NameB, ESearchCase::IgnoreCase) < 0;
+}
+
 /*
 bool UOmegaUtilityFunctions::CompareFloatValues(float Value1, float Value2, EComparisonMethod ComparisonMethod)
 {
@@ -227,10 +285,10 @@ bool UOmegaMathFunctions::RNG_RollFromFloat(float chance, bool& Outcome)
 	if(_rand==0.0 || _rand>chance)
 	{
 		Outcome=true;
-		return false;
+		return true;
 	}
 	Outcome=false;
-	return true;
+	return false;
 }
 
 float UOmegaMathFunctions::Variate_Float(float in, float amount, bool bAmountIsScale)
@@ -281,6 +339,26 @@ FRotator UOmegaMathFunctions::Random_RotatorInRange(const FRotator& Min, const F
 	_out.Pitch=UKismetMathLibrary::RandomFloatInRange(Min.Pitch,Max.Pitch);
 	_out.Roll=UKismetMathLibrary::RandomFloatInRange(Min.Roll,Max.Roll);
 	return _out;
+}
+
+TMap<UPrimaryDataAsset*, int32> UOmegaMathFunctions::InvertMapValues_AssetInt(TMap<UPrimaryDataAsset*, int32> in)
+{
+	TMap<UPrimaryDataAsset*, int32> out;
+	for(const auto& p : in)
+	{
+		out.Add(p.Key,p.Value*-1);
+	}
+	return out;
+}
+
+TMap<UPrimaryDataAsset*, float> UOmegaMathFunctions::InvertMapValues_Assetfloat(TMap<UPrimaryDataAsset*, float> in)
+{
+	TMap<UPrimaryDataAsset*, float> out;
+	for(const auto& p : in)
+	{
+		out.Add(p.Key,p.Value*-1);
+	}
+	return out;
 }
 
 

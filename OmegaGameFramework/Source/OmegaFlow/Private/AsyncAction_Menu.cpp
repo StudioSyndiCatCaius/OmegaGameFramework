@@ -19,7 +19,7 @@ void UAsyncAction_Menu::Activate()
 	SubsystemRef->GetMenu(MenuRef, IsMenuOpen);
 	if(!IsMenuOpen)
 	{
-		UMenu* LocalMenu = SubsystemRef->OpenMenu(MenuRef, ContextRef, TagsRef, FlagRef);
+		UMenu* LocalMenu = SubsystemRef->OpenMenu(MenuRef, ContextRef, TagsRef, FlagRef,true,in_meta);
 		if(LocalMenu)
 		{
 			LocalMenu->OnClosed.AddDynamic(this, &UAsyncAction_Menu::UAsyncAction_Menu::NativeShutdown);
@@ -38,7 +38,7 @@ void UAsyncAction_Menu::Activate()
 	}
 }
 
-UAsyncAction_Menu* UAsyncAction_Menu::OpenMenu(UObject* WorldContextObject, APlayerController* Player, const TSubclassOf<UMenu> MenuClass, UObject* Context, const FGameplayTagContainer OpenTags, const FString& OpenFlag)
+UAsyncAction_Menu* UAsyncAction_Menu::OpenMenu(UObject* WorldContextObject, APlayerController* Player, const TSubclassOf<UMenu> MenuClass, UObject* Context, const FGameplayTagContainer OpenTags, const FString& OpenFlag,FOmegaCommonMeta meta)
 {
 	APlayerController* TempPlayer = nullptr;
 	if(Player)
@@ -52,6 +52,7 @@ UAsyncAction_Menu* UAsyncAction_Menu::OpenMenu(UObject* WorldContextObject, APla
 	
 	UAsyncAction_Menu* NewMenuNode = NewObject<UAsyncAction_Menu>();
 	NewMenuNode->MenuRef = MenuClass;
+	NewMenuNode->in_meta=meta;
 	NewMenuNode->TagsRef = OpenTags;
 	NewMenuNode->PlayerRef = TempPlayer;
 	NewMenuNode->ContextRef = Context;

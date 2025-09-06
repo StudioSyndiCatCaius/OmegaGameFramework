@@ -3,13 +3,13 @@
 
 #include "Subsystems/OmegaSubsystem_BGM.h"
 #include "Subsystems/OmegaSubsystem_GamePreferences.h"
-
 #include "OmegaSettings.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "Functions/OmegaFunctions_Common.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
 
 UOmegaBGM* UOmegaBGMSubsystem::GetPlayingBGM()
 {
@@ -56,13 +56,16 @@ void UOmegaBGMSubsystem::PlayBGM(UOmegaBGM* BGM, FGameplayTag Slot, bool ResumeL
 		new_dat.Loop_EndTime=BGM->LoopEndTime;
 
 		//override from script
-		if(BGM->BgmScript)
+		if(BGM->BgmScript && GetWorld() && GetWorld()->GetGameInstance())
 		{
-			FOmegaBgmSoundData override_dat= BGM->BgmScript->GetBgmSoundData(this, BGM, GetWorld()->GetGameInstance()->
-				GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData->bgm_styles.FindOrAdd(UOmegaGameFrameworkBPLibrary::GetObjectLabel(BGM)));
-			if(override_dat.SoundWave)
+			if(GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>())
 			{
-				new_dat=override_dat;
+				FOmegaBgmSoundData override_dat= BGM->BgmScript->GetBgmSoundData(this, BGM, GetWorld()->GetGameInstance()->
+					GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData->bgm_styles.FindOrAdd(UOmegaGameFrameworkBPLibrary::GetObjectLabel(BGM)));
+				if(override_dat.SoundWave)
+				{
+					new_dat=override_dat;
+				}
 			}
 		}
 		
@@ -117,26 +120,36 @@ void UOmegaBGMSubsystem::StopBGM(bool Fade, float& StoppedPosition, float FadeDu
 	TempSlotData.SavedPlaybackPosition = LocalSavedPosition;
 	StoppedPosition = LocalSavedPosition;
 	SlotData.Add(PlayingSlot, TempSlotData);
-	
-	if(Fade)
+
+	if(UAudioComponent* aud=GetComponentBySlot(PlayingSlot))
 	{
-		GetComponentBySlot(PlayingSlot)->FadeOut(FadeDuration,0);
-	}
-	else
-	{
-		GetComponentBySlot(PlayingSlot)->Stop();
+		if(Fade)
+		{
+			aud->FadeOut(FadeDuration,0);
+		}
+		else
+		{
+			aud->Stop();
+		}
 	}
 	
 }
 
 void UOmegaBGMSubsystem::PauseBGM(bool bPaused)
 {
-	GetComponentBySlot(PlayingSlot)->SetPaused(bPaused);
+	if(UAudioComponent* aud=GetComponentBySlot(PlayingSlot))
+	{
+		aud->SetPaused(bPaused);
+	}
 }
 
 bool UOmegaBGMSubsystem::IsSlotPlayingBGM(FGameplayTag Slot)
 {
-	return PlayingSlot == Slot && GetComponentBySlot(Slot)->IsPlaying();
+	if(UAudioComponent* aud=GetComponentBySlot(Slot))
+	{
+		return PlayingSlot == Slot && aud->IsPlaying();
+	}
+	return false;
 }
 
 void UOmegaBGMSubsystem::SetBGMVolume(float Volume)
@@ -152,10 +165,14 @@ void UOmegaBGMSubsystem::SetBGMVolume(float Volume)
 
 void UOmegaBGMSubsystem::Local_OnPlayerbackPercent(const USoundWave* Wave, const float PlaybackPercent)
 {
-	if(Wave == GetComponentBySlot(PlayingSlot)->GetSound())
+	if(UAudioComponent* aud=GetComponentBySlot(PlayingSlot))
 	{
-		LocalSavedPosition = Wave->Duration*PlaybackPercent;
+		if(Wave == aud->GetSound())
+		{
+			LocalSavedPosition = Wave->Duration*PlaybackPercent;
+		}
 	}
+	
 }
 
 void UOmegaBGMSubsystem::Local_FinishPlayBGM()
@@ -173,28 +190,29 @@ void UOmegaBGMSubsystem::Local_FinishPlayBGM()
 	{
 		Local_StartPos = SlotData.FindOrAdd(PlayingSlot).SavedPlaybackPosition;	//Set from Resumed position
 	}
+	if(UAudioComponent* _aud=GetComponentBySlot(PlayingSlot))
+	{
+		//Set sound
+		if(_aud->GetSound() && _aud->GetSound()->GetClass()->IsChildOf(UMetaSoundSource::StaticClass()))
+		{
+			_aud->SetWaveParameter(TEXT("Wav"),IncomingData.Sound);
+			_aud->SetFloatParameter(TEXT("Loop_Start"),IncomingData.LoopBegin);
+			_aud->SetFloatParameter(TEXT("Loop_End"),IncomingData.LoopEnd);
+		}
+		else
+		{
+			_aud->SetSound(IncomingData.Sound);
+		}
 
-	//Set sound
-	if(GetComponentBySlot(PlayingSlot)->GetSound() && GetComponentBySlot(PlayingSlot)->GetSound()->GetClass()->IsChildOf(UMetaSoundSource::StaticClass()))
-	{
-		GetComponentBySlot(PlayingSlot)->SetWaveParameter(TEXT("Wav"),IncomingData.Sound);
-		GetComponentBySlot(PlayingSlot)->SetFloatParameter(TEXT("Loop_Start"),IncomingData.LoopBegin);
-		GetComponentBySlot(PlayingSlot)->SetFloatParameter(TEXT("Loop_End"),IncomingData.LoopEnd);
+		if (IncomingData.ResumePos)
+		{
+			_aud->FadeIn(GetFadeDuration(), GetBGMVolume(), Local_StartPos);
+		}
+		else
+		{
+			_aud->Play(0);
+		}
 	}
-	else
-	{
-		GetComponentBySlot(PlayingSlot)->SetSound(IncomingData.Sound);
-	}
-
-	if (IncomingData.ResumePos)
-	{
-		GetComponentBySlot(PlayingSlot)->FadeIn(GetFadeDuration(), GetBGMVolume(), Local_StartPos);
-	}
-	else
-	{
-		GetComponentBySlot(PlayingSlot)->Play(0);
-	}
-	
 }
 
 UAudioComponent* UOmegaBGMSubsystem::GetComponentBySlot(FGameplayTag Slot)

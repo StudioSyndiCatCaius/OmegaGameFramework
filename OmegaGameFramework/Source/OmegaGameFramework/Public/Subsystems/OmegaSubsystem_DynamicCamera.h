@@ -3,17 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
+#include "GameplayTagContainer.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
-#include "Camera/CameraActor.h"
 #include "GameFramework/Pawn.h"
-#include "Components/ActorComponent.h"
-#include "GameFramework/SpringArmComponent.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "OmegaSubsystem_DynamicCamera.generated.h"
 
 class UOmegaSaveSubsystem;
-
-
+class USpringArmComponent;
+class UCameraComponent;
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UDynamicCameraState : public UPrimaryDataAsset
@@ -49,6 +47,7 @@ protected:
 	UPROPERTY() float time_SinceLastCheck;
 	UPROPERTY() bool is_DynamicCamerActive;
 	UPROPERTY() APlayerController* REF_Controller;
+	UPROPERTY() AOmegaDynamicCamera* l_PreviousCam=nullptr;
 
 public:
 	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
@@ -117,17 +116,7 @@ UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaDynamicCamera : public APawn, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
-
-public:
-	// Sets default values for this actor's properties
-	AOmegaDynamicCamera();
-
-	FVector LOCAL_Average_Vector(TArray<FVector> inputs, FVector CurrentValue, float DeltaTime);
-	float LOCAL_Average_Float(TArray<float> inputs, float CurrentValue, float DeltaTime);
-	FTransform LOCAL_Average_Transform(TArray<FTransform> inputs, FTransform CurrentValue, float DeltaTime);
 	
-protected:
-
 	UPROPERTY(VisibleAnywhere,Category="DynamicCamera",DisplayName="Sources")
 	TArray<UObject*> REF_Sources;
 
@@ -136,22 +125,32 @@ protected:
 	UFUNCTION()
 	TArray<UObject*> GetValidSources();
 
-	virtual void BeginPlay() override;
-
 	UPROPERTY() UOmegaDynamicCameraSubsystem* REF_Subsystem=nullptr;
 	UPROPERTY() APlayerController* REF_SourcePlayer=nullptr;
 
 public:
+	AOmegaDynamicCamera();
 	
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+	
+	float SpeedOffset(float offset) const { return  InterpSpeed+offset; }
+	FVector L_Average_Vector(TArray<FVector> inputs, FVector CurrentValue, float DeltaTime) const;
+	float L_Average_Float(TArray<float> inputs, float CurrentValue, float DeltaTime);
+	FTransform L_Average_Transform(TArray<FTransform> inputs, FTransform CurrentValue, float DeltaTime);
 
 	//Tick when this is the Source Camera for a player
 	UFUNCTION(BlueprintImplementableEvent,Category="DynamicCamera")
 	void SourceTick(float deltaTime, APlayerController* SourcePlayer, UOmegaDynamicCameraSubsystem* Subsystem);
+
+	UFUNCTION(BlueprintImplementableEvent,Category="DynamicCamera")
+	void OnBeginAsTargetCamera(APlayerController* SourcePlayer);
+	UFUNCTION(BlueprintImplementableEvent,Category="DynamicCamera")
+	void OnEndAsTargetCamera(APlayerController* SourcePlayer);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DynamicCamera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
 	USpringArmComponent* comp_spring;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DynamicCamera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
 	UCameraComponent* comp_camera;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
@@ -168,8 +167,6 @@ public:
 	float InterpSpeed_Rotation;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="DynamicCamera")
 	bool SetRotationToPlayerControl;
-
-	float SpeedOffset(float offset) const { return  InterpSpeed+offset; }
 
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="DynamicCamera")
 	FGameplayTagContainer CameraTags;

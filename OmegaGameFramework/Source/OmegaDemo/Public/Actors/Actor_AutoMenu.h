@@ -20,6 +20,8 @@ class OMEGADEMO_API AOmegaAutoMenu : public AOmegaDynamicCamera
 	UFUNCTION()
 	void Native_OnMenuClosed(FGameplayTagContainer GameplayTags, UObject* Context, FString Flag);
 
+	UFUNCTION() void L_OpenMenu();
+	
 public:
 	AOmegaAutoMenu();
 	virtual void BeginPlay() override;

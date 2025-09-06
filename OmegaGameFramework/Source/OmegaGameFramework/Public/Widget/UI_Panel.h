@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonBorder.h"
-#include "CommonTextBlock.h"
 #include "Blueprint/UserWidget.h"
 
 #include "UI_Panel.generated.h"
+
+class UOmegaSlateStyle_Text;
+class UOmegaSlateStyle_Border;
+class UBorder;
+class UTextBlock;
 
 UCLASS(Abstract)
 class OMEGAGAMEFRAMEWORK_API UOmegaUI_Panel : public UUserWidget
@@ -22,19 +25,24 @@ public:
 	FText Title;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Panel")
-	TSubclassOf<UCommonBorderStyle> Override_BorderStyle;
+	UOmegaSlateStyle_Border* TitleBorder_Style;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Panel")
-	TSubclassOf<UCommonTextStyle> Override_TitleStyle;
-
+	UOmegaSlateStyle_Text* TitleText_Style;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Panel")
+	UOmegaSlateStyle_Border* BodyBorder_Style;
+	
 	UFUNCTION(BlueprintCallable,Category="Widget")
 	void SetTitle(FText NewTitle);
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Widget")
-	UCommonTextBlock* GetWidget_Text_Title();
+	UTextBlock* GetWidget_Text_Title();
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Widget")
-	UCommonBorder* GetWidget_Border_Main();
+	UBorder* GetWidget_Border_Title();
 
+	UFUNCTION(BlueprintImplementableEvent,Category="Widget")
+	UBorder* GetWidget_Border_Body();
+	
 	UFUNCTION(BlueprintImplementableEvent,Category="Widget")
 	UNamedSlot* GetWidget_Slot();
 };

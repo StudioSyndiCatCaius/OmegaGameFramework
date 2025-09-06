@@ -5,31 +5,29 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "NiagaraSystem.h"
-#include "Sound/SoundBase.h"
 #include "GameplayTagContainer.h"
-#include "Animation/AnimMontage.h"
-#include "LevelSequence.h"
-#include "Misc/OmegaUtils_Enums.h"
 #include "OmegaFunctions_AVContext.generated.h"
 
 class USkeletalMeshComponent;
+class ULevelSequence;
+class UAnimMontage;
+class UNiagaraSystem;
+class USoundBase;
 
-// This class does not need to be modified.
 UINTERFACE(MinimalAPI) class UDataInterface_ContextAV : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextAV
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Level Sequence>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Level Sequence>")
 	ULevelSequence* GetContextAVSequences(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Sound>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Sound>")
 	USoundBase* GetContextAVSounds(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Niagara>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Niagara>")
 	UNiagaraSystem* GetContextAVNiagara(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Montage>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Montage>")
 	UAnimMontage* GetContextAVMontages(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Animation>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Animation>")
 	UAnimSequence* GetContextAVAnimations(FGameplayTag ID);
 };
 
@@ -40,7 +38,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextActor
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Actor Class>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Actor Class>")
 	TSubclassOf<AActor> GetContextAV_ActorClass(FGameplayTag ID);
 };
 
@@ -49,9 +47,9 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextMesh
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Static Mesh>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Static Mesh>")
 	UStaticMesh* GetContextAV_StaticMesh(FGameplayTag ID);
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Skeletal Mesh>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Skeletal Mesh>")
 	USkeletalMesh* GetContextAV_SkeletalMesh(FGameplayTag ID);
 };
 
@@ -61,7 +59,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextAnimation
 	GENERATED_BODY()
 public:
 
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|AV", DisplayName="Ω Get Context AV <Animation Class>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|AV", DisplayName="Ω Get Context AV <Animation Class>")
 	TSubclassOf<UAnimInstance> GetContextAV_AnimClass(FGameplayTag ID);
 };
 
@@ -71,7 +69,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextSlate
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|Slate", DisplayName="Ω Get Context AV <Slate Brush>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|Slate", DisplayName="Ω Get Context AV <Slate Brush>")
 	FSlateBrush GetContextAV_SlateBrush(FGameplayTag ID);
 
 };
@@ -82,7 +80,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ContextString
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, Category="Omega|String", DisplayName="Ω Get Context AV <Text>")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Context|String", DisplayName="Ω Get Context AV <Text>")
 	FText GetContextAV_Text(FGameplayTag ID);
 
 };

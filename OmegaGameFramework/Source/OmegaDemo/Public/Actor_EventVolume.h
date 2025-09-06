@@ -11,6 +11,8 @@
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "Actor_EventVolume.generated.h"
 
+class UCombatantComponent;
+
 UCLASS(EditInlineNew,Abstract,BlueprintType,Blueprintable,CollapseCategories,meta=(ShowWorldContextPin))
 class OMEGADEMO_API UOmegaEventVolumeTriggerScript : public UObject
 {
@@ -64,7 +66,7 @@ public:
 };
 
 
-UCLASS(DisplayName="OmegaActor: Environment")
+UCLASS(DisplayName="Ω Environment")
 class OMEGADEMO_API AOmega_EventVolume : public AAdvancedVolume
 {
 	GENERATED_BODY()

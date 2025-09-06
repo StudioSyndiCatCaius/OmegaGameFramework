@@ -21,3 +21,5 @@ public:
 	AActor* GetConditionActor();
 	
 };
+
+

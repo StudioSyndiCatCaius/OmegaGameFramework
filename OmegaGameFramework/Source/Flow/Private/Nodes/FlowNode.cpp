@@ -46,6 +46,11 @@ UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
 	OutputPins = {DefaultOutputPin};
 }
 
+
+void UFlowNodeTrait::OnNodeEnter_Implementation(UFlowNode* Node) const
+{
+}
+
 #if WITH_EDITOR
 void UFlowNode::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {

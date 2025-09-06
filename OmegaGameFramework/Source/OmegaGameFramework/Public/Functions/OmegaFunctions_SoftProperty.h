@@ -13,6 +13,7 @@ UINTERFACE(MinimalAPI)
 class UOmegaSoftPropertyInterface : public UInterface
 {
 	GENERATED_BODY()
+	
 };
 
 /**
@@ -26,10 +27,10 @@ class OMEGAGAMEFRAMEWORK_API IOmegaSoftPropertyInterface
 public:
 	
 	UFUNCTION(BlueprintNativeEvent, Category="SoftPropertries")
-	FString GetSoftProperty(const FString& Property);
+	FString GetSoftProperty(FName Property);
 
 	UFUNCTION(BlueprintNativeEvent, Category="SoftPropertries")
-	TMap<FString, FString> GetSoftPropertyMap();
+	TMap<FName, FString> GetSoftPropertyMap();
 };
 
 //#####################################################################################################
@@ -41,17 +42,17 @@ class UOmegaSoftPropertyFunctions : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Soft Properties", meta=(CompactNodeTitle="Soft String"))
-	static FString GetSoftProperty_String(UObject* Object, const FString& PropertyName);
+	static FString GetSoftProperty_String(UObject* Object, FName PropertyName);
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Soft Properties", meta=(CompactNodeTitle="Soft Bool"))
-	static bool GetSoftProperty_bool(UObject* Object, const FString& PropertyName);
+	static bool GetSoftProperty_bool(UObject* Object, FName PropertyName);
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Soft Properties", meta=(CompactNodeTitle="Soft Float"))
-	static float GetSoftProperty_float(UObject* Object, const FString& PropertyName);
+	static float GetSoftProperty_float(UObject* Object, FName PropertyName);
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Soft Properties", meta=(CompactNodeTitle="Soft Int32"))
-	static int32 GetSoftProperty_int32(UObject* Object, const FString& PropertyName);
+	static int32 GetSoftProperty_int32(UObject* Object, FName PropertyName);
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Soft Properties", meta=(CompactNodeTitle="Soft Vector"))
-	static FVector GetSoftProperty_Vector(UObject* Object, const FString& PropertyName);
+	static FVector GetSoftProperty_Vector(UObject* Object, FName PropertyName);
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Soft Properties", meta=(CompactNodeTitle="Soft Rotator"))
-	static FRotator GetSoftProperty_Rotator(UObject* Object, const FString& PropertyName);
+	static FRotator GetSoftProperty_Rotator(UObject* Object, FName PropertyName);
 };
 //#################################################################################################################################################
 // +++++++++++++++++++++++++++++++ TAG PROPERTIES ++++++++++++++++++++++++++++++++++++++++++++++

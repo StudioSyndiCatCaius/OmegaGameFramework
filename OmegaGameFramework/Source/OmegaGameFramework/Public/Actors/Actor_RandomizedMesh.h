@@ -16,7 +16,7 @@ struct FOmegaRandomizedMeshInfo
 	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
 	FVector Scale_Max=FVector::One();
 	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
-	FRotator Rotation_Range;
+	FRotator Rotation_Range=FRotator();
 	UPROPERTY(EditAnywhere,Category="Randomized Mesh")
 	TArray<UStaticMesh*> Meshes;
 	UPROPERTY(EditAnywhere,Category="Randomized Mesh")

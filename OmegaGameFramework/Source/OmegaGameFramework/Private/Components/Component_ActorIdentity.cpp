@@ -38,6 +38,13 @@ TArray<UActorIdentityScript*> UActorIdentityComponent::Local_GetScripts() const
 
 void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAsset)
 {
+	if(IdentitySource)
+	{
+		if(Local_IsSourceAssetValid())
+		{
+			IDataInterface_ActorIdentitySource::Execute_OnIdentityUninit(IdentitySource,GetOwner(),this);
+		}
+	}
 	if(SourceAsset!=IdentitySource)
 	{
 		if(SourceAsset)
@@ -100,7 +107,10 @@ void UActorIdentityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if(EndPlayReason==EEndPlayReason::Destroyed)
 	{
-		GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,false);
+		if(GetWorld() && GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+		{
+			GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,false);
+		}
 	}
 	Super::EndPlay(EndPlayReason);
 }

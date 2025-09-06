@@ -34,6 +34,34 @@ UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	}
 }
 
+
+void UFlowAsset::SetLocalParam_Bool(FName Param, bool val)
+{
+	FlowParams.Add(Param,val);
+}
+
+void UFlowAsset::SetLocalParam_Int(FName Param, int32 val, bool Add)
+{
+	if(Add)
+	{
+		FlowParams.Add(Param,FlowParams.FindOrAdd(Param)+val);
+	}
+	else
+	{
+		FlowParams.Add(Param,val);
+	}
+}
+
+bool UFlowAsset::GetLocalParam_Bool(FName Param)
+{
+	if(FlowParams.FindOrAdd(Param)) { return 1; } return 0;
+}
+
+int32 UFlowAsset::GetLocalParam_Int(FName Param)
+{
+	return FlowParams.FindOrAdd(Param);
+}
+
 #if WITH_EDITOR
 void UFlowAsset::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector)
 {
@@ -424,7 +452,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 	
 	ensureAlways(StartNode);
 	RecordedNodes.Add(StartNode);
-
+	FlowMeta=OverrideData.meta;
 	//Try Override Nodes
 	if(OverrideData.bOverrideStartingNodes)
 	{

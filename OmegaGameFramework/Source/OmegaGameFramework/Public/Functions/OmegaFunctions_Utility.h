@@ -13,9 +13,14 @@ UCLASS()
 class UOmegaUtilityFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-
 public:
 	
+	UFUNCTION(BlueprintPure, Category="Omega|Load", meta=(Keywords="if, is",WorldContext="WorldContextObject"))
+	static bool AreStreamedLevelsLoading(UObject* WorldContextObject);
+	
+	//###############################################################################
+	// Shader
+	//###############################################################################
 	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Shader", meta=(Keywords="if, is"))
 	static bool AreShadersCompiling();
 
@@ -62,7 +67,29 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "LOmega|Utilities|Viewport", Meta = (DisplayName = "Set Window Mode", Keywords = "screen fullscreen windowed"))
 	static void SetWindowMode(const bool Fullscreen, const bool IsFullscreenWindowed);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Utilities")
+	static TArray<UObject*> SortObjectsByDisplayName(TArray<UObject*> Objects);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Utilities")
+	static bool IsObjectNameFirst(UObject* A, UObject* B);
+	
 };
+
+UCLASS()
+class UOmegaStringFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+public:
+	//Check if StringA comes before StringB alphabetically
+	UFUNCTION(BlueprintPure,Category="Omega|String")
+	static bool IsStringFirst(const FString& A, const FString& B);
+	
+
+	UFUNCTION(BlueprintPure,Category="Omega|String")
+	static TMap<FName,FString> ParseStringIntroParams(const FString& string, const FString& param_delimiter=" ",const FString& value_delimiter="=");
+};
+
 
 UCLASS()
 class UOmegaAssetFunctions : public UBlueprintFunctionLibrary
@@ -167,4 +194,10 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static FRotator Random_RotatorInRange(const FRotator& Min, const FRotator& Max);
+
+	//
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static TMap<UPrimaryDataAsset*,int32> InvertMapValues_AssetInt(TMap<UPrimaryDataAsset*,int32> in);
+	UFUNCTION(BlueprintPure,Category="Omega|Math")
+	static TMap<UPrimaryDataAsset*,float> InvertMapValues_Assetfloat(TMap<UPrimaryDataAsset*,float> in);
 };

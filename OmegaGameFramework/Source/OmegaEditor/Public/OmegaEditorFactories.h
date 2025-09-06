@@ -8,7 +8,6 @@
 
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaFaction.h"
-#include "Misc/OmegaDemoAssets.h"
 #include "OmegaDataItem.h"
 #include "OmegaDebug_Functions.h"
 
@@ -23,8 +22,12 @@
 #include "DataAssets/DA_CommonItem.h"
 #include "DataAssets/DA_CommonSkill.h"
 #include "DataAssets/DA_CommonInteractable.h"
+#include "DataAssets/DA_CombatantGambits.h"
+#include "DataAssets/DA_CommonEquipment.h"
+#include "DataAssets/DA_Common_EquipType.h"
+#include "DataAssets/DA_CommonRace.h"
+#include "DataAssets/DA_Job.h"
 
-#include "Misc/CombatantGambits.h"
 #include "Misc/OmegaDamageType.h"
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
@@ -62,9 +65,14 @@ private: \
 EAssetTypeCategories::Type OmegaAssetCategory; \
 }; \
 
-////////////////////////////////////////////
+// ==================================================================================================
 ////////---Asset Factories---//////////////
-///////////////////////////////////////////
+// ==================================================================================================
+
+// COLORS
+inline FColor _color_bp=FColor(0,0,200);
+inline FColor _color_debug=FColor(200,200,200);
+const FColor col_common=FColor(255, 30, 30);
 
 //Attributes
 UCLASS() class OMEGAEDITOR_API UOmegaAttribute_Factory : public UFactory
@@ -195,7 +203,7 @@ UCLASS() class OMEGAEDITOR_API UOmegaCharacterConfig_Factory : public UFactory
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaCharacterConfig,"Character Config", "Asset Desc here", FColor(50, 50, 50),"Util")
 
-inline FColor _color_debug=FColor(200,200,200);
+
 
 
 
@@ -244,7 +252,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaAbility", "Blueprint Ability"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_AbilityContextDesc", "This is Ability"); }
 	virtual UClass* GetSupportedClass() const override { return AOmegaAbility::StaticClass(); }
 private:
@@ -267,7 +275,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGameplaySystem", "Gameplay System"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GameplaySystemContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return AOmegaGameplaySystem::StaticClass(); }
 private:
@@ -290,7 +298,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGameplayModule", "Gameplay Module"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GameplayModuleContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaGameplayModule::StaticClass(); }
 private:
@@ -313,7 +321,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGameSave", "Game Save"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 200, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GameSaveContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaSaveGame::StaticClass(); }
 private:
@@ -336,7 +344,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGlobalSave", "Global Save"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 200, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GlobalSaveContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaSaveGlobal::StaticClass(); }
 private:
@@ -362,7 +370,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_Menu", "Menu"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_MenuContextDesc", "Menu"); }
 	virtual UClass* GetSupportedClass() const override { return UMenu::StaticClass(); }
 private:
@@ -385,7 +393,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_HudLayer", "HUD Layer"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_HudLayerContextDesc", "Hud Layer"); }
 	virtual UClass* GetSupportedClass() const override { return UHUDLayer::StaticClass(); }
 private:
@@ -397,7 +405,7 @@ private:
 // COMMON TYPES
 // =====================================================================================================================
 
-const FColor col_common=FColor(255, 30, 30);
+
 
 //Skill
 UCLASS() class OMEGAEDITOR_API UOAsset_CommonSkill_Factory : public UFactory
@@ -422,6 +430,30 @@ UCLASS() class OMEGAEDITOR_API UOAsset_CommonItem_Factory : public UFactory
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonItem,"Common Item", "Asset Desc here",col_common,"Common")
+
+//eQUIP
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonEquipment_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonEquipment,"Common Equipment", "Asset Desc here",col_common,"Common")
+
+//EquipType
+UCLASS() class OMEGAEDITOR_API UOAsset_Common_EquipType_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_Common_EquipType,"Common Equip Type", "Asset Desc here",col_common,"Common")
+
+//EquipType
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonRace_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonRace,"Common Race", "Asset Desc here",col_common,"Common")
 
 //Interactables
 UCLASS() class OMEGAEDITOR_API UOAsset_CommonInteractable_Factory : public UFactory

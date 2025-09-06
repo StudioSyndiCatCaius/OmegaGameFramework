@@ -10,6 +10,7 @@
 
 #include "FlowTypes.h"
 #include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/OmegaInterface_ObjectTraits.h"
 #include "Nodes/FlowPin.h"
 #include "FlowNode.generated.h"
 
@@ -20,11 +21,20 @@ class UFlowSubsystem;
 DECLARE_DELEGATE(FFlowNodeEvent);
 #endif
 
+UCLASS()
+class FLOW_API UFlowNodeTrait : public UOmegaObjectTrait
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent,Category="Flow") void OnNodeEnter(UFlowNode* Node) const;
+};
+
 /**
  * A Flow Node is UObject-based node designed to handle entire gameplay feature within single node.
  */
 UCLASS(Abstract, Blueprintable, HideCategories = Object)
-class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID
+class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID, public IDataInterface_Traits
 {
 	GENERATED_UCLASS_BODY()
 
@@ -104,6 +114,17 @@ protected:
 	// Inherits Guid after graph node
 	UPROPERTY(VisibleInstanceOnly, Category="Node")
 	FGuid NodeGuid;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Node")
+	TArray<UFlowNodeTrait*> Traits;
+	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override
+	{
+		TArray<UOmegaObjectTrait*> out;
+		for(auto* i : Traits)
+		{
+			if(i) { out.Add(i);}
+		}
+		return out;
+	};
 
 public:
 	void SetGuid(const FGuid NewGuid) { NodeGuid = NewGuid; }

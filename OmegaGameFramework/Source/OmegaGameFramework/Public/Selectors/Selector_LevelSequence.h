@@ -14,12 +14,12 @@ struct FOmegaSelect_LevelSequence
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="Selector")
-	UOmegaSelector_LevelSequence* Selector;
+	UOmegaSelector_LevelSequence* Selector=nullptr;
 	
 };
 
 
-UCLASS(Abstract)
+UCLASS(Abstract,CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UOmegaSelector_LevelSequence : public UOmegaInstancableObject
 {
 	GENERATED_BODY()
@@ -27,7 +27,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSelector_LevelSequence : public UOmegaInstanc
 public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Selector")
-	ULevelSequence* GetLevelSequence() const;
+	ULevelSequence* GetLevelSequence(UObject* Context) const;
 };
 
 

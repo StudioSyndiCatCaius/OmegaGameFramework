@@ -3,6 +3,8 @@
 
 #include "OmegaSettings.h"
 
+#include "Subsystems/OmegaSubsystem_Save.h"
+
 
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

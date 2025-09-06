@@ -7,22 +7,15 @@
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "Sound/SoundBase.h"
-#include "Engine/EngineTypes.h"
 #include "OmegaSubsystem_BGM.generated.h"
-
-
 
 USTRUCT()
 struct FOmegaBGMData
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	float SavedPlaybackPosition;
-
-	UPROPERTY()
-	UAudioComponent* SlotComponent;
+	UPROPERTY()float SavedPlaybackPosition=0.0f;
+	UPROPERTY()UAudioComponent* SlotComponent=nullptr;
 
 };
 
@@ -31,24 +24,15 @@ struct FOmegaBGMData_Incoming
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	FGameplayTag Slot;
-	UPROPERTY()
-	USoundWave* Sound;
-	UPROPERTY()
-	FTimerHandle PlayBGMHandle;
-	UPROPERTY()
-	bool ResumePos = false;
-	UPROPERTY()
-	bool DoesForcePlaybackPos = false;
-	UPROPERTY()
-	float ForcePlaybackPos;
-	UPROPERTY()
-	float FadeTime;
-	UPROPERTY()
-	float LoopBegin;
-	UPROPERTY()
-	float LoopEnd;
+	UPROPERTY() FGameplayTag Slot;
+	UPROPERTY() USoundWave* Sound=nullptr;
+	UPROPERTY() FTimerHandle PlayBGMHandle;
+	UPROPERTY() bool ResumePos = false;
+	UPROPERTY() bool DoesForcePlaybackPos = false;
+	UPROPERTY() float ForcePlaybackPos=0.0f;
+	UPROPERTY() float FadeTime=0.0f;
+	UPROPERTY() float LoopBegin=0.0f;
+	UPROPERTY() float LoopEnd=0.0f;
 };
 
 UCLASS(DisplayName="Omega Subsystem: BGM")
@@ -135,9 +119,9 @@ struct FOmegaBgmSoundData
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) USoundWave* SoundWave;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) float Loop_BeginTime;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) float Loop_EndTime;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BGM") USoundWave* SoundWave=nullptr;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BGM") float Loop_BeginTime=0.0f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BGM") float Loop_EndTime=0.0f;
 };
 
 UCLASS(EditInlineNew,Blueprintable,BlueprintType,Const,Abstract)

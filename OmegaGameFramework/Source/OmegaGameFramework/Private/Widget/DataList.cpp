@@ -16,12 +16,16 @@
 
 #include "Widgets/Layout/Anchors.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
 #include "Engine/DataAsset.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Widget/DataTooltip.h"
 
 
-
+class UOmegaSaveSubsystem;
 
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
@@ -137,9 +141,8 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
 	TempEntry->WidgetTags=EntryAutoTags;
-	TempEntry->WidgetMetadata=EntryMetadata;
-	TempEntry->bCanOverrideSize=bCanOverrideSize;
-	TempEntry->OverrideSize=OverrideSize;
+	TempEntry->WidgetTraits=EntryMetadata;
+	TempEntry->Traits=EntryTraits;
 	if(OverrideHoverOffset_Curve)
 	{
 		TempEntry->HoverOffset_Curve=OverrideHoverOffset_Curve;
@@ -351,7 +354,12 @@ void UDataList::SelectHoveredEntry()
 	if(HoveredEntry)
 	{
 		HoveredEntry->Select();
+		if(LinkedWidgetSwitcher && Entries.Contains(HoveredEntry))
+		{
+			LinkedWidgetSwitcher->SetActiveWidgetIndex(Entries.Find(HoveredEntry));
+		}
 	}
+	
 }
 
 void UDataList::SelectEntry(int32 Index)

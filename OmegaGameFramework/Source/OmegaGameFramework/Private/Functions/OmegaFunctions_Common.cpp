@@ -12,21 +12,39 @@
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
+#include "Misc/OmegaGameplayModule.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "JsonObjectWrapper.h"
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Dom/JsonObject.h"
 #include "LuaInterface.h"
+#include "OmegaSettings.h"
+#include "OmegaSettings_Gameplay.h"
 #include "OmegaSettings_Paths.h"
+#include "OmegaSettings_Slate.h"
 #include "Functions/OmegaFunctions_Combatant.h"
+#include "Functions/OmegaFunctions_Text.h"
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "LevelInstance/LevelInstanceActor.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Subsystems/OmegaSubsystem_AssetHandler.h"
 #include "Subsystems/OmegaSubsystem_File.h"
+#include "Subsystems/OmegaSubsystem_Gameplay.h"
 
+
+FText UOmegaGameFrameworkBPLibrary::L_TextFormatObject(UObject* obj,FText t)
+{
+	if(obj)
+	{
+		FOmegaCommonMeta m;
+		m.Context=obj;
+		return UOmegaTextFunctions::ApplyGameplayTextFormating(nullptr,t,FGameplayTag(),m);
+	}
+	return t;
+}
 
 bool UOmegaGameFrameworkBPLibrary::HasTags_Advance(FGameplayTagContainer Tags, FGameplayTagContainer Has, bool bAll, bool bExact)
 {
@@ -381,29 +399,6 @@ const TArray<FString> UOmegaGameFrameworkBPLibrary::GetDisplayNamesFromObjects(T
 }
 
 
-UObject* UOmegaGameFrameworkBPLibrary::GetAssetFromGlobalID(FGameplayTag GlobalID)
-{
-	if(GetMutableDefault<UOmegaSettings>()->GlobalIDAssets.Contains(GlobalID))
-	{
-		if(UObject* temp_obj = GetMutableDefault<UOmegaSettings>()->GlobalIDAssets[GlobalID].ResolveObject())
-		{
-			return temp_obj;
-		}
-	}
-	return nullptr;
-}
-
-UClass* UOmegaGameFrameworkBPLibrary::GetClassFromGlobalID(FGameplayTag GlobalID)
-{
-	if(GetMutableDefault<UOmegaSettings>()->GlobalIDClasses.Contains(GlobalID))
-	{
-		if(UClass* temp_obj = GetMutableDefault<UOmegaSettings>()->GlobalIDClasses[GlobalID].ResolveClass())
-		{
-			return temp_obj;
-		}
-	}
-	return nullptr;
-}
 
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::ConvertSoftToHardReferences(
 	const TArray<TSoftObjectPtr<UObject>>& SoftRefs, const TSubclassOf<UObject> ClassType)
@@ -492,8 +487,50 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 	return nullptr;
 }
 
-TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAssetList_FromPath(const TArray<FString> AssetPaths,
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAssets_FromPath(const FString& path, bool bRecursive,
 	TSubclassOf<UObject> Class)
+{
+TArray<UObject*> FoundAssets;
+    
+    // Get the Asset Registry Module
+    FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+    IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+    
+    // Create filter for asset search
+    FARFilter Filter;
+    Filter.PackagePaths.Add(FName(*path));
+    Filter.bRecursivePaths = bRecursive;
+    
+    // If a specific class is provided, filter by class
+    if (Class)
+    {
+        Filter.ClassPaths.Add(Class->GetClassPathName());
+    }
+    
+    // Get asset data
+    TArray<FAssetData> AssetDataArray;
+    AssetRegistry.GetAssets(Filter, AssetDataArray);
+    
+    // Load and convert asset data to UObject*
+    for (const FAssetData& AssetData : AssetDataArray)
+    {
+        // Load the asset
+        UObject* LoadedAsset = AssetData.GetAsset();
+        if (LoadedAsset)
+        {
+            // Double-check class type if specified
+            if (!Class || LoadedAsset->IsA(Class))
+            {
+                FoundAssets.Add(LoadedAsset);
+            }
+        }
+    }
+    
+    return FoundAssets;
+}
+
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAssetList_FromPath(const TArray<FString> AssetPaths,
+                                                                     TSubclassOf<UObject> Class)
 {
 	TArray<UObject*> out;
 	for(const FString& temp_path : AssetPaths)
@@ -695,7 +732,7 @@ AOmegaGameplaySystem* UOmegaGameFrameworkBPLibrary::GetActiveGameplaySystem(cons
 UActorComponent* UOmegaGameFrameworkBPLibrary::GetFirstActiveGameplaySystemWithComponent(
 	const UObject* WorldContextObject, TSubclassOf<UActorComponent> Component, FName RequiredTag, AOmegaGameplaySystem*& system, bool& Outcome)
 {
-	if(WorldContextObject)
+	if(WorldContextObject && WorldContextObject->GetWorld() && WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>())
 	{
 		for (AOmegaGameplaySystem* temp_sys : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetActiveGameplaySystems())
 		{
@@ -716,12 +753,44 @@ UActorComponent* UOmegaGameFrameworkBPLibrary::GetFirstActiveGameplaySystemWithC
 }
 
 UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObject* WorldContextObject,
-                                                                      TSubclassOf<UOmegaGameplayModule> ModuleClass)
+                                                                      TSubclassOf<UOmegaGameplayModule> ModuleClass, bool bFallbackToDefault)
 {
-	if(WorldContextObject && WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
+	if(ModuleClass)
 	{
-		return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass);
+		if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+		{
+			for(auto* a : set->GetModules())
+			{
+				if(a && a->GetClass()==ModuleClass)
+				{
+					return a;
+				}
+			}
+		}
+		if(WorldContextObject
+		&& WorldContextObject->GetWorld()->GetGameInstance()
+		&& WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
+		{
+			return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass);
+		}
+		
+		if(bFallbackToDefault)
+		{
+			return ModuleClass.GetDefaultObject();
+		}
 	}
+	return nullptr;
+}
+
+UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::TryGetGameplayModule(const UObject* WorldContextObject,
+	TSubclassOf<UOmegaGameplayModule> ModuleClass, bool& Outcome, bool bFallbackToDefault)
+{
+	if (UOmegaGameplayModule* m=GetGameplayModule(WorldContextObject,ModuleClass,bFallbackToDefault))
+	{
+		Outcome=true;
+		return m;
+	}
+	Outcome=false;
 	return nullptr;
 }
 
@@ -918,12 +987,12 @@ void UOmegaGameFrameworkBPLibrary::SetActorActive(AActor* Actor, bool bIsActive)
 }
 
 TArray<AActor*> UOmegaGameFrameworkBPLibrary::FilterActorsWithComponents(TArray<AActor*> Actors,
-	TSubclassOf<UActorComponent> ComponentClass, TArray<AActor*> ExcludedActors)
+	TSubclassOf<UActorComponent> ComponentClass)
 {
 	TArray<AActor*> OutActors;
 	for(auto* TempActor : Actors)
 	{
-		if(TempActor && TempActor->GetComponentByClass(ComponentClass) && !ExcludedActors.Contains(TempActor))
+		if(TempActor && TempActor->GetComponentByClass(ComponentClass))
 		{
 			OutActors.Add(TempActor);
 		}
@@ -1251,25 +1320,31 @@ FJsonObjectWrapper UOmegaGameFrameworkBPLibrary::CreateJsonField(const FString& 
 	return NewJson;
 }
 
-FText UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(UObject* Object)
+
+FText UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(UObject* Object,bool FormatText)
 {
+	if(!Object) { return FText(); }
 	FText OutName;
 	FText OutDescription;
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
 		IDataInterface_General::Execute_GetGeneralDataText(Object,"",nullptr,OutName,OutDescription);
 	}
+	if(FormatText) { L_TextFormatObject(Object,OutName);}
 	return OutName;
 }
 
-FText UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(UObject* Object)
+FText UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(UObject* Object,bool FormatText)
 {
+	if(!Object) { return FText(); }
 	FText OutName;
 	FText OutDescription;
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
 		IDataInterface_General::Execute_GetGeneralDataText(Object,"",nullptr,OutName,OutDescription);
 	}
+	
+	if(FormatText) { L_TextFormatObject(Object,OutDescription);}
 	return OutDescription;
 }
 

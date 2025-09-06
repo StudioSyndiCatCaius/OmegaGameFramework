@@ -14,6 +14,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Engine/GameInstance.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Widget/HUDLayer.h"
 
 // Sets default values
 AOmegaAbility::AOmegaAbility()
@@ -31,7 +33,7 @@ void AOmegaAbility::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Private_SetSoftTagsOnActor(GrantedActorOwnerTags, true);
+	OGF_Actor::SetTagsActive(GetOwner(),GrantedActorOwnerTags,false);
 
 	DefaultInputReceiver->OverrideInputOwner(CombatantOwner->GetOwner());
 	//Bind Default Inputs
@@ -85,7 +87,7 @@ void AOmegaAbility::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if(EndPlayReason == EEndPlayReason::Destroyed && !GetWorld()->bIsTearingDown)
 	{
-		Private_SetSoftTagsOnActor(GrantedActorOwnerTags, false);
+		OGF_Actor::SetTagsActive(GetOwner(),GrantedActorOwnerTags,false);
 	
 		if(CombatantOwner->GetOwnerPlayerController() && HudClass)
 		{
@@ -115,7 +117,7 @@ void AOmegaAbility::Native_AbilityActivated(UObject* Context)
 	{
 		GetAbilityActivationTimeline()->Play();
 	}
-	Private_SetSoftTagsOnActor(ActiveActorOwnerTags, true);
+	OGF_Actor::SetTagsActive(GetOwner(),ActiveActorOwnerTags,true);
 
 	if(bEnableInputOnActivation && GetAbilityOwnerPlayer())
 	{
@@ -141,8 +143,8 @@ void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
 	{
 		GetAbilityActivationTimeline()->Reverse();
 	}
-	
-	Private_SetSoftTagsOnActor(ActiveActorOwnerTags, false);
+
+	OGF_Actor::SetTagsActive(GetOwner(),ActiveActorOwnerTags,false);
 	
 	if(bEnableInputOnActivation && GetAbilityOwnerPlayer())
 	{

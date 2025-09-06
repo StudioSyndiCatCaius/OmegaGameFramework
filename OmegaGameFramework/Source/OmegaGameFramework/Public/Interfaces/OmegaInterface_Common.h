@@ -16,11 +16,12 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ObjectHierarchy
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Omega|GUID")
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Hierarchy",DisplayName="Hierarchy - Get Children")
 	TArray<UObject*> GetObject_Children() const;
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Omega|GUID")
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Hierarchy",DisplayName="Hierarchy - Get Parent")
 	UObject* GetObject_Parent() const;
 };
+
 
 
 
@@ -45,16 +46,16 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_General
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Texts"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Texts"), DisplayName="General - Get Text")
 	void GetGeneralDataText (const FString& Label, const class UObject* Context, FText& Name, FText& Description);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Images"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Images"), DisplayName="General - Get Images")
 	void GetGeneralDataImages (const FString& Label, const class UObject* Context,class UTexture2D*& Texture,class UMaterialInterface*& Material,FSlateBrush& Brush);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(CompactNodeTitle="Color"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Color"), DisplayName="General - Get Color")
 	void GetGeneralAssetColor(FLinearColor& Color);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Data|General", meta=(CompactNodeTitle="General Label"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="General Label"), DisplayName="General - Get Label")
 	void GetGeneralAssetLabel(FString& Label);
 
 };
@@ -90,7 +91,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_GUID
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Omega|GUID")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|GUID",DisplayName="GUID - Get")
 	FGuid GetObjectGuid() const;
 };
 
@@ -99,17 +100,41 @@ public:
 // Tags Interface
 // ===================================================================================================================
 UINTERFACE(MinimalAPI)
-class UGameplayTagsInterface : public UInterface { GENERATED_BODY() };
+class UGameplayTagsInterface : public UInterface
+{
+	GENERATED_BODY()
+public:
+	static FGameplayTag GetGCategory(UObject* o);
+	static FGameplayTagContainer GetGTags(UObject* o);
+	
+};
 
 class OMEGAGAMEFRAMEWORK_API IGameplayTagsInterface
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tags - Get Category")
 	FGameplayTag GetObjectGameplayCategory();
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tags - Get Tags")
 	FGameplayTagContainer GetObjectGameplayTags();
 
 };
 
+inline FGameplayTag UGameplayTagsInterface::GetGCategory(UObject* o)
+{
+	if(o && o->GetClass()->ImplementsInterface(StaticClass()))
+	{
+		return IGameplayTagsInterface::Execute_GetObjectGameplayCategory(o);
+	}
+	return FGameplayTag();
+}
+
+inline FGameplayTagContainer UGameplayTagsInterface::GetGTags(UObject* o)
+{
+	if(o && o->GetClass()->ImplementsInterface(StaticClass()))
+	{
+		return IGameplayTagsInterface::Execute_GetObjectGameplayTags(o);
+	}
+	return FGameplayTagContainer();
+}

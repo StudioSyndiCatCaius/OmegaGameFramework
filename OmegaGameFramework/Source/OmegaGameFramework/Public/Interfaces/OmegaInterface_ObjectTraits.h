@@ -6,6 +6,15 @@
 #include "UObject/Interface.h"
 #include "OmegaInterface_ObjectTraits.generated.h"
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaObjectTraits
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="Traits")
+	TArray<UOmegaObjectTrait*> Traits;
+};
+
 
 UCLASS(Blueprintable,BlueprintType,Abstract,Const,EditInlineNew,CollapseCategories,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaObjectTrait : public UObject
@@ -13,6 +22,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaObjectTrait : public UObject
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Trait")
+	FName Label;
 	
 };
 
@@ -29,7 +41,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Traits
 	GENERATED_BODY()
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Traits")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|General",DisplayName="Traits - Get")
 	TArray<UOmegaObjectTrait*> GetTraits();
 
 	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Traits")

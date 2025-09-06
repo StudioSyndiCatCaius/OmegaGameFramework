@@ -3,6 +3,7 @@
 
 #include "Actor_EventVolume.h"
 
+#include "Components/Component_Combatant.h"
 #include "Kismet/KismetStringLibrary.h"
 
 

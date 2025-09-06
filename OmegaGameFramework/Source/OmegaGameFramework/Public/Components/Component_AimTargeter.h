@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "OmegaGameplayComponent.h"
 #include "Components/ActorComponent.h"
 #include "Component_AimTargeter.generated.h"
 
@@ -14,14 +14,14 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_AimTarget
 	GENERATED_BODY()
 public:
 
-	UFUNCTION(BlueprintNativeEvent,Category="Aim Target")
+	UFUNCTION(BlueprintNativeEvent,Category="Ω|Actor",DisplayName="Aim Target - Get LocatioN")
 	FVector GetAimTargetLocation(const UAimTargetComponent* Component) const;
 };
 
 
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UAimTargetComponent : public UActorComponent
+class OMEGAGAMEFRAMEWORK_API UAimTargetComponent : public UOmegaGameplayComponent
 {
 	GENERATED_BODY()
 

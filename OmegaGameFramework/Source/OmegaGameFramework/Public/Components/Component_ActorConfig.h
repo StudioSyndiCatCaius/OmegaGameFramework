@@ -4,8 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Actors/Actor_ActorProcessor.h"
-
+#include "Functions/OmegaFunctions_ComponentMod.h"
 #include "Component_ActorConfig.generated.h"
 
 // =======================================================================================================================
@@ -13,7 +12,7 @@
 // =======================================================================================================================
 
 
-UCLASS(Blueprintable,BlueprintType,Const,EditInlineNew,Abstract,meta=(ShowWorldContextPin))
+UCLASS(Blueprintable,BlueprintType,Const,EditInlineNew,Abstract,meta=(ShowWorldContextPin),HideCategories="Navigation, Cooking, Activation, AssetUserData, Asset User Data")
 class OMEGAGAMEFRAMEWORK_API UOmegaActorConfigScript : public UObject
 {
 	GENERATED_BODY()
@@ -30,15 +29,15 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorConfig : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 public:
-		
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Actors")
-	TArray<TSoftClassPtr<AOmegaActorProcessor>> TargetProcessors;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Actors")
 	TArray<FGameplayTag> AutoregisterToGroups;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Actors")
 	TArray<UOmegaActorConfigScript*> Scripts;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Actors")
+	TArray<UActorModifierScript*> BeginPlay_Modifiers;
 };
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
@@ -54,5 +53,4 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Config")
 	void SetConfig(UOmegaActorConfig* Config);
-
 };

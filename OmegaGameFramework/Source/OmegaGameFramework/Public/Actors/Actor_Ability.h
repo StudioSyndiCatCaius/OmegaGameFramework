@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
-#include "Components/Component_Combatant.h"
-#include "Components/Component_InputReceiver.h"
-#include "Widget/HUDLayer.h"
 #include "Actor_Ability.generated.h"
 
+class UCombatantComponent;
+class UInputReceiverComponent;
+class UHUDLayer;
 
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbilityEnd, bool, bCancelled);
@@ -193,7 +193,7 @@ public:
 
 	//### HUD ###//
 	UPROPERTY(EditDefaultsOnly, Category="HUD")
-	TSubclassOf<UHUDLayer> HudClass = UHUDLayer::StaticClass();
+	TSubclassOf<UHUDLayer> HudClass;
 	
 	UPROPERTY()
 	bool bIsKilling;
@@ -259,21 +259,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Ability")
 	TArray<FName> ActiveActorOwnerTags;
 
-	void Private_SetSoftTagsOnActor(TArray<FName> TagList, bool Active)
-	{
-		for(FName TempTag : TagList)
-		{
-			if(Active)
-			{
-				CombatantOwner->GetOwner()->Tags.Add(TempTag);
-			}
-			else
-			{
-				int32 TempIndex = CombatantOwner->GetOwner()->Tags.Find(TempTag);
-				CombatantOwner->GetOwner()->Tags.RemoveAt(TempIndex);
-			}
-		}
-	}
 private:
 
 	UFUNCTION()

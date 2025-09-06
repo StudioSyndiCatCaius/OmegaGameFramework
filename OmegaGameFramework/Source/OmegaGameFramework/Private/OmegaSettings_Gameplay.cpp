@@ -5,8 +5,23 @@
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "OmegaSettings.h"
 
+TArray<UOmegaGameplayModule*> UOmegaSettings_Gameplay::GetModules()
+{
+	TArray<UOmegaGameplayModule*> out;
+	for(auto* a : ModuleSets)
+	{
+		if(a)
+		{
+			out.Append(a->GetModules());
+		}
+	}
+	out.Append(ScriptedModules);
+	return out;
+}
+
 UOmegaSettings_Gameplay* UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle()
 {
+	if(!GetMutableDefault<UOmegaSettings>()->DefaultSettings_Gameplay.IsValid()) { return nullptr; }
 	if(UObject* style_ref = GetMutableDefault<UOmegaSettings>()->DefaultSettings_Gameplay.TryLoad())
 	{
 		return Cast<UOmegaSettings_Gameplay>(style_ref);
@@ -60,32 +75,7 @@ bool UOmegaGameplayStyleFunctions::OmegaGameplayInputCall(APlayerController* Pla
 	return out;
 }
 
-UPrimaryDataAsset* UOmegaGameplayStyleFunctions::GetGlobalDataAsset_Common(FGameplayTag Tag)
-{
-	if(GetCurrentGameplayStyle()->GlobalDataAssets_Common.Contains(Tag))
-	{
-		return GetCurrentGameplayStyle()->GlobalDataAssets_Common[Tag];	
-	}
-	return nullptr;
-}
 
-UOmegaAttribute* UOmegaGameplayStyleFunctions::GetGlobalDataAsset_Attribute(FGameplayTag Tag)
-{
-	if(GetCurrentGameplayStyle()->GlobalDataAssets_Attribute.Contains(Tag))
-	{
-		return GetCurrentGameplayStyle()->GlobalDataAssets_Attribute[Tag];	
-	}
-	return nullptr;
-}
-
-UEquipmentSlot* UOmegaGameplayStyleFunctions::GetGlobalDataAsset_EquipSlot(FGameplayTag Tag)
-{
-	if(GetCurrentGameplayStyle()->GlobalDataAssets_EquipSlot.Contains(Tag))
-	{
-		return GetCurrentGameplayStyle()->GlobalDataAssets_EquipSlot[Tag];	
-	}
-	return nullptr;
-}
 
 UOmegaDataAssetMetaSetting* UOmegaGameplayStyleFunctions::GetDataAssetMetaSetting(UPrimaryDataAsset* DataAsset,
 	TSubclassOf<UOmegaDataAssetMetaSetting> Class, bool& Result)

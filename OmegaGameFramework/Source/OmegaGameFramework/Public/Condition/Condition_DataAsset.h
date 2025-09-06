@@ -6,7 +6,7 @@
 #include "Condition_DataAsset.generated.h"
 
 
-UCLASS(Blueprintable,BlueprintType,Abstract,Const,EditInlineNew,meta=(ShowWorldContextPin))
+UCLASS(Blueprintable,BlueprintType,Abstract,Const,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaCondition_DataAsset : public UObject
 {
 	GENERATED_BODY()

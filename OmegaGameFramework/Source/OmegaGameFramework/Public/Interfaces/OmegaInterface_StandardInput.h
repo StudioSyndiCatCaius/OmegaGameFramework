@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "Styling/SlateBrush.h"
-#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "OmegaInterface_StandardInput.generated.h"
 
@@ -16,14 +15,14 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_StandardInput
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable,Category="Input")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable,Category="ΩI|Input",DisplayName="Input - On Move")
 	void OnReceiveInput_Movement(FVector2D Value, APlayerController* Controller);
-	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="Input")
+	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="ΩI|Input",DisplayName="Input - On Control")
 	void OnReceiveInput_Control(FVector2D Value, APlayerController* Controller);
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Input")
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Input",DisplayName="Input - On Page Int")
 	void OnReceiveInput_PageShoulder(int32 Value, bool bActive, APlayerController* Controller);
-	UFUNCTION(BlueprintImplementableEvent,Category="Input")
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Input",DisplayName="Input - On Page Float")
 	void OnReceiveInput_PageTrigger(float Value, bool bActive, APlayerController* Controller);
 };
 

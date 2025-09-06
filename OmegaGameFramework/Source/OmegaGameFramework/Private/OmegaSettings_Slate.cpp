@@ -2,8 +2,44 @@
 
 
 #include "OmegaSettings_Slate.h"
+
+#include "CommonBorder.h"
+#include "CommonTextBlock.h"
 #include "OmegaSettings.h"
 #include "Components/Button.h"
+#include "Functions/OmegaFunctions_Text.h"
+#include "Widget/DataWidget.h"
+
+UOmegaSettings_Slate::UOmegaSettings_Slate()
+{
+	Styled_Borders.Add(EOmegaSlateBorderType::Background,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Big,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Button,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Medium,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Minimal,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Small,nullptr);
+
+	Styled_Text.Add(EOmegaSlateTextType::Header1,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Header2,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Header3,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Paragraph,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Tiny,nullptr);
+}
+
+FText UOmegaSettings_Slate::L_FormatDataWidgetText(UDataWidget* w, FText t) const
+{
+	if(TextFormater && w && DataWidgets_AutoFormatText)
+	{
+		FOmegaCommonMeta met;
+		met.Context=nullptr;
+		if(w->ReferencedAsset)
+		{
+			met.Context=w->ReferencedAsset;
+		}
+		return TextFormater->ApplyTextFormat(t, w,DataWidgets_TextFormatTag,met);
+	}
+	return t;
+}
 
 UOmegaSettings_Slate* UOmegaSlateFunctions::GetCurrentSlateStyle()
 {
@@ -30,7 +66,7 @@ void UOmegaSlateFunctions::SetSlateStyle_AllWidgets(UPanelWidget* Parent, EOmega
 			} else if (auto* ProgressBar = Cast<UProgressBar>(ChildWidget)) {
 				SetSlateStyle_ProgressBar(ProgressBar);
 			} else if (auto* ComboBox = Cast<UComboBoxString>(ChildWidget)) {
-				SetSlateStyle_ComboBox(ComboBox);
+				//SetSlateStyle_ComboBox(ComboBox);
 			} else if (auto* Button = Cast<UButton>(ChildWidget)) {
 				SetSlateStyle_Button(Button);
 			} else if (auto* CheckBox = Cast<UCheckBox>(ChildWidget)) {
@@ -108,7 +144,7 @@ void UOmegaSlateFunctions::SetSlateStyle_Button(UButton* widget)
 {
 	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->Button_Default)
 	{
-		widget->SetStyle(GetCurrentSlateStyle()->Button_Default->Brush_Button);
+		widget->SetStyle(GetCurrentSlateStyle()->Button_Default->ButtonStyle);
 	}
 }
 
@@ -132,16 +168,7 @@ void UOmegaSlateFunctions::SetSlateStyle_Checkbox(UCheckBox* widget)
 {
 	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->Checkbox_default)
 	{
-		widget->SetWidgetStyle(GetCurrentSlateStyle()->Checkbox_default->Brush_CheckBox);
-	}
-}
-
-void UOmegaSlateFunctions::SetSlateStyle_ComboBox(UComboBoxString* widget)
-{
-	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->ComboBox_Default)
-	{
-		widget->SetWidgetStyle(GetCurrentSlateStyle()->ComboBox_Default->Brush_Box);
-		widget->SetItemStyle(GetCurrentSlateStyle()->ComboBox_Default->Brush_Item);
+		widget->SetWidgetStyle(GetCurrentSlateStyle()->Checkbox_default->CheckBox);
 	}
 }
 

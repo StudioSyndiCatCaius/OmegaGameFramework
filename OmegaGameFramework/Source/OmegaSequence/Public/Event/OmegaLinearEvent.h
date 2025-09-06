@@ -97,7 +97,7 @@ struct FOmegaLinearEventReaderData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,Instanced, BlueprintReadWrite,Category="LinearEventReader")
-	UOmegaLinearEventReader* Reader;
+	UOmegaLinearEventReader* Reader=nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="LinearEventReader")
 	FString SourceString;
 };

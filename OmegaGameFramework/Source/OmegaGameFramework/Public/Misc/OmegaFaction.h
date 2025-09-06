@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
-#include "Components/Component_Combatant.h"
-
+#include "Misc/OmegaUtils_Enums.h"
+#include "Interfaces/OmegaInterface_Common.h"
 #include "OmegaFaction.generated.h"
 
 UCLASS(BlueprintType, Blueprintable)

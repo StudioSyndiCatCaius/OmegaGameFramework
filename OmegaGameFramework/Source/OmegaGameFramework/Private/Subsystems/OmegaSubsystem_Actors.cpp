@@ -2,25 +2,11 @@
 
 
 #include "Subsystems/OmegaSubsystem_Actors.h"
-
+#include "Components/Component_ActorIdentity.h"
 #include "OmegaSettings_Gameplay.h"
 
 void UOmegaActorSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
-	active_processors.Empty();
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
-	{
-		for(TSubclassOf<AOmegaActorProcessor> c : set->ActorProcessors)
-		{
-			if(c)
-			{
-				AOmegaActorProcessor* _newproc = GetWorld()->SpawnActorDeferred<AOmegaActorProcessor>(c,FTransform());
-				_newproc->FinishSpawning(FTransform());
-				active_processors.Add(c,_newproc);
-				UE_LOG(LogTemp, Warning, TEXT("Created Actor Processor: %s"), *_newproc->GetName());
-			}
-		}
-	}
 	Super::OnWorldBeginPlay(InWorld);
 }
 
@@ -32,10 +18,12 @@ void UOmegaActorSubsystem::local_RegisterActorIdComp(UActorIdentityComponent* Co
 		if(bIsRegister && !REF_ActorIdComps.Contains(Component))
 		{
 			REF_ActorIdComps.Add(Component);
+			OnActorIdentityRegistered.Broadcast(Component->GetOwner(),Component,true);
 		}
 		if(!bIsRegister && REF_ActorIdComps.Contains(Component))
 		{
 			REF_ActorIdComps.Remove(Component);
+			OnActorIdentityRegistered.Broadcast(Component->GetOwner(),Component,false);
 		}
 	}
 }
@@ -50,30 +38,32 @@ TArray<UActorIdentityComponent*> UOmegaActorSubsystem::GetAllActorIdentityCompon
 	return out;
 }
 
-void UOmegaActorSubsystem::RegisterActorToProcessor(AActor* Actor, TSubclassOf<AOmegaActorProcessor> Processor)
+AActor* UOmegaActorSubsystem::GetFirstActorIfIdentity(UPrimaryDataAsset* Identity)
 {
-	if(Actor && Processor)
+	if(Identity)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Attempting - Register %s to processor %s"), *Actor->GetName(), *Processor->GetName());
-		if(AOmegaActorProcessor* temp_proc=active_processors.FindOrAdd(Processor))
+		for(auto* a : GetAllActorIdentityComponents())
 		{
-			temp_proc->SetActorRegisteredToProcessor(Actor,true);
-			UE_LOG(LogTemp, Warning, TEXT("SUCCESS - Registered %s to processor %s"), *Actor->GetName(), *temp_proc->GetName());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("FAILED - invalid processor actor"));
+			if(a && a->GetIdentitySourceAsset()==Identity)
+			{
+				return a->GetOwner();
+			}
 		}
 	}
+	return nullptr;
 }
 
-void UOmegaActorSubsystem::PerformInteraction(AActor* Instigator, AActor* TargetActor, FGameplayTag Tag, UObject* Context)
+
+void UOmegaActorSubsystem::PerformInteraction(AActor* Instigator, AActor* TargetActor, FGameplayTag Tag, FOmegaCommonMeta Context)
 {
 	if(Instigator && TargetActor)
 	{
 		if(TargetActor->GetClass()->ImplementsInterface(UActorInterface_Interactable::StaticClass()))
 		{
-			IActorInterface_Interactable::Execute_OnInteraction(TargetActor,Instigator,Tag,Context);
+			if(!IActorInterface_Interactable::Execute_IsInteractionBlocked(TargetActor,Instigator,Tag,Context))
+			{
+				IActorInterface_Interactable::Execute_OnInteraction(TargetActor,Instigator,Tag,Context);
+			}
 		}
 		OnActorInteraction.Broadcast(Instigator,TargetActor,Tag,Context);
 	}
@@ -101,6 +91,7 @@ void UOmegaActorSubsystem::SetActorRegisteredToGroup(FGameplayTag GroupTag, AAct
 
 		// Add the actor to the group if not already present
 		actorGroups[GroupTag].Actors.AddUnique(Actor);
+		OnActorGroupChange.Broadcast(Actor,GroupTag,registered);
 	}
 	else
 	{
@@ -108,6 +99,7 @@ void UOmegaActorSubsystem::SetActorRegisteredToGroup(FGameplayTag GroupTag, AAct
 		if (actorGroups.Contains(GroupTag))
 		{
 			actorGroups[GroupTag].Actors.Remove(Actor);
+			OnActorGroupChange.Broadcast(Actor,GroupTag,registered);
 		}
 	}
 }

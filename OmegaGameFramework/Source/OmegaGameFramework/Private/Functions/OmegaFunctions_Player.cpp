@@ -27,3 +27,28 @@ FRotator UOmegaPlayerFunctions::GetRotationFrom2DDirection(APlayerController* Pl
 	}
 	return FRotator();
 }
+
+AOmegaPlayer* UOmegaPlayerFunctions::GetOmegaPlayer(UObject* WorldContextObject, int32 Index)
+{
+	if(WorldContextObject)
+	{
+		if(AOmegaPlayer* p=Cast<AOmegaPlayer>(UGameplayStatics::GetPlayerController(WorldContextObject,Index)))
+		{
+			return p;
+		}
+	}
+	return nullptr;
+}
+
+TArray<AOmegaPlayer*> UOmegaPlayerFunctions::GetAllOmegaPlayers(UObject* WorldContextObject)
+{
+	TArray<AOmegaPlayer*> out;
+	for (int i = 0; i < UGameplayStatics::GetNumPlayerControllers(WorldContextObject); ++i)
+	{
+		if(AOmegaPlayer* p=GetOmegaPlayer(WorldContextObject,i))
+		{
+			out.Add(p);
+		}
+	}
+	return out;
+}

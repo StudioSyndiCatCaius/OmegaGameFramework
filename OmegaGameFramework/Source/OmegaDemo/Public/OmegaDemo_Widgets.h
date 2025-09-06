@@ -8,12 +8,14 @@
 #include "Components/Component_Leveling.h"
 #include "Components/Component_Skin.h"
 #include "Components/Slider.h"
+#include "Interfaces/OmegaInterface_Widget.h"
 #include "Subsystems/OmegaSubsystem_Quest.h"
 #include "Widget/DataWidget.h"
 #include "Widget/Widget_DynamicMeter.h"
 #include "Widget/ColorWheel/ColorWidget.h"
 #include "OmegaDemo_Widgets.generated.h"
 
+class UWidgetSwitcher;
 class UCombatantComponent;
 class UOmegaAttribute;
 
@@ -24,7 +26,7 @@ class UOmegaAttribute;
 // ==============================================================================================================
 
 UCLASS(Abstract)
-class OMEGADEMO_API UDataWidgetBase_Combatant : public UDataWidget
+class OMEGADEMO_API UDataWidgetBase_Combatant : public UDataWidget, public IWidgetInterface_Combatant
 {
 	GENERATED_BODY()
 
@@ -36,14 +38,13 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	void OnCombatantNotify(UCombatantComponent* Combatant, FName Notify, const FString& Flag);
-	
 
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget") UDataList* GetDataList_Attributes();
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget") UDataList* GetDataList_Attributes_Metric();
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget") UDataList* GetDataList_Attributes_Static();
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget") UDataList* GetDataList_Skills();
 
-	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
-	UDataList* GetDataList_Attributes();
-
-	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
-	UDataList* GetDataList_Skills();
+	virtual void SetAttributeComparison_Implementation(bool bComparing, UCombatantComponent* Combatant, UObject* ComparedSource, UObject* UncomparedSource) override;
 };
 
 // ==============================================================================================================
@@ -115,13 +116,25 @@ class OMEGADEMO_API UDataWidgetBase_Leveling : public UDataWidget
 {
 	GENERATED_BODY()
 
+	void L_SetLevelComp(ULevelingComponent* comp);
 	UPROPERTY() ULevelingComponent* REF_Comp;
-	UFUNCTION() void local_OnXp(ULevelingComponent* comp,float xp,float changed);
+	UFUNCTION() void L_onXP(ULevelingComponent* comp,float xp,float changed,UOmegaLevelingAsset* asset);
 
 public:
 	virtual void OnSourceAssetChanged_Implementation(UObject* Asset) override;
+	virtual void Native_OnListOwnerChanged(UObject* ListOwner) override;
 	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Leveling")
+	UOmegaLevelingAsset* LevelingAsset=nullptr;
+
+	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
+	void OnLevelingComponentChanged(ULevelingComponent* Component);
+	
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UOmegaLevelingAsset* GetLevelingAsset();
+	
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UProgressBar* GetWidget_ProgressBar();
 	
@@ -277,4 +290,34 @@ public:
 	UColorWidget* GetWidget_Color();
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UCheckBox* GetWidget_ToggleCheckBox();
+};
+
+
+// ==============================================================================================================
+// Body Option
+// ==============================================================================================================
+
+UCLASS(Abstract)
+class OMEGADEMO_API UDataWidgetBase_SaveSlot : public UDataWidget
+{
+	GENERATED_BODY()
+
+public:
+	virtual void OnSourceAssetChanged_Implementation(UObject* Asset) override;
+	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Save")
+	void OnSaveWidgetInit(UOmegaSaveGame* Save);
+
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UWidgetSwitcher* GetWidget_Switcher_Type();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UTextBlock* GetWidget_Text_Playime();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UTextBlock* GetWidget_Text_LevelName();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UTextBlock* GetWidget_Text_ZoneName();
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
+	UImage* GetWidget_Image_Screenshot();
+
 };

@@ -3,6 +3,7 @@
 
 #include "Actors/Actor_Pickup.h"
 
+#include "Actors/Actor_GameplayCue.h"
 #include "Kismet/KismetMathLibrary.h"
 
 

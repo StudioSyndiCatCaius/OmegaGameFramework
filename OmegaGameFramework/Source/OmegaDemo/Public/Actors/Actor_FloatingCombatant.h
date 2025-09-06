@@ -40,5 +40,5 @@ public:
 	UOmegaActorConfig* Config;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
+	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
 };

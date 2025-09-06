@@ -14,19 +14,36 @@ UAssetSquad_Identity* UAssetSquadComponent::ValidateSquadID(UAssetSquad_Identity
 
 int32 UAssetSquadComponent::ValidateMember(UPrimaryDataAsset* member)
 {
-
+	if(member)
+	{
+		if(!SquadData.Assignments.Contains(member))
+		{
+			SquadData.Assignments.Add(member,nullptr);
+		}
+		if(!SquadData.Order.Contains(member))
+		{
+			SquadData.Order.Add(member);
+		}
+	}
 	return -1;
 }
 
 void UAssetSquadComponent::ValidateData()
 {
-
+	for(auto* i : SquadData.Order)
+	{
+		if(i) { ValidateMember(i);}
+	}
+	for(auto& p : SquadData.Assignments)
+	{
+		if(p.Key) { ValidateMember(p.Key);}
+	}
 }
 
 TArray<UAssetSquad_Identity*> UAssetSquadComponent::L_GetListedSquads() const
 {
 	TArray<UAssetSquad_Identity*> sq;
-	SquadData.SquadMembers.GetKeys(sq);
+	SquadData.Assignments.GenerateValueArray(sq);
 	return sq;
 }
 
@@ -46,18 +63,36 @@ void UAssetSquadComponent::SetSquadData(FOmegaAssetSquad_Data Data)
 
 FOmegaAssetSquad_Data UAssetSquadComponent::GetSquadData()
 {
+	ValidateData();
 	return SquadData;
+}
+
+void UAssetSquadComponent::RemoveAllMembersFromSquad(UAssetSquad_Identity* Squad)
+{
+	ValidateData();
+	if(Squad)
+	{
+		TArray<UPrimaryDataAsset*> as;
+		SquadData.Assignments.GetKeys(as);
+		for(auto* a : as)
+		{
+			if(a)
+			{
+				SetMemberInSquad(a,Squad,false);	
+			}
+		}
+	}
 }
 
 void UAssetSquadComponent::RemoveMemberFromAllSquads(UPrimaryDataAsset* Member)
 {
+	ValidateData();
 	if(Member)
 	{
 		TArray<UAssetSquad_Identity*> sq;
-		SquadData.SquadMembers.GetKeys(sq);
-		for(auto* s : sq)
+		if(SquadData.Assignments.Contains(Member))
 		{
-			SetMemberInSquad(Member,s,false);
+			SquadData.Assignments.Remove(Member);
 		}
 	}
 }
@@ -72,46 +107,59 @@ void UAssetSquadComponent::SetMemberInSquad(UPrimaryDataAsset* Member, UAssetSqu
 			{
 				RemoveMemberFromAllSquads(Member);
 			}
-			SquadData.SquadMembers.FindOrAdd(Squad).List.Add(Member);
+			SquadData.Assignments.Add(Member,Squad);
 			OnSquadMembersChanged.Broadcast(this,Squad,Member,true);
 		}
 		else if(!InSquad && IsMemberInSquad(Member,Squad))
 		{
-			SquadData.SquadMembers.FindOrAdd(Squad).List.Remove(Member);
+			SquadData.Assignments.Add(Member,nullptr);
 			OnSquadMembersChanged.Broadcast(this,Squad,Member,false);
 		}
 	}
 }
 
+void UAssetSquadComponent::SetMembersInSquad(TArray<UPrimaryDataAsset*> Members, UAssetSquad_Identity* Squad,
+	bool InSquad)
+{
+	for(auto* a : Members)
+	{
+		if(a) { SetMemberInSquad(a,Squad,InSquad);}
+	}
+}
+
 TArray<UPrimaryDataAsset*> UAssetSquadComponent::GetSquadMembers(UAssetSquad_Identity* Squad)
 {
-	return SquadData.SquadMembers.FindOrAdd(Squad).List;
+	TArray<UPrimaryDataAsset*> out;
+	if(!Squad) { return out;}
+	ValidateData();
+	for(auto* P : SquadData.Order)
+	{
+		if(P && GetMemberSquad(P)==Squad)
+		{
+			out.Add(P);
+		}
+	}
+	return out;
 }
 
 UAssetSquad_Identity* UAssetSquadComponent::GetMemberSquad(UPrimaryDataAsset* Member)
 {
-	if(Member)
+	if(Member && SquadData.Assignments.Contains(Member))
 	{
-		TArray<UAssetSquad_Identity*> sq;
-		SquadData.SquadMembers.GetKeys(sq);
-		for(auto* s : sq)
-		{
-			if(SquadData.SquadMembers.FindOrAdd(s).List.Contains(Member))
-			{
-				return s;
-			}
-		}
-	}
+		return SquadData.Assignments.FindOrAdd(Member);
+	} 
 	return nullptr;
 }
 
 int32 UAssetSquadComponent::GetMemberIndex_InFirstSquad(UPrimaryDataAsset* Member)
 {
-	for(auto* s : L_GetListedSquads())
+	if(Member)
 	{
-		if(SquadData.SquadMembers.FindOrAdd(s).List.Contains(Member))
+		ValidateMember(Member);
+		if(UAssetSquad_Identity* sq=GetMemberSquad(Member))
 		{
-			return SquadData.SquadMembers.FindOrAdd(s).List.Find(Member);
+			TArray<UPrimaryDataAsset*> l=GetSquadMembers(sq);
+			if(l.Contains(Member)) { return l.Find(Member);}
 		}
 	}
 	return -1;
@@ -119,7 +167,7 @@ int32 UAssetSquadComponent::GetMemberIndex_InFirstSquad(UPrimaryDataAsset* Membe
 
 bool UAssetSquadComponent::IsMemberInSquad(UPrimaryDataAsset* Member, UAssetSquad_Identity* Squad)
 {
-	if(SquadData.SquadMembers.Contains(Squad) && SquadData.SquadMembers[Squad].List.Contains(Member))
+	if(Member && Squad && GetMemberSquad(Member)==Squad)
 	{
 		return true;
 	}
@@ -141,12 +189,10 @@ void UAssetSquadComponent::SwapSquadMembers(UPrimaryDataAsset* A, UPrimaryDataAs
 	UAssetSquad_Identity* s_a=GetMemberSquad(A);
 	int32 i_b=GetMemberIndex_InFirstSquad(B);
 	UAssetSquad_Identity* s_b=GetMemberSquad(B);
-	if(s_b)
+	if(SquadData.Order.IsValidIndex(i_a) && SquadData.Order.IsValidIndex(i_b))
 	{
-		SquadData.SquadMembers.FindOrAdd(s_b).List.Insert(A,i_b);
+		SquadData.Order.Swap(i_a,i_b);
+		OnAssetSquadMembersSwapped.Broadcast(this,s_a,s_b);
 	}
-	if(s_a)
-	{
-		SquadData.SquadMembers.FindOrAdd(s_a).List.Insert(B,i_a);
-	}
+	
 }

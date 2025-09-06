@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "UObject/Object.h"
-#include "Materials/MaterialExpression.h"
-#include "MaterialCompiler.h"
-#include "Actors/Actor_ActorProcessor.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "OmegaSubsystem_Actors.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorInteraction, AActor*, InteractInstigator, AActor*, Target, FGameplayTag, Tag,UObject*, Context);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorInteraction, AActor*, InteractInstigator, AActor*, Target, FGameplayTag, Tag,FOmegaCommonMeta, Context);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorTaggedTargetChange, AActor*, Instigator, FGameplayTag, Tag, AActor*, Target, bool, regsitered);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorGroupChange, AActor*, Actor, FGameplayTag, Tag, bool, regsitered);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorTagEvent, AActor*, Actor, FGameplayTag, Tag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FActorIdentityDelegateRegister, AActor*, Actor, UActorIdentityComponent*, Component, bool, Registered);
 
 USTRUCT()
 struct FOmegaActorGroupData
@@ -23,15 +23,19 @@ struct FOmegaActorGroupData
 	UPROPERTY() TArray<AActor*> Actors;
 };
 
-UINTERFACE(MinimalAPI) class UActorInterface_Interactable : public UInterface { GENERATED_BODY() };
+UINTERFACE() class UActorInterface_Interactable : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IActorInterface_Interactable
 {
 	GENERATED_BODY()
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Interaction")
-	void OnInteraction(AActor* InteractInstigator, FGameplayTag Tag, UObject* Context);
+	void OnInteraction(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Interaction")
+	bool IsInteractionBlocked(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context);
 };
+
 
 
 // =======================================================================================================================
@@ -46,29 +50,31 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSubsystem : public UWorldSubsystem
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
-	UPROPERTY() TMap<TSubclassOf<AOmegaActorProcessor>,AOmegaActorProcessor*> active_processors;
 	UPROPERTY() TArray<UActorIdentityComponent*> REF_ActorIdComps;
 	UPROPERTY() TMap<FGameplayTag, FOmegaActorGroupData> actorGroups;
 	UPROPERTY() TMap<AActor*, FOmegaActorMeta> actors_meta;
 public:
 	UPROPERTY(BlueprintAssignable) FOnActorInteraction OnActorInteraction;
 	UPROPERTY(BlueprintAssignable) FOnActorTaggedTargetChange OnActorTaggedTargetChange;
+	UPROPERTY(BlueprintAssignable) FOnActorTagEvent OnActorTagEvent;
+	UPROPERTY(BlueprintAssignable) FOnActorGroupChange OnActorGroupChange;
+	
+	UPROPERTY(BlueprintAssignable) FActorIdentityDelegateRegister OnActorIdentityRegistered;
 	
 	void local_RegisterActorIdComp(UActorIdentityComponent* Component, bool bIsRegister);
 
 	UFUNCTION(BlueprintCallable,Category="Actor Identity Subsystem")
 	TArray<UActorIdentityComponent*> GetAllActorIdentityComponents();
 
-	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Processor")
-	void RegisterActorToProcessor(AActor* Actor, TSubclassOf<AOmegaActorProcessor> Processor);
+	UFUNCTION(BlueprintCallable,Category="Actor Identity Subsystem")
+	AActor* GetFirstActorIfIdentity(UPrimaryDataAsset* Identity);
 
 	// ---------------------------------------------------------------------------------
 	// Interaction
 	// ---------------------------------------------------------------------------------
-
 	
 	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Interaction")
-	void PerformInteraction(AActor* Instigator, AActor* TargetActor, FGameplayTag Tag, UObject* Context);
+	void PerformInteraction(AActor* Instigator, AActor* TargetActor, FGameplayTag Tag, FOmegaCommonMeta Context);
 
 	// ---------------------------------------------------------------------------------
 	// Groups

@@ -3,13 +3,43 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaFunctions_ComponentMod.h"
 #include "Engine/DataAsset.h"
 #include "UObject/Interface.h"
-#include "Components/Component_ActorConfig.h"
+#include "Condition/Condition_Actor.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Structs.h"
 
 #include "OmegaFunctions_Actor.generated.h"
+
+class UOmegaActorConfig;
+
+USTRUCT(BlueprintType)
+struct FOmegaActorModifierSet
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Actor") TArray<UOmegaCondition_Actor*> Conditions;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Actor") TArray<UActorModifierScript*> Modifiers;
+
+	bool Apply(AActor* a) const
+	{
+		if(a)
+		{
+			FOmegaConditions_Actor n;
+			n.Conditions=Conditions;
+			if(n.CheckConditions(a))
+			{
+				FActorModifiers m;
+				m.Script=Modifiers;
+				m.ApplyMods(a);
+				return true;
+			}
+		}
+		return false;
+	}
+};
+
+
 
 UCLASS(BlueprintType,Blueprintable,Abstract,Const,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UActorWeighterScript : public UObject
@@ -46,6 +76,7 @@ public:
 };
 
 
+
 // =====================================================================================================================
 // ACTOR
 // =====================================================================================================================
@@ -58,7 +89,16 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorFunctions : public UBlueprintFunctionLib
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable,Category="Actor Condition")
+	static void SnapActorToSuface(AActor* Actor, FVector Trace_Start,FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType);
+	
 
+	UFUNCTION(BlueprintCallable,Category="Actor Condition")
+	static bool CheckActorCondition(AActor* Actor, FOmegaConditions_Actor Conditions);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(ExpandBoolAsExecs="Result"))
+	static bool CheckIsActorInteractable(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta, bool& Result);
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(ExpandBoolAsExecs="Result"))
 	static bool IsActorPlayer(AActor* Actor, APawn*& Pawn, APlayerController*& Controller, bool& Result);
 	
@@ -77,6 +117,9 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(AdvancedDisplay="player"))
 	static TArray<AActor*> FilterActors_OnScreen(TArray<AActor*> actors, float ScreenEdgeTolerance, bool invert, APlayerController* player);
 
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(DeterminesOutputType="Class"))
+	static TArray<AActor*> FilterActors_OverlappingActor(AActor* OverlapTarget, TArray<AActor*> actors,TSubclassOf<AActor> Class);
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor")
 	static float GetActorWeight(AActor* Actor, FActorWeighter Weighter,float fallback);
 };

@@ -7,12 +7,14 @@
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Enums.h"
+#include "Misc/OmegaUtils_Structs.h"
 
 #include "OmegaFunctions_Save.generated.h"
 
 
 class UOmegaSaveGlobal;
 class UOmegaSaveGame;
+class USaveGame;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveFunctions : public UBlueprintFunctionLibrary
@@ -51,12 +53,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Data Asset - Set JSON")
 	static void DataAsset_SetJson(const UObject* WorldContextObject, UPrimaryDataAsset* Asset, FJsonObjectWrapper Json, bool bGlobal);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Data Asset - Get Param")
-	static int32 DataAsset_GetParam(const UObject* WorldContextObject, UPrimaryDataAsset* Asset, FGameplayTag Param, bool bGlobal);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Data Asset - Set Param")
-	static void DataAsset_SetParam(const UObject* WorldContextObject, UPrimaryDataAsset* Asset, FGameplayTag Param, int32 Value, bool Added, bool bGlobal);
 	
 	//GUID
 	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) GUID - Get JSON")
@@ -64,10 +60,27 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) GUID - Set JSON")
 	static void GUID_SetJson(const UObject* WorldContextObject, FGuid Guid, FJsonObjectWrapper Json, bool bGlobal);
-	
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) GUID - Get Param")
-	static int32 GUID_GetParam(const UObject* WorldContextObject, FGuid Guid, FGameplayTag Param, bool bGlobal);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) GUID - Set Param")
-	static void GUID_SetParam(const UObject* WorldContextObject, FGuid Guid, FGameplayTag Param, int32 Value, bool Added,  bool bGlobal);
+	//Entity
+	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
+	static void SetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key, FOmegaEntity Entity, bool bGlobal);
+	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
+	static FOmegaEntity GetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
+	static void SetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, FOmegaEntity Entity, bool bGlobal);
+	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
+	static FOmegaEntity GetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
+	static void SetEntity_ByName(const UObject* WorldContextObject, FName Key, FOmegaEntity Entity, bool bGlobal);
+	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
+	static FOmegaEntity GetEntity_ByName(const UObject* WorldContextObject, FName Key, bool bGlobal);
+
+
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom")
+	static bool Custom_SaveGame(USaveGame* SaveGameObject, const FString& path, const FString& file);
+
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom")
+	static USaveGame* Custom_LoadGame(const FString& path, const FString& file);
 };

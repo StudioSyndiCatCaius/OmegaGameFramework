@@ -10,6 +10,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/BillboardComponent.h"
+#include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
@@ -23,8 +24,12 @@
 #include "TimerManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Components/Component_UtilMesh.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/TextRenderComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/OmegaUtils_Methods.h"
 
 UZoneEntityComponent::UZoneEntityComponent()
 {
@@ -72,6 +77,19 @@ void UZoneEntityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		Ref_DisplayActor->K2_DestroyActor();
 	}
 	Super::EndPlay(EndPlayReason);
+}
+
+AActor* UZoneEntityComponent::GetDisplayActor() const
+{
+	if(UseParentAsDisplayActor)
+	{
+		return GetOwner();
+	}
+	if(Ref_DisplayActor)
+    {
+    	return Ref_DisplayActor;
+    }
+    return nullptr;
 }
 
 FVector2D UZoneEntityComponent::GetPosition2D()
@@ -135,16 +153,99 @@ AZoneEntityViewCamera::AZoneEntityViewCamera()
 	SceneCaptureComponent->PrimitiveRenderMode=ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
 }
 
+void AZoneEntityViewCamera::L_RefreshView()
+{
+	SceneCaptureComponent->ShowOnlyActors.Empty();
+	for(UZoneEntityComponent* temp_entity : GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->GetRegisteredZoneEntities())
+	{
+		if(temp_entity &&
+			IsLegendVisible(temp_entity->LegendAsset))
+		{
+			if(AActor* ac=temp_entity->GetDisplayActor())
+			{
+				if(L_ActorIsValidViewable(temp_entity->GetOwner()))
+				{
+					SceneCaptureComponent->ShowOnlyActors.Add(ac);
+				}
+			}
+		}
+	}
+}
+
+bool AZoneEntityViewCamera::L_ActorIsValidViewable(AActor* a) const
+{
+	if(a)
+	{
+		if(ViewFilterActors.IsEmpty()) { return true;}
+		for(auto* _a : ViewFilterActors)
+		{
+			if(_a && (a->IsOverlappingActor(_a) || a==_a))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void AZoneEntityViewCamera::BeginPlay()
 {
 	Super::BeginPlay();
-	for(UZoneEntityComponent* temp_entity : GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->GetRegisteredZoneEntities())
+	L_RefreshView();
+}
+
+bool AZoneEntityViewCamera::IsLegendVisible(UZoneLegendAsset* Legend) const
+{
+	if(LegendVisibility.Contains(Legend))
 	{
-		if(temp_entity->GetDisplayActor())
-		{
-			SceneCaptureComponent->ShowOnlyActors.Add(temp_entity->GetDisplayActor());
-		}
+		return LegendVisibility[Legend];
 	}
+	return true;
+}
+
+void AZoneEntityViewCamera::SetLegendVisible(UZoneLegendAsset* Legend, bool bVisible)
+{
+	if(Legend)
+	{
+		LegendVisibility.Add(Legend,bVisible);
+		L_RefreshView();
+	}
+}
+
+void AZoneEntityViewCamera::SetViewFilterActorValid(AActor* Actor, bool ValidFilter)
+{
+	if(Actor)
+	{
+		if(ValidFilter && !ViewFilterActors.Contains(Actor))
+		{
+			ViewFilterActors.Add(Actor);
+		}
+		if(!ValidFilter && ViewFilterActors.Contains(Actor))
+		{
+			ViewFilterActors.Remove(Actor);
+		}
+		L_RefreshView();
+	}
+}
+
+void AZoneEntityViewCamera::ClearAllViewFilterActors()
+{
+	ViewFilterActors.Empty();
+	L_RefreshView();
+}
+
+UOmegaSettings_Gameplay* UOmegaZoneSubsystem::L_GetSettings()
+{
+	if(settings_gameplay)
+	{
+		return settings_gameplay;
+	}
+	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	{
+		settings_gameplay=set;
+		return  settings_gameplay;
+	}
+	return GetMutableDefault<UOmegaSettings_Gameplay>();
 }
 
 
@@ -158,14 +259,54 @@ void UOmegaZoneSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 }
 
 
+
+
 void UOmegaZoneSubsystem::Tick(float DeltaTime)
 {
+	switch (l_LoadState) {
+	case zone_Uninitialzed:
+
+		//If not steaming in levels
+		if(!OGF_Load::LevelStream_IsLoading(GetWorld()))
+		{
+			OGF_Log::LogInfo("ZONE SUBSYSTEM - State Changed 2 'Initializing' ");
+			l_ZoneInitTime=0.0;
+			if(L_GetSettings()->bAutoSpawnAtFirstPoint)
+			{
+				l_LoadState=zone_Initializing;
+			}
+			else
+			{
+				l_LoadState=zone_Idle;
+			}
+		}
+		break;
+	case zone_Initializing:
+		l_ZoneInitTime+=DeltaTime;
+		if(L_GetSettings()->bAutoSpawnAtFirstPoint && zone_Initializing>=L_GetSettings()->SpawnAtFirstPointDelay)
+		{
+			l_LoadState=zone_Idle;
+			b_SkipNextFade=true;
+			SpawnFromStartingPoint();
+		}
+		break;
+	case zone_Idle:
+			
+		break;
+	case zone_Unloading:
+			
+		break;
+	case zone_Loading:
+			
+		break;
+	default: ;
+	}
+	
 
 }
 
 UOmegaLevelData* UOmegaZoneSubsystem::GetLevelData(TSoftObjectPtr<UWorld> SoftLevelReference)
 {
-
 	// Get the current level path
 	FString CurrentLevelPath = SoftLevelReference.GetLongPackageName();
 	UE_LOG(LogTemp, Warning, TEXT("LEVEL DATA CHECK --> CurrentLevelPath: %s"), *CurrentLevelPath);
@@ -258,6 +399,7 @@ TArray<UZoneEntityComponent*> UOmegaZoneSubsystem::GetRegisteredZoneEntities_OfL
 	return out;
 }
 
+
 void UOmegaZoneSubsystem::OnLoadFromLevelComplete()
 {
 	AOmegaZonePoint* OutPoint = nullptr;
@@ -281,40 +423,49 @@ void UOmegaZoneSubsystem::OnLoadFromLevelComplete()
 
 void UOmegaZoneSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
+	l_LoadState=zone_Uninitialzed;
+	bSequenceTransit_IsPlaying=false;
+	//Get Zone subsystem
+	if(GetWorld())
+	{
+		if(UGameInstance* _gi=GetWorld()->GetGameInstance())
+		{
+			l_subsys_ZoneGI=_gi->GetSubsystem<UOmegaZoneGameInstanceSubsystem>();
+			l_subsys_sav=_gi->GetSubsystem<UOmegaSaveSubsystem>();
+			l_subsys_gamM=_gi->GetSubsystem<UOmegaGameManager>();
+		}
+		l_subsys_gamplay=GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	}
 	Super::OnWorldBeginPlay(InWorld);
-	GamInstSubsys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>();
-
-	if (!GamInstSubsys) return;
-	FTimerHandle LocalTimer;
-	GetWorld()->GetTimerManager().SetTimer(LocalTimer, this, &UOmegaZoneSubsystem::SpawnFromStartingPoint, 0.1f, false);
-
 }
 
 void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 {
-	if (!GamInstSubsys || !GamInstSubsys->IsInlevelTransit)
+	OGF_Log::LogInfo("ZONE SUBSYSTEM - Attempting Spawn at Starting Point ");
+	if (!l_subsys_ZoneGI || !l_subsys_ZoneGI->IsInlevelTransit)
 	{
 		LoadDefaultZone();
 		return;
 	}
-	GamInstSubsys->IsInlevelTransit = false;
+	l_subsys_ZoneGI->IsInlevelTransit = false;
 	
 	AOmegaZonePoint* TempPoint = nullptr;
-	UOmegaGameManager* GameManager = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
-	UOmegaSaveSubsystem* SaveSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
 
 	//SPAWN AT - Load Point
-	if (GamInstSubsys->bIsLoadingGame)
+	if (l_subsys_ZoneGI->bIsLoadingGame)
 	{
-		GamInstSubsys->bIsLoadingGame=false;
+		l_subsys_ZoneGI->bIsLoadingGame=false;
 
-		const UOmegaSaveGame* TempSave = SaveSubsystem->ActiveSaveData;
-		TempPoint = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(), TempSave->SavedPlayerTransform);
-		if (TempPoint)
+		if(l_subsys_sav)
 		{
-			TempPoint->SetLifeSpan(1);
-			TempPoint->ZoneToLoad = TempSave->ActiveZone;
-			TempPoint->FinishSpawning(TempSave->SavedPlayerTransform);
+			const UOmegaSaveGame* _sav = l_subsys_sav->ActiveSaveData;
+			TempPoint = GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(), _sav->SavedPlayerTransform);
+			if (TempPoint)
+			{
+				TempPoint->SetLifeSpan(1);
+				TempPoint->ZoneToLoad = _sav->ActiveZone;
+				TempPoint->FinishSpawning(_sav->SavedPlayerTransform);
+			}
 		}
 	}
 	else
@@ -323,12 +474,14 @@ void UOmegaZoneSubsystem::SpawnFromStartingPoint()
 		UGameplayStatics::GetAllActorsOfClass(this, AOmegaZonePoint::StaticClass(), TempPoints);
 		for (AActor* TempActor : TempPoints)
 		{
-			AOmegaZonePoint* CheckedPoint = Cast<AOmegaZonePoint>(TempActor);
-			if (CheckedPoint && (CheckedPoint->FromLevel == GamInstSubsys->PreviousLevel || CheckedPoint->FromLevel.IsNull())
-				&& GamInstSubsys->TargetSpawnPointTag == CheckedPoint->ZonePointID)
+			if(AOmegaZonePoint* CheckedPoint = Cast<AOmegaZonePoint>(TempActor))
 			{
-				TempPoint = CheckedPoint;
-				break;
+				if (CheckedPoint->FromLevel == l_subsys_ZoneGI->PreviousLevel
+					&& l_subsys_ZoneGI->TargetSpawnPointTag == CheckedPoint->ZonePointID)
+				{
+					TempPoint = CheckedPoint;
+					break;
+				}
 			}
 		}
 	}
@@ -346,10 +499,13 @@ void UOmegaZoneSubsystem::LoadDefaultZone()
 {
 	if(GetCurrentLevelData() && GetCurrentLevelData()->GetDefaultZoneData())  // Load Default Level Data
 	{
+		
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - Loading default Zone (Current LevelData)");
 		LoadZone(GetCurrentLevelData()->GetDefaultZoneData());
 	}
 	else
 	{
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - Loading default Zone (Fallback)");
 		LoadZone(FallbackZone);
 	}
 }
@@ -360,11 +516,11 @@ void UOmegaZoneSubsystem::LoadZone(UOmegaZoneData* Zone, bool UnloadPreviousZone
 {
 	if (IsMidPlayerTransit || !Zone) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot change zones, Player is mid-transit or Zone is invalid."));
+		OGF_Log::LogWarning("ZONE SUBSYSTEM - Cannot change zones, Player is mid-transit or Zone is invalid");
 		return;
 	}
 
-	UE_LOG(LogTemp, Display, TEXT("Begin Zone Load: %s"), *Zone->GetName());
+	OGF_Log::LogInfo("ZONE SUBSYSTEM - Begin Zone Load: "+Zone->GetName());
 	IncomingZone_Load = Zone;
 	bUnloadPreviousZones = UnloadPreviousZones;
 	IsMidPlayerTransit = true;
@@ -404,6 +560,11 @@ bool UOmegaZoneSubsystem::IsZoneLoaded(UOmegaZoneData* Zone)
 		return GetLoadedZones().Contains(Zone);
 	}
 	return false;
+}
+
+bool UOmegaZoneSubsystem::IsZoneLoading()
+{
+	return l_LoadState!=zone_Idle;
 }
 
 AOmegaZonePoint* UOmegaZoneSubsystem::GetZonePointFromID(FGameplayTag ID)
@@ -454,7 +615,6 @@ void UOmegaZoneSubsystem::TransitPlayerToLevel(TSoftObjectPtr<UWorld> Level, FGa
 	const FString StartPath = Level.ToString();
 	FString EmptyPath;
 	FString targetLevel;
-
 	StartPath.Split(TEXT("."),&EmptyPath,&targetLevel);
 	
 	TransitPlayerToLevel_Name(FName(targetLevel),SpawnID);
@@ -489,19 +649,30 @@ void UOmegaZoneSubsystem::TransitPlayerToPoint(AOmegaZonePoint* Point, APlayerCo
 // COMPLETES Transition Event
 void UOmegaZoneSubsystem::Local_CompleteTransit()
 {
-	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(GetZoneGameplaySystem(), this, "");
-	if(GetTopLoadedZones())
+	OGF_Log::LogInfo("ZONE SUBSYSTEM - Completing Zone Transit Event");
+	if(l_subsys_gamplay && GetZoneGameplaySystem())
 	{
-		GetWorld()->GetSubsystem<UOmegaBGMSubsystem>()->PlayBGM(GetTopLoadedZones()->ZoneBGM, GetMutableDefault<UOmegaSettings>()->ZoneBGMSlot,false,true);
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - Attempting Transit GameplaySystem Shutdown");
+		l_subsys_gamplay->ShutdownGameplaySystem(GetZoneGameplaySystem(), this, "");
+	}
 
+	if(GetWorld() && GetTopLoadedZones() && L_GetSettings()->bAutoplayZoneBgm)
+	{
+		GetWorld()->GetSubsystem<UOmegaBGMSubsystem>()->PlayBGM(GetTopLoadedZones()->ZoneBGM, L_GetSettings()->ZoneBGMSlot,false,true);
 	}
 	IsMidPlayerTransit=false;
 	Local_IsWaitForLoad = false;
+	
+	OGF_Log::LogInfo("ZONE SUBSYSTEM - FINISHED!!!");
 }
 
 void UOmegaZoneSubsystem::Local_PreBeginTransitActions()
 {
-	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(GetZoneGameplaySystem(), this, "");
+	if(GetZoneGameplaySystem())
+	{
+		OGF_Log::LogWarning("ZONE SUBSYSTEM - Activating ZoneTransit Gameplay System");
+		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(GetZoneGameplaySystem(), this, "");
+	}
 }
 
 
@@ -520,11 +691,31 @@ void UOmegaZoneSubsystem::Local_FinishZoneLoad()
 
 TSubclassOf<AOmegaGameplaySystem> UOmegaZoneSubsystem::GetZoneGameplaySystem()
 {
-	if(TSubclassOf<AOmegaGameplaySystem> LocalSystem = GetMutableDefault<UOmegaSettings>()->ZoneTransitSystem.TryLoadClass<AOmegaGameplaySystem>())
+	if(TSubclassOf<AOmegaGameplaySystem> LocalSystem = L_GetSettings()->ZoneTransitSystem.LoadSynchronous())
 	{
 		return LocalSystem;
 	}
 	return nullptr;
+}
+
+void UOmegaZoneSubsystem::L_ZonePointEvent(AOmegaZonePoint* point, uint8 event, bool bState)
+{
+	if(point)
+	{
+		switch (event)
+		{
+			case 0:
+				if (bState && !ZonePoints.Contains(point))
+				{
+					ZonePoints.Add(point);
+				}
+				else if(!bState && ZonePoints.Contains(point))
+				{
+					ZonePoints.Remove(point);
+				};
+			default: ;
+		}
+	}
 }
 
 void UOmegaZoneSubsystem::Local_OnBeginLoadTaskList(TArray<FName> Levels, bool Loaded)
@@ -541,13 +732,13 @@ void UOmegaZoneSubsystem::Local_OnNextLoadEvent()
 	//End if List is empty
 	if(Incoming_LoadList.IsValidIndex(0))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("STARTING next level stream load/unload"));
 		Local_Name = Incoming_LoadList[0];
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - STARTING next level stream load/unload: "+Local_Name.ToString());
 		Incoming_LoadList.Remove(Local_Name);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("COMPLETE Load/Unload Steam Events"));
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - COMPLETED Load/Unload Steam Events");
 		Local_OnFinishLoadTask(Incoming_LoadState);
 		return;
 	}
@@ -575,30 +766,29 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 {
 	if (LoadState)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Finish Zone LOAD"));
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - Finish Zone: LOAD");
 
 		if (Incoming_LoadTaskZone)
 		{
 			OnZoneLoaded.Broadcast(Incoming_LoadTaskZone);
-
-			for (TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
+			if(GetWorld())
 			{
-				if (TempSys)
+				for (TSubclassOf<AOmegaGameplaySystem> TempSys : Incoming_LoadTaskZone->SystemsActivatedInZone)
 				{
-					GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys);
+					if (TempSys)
+					{
+						GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys);
+					}
 				}
 			}
 		}
-
 		if (Incoming_SpawnPoint)
 		{
-			APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this, 0);
-			while (!PawnRef)
+			if(APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this, 0))
 			{
-				PawnRef = UGameplayStatics::GetPlayerPawn(this, 0);
+				PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
+				UGameplayStatics::GetPlayerController(this, 0)->SetControlRotation(PawnRef->GetActorRotation());
 			}
-			PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
-			UGameplayStatics::GetPlayerController(this, 0)->SetControlRotation(PawnRef->GetActorRotation());
 			OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this, 0), Incoming_SpawnPoint);
 		}
 
@@ -606,7 +796,8 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Display, TEXT("Finish Zone UNLOAD"));
+		
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - Finish Zone: UNLOAD");
 
 		LoadedZones.Remove(IncomingZone_Unload);
 		OnZoneUnloaded.Broadcast(IncomingZone_Unload);
@@ -632,64 +823,97 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 
 ULevelSequence* UOmegaZoneSubsystem::GetTransitSequence()
 {
-	if(ULevelSequence* LevelSequence = Cast<ULevelSequence>(GetMutableDefault<UOmegaSettings>()->TransitSequence.TryLoad()))
+	if(ULevelSequence* seq = L_GetSettings()->Sequence_ZoneTransit.LoadSynchronous())
 	{
-		return LevelSequence;
+		return seq;
 	}
 	return nullptr;
 }
 
 ULevelSequencePlayer* UOmegaZoneSubsystem::GetTransitSequencePlayer()
 {
-	if(!LocalSeqPlayer)
+	if(ULevelSequence* seq= GetTransitSequence())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Initialized SequencePlayer"));
-		FMovieSceneSequencePlaybackSettings Settings;
-		ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), GetTransitSequence(), Settings, LocalSeqPlayer);
-		LocalSeqPlayer->SequencePlayer->OnFinished.AddDynamic(this, &UOmegaZoneSubsystem::Local_OnFinishTransitSequence);
+		if(!LocalSeqPlayer)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Initialized SequencePlayer"));
+			FMovieSceneSequencePlaybackSettings Settings;
+			ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), seq, Settings, LocalSeqPlayer);
+			LocalSeqPlayer->GetSequencePlayer()->OnFinished.AddDynamic(this, &UOmegaZoneSubsystem::Local_OnFinishTransitSequence);
+		}
+		return LocalSeqPlayer->GetSequencePlayer();
 	}
-	return LocalSeqPlayer->SequencePlayer;
+	return nullptr;
 }
 
 // TASKS -----------------------
 
 void UOmegaZoneSubsystem::Local_OnBeginTransitSequence(bool bForward)
 {
+	
 	if(!bSequenceTransit_IsPlaying)
 	{
 		bSequenceTransit_IsPlaying = true;
 		bSequenceTransit_IsForward = bForward;
-		
-		if(GetTransitSequence()) // If a level sequence is VALID
+		if(ULevelSequence* in_seq=GetTransitSequence()) // If a level sequence is VALID
 		{
-			if(bSequenceTransit_IsForward)
+			OGF_Log::LogInfo("ZONE SUBSYSTEM - Begining Transit LevelSequence | forward="+bForward);
+			if(ULevelSequencePlayer* seqPlayer=GetTransitSequencePlayer())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ATTEMPT PLAYER TRNASIT SEQUENCE: Forward"));
-				GetTransitSequencePlayer()->Play();
+				if(b_SkipNextFade)
+				{
+					b_SkipNextFade=false;
+					if(!bSequenceTransit_IsForward)
+					{
+						seqPlayer->GoToEndAndStop();
+					}
+					else
+					{
+						seqPlayer->SetPlaybackPosition(FMovieSceneSequencePlaybackParams(0.0, EUpdatePositionMethod::Jump));
+					}
+					Local_OnFinishTransitSequence();
+				}
+				else
+				{
+					if(bSequenceTransit_IsForward)
+					{
+						seqPlayer->Play();
+					}
+					else
+					{
+						//GetTransitSequencePlayer()->RestoreState();
+						seqPlayer->ChangePlaybackDirection();
+						seqPlayer->PlayReverse();
+					}
+				}
+				return;
 			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("ATTEMPT PLAYER TRNASIT SEQUENCE: Reverse"));
-				//GetTransitSequencePlayer()->RestoreState();
-				GetTransitSequencePlayer()->ChangePlaybackDirection();
-				GetTransitSequencePlayer()->PlayReverse();
-			}
+			OGF_Log::LogInfo("ZONE SUBSYSTEM - Transit LevelSequence PLAYER is invalid");
 		}
-		else // If a level sequence is INVALID
+		else
 		{
-			Local_OnFinishTransitSequence();
+			OGF_Log::LogInfo("ZONE SUBSYSTEM - Transit LevelSequence is invalid");
 		}
+		Local_OnFinishTransitSequence();
 	}
+	else
+	{
+		OGF_Log::LogWarning("ZONE SUBSYSTEM - Zone Transit Sequence already playing");
+	}
+	
 }
 
 void UOmegaZoneSubsystem::Local_OnFinishTransitSequence()
 {
+	
+	OGF_Log::LogInfo("ZONE SUBSYSTEM - Zone Transit Sequence Finished");
 	//Check if in Level Transit
-	if(GamInstSubsys->IsInlevelTransit)
+	if(l_subsys_ZoneGI && l_subsys_ZoneGI->IsInlevelTransit)
 	{
-		float LastPos;
-		GetWorld()->GetSubsystem<UOmegaBGMSubsystem>()->StopBGM(true,LastPos);
-		UE_LOG(LogTemp, Warning, TEXT("Fire Level Tranist: %s"), *IncomingLevelName.ToString());
+		//float LastPos;
+		//GetWorld()->GetSubsystem<UOmegaBGMSubsystem>()->StopBGM(true,LastPos);
+		
+		OGF_Log::LogInfo("ZONE SUBSYSTEM - Transiting to new Level: "+IncomingLevelName.ToString());
 		UGameplayStatics::OpenLevel(this, IncomingLevelName);
 		return;
 	}
@@ -698,7 +922,7 @@ void UOmegaZoneSubsystem::Local_OnFinishTransitSequence()
 		bSequenceTransit_IsPlaying = false;
 		if(bSequenceTransit_IsForward)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Sequence Finished: Fade Out"));
+			OGF_Log::LogInfo("ZONE SUBSYSTEM - Transti Sequence finished FADE OUT: Begining ZoneUnload");
 			//SEQUENCE FINISHED: Fade Out 
 			if(GetTopLoadedZones() && bUnloadPreviousZones)
 			{
@@ -707,12 +931,13 @@ void UOmegaZoneSubsystem::Local_OnFinishTransitSequence()
 			}
 			else
 			{
+				OGF_Log::LogWarning("ZONE SUBSYSTEM - No Zone To Unload");
 				Local_FinishZoneLoad();
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Sequence Finished: Fade In"));
+			OGF_Log::LogInfo("ZONE SUBSYSTEM - Transit Sequence finished FADE IN: Completing Zone Transit");
 			//SEQUENCE FINISHED: Fade In
 			Local_CompleteTransit();
 		}
@@ -752,7 +977,7 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 {
 	//Setup Root Billboard
 	UBillboardComponent* RootRef = CreateDefaultSubobject<UBillboardComponent>("RootBillboard");
-	
+	RootComponent=RootRef;
 	Box_Transit = CreateOptionalDefaultSubobject<UBoxComponent>("Transit Box");
 	Box_Notify = CreateOptionalDefaultSubobject<UBoxComponent>("Notify Box");
 	Spawn_Point_Ref= CreateOptionalDefaultSubobject<USceneComponent>("SpawnPointReference");
@@ -761,14 +986,14 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 	if(Box_Transit)
 	{
 		Box_Transit->SetupAttachment(RootRef);
-		Box_Transit->ShapeColor = FColor(255, 0, 0);
+		Box_Transit->ShapeColor=FColor::Yellow;
 		Box_Transit->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Box_Transit->OnComponentBeginOverlap.AddDynamic(this, &AOmegaZoneTransit::OnBoxTransitOverlapBegin);
 	}
 	if(Box_Notify)
 	{
 		Box_Notify->SetupAttachment(RootRef);
-		Box_Notify->ShapeColor = FColor(0, 0, 255);
+		Box_Notify->ShapeColor=FColor::Orange;
 		Box_Notify->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Box_Notify->OnComponentBeginOverlap.AddDynamic(this, &AOmegaZoneTransit::OnBoxNotifyOverlapBegin);
 		Box_Notify->OnComponentEndOverlap.AddDynamic(this, &AOmegaZoneTransit::OnBoxNotifyOverlapEnd);
@@ -780,8 +1005,9 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComponent"));
 	if(TextComponent)
 	{
+		TextComponent->SetMaterial(0,LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")));
 		TextComponent->SetupAttachment(RootRef);
-		TextComponent->SetTextRenderColor(FColor::White);
+		TextComponent->SetTextRenderColor(FColor::Yellow);
 		TextComponent->SetHorizontalAlignment(EHTA_Center);
 		TextComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
 		TextComponent->SetHiddenInGame(true);
@@ -794,15 +1020,24 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 		DirectionalArrow->ArrowColor=FColor::Yellow;
 		DirectionalArrow->SetComponentTickEnabled(false);
 	}
-	DisplayMesh=CreateOptionalDefaultSubobject<UInstancedStaticMeshComponent>("Display Mesh");
-	if(DisplayMesh)
-	{
-		DisplayMesh->SetupAttachment(RootRef);
-		DisplayMesh->SetRelativeLocation(FVector(0,0,45));
-		DisplayMesh->SetComponentTickEnabled(false);
-		DisplayMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		DisplayMesh->CastShadow=0;
-	}
+	DisplayEmitter=CreateOptionalDefaultSubobject<UNiagaraComponent>("Display");
+	DisplayEmitter->SetupAttachment(RootComponent);
+
+	UtilMesh=CreateOptionalDefaultSubobject<UUtilMeshComponent>("UtilMesh");
+	UtilMesh->SetupAttachment(RootComponent);
+#if WITH_EDITOR
+	UtilMesh->SetStaticMesh(LoadObject<UStaticMesh>(this,TEXT("/OmegaGameFramework/Meshes/util/SM_UTIL_TransitPointer.SM_UTIL_TransitPointer")));
+	UtilMesh->SetMaterial(0,LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/instances/MI_UTIL_throbber_Y.MI_UTIL_throbber_Y")));
+#endif
+	UtilMesh->SetRelativeLocation(FVector(0,0,100));
+	UtilMesh->SetRelativeScale3D(FVector(0.6,0.6,0.6));
+	
+	Capsule=CreateOptionalDefaultSubobject<UCapsuleComponent>("Capsule");
+	Capsule->SetupAttachment(RootComponent);
+	Capsule->ShapeColor=FColor::Yellow;
+#if WITH_EDITOR
+	bIsSpatiallyLoaded=false;
+#endif
 }
 
 void AOmegaZoneTransit::BeginPlay()
@@ -868,38 +1103,36 @@ void AOmegaZoneTransit::OnConstruction(const FTransform& Transform)
 		// Set the text for TextComponent
 		Text = FString::Printf(TEXT("Transit Zone: %s"), *TempTransitName);
 	}
-
-	if(DisplayMesh)
+	if(DisplayEmitter)
 	{
-		DisplayMesh->SetVisibility(bShow_DisplayPoint);
-		if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+		if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
 		{
-			DisplayMesh->SetStaticMesh(set->ZoneTransitDisplayMesh);
-		}
-		DisplayMesh->ClearInstances();
-		DisplayMesh->AddInstance(FTransform());
-		for (int i = 1; i <= DisplayPoint_Count; ++i)
-		{
-			FTransform R=FTransform();
-			R.SetLocation(FVector(0,i*DisplayPoint_Distance,0));
-			FTransform L=FTransform();
-			L.SetLocation(FVector(0,i*DisplayPoint_Distance*-1,0));
-			DisplayMesh->AddInstance(R);
-			DisplayMesh->AddInstance(L);
+			if(UNiagaraSystem* sys=set->DefaultZoneTransitParticle.LoadSynchronous())
+			{
+				DisplayEmitter->SetAsset(sys);
+			}
 		}
 	}
-	
+
+
+	Capsule->SetRelativeLocation(SpawnPointLocation);
 	TextComponent->SetText(FText::FromString(Text));
 	Super::OnConstruction(Transform);
 }
 
-void AOmegaZoneTransit::OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, UObject* Context)
+void AOmegaZoneTransit::OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context)
 {
 	if(bTransit_OnInteract && InteractInstigator==GetWorld()->GetFirstPlayerController()->GetPawnOrSpectator())
 	{
 		TriggerTransit(GetWorld()->GetFirstPlayerController());
 	}
 	IActorInterface_Interactable::OnInteraction_Implementation(InteractInstigator, Tag, Context);
+}
+
+bool AOmegaZoneTransit::IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag,
+	FOmegaCommonMeta Context)
+{
+	return !bTransit_OnInteract;
 }
 
 // BEGIN TRANSITION
@@ -979,6 +1212,11 @@ void AOmegaZoneTransit::TriggerTransit(APlayerController* Player)
 	}
 }
 
+bool AOmegaZoneTransit::CanPlayerTransit(APawn* PlayerPawn) const
+{
+	return AcceptedPlayerTags.IsEmpty() || UGameplayTagsInterface::GetGTags(PlayerPawn).HasAnyExact(AcceptedPlayerTags);
+}
+
 AOmegaZonePoint* AOmegaZoneTransit::GetLinkedSpawnPoint()
 {
 	if(linked_point)
@@ -988,10 +1226,18 @@ AOmegaZonePoint* AOmegaZoneTransit::GetLinkedSpawnPoint()
 	return nullptr;
 }
 
+void AOmegaZoneTransit::AutosetTransits()
+{
+	if(TransitPoint_Linked)
+	{
+		TransitPoint_Linked->TransitPoint_Linked=this;
+	}
+}
+
 void AOmegaZoneTransit::UpdateBoxes()
 {
-	Box_Transit->InitBoxExtent(FVector(50,Box_Y,Box_X));
-	Box_Notify->InitBoxExtent(FVector(200,Box_Y,Box_X));
+	Box_Transit->InitBoxExtent(FVector(50,Box_X,Box_Y));
+	Box_Notify->InitBoxExtent(FVector(200,Box_X,Box_Y));
 }
 
 //################################################################################################################
@@ -1002,28 +1248,33 @@ void AOmegaZonePoint::BeginPlay()
 {
 	const FVector TempVec = GetActorLocation()+FVector(0,0,1);
 	SetActorLocation(TempVec);
-	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->ZonePoints.Add(this);
+	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->L_ZonePointEvent(this,0,true);
 	Super::BeginPlay();
 }
 
 void AOmegaZonePoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->ZonePoints.Remove(this);
+	GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->L_ZonePointEvent(this,0,false);
 	Super::EndPlay(EndPlayReason);
 }
 
 AOmegaZonePoint::AOmegaZonePoint()
 {
 	UCapsuleComponent* CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>("Capsule Component");
+	CapsuleComponent->ShapeColor=FColor::Yellow;
+	CapsuleComponent->SetLineThickness(3);
 	DirectionalArrow= CreateOptionalDefaultSubobject<UArrowComponent>("DirectionArrow");
+	DirectionalArrow->ArrowColor=FColor::Yellow;
 	ZoneEntityComponent= CreateOptionalDefaultSubobject<UZoneEntityComponent>("ZoneEntity");
 	if(DirectionalArrow) { DirectionalArrow->SetupAttachment(CapsuleComponent); }
 	if(CapsuleComponent)
 	{
 		CapsuleComponent->InitCapsuleSize(45,90);
 	}
-
-	//bIsSpatiallyLoaded=false;
+#if WITH_EDITOR
+	bIsSpatiallyLoaded=false;
+#endif
+	
 }
 
 void AOmegaZonePoint::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,

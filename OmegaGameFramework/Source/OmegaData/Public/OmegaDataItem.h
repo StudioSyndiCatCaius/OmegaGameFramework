@@ -27,7 +27,7 @@ class ULevelSequence;
 
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
-																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
+																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier,
 																public IDataInterface_SkillSource, public IDataInterface_Skill, public ILuaInterface
 {
 	GENERATED_BODY()
@@ -175,14 +175,13 @@ public:
 	// Combatant
 	//###############################################################################
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
-	virtual TArray<FOmegaEffectContainer> GetOmegaEffects_Implementation() override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	
 	//###############################################################################
 	// Soft Properties
 	//###############################################################################
-	virtual FString GetSoftProperty_Implementation(const FString& Property) override;
-	virtual TMap<FString, FString> GetSoftPropertyMap_Implementation() override;
+	virtual FString GetSoftProperty_Implementation(const FName Property) override;
+	virtual TMap<FName, FString> GetSoftPropertyMap_Implementation() override;
 
 	//###############################################################################
 	// Asset Actions

@@ -13,6 +13,7 @@
 #include "InputMappingContext.h"
 #include "InputCoreTypes.h" // For FKey
 #include "Components/SlateWrapperTypes.h"
+#include "Misc/OmegaUtils_Structs.h"
 
 #include "OmegaSubsystem_Player.generated.h"
 
@@ -48,16 +49,11 @@ public:
 	UPROPERTY(EditAnywhere, Category="Input")
 	int32 InputPriority;
 	
-	UPROPERTY(EditAnywhere, Category="Mouse")
-	bool bShowMouseCursor;
-	UPROPERTY(EditAnywhere, Category="Mouse")
-	bool bEnabledClickEvents;
-	UPROPERTY(EditAnywhere, Category="Mouse")
-	bool bEnableTouchEvents;
-	UPROPERTY(EditAnywhere, Category="Mouse")
-	bool bEnableMouseOverEvents;
-	UPROPERTY(EditAnywhere, Category="Mouse")
-	bool bEnableTouchOverEvents;
+	UPROPERTY(EditAnywhere, Category="Mouse") bool bShowMouseCursor;
+	UPROPERTY(EditAnywhere, Category="Mouse") bool bEnabledClickEvents;
+	UPROPERTY(EditAnywhere, Category="Mouse") bool bEnableTouchEvents;
+	UPROPERTY(EditAnywhere, Category="Mouse") bool bEnableMouseOverEvents;
+	UPROPERTY(EditAnywhere, Category="Mouse") bool bEnableTouchOverEvents;
 };
 
 
@@ -90,7 +86,7 @@ public:
 
 	// -- Menus -- //
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta = (DeterminesOutputType = "MenuClass", AdvancedDisplay = "Context, Flag, AutoFocus, Flag"))
-	class UMenu* OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus=true);
+	class UMenu* OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus=true,FOmegaCommonMeta meta=FOmegaCommonMeta());
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
 	bool CloseMenu(class TSubclassOf<UMenu> MenuClass, FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
@@ -163,7 +159,7 @@ public:
 	// -- HUD -- //
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD", meta=(AdvancedDisplay = "LayerIndex, Context"))
-	UHUDLayer* AddHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, UObject* Context);
+	UHUDLayer* AddHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, UObject* Context, bool bPlayerScreen=true);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD", meta = (AdvancedDisplay = "Flag"))
 	bool RemoveHUDLayer(class TSubclassOf<UHUDLayer> LayerClass, FString Flag);

@@ -2,9 +2,11 @@
 
 
 #include "Components/Component_CombatEncounter.h"
-
+#include "Components/Component_Combatant.h"
+#include "OmegaSettings_Gameplay.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 UWorld* UOmegaCombatEncounterScript::GetWorld() const { return WorldPrivate; }
@@ -51,6 +53,15 @@ void UOmegaCombatEncounter_Component::BeginPlay()
 	Super::BeginPlay();
 }
 
+void UOmegaCombatEncounter_Component::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(EndPlayReason==EEndPlayReason::Type::Destroyed || EndPlayReason==EEndPlayReason::Type::RemovedFromWorld)
+	{
+		EndEncounter();
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
 UOmegaCombatEncounter_Component::UOmegaCombatEncounter_Component()
 {
 }
@@ -78,14 +89,29 @@ ULevelSequence* UOmegaCombatEncounter_Component::GetEncounter_SequenceIntro() co
 	{
 		return REF_Instance->OverrideSequence_Intro;
 	}
+	if(UOmegaEncounter_Asset* asset=Cast<UOmegaEncounter_Asset>(encounter_source))
+	{
+		if(asset->Override_IntroSequence)
+		{
+			return asset->Override_IntroSequence;
+		}
+	}
 	return Default_SequenceIntro;
 }
 
 UOmegaBGM* UOmegaCombatEncounter_Component::GetEncounter_BGM() const
 {
+	
 	if(REF_Instance && REF_Instance->OverrideBGM)
 	{
 		return REF_Instance->OverrideBGM;
+	}
+	if(UOmegaEncounter_Asset* asset=Cast<UOmegaEncounter_Asset>(encounter_source))
+	{
+		if(asset->Override_BGM)
+		{
+			return asset->Override_BGM;
+		}
 	}
 	return Default_BGM;
 }
@@ -112,6 +138,7 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter_
 {
 	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
+		encounter_source=Source;
 		AOmegaCombatEncounter_Instance* new_inst =StartEncounter(
 			IDataInterface_CombatEncounter::Execute_GetCombatEncounter_InstanceClass(Source),
 			GetStageFromID(IDataInterface_CombatEncounter::Execute_GetCombatEncounter_StageID(Source)));
@@ -125,6 +152,13 @@ bool UOmegaCombatEncounter_Component::EndEncounter()
 {
 	if(REF_Instance)
 	{
+		for(auto* b : REF_BattlerCombatants)
+		{
+			if(b)
+			{
+				b->GetOwner()->K2_DestroyActor();
+			}
+		}
 		REF_Instance->K2_DestroyActor();
 		if(EncounterManagerScript)
 		{
@@ -136,13 +170,21 @@ bool UOmegaCombatEncounter_Component::EndEncounter()
 }
 
 ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* DataAsset, UOmegaFaction* Faction,
-                                                          FTransform Transform)
+                                                          FTransform Transform, ESpawnActorCollisionHandlingMethod CollisionMethod)
 {
+	TSubclassOf<ACharacter> in_class=BattlerCharacterClass;
+	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	{
+		if(set->Default_EncounterCharacter.IsValid())
+		{
+			in_class=set->Default_EncounterCharacter.LoadSynchronous();
+		}
+	}
 	if(REF_Instance)
 	{
-		if(BattlerCharacterClass)
+		if(in_class)
 		{
-			ACharacter* new_char= GetWorld()->SpawnActorDeferred<ACharacter>(BattlerCharacterClass,Transform,REF_Instance);
+			ACharacter* new_char= GetWorld()->SpawnActorDeferred<ACharacter>(in_class,Transform,REF_Instance,nullptr,CollisionMethod);
 			if(UCombatantComponent* comb_ref = new_char->FindComponentByClass<UCombatantComponent>())
 			{
 				for(TSubclassOf<AOmegaAbility> temp_ability : ExtraBattlerAbilities)
@@ -161,6 +203,10 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 					EncounterManagerScript->OnBattlerSpawned(new_char,comb_ref);
 				}
 				OnEncounterSpawned.Broadcast(new_char);
+				if(new_char->GetClass()->ImplementsInterface(UActorInterface_EncounterBattler::StaticClass()))
+				{
+					IActorInterface_EncounterBattler::Execute_OnBattlerInit(new_char,this,DataAsset,Faction);
+				}
 				return new_char;
 			}
 			GetWorld()->DestroyActor(new_char);

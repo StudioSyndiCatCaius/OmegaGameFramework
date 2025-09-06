@@ -9,11 +9,41 @@
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "EnhancedInputSubsystems.h"
+#include "Actors/Actor_Player.h"
+#include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/GeneralDataObject.h"
+#include "Subsystems/OmegaSubsystem_Actors.h"
+
+void AOmegaBaseSystem::L_CleanupStateChange(bool state)
+{
+	if(state)
+	{
+		
+	}
+	else
+	{
+		
+	}
+}
+
+TArray<APlayerController*> AOmegaBaseSystem::L_GetPlayers()
+{
+	TArray<APlayerController*>out;
+	TArray <AActor*> FoundPlayers;
+	UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
+	for(auto* a : FoundPlayers)
+	{
+		if(APlayerController* p =Cast<APlayerController>(a))
+		{
+			out.Add(p);
+		}
+	}
+	return out;
+}
 
 // Sets default values
-AOmegaGameplaySystem::AOmegaGameplaySystem()
+AOmegaBaseSystem::AOmegaBaseSystem()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -22,69 +52,68 @@ AOmegaGameplaySystem::AOmegaGameplaySystem()
 }
 
 // Called when the game starts or when spawned
-void AOmegaGameplaySystem::BeginPlay()
+void AOmegaBaseSystem::BeginPlay()
 {
+	l_subsys_sav=GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+	l_subsys_qquery=GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>();
 	///ATTACH TO GAME MODE
 	if(!GetAttachParentActor())
 	{
-		SetOwner(UGameplayStatics::GetGameMode(this));
+		if(!GetOwner())
+		{
+			SetOwner(UGameplayStatics::GetGameMode(this));
+		}
 		AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	}
+	L_CleanupStateChange(true);
 	
 	//Get Players
-	TArray <AActor*> FoundPlayers;
-	UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
 
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnGlobalEvent);
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaGameplaySystem::OnTaggedGlobalEvent);
-	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnNewGameStarted.AddDynamic(this, &AOmegaGameplaySystem::OnNewGameStarted);
+
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaBaseSystem::OnGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaBaseSystem::OnTaggedGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnNewGameStarted.AddDynamic(this, &AOmegaBaseSystem::OnNewGameStarted);
 	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueDelay>()->SetQueuedDelaySourceRegistered(this,true);
 	OMACRO_INSTALL_QUEUEDQUERY()
+
+	//Setup Actor event bindings
+	UOmegaActorSubsystem* sub_a=GetWorld()->GetSubsystem<UOmegaActorSubsystem>();
+	sub_a->OnActorTagEvent.AddDynamic(this,&AOmegaBaseSystem::OnActor_TagEvent);
+	sub_a->OnActorInteraction.AddDynamic(this,&AOmegaBaseSystem::OnActor_Interaction);
+	sub_a->OnActorGroupChange.AddDynamic(this,&AOmegaBaseSystem::OnActor_RegisteredToGroup);
+	sub_a->OnActorIdentityRegistered.AddDynamic(this,&AOmegaBaseSystem::OnActor_IdentityRegistered);
 	
-	for (AActor* TempActor : FoundPlayers)
+	for (APlayerController* P : L_GetPlayers())
 	{
-		
-		const APlayerController* TempPlayer = Cast<APlayerController>(TempActor);
-		
 		//Add New Widgets To Player Screen
-		for (const class TSubclassOf <UHUDLayer>& TempWidgetClass : local_GetAllHudClasses())
+		for (const TSubclassOf <UHUDLayer>& TempWidgetClass : local_GetAllHudClasses())
 		{
-			UOmegaPlayerSubsystem* LocalSystem = TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
-			UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this);
+			UOmegaPlayerSubsystem* LocalSystem = P->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+			UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this,WidgetsOnPlayerScreen);
 			ActivePlayerWidgets.Add(CreatedLayer);
 		}
 		//Set Input Mode
+		if(PlayerInputMode)
 		{
-			if(PlayerInputMode)
-			{
-				UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(PlayerInputMode);
-			}
+			P->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(PlayerInputMode);
 		}
 		// Add New Mapping Context
 		for(UInputMappingContext* TempMap : AddPlayerInputMapping)
 		{
-			Cast<APlayerController>(TempActor)->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(TempMap, InputPriority);
+			Cast<APlayerController>(P)->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(TempMap, InputPriority);
 		}
 	}
 
-	//Setup Game Preferences
-	/*
-	UGamePreferenceSubsystem* GamePrefSystemRef = GEngine->GetWorld()->GetSubsystem<UGamePreferenceSubsystem>();
-	GamePrefSystemRef->OnBoolPreferenceUpdated.AddDynamic(this, &AOmegaGameplaySystem::GamePreferenceUpdatedBool);
-	GamePrefSystemRef->OnFloatPreferenceUpdated.AddDynamic(this, &AOmegaGameplaySystem::GamePreferenceUpdatedFloat);
-	SubsysRef = GEngine->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
-	*/
-
 	UOmegaGameplaySubsystem* GameplaySubsys = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 
-	GameplaySubsys->OnGameplayStateChange.AddDynamic(this, &AOmegaGameplaySystem::OnGameplayStateChange);
+	GameplaySubsys->OnGameplayStateChange.AddDynamic(this, &AOmegaBaseSystem::OnGameplayStateChange);
 	
 	//GRANT ABILITIES
 	for(auto* TempComb : GameplaySubsys->GetAllCombatants())
 	{
 		Local_GrantAbilities(TempComb);
 	}
-	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->OnCombatantRegistered.AddDynamic(this, &AOmegaGameplaySystem::Local_GrantAbilities);
+	GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->OnCombatantRegistered.AddDynamic(this, &AOmegaBaseSystem::Local_GrantAbilities);
 
 	//FLAGS
 	Local_SetFlagsActive(true);
@@ -95,12 +124,12 @@ void AOmegaGameplaySystem::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AOmegaGameplaySystem::Destroyed()
+void AOmegaBaseSystem::Destroyed()
 {
 	Super::Destroyed();
 }
 
-void AOmegaGameplaySystem::Local_SetFlagsActive(bool State)
+void AOmegaBaseSystem::Local_SetFlagsActive(bool State)
 {
 	for(const auto& LocalFlag : ActiveFlags)
 	{
@@ -108,24 +137,107 @@ void AOmegaGameplaySystem::Local_SetFlagsActive(bool State)
 	}
 }
 
+// =============================================================================================================
+// =============================================================================================================
+// Gameplay
+// =============================================================================================================
+// =============================================================================================================
+
+
+void AOmegaGameplaySystem::L_CleanupStateChange(bool state)
+{
+	if(UOmegaGameplaySubsystem* SubsysRef=GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>())
+	{
+		if(state)
+		{
+			SubsysRef->OnGameplaySystemActiveStateChange.Broadcast(this,Shutdown_Context,Shutdown_Flag,true);
+		}
+		else
+		{
+			SubsysRef->OnGameplaySystemActiveStateChange.Broadcast(this,Shutdown_Context,Shutdown_Flag,false);
+		}
+		
+	}
+}
+
+void AOmegaPlayerSystem::BeginPlay()
+{
+	if(AOmegaPlayer* p =GetSystemOwningPlayer())
+	{
+		EnableInput(p);
+	}
+	Super::BeginPlay();
+}
+
+AOmegaPlayerSystem::AOmegaPlayerSystem()
+{
+	WidgetsOnPlayerScreen=true;
+}
+
+TArray<APlayerController*> AOmegaPlayerSystem::L_GetPlayers()
+{
+	TArray<APlayerController*> out;
+	if(AOmegaPlayer* p=GetSystemOwningPlayer())
+	{
+		out.Add(p);
+	}
+	return out;
+}
+
+
+// =============================================================================================================
+// =============================================================================================================
+// PLAYER
+// =============================================================================================================
+// =============================================================================================================
+
+
+void AOmegaPlayerSystem::L_CleanupStateChange(bool state)
+{
+	if(AOmegaPlayer* p=GetSystemOwningPlayer())
+	{
+		if(state)
+		{
+			//SubsysRef->OnGameplaySystemActiveStateChange.Broadcast(this,Shutdown_Context,Shutdown_Flag,true);
+		}
+		else
+		{
+			//SubsysRef->OnGameplaySystemActiveStateChange.Broadcast(this,Shutdown_Context,Shutdown_Flag,false);
+		}
+		
+	}
+}
+
+AOmegaPlayer* AOmegaPlayerSystem::GetSystemOwningPlayer() const
+{
+	if(GetOwner())
+	{
+		if(AOmegaPlayer* p=Cast<AOmegaPlayer>(GetOwner()))
+		{
+			return p;
+		}
+	}
+	return nullptr;
+}
+
 // Called every frame
-void AOmegaGameplaySystem::Tick(float DeltaTime)
+void AOmegaBaseSystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-void AOmegaGameplaySystem::SystemActivated_Implementation(UObject* Context, const FString& Flag)
+void AOmegaBaseSystem::SystemActivated_Implementation(UObject* Context, const FString& Flag)
 {
 	
 }
 
-void AOmegaGameplaySystem::SystemShutdown_Implementation(UObject* Context, const FString& Flag)
+void AOmegaBaseSystem::SystemShutdown_Implementation(UObject* Context, const FString& Flag)
 {
 	
 }
 
-void AOmegaGameplaySystem::Shutdown(UObject* Context, FString Flag)
+void AOmegaBaseSystem::Shutdown(UObject* Context, FString Flag)
 {
 	// Block if already shutting down;
 	if(bIsInShutdown)
@@ -146,20 +258,26 @@ void AOmegaGameplaySystem::Shutdown(UObject* Context, FString Flag)
 	
 }
 
-void AOmegaGameplaySystem::OnBeginShutdown_Implementation(UObject* Context, const FString& Flag)
+void AOmegaBaseSystem::OnBeginShutdown_Implementation(UObject* Context, const FString& Flag)
 {
 	CompleteShutdown();
 }
 
-void AOmegaGameplaySystem::CompleteShutdown()
+void AOmegaBaseSystem::CompleteShutdown()
 {
 	if(bIsInShutdown)
 	{
 		TArray <AActor*> FoundPlayers;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerController::StaticClass(), FoundPlayers);
 
-		GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSaveSourceRegistered(this,false);
-		GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()->SetQueuedQuerySourceRegistered(this,false);
+		if(l_subsys_sav)
+		{
+			l_subsys_sav->SetSaveSourceRegistered(this,false);
+		}
+		if(l_subsys_sav)
+		{
+			l_subsys_qquery->SetQueuedQuerySourceRegistered(this,false);
+		}
 		// Remove Player Widgets
 		for (class UHUDLayer* TempWidget : ActivePlayerWidgets)
 		{
@@ -170,11 +288,7 @@ void AOmegaGameplaySystem::CompleteShutdown()
 		}
 		OnSystemShutdown.Broadcast(Shutdown_Context, Shutdown_Flag);
 		SystemShutdown(Shutdown_Context, Shutdown_Flag);
-		if (SubsysRef)
-		{
-			SubsysRef->OnGameplaySystemActiveStateChange.Broadcast(this,Shutdown_Context,Shutdown_Flag,false);
-			SubsysRef->NativeRemoveSystem(this);
-		}
+		L_CleanupStateChange(false);
 
 		//Remove Mapping Context
 		for (AActor* TempActor : FoundPlayers)
@@ -217,19 +331,19 @@ void AOmegaGameplaySystem::CompleteShutdown()
 	}
 }
 
-void AOmegaGameplaySystem::OutputNotify(UObject* Context, const FString& Flag)
+void AOmegaBaseSystem::OutputNotify(UObject* Context, const FString& Flag)
 {
 	OnSystemNotify.Broadcast(Context,Flag);
 }
 
-void AOmegaGameplaySystem::Restart(UObject* Context, FString Flag)
+void AOmegaBaseSystem::Restart(UObject* Context, FString Flag)
 {
 	local_InRestart = true;
 	Shutdown(Context,Flag);
 }
 
 
-void AOmegaGameplaySystem::local_globalEventTags(FGameplayTagContainer tags)
+void AOmegaBaseSystem::local_globalEventTags(FGameplayTagContainer tags)
 {
 	{
 		for(FGameplayTag tempTag : tags.GetGameplayTagArray())
@@ -239,7 +353,7 @@ void AOmegaGameplaySystem::local_globalEventTags(FGameplayTagContainer tags)
 	}
 }
 
-void AOmegaGameplaySystem::Local_GrantAbilities(UCombatantComponent* Combatant)
+void AOmegaBaseSystem::Local_GrantAbilities(UCombatantComponent* Combatant)
 {
 	if(Combatant)
 	{

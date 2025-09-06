@@ -19,10 +19,10 @@ int32 UOmegaMidiSubsystem::ReadVariableLength(const TArray<uint8>& Data, int32& 
     return Value;
 }
 
-void UOmegaMidiSubsystem::HandleNoteOff(FMidiTrack& Track, TMap<uint8, FMidiKey>& ActiveNotes, uint8 Note,
+void UOmegaMidiSubsystem::HandleNoteOff(FOmegaMidi_Track& Track, TMap<uint8, FOmegaMidi_Key>& ActiveNotes, uint8 Note,
     float CurrentTime)
 {
-    if (FMidiKey* Key = ActiveNotes.Find(Note))
+    if (FOmegaMidi_Key* Key = ActiveNotes.Find(Note))
     {
         Key->Duration = CurrentTime - Key->StartTime;
         Track.Keys.Add(*Key);
@@ -30,7 +30,7 @@ void UOmegaMidiSubsystem::HandleNoteOff(FMidiTrack& Track, TMap<uint8, FMidiKey>
     }
 }
 
-bool UOmegaMidiSubsystem::ParseMidiFile(const FString& FilePath, FMidiData& OutMidiData)
+bool UOmegaMidiSubsystem::ParseMidiFile(const FString& FilePath, FOmegaMidi_Data& OutMidiData)
 {
 	 // Read file into buffer
         TArray<uint8> FileData;
@@ -79,7 +79,7 @@ bool UOmegaMidiSubsystem::ParseMidiFile(const FString& FilePath, FMidiData& OutM
         // Process each track
         for (uint16 TrackIndex = 0; TrackIndex < NumTracks; ++TrackIndex)
         {
-            FMidiTrack Track;
+            FOmegaMidi_Track Track;
             Track.TrackNumber = TrackIndex;
 
             // Verify track header
@@ -105,7 +105,7 @@ bool UOmegaMidiSubsystem::ParseMidiFile(const FString& FilePath, FMidiData& OutM
             CurrentPosition += 8;
 
             float CurrentTime = 0.0f;
-            TMap<uint8, FMidiKey> ActiveNotes;
+            TMap<uint8, FOmegaMidi_Key> ActiveNotes;
 
             // Process track events
             while (CurrentPosition < FileData.Num())
@@ -135,7 +135,7 @@ bool UOmegaMidiSubsystem::ParseMidiFile(const FString& FilePath, FMidiData& OutM
 
                     if (Velocity > 0)
                     {
-                        FMidiKey NewKey;
+                        FOmegaMidi_Key NewKey;
                         NewKey.NoteNumber = Note;
                         NewKey.StartTime = CurrentTime;
                         NewKey.Velocity = Velocity;
@@ -178,7 +178,7 @@ bool UOmegaMidiSubsystem::ParseMidiFile(const FString& FilePath, FMidiData& OutM
                         
                         float BPM = 60000000.0f / MicrosecondsPerQuarterNote;
                         
-                        FTempoEvent TempoChange;
+                        FOmegaMidi_TempoEvent TempoChange;
                         TempoChange.TimeInSeconds = CurrentTime;
                         TempoChange.BPM = BPM;
                         

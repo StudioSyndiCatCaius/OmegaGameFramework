@@ -6,9 +6,10 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Components/Component_Combatant.h"
 #include "Misc/GeneralDataObject.h"
 #include "OmegaFunctions_CombatantFilter.generated.h"
+
+class UCombatantComponent;
 
 // ================================================================================================================
 // COMBATANT FILTER
@@ -54,7 +55,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_CombatantFilter
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Combatant")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Skill",DisplayName="Skill - Get Target Filter")
 	FCombatantFilterData GetSkillTargetFilterData();
 };
 
@@ -70,5 +71,9 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Combatant|Filter")
 	static TArray<UCombatantComponent*> FilterCombatants_ByAsset(UCombatantComponent* Instigator, TArray<UCombatantComponent*> CombatantsIn, UObject* FilterAsset);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Combatant|Filter",meta=(ExpandBoolAsExecs="Outcome"))
+	static UPrimaryDataAsset* SelectFirstSkillThatCanTarget(UCombatantComponent* Instigator, TArray<UPrimaryDataAsset*> Skills, UCombatantComponent* Target, bool& Outcome);
+
 	
 };

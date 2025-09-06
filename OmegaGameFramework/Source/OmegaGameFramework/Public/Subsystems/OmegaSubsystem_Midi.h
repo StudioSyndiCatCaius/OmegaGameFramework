@@ -9,7 +9,7 @@
 
 
 USTRUCT(BlueprintType)
-struct FMidiKey
+struct FOmegaMidi_Key
 {
     GENERATED_BODY()
 
@@ -25,16 +25,16 @@ struct FMidiKey
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
     uint8 Velocity;
 
-    FMidiKey() : NoteNumber(0), StartTime(0.0f), Duration(0.0f), Velocity(0) {}
+    FOmegaMidi_Key() : NoteNumber(0), StartTime(0.0f), Duration(0.0f), Velocity(0) {}
 };
 
 USTRUCT(BlueprintType)
-struct FMidiTrack
+struct FOmegaMidi_Track
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
-    TArray<FMidiKey> Keys;
+    TArray<FOmegaMidi_Key> Keys;
 
     UPROPERTY(BlueprintReadWrite, Category = "MIDI")
     FString TrackName;
@@ -45,11 +45,11 @@ struct FMidiTrack
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
     int32 InstrumentNumber;
 
-    FMidiTrack() : TrackNumber(0), InstrumentNumber(0) {}
+    FOmegaMidi_Track() : TrackNumber(0), InstrumentNumber(0) {}
 };
 
 USTRUCT(BlueprintType)
-struct FTempoEvent
+struct FOmegaMidi_TempoEvent
 {
     GENERATED_BODY()
 
@@ -59,19 +59,19 @@ struct FTempoEvent
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
     float BPM;
 
-    FTempoEvent() : TimeInSeconds(0.0f), BPM(120.0f) {}
+    FOmegaMidi_TempoEvent() : TimeInSeconds(0.0f), BPM(120.0f) {}
 };
 
 USTRUCT(BlueprintType)
-struct FMidiData
+struct FOmegaMidi_Data
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
-    TArray<FMidiTrack> Tracks;
+    TArray<FOmegaMidi_Track> Tracks;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
-    TArray<FTempoEvent> TempoChanges;
+    TArray<FOmegaMidi_TempoEvent> TempoChanges;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
     float InitialBPM;
@@ -85,7 +85,7 @@ struct FMidiData
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MIDI")
     float DurationInSeconds;
 
-    FMidiData() : InitialBPM(120.0f), TimeDivision(480), Format(1), DurationInSeconds(0.0f) {}
+    FOmegaMidi_Data() : InitialBPM(120.0f), TimeDivision(480), Format(1), DurationInSeconds(0.0f) {}
 };
 
 
@@ -95,10 +95,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaMidiSubsystem : public UWorldSubsystem
     GENERATED_BODY()
 
     static int32 ReadVariableLength(const TArray<uint8>& Data, int32& Position);
-    static void HandleNoteOff(FMidiTrack& Track, TMap<uint8, FMidiKey>& ActiveNotes, uint8 Note, float CurrentTime);
+    static void HandleNoteOff(FOmegaMidi_Track& Track, TMap<uint8, FOmegaMidi_Key>& ActiveNotes, uint8 Note, float CurrentTime);
     
 public:
     UFUNCTION(BlueprintCallable,Category="Omega|Midi")
-    bool ParseMidiFile(const FString& FilePath, FMidiData& OutMidiData);
+    bool ParseMidiFile(const FString& FilePath, FOmegaMidi_Data& OutMidiData);
 };
 

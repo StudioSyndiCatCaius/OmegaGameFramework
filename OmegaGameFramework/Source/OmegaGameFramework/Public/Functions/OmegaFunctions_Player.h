@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actors/Actor_Player.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "OmegaFunctions_Player.generated.h"
@@ -19,5 +20,9 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Player",meta=(AdvancedDisplay="Start_Offset, End_Offset"))
 	static FRotator GetRotationFrom2DDirection(APlayerController* Player, FVector2D Start,FVector2D Target, FVector Start_Offset,FVector End_Offset);
 
+	UFUNCTION(BlueprintPure,Category="Omega|Player",meta=(WorldContext="WorldContextObject"))
+	static AOmegaPlayer* GetOmegaPlayer(UObject* WorldContextObject, int32 Index);
 	
+	UFUNCTION(BlueprintPure,Category="Omega|Player",meta=(WorldContext="WorldContextObject"))
+	static TArray<AOmegaPlayer*> GetAllOmegaPlayers(UObject* WorldContextObject);
 };

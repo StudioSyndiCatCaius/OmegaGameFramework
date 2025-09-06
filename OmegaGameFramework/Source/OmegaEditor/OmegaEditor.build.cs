@@ -17,6 +17,7 @@ public class OmegaEditor : ModuleRules
 			"OmegaGameFramework", 
 			"RenderCore",
 			"OmegaData",
+			"LuaMachine",
 			"OmegaDebug",
 			"OmegaDemo",
 			"UMGEditor"

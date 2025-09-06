@@ -73,7 +73,7 @@ void UCombatantExtensionComponent::SetCombatant(UCombatantComponent* Combatant)
 		
 		if(bIsAttributeModifier)
 		{
-			CombatantRef->AddAttrbuteModifier(this);
+			CombatantRef->SetAttributeModifierActive(this,true);
 		}
 		if(bIsDamageModifier)
 		{
@@ -94,7 +94,7 @@ void UCombatantExtensionComponent::ClearCombatant()
 	{
 		if(bIsAttributeModifier)
 		{
-			CombatantRef->RemoveAttributeModifier(this);
+			CombatantRef->SetAttributeModifierActive(this,false);
 		}
 		if(bIsDamageModifier)
 		{

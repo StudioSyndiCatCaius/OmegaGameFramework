@@ -18,8 +18,9 @@
 #include "TimerManager.h"
 #include "Functions/OmegaFunctions_Utility.h"
 #include "..\..\Public\OmegaSettings_Slate.h"
+#include "Widget/DataTooltip.h"
 
-bool UDataWidgetMetadata::CanAddObjectToList_Implementation(UObject* SourceObject) const
+bool UDataWidgetTraits::CanAddObjectToList_Implementation(UObject* SourceObject) const
 {
 	return true;
 }
@@ -31,25 +32,9 @@ void UDataWidget::NativePreConstruct()
 	bIsFocusable = true;
 	if(GetNameTextWidget())
 	{
-		GetNameTextWidget()->SetText(NameText);
-		if(OverrideTextStyle_Name)
-		{
-			if(UCommonTextBlock* _txt = Cast<UCommonTextBlock>(GetNameTextWidget()))
-			{
-				_txt->SetStyle(OverrideTextStyle_Name);
-			}
-		}
+		GetNameTextWidget()->SetText(L_FormatText(NameText));
 	}
-	if(GetDescriptionTextWidget())
-	{
-		if(OverrideTextStyle_Description)
-		{
-			if(UCommonTextBlock* _txt = Cast<UCommonTextBlock>(GetDescriptionTextWidget()))
-			{
-				_txt->SetStyle(OverrideTextStyle_Description);
-			}
-		}
-	}
+
 	//Setup Source Asset
 	SetSourceAsset(ReferencedAsset);
 	SetIsEnabled(!IsEntityDisabled(ReferencedAsset));
@@ -59,8 +44,16 @@ void UDataWidget::NativePreConstruct()
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,0);
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,0);
 	}
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnInit(this);
+		}
+	}
 	Refresh();
-	RefreshMeta();
+
 }
 
 void UDataWidget::NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent)
@@ -73,6 +66,17 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 {
 	Super::OnRemovedFromFocusPath(InFocusEvent);
 	Unhover();
+}
+
+
+
+FText UDataWidget::L_FormatText(FText t)
+{
+	if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
+	{
+		return set->L_FormatDataWidgetText(this,t);
+	}
+	return t;
 }
 
 void UDataWidget::LC_UpdateBlendStateVal(bool& bBlending, bool bTarget, float& val, float DT, float max_time, UCurveFloat* curve, FName MatParamName, int type)
@@ -177,29 +181,32 @@ UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 
 
 
-UDataWidgetMetadata* UDataWidget::GetWidgetMetadata_FromClass(TSubclassOf<UDataWidgetMetadata> Class)
+
+
+UDataWidgetTraits* UDataWidget::GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Class, bool FallbackToDefault,
+	bool& Outcome)
 {
-	for(auto* tempMeta : WidgetMetadata)
+	if(Class)
 	{
-		if(tempMeta && tempMeta->GetClass()->IsChildOf(Class))
+		for(auto* tempMeta : WidgetTraits)
 		{
-			return tempMeta;
+			if(tempMeta && tempMeta->GetClass()->IsChildOf(Class))
+			{
+				Outcome=true;
+				return tempMeta;
+			}
+		}
+		if(FallbackToDefault)
+		{
+			Outcome=true;
+			return Class.GetDefaultObject();
 		}
 	}
+	Outcome=false;
 	return  nullptr;
 }
 
-void UDataWidget::RefreshMeta()
-{
-	for(auto* tempMeta : WidgetMetadata)
-	{
-		if(tempMeta)
-		{
-			tempMeta->OnMetaApplied(this);
-		}
-		MetaRefreshed();
-	}
-}
+
 
 
 void UDataWidget::private_refresh(UDataWidget* widget)
@@ -230,11 +237,11 @@ void UDataWidget::Refresh()
 		IDataInterface_General::Execute_GetGeneralDataText(ReferencedAsset, AssetLabel, this, LocalName, LocalDesc);
 		if (GetNameTextWidget())
 		{
-			GetNameTextWidget()->SetText(LocalName);
+			GetNameTextWidget()->SetText(L_FormatText(LocalName));
 		}
 		if (GetDescriptionTextWidget())
 		{
-			GetDescriptionTextWidget()->SetText(LocalDesc);
+			GetDescriptionTextWidget()->SetText(L_FormatText(LocalDesc));
 		}
 
 		//get source asset images
@@ -288,12 +295,6 @@ void UDataWidget::Refresh()
 		
 			
 	}//Finish widget setup
-
-	if(GetWidget_SizeBox() && bCanOverrideSize)
-	{
-		GetWidget_SizeBox()->SetWidthOverride(OverrideSize.X);
-		GetWidget_SizeBox()->SetHeightOverride(OverrideSize.Y);
-	}
 	
 	SetIsEnabled(GetIsEntitySelectable());
 	UObject* LocalListOwner = nullptr;
@@ -301,18 +302,42 @@ void UDataWidget::Refresh()
 	{
 		LocalListOwner = GetOwningList()->ListOwner;
 	}
-	RefreshMeta();
+
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnRefreshed(this,ReferencedAsset,LocalListOwner);
+		}
+	}
 	Native_OnRefreshed(ReferencedAsset,LocalListOwner);
 	OnWidgetRefreshed.Broadcast(this);
 }
 
 void UDataWidget::Native_OnSourceAssetChanged(UObject* SourceAsset)
 {
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnSourceChanged(this,ReferencedAsset);
+		}
+	}
 	OnSourceAssetChanged(ReferencedAsset);
 }
 
 void UDataWidget::Native_OnListOwnerChanged(UObject* ListOwner)
 {
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnListOwnerChanged(this,GetOwningList(),ListOwner);
+		}
+	}
 	OnNewListOwner(ListOwner);
 }
 
@@ -433,10 +458,10 @@ void UDataWidget::OnNewListOwner_Implementation(UObject* ListOwner)
 {
 }
 
-FString UDataWidget::GetAssetLabel()
+FString UDataWidget::GetAssetLabel() const
 {
 	FString OutString = "None";
-	if (ReferencedAsset)
+	if (ReferencedAsset && ReferencedAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
 		IDataInterface_General::Execute_GetGeneralAssetLabel(ReferencedAsset, OutString);
 	}
@@ -592,12 +617,12 @@ void UDataWidget::Local_UpdateTooltip(UObject* AssetRef)
 			//update name widget
 			if(DefaultCreatedTooltip->GetAssetNameWidget())
 			{
-				DefaultCreatedTooltip->GetAssetNameWidget()->SetText(LocalName);
+				DefaultCreatedTooltip->GetAssetNameWidget()->SetText(L_FormatText(LocalName));
 			}
 			//update description widget
 			if(DefaultCreatedTooltip->GetAssetNameWidget())
 			{
-				DefaultCreatedTooltip->GetAssetDescriptionWidget()->SetText(LocalDesc);
+				DefaultCreatedTooltip->GetAssetDescriptionWidget()->SetText(L_FormatText(LocalDesc));
 			}
 		}
 		

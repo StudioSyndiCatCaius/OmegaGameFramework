@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Selectors/Selector_Object.h"
 #include "UObject/Object.h"
 #include "OmegaUtils_Actor.generated.h"
 
@@ -12,7 +13,7 @@ struct FOmegaActorSelectorData
 	GENERATED_BODY()
 public:
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Instanced,Category="Actor Selector")
-	UOmegaActorSelector* Selector;
+	UOmegaActorSelector* Selector=nullptr;
 	
 };
 
@@ -41,9 +42,28 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSelector : public UObject
 public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor Selector")
-	TArray<AActor*> GetActors(UObject* WorldContext);
+	TArray<AActor*> GetActors(const UObject* WorldContext);
 	
 	UFUNCTION() AActor* Private_GetActor(UWorld* WorldContext);
 	
 	UFUNCTION() TArray<AActor*> Private_GetActorList(UWorld* WorldContext);
 };
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaSelector_Object_Actor : public UOmegaSelector_Object
+{
+	GENERATED_BODY()
+	
+public:
+	UPROPERTY(EditAnywhere,Instanced,Category="DataAsset") UOmegaActorSelector* Actor;
+	virtual UObject* GetSelected_Obj_Implementation(const UObject* Context) const override
+	{
+		if(!Actor->GetActors(Context).IsEmpty())
+		{
+			return Actor->GetActors(Context)[0];
+		}
+		return nullptr;
+	};
+};
+

@@ -11,13 +11,32 @@
 #include "Misc/GeneralDataObject.h"
 #include "Component_Skin.generated.h"
 
+
 USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaBodyAppearanceData
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
+	UOmegaBodyType* BodyType=nullptr;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
+	TMap<FName, FName> params_name;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
+	TMap<FName, int32> params_int;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
+	TMap<FName, float> params_float;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
+	TMap<FName, FLinearColor> params_color;
+};
+
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaBodyAppearanceInfo
+{
+	GENERATED_BODY()
+
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Body")
-	UOmegaBodyType* BodyType;
+	UOmegaBodyType* BodyType=nullptr;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Body")
 	TMap<UOmegaBodySlot*, FVector> Params;
 };
@@ -70,11 +89,11 @@ public:
 	UPROPERTY()
 	TArray<USkeletalMeshComponent*> MeshComponents;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly)
-	FOmegaBodyAppearanceData Appearance;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Omega|Skin")
+	FOmegaBodyAppearanceInfo Appearance;
 	// BODY APPEARANCE
 	UFUNCTION(BlueprintCallable,Category="Omega|Skin|Body")
-	void SetBodyAppearanceData(FOmegaBodyAppearanceData AppearanceData);
+	void SetBodyAppearanceData(FOmegaBodyAppearanceInfo AppearanceData);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Skin|Body")
 	void SetBody_Type(UOmegaBodyType* BodyType);
@@ -224,7 +243,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaBodyPreset : public UOmegaDataAsset
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Body")
-	FOmegaBodyAppearanceData AppearanceData;
+	FOmegaBodyAppearanceInfo AppearanceData;
 };
 
 

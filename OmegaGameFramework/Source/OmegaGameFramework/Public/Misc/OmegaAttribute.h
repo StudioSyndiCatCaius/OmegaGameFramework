@@ -7,11 +7,11 @@
 #include "Styling/SlateBrush.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "GameplayTagContainer.h"
-#include "Curves/CurveFloat.h"
 #include "Functions/OmegaFunctions_AVContext.h"
 #include "OmegaAttribute.generated.h"
 
 class UCombatantComponent;
+class UCurveFloat;
 
 USTRUCT(BlueprintType)
 struct FOmegaAttributeModifier
@@ -24,6 +24,55 @@ struct FOmegaAttributeModifier
 	float Incrementer = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
 	float Multiplier = 0;
+
+	static TArray<FOmegaAttributeModifier> Simplify(TArray<FOmegaAttributeModifier> in)
+	{
+		TArray<FOmegaAttributeModifier> out;
+		TArray<UOmegaAttribute*> att_list;
+		TMap<UOmegaAttribute*,float> att_inc;
+		TMap<UOmegaAttribute*,float> att_mult;
+		for(auto a : in)
+		{
+			if(a.Attribute)
+			{
+				att_list.AddUnique(a.Attribute);
+				att_inc.Add(a.Attribute,att_inc.FindOrAdd(a.Attribute)+a.Incrementer);
+				att_mult.Add(a.Attribute,att_mult.FindOrAdd(a.Attribute)+a.Multiplier);
+			}
+		}
+		for(auto* a : att_list)
+		{
+			FOmegaAttributeModifier mod;
+			mod.Attribute=a;
+			mod.Incrementer=att_inc.FindOrAdd(a);
+			mod.Multiplier=att_mult.FindOrAdd(a);
+			out.Add(mod);
+		}
+		return out;
+	}
+
+	static TArray<FOmegaAttributeModifier> FromFlat(TMap<UOmegaAttribute*, float> vals, bool bMultiplier=false)
+	{
+		TArray<FOmegaAttributeModifier> out;
+		for(auto& p :vals)
+		{
+			if(p.Key)
+			{
+				FOmegaAttributeModifier mod;
+				mod.Attribute=p.Key;
+				if(bMultiplier)
+				{
+					mod.Multiplier=p.Value;
+				}
+				else
+				{
+					mod.Incrementer=p.Value;
+				}
+				out.Add(mod);
+			}
+		}
+		return out;
+	}
 };
 
 UCLASS()

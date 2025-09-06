@@ -5,13 +5,53 @@
 
 #include "Components/ArrowComponent.h"
 #include "Components/Component_ActorIdentity.h"
+#include "Components/Component_ActorConfig.h"
 #include "Functions/OmegaFunctions_Utility.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Subsystems/OmegaSubsystem_Actors.h"
 
 // =====================================================================================================================
 // ACTOR
 // =====================================================================================================================
+
+void UOmegaActorFunctions::SnapActorToSuface(AActor* Actor, FVector Trace_Start, FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType)
+{
+	if(Actor)
+	{
+		FHitResult hitResult;
+		TArray<AActor*> a_ignore;
+		a_ignore.Add(Actor);
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(CollisionType);
+		if(UKismetSystemLibrary::LineTraceSingleForObjects(Actor,Trace_Start+Actor->GetActorLocation(),Trace_End+Actor->GetActorLocation(),ObjectTypes,
+			false,a_ignore,EDrawDebugTrace::None,hitResult,true))
+		{
+			FVector v_origin;
+			FVector v_bounds;
+			Actor->GetActorBounds(true,v_origin,v_bounds);
+			Actor->SetActorLocation(hitResult.ImpactPoint);
+			Actor->AddActorLocalOffset(FVector(0,0,v_bounds.Z/2));
+		}
+	}
+}
+
+bool UOmegaActorFunctions::CheckActorCondition(AActor* Actor, FOmegaConditions_Actor Conditions)
+{
+	return Conditions.CheckConditions(Actor);
+}
+
+bool UOmegaActorFunctions::CheckIsActorInteractable(AActor* Actor, AActor* Instigator,FGameplayTag Tag,FOmegaCommonMeta meta, bool& Result)
+{
+	Result=false;
+	if(Actor &&
+		Actor->GetClass()->ImplementsInterface(UActorInterface_Interactable::StaticClass())
+			&& !IActorInterface_Interactable::Execute_IsInteractionBlocked(Actor,Instigator,Tag,meta))
+	{
+		Result=true;	
+	}
+	return Result;
+}
 
 bool UOmegaActorFunctions::IsActorPlayer(AActor* Actor, APawn*& Pawn, APlayerController*& Controller, bool& Result)
 {
@@ -168,6 +208,25 @@ TArray<AActor*> UOmegaActorFunctions::FilterActors_OnScreen(TArray<AActor*> acto
 	}
     
 	return filteredActors;
+}
+
+TArray<AActor*> UOmegaActorFunctions::FilterActors_OverlappingActor(AActor* OverlapTarget, TArray<AActor*> actors,TSubclassOf<AActor> Class)
+{
+	TArray<AActor*> out;
+	if(OverlapTarget)
+	{
+		TArray<AActor*> temp_actors;
+		OverlapTarget->GetOverlappingActors(temp_actors,Class);
+		for(auto* a : actors)
+		{
+			if(a && temp_actors.Contains(a))
+			{
+				out.Add(a);
+			}
+		}
+		return out;
+	}
+	return actors;
 }
 
 

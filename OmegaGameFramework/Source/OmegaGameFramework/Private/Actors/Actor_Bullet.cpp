@@ -2,6 +2,8 @@
 
 
 #include "Actors/Actor_Bullet.h"
+
+#include "Actors/Actor_GameplayCue.h"
 #include "Components/SphereComponent.h"
 #include "Components/BillboardComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"

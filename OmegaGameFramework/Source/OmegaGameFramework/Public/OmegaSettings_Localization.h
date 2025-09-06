@@ -21,7 +21,7 @@ public:
 	UOAsset_Localization* DefaultLocalization;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization")
 	TArray<UOAsset_Localization*> LocalizationList;
-
+	
 };
 
 

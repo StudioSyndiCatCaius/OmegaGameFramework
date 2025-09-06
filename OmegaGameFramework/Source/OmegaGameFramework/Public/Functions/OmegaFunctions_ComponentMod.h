@@ -9,6 +9,10 @@
 
 #include "OmegaFunctions_ComponentMod.generated.h"
 
+class UTextRenderComponent;
+class UOmegaCondition_Actor;
+class UOmegaActorSelector;
+
 // =====================================================================================================================
 // ACtor Modifiers
 // =====================================================================================================================
@@ -32,7 +36,34 @@ struct FActorModifiers
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
 	TArray<UActorModifierScript*> Script;
+
+	void ApplyMods(AActor* Actor)
+	{
+		if(Actor)
+		{
+			for(auto* s : Script)
+			{
+				if(s) { s->OnAppliedToActor(Actor);}
+			}
+		}
+	}
 };
+
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FActorModiferContainer
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
+	UOmegaActorSelector* ActorSelector=nullptr;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
+	TArray<UOmegaCondition_Actor*> Conditions;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
+	TArray<UActorModifierScript*> Modifiers;
+};
+
 
 
 // =====================================================================================================================
@@ -84,7 +115,7 @@ struct FComponentMod_SkeletalMesh
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
-	UComponentModScript_SkeletalMesh* Script;
+	UComponentModScript_SkeletalMesh* Script=nullptr;
 };
 
 // --------------------------------------------------------------------
@@ -110,7 +141,7 @@ struct FComponentMod_StaticMesh
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
-	UComponentModScript_StaticMesh* Script;
+	UComponentModScript_StaticMesh* Script=nullptr;
 };
 
 // --------------------------------------------------------------------
@@ -136,7 +167,7 @@ struct FComponentMod_InstancedStaticMesh
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
-	UComponentModScript_InstancedStaticMesh* Script;
+	UComponentModScript_InstancedStaticMesh* Script=nullptr;
 };
 
 
@@ -153,8 +184,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaComponentModifierFunctions : public UBlueprin
 public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
 	static void ApplyModifierTo_Actor(FActorModifiers mods, AActor* Actor);
+	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier",meta=(WorldContext="WorldContextObject"))
+	static void RunActorModifierContainer(UObject* WorldContextObject, FActorModiferContainer container);
 
-	
 	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
 	static void ApplyModifierTo_Component(FComponentMods mod, UActorComponent* Component);
 	
@@ -166,4 +198,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
 	static void ApplyModifierTo_InstancedStaticMesh(FComponentMod_InstancedStaticMesh mod, UInstancedStaticMeshComponent* Component);
+
+	static void SetTextComponentType_Util(UTextRenderComponent* Component);	
 };

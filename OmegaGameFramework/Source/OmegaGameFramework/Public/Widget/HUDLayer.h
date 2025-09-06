@@ -6,14 +6,10 @@
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
 #include "ScreenWidget.h"
-
 #include "HUDLayer.generated.h"
 
 class UOmegaPlayerSubsystem;
 
-/**
- * 
- */
 UCLASS(HideFunctions = (Construct, Destruct))
 class OMEGAGAMEFRAMEWORK_API UHUDLayer : public UOmegaScreenWidget
 {
@@ -48,15 +44,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	bool bReverseCloseAnim=true;
 	
-	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Name)")
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Global Event (Name)")
 	void OnGlobalEvent(FName Event, UObject* Context);
-	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Tag)")
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Global Event (Tag)")
 	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
 	
 	UFUNCTION() void Local_BindGlobalEvent();
 
 	UFUNCTION(BlueprintNativeEvent)
-	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FLuaValue meta);
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInputMethodChanged(bool bIsGamepad);
 

@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "Functions/OmegaFunctions_Common.h"
 #include "Component_ActorTargeting.generated.h"
+
+class UActorModifierScript;
+class UOmegaCondition_Actor;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorRegisteredUpdate, AActor*, Actor, bool, bRegistered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorTargetUpdate, AActor*, Actor, bool, bTargeted);
@@ -20,23 +22,35 @@ class OMEGAGAMEFRAMEWORK_API UActorTargetingComponent : public UActorComponent
 	UPROPERTY(VisibleInstanceOnly,Category="Actors") AActor* REF_TargetActor;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	static void local_setTagsOnActor(AActor* Actor, TArray<FName> tags, bool bActive)
-	{
-		if(Actor)
-		{
-			for (FName TempTag : tags)
-			{
-				UOmegaGameFrameworkBPLibrary::SetActorTagActive(Actor, TempTag,bActive);
-			}
-		}
-	}
+	static void L_setTagsOnActor(AActor* Actor, TArray<FName> tags, bool bActive);
 	
 public:
 
 	UPROPERTY(BlueprintAssignable) FOnActorRegisteredUpdate OnActorRegisteredUpdate;
 	UPROPERTY(BlueprintAssignable) FOnActorTargetUpdate OnActorTargetUpdate;
 
+	//Classes that are required to be added to target registry. Blank will allow all classes.
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="ActorTargeting")
+	TArray<UActorModifierScript*> ActorMods_OnRegister;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="ActorTargeting")
+	TArray<UActorModifierScript*> ActorMods_OnUnregister;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="ActorTargeting")
+	TArray<UActorModifierScript*> ActorMods_OnTargeted;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="ActorTargeting")
+	TArray<UActorModifierScript*> ActorMods_OnUntargeted;
+
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="ActorTargeting")
+	TArray<UOmegaCondition_Actor*> Conditions_CanRegister;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="TagEvents")
+	FGameplayTagContainer TagEvents_OnRegister;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="TagEvents")
+	FGameplayTagContainer TagEvents_OnUnregister;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="TagEvents")
+	FGameplayTagContainer TagEvents_OnTargeted;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="TagEvents")
+	FGameplayTagContainer TagEvents_OnUntargeted;
+	
 	//Classes that are required to be added to target registry. Blank will allow all classes.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mouse")
 	bool bTargetFromMouseCursor;
@@ -46,44 +60,7 @@ public:
 	float Mouse_TraceRadius=20;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mouse")
 	TEnumAsByte<ETraceTypeQuery> Mouse_TraceChannel;
-
-	//Classes that are required to be added to target registry. Blank will allow all classes.
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|Classes")
-	TArray<TSubclassOf<AActor>> IncludedClasses;
-
-	//Classes that will never be added to the target registry
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|Classes")
-	TArray<TSubclassOf<AActor>> ExcludedClasses;
-
-	//Gameplay tags that an actor must have to be registered
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|GameplayTags")
-	FGameplayTagContainer TargetGameplayTagsRequired;
-	
-	//Gameplay Tags that, if owned, prevent an actor from being registered
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|GameplayTags")
-	FGameplayTagContainer TargetGameplayTagsBlocked;
     	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|TagEvents")
-	FGameplayTagContainer EventsOnRegister;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|TagEvents")
-	FGameplayTagContainer EventsOnUnregister;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|TagEvents")
-	FGameplayTagContainer EventsOnTarget;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|TagEvents")
-	FGameplayTagContainer EventsOnUntarget;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|ActorTags")
-    TArray<FName> TagsOnRegister;
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|ActorTags")
-    TArray<FName> TagsOnTarget;
-
-	//Tags that are required to be added to target registry. Blank will allow all classes.
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|ActorTags")
-	TArray<FName> IncludedTags;
-
-	//Tags that will never be added to the target registry
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting|ActorTags")
-	TArray<FName> ExcludedTags;
 
 	UFUNCTION(BlueprintCallable,Category="ActorTargeting")
 	bool SetActorRegistered(AActor* Actor, bool bRegister);
@@ -95,13 +72,17 @@ public:
 	void ClearRegisteredTargets();
 
 	UFUNCTION(BlueprintCallable,Category="ActorTargeting")
+	bool IsActorRegistered(AActor* Actor) const;
+
+	
+	UFUNCTION(BlueprintCallable,Category="ActorTargeting")
 	TArray<AActor*> GetRegisteredTargets();
 	
 	UFUNCTION(BlueprintCallable,Category="ActorTargeting")
 	void SetActiveTarget(AActor* Actor, bool bAutoRegisterActor);
 	
 	UFUNCTION(BlueprintPure,Category="ActorTargeting")
-	AActor* GetActiveTarget();
+	AActor* GetActiveTarget() const;
 
 	UFUNCTION(BlueprintCallable,Category="ActorTargeting")
 	AActor* CycleTarget(int32 CycleAmount);

@@ -5,77 +5,33 @@
 #include "LevelSequence.h"
 //#include "Functions/OmegaFunctions_AVContext.h"
 #include "Animation/AnimMontage.h"
+#include "Components/Component_Combatant.h"
+#include "Condition/Condition_Actor.h"
+#include "Condition/Condition_Combatant.h"
 
-TSubclassOf<UCombatantFilter> UOAsset_CommonSkill::GetSkillTargetFilter_Implementation()
+
+void UOAsset_CommonSkill::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
 {
-	return TargetFilter;
+	Super::GetGeneralDataText_Implementation(Label, Context, Name, Description);
+	if(bAppendEffectsDescription)
+	{
+		FString str=Description.ToString()+
+			UOmegaScriptedEffectFunctions::GetEffects_Description(GetScriptedEffects("")).ToString();
+		Description=FText::FromString(str);
+	}
+}
+
+bool UOAsset_CommonSkill::CanUseSkill_Implementation(UCombatantComponent* Combatant)
+{
+	FOmegaConditions_Combatant con;
+	con.Conditions=Conditions_CanUse;
+	return con.CheckConditions(Combatant);
 }
 
 TMap<UOmegaAttribute*, float> UOAsset_CommonSkill::GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,
-	UObject* Context)
+                                                                                         UObject* Context)
 {
 	return AttributeUseCost;
 }
 
-FOmegaCustomScriptedEffects UOAsset_CommonSkill::GetScriptedEffects_Implementation(FGameplayTag Tag)
-{
-	if(Effects_Tagged.Contains(Tag))
-	{
-		return Effects_Tagged[Tag];
-	}
-	return Effects_Default;
-}
-
-
-
-ULevelSequence* UOAsset_CommonSkill::GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag)
-{
-	if(TaggedSequences.Contains(Tag))
-	{
-		return TaggedSequences[Tag];
-	}
-	if(DefaultSequence_Asset)
-	{
-		return DefaultSequence_Asset;
-	}
-	/*
-	if(Combatant)
-	{
-		if(ACharacter* char_Ref = Cast<ACharacter>(Combatant->GetOwner()))
-		{
-			if(char_Ref->GetMesh()->GetAnimInstance())
-			{
-				TEnumAsByte<EOmegaFunctionResult> result;
-				return UOmegaContextAVFunctions::TryGetObjectContext_Sequence(char_Ref->GetMesh()->GetAnimInstance(),DefaultSequence_Tag,nullptr,result);
-			}
-		}
-	}
-	*/
-	return nullptr;
-}
-
-UAnimMontage* UOAsset_CommonSkill::GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag)
-{
-	if(TaggedMontages.Contains(Tag))
-	{
-		return TaggedMontages[Tag];
-	}
-	if(DefaultMontage_Asset)
-	{
-		return DefaultMontage_Asset;
-	}
-	/*
-	if(Combatant)
-	{
-		if(ACharacter* char_Ref = Cast<ACharacter>(Combatant->GetOwner()))
-		{
-			if(char_Ref->GetMesh()->GetAnimInstance())
-			{
-				TEnumAsByte<EOmegaFunctionResult> result;
-				return UOmegaContextAVFunctions::TryGetObjectContext_Montages(char_Ref->GetMesh()->GetAnimInstance(),DefaultMontage_Tag,nullptr,result);
-			}
-		}
-	}
-	*/
-	return nullptr;
-}

@@ -5,6 +5,7 @@
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Actors/Actor_Player.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 
@@ -17,6 +18,7 @@ void AOmegaGameMode::Local_LoadSystemShutdown(UObject* Context, FString Flag)
 	{
 		SystemRef->ActivateGameplaySystem(TempSystem, this, "GameMode_PostLoad");
 	}
+	OnLoadEventFinish.Broadcast();
 	OnLoadEventFinished();
 }
 
@@ -63,3 +65,16 @@ void AOmegaGameMode::BeginPlay()
 
 	
 }
+
+FString AOmegaGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId,
+	const FString& Options, const FString& Portal)
+{
+	if(AOmegaPlayer* p=Cast<AOmegaPlayer>(NewPlayerController))
+	{
+		p->Systems_Auto.Append(PlayerSystems_Auto);
+		p->SetSystemsActive(PlayerSystems_Auto,this,"Auto",true);
+		p->Systems_Persistent.Append(PlayerSystems_Auto);
+	}
+	return Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
+}
+

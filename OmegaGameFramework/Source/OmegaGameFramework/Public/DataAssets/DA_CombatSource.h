@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
 #include "Interfaces/OmegaInterface_Skill.h"
-
 #include "Misc/GeneralDataObject.h"
+#include "Types/Struct_CombatantSource.h"
 #include "DA_CombatSource.generated.h"
 
 
@@ -17,13 +17,7 @@ class OMEGAGAMEFRAMEWORK_API UOAsset_CombatSource : public UOmegaDataAsset, publ
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Combatant")
-	TArray<UOmegaScripted_AttributeModifier*> Attribute_Mods;
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Combatant")
-	TArray<UOmegaScripted_DamageModifier*> Damage_Mods;
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Combatant")
-	TArray<UOmegaScripted_SkillSource*> Skills;
-
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combatant") FOmegaCombatantSources Sources;
 	
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
@@ -34,22 +28,16 @@ public:
 inline TArray<FOmegaAttributeModifier> UOAsset_CombatSource::GetModifierValues_Implementation(
 	UCombatantComponent* CombatantComponent)
 {
-	FOmegaScripted_AttributeModifiers mod;
-	mod.Modifiers=Attribute_Mods;
-	return mod.GatherModifiers(CombatantComponent);
+	return Sources.GetAttributeMods(CombatantComponent);
 }
 
 inline float UOAsset_CombatSource::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
 	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
-	FOmegaScripted_DamageModifiers mod;
-	mod.Modifiers=Damage_Mods;
-	return mod.ApplyMod(Attribute,Target,Instigator,BaseDamage,DamageType,Context);
+	return Sources.GetDamageMods(Attribute,Target,Instigator,BaseDamage,DamageType,Context);
 }
 
 inline TArray<UPrimaryDataAsset*> UOAsset_CombatSource::GetSkills_Implementation(UCombatantComponent* Combatant)
 {
-	FOmegaScripted_SkillSources mod;
-	mod.Modifiers=Skills;
-	return mod.GatherSkills(Combatant);
+	return Sources.GetSkills(Combatant);
 }

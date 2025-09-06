@@ -24,6 +24,15 @@ void UOmegaMaterialFunctions::ApplyMaterialsToSlots(UPrimitiveComponent* Compone
 	}
 }
 
+void UOmegaMaterialFunctions::ApplyDynamicMaterialParams(UMaterialInstanceDynamic* Material,
+	FOmegaDynamicMaterialParams params)
+{
+	if(Material)
+	{
+		params.Apply(Material);
+	}
+}
+
 // Define a log category for your texture operations
 DEFINE_LOG_CATEGORY_STATIC(LogTextureOperations, Log, All);
 

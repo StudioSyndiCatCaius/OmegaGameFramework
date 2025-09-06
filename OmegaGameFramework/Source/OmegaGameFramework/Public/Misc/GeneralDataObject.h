@@ -3,14 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "Interfaces/OmegaInterface_Common.h"
 #include "GameplayTagContainer.h"
-#include "LuaObject.h"
 #include "Functions/OmegaFunctions_ObjectTraits.h"
 #include "Functions/OmegaFunctions_SoftProperty.h"
 #include "Interfaces/OmegaInterface_AssetThumbnail.h"
-#include "Misc/OmegaAttribute.h"
 #include "GeneralDataObject.generated.h"
 
 
@@ -86,19 +83,6 @@ public:
 };
 
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaLuaBaseObject : public ULuaObject, public IDataInterface_AttributeModifier
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(EditDefaultsOnly,Category="FieldNames") FString Param_AttributeMods="attributes";
-
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
-};
-
-
 UCLASS(Blueprintable,BlueprintType,Abstract,Const,EditInlineNew,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaInstancableObject : public UObject
 {
@@ -107,10 +91,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaInstancableObject : public UObject
 public:
 	
 };
-
-UCLASS(meta=(ShowWorldContextPin))
+UCLASS(meta=(ShowWorldContextPin,DisallowCreateNew),EditInlineNew)
 class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_AssetThumbnail,
-																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy, public IDataInterface_Traits,
+																			public IDataInterface_GUID, public IDataInterface_Traits,
 																			public IOmegaSoftPropertyInterface 
 {
 	GENERATED_BODY()
@@ -126,24 +109,19 @@ public:
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FGuid Guid;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) FString CustomLabel;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TMap<FString,FString> ExtraParams;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TMap<FName,FString> ExtraParams;
 	OMACRO_ADDPARAMS_GENERAL();
 	
 	virtual FGuid GetObjectGuid_Implementation() { return Guid; }
-	virtual TMap<FString, FString> GetSoftPropertyMap_Implementation() override { return ExtraParams; };
+	virtual TMap<FName, FString> GetSoftPropertyMap_Implementation() override { return ExtraParams; };
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="General") TArray<UOmegaObjectTrait*> Traits;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override { return Traits; };
 	//virtual// void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override{ Traits=NewTraits; };
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) UPrimaryDataAsset* ParentAsset;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TArray<UPrimaryDataAsset*> ChildAssets;
+	UFUNCTION(BlueprintNativeEvent,Category="Editor") bool UseIconAsThumbnail();
 
-	virtual UObject* GetObject_Parent_Implementation() const override;
-	virtual TArray<UObject*> GetObject_Children_Implementation() const override;
-	
-	UFUNCTION(BlueprintNativeEvent,Category="DataAsset") bool UseIconAsThumbnail();
-
+	virtual FLinearColor GetThumbnailBack_Tint_Implementation() override { return FLinearColor::Gray; };
 	virtual FSlateBrush GetThumbnail_Brush_Implementation() override { return Icon;};
 	virtual FText GetThumbnail_Text_Implementation() override { return DisplayName;};
 };

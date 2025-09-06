@@ -7,11 +7,12 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Functions/OmegaFunctions_Combatant.h"
+#include "GameFramework/GameModeBase.h"
 
 
 void UOmegaGameplaySubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
-	ActiveSystems.Empty();
+	SystemsData.active_systems.Empty();
 }
 
 void UOmegaGameplaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
@@ -27,10 +28,16 @@ void UOmegaGameplaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	}
 }
 
-AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag)
+AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag,FOmegaCommonMeta meta)
 {
 	if (Class)
 	{
+		if(AOmegaGameplaySystem* DummySystem=Cast<AOmegaGameplaySystem>(SystemsData.Activate(Class,Context,Flag,this,nullptr,meta)))
+		{
+			OnGameplaySystemActiveStateChange.Broadcast(DummySystem,Context,Flag,true);
+			return DummySystem;
+		}
+		/*
 		struct FActorSpawnParameters SystemParams;
 		bool bSystemExists;
 		AOmegaGameplaySystem* DummySystem = GetGameplaySystem(Class, bSystemExists);
@@ -48,28 +55,8 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassO
 		
 		if (!bSystemExists)
 		{
-			const FTransform SpawnWorldPoint;
-			DummySystem = GetWorld()->SpawnActorDeferred<AOmegaGameplaySystem>(Class, SpawnWorldPoint, nullptr);
-			if(!DummySystem)
-			{
-				return nullptr;
-			}
-			DummySystem->SubsysRef = this;
-			UGameplayStatics::FinishSpawningActor(DummySystem, SpawnWorldPoint);
-			ActiveSystems.Add(DummySystem);
-			if(Context)
-			{
-				DummySystem->ContextObject = Context;
-			}
-			DummySystem->ActivationFlag=Flag;
 			
-			Local_RefreshSystemState();
-			
-			//Finish & Activate
-			DummySystem->SystemActivated(Context, Flag);
-			OnGameplaySystemActiveStateChange.Broadcast(DummySystem,Context,Flag,true);
-			return DummySystem;
-		}
+		}*/
 	}
 	return nullptr;
 }
@@ -113,12 +100,9 @@ AOmegaGameplaySystem* UOmegaGameplaySubsystem::GetGameplaySystem(TSubclassOf<AOm
 TArray<AOmegaGameplaySystem*> UOmegaGameplaySubsystem::GetActiveGameplaySystems(bool bIncludeSystemsInShutdown)
 {
 	TArray<AOmegaGameplaySystem*> OutSystems;
-	for(auto* TempSystem : ActiveSystems)
+	for(auto* TempSystem : SystemsData.GetActiveSystems(bIncludeSystemsInShutdown))
 	{
-		if(TempSystem && (!TempSystem->bIsInShutdown || bIncludeSystemsInShutdown))
-		{
-			OutSystems.AddUnique(TempSystem);
-		}
+		OutSystems.Add(Cast<AOmegaGameplaySystem>(TempSystem));
 	}
 	return OutSystems;
 }
@@ -247,14 +231,6 @@ TArray<UCombatantComponent*> UOmegaGameplaySubsystem::GetAllCombatants()
 	return OutCombatants;
 }
 
-void UOmegaGameplaySubsystem::NativeRemoveSystem(AOmegaGameplaySystem* System)
-{
-	if (ActiveSystems.Contains(System))
-	{
-		
-		ActiveSystems.Remove(System);
-	}
-}
 
 TArray<UCombatantComponent*> UOmegaGameplaySubsystem::RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass,
 	UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants)

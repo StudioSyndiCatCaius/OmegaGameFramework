@@ -5,13 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Functions/OmegaFunctions_ScriptedEffects.h"
-#include "Actors/Actor_GameplayCue.h"
 #include "Actor_Bullet.generated.h"
 
 class USphereComponent;
 class UCombatantComponent;
 class UProjectileMovementComponent;
 class UBillboardComponent;
+class AOmegaGameplayCue;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaBulletActor : public AActor

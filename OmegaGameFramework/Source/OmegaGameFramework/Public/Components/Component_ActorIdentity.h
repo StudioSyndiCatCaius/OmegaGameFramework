@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "OmegaGameplayComponent.h"
 #include "Components/ActorComponent.h"
 #include "Functions/OmegaFunctions_TagEvent.h"
 #include "Misc/GeneralDataObject.h"
-#include "Misc/OmegaUtils_Enums.h"
 #include "Component_ActorIdentity.generated.h"
 
 // =======================================================================================================================
@@ -16,8 +16,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorIdentityChanged, UPrimaryDataAsset*, IdentityAsset, UActorIdentityComponent*, Component);
 
-UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UActorIdentityComponent : public UActorComponent, public IGameplayTagsInterface, public IActorTagEventInterface
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent),HideCategories="Navigation, Cooking, Activation, AssetUserData, Asset User Data")
+class OMEGAGAMEFRAMEWORK_API UActorIdentityComponent : public UOmegaGameplayComponent, public IGameplayTagsInterface, public IActorTagEventInterface
 {
 	GENERATED_BODY()
 
@@ -27,27 +27,24 @@ class OMEGAGAMEFRAMEWORK_API UActorIdentityComponent : public UActorComponent, p
 
 public:
 
-	UPROPERTY(EditAnywhere,Category="Actor Identity") UPrimaryDataAsset* IdentitySource;
-	UPROPERTY(EditAnywhere,Category="Actor Identity") FGameplayTag CategoryTag;
-	UPROPERTY(EditAnywhere,Category="Actor Identity") FGameplayTagContainer GameplayTags;
+	UPROPERTY(EditAnywhere,Category="Actor") UPrimaryDataAsset* IdentitySource;
+	UPROPERTY(EditAnywhere,Category="Actor") FGameplayTag CategoryTag;
+	UPROPERTY(EditAnywhere,Category="Actor") FGameplayTagContainer GameplayTags;
 	
 	UPROPERTY(BlueprintAssignable) FOnActorIdentityChanged OnActorIdentityChanged;
 
-
-	UFUNCTION(BlueprintCallable,Category="Actor Identity")
+	UFUNCTION(BlueprintCallable,Category="Actor")
 	void SetIdentitySourceAsset(UPrimaryDataAsset* SourceAsset);
-	UFUNCTION(BlueprintPure,Category="Actor Identity")
+	UFUNCTION(BlueprintPure,Category="Actor")
 	UPrimaryDataAsset*  GetIdentitySourceAsset() const
 	{
 		if(IdentitySource) {return IdentitySource;} return nullptr;
 	};
-
 	
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; };
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return GameplayTags; };
 	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;
-	
-	
+
 protected:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -68,22 +65,25 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_ActorIdentitySource
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Actor Identity")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Actor",DisplayName="Actor ID - Get Scripts")
 	TArray<UActorIdentityScript*> GetIdentityScripts();
 
-	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Actor",DisplayName="Actor ID - On Identity Init")
 	bool OnIdentityInit(AActor* Actor, UActorIdentityComponent* Component);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Actor",DisplayName="Actor ID - On Identity Uninit")
+	bool OnIdentityUninit(AActor* Actor, UActorIdentityComponent* Component);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Actor",DisplayName="Actor ID - On Construct")
 	bool OnActorConstruction(AActor* Actor, UActorIdentityComponent* Component);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Actor",DisplayName="Actor ID - On Begin Play")
 	bool OnActorBeginPlay(AActor* Actor, UActorIdentityComponent* Component);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Actor",DisplayName="Actor ID - On Tick")
 	bool OnActorTick(AActor* Actor, UActorIdentityComponent* Component, float DeltaTime);
 
-	UFUNCTION(BlueprintNativeEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Actor",DisplayName="Actor ID - On Tag Event")
 	bool OnActorTagEvent(AActor* Actor, UActorIdentityComponent* Component, FGameplayTag Event);
 	
 };
@@ -122,13 +122,13 @@ class OMEGAGAMEFRAMEWORK_API UActorIdentityScript : public UObject
 
 public:
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Actor")
 	void OnActorConstruction(AActor* Actor, UActorIdentityComponent* Component) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Actor")
 	void OnActorBeginPlay(AActor* Actor, UActorIdentityComponent* Component) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor Identity")
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Actor")
 	void OnActorTick(AActor* Actor, UActorIdentityComponent* Component, float DeltaTime) const;
 };
 

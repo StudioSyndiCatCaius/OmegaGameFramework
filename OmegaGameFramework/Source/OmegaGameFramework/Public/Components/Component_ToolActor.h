@@ -16,7 +16,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaTool : public AActor
 	virtual void Tick(float DeltaSeconds) override;
 	
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) float TriggerFrequency;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Tool") float TriggerFrequency;
 
 	UPROPERTY() UToolActorComponent* owning_component;
 	

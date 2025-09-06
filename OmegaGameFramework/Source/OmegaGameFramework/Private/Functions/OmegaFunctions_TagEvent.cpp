@@ -7,6 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 
 #include "Components/BillboardComponent.h"
+#include "Subsystems/OmegaSubsystem_Actors.h"
 
 void UActorTagEventFunctions::FireActorTagEvents(TMap<AActor*, FGameplayTag> Events)
 {
@@ -28,6 +29,7 @@ void UActorTagEventFunctions::FireTagEventOnActors(TArray<AActor*> Actors, FGame
 			if(TempActor->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))
 			{
 				IActorTagEventInterface::Execute_OnTagEvent(TempActor, Event);
+				TempActor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->OnActorTagEvent.Broadcast(TempActor,Event);
 			}
 			
 			for(UActorComponent* TempComp : TempActor->GetComponents())

@@ -10,9 +10,8 @@
 #include "UObject/Interface.h"
 #include "Tickable.h"
 #include "Engine/World.h"
-#include "Components/Component_Combatant.h"
 #include "JsonObjectWrapper.h"
-#include "LuaValue.h"
+#include "Actors/OmegaGameplaySystem.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "OmegaSubsystem_Gameplay.generated.h"
 
@@ -20,9 +19,9 @@ class AOmegaGameplaySystem;
 class UOmegaSettings;
 class UDamageFormula;
 class UCombatantFilter;
+class UCombatantComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantRegistered, UCombatantComponent*, Combatant);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantUnegistered, UCombatantComponent*, Combatant);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantRegisterDelegate, UCombatantComponent*, Combatant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCombatantDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameplayStateChange, FGameplayTag, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnGameplaySystemActiveStateChange, AOmegaGameplaySystem*, system, UObject*, context, const FString&, flag, bool, bActive);
@@ -33,27 +32,20 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplaySubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable)
-	FOnGameplaySystemActiveStateChange OnGameplaySystemActiveStateChange;
+	UPROPERTY(BlueprintAssignable) FOnGameplaySystemActiveStateChange OnGameplaySystemActiveStateChange;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Gameplay")
-	FGameplayTagContainer StateTags;
+	UPROPERTY() FOmegaBaseSystemStats SystemsData;
+	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Omega") FOmegaEntitySet Entities;
 	
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
-
-	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|") FJsonObjectWrapper WorldJsonObject;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere) FLuaValue LuaWorldData;
-
-	UFUNCTION()
-	void NativeRemoveSystem(AOmegaGameplaySystem* System);
-
-	UPROPERTY()
-	TArray<class AOmegaGameplaySystem*> ActiveSystems;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Gameplay") FGameplayTagContainer StateTags;
 	
 	UFUNCTION(BlueprintCallable, Category = "OmegaGameplaySubsystem", meta=(AdvancedDisplay = "Context, Flag"))
-	AOmegaGameplaySystem* ActivateGameplaySystem(class TSubclassOf<AOmegaGameplaySystem> Class, class UObject* Context = nullptr, FString Flag="");
+	AOmegaGameplaySystem* ActivateGameplaySystem(class TSubclassOf<AOmegaGameplaySystem> Class, class UObject* Context = nullptr, FString Flag="",FOmegaCommonMeta meta=FOmegaCommonMeta());
 
 	UFUNCTION(BlueprintCallable, Category = "OmegaGameplaySubsystem", meta = (AdvancedDisplay = "Context, Flag"))
 	bool ShutdownGameplaySystem(class TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context = nullptr, FString Flag = "");
@@ -67,8 +59,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	TArray<AOmegaGameplaySystem*> GetActiveGameplaySystemsWithInterface(TSubclassOf<UInterface> Interface);
 
-	UFUNCTION()
-	FGameplayTagContainer GetBlockedSystemTags();
+	UFUNCTION() FGameplayTagContainer GetBlockedSystemTags();
 	
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	bool IsSystemTagBlocked(FGameplayTagContainer Tags);
@@ -128,10 +119,8 @@ public:
 	UFUNCTION(BlueprintPure, Category="Combat")
 	TArray<UCombatantComponent*> GetAllCombatants();
 	
-	UPROPERTY(BlueprintAssignable)
-	FOnCombatantRegistered OnCombatantRegistered;
-	UPROPERTY(BlueprintAssignable)
-    FOnCombatantUnegistered OnCombatantUnegistered;
+	UPROPERTY(BlueprintAssignable) FOnCombatantRegisterDelegate OnCombatantRegistered;
+	UPROPERTY(BlueprintAssignable) FOnCombatantRegisterDelegate OnCombatantUnegistered;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnCombatantDamaged OnCombatantDamaged;

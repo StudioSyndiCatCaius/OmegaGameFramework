@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "GameplayTagContainer.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "OmegaInterface_IntState.generated.h"
 

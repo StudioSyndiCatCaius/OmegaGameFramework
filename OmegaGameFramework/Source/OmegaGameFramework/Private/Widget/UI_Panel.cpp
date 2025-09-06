@@ -3,20 +3,35 @@
 
 #include "Widget/UI_Panel.h"
 
+#include "Components/Border.h"
+#include "Components/TextBlock.h"
+#include "Widget/UI_Widgets.h"
+
 
 void UOmegaUI_Panel::NativePreConstruct()
 {
-	if(UCommonBorder* _b = GetWidget_Border_Main())
+	if(UBorder* _b = GetWidget_Border_Title())
 	{
-		if(Override_BorderStyle) { _b->SetStyle(Override_BorderStyle);}
+		if(TitleBorder_Style)
+		{
+			TitleBorder_Style->Apply(_b);
+		}
 		
 	}
-	if(UCommonTextBlock* _t = GetWidget_Text_Title())
+	if(UBorder* _b = GetWidget_Border_Body())
+	{
+		if(BodyBorder_Style)
+		{
+			BodyBorder_Style->Apply(_b);
+		}
+		
+	}
+	if(UTextBlock* _t = GetWidget_Text_Title())
 	{
 		SetTitle(Title);
-		if(Override_TitleStyle)
+		if(TitleText_Style)
 		{
-			_t->SetStyle(Override_TitleStyle);
+			TitleText_Style->Apply(_t);
 		}
 	}
 	Super::NativePreConstruct();

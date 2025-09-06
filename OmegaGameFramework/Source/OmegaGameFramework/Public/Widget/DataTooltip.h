@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/TextBlock.h"
 #include "DataTooltip.generated.h"
 
 class UDataWidget;
+class UTextBlock;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UDataTooltip : public UUserWidget

@@ -6,7 +6,7 @@
 #include "Condition_Actor.generated.h"
 
 
-UCLASS(Blueprintable,BlueprintType,Abstract,Const,EditInlineNew,meta=(ShowWorldContextPin))
+UCLASS(Blueprintable,BlueprintType,Abstract,Const,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaCondition_Actor : public UObject
 {
 	GENERATED_BODY()

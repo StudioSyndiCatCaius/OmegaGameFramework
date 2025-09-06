@@ -8,7 +8,6 @@
 #include "Engine/DataAsset.h"
 #include "Functions/OmegaFunctions_AVContext.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
-#include "Interfaces/OmegaInterface_Common.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaDamageType.generated.h"
 

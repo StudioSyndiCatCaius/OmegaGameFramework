@@ -3,10 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Common.h"
 #include "GameplayTagContainer.h"
 #include "JsonObjectWrapper.h"
-#include "LuaValue.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataAsset.h"
 #include "Functions/OmegaFunctions_TagEvent.h"

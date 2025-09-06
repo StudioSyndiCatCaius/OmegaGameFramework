@@ -2,20 +2,40 @@
 
 
 #include "Actors/Actor_Environment.h"
-
-#include "Components/BoxComponent.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
-#include "Components/RuntimeVirtualTextureComponent.h"
-#include "PCGGraph.h"
+#include "PCGComponent.h"
+#include "Components/ArrowComponent.h"
 #include "Components/SkyLightComponent.h"
+#include "Components/VolumetricCloudComponent.h"
+#include "Engine/TextureCube.h"
+#include "PCGGraph.h"
 #include "Async/TaskGraphInterfaces.h"
 #include "Components/AudioComponent.h"
 #include "Engine/World.h"
-#include "Kismet/KismetMathLibrary.h"
+#include "Subsystems/OmegaSubsystem_BGM.h"
 
+
+class UOmegaBGMSubsystem;
+
+void AOmegaActorEnvironment::L_PresetSave()
+{
+	if(GetGameInstance() && current_preset)
+	{
+		GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSoftProperty_DataAsset(SaveField_Preset.ToString(),current_preset,false);
+	}
+}
+
+void AOmegaActorEnvironment::L_PresetLoad()
+{
+	if(UOmegaEnvironmentPreset* p=Cast<UOmegaEnvironmentPreset>(
+			GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->GetSoftProperty_DataAsset(SaveField_Preset.ToString(),false)))
+	{
+		Set_Preset(p);
+	}
+}
 
 AOmegaActorEnvironment::AOmegaActorEnvironment()
 {
@@ -57,6 +77,19 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 		SkyBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 		SkyBox->SetCastShadow(false);
 	}
+
+	PostProcess->Settings.bOverride_BloomIntensity=true;
+	PostProcess->Settings.BloomIntensity=0.0;
+	PostProcess->Settings.bOverride_AutoExposureMinBrightness=true;
+	PostProcess->Settings.bOverride_AutoExposureMaxBrightness=true;
+	PostProcess->Settings.AutoExposureMinBrightness=0.2;
+	PostProcess->Settings.AutoExposureMaxBrightness=1;
+	PostProcess->Settings.bOverride_AmbientCubemapIntensity=true;
+	PostProcess->Settings.AmbientCubemapIntensity=0.15;
+	if(UTextureCube* c =LoadObject<UTextureCube>(this,TEXT("/Engine/EngineResources/GrayLightTextureCube.GrayLightTextureCube")))
+	{
+		PostProcess->Settings.AmbientCubemap=c;
+	}
 }
 
 void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
@@ -94,7 +127,24 @@ void AOmegaActorEnvironment::BeginPlay()
 	{
 		GetWorld()->GetSubsystem<UOmegaBGMSubsystem>()->PlayBGM(BGM_to_autoplay,BGM_Slot,false,true);
 	}
+	if(SaveField_Preset.IsValid() && SaveCurrentPreset)
+	{
+		L_PresetLoad();
+	}
 	Super::BeginPlay();
+}
+
+void AOmegaActorEnvironment::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(EndPlayReason==EEndPlayReason::LevelTransition)
+	{
+		if(SaveField_Preset.IsValid() && current_preset && SaveCurrentPreset)
+        {
+        	L_PresetSave();
+        }
+	}
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 
@@ -138,6 +188,23 @@ void AOmegaActorEnvironment::Set_Preset(UOmegaEnvironmentPreset* Preset)
 	{
 		current_preset=Preset;
 		current_preset->Local_Update(this);
+	}
+}
+
+void UOmegaEnvironmentPreset::Local_Update(AOmegaActorEnvironment* EnvironmentActor)
+{
+	if(EnvironmentActor)
+	{
+		for(auto* Script: Scripts)
+		{
+			L_SetCompVis(EnvironmentActor->SkyLight,Use_SkyLight);
+			L_SetCompVis(EnvironmentActor->DirectionalLight,Use_SunLight);
+			L_SetCompVis(EnvironmentActor->Fog,Use_Fog);
+			L_SetCompVis(EnvironmentActor->Atmosphere,Use_Atmosphere);
+			L_SetCompVis(EnvironmentActor->Clouds,Use_Clouds);
+			L_SetCompVis(EnvironmentActor->SkyBox,Use_Skybox);
+			if(Script) {Script->OnUpdated(EnvironmentActor);}
+		}
 	}
 }
 

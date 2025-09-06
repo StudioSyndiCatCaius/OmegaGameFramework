@@ -3,10 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Component_GroupedActorSpawner.generated.h"
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGroupedActorSpawned, UGroupedActorSpawnerComponent*, Component, AActor*, SpawnedActor);
 

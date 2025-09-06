@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 
 #include "FlowSave.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "FlowTypes.generated.h"
 
 #if WITH_EDITORONLY_DATA
@@ -24,11 +25,9 @@ USTRUCT(BlueprintType)
 struct FFlowAssetOverrideData
 {
 	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="FlowAsset")
-	bool bOverrideStartingNodes;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="FlowAsset")
-	TArray<FGuid> StartingNodes;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="FlowAsset") bool bOverrideStartingNodes=false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="FlowAsset") TArray<FGuid> StartingNodes;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="FlowAsset") FOmegaCommonMeta meta;
 };
 
 UENUM(BlueprintType)

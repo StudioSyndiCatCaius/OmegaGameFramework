@@ -9,9 +9,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
 #include "MetasoundSource.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
 #include "UObject/SoftObjectPath.h"
-
 #include "OmegaSettings.generated.h"
 
 class AOmegaGameplaySystem;
@@ -20,6 +18,8 @@ class UGamePreferenceFloat;
 class UOmegaSlateStyle;
 class UOmegaGameplayStyle;
 class UOmegaSettings_Preferences;
+class UOmegaSaveGame;
+class UOmegaSaveGlobal;
 
 UENUM(BlueprintType)
 enum class EOmegaInputModeType : uint8
@@ -45,12 +45,13 @@ public:
 
 
 	// Settings
-
+	
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Gameplay"))
 	FSoftObjectPath DefaultSettings_Gameplay{"/OmegaGameFramework/Settings/OmegaSettings_Gameplay_Demo_A.OmegaSettings_Gameplay_Demo_A"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Slate"))
 	FSoftObjectPath DefaultSettings_Slate{"/OmegaGameFramework/Settings/OmegaSettings_Slate_Demo_A.OmegaSettings_Slate_Demo_A"};
-	
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Assets"))
+	FSoftObjectPath DefaultSettings_Assets{""};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Preferences"),AdvancedDisplay)
 	FSoftObjectPath DefaultSettings_Preferences{""};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Paths"), AdvancedDisplay)
@@ -93,12 +94,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Assets", meta = (MetaClass = "OmegaGameplayModule"))
     TMap<TSubclassOf<UObject>, FDirectoryPath> SortedAssetsRootPathByClass;
-
-	UPROPERTY(EditAnywhere, config, Category = "Assets")
-	TMap<FGameplayTag,FSoftObjectPath> GlobalIDAssets;
-
-	UPROPERTY(EditAnywhere, config, Category = "Assets")
-	TMap<FGameplayTag,FSoftClassPath> GlobalIDClasses;
 	
 	//########################################################
 	//Preferences
@@ -141,18 +136,7 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Dynamic Camera", meta = (MetaClass = "OmegaDynamicCamera"))
 	FSoftClassPath DynamicCameraClass;
 
-	//########################################################
-	//Zones
-	//########################################################
 
-	UPROPERTY(EditAnywhere, config, Category = "Zones", meta = (MetaClass = "OmegaGameplaySystem"))
-	FSoftClassPath ZoneTransitSystem;
-
-	UPROPERTY(EditAnywhere, config, Category = "Zones", meta = (MetaClass = "LevelSequence"))
-	FSoftObjectPath TransitSequence;
-	
-	UPROPERTY(EditAnywhere, config, Category = "Zones")
-	FGameplayTag ZoneBGMSlot;
 
 	//########################################################
 	//Mods

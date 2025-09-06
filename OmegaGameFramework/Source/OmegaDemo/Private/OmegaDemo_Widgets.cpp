@@ -5,8 +5,11 @@
 #include "Components/ActorComponent.h"
 #include "Components/Component_Combatant.h"
 #include "Components/ProgressBar.h"
+#include "Components/WidgetSwitcher.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Subsystems/OmegaSubsystem_Message.h"
+#include "Subsystems/OmegaSubsystem_Zone.h"
 #include "Widget/DataList.h"
 
 
@@ -38,7 +41,7 @@ void UDataWidgetBase_Combatant::Native_OnSourceAssetChanged(UObject* SourceAsset
 	if(UActorComponent* ref_comp = local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass()))
 	{
 		REF_combatant=Cast<UCombatantComponent>(ref_comp);
-		if(REF_combatant)
+		if(REF_combatant && ref_comp)
 		{
 			REF_combatant->OnCombatantNotify.AddDynamic(this, &UDataWidgetBase_Combatant::OnCombatantNotify);
 		}
@@ -68,13 +71,38 @@ void UDataWidgetBase_Combatant::Native_OnRefreshed(UObject* SourceAsset, UObject
 // Attribute
 // ==============================================================================================================
 
+
+void L_ReplicateCompare(UDataList* l,bool bComparing, UCombatantComponent* Combatant,
+	UObject* ComparedSource, UObject* UncomparedSource)
+{
+	if(l)
+	{
+		for(auto* i : l->GetEntries())
+		{
+			if(i && i->GetClass()->ImplementsInterface(UWidgetInterface_Combatant::StaticClass()))
+			{
+				IWidgetInterface_Combatant::Execute_SetAttributeComparison(i,bComparing,Combatant,ComparedSource,UncomparedSource);
+			}
+		}
+	}
+}
+
+void UDataWidgetBase_Combatant::SetAttributeComparison_Implementation(bool bComparing, UCombatantComponent* Combatant,
+	UObject* ComparedSource, UObject* UncomparedSource)
+{
+	L_ReplicateCompare(GetDataList_Attributes(),bComparing,Combatant,ComparedSource,UncomparedSource);
+	L_ReplicateCompare(GetDataList_Attributes_Metric(),bComparing,Combatant,ComparedSource,UncomparedSource);
+	L_ReplicateCompare(GetDataList_Attributes_Static(),bComparing,Combatant,ComparedSource,UncomparedSource);
+}
+
 void UDataWidgetBase_Attribute::local_Update()
 {
-	if(REF_attribute)
+	if(REF_attribute && REF_Combatant)
 	{
+		float _att_percent=REF_Combatant->GetAttributePercentage(REF_attribute);
 		//set bar color
 		FLinearColor in_color=REF_attribute->AttributeColor;
-		if(REF_Combatant && bUseDamageColor && REF_Combatant->GetAttributePercentage(REF_attribute)<DamageColorPercentChange)
+		if(REF_Combatant && bUseDamageColor && _att_percent<DamageColorPercentChange)
 		{
 			in_color=REF_attribute->DamageColor;
 		}
@@ -83,7 +111,7 @@ void UDataWidgetBase_Attribute::local_Update()
 		{
 			if(REF_Combatant)
 			{
-				_bar->SetPercent(REF_Combatant->GetAttributePercentage(REF_attribute));
+				_bar->SetPercent(_att_percent);
 			}
 			_bar->SetFillColorAndOpacity(in_color);
 		}
@@ -91,7 +119,7 @@ void UDataWidgetBase_Attribute::local_Update()
 		{
 			if(REF_Combatant)
 			{
-				_dmeter->SetPercent_Progress(REF_Combatant->GetAttributePercentage(REF_attribute));
+				_dmeter->SetPercent_Progress(_att_percent);
 			}
 			_dmeter->SetProgress_Color(in_color);
 		}
@@ -221,7 +249,17 @@ void UDataWidgetBase_Attribute::SetAttributeComparison_Implementation(bool bComp
 // Leveling
 // ==============================================================================================================
 
-void UDataWidgetBase_Leveling::local_OnXp(ULevelingComponent* comp, float xp, float changed)
+void UDataWidgetBase_Leveling::L_SetLevelComp(ULevelingComponent* comp)
+{
+	if(comp)
+	{
+		REF_Comp=comp;
+		OnLevelingComponentChanged(REF_Comp);
+	}
+}
+
+
+void UDataWidgetBase_Leveling::L_onXP(ULevelingComponent* comp, float xp, float changed,UOmegaLevelingAsset* asset)
 {
 	Refresh();
 }
@@ -230,42 +268,55 @@ void UDataWidgetBase_Leveling::OnSourceAssetChanged_Implementation(UObject* Asse
 {
 	if(UActorComponent* temp_comp = local_GetComponentFromObject(Asset,ULevelingComponent::StaticClass()))
 	{
-		REF_Comp=Cast<ULevelingComponent>(temp_comp);
-		if(REF_Comp && REF_Comp->LevelingAsset)
+		L_SetLevelComp(Cast<ULevelingComponent>(temp_comp));
+		if(REF_Comp && REF_Comp->L_ValidateLevelAsset(GetLevelingAsset()))
 		{
 			if(GetWidget_Text_RankName())
 			{
-				GetWidget_Text_RankName()->SetText(REF_Comp->LevelingAsset->RankName);
+				GetWidget_Text_RankName()->SetText(REF_Comp->L_ValidateLevelAsset(GetLevelingAsset())->RankName);
 			}
 			if(GetWidget_Text_XpName())
 			{
-				GetWidget_Text_XpName()->SetText(REF_Comp->LevelingAsset->XPName);
+				GetWidget_Text_XpName()->SetText(REF_Comp->L_ValidateLevelAsset(GetLevelingAsset())->XPName);
 			}
-			REF_Comp->OnXPUpdated.AddDynamic(this, &UDataWidgetBase_Leveling::local_OnXp);
+			REF_Comp->OnXPUpdated.AddDynamic(this, &UDataWidgetBase_Leveling::L_onXP);
 		}
+	}
+	else if(UOmegaLevelingAsset* lvl_asset=Cast<UOmegaLevelingAsset>(Asset))
+	{
+		LevelingAsset=lvl_asset;
 	}
 	Super::OnSourceAssetChanged_Implementation(Asset);
 }
 
+void UDataWidgetBase_Leveling::Native_OnListOwnerChanged(UObject* ListOwner)
+{
+	if(UActorComponent* temp_comp = local_GetComponentFromObject(ListOwner,ULevelingComponent::StaticClass()))
+	{
+		L_SetLevelComp(Cast<ULevelingComponent>(temp_comp));
+	}
+	Super::Native_OnListOwnerChanged(ListOwner);
+}
+
 void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
-	if(REF_Comp && REF_Comp->LevelingAsset)
+	if(REF_Comp)
 	{
 		if(GetWidget_ProgressBar())
 		{
-			GetWidget_ProgressBar()->SetPercent(REF_Comp->GetPercentageToNextLevel());
+			GetWidget_ProgressBar()->SetPercent(REF_Comp->GetPercentageToNextLevel(LevelingAsset));
 		}
 		if(GetWidget_Text_RankValue())
 		{
-			GetWidget_Text_RankValue()->SetText(FText::AsNumber(REF_Comp->GetCurrentLevel()));
+			GetWidget_Text_RankValue()->SetText(FText::AsNumber(REF_Comp->GetCurrentLevel(LevelingAsset)));
 		}
 		if(GetWidget_Text_CurrentValue())
 		{
-			GetWidget_Text_CurrentValue()->SetText(FText::AsNumber(REF_Comp->XP));
+			GetWidget_Text_CurrentValue()->SetText(FText::AsNumber(REF_Comp->GetXP(LevelingAsset)));
 		}
 		if(GetWidget_Text_MaxValue())
 		{
-			GetWidget_Text_CurrentValue()->SetText(FText::AsNumber(REF_Comp->GetCurrentLevelMaxXP()));
+			GetWidget_Text_CurrentValue()->SetText(FText::AsNumber(REF_Comp->GetCurrentLevelMaxXP(LevelingAsset)));
 		}
 	}
 	Super::Native_OnRefreshed(SourceAsset, ListOwner);
@@ -429,6 +480,7 @@ void UDataWidgetBase_Message::Native_OnSourceAssetChanged(UObject* SourceAsset)
 		if(REF_message->GetMessageInstigator()!=REF_lastInstigator)
 		{
 			OnInstigatorChange(REF_message->GetMessageInstigator(),REF_lastInstigator);
+			REF_lastInstigator=REF_message->GetMessageInstigator();
 		}
 		if(REF_lastInstigator)
 		{
@@ -520,4 +572,61 @@ void UDataWidgetBase_BodySlot::Native_OnRefreshed(UObject* SourceAsset, UObject*
 			
 		}
 	}
+}
+
+void UDataWidgetBase_SaveSlot::OnSourceAssetChanged_Implementation(UObject* Asset)
+{
+	if(GetOwningPlayer() && GetGameInstance())
+	{
+		UOmegaZoneSubsystem* l_ZoneSub=GetWorld()->GetSubsystem<UOmegaZoneSubsystem>();
+		UWidgetSwitcher* sw=GetWidget_Switcher_Type();
+		if(UOmegaSaveGame* sav=Cast<UOmegaSaveGame>(Asset))
+		{
+			if(sw)
+			{
+				sw->SetActiveWidgetIndex(0);
+			}
+			if(UImage* img=GetWidget_Image_Screenshot())
+			{
+				if(sav->SaveScreenshot)
+				{
+					img->SetBrushFromTexture(sav->SaveScreenshot);
+				}
+			}
+			if(UTextBlock* txt=GetWidget_Text_Playime())
+			{
+				txt->SetText(FText::FromString(sav->Playtime.ToString()));
+			}
+			if(UTextBlock* txt=GetWidget_Text_LevelName())
+			{
+				if(UOmegaLevelData* lvl= l_ZoneSub->GetLevelData(nullptr))
+				{
+					txt->SetText(lvl->DisplayName);
+				}
+				else
+				{
+					txt->SetText(FText::FromString("???"));
+				}
+			}
+			if(UTextBlock* txt=GetWidget_Text_ZoneName())
+			{
+				if(sav->ActiveZone)
+				{
+					txt->SetText(sav->ActiveZone->ZoneName);
+				}
+				else
+				{
+					txt->SetText(FText::FromString("???"));
+				}
+			}
+			OnSaveWidgetInit(sav);
+		}
+		if(sw) { sw->SetActiveWidgetIndex(1); }
+	}
+	Super::OnSourceAssetChanged_Implementation(Asset);
+}
+
+void UDataWidgetBase_SaveSlot::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
+{
+	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 }

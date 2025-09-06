@@ -31,3 +31,26 @@ public:
 
 };
 
+
+UCLASS(DisplayName="Actor - Condition",Category="Actor")
+class OMEGADEMO_API UFlowNode_Actor_Condition : public UFlowNode
+{
+	GENERATED_BODY()
+
+	bool L_CheckCondition();
+public:
+	UFlowNode_Actor_Condition();
+
+	virtual void ExecuteInput(const FName& PinName) override;
+
+#if WITH_EDITOR
+	//virtual FString GetNodeDescription() const override;
+	virtual FString GetNodeCategory() const override { return "Actor"; };
+#endif
+
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Actor")
+	UOmegaActorSelector* Actor;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Actor")
+	TArray<UOmegaCondition_Actor*> Conditions;
+
+};

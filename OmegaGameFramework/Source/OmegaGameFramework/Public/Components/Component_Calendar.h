@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Component_Calendar.generated.h"
 
@@ -20,10 +19,10 @@ struct FOmegaCalendarData
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) int32 Period=-1;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) int32 Day=-1;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) int32 Month=-1;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) int32 Year=-1;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Calendar") int32 Period=-1;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Calendar") int32 Day=-1;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Calendar") int32 Month=-1;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Calendar") int32 Year=-1;
 };
 
 class UOAsset_Calendar;

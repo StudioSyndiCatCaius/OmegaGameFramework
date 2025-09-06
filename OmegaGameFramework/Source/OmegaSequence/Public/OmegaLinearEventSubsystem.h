@@ -37,7 +37,7 @@ struct FQueuedLinearEventData
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="QueuedLinearEvent")
-	int32 priority;
+	int32 priority=0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="QueuedLinearEvent")
 	FLinearEventSequence Events;
 };

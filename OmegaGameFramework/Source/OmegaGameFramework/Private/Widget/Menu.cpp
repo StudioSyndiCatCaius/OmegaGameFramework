@@ -9,9 +9,9 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
+#include "Subsystems/OmegaSubsystem_Message.h"
 #include "Subsystems/OmegaSubsystem_Player.h"
 #include "Widget/DataList.h"
-
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
@@ -229,6 +229,14 @@ void UMenu::Native_CompleteClose()
 	}
 }
 
+void UMenu::MenuClosed_Implementation(FGameplayTagContainer Tags, const FString& Flag)
+{
+}
+
+void UMenu::MenuOpened_Implementation(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
+{
+}
+
 bool UMenu::InputBlocked_Implementation()
 {
 	return IsInputBlocked();
@@ -259,6 +267,6 @@ void UMenu::SetMenuState(int32 state)
 }
 
 void UMenu::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
-                                             FLuaValue meta)
+                                             FOmegaGameplayMessageMeta meta)
 {
 }

@@ -20,6 +20,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Microsoft/AllowMicrosoftPlatformTypes.h"
+#include "Misc/OmegaUtils_Methods.h"
 
 // ====================================================================================================
 // Initialize
@@ -59,59 +60,87 @@ void UOmegaSaveSubsystem::Deinitialize()
 
 void UOmegaSaveSubsystem::GetSaveSlotName(int32 Slot, FString& OutName)
 {
-	FString LocalString = GetMutableDefault<UOmegaSettings>()->SaveGamePrefex;
-	LocalString.Append(FString::FromInt(Slot));
-	OutName = LocalString;
+	FString str_pref = GetMutableDefault<UOmegaSettings>()->SaveGamePrefex;
+	FString str_slot = FString::Printf(TEXT("%04d"), Slot);
+	OutName = str_pref+str_slot;
 }
 
-TArray<UOmegaSaveGame*> UOmegaSaveSubsystem::GetSaveSlotList(int32 FirstIndex, int32 LastIndex)
+TArray<UOmegaSaveGame*> UOmegaSaveSubsystem::GetSaveSlotList(int32 FirstIndex, int32 LastIndex,const FString& alternate_path)
 {
 	TArray<UOmegaSaveGame*> OutList;
 	for (int i = FirstIndex; i <= LastIndex; ++i)
 	{
 		bool bIsLoaded;
-		if(LoadGame(i, bIsLoaded))
+		if(UOmegaSaveGame* sav= LoadGame(i, bIsLoaded,alternate_path))
 		{
-			OutList.Add(LoadGame(i, bIsLoaded));
+			OutList.Add(sav);
 		}
 	}
 	return OutList;
 }
 
-UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success)
+UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success, const FString& alt_path)
 {
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
-	return LoadGame_Named(SlotName,Success);
+	return LoadGame_Named(SlotName,Success,alt_path);
 }
 
-UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame_Named(FString Slot, bool& Success)
+UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame_Named(FString Slot, bool& Success, const FString& alt_path)
 {
-	const bool ValidSave = UGameplayStatics::DoesSaveGameExist(Slot, 0);
-	Success = ValidSave;
-	
-	if (ValidSave)
+	if(alt_path.IsEmpty())
 	{
-		UOmegaSaveGame* LocalGameSave = Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(Slot, 0));
-		LocalGameSave->SaveScreenshot = UKismetRenderingLibrary::ImportFileAsTexture2D(this, Local_GetScreenshotPath(Slot));
-		return LocalGameSave;
-	}
+		const bool ValidSave = UGameplayStatics::DoesSaveGameExist(Slot, 0);
+		Success = ValidSave;
 	
+		if (ValidSave)
+		{
+			UOmegaSaveGame* LocalGameSave = Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(Slot, 0));
+			LocalGameSave->SaveScreenshot = UKismetRenderingLibrary::ImportFileAsTexture2D(this, Local_GetScreenshotPath(Slot));
+			return LocalGameSave;
+		}
+	}
+	else if (USaveGame* _sav=OGF_Save::LoadGame(alt_path,Slot))
+	{
+		if(UOmegaSaveGame* sav_gam=Cast<UOmegaSaveGame>(_sav))
+		{
+			return sav_gam;
+		}
+	}
 	return nullptr;
 }
 
+TArray<UOmegaSaveGame*> UOmegaSaveSubsystem::ListSavedGames(const FString& alt_path, int32 number, bool retain_size)
+{
+	TArray<UOmegaSaveGame*> out;
+	for (int i = 0; i < number; ++i)
+	{
+		bool is_suc;
+		if(UOmegaSaveGame* sav= LoadGame(i,is_suc,alt_path))
+		{
+			out.Add(sav);
+		}
+		else if(retain_size)
+		{
+			out.Add(nullptr);
+		}
+	}
+	return out;
+}
+
+
 
 //ON SAVE
-void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, FGameplayTag SaveCategory, bool& Success)
+void UOmegaSaveSubsystem::SaveActiveGame(int32 Slot, FGameplayTag SaveCategory, bool& Success, const FString& AlternatePath)
 {
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
-	Success = L_SaveGame(SlotName,SaveCategory);
+	SaveActiveGame_Named(SlotName,SaveCategory,Success,AlternatePath);
 }
 
-void UOmegaSaveSubsystem::SaveActiveGame_Named(FString Slot, FGameplayTag SaveCategory, bool& Success)
+void UOmegaSaveSubsystem::SaveActiveGame_Named(FString Slot, FGameplayTag SaveCategory, bool& Success, const FString& AlternatePath)
 {
-	Success = L_SaveGame(Slot,SaveCategory);
+	Success = L_SaveGame(Slot,SaveCategory,AlternatePath);
 }
 
 
@@ -122,7 +151,7 @@ bool UOmegaSaveSubsystem::SaveGameUnique(EUniqueSaveFormats Format)
 
 
 
-bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory)
+bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory, const FString& alt_path)
 {
 	//LocalActiveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
 
@@ -145,8 +174,6 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory)
 	{
 		TempModule->GameFileSaved(ActiveSaveData);
 	}
-	//Save Lua Data
-	// local_SaveLuaFields(GetMutableDefault<UOmegaSettings>()->LuaFields_AutoSavedToGame,GetSaveObject(false));
 	
 	if (IsValid(UGameplayStatics::GetPlayerPawn(this, 0)))
 	{
@@ -154,13 +181,8 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory)
 	}
 	ActiveSaveData->ActiveZone = GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->GetTopLoadedZones();
 	ActiveSaveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
-
-	//SaveDate
 	ActiveSaveData->SaveDate = UKismetMathLibrary::Now();
 	ActiveSaveData->SaveCategory=SaveCategory;
-	
-	//Save Playtime
-	//LocalActiveData->SavedPlaytime = GetGameInstance()->GetSubsystem<UOmegaGameManager>()->Playtime;
 
 	const FString fileName = Local_GetScreenshotPath(SlotName);
 	FScreenshotRequest::RequestScreenshot(fileName, false, false);
@@ -168,7 +190,17 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory)
 	{
 		ActiveSaveData->Campaign->ScriptEvent(3,this);
 	}
-	return UGameplayStatics::SaveGameToSlot(ActiveSaveData, SlotName, 0);
+
+	// WRITE TO DISK
+	if(alt_path.IsEmpty())
+	{
+		return UGameplayStatics::SaveGameToSlot(ActiveSaveData, SlotName, 0);
+	}
+	else
+	{
+		return OGF_Save::SaveGame(ActiveSaveData,alt_path,SlotName);
+	}
+	
 }
 
 
@@ -452,7 +484,7 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 	bool bExclude, bool bExact) const
 {
 	TArray<UPrimaryDataAsset*> OutAssets;
-
+	
 	for(auto* TempAsset : GetSaveObject(bGlobal)->CollectedDataAssets)
 	{
 		if(TempAsset->Implements<UGameplayTagsInterface>())
@@ -467,22 +499,6 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 	return OutAssets;
 }
 
-TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetDataAssetsWithSavedTags(FGameplayTagContainer Tags, bool bExact,
-	 bool bGlobal)
-{
-	TArray<UPrimaryDataAsset*> out;
-	TArray<UPrimaryDataAsset*> list;
-	GetSaveObject(bGlobal)->Vars_Assets.GetKeys(list);
-	for(auto* asset : list)
-	{
-		if(asset && DoesDataAssetHaveSaveTags(asset,Tags,bExact,bGlobal))
-		{
-			out.Add(asset);
-		}
-	}
-	return out;
-}
-
 // ------------------------------------------------------------------------------------------------------------
 // Data Assets
 // ------------------------------------------------------------------------------------------------------------
@@ -490,19 +506,7 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetDataAssetsWithSavedTags(FGame
 void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags,
 	bool bGlobal)
 {
-	if(Asset)
-	{
-		FOmegaSaveVars asset_data=GetSaveObject(bGlobal)->Vars_Assets.FindOrAdd(Asset);
-		if(bHasTags)
-		{
-			asset_data.Tags.AppendTags(Tags);
-		}
-		else
-		{
-			asset_data.Tags.RemoveTags(Tags);
-		}
-		GetSaveObject(bGlobal)->Vars_Assets[Asset]=asset_data;
-	}
+	GetSaveObject(bGlobal)->Entities.Asset_SetTags(Asset,Tags,bHasTags);
 }
 
 void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset_List(TArray<UPrimaryDataAsset*> Assets, FGameplayTagContainer Tags,
@@ -517,34 +521,12 @@ void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset_List(TArray<UPrimaryDataAsset*>
 
 bool UOmegaSaveSubsystem::DoesDataAssetHaveSaveTags(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
 {
-	if(Asset)
-	{
-		FOmegaSaveVars asset_data=GetSaveObject(bGlobal)->Vars_Assets.FindOrAdd(Asset);
-		if(bExact)
-		{
-			return asset_data.Tags.HasAllExact(Tags);
-		}
-		else
-		{
-			return asset_data.Tags.HasAny(Tags);
-		}
-	}
-	return false;
+	return GetSaveObject(bGlobal)->Entities.Asset_HasTags(Asset,Tags,bExact);
 }
 
 TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetSaveAssets_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
 {
-	TArray<UPrimaryDataAsset*> out;
-	TArray<UPrimaryDataAsset*> keys;
-	GetSaveObject(bGlobal)->Vars_Assets.GetKeys(keys);
-	for(UPrimaryDataAsset* i : keys)
-	{
-		if(DoesDataAssetHaveSaveTags(i,Tags,bExact,bGlobal))
-		{
-			out.Add(i);
-		}
-	}
-	return out;
+	return GetSaveObject(bGlobal)->Entities.Asset_GetWithTags(Tags,bExact);
 }
 
 void UOmegaSaveSubsystem::SetGuidCollected(FGuid Guid, bool Collected, bool bGlobal)
@@ -566,16 +548,7 @@ bool UOmegaSaveSubsystem::GetIsGuidCollected(FGuid Guid, bool bGlobal) const
 
 void UOmegaSaveSubsystem::SetGuidHasTags(FGuid Guid, FGameplayTagContainer Tags, bool HasTags, bool bGlobal)
 {
-	FOmegaSaveVars asset_data=GetSaveObject(bGlobal)->Vars_Guid.FindOrAdd(Guid);
-	if(HasTags)
-	{
-		asset_data.Tags.AppendTags(Tags);
-	}
-	else
-	{
-		asset_data.Tags.RemoveTags(Tags);
-	}
-	GetSaveObject(bGlobal)->Vars_Guid[Guid]=asset_data;
+	GetSaveObject(bGlobal)->Entities.Guid_SetTags(Guid,Tags,HasTags);
 }
 
 void UOmegaSaveSubsystem::SetGuidHasTags_List(TArray<FGuid> Guids, FGameplayTagContainer Tags, bool HasTags,
@@ -590,27 +563,13 @@ void UOmegaSaveSubsystem::SetGuidHasTags_List(TArray<FGuid> Guids, FGameplayTagC
 
 bool UOmegaSaveSubsystem::GetDoesGuidHaveTags(FGuid Guid, FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
 {
-	const FGameplayTagContainer TempTags = GetSaveObject(bGlobal)->Vars_Guid.FindOrAdd(Guid).Tags;
-	if(bExact)
-	{
-		return TempTags.HasAllExact(Tags);
-	}
-	return TempTags.HasAll(Tags);
+	return  GetSaveObject(bGlobal)->Entities.Guid_HasTags(Guid,Tags,bExact);
 }
 
 TArray<FGuid> UOmegaSaveSubsystem::GetSaveGuids_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
 {
-	TArray<FGuid> out;
-	TArray<FGuid> keys;
-	GetSaveObject(bGlobal)->Vars_Guid.GetKeys(keys);
-	for(FGuid i : keys)
-	{
-		if(GetDoesGuidHaveTags(i,Tags,bExact,bGlobal))
-		{
-			out.Add(i);
-		}
-	}
-	return out;
+	
+	return GetSaveObject(bGlobal)->Entities.Guid_GetWithTags(Tags,bExact);
 }
 
 //////////////

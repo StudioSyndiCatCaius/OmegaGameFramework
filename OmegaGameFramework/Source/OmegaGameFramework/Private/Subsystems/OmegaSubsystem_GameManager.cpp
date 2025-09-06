@@ -2,6 +2,8 @@
 
 
 #include "Subsystems/OmegaSubsystem_GameManager.h"
+
+#include "OmegaSettings.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "OmegaSettings_Gameplay.h"
 #include "Engine/GameInstance.h"
@@ -35,7 +37,7 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	}
 	if(UOmegaSettings_Gameplay* _set=Cast<UOmegaSettings_Gameplay>(GetMutableDefault<UOmegaSettings>()->DefaultSettings_Gameplay.TryLoad()))
 	{
-		for(auto* c : _set->ScriptedModules)
+		for(auto* c : _set->GetModules())
 		{
 			if(c)
 			{

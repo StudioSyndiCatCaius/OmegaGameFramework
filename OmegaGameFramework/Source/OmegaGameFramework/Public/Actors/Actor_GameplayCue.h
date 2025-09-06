@@ -16,7 +16,7 @@ class UNiagaraComponent;
 class UAudioComponent;
 class UCameraShakeSourceComponent;
 
-UCLASS()
+UCLASS(DisplayName="Ω Cue")
 class OMEGAGAMEFRAMEWORK_API AOmegaGameplayCue : public AActor, public IGameplayTagsInterface
 {
 	GENERATED_BODY()

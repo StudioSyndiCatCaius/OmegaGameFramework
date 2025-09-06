@@ -3,11 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/Actor_Ability.h"
-#include "Actors/OmegaGameplaySystem.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "Components/Component_Combatant.h"
 #include "Component_TurnBasedManager.generated.h"
+
+class UCombatantComponent;
+class AOmegaAbility;
+class AOmegaGameplaySystem;
 
 // =========================================
 // Turn Manager 
@@ -71,7 +73,7 @@ public:
 	UFUNCTION()
 	void SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass);
 	
-	UPROPERTY(EditAnywhere,Instanced,DisplayName="Turn Manager")
+	UPROPERTY(EditAnywhere,Instanced, Category="Turn Manager")
 	UTurnManagerBase* TurnManager;
 	
 	//Prevents Combatants with these tags from being allowed to have a turn.
@@ -106,7 +108,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"), DisplayName="Remove From Turn Order (Combatant)")
 	void RemoveFromTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
-
+	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"), DisplayName="Remove From Turn Order (Faction)")
 	void RemoveFactionFromTurnOrder(FGameplayTag Faction, FString Flag, FGameplayTagContainer Tags);
 
@@ -182,17 +184,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Turn")
 	bool bGenerateTurnOrderIfEmpty = true;
 	
-	TSubclassOf<AOmegaAbility> Local_GetTurnAbility() const
-	{
-		if(TurnAbility)
-		{
-			return TurnAbility;
-		}
-		else
-		{
-			return AOmegaAbility::StaticClass();
-		}
-	}
+	TSubclassOf<AOmegaAbility> Local_GetTurnAbility() const;
 
 	UPROPERTY()
 	AOmegaAbility* LocalTurnAbility;
@@ -218,7 +210,7 @@ public:
 
 	//Empties all registered combatants from the list
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	void ClearRegisteredCombatants(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void ClearRegisteredCombatants(FString Flag, FGameplayTagContainer Tags);
 
 	static bool DoesCombatantUseInterface(const UCombatantComponent* Combatant);
 	
@@ -281,10 +273,14 @@ class OMEGAGAMEFRAMEWORK_API UTurnTrackerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	bool usesInterface(const UObject* obj) const;
+	void L_RunElapse(bool run);
+	
+	bool L_usesInterface(const UObject* obj) const;
 
 	UFUNCTION()
-	void L_OnTurnUpdate(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void L_OnTurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	UFUNCTION()
+	void L_OnTurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
 
 	UPROPERTY() UObject* tracker_source;
 	UPROPERTY() int32 TurnsElapsed;
@@ -292,7 +288,14 @@ class OMEGAGAMEFRAMEWORK_API UTurnTrackerComponent : public UActorComponent
 	
 public:
 	UPROPERTY(BlueprintAssignable) FTurnTrackerDelegate OnTurnValueChanged;
-
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Turn Tracker")
+	bool ElapseOn_TurnStart=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Turn Tracker")
+	bool ElapseOn_TurnEnd=false;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Turn Tracker")
+	int32 Elapse_IncrementValue=-1;
+	
 	UFUNCTION(BlueprintCallable,Category="Turn Tracker")
 	void LinkToTurnManager(UTurnBasedManagerComponent* TurnManager, UCombatantComponent* combatant);
 	
@@ -303,19 +306,27 @@ public:
 		
 	UFUNCTION(BlueprintCallable,Category="Turn Tracker")
 	void SetTurnsElapsed(int32 value, bool Added);
-	
+
+	UFUNCTION(BlueprintPure,Category="Turn Tracker")
+	int32 GetTurnsElapsed() const { return TurnsElapsed; }
 };
 
 UINTERFACE(MinimalAPI)
-class UDataInterface_TurnTrackerSource : public UInterface
+class UDataInterface_TurnEntity : public UInterface
 {
 	GENERATED_BODY()
 };
 
-class OMEGAGAMEFRAMEWORK_API IDataInterface_TurnTrackerSource
+class OMEGAGAMEFRAMEWORK_API IDataInterface_TurnEntity
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Omega|TurnTracker") int32 GetTurns_Init();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Omega|TurnTracker") int32 GetTurns_Max();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|TurnBased",DisplayName="Turn Entity - On Turn Start")
+	void OnTurnStart(UTurnTrackerComponent* EntityComponent, UTurnBasedManagerComponent* TurnComponent, UCombatantComponent* Member);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|TurnBased",DisplayName="Turn Entity - On Turn End")
+	void OnTurnEnd(UTurnTrackerComponent* EntityComponent, UTurnBasedManagerComponent* TurnComponent, UCombatantComponent* Member);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|TurnBased",DisplayName="Turn Entity - Get Turns Init")
+	int32 GetTurns_Init();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|TurnBased",DisplayName="Turn Entity - Get Turns Init")
+	int32 GetTurns_Max();
 };

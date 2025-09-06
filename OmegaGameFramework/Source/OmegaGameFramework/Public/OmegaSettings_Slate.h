@@ -3,44 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "UObject/Object.h"
-#include "CommonTextBlock.h"
-#include "CommonBorder.h"
-#include "Widget/HUDLayer.h"
-#include "Widget/Menu.h"
-#include "Components/CheckBox.h"
-#include "Components/ComboBox.h"
-#include "Components/ComboBoxString.h"
-#include "Components/ProgressBar.h"
-#include "Components/Slider.h"
-#include "Widget/DataWidget.h"
+#include "Widget/UI_Widgets.h"
 #include "OmegaSettings_Slate.generated.h"
 
+class UOmegaUIStyle_Background;
 class UOmegaBGM;
-
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Button : public UPrimaryDataAsset {
-	GENERATED_BODY() public:
-	UPROPERTY(EditAnywhere,Category="Style") FButtonStyle Brush_Button;
-};
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Slider : public UPrimaryDataAsset {
-	GENERATED_BODY() public:
-	UPROPERTY(EditAnywhere,Category="Style") FSliderStyle Brush_Slider;
-};
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ProgressBar : public UPrimaryDataAsset {
-	GENERATED_BODY() public:
-	UPROPERTY(EditAnywhere,Category="Style") FProgressBarStyle Brush_ProgressBar;
-};
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_CheckBox : public UPrimaryDataAsset {
-	GENERATED_BODY() public:
-	UPROPERTY(EditAnywhere,Category="Style") FCheckBoxStyle Brush_CheckBox;
-};
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ComboBox : public UPrimaryDataAsset {
-	GENERATED_BODY() public:
-	UPROPERTY(EditAnywhere,Category="Style") FComboBoxStyle Brush_Box;
-	UPROPERTY(EditAnywhere,Category="Style") FTableRowStyle Brush_Item;
-};
-
+class UOmegaTextFormater_Collection;
+class UHUDLayer;
+class UMenu;
+class UCommonBorderStyle;
+class UCommonTextStyle;
+class UProgressBar;
+class USlider;
+class UCheckBox;
+class UDataWidget;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Slate : public UPrimaryDataAsset
@@ -48,17 +27,42 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Slate : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
+	UOmegaSettings_Slate();
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	FText L_FormatDataWidgetText(UDataWidget* w, FText t) const;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
+	TMap<TSoftObjectPtr<UPrimaryDataAsset>,FText> Override_AssetNames;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
+	TMap<TSoftObjectPtr<UPrimaryDataAsset>,FSlateBrush> Override_AssetIcon;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
+	TMap<TSoftObjectPtr<UPrimaryDataAsset>,FSlateBrush> Override_AssetColor;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts",AdvancedDisplay)
 	TSubclassOf<UCommonTextStyle> Text_Header_1;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts",AdvancedDisplay)
 	TSubclassOf<UCommonTextStyle> Text_Header_2;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts",AdvancedDisplay)
 	TSubclassOf<UCommonTextStyle> Text_Header_3;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts",AdvancedDisplay)
 	TSubclassOf<UCommonTextStyle> Text_Paragraph;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts",AdvancedDisplay)
 	TSubclassOf<UCommonTextStyle> Text_Tiny;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	TMap<TEnumAsByte<EOmegaSlateTextType>,TSoftObjectPtr<UOmegaSlateStyle_Text>> Styled_Text;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	TMap<FGameplayTag,TSoftClassPtr<UCommonTextStyle>> Tagged_Text;
+	
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Text")
+    UOmegaTextFormater_Collection* TextFormater;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Text")
+	bool DataWidgets_AutoFormatText=true;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Text")
+	FGameplayTag DataWidgets_TextFormatTag;
+
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Border")
 	TSubclassOf<UCommonBorderStyle> Border_Big;
@@ -72,6 +76,11 @@ public:
 	TSubclassOf<UCommonBorderStyle> Border_Minimal;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Border")
 	TSubclassOf<UCommonBorderStyle> Border_Background;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
+	TMap<TEnumAsByte<EOmegaSlateBorderType>,TSoftObjectPtr<UOmegaSlateStyle_Border>> Styled_Borders;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Border")
+	TMap<FGameplayTag,TSoftClassPtr<UCommonBorderStyle>> Tagged_Borders;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Color")
 	FLinearColor Color_1=FLinearColor::Red;
@@ -84,6 +93,8 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Color")
 	TMap<FGameplayTag,FLinearColor> Colors_Tagged;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Elements")
+	UOmegaUIStyle_Background* Background_Default;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Elements")
 	UOmegaSlateStyle_ProgressBar* ProgressBar_Default;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Elements")
@@ -134,6 +145,10 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
 	TSubclassOf<UMenu> Menu_Info;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	TSubclassOf<UMenu> Menu_NumInput;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	TSubclassOf<UMenu> Menu_TextInput;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
 	TSubclassOf<UMenu> Menu_SaveLoad;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
 	TSubclassOf<UMenu> Menu_Choice;
@@ -146,6 +161,9 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
 	TSubclassOf<UMenu> Menu_Extras;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
+	TMap<FGameplayTag,TSoftClassPtr<UMenu>> Menus_Tagged;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="HUD")
 	TSubclassOf<UHUDLayer> HUD_Loading;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="HUD")
@@ -154,27 +172,8 @@ public:
 	TSubclassOf<UHUDLayer> HUD_Dialogue;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="HUD")
 	TSubclassOf<UHUDLayer> HUD_Battle;
-};
-
-UENUM()
-enum EOmegaSlateTextType
-{
-	Header1,
-	Header2,
-	Header3,
-	Paragraph,
-	Tiny,
-};
-
-UENUM()
-enum EOmegaSlateBorderType
-{
-	Big,
-	Medium,
-	Small,
-	Button,
-	Minimal,
-	Background,
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="HUD")
+	TMap<FGameplayTag,TSoftClassPtr<UHUDLayer>> HUDs_Tagged;
 };
 
 
@@ -211,9 +210,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
 	static void SetSlateStyle_Checkbox(UCheckBox* widget);
-	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
-	static void SetSlateStyle_ComboBox(UComboBoxString* widget);
-	
+
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
 	static FLinearColor GetSlateColor_ByIndex(int32 index);	
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate")

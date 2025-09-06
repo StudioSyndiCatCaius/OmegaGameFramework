@@ -7,7 +7,6 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "Engine/DataAsset.h"
 #include "Misc/GeneralDataObject.h"
-#include "Misc/OmegaUtils_Enums.h"
 #include "OmegaSubsystem_Grid3D.generated.h"
 
 USTRUCT(Blueprintable,BlueprintType)
@@ -15,11 +14,10 @@ struct FOmegaGrid3DPath
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Grid3D")
 	TArray<FIntVector> PathPoints;
 
-	UPROPERTY()
-	int32 distance;
+	UPROPERTY() int32 distance=0;
 };
 
 USTRUCT(Blueprintable,BlueprintType)
@@ -27,7 +25,7 @@ struct FOmegaGrid3DPathfindResult
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Grid3D")
 	TArray<FOmegaGrid3DPath> paths;
 
 };
@@ -37,10 +35,10 @@ struct FOmegaGrid3DPathfindMeta
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Grid3D")
 	AOmegaGrid3D_Tile* Tile=nullptr;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Grid3D")
 	AActor* ContextActor=nullptr;
 };
 

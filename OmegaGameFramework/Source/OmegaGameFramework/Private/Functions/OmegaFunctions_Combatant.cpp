@@ -5,6 +5,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "OmegaSettings.h"
+#include "Actors/Actor_GameplayEffect.h"
+#include "Condition/Condition_Combatant.h"
 #include "Functions/OmegaFunctions_Animation.h"
 #include "Functions/OmegaFunctions_AVContext.h"
 #include "GameFramework/Pawn.h"
@@ -13,6 +15,8 @@
 #include "Misc/Attribute.h"
 #include "Interfaces/OmegaInterface_Combatant.h"
 #include "Interfaces/OmegaInterface_Skill.h"
+#include "Types/Struct_Combatant.h"
+
 
 TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByTags(
 	TArray<UCombatantComponent*> Combatants, FGameplayTagContainer Tags, bool bExact, bool bExclude)
@@ -62,6 +66,35 @@ AOmegaGameplayEffect* UCombatantFunctions::SelectFirstEffectWithContext(TArray<A
 	return nullptr;
 }
 
+void UCombatantFunctions::RemoveGameplayEffects_WithContext(UCombatantComponent* Combatant, UObject* Context)
+{
+	if(Combatant && Context)
+	{
+		for(auto* e : Combatant->GetAllEffects())
+		{
+			if(e && e->EffectContext==Context)
+			{
+				e->K2_DestroyActor();
+			}
+		}
+	}
+}
+
+void UCombatantFunctions::RemoveGameplayEffects_OfClass(UCombatantComponent* Combatant,
+	TSubclassOf<AOmegaGameplayEffect> EffectClass, bool bIncludeChildTypes)
+{
+	if(Combatant && EffectClass)
+	{
+		for(auto* e : Combatant->GetAllEffects())
+		{
+			if(e && (e->GetClass()==EffectClass || (bIncludeChildTypes && e->GetClass()->IsChildOf(EffectClass))))
+			{
+				e->K2_DestroyActor();
+			}
+		}
+	}
+}
+
 
 void UCombatantFunctions::SetCombatantFromSource(UCombatantComponent* Combatant, UObject* Source)
 {
@@ -82,6 +115,16 @@ void UCombatantFunctions::SetCombatantFromSource(UCombatantComponent* Combatant,
 			Combatant->SetSourceDataAsset(in_asset);
 		}
 	}
+}
+
+bool UCombatantFunctions::CheckCombatantConditions(UCombatantComponent* Combatant,
+	FOmegaConditions_Combatant Conditions)
+{
+	if(Combatant)
+	{
+		return Conditions.CheckConditions(Combatant);
+	}
+	return true;
 }
 
 UCombatantComponent* UCombatantFunctions::GetCombatantWithHighestAttributeValue(TArray<UCombatantComponent*> Combatants,
@@ -151,27 +194,6 @@ void UCombatantFunctions::ApplyEffectFromContainer(UCombatantComponent* Combatan
 	}
 }
 
-void UCombatantFunctions::ApplyEffectFromAsset(UCombatantComponent* Combatant, UCombatantComponent* Instigator,
-	UObject* Asset)
-{
-	if(!Asset)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Invalid Asset"));
-		return;
-	}
-	if(Asset->GetClass()->ImplementsInterface(UDataInterface_OmegaEffect::StaticClass()))
-	{
-		UE_LOG(LogTemp, Display, TEXT("Applied Effects from asset"));
-		for(const FOmegaEffectContainer& TempEffect : IDataInterface_OmegaEffect::Execute_GetOmegaEffects(Asset))
-		{
-			ApplyEffectFromContainer(Combatant, Instigator, TempEffect, Asset);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Display, TEXT("Does not implement interface"));
-	}
-}
 
 UCombatantComponent* UCombatantFunctions::GetPlayerCombatant(const UObject* WorldContextObject, int32 Index)
 {
@@ -224,11 +246,12 @@ UOmegaAttribute* UCombatantFunctions::GetAttributeByUniqueID(const FString& ID)
 	return nullptr;
 }
 
-TArray<FOmegaAttributeModifier> UCombatantFunctions::FlatAttributesToModifierValues(
+TArray<FOmegaAttributeModifier> UCombatantFunctions::MakeAttributeMods_FromFlatValues(
 	TMap<UOmegaAttribute*, float> FlatAttributes,bool AsMultiplier)
 {
 	TArray<FOmegaAttributeModifier> out;
 	TArray<UOmegaAttribute*> local_attributes;
+	FlatAttributes.GetKeys(local_attributes);
 	for(auto* a: local_attributes)
 	{
 		FOmegaAttributeModifier new_mod;
@@ -247,8 +270,19 @@ TArray<FOmegaAttributeModifier> UCombatantFunctions::FlatAttributesToModifierVal
 	return out;
 }
 
+TArray<FOmegaAttributeModifier> UCombatantFunctions::MakeAttributeMods_FromFlatIntValues(
+	TMap<UOmegaAttribute*, int32> FlatAttributes, bool AsMultiplier)
+{
+	TMap<UOmegaAttribute*, float> in;
+	for(auto& p : FlatAttributes)
+	{
+		in.Add(p.Key,p.Value);
+	}
+	return MakeAttributeMods_FromFlatValues(in,AsMultiplier);
+}
+
 void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-	UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue)
+                                                          UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue)
 {
 	if(Combatant && Attribute)
 	{
@@ -288,6 +322,10 @@ bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, U
 	{
 		if(SkillObject->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
 		{
+			if(!IDataInterface_Skill::Execute_CanUseSkill(SkillObject,Combatant))
+			{
+				return false;
+			}
 			TArray<UOmegaAttribute*> att_list;
 			TMap<UOmegaAttribute*, float> att_vals = IDataInterface_Skill::Execute_GetSkillAttributeCosts(
 				SkillObject, Combatant, nullptr);
@@ -312,6 +350,8 @@ bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, U
 
 bool UCombatantFunctions::ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject)
 {
+	if(!Combatant || !SkillObject) { return false; }
+	
 	if(CanCombatantUseSkill(Combatant,SkillObject))
 	{
 		if(SkillObject->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))

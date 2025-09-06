@@ -3,6 +3,7 @@
 
 #include "Functions/OmegaFunctions_Save.h"
 
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 
 UOmegaSaveBase* _getSaveObj(const UObject* context,bool bGlobal)
@@ -99,7 +100,7 @@ FJsonObjectWrapper UOmegaSaveFunctions::DataAsset_GetJson(const UObject* WorldCo
 {
 	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
 	{
-		return _sav->Vars_Assets.FindOrAdd(Asset).JsonData;
+		return _sav->Entities.Entities_Asset.FindOrAdd(Asset).JsonData;
 	}
 	return FJsonObjectWrapper();
 }
@@ -109,39 +110,17 @@ void UOmegaSaveFunctions::DataAsset_SetJson(const UObject* WorldContextObject, U
 {
 	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
 	{
-		_sav->Vars_Assets.FindOrAdd(Asset).JsonData=Json;
+		_sav->Entities.Entities_Asset.FindOrAdd(Asset).JsonData=Json;
 	}
 }
 
-int32 UOmegaSaveFunctions::DataAsset_GetParam(const UObject* WorldContextObject, UPrimaryDataAsset* Asset,
-	FGameplayTag Param, bool bGlobal)
-{
-	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
-	{
-		return _sav->Vars_Assets.FindOrAdd(Asset).params_int32.FindOrAdd(Param);
-	}
-	return 0;
-}
 
-void UOmegaSaveFunctions::DataAsset_SetParam(const UObject* WorldContextObject, UPrimaryDataAsset* Asset,
-	FGameplayTag Param, int32 Value, bool Added, bool bGlobal)
-{
-	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
-	{
-		int32 in_val=Value;
-		if(Added)
-		{
-			in_val+=_sav->Vars_Assets.FindOrAdd(Asset).params_int32.FindOrAdd(Param);
-		}
-		_sav->Vars_Assets.FindOrAdd(Asset).params_int32.Add(Param,in_val);
-	}
-}
 
 FJsonObjectWrapper UOmegaSaveFunctions::GUID_GetJson(const UObject* WorldContextObject, FGuid Guid, bool bGlobal)
 {
 	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
 	{
-		return _sav->Vars_Guid.FindOrAdd(Guid).JsonData;
+		return _sav->Entities.Entities_Guid.FindOrAdd(Guid).JsonData;
 	}
 	return FJsonObjectWrapper();
 }
@@ -151,30 +130,76 @@ void UOmegaSaveFunctions::GUID_SetJson(const UObject* WorldContextObject, FGuid 
 {
 	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
  	{
- 		_sav->Vars_Guid.FindOrAdd(Guid).JsonData=Json;
+ 		_sav->Entities.Entities_Guid.FindOrAdd(Guid).JsonData=Json;
  	}
 }
 
-int32 UOmegaSaveFunctions::GUID_GetParam(const UObject* WorldContextObject, FGuid Guid, FGameplayTag Param, bool bGlobal)
+
+
+
+void UOmegaSaveFunctions::SetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key,
+	FOmegaEntity Entity, bool bGlobal)
 {
 	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
 	{
-		return _sav->Vars_Guid.FindOrAdd(Guid).params_int32.FindOrAdd(Param);
+		_sav->Entities.Entities_Asset.Add(Key,Entity);
 	}
-	return 0;
 }
 
-void UOmegaSaveFunctions::GUID_SetParam(const UObject* WorldContextObject, FGuid Guid, FGameplayTag Param, int32 Value, bool Added,
+FOmegaEntity UOmegaSaveFunctions::GetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key,
 	bool bGlobal)
 {
 	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
 	{
-		int32 in_val=Value;
-		if(Added)
-		{
-			in_val+=_sav->Vars_Guid.FindOrAdd(Guid).params_int32.FindOrAdd(Param);
-		}
-		_sav->Vars_Guid.FindOrAdd(Guid).params_int32.Add(Param,in_val);
+		return _sav->Entities.Entities_Asset.FindOrAdd(Key);
 	}
+	return FOmegaEntity();
+}
+
+void UOmegaSaveFunctions::SetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, FOmegaEntity Entity,
+	bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Entities.Entities_Guid.Add(Key,Entity);
+	}
+}
+
+FOmegaEntity UOmegaSaveFunctions::GetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
+	{
+		return _sav->Entities.Entities_Guid.FindOrAdd(Key);
+	}
+	return FOmegaEntity();
+}
+
+void UOmegaSaveFunctions::SetEntity_ByName(const UObject* WorldContextObject, FName Key, FOmegaEntity Entity,
+                                           bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Entities.Entities_Named.Add(Key,Entity);
+	}
+}
+
+FOmegaEntity UOmegaSaveFunctions::GetEntity_ByName(const UObject* WorldContextObject, FName Key, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getSaveObj(WorldContextObject,bGlobal))
+	{
+		return _sav->Entities.Entities_Named.FindOrAdd(Key);
+	}
+	return FOmegaEntity();
+}
+
+bool UOmegaSaveFunctions::Custom_SaveGame(USaveGame* SaveGameObject, const FString& path, const FString& file)
+{
+	return OGF_Save::SaveGame(SaveGameObject,path,file);
+}
+
+USaveGame* UOmegaSaveFunctions::Custom_LoadGame(const FString& path, const FString& file)
+{
+	return OGF_Save::LoadGame(path,file);
+
 }
 

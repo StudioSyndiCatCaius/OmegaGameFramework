@@ -8,8 +8,6 @@
 #include "Subsystems/EngineSubsystem.h"
 #include "OmegaSubsystem_AssetHandler.generated.h"
 
-
-
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_AssetHandler : public UEngineSubsystem
 {

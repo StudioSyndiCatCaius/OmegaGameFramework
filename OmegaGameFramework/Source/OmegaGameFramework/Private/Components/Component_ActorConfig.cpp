@@ -16,13 +16,9 @@ void UActorConfigComponent::BeginPlay()
 				sub->SetActorRegisteredToGroup(t,GetOwner(),true);
 			}
 			
-			for(TSoftClassPtr<AOmegaActorProcessor> p : DefaultConfig->TargetProcessors)
-			{
-				if(p)
-				{
-					sub->RegisterActorToProcessor(GetOwner(),p.LoadSynchronous());
-				}
-			}
+			FActorModifiers amods;
+			amods.Script=DefaultConfig->BeginPlay_Modifiers;
+			amods.ApplyMods(GetOwner());
 		}
 	}
 	

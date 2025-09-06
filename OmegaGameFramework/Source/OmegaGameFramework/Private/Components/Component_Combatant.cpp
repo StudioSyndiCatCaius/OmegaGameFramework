@@ -3,6 +3,7 @@
 
 #include "Components/Component_Combatant.h"
 
+#include "OmegaSettings_Gameplay.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
@@ -20,7 +21,7 @@
 
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaDamageType.h"
-#include "Misc/CombatantGambits.h"
+#include "DataAssets/DA_CombatantGambits.h"
 #include "Misc/OmegaFaction.h"
 
 #include "Components/PrimitiveComponent.h"
@@ -30,23 +31,31 @@
 #include "GameFramework/PlayerController.h"
 
 
-
-
-// Sets default values for this component's properties
-UCombatantComponent::UCombatantComponent()
+float UCombatantComponent::L_ModifyDamage(UOmegaAttribute* Attribute,UObject* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context)
 {
-	
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-	// ...
+	float FinalDamage = BaseDamage;
+	for(auto* TempMod : GetDamageModifiers())
+	{
+		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, DamageType, Context); //Apply Damage Modifier
+	}
+	return FinalDamage;
 }
 
+UCombatantComponent::UCombatantComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+}
 
-// Called when the game starts
 void UCombatantComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	{
+		if(!AttributeSet && set->Default_AttributeSet)
+		{
+			AttributeSet=set->Default_AttributeSet;
+		}
+	}
     
 	auto* WorldSubsystem = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
 	if (WorldSubsystem)
@@ -88,13 +97,26 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+float UCombatantComponent::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
+	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+{
+	return L_ModifyDamage(Attribute,Instigator,BaseDamage,DamageType,Context);
+}
+
 void UCombatantComponent::SetMasterDataSourceActive(UObject* Source, bool bActive)
 {
 	if(Source)
 	{
-		SetSkillSourceActive(Source, bActive);
-		SetAttributeModifierActive(Source, bActive);
-		SetDamageModifierActive(Source, bActive);
+		if(bActive && !SOURCES_Master.Contains(Source))
+		{
+			SOURCES_Master.Add(Source);
+			Update();
+		}
+		else if(!bActive && SOURCES_Master.Contains(Source))
+		{
+			SOURCES_Master.Remove(Source);
+			Update();
+		}
 	}
 }
 
@@ -172,55 +194,7 @@ bool UCombatantComponent::CombatantHasAllTag(FGameplayTagContainer Tags, bool Ex
 ///////////////////////////////////
 void UCombatantComponent::Update()
 {
-	TArray<UUserWidget*> FoundWidgets;
-    UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, FoundWidgets, UWidgetInterface_Combatant::StaticClass(), false);
-
-    for (auto* TempWidget : FoundWidgets)
-    {
-        if (IWidgetInterface_Combatant::Execute_GetCombatantComponent(TempWidget) == this && AttributeSet)
-        {
-            IWidgetInterface_Combatant::Execute_OnCombatantUpdated(TempWidget, this);
-
-            // Update attribute texts and progress bars
-            for (auto* LocalAtb : AttributeSet->Attributes)
-            {
-                float DumVal = 0.f, DumMax = 0.f;
-                GetAttributeValue(LocalAtb, DumVal, DumMax);
-
-                UTextBlock* ValText = nullptr;
-                UTextBlock* MaxText = nullptr;
-                IWidgetInterface_Combatant::Execute_GetAttributeTexts(TempWidget, LocalAtb, ValText, MaxText);
-
-                if (MaxText)
-                {
-                    MaxText->SetText(UKismetTextLibrary::Conv_FloatToText(
-	                    DumMax, LocalAtb->RoundingMode, LocalAtb->bAlwaysSign, LocalAtb->bUseGrouping,
-	                    LocalAtb->MinIntegralDigits, LocalAtb->MaxIntegralDigits, LocalAtb->MinFractionalDigits,
-	                    LocalAtb->MaxFractionalDigits));
-                }
-
-                if (ValText)
-                {
-                    ValText->SetText(UKismetTextLibrary::Conv_FloatToText(
-	                    DumVal, LocalAtb->RoundingMode, LocalAtb->bAlwaysSign, LocalAtb->bUseGrouping,
-	                    LocalAtb->MinIntegralDigits, LocalAtb->MaxIntegralDigits, LocalAtb->MinFractionalDigits,
-	                    LocalAtb->MaxFractionalDigits));
-                }
-
-                UProgressBar* AttProg = nullptr;
-                bool bLocal_BarToColor = false;
-                IWidgetInterface_Combatant::Execute_GetAttributeProgressBar(TempWidget, LocalAtb, AttProg, bLocal_BarToColor);
-                if (AttProg)
-                {
-                    AttProg->SetPercent(GetAttributePercentage(LocalAtb));
-                    if (bLocal_BarToColor)
-                    {
-                        AttProg->SetFillColorAndOpacity(LocalAtb->AttributeColor);
-                    }
-                }
-            }
-        }
-    }
+	Local_CacheAttributeMods();
 }
 
 APawn* UCombatantComponent::GetOwnerPawn()
@@ -509,59 +483,60 @@ TArray<AOmegaAbility*> UCombatantComponent::GetGrantedAbilitiesWithTags(FGamepla
 float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, UOmegaDamageType* DamageType, FHitResult Hit)
 {
 	
-	if(!bCanDamageAttributes)
+	if(Attribute)
 	{
-		return 0;
-	}
-	float CurrentValue;
-	float MaxVal;
-
-	// INIT Contextual Values
-	UOmegaDamageType* LocalDamageType = nullptr;
-	if(DamageType)
-	{
-		LocalDamageType = DamageType;
-	}
-	
-	UObject* LocalContext = nullptr;
-	if(Context)
-	{
-		LocalContext = Context;
-	}
-	
-	GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
-	float FinalDamage = BaseDamage;
-
-	//Aply Damage Modifiers
-	for(auto* TempMod : GetDamageModifiers())
-	{
-		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, LocalDamageType, Context); //Apply Damage Modifier
-	}
-	
-	// DAMAGE TYPE REACTIONS
-	if(DamageType && DamageTypeReactions.Contains(DamageType))
-	{
-		UOmegaDamageTypeReactionAsset* ReactClass = DamageTypeReactions.FindOrAdd(DamageType);
-		if(ReactClass)
+		if(!bCanDamageAttributes || Attribute->bIsValueStatic)
 		{
-			IDataInterface_DamageModifier::Execute_ModifyDamage(ReactClass, Attribute, this, Instigator, BaseDamage, LocalDamageType, Context); //Apply Damage Modifier
+			return 0;
 		}
-		if(ReactionEffectClass && ReactClass)
+		float CurrentValue;
+		float MaxVal;
+		
+		// INIT Contextual Values
+		UOmegaDamageType* LocalDamageType = nullptr;
+		if(DamageType)
 		{
-			CreateEffect(ReactionEffectClass,1.0,this,FGameplayTagContainer(),ReactClass);
+			LocalDamageType = DamageType;
 		}
-	}
 	
-	//--------------------- FINISH AND APPLY ---------------------///
+		UObject* LocalContext = nullptr;
+		if(Context)
+		{
+			LocalContext = Context;
+		}
 	
-	CurrentValue = CurrentValue - FinalDamage;		//Deduct final damage value from current attribute value
-	CurrentValue = FMath::Clamp(CurrentValue, 0.0f, MaxVal);		//Make sure the value does not go under 0 or exceed the max allowed value
+		GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
+		float FinalDamage = BaseDamage;
 
-	//FINALIZE
-	CurrentAttributeValues.Add(Attribute, CurrentValue);
-	OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, LocalDamageType, Hit);
-	Update();
-	return FinalDamage;
+		//Aply Damage Modifiers
+		FinalDamage=L_ModifyDamage(Attribute,Instigator,FinalDamage,DamageType,Context);
+		
+		// DAMAGE TYPE REACTIONS
+		if(DamageType && DamageTypeReactions.Contains(DamageType))
+		{
+			UOmegaDamageTypeReactionAsset* ReactClass = DamageTypeReactions.FindOrAdd(DamageType);
+			if(ReactClass)
+			{
+				IDataInterface_DamageModifier::Execute_ModifyDamage(ReactClass, Attribute, this, Instigator, BaseDamage, LocalDamageType, Context); //Apply Damage Modifier
+			}
+			if(ReactionEffectClass && ReactClass)
+			{
+				CreateEffect(ReactionEffectClass,1.0,this,FGameplayTagContainer(),ReactClass);
+			}
+		}
+	
+		//--------------------- FINISH AND APPLY ---------------------///
+	
+		CurrentValue = CurrentValue - FinalDamage;		//Deduct final damage value from current attribute value
+		CurrentValue = FMath::Clamp(CurrentValue, 0.0f, MaxVal);		//Make sure the value does not go under 0 or exceed the max allowed value
+
+		//FINALIZE
+		CurrentAttributeValues.Add(Attribute, CurrentValue);
+		OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, LocalDamageType, Hit);
+		Update();
+		return FinalDamage;
+	}
+	return 0;
 }
 
 void UCombatantComponent::CancelAbilitiesWithTags(FGameplayTagContainer Tags)
@@ -679,6 +654,26 @@ bool UCombatantComponent::SetSkillSourceActive(UObject* SkillSource, bool bActiv
 	return true;
 }
 
+TArray<UObject*> UCombatantComponent::Local_GetSkillSources()
+{
+	TArray<UObject*> OutSkills;
+	for(auto* i : SOURCES_Skills)
+	{
+		if(i && i->GetClass()->ImplementsInterface(UDataInterface_SkillSource::StaticClass()))
+		{
+			OutSkills.AddUnique(i);
+		}
+	}
+	for(auto* i : SOURCES_Master)
+	{
+		if(i && i->GetClass()->ImplementsInterface(UDataInterface_SkillSource::StaticClass()))
+		{
+			OutSkills.AddUnique(i);
+		}
+	}
+	return OutSkills;
+}
+
 
 bool UCombatantComponent::SetDamageModifierActive(UObject* Modifier, bool bActive)
 {
@@ -704,6 +699,13 @@ TArray<UObject*> UCombatantComponent::GetDamageModifiers()
 {
 	TArray<UObject*> OutMods;
 	for(auto* TempMod : SOURCES_DamageMods)
+	{
+		if(TempMod && TempMod->Implements<UDataInterface_DamageModifier>())
+		{
+			OutMods.Add(TempMod);
+		}
+	}
+	for(auto* TempMod : SOURCES_Master)
 	{
 		if(TempMod && TempMod->Implements<UDataInterface_DamageModifier>())
 		{
@@ -813,11 +815,15 @@ void UCombatantComponent::InitializeFromAsset(UObject* Asset)
 
 float UCombatantComponent::GetAttributePercentage(UOmegaAttribute* Attribute)
 {
-	float CurVal;
-	float MaxVal;
-	GetAttributeValue(Attribute, CurVal, MaxVal);
-	float OutVal = CurVal / MaxVal;
-	return OutVal;
+	if(Attribute)
+	{
+		float CurVal;
+		float MaxVal;
+		GetAttributeValue(Attribute, CurVal, MaxVal);
+		float OutVal = CurVal / MaxVal;
+		return OutVal;
+	}
+	return 0.0;
 }
 
 TMap<UOmegaAttribute*, float> UCombatantComponent::GetCurrentAttributeValues()
@@ -860,7 +866,10 @@ void UCombatantComponent::InitializeAttributes()
 				}
 				GetAttributeValue(TempAtt, CurrentVal, DumVal);	
 				//DumVal = GetAttributeBaseValue(TempAtt);
-				CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);
+				if(!TempAtt->bIsValueStatic)
+				{
+					CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);	
+				}
 			}
 		}
 	}
@@ -901,32 +910,15 @@ void UCombatantComponent::SetAttributeModifierActive(UObject* Modifier, bool bAc
 		if(bActive && !SOURCES_AttributeMods.Contains(Modifier))
 		{
 			SOURCES_AttributeMods.Add(Modifier);
-			Local_CacheAttributeMods();
+			//Local_CacheAttributeMods();
 			Update();
 		}
 		else if(!bActive && SOURCES_AttributeMods.Contains(Modifier))
 		{
 			SOURCES_AttributeMods.Remove(Modifier);
-			Local_CacheAttributeMods();
 			Update();
 		}
 	}
-}
-
-bool UCombatantComponent::AddAttrbuteModifier(UObject* Modifier)
-{
-	if(Modifier->Implements<UDataInterface_AttributeModifier>())
-	{
-		SOURCES_AttributeMods.Add(Modifier);
-		return true;
-	}
-	return false;
-}
-
-bool UCombatantComponent::RemoveAttributeModifier(UObject* Modifier)
-{
-	SetAttributeModifierActive(Modifier,false);
-	return false;
 }
 
 void UCombatantComponent::RemoveAttributeModifersWithTags(FGameplayTagContainer Tags)
@@ -935,7 +927,7 @@ void UCombatantComponent::RemoveAttributeModifersWithTags(FGameplayTagContainer 
 	{
 		if(IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempMod).HasAnyExact(Tags))
 		{
-			RemoveAttributeModifier(TempMod);
+			SetAttributeModifierActive(TempMod,false);
 		}
 	}
 }
@@ -952,25 +944,23 @@ float UCombatantComponent::GetAttributeComparedValue(UOmegaAttribute* Attribute,
 const TArray<UObject*> UCombatantComponent::GetAttributeModifiers()
 {
 	//Base Modifiers
-	TArray<UObject*> LocalMods = SOURCES_AttributeMods;
+	TArray<UObject*> _mods = SOURCES_AttributeMods;
 	
-	//LocalMods.Append(static_cast<TArray<UObject*>>(Skills));
-	//Add Skill Modifiers
-	for(UObject* TempMod: static_cast<TArray<UObject*>>(Skills))
+	if(bUseSkillsAsMasterSource)
 	{
-		LocalMods.Add(TempMod);	
-	}
-	//Add Owner Mods
-	if(GetOwner()->GetClass()->ImplementsInterface(UActorInterface_Combatant::StaticClass()))
-	{
-		for(UObject* TempMod: IActorInterface_Combatant::Execute_GetAttributeModifiers(GetOwner()))
+		for(UObject* TempMod: static_cast<TArray<UObject*>>(GetAllSkills()))
 		{
-			LocalMods.Add(TempMod);	
+			_mods.Add(TempMod);	
 		}
-		//LocalMods.Append();
 	}
-
-	return LocalMods;
+	for(auto* i : SOURCES_Master)
+	{
+		if(i && i->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		{
+			_mods.Add(i);
+		}
+	}
+	return _mods;
 }
 
 ///Applies Modifier Values
@@ -1405,7 +1395,7 @@ FLinearColor UCombatantComponent::GetFactionColor()
 	{
 		return FactionDataAsset->FactionColor;
 	}
-	return FLinearColor();
+	return FLinearColor::White;
 }
 
 FGameplayTag UCombatantComponent::GetFactionTag()
@@ -1508,41 +1498,15 @@ bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit,
 {
 	if(Gambit)
 	{
-		for(const FCombatantGambit& TempGambit : Gambit->GetAllGambitActions())
+		for (auto* a :Gambit->GetAllGambitActions())
 		{
-			float rand_val = UKismetMathLibrary::RandomFloat();
-			
-			if(TempGambit.Gambit_THEN && TempGambit.Gambit_TARGET && rand_val<=TempGambit.TriggerChance)	//Is accepted Gambit
+			if(a)
 			{
-				bool successful_select=true;
-				for(auto* TempIf : TempGambit.Gambit_IF)
-				{
-					if(!TempIf->RunGambitCheck(this))
-					{
-						successful_select=false;
-						break;
-					}
-				}
-				if(successful_select)
-				{
-					AddTargetsToList(TempGambit.Gambit_TARGET->GetTargetList(this),true);
-					TSubclassOf<AOmegaAbility> IncomingAbility;
-					UObject* IncomingContext;
-					TempGambit.Gambit_THEN->RunGambitAction(this, IncomingAbility,IncomingContext);
 				
-					bool SuccessGet;
-					AOmegaAbility* LocalAbility = GetAbility(IncomingAbility,SuccessGet);
-					//Make sure ability is granted
-					if(SuccessGet)
-					{
-						// Make sure this ability is valid and can activcate
-						if(IncomingAbility && LocalAbility && LocalAbility->CanActivate(IncomingContext)) //Check if this ability can be activated
-						{
-							Ability = IncomingAbility;
-							Context = IncomingContext;
-							return true;
-						}
-					}
+				if(a->CanRunGambit(this))
+				{
+					a->RunGambitAction(this,Ability,Context);
+					return true;
 				}
 			}
 		}
@@ -1555,18 +1519,3 @@ bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit,
 // Deprecated
 //##################################################################################################################
 	
-
-void UCombatantComponent::AddTargetToList(UCombatantComponent* Combatant)
-{
-	SetTargetRegistered(Combatant,true);
-}
-
-void UCombatantComponent::AddTargetsToList(TArray<UCombatantComponent*> Combatants, bool bClearListFirst)
-{
-	SetTargetsRegistered(Combatants,true,bClearListFirst);
-}
-
-void UCombatantComponent::RemoveTargetFromList(UCombatantComponent* Combatant)
-{
-	SetTargetRegistered(Combatant,false);
-}

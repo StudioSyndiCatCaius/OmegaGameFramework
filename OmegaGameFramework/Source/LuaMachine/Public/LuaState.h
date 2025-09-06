@@ -149,7 +149,7 @@ struct FLuaSmartReference : public TSharedFromThis<FLuaSmartReference>
 
 class ULuaUserDataObject;
 
-UCLASS(Abstract, Blueprintable, HideDropdown)
+UCLASS(Blueprintable, HideDropdown)
 class LUAMACHINE_API ULuaState : public UObject
 {
 	GENERATED_BODY()

@@ -1,6 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "Actors/Actor_Ability.h"
+#include "Components/Component_Combatant.h"
 #include "Components/Component_TurnBasedManager.h"
 #include "Engine/GameInstance.h"
 
@@ -235,6 +237,18 @@ void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FStri
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(TagEventsOnTurnBegin_Global,this);
 }
 
+TSubclassOf<AOmegaAbility> UTurnBasedManagerComponent::Local_GetTurnAbility() const
+{
+	if(TurnAbility)
+	{
+		return TurnAbility;
+	}
+	else
+	{
+		return AOmegaAbility::StaticClass();
+	}
+}
+
 void UTurnBasedManagerComponent::Local_TurnAbilityFinish(bool Cancelled)
 {
 	if(LocalTurnAbility)
@@ -322,7 +336,7 @@ void UTurnBasedManagerComponent::UnregisterCombatant(UCombatantComponent* Combat
 	}
 }
 
-void UTurnBasedManagerComponent::ClearRegisteredCombatants(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::ClearRegisteredCombatants(FString Flag, FGameplayTagContainer Tags)
 {
 	for(UCombatantComponent* TempCombatant : RegisteredCombatants)
 	{
@@ -333,21 +347,46 @@ void UTurnBasedManagerComponent::ClearRegisteredCombatants(UCombatantComponent* 
 	}
 }
 
-bool UTurnTrackerComponent::usesInterface(const UObject* obj) const
+void UTurnTrackerComponent::L_RunElapse(bool run)
+{
+	if(run)
+	{
+		SetTurnsElapsed(Elapse_IncrementValue,true);
+	}
+}
+
+bool UTurnTrackerComponent::L_usesInterface(const UObject* obj) const
 {
 	if(obj)
 	{
-		return obj->GetClass()->ImplementsInterface(UDataInterface_TurnTrackerSource::StaticClass());
+		return obj->GetClass()->ImplementsInterface(UDataInterface_TurnEntity::StaticClass());
 	}
 	return false;
 }
 
-void UTurnTrackerComponent::L_OnTurnUpdate(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant,
+void UTurnTrackerComponent::L_OnTurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant,
 	FString Flag, FGameplayTagContainer Tags)
 {
 	if(Combatant==linked_combatant)
 	{
-		SetTurnsElapsed(-1,true);
+		if(L_usesInterface(tracker_source))
+		{
+			IDataInterface_TurnEntity::Execute_OnTurnStart(tracker_source,this,Component,Combatant);
+		}
+		L_RunElapse(ElapseOn_TurnStart);
+	}
+}
+
+void UTurnTrackerComponent::L_OnTurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant,
+	FString Flag, FGameplayTagContainer Tags)
+{
+	if(Combatant==linked_combatant)
+	{
+		if(L_usesInterface(tracker_source))
+		{
+			IDataInterface_TurnEntity::Execute_OnTurnEnd(tracker_source,this,Component,Combatant);
+		}
+		L_RunElapse(ElapseOn_TurnEnd);
 	}
 }
 
@@ -360,13 +399,14 @@ void UTurnTrackerComponent::LinkToTurnManager(UTurnBasedManagerComponent* TurnMa
 	}
 	if(TurnManager)
 	{
-		TurnManager->OnTurnStart.AddDynamic(this, &UTurnTrackerComponent::L_OnTurnUpdate);
+		TurnManager->OnTurnStart.AddDynamic(this, &UTurnTrackerComponent::L_OnTurnStart);
+		TurnManager->OnTurnEnd.AddDynamic(this, &UTurnTrackerComponent::L_OnTurnEnd);
 	}
 }
 
 void UTurnTrackerComponent::SetSource(UObject* Source, bool bInitTurns)
 {
-	if(Source && usesInterface(Source))
+	if(Source && L_usesInterface(Source))
 	{
 		tracker_source=Source;
 		if(bInitTurns)
@@ -378,16 +418,16 @@ void UTurnTrackerComponent::SetSource(UObject* Source, bool bInitTurns)
 
 void UTurnTrackerComponent::InitTurns(bool AddToCurrent)
 {
-	SetTurnsElapsed(IDataInterface_TurnTrackerSource::Execute_GetTurns_Init(tracker_source),AddToCurrent);
+	SetTurnsElapsed(IDataInterface_TurnEntity::Execute_GetTurns_Init(tracker_source),AddToCurrent);
 }
 
 void UTurnTrackerComponent::SetTurnsElapsed(int32 value, bool Added)
 {
 	if(Added) { TurnsElapsed+=value;}
 	else { TurnsElapsed=value; }
-	if(usesInterface(tracker_source))
+	if(L_usesInterface(tracker_source))
 	{
-		TurnsElapsed=UKismetMathLibrary::Clamp(TurnsElapsed,0,IDataInterface_TurnTrackerSource::Execute_GetTurns_Max(tracker_source));
+		TurnsElapsed=UKismetMathLibrary::Clamp(TurnsElapsed,0,IDataInterface_TurnEntity::Execute_GetTurns_Max(tracker_source));
 	}
 	OnTurnValueChanged.Broadcast(this,TurnsElapsed);
 }

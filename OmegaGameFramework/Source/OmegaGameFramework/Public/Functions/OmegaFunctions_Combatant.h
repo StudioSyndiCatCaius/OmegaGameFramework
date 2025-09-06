@@ -6,14 +6,14 @@
 
 #include "CoreMinimal.h"
 #include "OmegaFunctions_ScriptedEffects.h"
-#include "Actors/Actor_GameplayEffect.h"
 #include "Misc/GeneralDataObject.h"
-#include "Misc/OmegaUtils_Enums.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaFunctions_Combatant.generated.h"
 
 class UOmegaFaction;
-
+class UOmegaScripted_DamageModifier;
+class UCombatantComponent;
+class AOmegaGameplayEffect;
 
 UENUM(Blueprintable, BlueprintType)
 enum EOmegaCombatTarget
@@ -47,7 +47,8 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="Ω Set Combatant (From Source)")
 	static void SetCombatantFromSource(UCombatantComponent* Combatant, UObject* Source);
 
-		
+	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="Ω Set Combatant (From Source)")
+	static bool CheckCombatantConditions(UCombatantComponent* Combatant, FOmegaConditions_Combatant Conditions);
 	//-----------------------------------------------------------------------------------
 	// Get
 	//-----------------------------------------------------------------------------------
@@ -86,14 +87,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Combat",meta=(DeterminesOutputType="EffectClass", ExpandBoolAsExecs="Result"))
 	static AOmegaGameplayEffect* SelectFirstEffectWithContext(TArray<AOmegaGameplayEffect*> Effects, UObject* Context, bool& Result);
+
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	static void RemoveGameplayEffects_WithContext(UCombatantComponent* Combatant, UObject* Context);
+	
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	static void RemoveGameplayEffects_OfClass(UCombatantComponent* Combatant, TSubclassOf<AOmegaGameplayEffect> EffectClass, bool bIncludeChildTypes);
 	
 	// Applies an Effect From a Container struct
 	UFUNCTION(BlueprintCallable, Category="Combat", meta=(AdvancedDisplay = "Context"),DisplayName="Ω Apply Gameplay Effects (from Container)")
 	static void ApplyEffectFromContainer(UCombatantComponent* Combatant, UCombatantComponent* Instigator, FOmegaEffectContainer Effect, UObject* Context);
-
-	//NOTE: Asset must implement "DataInterface_OmegaEffect".
-	UFUNCTION(BlueprintCallable, Category="Combat",DisplayName="Ω Apply Gameplay Effects (from Asset)")
-	static void ApplyEffectFromAsset(UCombatantComponent* Combatant, UCombatantComponent* Instigator, UObject* Asset);
 
 	UFUNCTION(BlueprintPure, Category="Combat", meta = (WorldContext = "WorldContextObject")) 
 	static UCombatantComponent* GetPlayerCombatant(const UObject* WorldContextObject, int32 Index);
@@ -115,7 +118,9 @@ public:
 	static UOmegaAttribute* GetAttributeByUniqueID(const FString& ID);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes")
-	static TArray<FOmegaAttributeModifier> FlatAttributesToModifierValues(TMap<UOmegaAttribute*, float> FlatAttributes,bool AsMultiplier);
+	static TArray<FOmegaAttributeModifier> MakeAttributeMods_FromFlatValues(TMap<UOmegaAttribute*, float> FlatAttributes,bool AsMultiplier=false);
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes")
+	static TArray<FOmegaAttributeModifier> MakeAttributeMods_FromFlatIntValues(TMap<UOmegaAttribute*, int32> FlatAttributes,bool AsMultiplier=false);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="Ω Compare Attribute Modifiers (Single)")
 	static void CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue);
@@ -126,6 +131,8 @@ public:
 	//Consume the amount of attributes required for this skill. Returns FALSE of insufficient.
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="Ω Consume Skill Attirbute Cost")
 	static bool ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject);
+
+
 	
 	//-----------------------------------------------------------------------------------
 	// Targets
@@ -140,16 +147,6 @@ public:
 	//-----------------------------------------------------------------------------------
 	// Branches
 	//-----------------------------------------------------------------------------------
-/*
-	//Checks if the Current Attribute Value is at given value
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"))
-	static void IsAttributeAtValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Value, EComparisonMethod Method, bool& Outcome);
-
-	//Checks if the Current Attribute Value is at a given percentage
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"))
-	static void IsAttributeAtPercentage(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Percentage, EComparisonMethod Method, bool& Outcome);
-*/
-
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Is Combatant Of Faction")
 	static void IsCombatantOfFaction(UCombatantComponent* Combatant, UOmegaFaction* Faction, bool& Outcome);

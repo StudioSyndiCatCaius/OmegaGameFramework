@@ -31,11 +31,12 @@ public:
 	UPROPERTY() UObject* LocalContext = nullptr;
 	UPROPERTY() UOmegaGameplaySubsystem* SubSysRef;
 	UPROPERTY() const UObject* Local_WorldContext;
+	UPROPERTY() FOmegaCommonMeta in_meta;
 	
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),
 		DisplayName="Ω🔷 Activate Gameplay System") 
-	static UAsyncAction_GameplaySystem* ActivateGameplaySystem(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag);
+	static UAsyncAction_GameplaySystem* ActivateGameplaySystem(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag, FOmegaCommonMeta meta);
 
 	
 };

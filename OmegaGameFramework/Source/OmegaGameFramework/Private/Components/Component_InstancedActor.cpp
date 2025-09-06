@@ -19,6 +19,18 @@ void UInstanceActorComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+void UInstanceActorComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(EndPlayReason==EEndPlayReason::Destroyed)
+	{
+		for(auto* i : _instanceOrder)
+		{
+			if(i) { i->K2_DestroyActor();}
+		}
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
 void UInstanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -45,6 +57,9 @@ AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, c
 	LocalActor->OnInstanceCreated(LocalContext, Flag);
 
 	_instanceOrder.AddUnique(LocalActor);
+#if WITH_EDITOR
+	LocalActor->SetActorLabel(Instance_NamePrefex.ToString()+LocalContext->GetName());
+#endif
 	
 	return LocalActor;
 }
@@ -56,6 +71,28 @@ void UInstanceActorComponent::CreateInstances(TArray<UObject*> Contexts, const F
 	{
 		if(i) { CreateInstance(i,Flag,LocalTransform);}
 	}
+}
+
+AOmegaInstanceActor* UInstanceActorComponent::TryGetInstanceByContext(UObject* Context, bool CreateIfInvalid,
+	TSubclassOf<AOmegaInstanceActor> Class, bool& Result)
+{
+	if(Context)
+	{
+		Result=true;
+		for(auto* i : GetInstances())
+		{
+			if(i && i->ContextObject == Context && (!Class || i->GetClass()->IsChildOf(Class)))
+			{
+				return i;
+			}
+		}
+		if(CreateIfInvalid)
+		{
+			return CreateInstance(Context,"TryGet",FTransform());
+		}
+	}
+	Result=false;
+	return nullptr;
 }
 
 AOmegaInstanceActor* UInstanceActorComponent::GetInstanceByIndex(int32 Index)

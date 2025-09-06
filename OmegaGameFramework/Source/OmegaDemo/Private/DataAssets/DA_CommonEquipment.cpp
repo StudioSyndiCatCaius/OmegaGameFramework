@@ -6,36 +6,25 @@
 #include "DataAssets/DA_Common_EquipType.h"
 
 
-
-float UOAsset_CommonEquipment::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+FOmegaCombatantSources UOAsset_CommonEquipment::L_GetCombatMods() const
 {
-	return IDataInterface_DamageModifier::ModifyDamage_Implementation(Attribute, Target, Instigator, BaseDamage,
-	                                                                  DamageType, Context);
-}
-
-TArray<FOmegaAttributeModifier> UOAsset_CommonEquipment::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
-{
-	TArray<FOmegaAttributeModifier> out;
-	for(UOmegaScripted_AttributeModifier* i : Attribute_Mods)
+	FOmegaCombatantSources base=CombatModifiers;
+	if(Type)
 	{
-		if(i)
-		{
-			TArray<FOmegaAttributeModifier> t=IDataInterface_AttributeModifier::Execute_GetModifierValues(i,CombatantComponent);
-			out.Append(t);
-		}
+		base.Append(Type->Sources,UseType_AttributeMods,UseType_DamageMods,UseType_Skills);
 	}
-	return out;
+	return base;
 }
 
 bool UOAsset_CommonEquipment::CanEquipItem_Implementation(UEquipmentComponent* Component,UEquipmentSlot* Slot)
 {
+	
 	if(Component)
 	{
 		FOmegaConditions_Actor aCond;
 		if(Type)
 		{
-			aCond.Conditions=Type->EquipConditions;
+			aCond.Conditions=Type->GetAllConditions();
 			if(!aCond.CheckConditions(Component->GetOwner()))
 			{
 				return false;
@@ -50,10 +39,52 @@ bool UOAsset_CommonEquipment::CanEquipItem_Implementation(UEquipmentComponent* C
 	return true;
 }
 
+TArray<FOmegaAttributeModifier> UOAsset_CommonEquipment::GetModifierValues_Implementation(
+	UCombatantComponent* CombatantComponent)
+{
+	TArray<FOmegaAttributeModifier> g=L_GetCombatMods().GetAttributeMods(CombatantComponent);
+	for(auto& p : Attributes)
+	{
+		if(p.Key)
+		{
+			FOmegaAttributeModifier mod;
+			mod.Attribute=p.Key;
+			mod.Incrementer=p.Value;
+			g.Add(mod);
+		}
+	}
+	if(Type)
+	{
+		if(UseType_RankAttributeScaling)
+		{
+			g.Append(Type->L_ScaleAttributeByRank_All(Rank));
+		}
+	}
+	return FOmegaAttributeModifier::Simplify(g);
+}
+
+float UOAsset_CommonEquipment::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
+	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+{
+	return L_GetCombatMods().GetDamageMods(Attribute,Target,Instigator,BaseDamage,DamageType,Context);
+}
+
 TArray<UPrimaryDataAsset*> UOAsset_CommonEquipment::GetSkills_Implementation(UCombatantComponent* Combatant)
 {
-	TArray<UPrimaryDataAsset*> out;
-	FOmegaScripted_SkillSources temp;
-	temp.Modifiers=SkillsGranted;
-	return temp.GatherSkills(Combatant);
+	return L_GetCombatMods().GetSkills(Combatant);
 }
+
+UOAsset_Appearance* UOAsset_CommonEquipment::GetAppearanceAsset_Implementation()
+{
+	if(Type && DefaultToTypeAppearance && !Appearance)
+	{
+		return Execute_GetAppearanceAsset(Type);
+	}
+	if(Appearance)
+	{
+		return Appearance;
+	}
+	return nullptr;
+}
+
+

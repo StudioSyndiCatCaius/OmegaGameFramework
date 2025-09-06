@@ -14,6 +14,14 @@ enum EOmegaGlobalParamTarget
 	SAVE_GLOBAL,
 };
 
+UENUM(Blueprintable, BlueprintType)
+enum EFactionAffinity
+{
+	NeutralAffinity			UMETA(DisplayName = "Neutral"),
+	FriendlyAffinity		UMETA(DisplayName = "Friendly"),
+	HostileAffinity			UMETA(DisplayName = "Hostile"),
+};
+
 
 UENUM(Blueprintable)
 enum EOmegaStarRank

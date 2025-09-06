@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Interfaces/OmegaInterface_Widget.h"
 #include "Components/Image.h"
+#include "Misc/OmegaUtils_Structs.h"
 
 #include "ScreenWidget.generated.h"
 
@@ -23,6 +24,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaScreenWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 	UPROPERTY(BlueprintReadOnly,Category="Widget") UObject* ContextObject;
+	UPROPERTY(BlueprintReadOnly,Category="Widget") FOmegaCommonMeta widget_meta;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="ScreenWidget") UTextBlock* GetWidget_Text_ContextName();
 	UFUNCTION(BlueprintImplementableEvent,Category="ScreenWidget") UTextBlock* GetWidget_Text_ContextDescription();

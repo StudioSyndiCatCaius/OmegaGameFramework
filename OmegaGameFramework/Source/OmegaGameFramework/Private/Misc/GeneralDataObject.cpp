@@ -28,44 +28,11 @@ void UGeneralDataObject::GetGeneralAssetLabel_Implementation(FString& Label)
 }
 
 
-TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
-{
-	TArray<FOmegaAttributeModifier> out;
-	FLuaValue mod_list = ILuaInterface::Execute_GetValue(this,"").GetField(Param_AttributeMods);
-	for(FLuaValue att_name : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(mod_list))
-	{
-		bool result;
-		UObject* output = UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(att_name.String,UOmegaAttribute::StaticClass(),result);
-		if(output && result)
-		{
-			FOmegaAttributeModifier new_mod;
-			new_mod.Attribute=Cast<UOmegaAttribute>(output);
-			new_mod.Incrementer=mod_list.GetField(att_name.String).ToFloat();
-			out.Add(new_mod);
-		}
-	}
-	return out;
-}
-
 UOmegaDataAsset::UOmegaDataAsset()
 {
 	if(!Guid.IsValid()) { Guid= FGuid::NewGuid();}
 }
 
-UObject* UOmegaDataAsset::GetObject_Parent_Implementation() const
-{
-	return ParentAsset;
-}
-
-TArray<UObject*> UOmegaDataAsset::GetObject_Children_Implementation() const
-{
-	TArray<UObject*> out;
-	for(auto* c : ChildAssets)
-	{
-		if(c) { out.Add(c); }
-	}
-	return out;
-}
 
 bool UOmegaDataAsset::UseIconAsThumbnail_Implementation()
 {

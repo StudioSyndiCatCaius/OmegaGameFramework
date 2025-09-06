@@ -6,9 +6,9 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Actor.h"
-#include "Misc/OmegaUtils_Enums.h"
-#include "Subsystems/OmegaSubsystem_DynamicCamera.h"
 #include "OmegaFunctions_Camera.generated.h"
+
+class AOmegaDynamicCamera;
 
 UCLASS()
 class UOmegaCameraFunctions : public UBlueprintFunctionLibrary

@@ -137,7 +137,7 @@ void USkinComponent::Assemble(USkeletalMeshComponent* OverrideMesh)
 	Update_Skin();
 }
 
-void USkinComponent::SetBodyAppearanceData(FOmegaBodyAppearanceData AppearanceData)
+void USkinComponent::SetBodyAppearanceData(FOmegaBodyAppearanceInfo AppearanceData)
 {
 	Appearance=AppearanceData;
 	Update_Skin();

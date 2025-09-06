@@ -8,6 +8,7 @@ public class LuaMachine : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
+        PrecompileForTargets = PrecompileTargetsType.Any;
 		
         PublicIncludePaths.AddRange(
             new string[] {

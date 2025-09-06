@@ -4,15 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "OmegaSettings.h"
 #include "JsonObjectWrapper.h"
-#include "Misc/OmegaGameMode.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "OmegaSubsystem_GameManager.generated.h"
 
 class UOmegaSettings;
 class UOmegaGameSettings;
 class UOmegaGameplayModule;
+class AOmegaGameMode;
 
 USTRUCT()
 struct FGameplayLogEntry
@@ -45,7 +44,9 @@ protected:
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Manager")
 	FGameplayTagContainer StateTags;
-
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Omega") FOmegaEntitySet Entities;
+	
 	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
 	
@@ -122,14 +123,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|GlobalJson")
 	FJsonObjectWrapper GlobalJsonObject;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	FLuaValue LuaGameInstanceData;
-	
-	//UFUNCTION(BlueprintCallable, Category="OmegaGameManager|GlobalJson", meta = (CustomStructureParam = "Value", AutoCreateRefTerm = "Value"))
-	//bool SetGlobalJsonProperty(const FString& Property, const int32& Value);
-
-	//UFUNCTION(BlueprintCallable, Category="OmegaGameManager|GlobalJson", meta = (CustomStructureParam = "OutValue", AutoCreateRefTerm = "OutValue"))
-	//bool GetGlobalJsonProperty(const FString& Property, int32& OutValue);
 	
 	//##################################################################################################################
 	// LOG

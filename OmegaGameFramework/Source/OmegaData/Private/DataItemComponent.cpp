@@ -26,7 +26,7 @@ void UDataItemComponent::BeginPlay()
 	if(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
 	{
 		UCombatantComponent* LocalCombatant = Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()));
-		LocalCombatant->AddAttrbuteModifier(this);
+		LocalCombatant->SetAttributeModifierActive(this,true);
 		LocalCombatant->SetSkillSourceActive(this, true);
 	}
 

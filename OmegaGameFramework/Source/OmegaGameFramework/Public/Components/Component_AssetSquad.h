@@ -3,10 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Components/ActorComponent.h"
-#include "Misc/OmegaUtils_Structs.h"
 #include "Component_AssetSquad.generated.h"
 
 UCLASS()
@@ -17,8 +15,6 @@ class OMEGAGAMEFRAMEWORK_API UAssetSquad_Identity : public UPrimaryDataAsset
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Squad")
 	int32 MaxMembers=-1;
-
-
 	
 };
 
@@ -29,13 +25,15 @@ USTRUCT(BlueprintType)
 struct FOmegaAssetSquad_Data
 {
 	GENERATED_BODY()
-	UPROPERTY(EditAnywhere,Category="AssetSquad") TMap<UAssetSquad_Identity*,FOmegaList_DataAsset> SquadMembers;
+	UPROPERTY(EditAnywhere,Category="AssetSquad") TMap<UPrimaryDataAsset*,UAssetSquad_Identity*> Assignments;
+	UPROPERTY(EditAnywhere,Category="AssetSquad") TArray<UPrimaryDataAsset*> Order;
 };
 
 
 class UCombatantComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAssetSquadMembersChanged, UAssetSquadComponent*, Component, UAssetSquad_Identity*, Squad, UPrimaryDataAsset*, Member, bool, bInSquad);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetSquadMembersSwapped, UAssetSquadComponent*, Component, UPrimaryDataAsset*, A, UPrimaryDataAsset*, B);
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UAssetSquadComponent : public UActorComponent
@@ -50,7 +48,8 @@ class OMEGAGAMEFRAMEWORK_API UAssetSquadComponent : public UActorComponent
 public:
 	virtual void BeginPlay() override;
 	UPROPERTY(BlueprintAssignable) FOnAssetSquadMembersChanged OnSquadMembersChanged;
-
+	UPROPERTY(BlueprintAssignable) FOnAssetSquadMembersSwapped OnAssetSquadMembersSwapped;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Squad")
 	UAssetSquad_Identity* Default_SquadID;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Squad")
@@ -67,14 +66,18 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Squad")
 	FOmegaAssetSquad_Data GetSquadData();
 
-
+	UFUNCTION(BlueprintCallable,Category="Squad")
+	void RemoveAllMembersFromSquad(UAssetSquad_Identity* Squad);
+	
 	UFUNCTION(BlueprintCallable,Category="Squad")
 	void RemoveMemberFromAllSquads(UPrimaryDataAsset* Member);
 	
-	
 	UFUNCTION(BlueprintCallable,Category="Squad")
 	void SetMemberInSquad(UPrimaryDataAsset* Member, UAssetSquad_Identity* Squad,bool InSquad);
-
+	
+	UFUNCTION(BlueprintCallable,Category="Squad")
+	void SetMembersInSquad(TArray<UPrimaryDataAsset*> Members, UAssetSquad_Identity* Squad,bool InSquad);
+	
 	UFUNCTION(BlueprintCallable,Category="Squad")
 	TArray<UPrimaryDataAsset*> GetSquadMembers(UAssetSquad_Identity* Squad);
 	

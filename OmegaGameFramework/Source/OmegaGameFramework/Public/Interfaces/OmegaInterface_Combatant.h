@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Actors/Actor_GameplayEffect.h"
 #include "Misc/OmegaAttribute.h"
 #include "OmegaInterface_Combatant.generated.h"
 
@@ -18,7 +17,7 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Combatant
 
 	public:
 
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant")
 	TArray<UObject*> GetAttributeModifiers();
 };
 
@@ -30,40 +29,27 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Combatant
 
 public:
 
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant") UCombatantGambitAsset* GetGambitAsset();
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant") UOmegaFaction* GetFactionAsset();
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant") TArray<UPrimaryDataAsset*> GetDefaultSkills();
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant") int32 GetLevel();
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant") TMap<UOmegaAttribute*, float> GetMaxAttributeOverrides();
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant") FGameplayTag GetAttributeValueCategory();
-	UFUNCTION(BlueprintNativeEvent, Category="Combatant") TMap<UOmegaDamageType*,UOmegaDamageTypeReactionAsset*> GetDamageTypeReactions();
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") UCombatantGambitAsset* GetGambitAsset();
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") UOmegaFaction* GetFactionAsset();
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") TArray<UPrimaryDataAsset*> GetDefaultSkills();
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") int32 GetLevel();
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") TMap<UOmegaAttribute*, float> GetMaxAttributeOverrides();
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") FGameplayTag GetAttributeValueCategory();
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") TMap<UOmegaDamageType*,UOmegaDamageTypeReactionAsset*> GetDamageTypeReactions();
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
 	TMap<UOmegaAttribute*, float> OverrideCurrentAttributeValues(UCombatantComponent* Combatant, bool& bOverride);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
 	TMap<UOmegaAttribute*, int32> OverrideAttributeLevels(UCombatantComponent* Combatant, bool& bOverride);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
 	FGameplayTag OverrideAttributeValueCategory(UCombatantComponent* Combatant, bool& bOverride);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
+	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
 	int32 OverrideCombatantLevel(UCombatantComponent* Combatant, bool& bOverride);
 };
 
-
-// ===================================================================================================================
-// Effects
-// ===================================================================================================================
-UINTERFACE(MinimalAPI) class UDataInterface_OmegaEffect : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_OmegaEffect
-{
-	GENERATED_BODY()
-
-	public:
-	UFUNCTION(BlueprintNativeEvent, Category="Effects")
-	TArray<FOmegaEffectContainer> GetOmegaEffects();
-};
 
 UINTERFACE() class UDataInterface_DamageModifier : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_DamageModifier
@@ -73,7 +59,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_DamageModifier
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	UFUNCTION(BlueprintNativeEvent, Category="Attributes")
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant",DisplayName="Damage Modifier - Apply")
 	float ModifyDamage(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context);
 };
 

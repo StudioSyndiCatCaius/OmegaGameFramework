@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/OmegaGameplaySystem.h"
 #include "Components/ActorComponent.h"
 #include "Component_GameplaySystems.generated.h"
 
+class AOmegaGameplaySystem;
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UGameplaySystemsComponent : public UActorComponent

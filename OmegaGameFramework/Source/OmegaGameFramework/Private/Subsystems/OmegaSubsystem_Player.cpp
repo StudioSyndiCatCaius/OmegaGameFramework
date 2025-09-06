@@ -16,6 +16,7 @@
 #include "OmegaSettings_Slate.h"
 #include "Blueprint/SlateBlueprintLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "Widget/DataWidget.h"
 
 void UOmegaPlayerSubsystem::Initialize(FSubsystemCollectionBase& Colection)
@@ -39,7 +40,7 @@ void UOmegaPlayerSubsystem::CloseAllMenus(AActor* DestroyedActor)
 	}
 }
 
-UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus)
+UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus,FOmegaCommonMeta meta)
 {
 	//CollectGarbage(EObjectFlags::RF_Garbage);
 	bool bIsMenuOpen = false;
@@ -56,6 +57,7 @@ UMenu* UOmegaPlayerSubsystem::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObje
 		{
 			OpenMenus.Add(LocalMenu);
 			LocalMenu->ContextObject=Context;
+			LocalMenu->widget_meta=meta;
 			LocalMenu->OpenMenu(Tags, Context, ParentPlayerController, Flag);	//Set Menu Context, Tags, and Player Controller
 			bool MultiMenu = OpenMenus.IsValidIndex(1);
 			OnMenuOpened.Broadcast(LocalMenu, Tags, MultiMenu);
@@ -198,7 +200,7 @@ bool UOmegaPlayerSubsystem::CanInterfaceInput() const
 
 
 /// HUDS////
-UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass, UObject* Context)
+UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass, UObject* Context, bool bPlayerScreen)
 {
 	CleanHUDLayers();
 	UHUDLayer* LocalLayer = Cast<UHUDLayer>(CreateWidget(GetWorld(), LayerClass));
@@ -208,7 +210,14 @@ UHUDLayer* UOmegaPlayerSubsystem::AddHUDLayer(TSubclassOf<UHUDLayer> LayerClass,
 		
 		LocalLayer->SetOwningLocalPlayer(GetLocalPlayer());
 		LocalLayer->ContextObject=Context;
-		LocalLayer->AddToPlayerScreen(LocalLayer->SlateLayerIndex);
+		if(bPlayerScreen)
+		{
+			LocalLayer->AddToPlayerScreen(LocalLayer->SlateLayerIndex);
+		}
+		else
+		{
+			LocalLayer->AddToViewport(LocalLayer->SlateLayerIndex);
+		}
 		LocalLayer->LayerAdded(GetLocalPlayer()->GetPlayerController(GetWorld()), Context);
 		return LocalLayer;
 	}

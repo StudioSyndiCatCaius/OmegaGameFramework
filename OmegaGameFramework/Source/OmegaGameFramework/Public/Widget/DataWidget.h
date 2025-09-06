@@ -3,24 +3,27 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonBorder.h"
 #include "CommonTextBlock.h"
-#include "DataTooltip.h"
 #include "GameplayTagContainer.h"
 #include "Math/Vector2D.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
 #include "Blueprint/IUserObjectListEntry.h"
+#include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Misc/OmegaUtils_Delegates.h"
 #include "Widget/OmegaUserWidget.h"
-#include "Components/SizeBox.h"
-#include "Curves/CurveVector.h"
 #include "DataWidget.generated.h"
 
+class UOmegaObjectTrait;class UOmegaPlayerSubsystem;
+class UOmegaSettings_Slate;
 class UDataList;
 class UTextBlock;
 class UButton;
 class UImage;
 class UDataList;
 class UWidgetAnimation;
+class UBorder;
+class USizeBox;
+class UCurveVector;
+class UDataTooltip;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelected, UDataWidget*, DataWidget);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHovered, UDataWidget*, DataWidget, bool, bIsHovered);
@@ -28,27 +31,38 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlight, UDataWidget*, DataWid
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWidgetRefreshed, UDataWidget*, DataWidget);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWidgetNotify, UDataWidget*, DataWidget, FName, Notify);
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew, const)
-class OMEGAGAMEFRAMEWORK_API UDataWidgetMetadata : public UObject
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UDataWidgetTraits : public UObject
 {
 	GENERATED_BODY()
 	
 public:
-		
-	UFUNCTION(BlueprintImplementableEvent, Category="Meta")
-	void OnMetaApplied(UDataWidget* widget) const;
 	
-	UFUNCTION(BlueprintNativeEvent, Category="Meta")
-	bool CanAddObjectToList(UObject* SourceObject) const;
+	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnInit(UDataWidget* Widget) const;
+	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnSourceChanged(UDataWidget* Widget, UObject* Source) const;
+	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnListOwnerChanged(UDataWidget* Widget, UDataList* List, UObject* Owner) const;
+	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnRefreshed(UDataWidget* Widget, UObject* Source, UObject* ListOwner) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Meta") bool CanAddObjectToList(UObject* SourceObject) const;
 };
 
-
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUserObjectListEntry
+class OMEGAGAMEFRAMEWORK_API UDataWidgetMetadata  : public UDataWidgetTraits
 {
 	GENERATED_BODY()
 	
-	void Local_SetVisFromBool(UWidget* widget, bool val) const
+public:
+	
+};
+
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUserObjectListEntry, public IDataInterface_Traits
+{
+	GENERATED_BODY()
+	
+	FText L_FormatText(FText t);
+	void L_SetVisFromBool(UWidget* widget, bool val) const
 	{
 		if(widget)
 		{
@@ -63,7 +77,7 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUser
 		}
 	}
 
-	void local_overrideTextStyle(UTextBlock* text, TSubclassOf<UCommonTextStyle> style)
+	void L_overrideTextStyle(UTextBlock* text, TSubclassOf<UCommonTextStyle> style)
 	{
 		if(text && text->GetClass()->IsChildOf(UCommonTextBlock::StaticClass()) && style)
 		{
@@ -111,9 +125,17 @@ protected:
 	virtual void NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent) override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void SetVisibility(ESlateVisibility InVisibility) override;
-	
 	UOmegaPlayerSubsystem* GetPlayerSubsystem() const;
 public:
+
+	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override
+	{
+		return Traits;
+	};
+	
+	UPROPERTY(BlueprintAssignable) FOnSelected OnSelected;
+	UPROPERTY(BlueprintAssignable) FOnHovered OnHovered;
+	UPROPERTY(BlueprintAssignable) FOnHighlight OnHighlight;
 	
 	UPROPERTY() UDataList* ParentList = nullptr;
 	
@@ -139,22 +161,19 @@ public:
 	//	Meta
 	//---------------------------------------------------------------------------------------------//
 	UPROPERTY(EditAnywhere, Instanced, Category="Meta")
-	TArray<UDataWidgetMetadata*> WidgetMetadata;
+	TArray<UOmegaObjectTrait*> Traits;
+	UPROPERTY(EditAnywhere, Instanced, Category="Meta")
+	TArray<UDataWidgetTraits*> WidgetTraits;
 	
 	UFUNCTION(BlueprintPure,Category="Meta")
-	TArray<UDataWidgetMetadata*> GetWidgetMetadata() const
+	TArray<UDataWidgetTraits*> GetWidgetTraits() const
 	{
-		return WidgetMetadata;
+		return WidgetTraits;
 	}
 
-	UFUNCTION(BlueprintPure,Category="Meta",meta=(DeterminesOutputType="Class"))
-	UDataWidgetMetadata* GetWidgetMetadata_FromClass(TSubclassOf<UDataWidgetMetadata> Class);
+	UFUNCTION(BlueprintPure,Category="Meta",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Outcome"))
+	UDataWidgetTraits* GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Class, bool FallbackToDefault, bool& Outcome);
 	
-	UFUNCTION()
-	void RefreshMeta();
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Meta")
-	void MetaRefreshed();
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
@@ -250,7 +269,7 @@ public:
 	void OnNewListOwner(UObject* ListOwner);
 
 	UFUNCTION()
-		FString GetAssetLabel();
+		FString GetAssetLabel() const;
 
 	//---------------------------------------------------------------------------------------------//
 	//	ListOwner
@@ -329,19 +348,9 @@ public:
 	
 	
 //BINDABLE WIDGETS
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
-	bool bCanOverrideSize;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides",meta=(EditCondition="bCanOverrideSize"))
-	FVector2D OverrideSize;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	UMaterialInterface* Override_IconMaterial;
-	UPROPERTY(EditInstanceOnly,BlueprintReadOnly,Category="Overrides")
-	TSubclassOf<UCommonBorderStyle> OverrideBorderStyle;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
-	TSubclassOf<UCommonTextStyle> OverrideTextStyle_Name;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
-	TSubclassOf<UCommonTextStyle> OverrideTextStyle_Description;
 	
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - Root")
 	UTextBlock* GetRootPanelWidget();
@@ -382,17 +391,5 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Animations")
 	UWidgetAnimation* GetHighlightAnimation();
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-//////////______________________________DELEGATES______________________________//////////
-////////////////////////////////////////////////////////////////////////////////////////
-
-	UPROPERTY(BlueprintAssignable)
-	FOnSelected OnSelected;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnHovered OnHovered;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnHighlight OnHighlight;
 
 };

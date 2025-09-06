@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/DataAsset.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Component_DataWidget.generated.h"
 
 class UDataWidget;

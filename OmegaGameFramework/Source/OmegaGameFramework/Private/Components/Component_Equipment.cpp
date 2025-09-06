@@ -35,7 +35,7 @@ void UEquipmentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
 	{
-		Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->RemoveAttributeModifier(this);
+		Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->SetAttributeModifierActive(this,false);
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -54,6 +54,14 @@ void UEquipmentComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 TMap<UEquipmentSlot*, UPrimaryDataAsset*> UEquipmentComponent::GetEquipment()
 {
+	TMap<UEquipmentSlot*, UPrimaryDataAsset*> out=Slots;
+	for(auto* s : Sources)
+	{
+		if(s && s->GetClass()->ImplementsInterface(UDataInterface_EquipmentSource::StaticClass()))
+		{
+			out.Append(IDataInterface_EquipmentSource::Execute_GetEquipment(s));
+		}
+	}
 	return Slots;
 }
 
@@ -274,6 +282,25 @@ TArray<UPrimaryDataAsset*> UEquipmentComponent::GetSkills_Implementation(UCombat
 	return out;
 }
 
+float UEquipmentComponent::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
+	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+{
+	if(!bModifyDamage) { return BaseDamage; }
+	
+	float dmg=BaseDamage;
+	TArray<UPrimaryDataAsset*> items;
+	GetEquipment().GenerateValueArray(items);
+	
+	for(auto* i : items)
+	{
+		if(i && i->GetClass()->ImplementsInterface(UDataInterface_DamageModifier::StaticClass()))
+		{
+			dmg=IDataInterface_DamageModifier::Execute_ModifyDamage(i,Attribute,Target,Instigator,dmg,DamageType,Context);
+		}
+	}
+	return dmg;
+}
+
 void UEquipmentComponent::LinkAssetCollectionComponent(UDataAssetCollectionComponent* Component)
 {
 	if(Component)
@@ -351,16 +378,6 @@ bool UEquipmentSlot::CanSlotEquipItem(UPrimaryDataAsset* Item)
 		FOmegaConditions_DataAsset con;
 		con.Conditions=EquipConditions;
 		if(!con.CheckConditions(Item)) { return false; }
-//		FGameplayTagContainer item_tags;
-//		FGameplayTag item_category;
-		//if(Item->GetClass()->ImplementsInterface(UGameplayTagsInterface::StaticClass()))
-		//{
-		//	item_category = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(Item);
-		//	item_tags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(Item);
-		//}
-	//	if(!item_category.MatchesAny(AcceptedCategories) && !AcceptedCategories.IsEmpty()) {return false;}
-	//	if(!RequiredTags.IsEmpty() && !item_tags.HasAny(RequiredTags)) {return false;}
-
 		for(auto* temp_script : SlotScripts)
 		{
 			if(!temp_script->CanEquipItem(Item))
@@ -368,7 +385,6 @@ bool UEquipmentSlot::CanSlotEquipItem(UPrimaryDataAsset* Item)
 				return false;
 			}
 		}
-		
 		return true;
 	}
 	return false;
@@ -394,17 +410,34 @@ UPrimaryDataAsset* UOmegaEquipmentFunctions::TryGetEquipmentInSlot(UObject* Targ
 }
 
 TArray<UPrimaryDataAsset*> UOmegaEquipmentFunctions::GetEquippableItems_FromInventory(UEquipmentComponent* Equipment,
-	UDataAssetCollectionComponent* Inventory, UEquipmentSlot* Slot)
+	UDataAssetCollectionComponent* Inventory, UEquipmentSlot* Slot,bool bIncludedSources)
 {
 	TArray<UPrimaryDataAsset*>  out;
 	if(Equipment && Inventory)
 	{
-		TArray<UPrimaryDataAsset*> items;
-		Inventory->GetCollectionMap().GetKeys(items);
-		Equipment->FilterEquippableItems(items,Slot);
+		TArray<UPrimaryDataAsset*>  i;
+		Inventory->GetCollectionMap(1,bIncludedSources).GetKeys(i);
+		return Equipment->FilterEquippableItems(i,Slot);
 	}
 	return  out;
 		
+}
+
+TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOmegaEquipmentFunctions::GetEquipmentFromLinkedAssetList(
+	TMap<UPrimaryDataAsset*, UPrimaryDataAsset*> list)
+{
+	TMap<UEquipmentSlot*, UPrimaryDataAsset*> out;
+	for(auto& p : list)
+	{
+		if(p.Key && p.Value)
+		{
+			if(UEquipmentSlot* _slot=Cast<UEquipmentSlot>(p.Key))
+			{
+				out.Add(_slot,p.Value);
+			}
+		}
+	}
+	return out;
 }
 
 

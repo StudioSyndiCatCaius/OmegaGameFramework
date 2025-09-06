@@ -36,7 +36,7 @@ struct FOmegaScriptedTrace
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Trace")
-	UOmegaScriptedTraceLogic* Logic;
+	UOmegaScriptedTraceLogic* Logic=nullptr;
 };
 
 UCLASS()

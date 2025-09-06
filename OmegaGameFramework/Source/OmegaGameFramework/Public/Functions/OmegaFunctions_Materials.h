@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Types/Struct_Material.h"
 #include "OmegaFunctions_Materials.generated.h"
 
 
@@ -19,6 +20,9 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Materials")
 	static void ApplyMaterialsToSlots(UPrimitiveComponent* Component, TMap<FName,UMaterialInterface*> Materials);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Materials")
+	static void ApplyDynamicMaterialParams(UMaterialInstanceDynamic* Material, FOmegaDynamicMaterialParams params);
 
 };
 

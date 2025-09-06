@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/Component_Combatant.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "GameFramework/Actor.h"
 #include "Actor_CombatantSelector.generated.h"
+
+class UCombatantComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatantSelectionFinished,TArray<UCombatantComponent*>, Targets, FName, FinishNotify);
 

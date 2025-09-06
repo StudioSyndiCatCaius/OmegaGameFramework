@@ -4,15 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "LevelSequence.h"
 #include "Engine/DataAsset.h"
 #include "UObject/Interface.h"
-#include "Interfaces/OmegaInterface_Common.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/GeneralDataObject.h"
 #include "OmegaFunctions_Animation.generated.h"
 
-
+class UAnimMontage;
+class ULevelSequence;
 
 UCLASS(Blueprintable,BlueprintType,Const,EditInlineNew,Abstract,CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UOmegaAnimationEmoteScript : public UObject

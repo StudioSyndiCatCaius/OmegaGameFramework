@@ -7,7 +7,7 @@
 
 
 UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
-	(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag)
+	(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag, FOmegaCommonMeta meta)
 {
 	UAsyncAction_GameplaySystem* NewSysNode = NewObject<UAsyncAction_GameplaySystem>();
 	if(SystemClass)
@@ -15,6 +15,7 @@ UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
 		NewSysNode->LocalSystemClass = SystemClass;
 		NewSysNode->LocalOpenFlag = Flag;
 		NewSysNode->Local_WorldContext = WorldContextObject;
+		NewSysNode->in_meta = meta;
 		if(Context)
 		{
 			NewSysNode->LocalContext = Context;
@@ -47,7 +48,7 @@ void UAsyncAction_GameplaySystem::Activate()
 		
 			if(!IsAlreadyActiveSystem)
 			{
-				AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag);
+				AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag,in_meta);
 				NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
 				NewSystem->OnSystemNotify.AddDynamic(this, &UAsyncAction_GameplaySystem::Native_Notify);
 			}

@@ -7,10 +7,9 @@
 #include "GameplayTagContainer.h"
 #include "ScreenWidget.h"
 #include "Components/WidgetSwitcher.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
 #include "Interfaces/OmegaInterface_Widget.h"
 #include "Misc/GeneralDataObject.h"
-
+#include "Misc/OmegaUtils_Structs.h"
 #include "Menu.generated.h"
 
 class APlayerController;
@@ -18,7 +17,7 @@ class UWidgetAnimation;
 class AOmegaGameplaySystem;
 class UOmegaInputMode;
 class UDataListCustomEntry;
-
+class UOmegaGameplayMessage;
 
 UINTERFACE(MinimalAPI) class UDataInterface_CommonMenu : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_CommonMenu
@@ -74,7 +73,7 @@ public:
 	FText DisplayName;
 	UPROPERTY(EditAnywhere, Category = "Menu")
 	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
-
+	
 	UFUNCTION()
 		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag);
 
@@ -92,10 +91,10 @@ public:
 	
 	void Native_CompleteClose();
 	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
+	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Widget|Menu")
 		void MenuOpened(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|Menu")
+	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Widget|Menu")
 		void MenuClosed(FGameplayTagContainer Tags, const FString& Flag);
 
 	//----------------------------------------------------------------------
@@ -180,7 +179,7 @@ public:
 	UFUNCTION() void Local_BindGlobalEvent();
 
 	UFUNCTION(BlueprintNativeEvent)
-	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FLuaValue meta);
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInputMethodChanged(bool bIsGamepad);
 

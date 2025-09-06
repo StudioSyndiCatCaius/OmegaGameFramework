@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "Widget/Menu.h"
 #include "AsyncAction_Menu.generated.h"
 
@@ -22,16 +23,12 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnMenuFailed Failed;
 	
-	UPROPERTY()
-	APlayerController* PlayerRef;
-	UPROPERTY()
-	TSubclassOf<UMenu> MenuRef;
-	UPROPERTY()
-	FString FlagRef;
-	UPROPERTY()
-	UObject* ContextRef;
-	UPROPERTY()
-	FGameplayTagContainer TagsRef;
+	UPROPERTY() APlayerController* PlayerRef;
+	UPROPERTY() TSubclassOf<UMenu> MenuRef;
+	UPROPERTY() FString FlagRef;
+	UPROPERTY() UObject* ContextRef;
+	UPROPERTY() FGameplayTagContainer TagsRef;
+	UPROPERTY() FOmegaCommonMeta in_meta;
 
 	UFUNCTION()
 	void NativeShutdown(FGameplayTagContainer CloseTags, UObject* Context, const FString OutFlag);
@@ -39,7 +36,7 @@ public:
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player, OpenTags, OpenFlag"), Category="Omega|AsyncGameplayTasks"
 		,DisplayName="Ω🔷 Open Menu")
-	static UAsyncAction_Menu* OpenMenu(UObject* WorldContextObject, APlayerController* Player, const TSubclassOf<UMenu> MenuClass, UObject* Context, const FGameplayTagContainer OpenTags, const FString& OpenFlag);
+	static UAsyncAction_Menu* OpenMenu(UObject* WorldContextObject, APlayerController* Player, const TSubclassOf<UMenu> MenuClass, UObject* Context, const FGameplayTagContainer OpenTags, const FString& OpenFlag,FOmegaCommonMeta meta);
 
 	
 };
