@@ -34,10 +34,12 @@ class OMEGAGAMEFRAMEWORK_API UOAsset_Campaign : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 
-	
-	
+
 public:
 	void ScriptEvent(int32 event,UOmegaSaveSubsystem* subsystem);
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Campaign")
+	UOmegaQuest* PrimaryQuest;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="Campaign")
 	TArray<UOAsset_Campaign_Script*> Scripts;

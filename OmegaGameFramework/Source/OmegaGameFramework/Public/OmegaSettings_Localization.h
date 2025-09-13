@@ -21,7 +21,12 @@ public:
 	UOAsset_Localization* DefaultLocalization;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization")
 	TArray<UOAsset_Localization*> LocalizationList;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization",meta=(MultiLine))
+	FString Default_VoiceCue_Path="/Game/0_Main/Assets/audio/voice/";
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization")
+	FString VoiceClip_Prefex="vo_{id}_";
+	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization",meta=(MultiLine))
+	//FString Default_VoiceMessage_Path="/Game/0_Main/Assets/audio/vo_msg/";
 };
 
 
@@ -45,6 +50,12 @@ class OMEGAGAMEFRAMEWORK_API UOmegaLocalizationFunctions : public UBlueprintFunc
 
 public:
 
+	UFUNCTION(BlueprintCallable,Category="Omega|Localization")
+	static void PlayVoiceClip(AActor* Instigator, FString VoiceClip);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Localization")
+	static USoundBase* GetVoiceClip_ByID(FName ID, FString VoiceClip);
+	
 	UFUNCTION(BlueprintPure,Category="Omega|Settings", DisplayName="Get OMEGA Settings (Localization)")
 	static UOmegaSettings_Localization* GetCurrentSettings_Localization();
 };

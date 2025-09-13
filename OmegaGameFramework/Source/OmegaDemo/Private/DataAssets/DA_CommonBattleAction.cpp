@@ -16,6 +16,7 @@ ULevelSequence* UOAsset_CommonBattleAction::GetSkill_Sequences_Implementation(UC
 				return Sequence_Named[Name]->GetLevelSequence(Combatant);
 			}
 		}
+		return nullptr;
 	}
 	if(Sequence)
 	{
@@ -35,6 +36,7 @@ UAnimMontage* UOAsset_CommonBattleAction::GetSkill_Montage_Implementation(UComba
 				return Montage_Named[Name]->GetMontage(Combatant);
 			}
 		}
+		return nullptr;
 	}
 	if(Montage)
 	{

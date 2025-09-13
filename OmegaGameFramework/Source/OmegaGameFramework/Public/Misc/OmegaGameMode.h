@@ -21,6 +21,7 @@ protected:
 	void Local_LoadSystemShutdown(UObject* Context, FString Flag);
 	
 public:
+	AOmegaGameMode();
 
 	UPROPERTY(BlueprintAssignable) FOmegaGameModeDelegate OnLoadEventFinish;
 	

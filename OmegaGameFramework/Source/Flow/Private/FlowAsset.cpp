@@ -13,6 +13,7 @@
 #include "Nodes/Route/FlowNode_SubGraph.h"
 
 #include "Engine/World.h"
+#include "Nodes/Route/FlowNode_Hub.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
 
@@ -775,6 +776,22 @@ TArray<FGuid> UFlowAsset::GetActiveNodeGuids()
 void UFlowAsset::ForceActivateNode(FGuid NodeGuid, FName InputName)
 {
 	TriggerInput(NodeGuid, InputName);
+}
+
+bool UFlowAsset::ForceActivateHubNode(FName HubName)
+{
+	for(auto* f : GetAllNodes())
+	{
+		if(f)
+		{
+			if(f->GetClass()->IsChildOf(UFlowNode_Hub::StaticClass()) && Cast<UFlowNode_Hub>(f)->HubName==HubName)
+			{
+				f->TriggerInput("In", EFlowPinActivationType::Forced);
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 void UFlowAsset::FireFlowSignal(FName Signal, UObject* Context)

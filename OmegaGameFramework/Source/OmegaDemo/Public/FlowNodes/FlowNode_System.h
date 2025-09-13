@@ -83,6 +83,8 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	TSoftObjectPtr<UOmegaEncounter_Asset> Encounter;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Game")
+	UOmegaEncounter_Asset* Encounter_Custom;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	FString Flag;
 };

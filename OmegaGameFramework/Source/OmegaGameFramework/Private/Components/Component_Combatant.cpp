@@ -805,13 +805,6 @@ void UCombatantComponent::SetOverrideMaxAttributes_Int(TMap<UOmegaAttribute*, in
 	SetOverrideMaxAttributes(targetMap);
 }
 
-void UCombatantComponent::InitializeFromAsset(UObject* Asset)
-{
-	if(Asset && Asset->Implements<UDataInterface_Combatant>())
-	{
-		
-	}
-}
 
 float UCombatantComponent::GetAttributePercentage(UOmegaAttribute* Attribute)
 {

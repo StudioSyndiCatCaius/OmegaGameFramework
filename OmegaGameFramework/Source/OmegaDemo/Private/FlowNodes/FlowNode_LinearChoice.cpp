@@ -18,9 +18,6 @@ UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 	OutputPins.Empty();
 	//NodeStyle = EFlowNodeStyle::Latent;
 	//InstanceClass = LoadObject<UClass>(nullptr, TEXT("/OmegaGameFramework/DEMO/Choice/OmegaDemo_Choice_Instance.OmegaDemo_Choice_Instance"));
-	OutputPins.Add(FFlowPin(TEXT("0")));
-	OutputPins.Add(FFlowPin(TEXT("1")));
-	OutputPins.Add(FFlowPin(TEXT("2")));
 
 	for (int i = 0; i < 3; ++i)
 	{

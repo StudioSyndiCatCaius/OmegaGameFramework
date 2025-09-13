@@ -22,6 +22,11 @@ void AOmegaGameMode::Local_LoadSystemShutdown(UObject* Context, FString Flag)
 	OnLoadEventFinished();
 }
 
+AOmegaGameMode::AOmegaGameMode()
+{
+	PlayerControllerClass=AOmegaPlayer::StaticClass();
+}
+
 void AOmegaGameMode::Local_ActivatePersistentSystems()
 {
 	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();

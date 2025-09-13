@@ -20,13 +20,6 @@ virtual void GetGeneralAssetLabel_Implementation(FString& Label) override { if(!
 virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; }; \
 virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return  GameplayTags; }; \
 
-#define OMACRO_INSTALL_QUEUEDQUERY() \
-if(UOmegaSubsystem_QueuedQuery* REF_QuerySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()) \
-{ \
-	REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); \
-} \
-
-
 
 USTRUCT(BlueprintType)
 struct FCustomAssetData

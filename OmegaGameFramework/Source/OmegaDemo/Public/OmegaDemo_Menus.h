@@ -14,11 +14,18 @@ class OMEGADEMO_API UMenuBase_Title : public UMenu
 {
 	GENERATED_BODY()
 
+	virtual UWidgetSwitcher* GetWidget_WidgetSwitcher_State_Implementation() override;
+
 public:
+	virtual void NativePreConstruct() override;
+	
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Title Menu") FVector2D LogoSize=FVector2D(400,400);
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Menu") UImage* GetWidget_Image_Logo();
-	UFUNCTION(BlueprintImplementableEvent,Category="Menu") UTextBlock* GetWidget_Text_Legal();
-
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu",meta=(BindWidget)) UImage* IMG_Logo;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu",meta=(BindWidget)) UDataList* List_RootOptions;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu",meta=(BindWidget)) UWidgetSwitcher* Switcher_SplashState;
+	
+	
 };
 
 
@@ -40,14 +47,25 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="MENU") int32 SaveCount=20;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="MENU") bool RetainSaveCountSize=false;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu", meta=(BindWidget))
+	UDataList* List_SaveSlots;
+	
 	virtual void MenuOpened_Implementation(FGameplayTagContainer Tags, UObject* Context, const FString& Flag) override;
-	
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu") FString GetSavesPath_ByCategory(int32 save_category);
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Menu") UDataList* GetDataList_SaveSlots();
+
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu") UDataList* GetDataList_SavePaths(int32 save_category);
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu") UWidgetSwitcher* GetWidget_Switcher_SavePaths();
+	
+};
+
+UCLASS(Abstract)
+class OMEGADEMO_API UMenuBase_Equipment : public UMenu
+{
+	GENERATED_BODY()
 
 
+public:
+
+	
 };

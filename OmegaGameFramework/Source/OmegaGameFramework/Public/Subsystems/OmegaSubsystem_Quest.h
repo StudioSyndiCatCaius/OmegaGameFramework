@@ -100,8 +100,6 @@ public:
 };
 
 
-
-
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UOmegaQuestComponent : public UActorComponent
 {
@@ -161,7 +159,5 @@ public:
 	// ======== TASKS =====
 	UFUNCTION(BlueprintCallable,Category="Quest")
 	TArray<UObject*> GetActiveQuestTasks();
-
 	
 };
-

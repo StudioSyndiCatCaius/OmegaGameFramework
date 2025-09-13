@@ -171,6 +171,7 @@ void FOmegaEditor::StartupModule()
 	ThumbColors.Add({1,1,1,1}); // white
 	ThumbColors.Add({0.2,0.2,1}); // red
 	ThumbColors.Add({0.2,1,0.7,1}); // green
+	ThumbColors.Add({0.1,0.4,1,1}); // blue
 	
 		
 	FSlateImageBrush* ThumbnailTemp;

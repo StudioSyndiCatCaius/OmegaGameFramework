@@ -10,6 +10,7 @@
 #include "Subsystems/OmegaSubsystem_Save.h"
 #include "EnhancedInputSubsystems.h"
 #include "Actors/Actor_Player.h"
+#include "Components/Component_Combatant.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/GeneralDataObject.h"
@@ -55,7 +56,7 @@ AOmegaBaseSystem::AOmegaBaseSystem()
 void AOmegaBaseSystem::BeginPlay()
 {
 	l_subsys_sav=GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
-	l_subsys_qquery=GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>();
+	l_subsys_qquery=GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>();
 	///ATTACH TO GAME MODE
 	if(!GetAttachParentActor())
 	{
@@ -73,8 +74,12 @@ void AOmegaBaseSystem::BeginPlay()
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaBaseSystem::OnGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaBaseSystem::OnTaggedGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnNewGameStarted.AddDynamic(this, &AOmegaBaseSystem::OnNewGameStarted);
-	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueDelay>()->SetQueuedDelaySourceRegistered(this,true);
-	OMACRO_INSTALL_QUEUEDQUERY()
+	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>()->SetQueuedDelaySourceRegistered(this,true);
+	
+	if(UOmegaSubsystem_QueueEvents* REF_QuerySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>()) 
+	{ 
+		REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); 
+	} 
 
 	//Setup Actor event bindings
 	UOmegaActorSubsystem* sub_a=GetWorld()->GetSubsystem<UOmegaActorSubsystem>();
@@ -342,6 +347,18 @@ void AOmegaBaseSystem::Restart(UObject* Context, FString Flag)
 	Shutdown(Context,Flag);
 }
 
+
+AOmegaPlayer* AOmegaBaseSystem::GetSystemOwningPlayer() const
+{
+	if(GetWorld())
+	{
+		if(AOmegaPlayer* p=Cast<AOmegaPlayer>(GetWorld()->GetFirstPlayerController()))
+		{
+			return p;
+		}
+	}
+	return nullptr;
+}
 
 void AOmegaBaseSystem::local_globalEventTags(FGameplayTagContainer tags)
 {

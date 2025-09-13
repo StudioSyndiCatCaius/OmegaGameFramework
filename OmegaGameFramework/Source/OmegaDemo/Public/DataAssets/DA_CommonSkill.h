@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "DA_CommonBattleAction.h"
 #include "Functions/OmegaFunctions_CombatantFilter.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
 #include "Interfaces/OmegaInterface_Skill.h"
 
 #include "Misc/GeneralDataObject.h"

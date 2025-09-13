@@ -31,7 +31,7 @@ class UUtilMeshComponent;
 
 UCLASS(HideCategories=("Skeletal Mesh, Physics"),DisplayName="Ω Character")
 class OMEGADEMO_API AOmegaCharacter : public AOmegaBaseCharacter, public IGameplayTagsInterface, public IActorInterface_AimTarget,
-										public IDataInterface_FlowAsset, public IDataInterface_General,
+										public IDataInterface_FlowAsset,
 										public IActorTagEventInterface, public IActorInterface_Interactable
 {
 	GENERATED_BODY()
@@ -153,7 +153,6 @@ public:
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 };

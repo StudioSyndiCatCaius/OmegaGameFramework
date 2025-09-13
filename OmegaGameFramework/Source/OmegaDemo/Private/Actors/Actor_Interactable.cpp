@@ -4,6 +4,7 @@
 
 #include "OmegaSettings_Gameplay.h"
 #include "Components/Component_ActorConfig.h"
+#include "Components/Component_Saveable.h"
 #include "Components/Component_UtilMesh.h"
 #include "Interfaces/OmegaInterface_ObjectTraits.h"
 #include "Components/TextRenderComponent.h"
@@ -206,6 +207,15 @@ UOmegaInteractable_Preset::UOmegaInteractable_Preset()
 void AOmegaInteractable::L_InteractionSystemEnd(UObject* Context, FString Flag)
 {
 	
+}
+
+void AOmegaInteractable::BeginPlay()
+{
+	Super::BeginPlay();
+	if(Saveable->GetSaveParam_Bool("dead"))
+	{
+		K2_DestroyActor();
+	}
 }
 
 

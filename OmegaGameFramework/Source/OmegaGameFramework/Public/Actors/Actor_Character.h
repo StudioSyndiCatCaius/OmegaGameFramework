@@ -26,7 +26,7 @@ public:
 
 UCLASS(HideCategories=("Skeletal Mesh, Physics"))
 class OMEGAGAMEFRAMEWORK_API AOmegaBaseCharacter : public ACharacter, public IDataInterface_Json, public IDataInterface_Traits,
-																	public IDataInterface_AppearanceSource, public IDataInterface_AssetLibraries
+																	public IDataInterface_AppearanceSource, public IDataInterface_AssetLibraries, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -42,24 +42,25 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UStateTreeComponent* StateTree;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Character")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="OmegaCharacter")
 	UPrimaryDataAsset* CharacterAsset;
 
-	UFUNCTION(BlueprintCallable, Category="Character")
+	UFUNCTION(BlueprintCallable, Category="OmegaCharacter")
 	void SetCharacterAsset(UPrimaryDataAsset* Asset);
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter")
 	TSoftObjectPtr<UOAsset_Appearance> AppearanceOverride;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character",AdvancedDisplay)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter",AdvancedDisplay)
 	UOmegaAssetLibrary_Animation* Library_Animation;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character",AdvancedDisplay)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter",AdvancedDisplay)
 	UOmegaAssetLibrary_Sound* Library_Sound;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character",AdvancedDisplay)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter",AdvancedDisplay)
 	UOmegaAssetLibrary_SlateBrush* Library_Slate;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay, Category="Character")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay, Category="OmegaCharacter")
 	UOmegaCharacterConfig* Config;
-	
+
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 	virtual void GetAppearanceLibraries_Implementation(UOmegaAssetLibrary_Animation*& Anim, UOmegaAssetLibrary_Sound*& Sound, UOmegaAssetLibrary_SlateBrush*& Slate) override;
 };

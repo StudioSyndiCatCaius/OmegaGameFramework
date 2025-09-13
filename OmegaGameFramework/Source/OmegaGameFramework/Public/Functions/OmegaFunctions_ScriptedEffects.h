@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LuaInterface.h"
-#include "LuaValue.h"
 #include "Engine/DataAsset.h"
 #include "Styling/SlateBrush.h"
 #include "Interfaces/OmegaInterface_Common.h"
@@ -25,12 +23,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect")
 	TArray<UOmegaScriptedEffect*> CustomEffects;
 
-	TArray<UOmegaScriptedEffect*> GetAllEffects();
+	TArray<UOmegaScriptedEffect*> GetAllEffects() const;
+	FText GetEffectsDescription(const FString& delimiter=" ") const;
 };
 
 
 UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories, Abstract,meta=(ShowWorldContextPin))
-class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffect : public UObject, public ILuaInterface, public IDataInterface_General
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedEffect : public UObject, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -45,9 +44,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category="Scripted Effect")
 	TArray<TSubclassOf<AOmegaGameplayCue>> GetCuesToPlay();
 
-	UPROPERTY() FLuaValue lua_val;
-	virtual FLuaValue GetValue_Implementation(const FString& Field) override;
-	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field) override;
 };
 
 UCLASS(EditInlineNew)

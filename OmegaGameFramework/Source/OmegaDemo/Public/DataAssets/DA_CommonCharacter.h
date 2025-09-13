@@ -19,6 +19,9 @@
 class AOmegaSkin;
 class UOmegaFaction;
 class UEquipmentSlot;
+class UCombatantGambitAsset;
+class UOmegaDamageType;
+class UOmegaDamageTypeReactionAsset;
 
 UCLASS()
 class OMEGADEMO_API UOAsset_CommonCharacter : public UOAsset_CombatantIdentity, public IDataInterface_FlowAsset, public IDataInterface_ContextSlate,

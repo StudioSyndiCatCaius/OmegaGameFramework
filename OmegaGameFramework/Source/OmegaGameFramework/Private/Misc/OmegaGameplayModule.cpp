@@ -3,6 +3,7 @@
 
 #include "Misc/OmegaGameplayModule.h"
 
+#include "Components/Component_Combatant.h"
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "Subsystems/OmegaSubsystem_GameManager.h"
 #include "UObject/Object.h"
@@ -11,7 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/GeneralDataObject.h"
 #include "Subsystems/OmegaSubsystem_Actors.h"
-#include "Subsystems/OmegaSubsystem_QueuedQuery.h"
+#include "Subsystems/OmegaSubsystem_QueueEvents.h"
 
 UOmegaGameplayModule::UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -35,7 +36,7 @@ void UOmegaGameplayModule::Native_Initialize()
 		_sys->OnNewGameStarted.AddDynamic(this, &UOmegaGameplayModule::GameFileStarted);
 		GameFileStarted(_sys->ActiveSaveData,FGameplayTagContainer());
 	}
-	if(UOmegaSubsystem_QueuedSelector* _sys = GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedSelector>())
+	if(UOmegaSubsystem_QueueEvents* _sys = GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>())
 	{
 		_sys->SetQueuedSelectorSourceRegistered(this,true);
 	}
@@ -64,7 +65,7 @@ void UOmegaGameplayModule::Native_OnLevelOpened(FString LevelName, AOmegaGameMod
 	{
 		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSystem, this, "None");
 	}
-	if(UOmegaSubsystem_QueuedQuery* REF_QuerySubsystem = GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()) 
+	if(UOmegaSubsystem_QueueEvents* REF_QuerySubsystem = GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>()) 
 	{
 		REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); 
 	} 

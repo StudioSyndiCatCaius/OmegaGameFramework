@@ -30,6 +30,7 @@ class OMEGADEMO_API AOmegaInteractable : public AOmegaProp, public IDataInterfac
 	void L_InteractionSystemEnd(UObject* Context, FString Flag);
 	
 public:
+	virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual UOmegaProp_Preset* L_GetPreset() override;
 	AOmegaInteractable();
@@ -44,12 +45,16 @@ public:
 	void Update();
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Interactable")
 	void AutosetName();
+
+	//Only interactable one per save
+	UPROPERTY()
+	bool Oneshot;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable",DisplayName="Preset")
 	UOmegaInteractable_Preset* Interactable_Preset=nullptr;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable",DisplayName="Name")
 	FText DisplayName;
-	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable")
 	UFlowAsset* DialogueFlow=nullptr;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Interactable")

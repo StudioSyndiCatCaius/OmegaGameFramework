@@ -44,8 +44,6 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="Ω Set Combatant (From Source)")
-	static void SetCombatantFromSource(UCombatantComponent* Combatant, UObject* Source);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="Ω Set Combatant (From Source)")
 	static bool CheckCombatantConditions(UCombatantComponent* Combatant, FOmegaConditions_Combatant Conditions);

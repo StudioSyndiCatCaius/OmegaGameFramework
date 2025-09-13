@@ -38,6 +38,7 @@ class UDataInterface_General : public UInterface
 public:
 	static FText GetObjectName(UObject* obj);
 	static FText GetObjectDesc(UObject* obj);
+	static FString GetObjectLabel(UObject* obj);
 };
 
 
@@ -79,6 +80,23 @@ inline FText UDataInterface_General::GetObjectDesc(UObject* obj)
 	{
 		FText out_desc;
 		IDataInterface_General::Execute_GetGeneralDataText(obj,"",nullptr,out_desc,out);
+	}
+	return out;
+}
+
+inline FString UDataInterface_General::GetObjectLabel(UObject* obj)
+{
+	FString out;
+	if(obj)
+	{
+		if(obj->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+		{
+			IDataInterface_General::Execute_GetGeneralAssetLabel(obj,out);
+		}
+		else
+		{
+			out=obj->GetName();
+		}
 	}
 	return out;
 }

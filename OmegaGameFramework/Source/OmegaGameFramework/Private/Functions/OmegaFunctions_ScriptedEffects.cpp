@@ -24,7 +24,7 @@ bool UOmegaScriptedEffect::CanApplyEffect_Implementation(UCombatantComponent* Ta
 	return true;
 }
 
-TArray<UOmegaScriptedEffect*> FOmegaCustomScriptedEffects::GetAllEffects()
+TArray<UOmegaScriptedEffect*> FOmegaCustomScriptedEffects::GetAllEffects() const
 {
 	TArray<UOmegaScriptedEffect*> out=CustomEffects;
 	for(auto* a : EffectAssets)
@@ -37,14 +37,18 @@ TArray<UOmegaScriptedEffect*> FOmegaCustomScriptedEffects::GetAllEffects()
 	return out;
 }
 
-FLuaValue UOmegaScriptedEffect::GetValue_Implementation(const FString& Field)
+FText FOmegaCustomScriptedEffects::GetEffectsDescription(const FString& delimiter) const
 {
-	return lua_val;
-}
-
-void UOmegaScriptedEffect::SetValue_Implementation(FLuaValue Value, const FString& Field)
-{
-	lua_val = Value;
+	FText out;
+	for(auto* a : GetAllEffects())
+	{
+		if(a)
+		{
+			FString str=out.ToString()+delimiter+UDataInterface_General::GetObjectDesc(a).ToString();
+			out=FText::FromString(str);
+		}
+	}
+	return out;
 }
 
 void UOmegaScriptedEffectAsset::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,

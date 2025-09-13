@@ -257,6 +257,11 @@ void UMenu::Native_UpdateState()
 	OnMenuStateChanged(menu_state);
 }
 
+UWidgetSwitcher* UMenu::GetWidget_WidgetSwitcher_State_Implementation()
+{
+	return nullptr;
+}
+
 void UMenu::SetMenuState(int32 state)
 {
 	if(state!=menu_state)

@@ -27,6 +27,8 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tech,"Skill.Type.Tech");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Magic,"Skill.Type.Magic");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Tactic,"Skill.Type.Tactic");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Skill_Flag_TargetAll,"Skill.Flag.TargetAll");
+
 // --------------------------------------------------------------------------------------------------------
 // Combat
 // --------------------------------------------------------------------------------------------------------

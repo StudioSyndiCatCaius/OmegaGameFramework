@@ -175,9 +175,9 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 	TSubclassOf<ACharacter> in_class=BattlerCharacterClass;
 	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
 	{
-		if(set->Default_EncounterCharacter.IsValid())
+		if(set->Default_EncounterCharacter)
 		{
-			in_class=set->Default_EncounterCharacter.LoadSynchronous();
+			in_class=set->Default_EncounterCharacter;
 		}
 	}
 	if(REF_Instance)

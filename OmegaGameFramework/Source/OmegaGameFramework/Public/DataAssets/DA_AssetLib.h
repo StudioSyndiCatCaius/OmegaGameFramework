@@ -172,6 +172,8 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_AssetLibraries
 	GENERATED_BODY()
 
 public:
+
+
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|AppearanceLibraries")
 	void GetAppearanceLibraries(UOmegaAssetLibrary_Animation*& Anim,UOmegaAssetLibrary_Sound*& Sound,UOmegaAssetLibrary_SlateBrush*& Slate);

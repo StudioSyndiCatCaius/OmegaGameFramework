@@ -27,22 +27,9 @@ void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, U
 {
 	if(IdentityAsset)
 	{
-		//if(IdentityAsset->GetClass()->IsChildOf(UOmegaDataItem::StaticClass())) { DataItem->SetDataItem(Cast<UOmegaDataItem>(IdentityAsset)); }
 		Combatant->SetSourceDataAsset(IdentityAsset);
-		UCombatantFunctions::SetCombatantFromSource(Combatant,IdentityAsset);
 		Equipment->SetEquipment_FromSource(IdentityAsset);
 		UOmegaSkinFunctions::SetSkinFromAsset(SkinComponent,IdentityAsset);
-		if(IdentityAsset && IdentityAsset->GetClass()->ImplementsInterface(UDataInterface_MutableSource::StaticClass()))
-		{
-			if(UCustomizableObjectInstance* inst = IDataInterface_MutableSource::Execute_GetCustomizableObjectInstance(IdentityAsset))
-			{
-				//if(USkeletalMesh* _mesh = inst->GetComponentMeshSkeletalMesh(MutableComponentName))
-				//{
-				//	GetMesh()->SetSkeletalMeshAsset(_mesh);
-				//}
-				//if(CustomSkelMesh) { CustomSkelMesh->SetCustomizableObjectInstance(inst); }
-			}
-		}
 	}
 }
 
@@ -332,14 +319,6 @@ void AOmegaCharacter::GetGeneralDataImages_Implementation(const FString& Label, 
 	IDataInterface_General::GetGeneralDataImages_Implementation(Label, Context, Texture, Material, Brush);
 }
 
-void AOmegaCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	if(b_IdentityHasGeneralInterface())
-	{
-		Execute_GetGeneralAssetLabel(ActorIdentity->GetIdentitySourceAsset(),Label);
-	}
-	IDataInterface_General::GetGeneralAssetLabel_Implementation(Label);
-}
 
 UOAsset_Appearance* AOmegaCharacter::GetAppearanceAsset_Implementation()
 {

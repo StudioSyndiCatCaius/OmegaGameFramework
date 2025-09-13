@@ -6,9 +6,7 @@
 #include "Nodes/FlowNode.h"
 #include "FlowNode_Hub.generated.h"
 
-/**
- * A named node that you can reroute to from a "ToHub" node.
- */
+
 UCLASS(NotBlueprintable, meta = (DisplayName = "HUB"))
 class FLOW_API UFlowNode_Hub : public UFlowNode
 {
@@ -37,7 +35,7 @@ public:
 	
 	virtual void ExecuteInput(const FName& PinName) override;
 
-	UPROPERTY(EditAnywhere, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
 	FName TargetHub;
 
 

@@ -6,8 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "GameplayTagContainer.h"
 #include "OmegaGameMode.h"
-#include "Subsystems/OmegaSubsystem_QueuedQuery.h"
-#include "Subsystems/OmegaSubsystem_QueuedSelector.h"
+#include "Subsystems/OmegaSubsystem_QueueEvents.h"
 
 #include "OmegaGameplayModule.generated.h"
 

@@ -2,12 +2,14 @@
 
 
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
+
+#include "OmegaSettings_Gameplay.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "EngineUtils.h"
+#include "Components/Component_Combatant.h"
 #include "Functions/OmegaFunctions_Combatant.h"
-#include "GameFramework/GameModeBase.h"
+#include "Subsystems/OmegaSubsystem_Quest.h"
 
 
 void UOmegaGameplaySubsystem::Initialize(FSubsystemCollectionBase& Colection)
@@ -19,6 +21,7 @@ void UOmegaGameplaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
 	UOmegaSaveSubsystem* _sys=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+	
 	for(auto* TempState : _sys->GetActiveStoryStates())
 	{
 		for(auto* TempScript : TempState->Scripts)
@@ -26,6 +29,8 @@ void UOmegaGameplaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
 			TempScript->OnLevelChange(_sys, TempState,UGameplayStatics::GetCurrentLevelName(_sys));
 		}
 	}
+
+
 }
 
 AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag,FOmegaCommonMeta meta)

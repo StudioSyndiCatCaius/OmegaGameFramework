@@ -3,7 +3,31 @@
 
 #include "OmegaDemo_Menus.h"
 
+#include "OmegaSettings_Slate.h"
 #include "Widget/DataList.h"
+
+
+UWidgetSwitcher* UMenuBase_Title::GetWidget_WidgetSwitcher_State_Implementation()
+{
+	if(Switcher_SplashState)
+	{
+		return Switcher_SplashState;
+	}
+	return nullptr;
+}
+
+void UMenuBase_Title::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+	if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
+	{
+		if(IMG_Logo)
+		{
+			IMG_Logo->SetBrushResourceObject(set->LogoDefault.GetResourceObject());
+		}
+		
+	}
+}
 
 void UMenuBase_SaveLoad::L_SetSavePathCategory(int32 cat)
 {
@@ -60,9 +84,9 @@ void UMenuBase_SaveLoad::MenuOpened_Implementation(FGameplayTagContainer Tags, U
 	}
 	L_SetSavePathCategory(0);
 
-	if(UDataList* list=GetDataList_SaveSlots())
+	if(List_SaveSlots)
 	{
-		list->OnEntrySelected.AddDynamic(this, &UMenuBase_SaveLoad::UMenuBase_SaveLoad::L_OnSelectSlot);
+		List_SaveSlots->OnEntrySelected.AddDynamic(this, &UMenuBase_SaveLoad::UMenuBase_SaveLoad::L_OnSelectSlot);
 	}
 	Super::MenuOpened_Implementation(Tags, Context, Flag);
 }

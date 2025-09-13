@@ -13,6 +13,7 @@
 class UOAsset_ActorModifierCollection;
 class UEquipmentSlot;
 class UOmegaAttribute;
+class UOmegaAttributeSet;
 class AZoneEntityDisplayActor;
 class UOmegaCharacterConfig;
 class UOmegaActorConfig;
@@ -115,26 +116,25 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Classes")
 	TSubclassOf<AOmegaActor_ChoiceBASE> DefaultChoiceInstance;
-
-
+	
 	// ---------------------------------------------------------------------------
 	// Actor
 	// ---------------------------------------------------------------------------
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character")
 	TSoftClassPtr<UAnimInstance> DefaultCharacter_AnimClass;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character")
-	TSoftClassPtr<ACharacter> Default_EncounterCharacter;
+	TSubclassOf<ACharacter> Default_EncounterCharacter;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay,Category="Actor")
 	UOmegaCharacterConfig* DefaultActorConfig_Character;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay,Category="Actor")
 	UOmegaActorConfig* DefaultActorConfig_Interactable;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay,Category="Actor")
 	UOmegaActorConfig* DefaultActorConfig_FloatingCombatant;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Actor")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,AdvancedDisplay,Category="Actor")
 	UOAsset_ActorModifierCollection* ActorMods_Character;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Actor")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,AdvancedDisplay,Category="Actor")
 	UOAsset_ActorModifierCollection* ActorMods_Interactable;
 
 	// ---------------------------------------------------------------------------
@@ -143,28 +143,18 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combatant")
 	UOmegaAttributeSet* Default_AttributeSet;
 	
-	//########################################################
-	//Zones
-	//########################################################
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone")
-	TSubclassOf<AZoneEntityDisplayActor> DefaultZoneEntityDisplayActor;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone")
-	TSoftObjectPtr<UNiagaraSystem> DefaultZoneTransitParticle;
-	UPROPERTY(EditAnywhere,  Category = "Zone")
-	bool bAutoSpawnAtFirstPoint=true;
-	UPROPERTY(EditAnywhere,  Category = "Zone")
-	float SpawnAtFirstPointDelay=0.1;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Zone")
-	TSoftClassPtr<AOmegaGameplaySystem> ZoneTransitSystem;
-	UPROPERTY(EditAnywhere,  Category = "Zone")
-	bool bAutoplayZoneBgm=true;
-	UPROPERTY(EditAnywhere,  Category = "Zone")
-	FGameplayTag ZoneBGMSlot;
+	// ---------------------------------------------------------------------------
+	// Zones
+	// ---------------------------------------------------------------------------
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Sequences")
-	TSoftObjectPtr<ULevelSequence> Sequence_ZoneTransit;
-
+	UPROPERTY(EditAnywhere,Category = "Zone") bool bAutoSpawnAtFirstPoint=true;
+	UPROPERTY(EditAnywhere,Category = "Zone") bool bAutoplayZoneBgm=true;
+	UPROPERTY(EditAnywhere,Category = "Zone") float SpawnAtFirstPointDelay=0.1;
+	UPROPERTY(EditAnywhere,Category = "Zone") FGameplayTag ZoneBGMSlot;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone") TSubclassOf<AZoneEntityDisplayActor> DefaultZoneEntityDisplayActor;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone") TSoftClassPtr<AOmegaGameplaySystem> ZoneTransitSystem;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone") TSoftObjectPtr<UNiagaraSystem> DefaultZoneTransitParticle;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone") TSoftObjectPtr<ULevelSequence> Sequence_ZoneTransit;
 
 	// ---------------------------------------------------------------------------
 	// Systems
@@ -177,6 +167,11 @@ public:
 	//Triggered with Demo FlowAsset events
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = "Systems")
 	TSoftClassPtr<AOmegaGameplaySystem> System_FlowAsset;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Systems",DisplayName="Systems (Auto Activated)")
+	TArray<TSubclassOf<AOmegaGameplaySystem>> System_AutoActivated;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Systems",DisplayName="Systems (Named)")
+	TMap<FName,TSubclassOf<AOmegaGameplaySystem>> System_Named;
 	// ---------------------------------------------------------------------------
 	// Data Asset
 	// ---------------------------------------------------------------------------
@@ -218,8 +213,6 @@ public:
 		}
 		return out;
 	}
-	
-
 };
 
 
@@ -229,7 +222,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayStyleFunctions : public UBlueprintFun
 	GENERATED_BODY()
 
 public:
-	
 
 	UFUNCTION(BlueprintPure,Category="Omega|Settings", DisplayName="Get OMEGA Settings (Gameplay)")
 	static UOmegaSettings_Gameplay* GetCurrentGameplayStyle();
@@ -239,8 +231,6 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay")
 	static bool OmegaGameplayInputCall(APlayerController* Player, const FKey& Key, bool End);
-
-
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay",meta=(DeterminesOutputType="Class", ExpandBoolAsExecs="Result"))
 	static UOmegaDataAssetMetaSetting* GetDataAssetMetaSetting(UPrimaryDataAsset* DataAsset, TSubclassOf<UOmegaDataAssetMetaSetting> Class, bool& Result);

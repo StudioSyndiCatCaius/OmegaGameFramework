@@ -339,6 +339,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Flow")
 	void ForceActivateNode(FGuid NodeGuid, FName InputName);
 	
+	UFUNCTION(BlueprintCallable, Category="Flow")
+    bool ForceActivateHubNode(FName HubName);
+	
 	//--------------------------------------------------------//
 	// General
 	//--------------------------------------------------------//

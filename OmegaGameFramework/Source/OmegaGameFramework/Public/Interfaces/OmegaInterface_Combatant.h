@@ -10,45 +10,6 @@
 class UCombatantComponent;
 class UCombatantFilter;
 
-UINTERFACE() class UActorInterface_Combatant : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IActorInterface_Combatant
-{
-	GENERATED_BODY()
-
-	public:
-
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant")
-	TArray<UObject*> GetAttributeModifiers();
-};
-
-
-UINTERFACE() class UDataInterface_Combatant : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_Combatant
-{
-	GENERATED_BODY()
-
-public:
-
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") UCombatantGambitAsset* GetGambitAsset();
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") UOmegaFaction* GetFactionAsset();
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") TArray<UPrimaryDataAsset*> GetDefaultSkills();
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") int32 GetLevel();
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") TMap<UOmegaAttribute*, float> GetMaxAttributeOverrides();
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") FGameplayTag GetAttributeValueCategory();
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant") TMap<UOmegaDamageType*,UOmegaDamageTypeReactionAsset*> GetDamageTypeReactions();
-	
-	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
-	TMap<UOmegaAttribute*, float> OverrideCurrentAttributeValues(UCombatantComponent* Combatant, bool& bOverride);
-
-	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
-	TMap<UOmegaAttribute*, int32> OverrideAttributeLevels(UCombatantComponent* Combatant, bool& bOverride);
-
-	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
-	FGameplayTag OverrideAttributeValueCategory(UCombatantComponent* Combatant, bool& bOverride);
-
-	UFUNCTION(BlueprintImplementableEvent, Category="ΩI|Combatant")
-	int32 OverrideCombatantLevel(UCombatantComponent* Combatant, bool& bOverride);
-};
 
 
 UINTERFACE() class UDataInterface_DamageModifier : public UInterface { GENERATED_BODY() };

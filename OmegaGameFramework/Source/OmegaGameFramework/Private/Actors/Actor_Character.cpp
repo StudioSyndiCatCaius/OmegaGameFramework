@@ -89,6 +89,14 @@ void AOmegaBaseCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)
 	N_OnCharAssetChange(old_asset,CharacterAsset);
 }
 
+void AOmegaBaseCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	if(CharacterAsset)
+	{
+		Label=UDataInterface_General::GetObjectLabel(CharacterAsset);
+	}
+}
+
 UOAsset_Appearance* AOmegaBaseCharacter::GetAppearanceAsset_Implementation()
 {
 	if(AppearanceOverride.IsValid())

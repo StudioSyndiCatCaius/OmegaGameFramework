@@ -124,8 +124,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes", AdvancedDisplay)
 	FGameplayTag AttributeValueCategory;
-
-		//		--- FUNCTION ---
 	
 	UFUNCTION(BlueprintCallable,Category="Attributes")
 	void ChangeAttributeSet(UOmegaAttributeSet* NewSet,bool Reinitialize);
@@ -136,10 +134,6 @@ public:
 	void SetOverrideMaxAttributes(TMap<UOmegaAttribute*, float> Value);
 	UFUNCTION(BlueprintCallable, Category="Attributes", DisplayName="Set Override Max Attributes (Int)")
 	void SetOverrideMaxAttributes_Int(TMap<UOmegaAttribute*, int32> Value);
-
-	//Initializes the Combatants from an asset implementing "DataInterface_Combatant"
-	UFUNCTION(BlueprintCallable, Category="Combatant")
-	void InitializeFromAsset(UObject* Asset);
 	
 	UFUNCTION(BlueprintCallable, Category = "Attributes", meta = (AdvancedDisplay = "Instigator, Context, DamageType, Hit"))
 	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, UOmegaDamageType* DamageType, FHitResult Hit);

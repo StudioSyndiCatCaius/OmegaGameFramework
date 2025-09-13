@@ -9,9 +9,7 @@
 #include "Widget/HUDLayer.h"
 #include "GameplayTagContainer.h"
 #include "Actor_Ability.h"
-#include "Components/Component_Combatant.h"
-#include "Subsystems/OmegaSubsystem_QueueDelay.h"
-#include "Subsystems/OmegaSubsystem_QueuedQuery.h"
+#include "Subsystems/OmegaSubsystem_QueueEvents.h"
 #include "Subsystems/OmegaSubsystem_Save.h"
 
 #include "OmegaGameplaySystem.generated.h"
@@ -50,7 +48,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaBaseSystem : public AActor, public IOmegaSave
 	GENERATED_BODY()
 
 	UPROPERTY() UOmegaSaveSubsystem* l_subsys_sav;
-	UPROPERTY() UOmegaSubsystem_QueuedQuery* l_subsys_qquery;
+	UPROPERTY() UOmegaSubsystem_QueueEvents* l_subsys_qquery;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -59,7 +57,6 @@ public:
 	virtual void L_CleanupStateChange(bool state);
 	virtual TArray<APlayerController*> L_GetPlayers();
 protected:
-	
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -165,7 +162,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Save")
 	void OnNewGameStarted(UOmegaSaveGame* NewSave, FGameplayTagContainer GameplayTags);
 	
-
+	UFUNCTION(BlueprintPure,Category="Omega|Systems")
+	virtual AOmegaPlayer* GetSystemOwningPlayer() const;
 
 private:
 	void local_globalEventTags(FGameplayTagContainer tags);
@@ -408,6 +406,5 @@ public:
 	virtual TArray<APlayerController*> L_GetPlayers() override;
 	virtual void L_CleanupStateChange(bool state) override;
 
-	UFUNCTION(BlueprintPure,Category="Omega|Systems")
-	AOmegaPlayer* GetSystemOwningPlayer() const;
+	virtual AOmegaPlayer* GetSystemOwningPlayer() const override;
 };

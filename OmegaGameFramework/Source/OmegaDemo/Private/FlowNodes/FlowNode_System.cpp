@@ -107,7 +107,15 @@ FString UFlowNode_System_Encounter::L_GetFlag() const
 
 UObject* UFlowNode_System_Encounter::L_GetContext() const
 {
-	return Encounter.LoadSynchronous();
+	if(!Encounter.IsNull())
+	{
+		return Encounter.LoadSynchronous(); 
+	}
+	if(Encounter_Custom)
+	{
+		return Encounter_Custom;
+	}
+	return nullptr;
 }
 
 void UFlowNode_System_DlgFlow::L_SystemEnd(UObject* context, FString flag)

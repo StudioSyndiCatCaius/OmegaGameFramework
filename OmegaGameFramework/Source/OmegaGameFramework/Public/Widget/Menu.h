@@ -186,14 +186,15 @@ public:
 	//----------------------------------------------------------------------
 	// State
 	//----------------------------------------------------------------------
-private:
-	UPROPERTY() int32 menu_state;
-	void Native_UpdateState();
+
 public:
+	UPROPERTY() int32 menu_state;
+	virtual void Native_UpdateState();
+	
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu|State")
 	void OnMenuStateChanged(int32 new_state);
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Menu|State")
+	UFUNCTION(BlueprintNativeEvent,Category="Menu|State")
 	UWidgetSwitcher* GetWidget_WidgetSwitcher_State();
 	
 	UFUNCTION(BlueprintCallable,Category="Menu|State")

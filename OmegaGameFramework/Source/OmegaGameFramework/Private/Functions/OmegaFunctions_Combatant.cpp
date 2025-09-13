@@ -6,6 +6,7 @@
 #include "Subsystems/OmegaSubsystem_Gameplay.h"
 #include "OmegaSettings.h"
 #include "Actors/Actor_GameplayEffect.h"
+#include "Components/Component_Combatant.h"
 #include "Condition/Condition_Combatant.h"
 #include "Functions/OmegaFunctions_Animation.h"
 #include "Functions/OmegaFunctions_AVContext.h"
@@ -96,26 +97,6 @@ void UCombatantFunctions::RemoveGameplayEffects_OfClass(UCombatantComponent* Com
 }
 
 
-void UCombatantFunctions::SetCombatantFromSource(UCombatantComponent* Combatant, UObject* Source)
-{
-	if(Combatant && Source && Source->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
-	{
-		Combatant->AttributeValueCategory=IDataInterface_Combatant::Execute_GetAttributeValueCategory(Source);
-		Combatant->OverrideMaxAttributes=IDataInterface_Combatant::Execute_GetMaxAttributeOverrides(Source);
-		Combatant->Skills=IDataInterface_Combatant::Execute_GetDefaultSkills(Source);
-		Combatant->FactionDataAsset=IDataInterface_Combatant::Execute_GetFactionAsset(Source);
-		Combatant->DamageTypeReactions=IDataInterface_Combatant::Execute_GetDamageTypeReactions(Source);
-		Combatant->DefaultGambit=IDataInterface_Combatant::Execute_GetGambitAsset(Source);
-		
-		int32 new_level = IDataInterface_Combatant::Execute_GetLevel(Source);
-		if(new_level>0) { Combatant->SetCombatantLevel(new_level,true); }
-		
-		if (UPrimaryDataAsset* in_asset = Cast<UPrimaryDataAsset>(Source))
-		{
-			Combatant->SetSourceDataAsset(in_asset);
-		}
-	}
-}
 
 bool UCombatantFunctions::CheckCombatantConditions(UCombatantComponent* Combatant,
 	FOmegaConditions_Combatant Conditions)

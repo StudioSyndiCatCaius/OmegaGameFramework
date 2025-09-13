@@ -38,13 +38,10 @@ UActorComponent* local_GetComponentFromObject(UObject* object, TSubclassOf<UActo
 
 void UDataWidgetBase_Combatant::Native_OnSourceAssetChanged(UObject* SourceAsset)
 {
-	if(UActorComponent* ref_comp = local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass()))
+	if(UCombatantComponent* ref_comp = Cast<UCombatantComponent>(local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass())))
 	{
-		REF_combatant=Cast<UCombatantComponent>(ref_comp);
-		if(REF_combatant && ref_comp)
-		{
-			REF_combatant->OnCombatantNotify.AddDynamic(this, &UDataWidgetBase_Combatant::OnCombatantNotify);
-		}
+		REF_combatant=ref_comp;
+		//REF_combatant->OnCombatantNotify.AddDynamic(this, &UDataWidgetBase_Combatant::OnCombatantNotify);
 	}
 	Super::Native_OnSourceAssetChanged(SourceAsset);
 }
