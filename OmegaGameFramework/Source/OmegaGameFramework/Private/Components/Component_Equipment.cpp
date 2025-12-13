@@ -377,7 +377,8 @@ bool UEquipmentSlot::CanSlotEquipItem(UPrimaryDataAsset* Item)
 	{
 		FOmegaConditions_DataAsset con;
 		con.Conditions=EquipConditions;
-		if(!con.CheckConditions(Item)) { return false; }
+		TArray<FText> r; // this should probably be made an output at some point.
+		if(!con.CheckConditions(Item,r)) { return false; }
 		for(auto* temp_script : SlotScripts)
 		{
 			if(!temp_script->CanEquipItem(Item))

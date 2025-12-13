@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 //#include "OmegaUtils_Methods.generated.h"
 
+class UOmegaAttribute;
 class USaveGame;
 class AActor;
 
@@ -82,4 +83,29 @@ public:
 class OGF_Build
 {
 public:
+};
+
+class OGF_Assets
+{
+public:
+
+	static TArray<FName> Keys_Attribute();
+	
+	static TMap<FName,UOmegaAttribute*> Map_NamedAttribute(TArray<FName> names);
+	static TMap<UOmegaAttribute*,float> NamedAttributes_ToFloat(TMap<FName,float> vals);
+};
+
+class OGF_SoftParam
+{
+public:
+	
+	static float Conv_float(TMap<FName,FString> params, FName key, float def);
+	static int32 Conv_int(TMap<FName,FString> params, FName key, int32 def);
+	static bool Conv_bool(TMap<FName,FString> params, FName key, bool def);
+	static FString Conv_string(TMap<FName,FString> params, FName key, FString def);
+	
+	static void set_float(TMap<FName,FString>& params, FName key, float def);
+	static void set_int(TMap<FName,FString>& params, FName key, int32 def);
+	static void set_bool(TMap<FName,FString>& params, FName key, bool def);
+	static void set_string(TMap<FName,FString>& params, FName key, FString def);
 };

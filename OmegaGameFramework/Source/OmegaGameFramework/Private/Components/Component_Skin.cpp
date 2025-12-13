@@ -6,6 +6,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Animation/AnimInstance.h"
 #include "SkeletalMergingLibrary.h"
+#include "DataAssets/DA_Body.h"
 #include "Engine/SkeletalMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
@@ -82,6 +83,7 @@ void USkinComponent::Update_Skin()
 		}
 		
 		TArray<UOmegaBodySlot*> BodySlot_List;
+		/*
 		Appearance.Params.GetKeys(BodySlot_List);
 		for(auto* i : BodySlot_List)
 		{
@@ -95,6 +97,7 @@ void USkinComponent::Update_Skin()
 				i->Script->OnApplied_ToMeshComponent(REF_SkelMesh,in_val);
 			}
 		}
+		*/
 	}
 }
 
@@ -156,13 +159,14 @@ UOmegaBodyType* USkinComponent::GetBody_Type() const
 
 void USkinComponent::SetBodyParam_Vector(UOmegaBodySlot* Param, FVector Value)
 {
-	Appearance.Params.Add(Param,Value);
+	//Appearance.Params.Add(Param,Value);
 	Update_Skin();
 }
 
 FVector USkinComponent::GetBodyParam_Vector(UOmegaBodySlot* Param)
 {
-	return Appearance.Params.FindOrAdd(Param);
+//	return Appearance.Params.FindOrAdd(Param);
+	return FVector();
 }
 
 void USkinComponent::SetBodyParam_Bool(UOmegaBodySlot* Param, bool Value)
@@ -446,29 +450,7 @@ void AOmegaSkin::BuildSkin()
 	OnSkinBuildFinished();
 }
 
-FVector UOmegaBodySlot::GetDefaultValue()
-{
 
-	return FVector();
-}
-
-FVector UOmegaBodySlot::GetMaxValue()
-{
-	if(Script)
-	{
-		return Script->GetMaxValue();
-	}
-	return FVector(1,0,0);
-}
-
-EOmegaBodySlotType UOmegaBodySlot::GetSlotType()
-{
-	if(Script)
-	{
-		return Script->GetScriptSlotType();
-	}
-	return EOmegaBodySlotType::BODYSLOT_INTEGER;
-}
 
 TArray<USkeletalMeshComponent*> AOmegaSkin::GetMeshMergeComponents_Implementation()
 {

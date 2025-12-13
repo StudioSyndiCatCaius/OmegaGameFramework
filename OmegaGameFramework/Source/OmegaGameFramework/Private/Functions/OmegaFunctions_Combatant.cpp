@@ -147,7 +147,7 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetCombatantFromTargetSelectio
 			OutTargets.Add(Instigator);
 			break;
 		case Target_ActiveTarget:
-			OutTargets.Add(Instigator->Native_GetActiveTarget());
+			OutTargets.Add(Instigator->GetActiveTarget());
 			break;
 		case Target_AllTargets:
 			OutTargets=Instigator->GetRegisteredTargetList();
@@ -404,9 +404,9 @@ float UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* 
 
 float UCombatantFunctions::GetCombatantDistantToActiveTarget(UCombatantComponent* Combatant)
 {
-	if(Combatant && Combatant->Native_GetActiveTarget())
+	if(Combatant && Combatant->GetActiveTarget())
 	{
-		return Combatant->Native_GetActiveTarget()->GetOwner()->GetDistanceTo(Combatant->GetOwner());
+		return Combatant->GetActiveTarget()->GetOwner()->GetDistanceTo(Combatant->GetOwner());
 	}
 	return 0;
 }

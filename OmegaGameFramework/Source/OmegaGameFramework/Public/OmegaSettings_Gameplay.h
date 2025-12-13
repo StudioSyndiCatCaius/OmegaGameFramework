@@ -24,7 +24,6 @@ class AOmegaActor_ChoiceBASE;
 class UOmegaGameplayModule;
 class AOmegaGameplaySystem;
 
-
 // ------------------------------------------------------------------------------------------------------------------------
 // Data Asset MetaSettings
 // ------------------------------------------------------------------------------------------------------------------------
@@ -120,23 +119,14 @@ public:
 	// ---------------------------------------------------------------------------
 	// Actor
 	// ---------------------------------------------------------------------------
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
 	TSoftClassPtr<UAnimInstance> DefaultCharacter_AnimClass;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
 	TSubclassOf<ACharacter> Default_EncounterCharacter;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay,Category="Actor")
-	UOmegaCharacterConfig* DefaultActorConfig_Character;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay,Category="Actor")
-	UOmegaActorConfig* DefaultActorConfig_Interactable;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay,Category="Actor")
-	UOmegaActorConfig* DefaultActorConfig_FloatingCombatant;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,AdvancedDisplay,Category="Actor")
-	UOAsset_ActorModifierCollection* ActorMods_Character;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,AdvancedDisplay,Category="Actor")
-	UOAsset_ActorModifierCollection* ActorMods_Interactable;
-
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Actor")
+	TMap<TSubclassOf<AActor>,UOmegaActorConfig*> ActorConfig_ByClass;
+	
 	// ---------------------------------------------------------------------------
 	// Combatant
 	// ---------------------------------------------------------------------------
@@ -149,6 +139,7 @@ public:
 	
 	UPROPERTY(EditAnywhere,Category = "Zone") bool bAutoSpawnAtFirstPoint=true;
 	UPROPERTY(EditAnywhere,Category = "Zone") bool bAutoplayZoneBgm=true;
+	UPROPERTY(EditAnywhere,Category = "Zone") bool bDynamicCameraViewTargetOnTransit=true;
 	UPROPERTY(EditAnywhere,Category = "Zone") float SpawnAtFirstPointDelay=0.1;
 	UPROPERTY(EditAnywhere,Category = "Zone") FGameplayTag ZoneBGMSlot;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Zone") TSubclassOf<AZoneEntityDisplayActor> DefaultZoneEntityDisplayActor;
@@ -175,11 +166,11 @@ public:
 	// ---------------------------------------------------------------------------
 	// Data Asset
 	// ---------------------------------------------------------------------------
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Advanced|DataAsset")
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Misc",AdvancedDisplay)
 	TArray<UOmegaDataAssetMetaSettingCollection*> DataAssetSettingCollections;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Advanced|DataAsset")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Misc",AdvancedDisplay)
 	TArray<FOmegaDataAssetMetaSettingsInfo> DataAssetSettings;
 
 	UFUNCTION()

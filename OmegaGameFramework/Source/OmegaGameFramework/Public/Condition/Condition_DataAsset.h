@@ -14,7 +14,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaCondition_DataAsset : public UObject
 public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor Condition")
-	bool CheckAssetCondition(UPrimaryDataAsset* Asset) const;
+	bool CheckAssetCondition(UPrimaryDataAsset* Asset, FText& Reason) const;
 	
 };
 
@@ -25,15 +25,21 @@ struct FOmegaConditions_DataAsset
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Conditions")
 	TArray<UOmegaCondition_DataAsset*> Conditions;
 
-	bool CheckConditions(UPrimaryDataAsset* asset)
+	bool CheckConditions(UPrimaryDataAsset* asset,TArray<FText>& Reasons)
 	{
+		bool out=true;
 		if(asset)
 		{
 			for(auto* a : Conditions)
 			{
-				if(a && !a->CheckAssetCondition(asset)) { return false;  }
+				FText r;
+				if(a && !a->CheckAssetCondition(asset,r))
+				{
+					out=false;
+					Reasons.Add(r);
+				}
 			}
 		}
-		return true;
+		return out;
 	}
 };

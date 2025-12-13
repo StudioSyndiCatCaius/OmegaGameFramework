@@ -27,6 +27,10 @@ void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, U
 {
 	if(IdentityAsset)
 	{
+		if(IdentityAsset!=CharacterAsset)
+		{
+			CharacterAsset=IdentityAsset;
+		}
 		Combatant->SetSourceDataAsset(IdentityAsset);
 		Equipment->SetEquipment_FromSource(IdentityAsset);
 		UOmegaSkinFunctions::SetSkinFromAsset(SkinComponent,IdentityAsset);
@@ -87,6 +91,7 @@ AOmegaCharacter::AOmegaCharacter()
 	SubscriptComponent = CreateDefaultSubobject<USubscriptComponent>(TEXT("Subscript"));
 	SkinComponent = CreateDefaultSubobject<USkinComponent>(TEXT("Skin"));
 	GameplayPause = CreateDefaultSubobject<UGameplayPauseComponent>(TEXT("GameplayPause"));
+	GameplayPause->PauseCategory=FGameplayTag::RequestGameplayTag(TEXT("Character.Type.Field"));
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
 	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
 	
@@ -138,7 +143,7 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	//static ConstructorHelpers::FClassFinder<UAnimInstance> AnmRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Animations/ABP_OmegaDemo_Mannequin.ABP_OmegaDemo_Mannequin_c"));
 	//GetMesh()->SetAnimInstanceClass(AnmRef.Class);
-	static ConstructorHelpers::FClassFinder<UAnimInstance> AnimBP(TEXT("/OmegaGameFramework/DEMO/Mannequin/Animations/ABP_OmegaDemo_Mannequin.ABP_OmegaDemo_Mannequin_C"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> AnimBP(TEXT("/OmegaGameFramework/DEMO/Animation/ABP_OMEGA_Common.ABP_OMEGA_Common_C"));
     
 	if (AnimBP.Class != nullptr)
 	{
@@ -173,10 +178,14 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 			Icon_Faction->SetVisibility(true);
 			Icon_Faction->SetSprite(texture);
 		}
+		
 	}
 	if(Text_Name)
 	{
-		Text_Name->SetTextRenderColor(Combatant->GetFactionColor().ToFColorSRGB());	
+		if(Combatant)
+		{
+			Text_Name->SetTextRenderColor(Combatant->GetFactionColor().ToFColorSRGB());	
+		}
 		Text_Name->SetText(L_GetDisplayName());	
 	}
 	
@@ -197,8 +206,11 @@ FVector AOmegaCharacter::GetAimTargetLocation_Implementation(const UAimTargetCom
 void AOmegaCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
-	Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
+	if(Leveling)
+	{
+		Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
+		Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
+	}
 	//DataItem->OnDataItemChanged.AddDynamic(this, &AOmegaCharacter::Local_UpdateDataItem);
 	if(DefaultEmote)
 	{

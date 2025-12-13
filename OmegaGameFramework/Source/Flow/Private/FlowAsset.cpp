@@ -13,9 +13,13 @@
 #include "Nodes/Route/FlowNode_SubGraph.h"
 
 #include "Engine/World.h"
+#include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/Route/FlowNode_Hub.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
+#include "Subsystems/OmegaSubsystem_Actors.h"
+
+class UOmegaActorSubsystem;
 
 UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -792,6 +796,34 @@ bool UFlowAsset::ForceActivateHubNode(FName HubName)
 		}
 	}
 	return false;
+}
+
+AActor* UFlowAsset::GetActorByBinding_Asset(UPrimaryDataAsset* Asset,bool bFallbackToFirstIdentity)
+{
+	if(GetWorld() && ActorBindings_ByAsset.Contains(Asset) && ActorBindings_ByAsset[Asset])
+	{
+		return ActorBindings_ByAsset[Asset]->Private_GetActor(GetWorld());
+	}
+	if(bFallbackToFirstIdentity)
+	{
+		if(UOmegaActorSubsystem* actor_subsystem=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+		{
+			if(AActor* a= actor_subsystem->GetFirstActorIfIdentity(Asset))
+			{
+				return a;
+			}
+		}
+	}
+	return nullptr;
+}
+
+AActor* UFlowAsset::GetActorByBinding_Name(FName Name)
+{
+	if(GetWorld() && ActorBindings_ByName.Contains(Name) && ActorBindings_ByName[Name])
+	{
+		return ActorBindings_ByName[Name]->Private_GetActor(GetWorld());
+	}
+	return nullptr;
 }
 
 void UFlowAsset::FireFlowSignal(FName Signal, UObject* Context)

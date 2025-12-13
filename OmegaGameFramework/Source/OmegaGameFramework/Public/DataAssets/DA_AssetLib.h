@@ -45,7 +45,6 @@ public:
 	TMap<FName,UBlendSpace*> BlendSpace_Named;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="BlendSpace")
 	TMap<FName,UAimOffsetBlendSpace*> AimBlendSpace_Named;
-	
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Assets")
 	TMap<FGameplayTag, UAnimSequence*> AnimSequences;
@@ -65,11 +64,11 @@ public:
 	// Get asset (Single)
 	// --------------------------------------------------------------------------------
 	UFUNCTION(BlueprintCallable,Category="AssetLibrary",meta=(ExpandBoolAsExecs="Result"))
-	UAnimSequence* GetAnimation_Named(FName Name,bool& Result,UAnimSequence* fall_back=nullptr);
+	UAnimSequence* GetAnimation_Named(FName Name,bool RandomFromList, bool& Result,UAnimSequence* fall_back=nullptr);
 	UFUNCTION(BlueprintCallable,Category="AssetLibrary",meta=(ExpandBoolAsExecs="Result"))
-	UAnimMontage* GetMontage_Named(FName Name,bool& Result,UAnimMontage* fall_back=nullptr);
+	UAnimMontage* GetMontage_Named(FName Name,bool RandomFromList,bool& Result,UAnimMontage* fall_back=nullptr);
 	UFUNCTION(BlueprintCallable,Category="AssetLibrary",meta=(ExpandBoolAsExecs="Result"))
-	ULevelSequence* GetLevelSequence_Named(FName Name,bool& Result,ULevelSequence* fall_back=nullptr);
+	ULevelSequence* GetLevelSequence_Named(FName Name,bool RandomFromList,bool& Result,ULevelSequence* fall_back=nullptr);
 
 	UFUNCTION(BlueprintCallable,Category="AssetLibrary",meta=(ExpandBoolAsExecs="Result"))
 	UBlendSpace* GetBlendSpace_Named(FName Name,bool& Result,UBlendSpace* fall_back=nullptr);
@@ -85,6 +84,7 @@ public:
 	TArray<UAnimMontage*> GetMontage_NamedList(FName Name) const;
 	UFUNCTION(BlueprintPure,Category="AssetLibrary")
 	TArray<ULevelSequence*> GetLevelSequence_NamedList(FName Name) const;
+	
 	
 	virtual UAnimSequence* GetContextAVAnimations_Implementation(FGameplayTag ID) override
 	{
@@ -170,10 +170,7 @@ UINTERFACE(MinimalAPI) class UDataInterface_AssetLibraries : public UInterface {
 class OMEGAGAMEFRAMEWORK_API IDataInterface_AssetLibraries
 {
 	GENERATED_BODY()
-
 public:
-
-
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|AppearanceLibraries")
 	void GetAppearanceLibraries(UOmegaAssetLibrary_Animation*& Anim,UOmegaAssetLibrary_Sound*& Sound,UOmegaAssetLibrary_SlateBrush*& Slate);

@@ -15,7 +15,7 @@
 // ACTOR
 // =====================================================================================================================
 
-void UOmegaActorFunctions::SnapActorToSuface(AActor* Actor, FVector Trace_Start, FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType)
+void UOmegaActorFunctions::SnapActorToSurface(AActor* Actor, FVector Trace_Start, FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType)
 {
 	if(Actor)
 	{
@@ -236,7 +236,97 @@ float UOmegaActorFunctions::GetActorWeight(AActor* Actor, FActorWeighter Weighte
 	return fallback;
 }
 
+FString UOmegaActorFunctions::GetTagAsParam(UObject* Target, FName TagKey, bool& Valid, FName Delimiter)
+{
+	Valid=false;
+	if(Target)
+	{
+		TArray<FName> _tags;
+		if(AActor* a =Cast<AActor>(Target)) { _tags=a->Tags; }
+		if(UActorComponent* a =Cast<UActorComponent>(Target)) { _tags=a->ComponentTags; }
+		for(FName t : _tags)
+		{
+			FString sTag=t.ToString();
+			FString sKey;
+			FString sVal;
+			sTag.Split(Delimiter.ToString(),&sKey,&sVal);
+			if(TagKey==sKey)
+			{
+				Valid=true;
+				return sVal;
+			}
+		}
+	}
+	return "";
+}
 
+FString UOmegaActorFunctions::GetActorBoundParam_String(AActor* Actor, FName Key, const FString& Fallback)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_string(Actor,Key,Fallback);
+	}
+	return Fallback;
+}
+
+float UOmegaActorFunctions::GetActorBoundParam_Float(AActor* Actor, FName Key, float Fallback)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_float(Actor,Key,Fallback);
+	}
+	return Fallback;
+}
+
+int32 UOmegaActorFunctions::GetActorBoundParam_Int32(AActor* Actor, FName Key, int32 Fallback)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_int(Actor,Key,Fallback);
+	}
+	return Fallback;
+}
+
+bool UOmegaActorFunctions::GetActorBoundParam_Bool(AActor* Actor, FName Key, bool Fallback)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_bool(Actor,Key,Fallback);
+	}
+	return Fallback;
+}
+
+void UOmegaActorFunctions::SetActorBoundParam_String(AActor* Actor, FName Key, const FString& Value)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_string(Actor,Key,Value);
+	}
+}
+
+void UOmegaActorFunctions::SetActorBoundParam_Float(AActor* Actor, FName Key, float Value)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_float(Actor,Key,Value);
+	}
+}
+
+void UOmegaActorFunctions::SetActorBoundParam_Int32(AActor* Actor, FName Key, int32 Value)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_int(Actor,Key,Value);
+	}
+}
+
+void UOmegaActorFunctions::SetActorBoundParam_Bool(AActor* Actor, FName Key, bool Value)
+{
+	if(Actor)
+	{
+		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_bool(Actor,Key,Value);
+	}
+}
 
 // =====================================================================================================================
 // PAWN

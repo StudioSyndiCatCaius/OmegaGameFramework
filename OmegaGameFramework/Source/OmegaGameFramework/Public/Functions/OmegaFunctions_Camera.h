@@ -42,4 +42,9 @@ public:
 	static bool SetDynamicCamera_Override(UObject* WorldContextObject, AOmegaDynamicCamera* SourceCamera, bool bSnapTo, APlayerController* Player=nullptr);
 	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Ω Dynamic Camera - Clear Override")
 	static bool ClearDynamicCamera_Override(UObject* WorldContextObject, APlayerController* Player=nullptr);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Camera",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Ω Dynamic Camera - Set As ViewTarget")
+	static bool SetViewTargetToDynamicCamera(UObject* WorldContextObject, APlayerController* Player=nullptr);
+
+	
 };

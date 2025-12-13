@@ -70,6 +70,7 @@ struct FOmegaActorMeta
 	GENERATED_BODY()
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FGameplayTag,AActor*> TaggedTargets;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FGameplayTagContainer Tags;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FString> boundParam;
 };
 
 

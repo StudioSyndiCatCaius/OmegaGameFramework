@@ -195,7 +195,6 @@ void AOmegaAbility::Execute(UObject* Context)
 		bIsActive = true;
 		CombatantOwner->CancelAbilitiesWithTags(CancelAbilities);
 		CombatantOwner->CancelAbilitiesWithTags(BlockAbilities);
-		CombatantOwner->SetAbilityActive(true, this);
 
 		UActorTagEventFunctions::FireTagEventsOnActor(CombatantOwner->GetOwner(),OwnerEventsOnActivate);
 		
@@ -358,7 +357,6 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 	if (bIsActive && !GetWorld()->bIsTearingDown)
 	{
 		bIsActive = false;
-		CombatantOwner->SetAbilityActive(false, this);
 		Native_AbilityFinished(bCancel);
 		OnAbilityFinished.Broadcast(bCancel);
 

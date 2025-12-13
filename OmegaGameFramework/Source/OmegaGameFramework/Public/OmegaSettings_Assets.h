@@ -11,6 +11,8 @@
 #include "Misc/OmegaUtils_Enums.h"
 #include "OmegaSettings_Assets.generated.h"
 
+class UOmegaDamageType;
+class UOmegaDamageTypeReactionAsset;
 class UOmegaAttributeSet;
 class UOmegaFaction;
 class UOmegaAttribute;
@@ -33,10 +35,24 @@ UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Assets : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
-
 public:
+	TMap<UEquipmentSlot*,UPrimaryDataAsset*> Conv_NamedEquipment(TMap<FName, UPrimaryDataAsset*>  in) const;
+	
 	FOmegaObjectTraits L_GetAppendedTraits(UObject* o);
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Named")
+	TMap<FName,UPrimaryDataAsset*> Named_DataAssets;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Named")
+	TMap<FName,UOmegaAttribute*> Named_Attributes;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Named")
+	TMap<FName,UEquipmentSlot*> Named_EquipSlots;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Named")
+	TMap<FName,UOmegaDamageType*> Named_DamageTypes;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Named")
+	TMap<FName,UOmegaDamageTypeReactionAsset*> Named_DamageTypeReactions;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Named")
+	TMap<EOmegaGender,UPrimaryDataAsset*> Gender_Assets;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Assets")
 	TMap<FGameplayTag, TSoftObjectPtr<UPrimaryDataAsset>> Tagged_DataAssets;
@@ -64,8 +80,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Equipment")
 	TSoftObjectPtr<UEquipmentSlot> EquipSlot_Race;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Literal")
-	TMap<EOmegaGender,UPrimaryDataAsset*> Gender_Assets;
+
 };
 
 

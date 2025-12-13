@@ -142,3 +142,16 @@ bool UOmegaCameraFunctions::ClearDynamicCamera_Override(UObject* WorldContextObj
 	}
 	return false;
 }
+
+bool UOmegaCameraFunctions::SetViewTargetToDynamicCamera(UObject* WorldContextObject, APlayerController* Player)
+{
+	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+	{
+		if(AOmegaDynamicCamera* mcam=_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetDynamicCamera())
+		{
+			_player->SetViewTarget(mcam);
+			return true;
+		}
+	}
+	return false;
+}

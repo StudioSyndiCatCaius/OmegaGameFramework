@@ -11,7 +11,7 @@
 #include "OmegaSubsystem_Mods.generated.h"
 
 
-UCLASS(DisplayName="Omega Subsystm: Mods")
+UCLASS(DisplayName="Omega Subsystem: Mods")
 class OMEGAGAMEFRAMEWORK_API UOmegaModSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
@@ -34,7 +34,10 @@ public:
 	TArray<UOmegaMod*> ModList;
 
 	UFUNCTION(BlueprintPure, Category="OmegaMods")
-	TArray<FString> GetModListPaths();
+	TArray<FString> GetModListPaths(bool IncludeBaseOverride=false);
+	
+	UFUNCTION(BlueprintPure, Category="OmegaMods")
+    TArray<FString> GetModAssetFile(const FString& filename, bool IncludeBaseOverride=true);
 	
 	UFUNCTION(BlueprintPure, Category="OmegaMods")
 	FString GetModsDirectory();

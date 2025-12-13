@@ -10,6 +10,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaFunctions_Combatant.generated.h"
 
+class UOmegaAttribute;
 class UOmegaFaction;
 class UOmegaScripted_DamageModifier;
 class UCombatantComponent;

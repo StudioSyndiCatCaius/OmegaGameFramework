@@ -3,25 +3,39 @@
 
 #include "Components/Component_ActorConfig.h"
 
+#include "OmegaSettings_Gameplay.h"
 #include "Subsystems/OmegaSubsystem_Actors.h"
+
+void UActorConfigComponent::L_TimerEnd()
+{
+	if(UOmegaActorSubsystem* sub=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+	{
+		for(FGameplayTag t : DefaultConfig->AutoregisterToGroups)
+		{
+			sub->SetActorRegisteredToGroup(t,GetOwner(),true);
+		}
+			
+		FActorModifiers amods;
+		amods.Script=DefaultConfig->BeginPlay_Modifiers;
+		amods.ApplyMods(GetOwner());
+	}
+}
+
+UOmegaActorConfig* UActorConfigComponent::L_GetConfig()
+{
+	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	{
+		if(set->ActorConfig_ByClass.Contains(GetOwner()->GetClass()))
+		{
+			return set->ActorConfig_ByClass[GetOwner()->GetClass()];
+		}
+	}
+	return DefaultConfig;
+}
 
 void UActorConfigComponent::BeginPlay()
 {
-	if(DefaultConfig)
-	{
-		if(UOmegaActorSubsystem* sub=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
-		{
-			for(FGameplayTag t : DefaultConfig->AutoregisterToGroups)
-			{
-				sub->SetActorRegisteredToGroup(t,GetOwner(),true);
-			}
-			
-			FActorModifiers amods;
-			amods.Script=DefaultConfig->BeginPlay_Modifiers;
-			amods.ApplyMods(GetOwner());
-		}
-	}
-	
+	SetConfig(L_GetConfig());
 	Super::BeginPlay();
 }
 
@@ -34,5 +48,18 @@ void UActorConfigComponent::SetConfig(UOmegaActorConfig* Config)
 	else
 	{
 		DefaultConfig=nullptr;
+	}
+	if(DefaultConfig)
+	{
+		float _inVal=DefaultConfig->BeginPlayMod_Delay.GetValue();
+		if(_inVal>0.0)
+		{
+			GetWorld()->GetTimerManager().SetTimer(timer_modDelay,this, &UActorConfigComponent::L_TimerEnd,_inVal);	
+		}
+		else
+		{
+			L_TimerEnd();
+		}
+		
 	}
 }

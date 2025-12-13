@@ -52,6 +52,7 @@ class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IDataInte
 {
 	GENERATED_BODY()
 
+	AActor* local_GetInstigatorActor() const;
 	UObject* local_GetInstigator() const;
 	UFUNCTION() void LocalGEvent(FName Event, UObject* Context);
 public:
@@ -86,13 +87,24 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",AdvancedDisplay)
 	FName MessageKey;
 	
-	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Animation")
+	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Actor")
 	UOmegaSelector_Montage* Montage;
-	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Animation")
+	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Actor")
 	UOmegaSelector_LevelSequence* Sequence;
-	
-	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Animation")
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Actor")
 	TSoftObjectPtr<UOAsset_TransformPreset> Position;
+
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Look Aim")
+	UPrimaryDataAsset* LookAt;
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Look Aim")
+	TArray<UPrimaryDataAsset*> Listeners;
+	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Look Aim")
+	UOmegaActorSelector* LookAt_Alt;
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Look Aim")
+	bool ClearLookAt;
+	
+	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Misc")
+	TArray<UActorModifierScript*> InstigatorModifiers;
 	
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor")
 	void Autokey_ByNext();

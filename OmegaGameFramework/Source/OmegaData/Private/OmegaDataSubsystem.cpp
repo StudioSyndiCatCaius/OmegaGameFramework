@@ -13,6 +13,7 @@
 
 void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+	/*
 	if(GetMutableDefault<UOmegaDataSettings>()->AutoscanOnBeginPlay)
 	{
 		const TArray<FDirectoryPath> LocalPaths = GetMutableDefault<UOmegaDataSettings>()->DataItemScansPath;
@@ -55,6 +56,7 @@ void UOmegaDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			}
 		}
 	}
+	*/
 	Super::Initialize(Collection);
 }
 

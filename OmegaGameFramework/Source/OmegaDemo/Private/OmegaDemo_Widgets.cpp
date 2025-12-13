@@ -6,6 +6,7 @@
 #include "Components/Component_Combatant.h"
 #include "Components/ProgressBar.h"
 #include "Components/WidgetSwitcher.h"
+#include "DataAssets/DA_Body.h"
 #include "Functions/OmegaFunctions_Common.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Subsystems/OmegaSubsystem_Message.h"

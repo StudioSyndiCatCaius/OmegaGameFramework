@@ -48,12 +48,23 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
+
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 	UPROPERTY() TArray<UActorIdentityComponent*> REF_ActorIdComps;
 	UPROPERTY() TMap<FGameplayTag, FOmegaActorGroupData> actorGroups;
 	UPROPERTY() TMap<AActor*, FOmegaActorMeta> actors_meta;
 public:
+	TMap<FName,FString>& GetA_PMap(AActor* a);
+	FString GetAParam_string(AActor* a, FName key, FString def);
+	float GetAParam_float(AActor* a, FName key, float def);
+	int32 GetAParam_int(AActor* a, FName key, int32 def);
+	bool GetAParam_bool(AActor* a, FName key, bool def);
+	void SetAParam_string(AActor* a, FName key, FString def);
+	void SetAParam_float(AActor* a, FName key, float def);
+	void SetAParam_int(AActor* a, FName key, int32 def);
+	void SetAParam_bool(AActor* a, FName key, bool def);
+	
 	UPROPERTY(BlueprintAssignable) FOnActorInteraction OnActorInteraction;
 	UPROPERTY(BlueprintAssignable) FOnActorTaggedTargetChange OnActorTaggedTargetChange;
 	UPROPERTY(BlueprintAssignable) FOnActorTagEvent OnActorTagEvent;
@@ -67,7 +78,7 @@ public:
 	TArray<UActorIdentityComponent*> GetAllActorIdentityComponents();
 
 	UFUNCTION(BlueprintCallable,Category="Actor Identity Subsystem")
-	AActor* GetFirstActorIfIdentity(UPrimaryDataAsset* Identity);
+	AActor* GetFirstActorIfIdentity(UPrimaryDataAsset* Identity,TSubclassOf<AActor> FilterClass=nullptr);
 
 	// ---------------------------------------------------------------------------------
 	// Interaction

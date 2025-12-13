@@ -21,7 +21,7 @@ class UUtilMeshComponent;
 class UOmegaCondition_Interact;
 
 UCLASS(DisplayName="Ω Interactable",HideCategories=("Prop"))
-class OMEGADEMO_API AOmegaInteractable : public AOmegaProp, public IDataInterface_FlowAsset, public IDataInterface_General, public IDataInterface_Traits,
+class OMEGADEMO_API AOmegaInteractable : public AOmegaProp, public IDataInterface_FlowAsset, public IDataInterface_Traits,
 											public IActorInterface_Interactable
 {
 	GENERATED_BODY()

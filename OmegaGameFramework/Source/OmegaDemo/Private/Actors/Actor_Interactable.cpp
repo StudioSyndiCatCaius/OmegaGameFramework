@@ -138,13 +138,6 @@ void AOmegaInteractable::OnInteraction_Implementation(AActor* InteractInstigator
 
 void AOmegaInteractable::Update()
 {
-	//if(RangeBox)
-	//{
-	//	Range+=GetActorScale()-1;
-	//	FVector _def=50*Range;
-	//	RangeBox->SetBoxExtent(_def);
-	//	SetActorScale3D(FVector::One());
-	//}
 	if(NameText)
 	{
 		NameText->SetText(UDataInterface_General::GetObjectName(this));
@@ -157,21 +150,7 @@ void AOmegaInteractable::Update()
 		SpringArm->TargetArmLength=_dis;
 	}
 
-	//Apply Gameplay Settings
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
-	{
-		if(UOmegaActorConfig* _cfg=set->DefaultActorConfig_Interactable)
-		{
-			if(ActorConfig && !ActorConfig->DefaultConfig)
-			{
-				ActorConfig->DefaultConfig=_cfg;
-			}
-		}
-		if(UOAsset_ActorModifierCollection* col=set->ActorMods_Interactable)
-		{
-			col->ApplyAllModifiers(this);
-		}
-	}
+
 	
 #if WITH_EDITOR
 	if(Interactable_Preset && GetActorLabel()=="OmegaInteractable")

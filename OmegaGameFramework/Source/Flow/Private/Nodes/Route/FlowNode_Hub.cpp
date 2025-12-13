@@ -28,7 +28,24 @@ FString UFlowNode_Hub::GetNodeDescription() const
 {
 	return HubName.ToString();
 }
+
 #endif
+
+TArray<FName> UFlowNode_ToHub::GetHubKeys() const
+{
+	TArray<FName> out;
+	if(GetFlowAsset())
+	{
+		for(auto* f : GetFlowAsset()->GetAllNodes())
+		{
+			if(UFlowNode_Hub* h=Cast<UFlowNode_Hub>(f))
+			{
+				out.Add(h->HubName);
+			}
+		}
+	}
+	return out;
+}
 
 UFlowNode_ToHub::UFlowNode_ToHub(const FObjectInitializer& ObjectInitializer)
 {

@@ -10,6 +10,22 @@
 
 
 
+TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOmegaSettings_Assets::Conv_NamedEquipment(
+	TMap<FName, UPrimaryDataAsset*> in) const
+{
+	TMap<UEquipmentSlot*, UPrimaryDataAsset*> out;
+	TArray<FName> nams;
+	in.GetKeys(nams);
+	for(FName n : nams)
+	{
+		if(Named_EquipSlots.Contains(n) && Named_EquipSlots[n])
+		{
+			out.Add(Named_EquipSlots[n],in[n]);
+		}
+	}
+	return out;
+}
+
 
 FOmegaObjectTraits UOmegaSettings_Assets::L_GetAppendedTraits(UObject* o)
 {

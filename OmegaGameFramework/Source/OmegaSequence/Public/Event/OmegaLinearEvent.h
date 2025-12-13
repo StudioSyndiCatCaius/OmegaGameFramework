@@ -62,8 +62,8 @@ public:
 
 	UFUNCTION() virtual void Native_Begin(const FString& Flag="");
 	
-	UFUNCTION(BlueprintImplementableEvent) void OnEventBegin(const FString& Flag);
-	UFUNCTION(BlueprintImplementableEvent) void OnEventEnd(const FString& Flag);
+	UFUNCTION(BlueprintNativeEvent) void OnEventBegin(const FString& Flag);
+	UFUNCTION(BlueprintNativeEvent) void OnEventEnd(const FString& Flag);
 
 	
 	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context);

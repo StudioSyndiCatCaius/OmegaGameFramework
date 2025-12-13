@@ -21,13 +21,15 @@ AAdvancedVolume::AAdvancedVolume()
 	SetActorHiddenInGame(false);
 	
 	USceneComponent* RootRef = CreateDefaultSubobject<USceneComponent>("VolumeRoot");
-
+	RootComponent=RootRef;
+	
 	CollisionType = ECollisionChannel::ECC_WorldDynamic;
 	
 	// Volume
 	Volume = CreateOptionalDefaultSubobject<UStaticMeshComponent>("Volume");
 	if(Volume)
 	{
+		Volume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Volume->SetupAttachment(RootRef);
 		Volume->SetHiddenInGame(true);
 		Volume->SetCanEverAffectNavigation(false);
@@ -57,6 +59,13 @@ AAdvancedVolume::AAdvancedVolume()
 
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MatRef(TEXT("/OmegaGameFramework/Materials/m_trans.m_trans"));
 	VolumeMaterial_ref = MatRef.Object;
+
+	Bounds_box=CreateDefaultSubobject<UBoxComponent>("bounds_box");
+	Bounds_box->SetupAttachment(RootComponent);
+	Bounds_box->SetBoxExtent(FVector(50,50,50));
+	Bounds_sphere=CreateDefaultSubobject<USphereComponent>("bounds_sphere");
+	Bounds_sphere->SetupAttachment(RootComponent);
+	Bounds_sphere->SetSphereRadius(50);
 }
 
 // Called when the game starts or when spawned
@@ -83,9 +92,17 @@ void AAdvancedVolume::OnConstruction(const FTransform& Transform)
 	{
 	case EVolumeShape::OmegaVolume_Sphere: 
 		Volume->SetStaticMesh(ShapeMeshRef_sphere);
+		Bounds_sphere->SetVisibility(true);
+		Bounds_sphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Bounds_box->SetVisibility(false);
+		Bounds_box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EVolumeShape::OmegaVolume_Box:
 		Volume->SetStaticMesh(ShapeMeshRef_box);
+		Bounds_box->SetVisibility(true);
+		Bounds_box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Bounds_sphere->SetVisibility(false);
+		Bounds_sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	default: ;
 	}
@@ -94,10 +111,12 @@ void AAdvancedVolume::OnConstruction(const FTransform& Transform)
 	
 	if(Volume)
 	{
-		Volume->SetGenerateOverlapEvents(true);
+		Volume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		UMaterialInstanceDynamic* LocalMatInst = Volume->CreateDynamicMaterialInstance(0, VolumeMaterial_ref);
 		LocalMatInst->SetVectorParameterValue("Color", Color);
 		LocalMatInst->SetScalarParameterValue("Opacity", 0.35);
+		Bounds_sphere->ShapeColor=Color.ToFColorSRGB();
+		Bounds_box->ShapeColor=Color.ToFColorSRGB();
 	}
 	
 	

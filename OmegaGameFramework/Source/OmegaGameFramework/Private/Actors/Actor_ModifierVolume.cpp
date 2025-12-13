@@ -71,3 +71,22 @@ void AActor_ModifierVolume::BeginPlay()
 	}
 	Super::BeginPlay();
 }
+
+void AActor_ModifierVolume::OnTagEvent_Implementation(FGameplayTag Event)
+{
+	TArray<FGameplayTag> _tags;
+	Modifiers_OnTagEvent.GetKeys(_tags);
+	for(FGameplayTag c : _tags)
+	{
+		if(Event.MatchesTagExact(c))
+		{
+			for(auto* a : L_GetActorsToMod())
+			{
+				if(a)
+				{
+					Modifiers_OnTagEvent[c].ApplyMods(a);
+				}
+			}
+		}
+	}
+}

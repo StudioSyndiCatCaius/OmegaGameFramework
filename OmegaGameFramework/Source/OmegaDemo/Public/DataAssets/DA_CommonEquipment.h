@@ -37,10 +37,10 @@ public:
 	FOmegaCombatantSources CombatModifiers;
 
 	//true=will scale this attribute modifier values from the Type.RankAttributeScales based on the Equipment's rank.
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags") bool UseType_RankAttributeScaling=true;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags") bool UseType_AttributeMods=true;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags") bool UseType_DamageMods=true;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags") bool UseType_Skills=true;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags",AdvancedDisplay) bool UseType_RankAttributeScaling=true;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags",AdvancedDisplay) bool UseType_AttributeMods=true;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags",AdvancedDisplay) bool UseType_DamageMods=true;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags",AdvancedDisplay) bool UseType_Skills=true;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Appearance")
 	bool DefaultToTypeAppearance=true;
@@ -48,11 +48,12 @@ public:
 	UOAsset_Appearance* Appearance;
 	
 	virtual bool CanEquipItem_Implementation(UEquipmentComponent* Component,UEquipmentSlot* Slot) override;
-
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
+
+	UFUNCTION(BlueprintPure,Category="Equipment") bool IsOfType(TArray<UOAsset_Common_EquipType*> AcceptedTypes) const;
 };
 
 

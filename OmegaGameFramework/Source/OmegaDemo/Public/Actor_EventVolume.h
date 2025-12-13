@@ -66,7 +66,7 @@ public:
 };
 
 
-UCLASS(DisplayName="Ω Environment")
+UCLASS(DisplayName="Ω Event Trigger")
 class OMEGADEMO_API AOmega_EventVolume : public AAdvancedVolume
 {
 	GENERATED_BODY()

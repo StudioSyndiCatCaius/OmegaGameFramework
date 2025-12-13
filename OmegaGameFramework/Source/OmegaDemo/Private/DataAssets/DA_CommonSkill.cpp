@@ -27,9 +27,9 @@ void UOAsset_CommonSkill::GetGeneralDataText_Implementation(const FString& Label
 
 bool UOAsset_CommonSkill::CanUseSkill_Implementation(UCombatantComponent* Combatant)
 {
-	FOmegaConditions_Combatant con;
+	FOmegaConditions_Actor con;
 	con.Conditions=Conditions_CanUse;
-	return con.CheckConditions(Combatant);
+	return con.CheckConditions(Combatant->GetOwner());
 }
 
 TMap<UOmegaAttribute*, float> UOAsset_CommonSkill::GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,

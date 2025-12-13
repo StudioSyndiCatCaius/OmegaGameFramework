@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Condition/Condition_DataAsset.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Selectors/Selector_DataAsset.h"
 #include "Selectors/Selector_Object.h"
@@ -23,4 +24,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Selector",meta=(WorldContext="WorldContextObject"))
 	static UPrimaryDataAsset* RunSelector_DataAsset(UObject* WorldContextObject, FOmegaSelect_DataAsset Selector);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Selector")
+	static bool CheckCondition_DataAsset(UPrimaryDataAsset* Asset, FOmegaConditions_DataAsset Selector,TArray<FText>& Reasons);
 };

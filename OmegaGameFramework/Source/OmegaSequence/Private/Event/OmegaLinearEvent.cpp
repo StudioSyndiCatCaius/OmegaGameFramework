@@ -51,6 +51,14 @@ void UOmegaLinearEvent::Native_Begin(const FString& Flag)
 	OnEventBegin(Flag);
 }
 
+void UOmegaLinearEvent::OnEventEnd_Implementation(const FString& Flag)
+{
+}
+
+void UOmegaLinearEvent::OnEventBegin_Implementation(const FString& Flag)
+{
+}
+
 void UOmegaLinearEvent::Finish(const FString& Flag, const FName JumpToID)
 {
 	if(WorldPrivate)

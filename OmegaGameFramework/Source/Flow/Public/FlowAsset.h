@@ -9,6 +9,7 @@
 #include "Templates/SubclassOf.h"
 #include "FlowAsset.generated.h"
 
+class UOmegaActorSelector;
 class UFlowNode;
 class UFlowNode_CustomInput;
 class UFlowNode_Start;
@@ -373,8 +374,16 @@ public:
 	//--------------------------------------------------------//
 	// TRAITS
 	//--------------------------------------------------------//
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Traits")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
 	TArray<UFlowAssetTrait*> Traits;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
+	TMap<UPrimaryDataAsset*,UOmegaActorSelector*> ActorBindings_ByAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
+	TMap<FName,UOmegaActorSelector*> ActorBindings_ByName;
+
+	UFUNCTION(BlueprintPure,Category="FlowAsset") AActor* GetActorByBinding_Asset(UPrimaryDataAsset* Asset,bool bFallbackToFirstIdentity);
+	UFUNCTION(BlueprintPure,Category="FlowAsset") AActor* GetActorByBinding_Name(FName Name);
 	
 	//--------------------------------------------------------//
 	// NOTIFY

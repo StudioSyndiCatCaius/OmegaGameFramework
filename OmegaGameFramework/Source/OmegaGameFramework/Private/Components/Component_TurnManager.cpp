@@ -177,7 +177,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 	{
 		OnTurnEnd.Broadcast(this,GetActiveTurnMember(), Flag, Tags);
 		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
-		GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnEnd);
+//		GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnEnd);
 		UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnEnd);
 		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(TagEventsOnTurnEnd_Global,this);
 	}
@@ -223,8 +223,8 @@ void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FStri
 {
 	OnTurnStart.Broadcast(this,Combatant, Flag, Tags);
 	bool LocalSuccess;
-	Combatant->GrantAbility(Local_GetTurnAbility());
-	GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnStart);
+	Combatant->SetAbilityGranted(Local_GetTurnAbility(),true);
+	//GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnStart);
 	
 	// TAG EVENTS
 	UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnBegin);

@@ -12,6 +12,8 @@
 #include "OmegaLinearEventSubsystem.h"
 #include "GameFramework/Character.h"
 #include "MovieSceneSequencePlaybackSettings.h"
+#include "Components/Component_AimTargeter.h"
+#include "Functions/OmegaFunctions_ComponentMod.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Selectors/Selector_LevelSequence.h"
@@ -75,6 +77,25 @@ void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
 		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.RemoveDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
 		Finish("");
 	}
+}
+
+AActor* UFlowNode_SimpleMessage::local_GetInstigatorActor() const
+{
+	if(Instigator_Asset)
+	{
+		if(AActor* a=GetFlowAsset()->GetActorByBinding_Asset(Instigator_Asset,true))
+		{
+			return a;
+		}
+	}
+	if(Instigator_Alt)
+	{
+		if(AActor* a=Cast<AActor>(Instigator_Alt->GetSelected_Obj(this)))
+		{
+			return a;
+		}
+	}
+	return nullptr;
 }
 
 UObject* UFlowNode_SimpleMessage::local_GetInstigator() const
@@ -145,9 +166,9 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	LocalMessage->meta=msg_meta;
 	LocalMessage->Native_Begin("");
 
-	if(UOmegaActorSubsystem* actor_subsystem=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+	if(AActor* a=local_GetInstigatorActor())
 	{
-		if(ACharacter* c=Cast<ACharacter>(actor_subsystem->GetFirstActorIfIdentity(Instigator_Asset)))
+		if(ACharacter* c=Cast<ACharacter>(a))
 		{
 			if(Montage && Montage->GetMontage(c))
 			{
@@ -162,9 +183,39 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 				seqPlayer->Play();
 			}
 		}
-	}
-	
 
+		// Aim Targeting
+		if(UAimTargetComponent* c=Cast<UAimTargetComponent>(a->GetComponentByClass(UAimTargetComponent::StaticClass())))
+		{
+			if(ClearLookAt)
+			{
+				c->ClearAimTarget();
+			}
+			else if (AActor* t=GetFlowAsset()->GetActorByBinding_Asset(LookAt,true))
+			{
+				c->SetAimTarget(t);
+			}
+			else if(GetWorld() && LookAt_Alt && LookAt_Alt->Private_GetActor(GetWorld()))
+			{
+				c->SetAimTarget(LookAt_Alt->Private_GetActor(GetWorld()));
+			}
+		}
+
+		for(auto* l : Listeners)
+		{
+			if(AActor* ta = GetFlowAsset()->GetActorByBinding_Asset(l,true))
+			{
+				if(UAimTargetComponent* c=Cast<UAimTargetComponent>(ta->GetComponentByClass(UAimTargetComponent::StaticClass())))
+				{
+					c->SetAimTarget(a);
+				}
+			}
+		}
+
+		FActorModifiers m;
+		m.Script=InstigatorModifiers;
+		m.ApplyMods(a);
+	}
 	
 	TriggerOutput("Begin", false,  EFlowPinActivationType::Default);
 }
@@ -186,7 +237,7 @@ FString UFlowNode_SimpleMessage::GetNodeDescription() const
 		UKismetStringLibrary::LeftChop(in_start,len_line-len_max)+"...",
 		in_start,len_line>len_max);
 
-	const FText OutText = FText::Format(FText::FromString("{0}: {1}"), FText::FromString(SpeakerString), FText::FromString(in_txt));
+	const FText OutText = FText::Format(FText::FromString("   {0}:\n{1}"), FText::FromString(SpeakerString), FText::FromString(in_txt));
 
 	return OutText.ToString();
 }

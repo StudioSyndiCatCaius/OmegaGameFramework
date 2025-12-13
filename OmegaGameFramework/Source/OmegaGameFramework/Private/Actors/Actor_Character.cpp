@@ -13,19 +13,12 @@ void AOmegaBaseCharacter::N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPri
 {
 }
 
+
 void AOmegaBaseCharacter::OnConstruction(const FTransform& Transform)
 {
 	if(Config && ActorConfig)
 	{
 		ActorConfig->SetConfig(Config);
-	}
-	else if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
-	{
-		ActorConfig->SetConfig(set->DefaultActorConfig_Character);
-		if(UOAsset_ActorModifierCollection* col=set->ActorMods_Character)
-		{
-			col->ApplyAllModifiers(this);
-		}
 	}
 	Super::OnConstruction(Transform);
 	FVector bound_origin;
@@ -71,6 +64,10 @@ AOmegaBaseCharacter::AOmegaBaseCharacter()
 		bUseControllerRotationYaw=false;
 		GetCharacterMovement()->bOrientRotationToMovement=true;
 		GetCharacterMovement()->RotationRate=FRotator(0,500,0);
+	}
+	if(Seed<0)
+	{
+		Seed=UKismetMathLibrary::RandomIntegerInRange(0,999999999);
 	}
 }
 

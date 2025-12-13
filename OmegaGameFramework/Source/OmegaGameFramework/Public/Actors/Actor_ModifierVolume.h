@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
+#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/OmegaFunctions_TagEvent.h"
 #include "GameFramework/Actor.h"
 #include "Actor_ModifierVolume.generated.h"
 
@@ -11,7 +13,7 @@ class UActorModifierScript;
 class UOmegaCondition_Actor;
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AActor_ModifierVolume : public AActor
+class OMEGAGAMEFRAMEWORK_API AActor_ModifierVolume : public AActor, public IActorTagEventInterface
 {
 	GENERATED_BODY()
 
@@ -23,6 +25,7 @@ public:
 	AActor_ModifierVolume();
 	
 	virtual void BeginPlay() override;
+	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;
 	
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UBoxComponent* Range;
@@ -33,4 +36,5 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modifier") TArray<TSoftObjectPtr<AActor>> Modify_Direct;
 	
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Modifier") TArray<UActorModifierScript*> Modifiers;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modifier") TMap<FGameplayTag,FActorModifiers> Modifiers_OnTagEvent;
 };

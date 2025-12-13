@@ -78,9 +78,9 @@ public:
 	static FOmegaEntity GetEntity_ByName(const UObject* WorldContextObject, FName Key, bool bGlobal);
 
 
-	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom")
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="Save Game (Custom)")
 	static bool Custom_SaveGame(USaveGame* SaveGameObject, const FString& path, const FString& file);
 
-	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom")
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="Load Game (Custom)")
 	static USaveGame* Custom_LoadGame(const FString& path, const FString& file);
 };

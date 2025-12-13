@@ -8,6 +8,11 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Actor.h"
 
+bool UActorModifierScript::OnAppliedToActor_Implementation(AActor* Actor) const
+{
+	return false;
+}
+
 void UOmegaComponentModifierFunctions::ApplyModifierTo_Actor(FActorModifiers mods, AActor* Actor)
 {
 	if(Actor)

@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "Interfaces/OmegaInterface_Json.h"
 #include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Interfaces/OmegaInterface_Seed.h"
 #include "Actor_Character.generated.h"
 
 class UStateTreeComponent;
@@ -20,13 +21,15 @@ class OMEGAGAMEFRAMEWORK_API UOmegaCharacterConfig : public UOmegaActorConfig
 
 public:
 	
+	
 };
 
 
 
 UCLASS(HideCategories=("Skeletal Mesh, Physics"))
 class OMEGAGAMEFRAMEWORK_API AOmegaBaseCharacter : public ACharacter, public IDataInterface_Json, public IDataInterface_Traits,
-																	public IDataInterface_AppearanceSource, public IDataInterface_AssetLibraries, public IDataInterface_General
+																	public IDataInterface_AppearanceSource, public IDataInterface_AssetLibraries,
+																public IDataInterface_General, public IDataInterface_Seed
 {
 	GENERATED_BODY()
 
@@ -39,8 +42,10 @@ public:
 	AOmegaBaseCharacter();
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UStateTreeComponent* StateTree;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="OmegaCharacter")
+	int32 Seed=-1;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="OmegaCharacter")
 	UPrimaryDataAsset* CharacterAsset;
@@ -63,4 +68,5 @@ public:
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 	virtual void GetAppearanceLibraries_Implementation(UOmegaAssetLibrary_Animation*& Anim, UOmegaAssetLibrary_Sound*& Sound, UOmegaAssetLibrary_SlateBrush*& Slate) override;
+	virtual int32 GetSeed_Implementation(FName Name) override { return Seed;};
 };

@@ -36,19 +36,19 @@ TSubclassOf<UOmegaMod> UOmegaModSubsystem::GetModClass()
 
 void UOmegaModSubsystem::InitializeMods()
 {
-	for(FString TempPath : GetModListPaths())
+	for(FString TempPath : GetModListPaths(false))
 	{
 		UOmegaMod* NewMod = NewObject<UOmegaMod>(this, GetModClass());
-		NewMod->ModStringData=TempPath;
+		NewMod->ModStringData=TempPath+"mod.lua";
 		ModList.Add(NewMod);
 
-		NewMod->OnModInitialized(TempPath);
+		NewMod->OnModInitialized(TempPath+"mod.lua");
 		
 		FString raw_path;
 	}
 }
 
-TArray<FString> UOmegaModSubsystem::GetModListPaths()
+TArray<FString> UOmegaModSubsystem::GetModListPaths(bool IncludeBaseOverride)
 {
 	TArray<FString> FileNames;
 	IFileManager & FileManager = IFileManager::Get();
@@ -59,10 +59,30 @@ TArray<FString> UOmegaModSubsystem::GetModListPaths()
 	for (FString fileName : relativeFileNames)
 	{
 		FString ModTypeExtension = "lua";
-		FileNames.Add(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName  + FGenericPlatformMisc::GetDefaultPathSeparator() + "mod." + ModTypeExtension);
+		FileNames.Add(GetModsDirectory() + FGenericPlatformMisc::GetDefaultPathSeparator() + fileName  + FGenericPlatformMisc::GetDefaultPathSeparator());// + "mod." + ModTypeExtension);
+	}
+	if(IncludeBaseOverride)
+	{
+		FileNames.Add(FPaths::ProjectDir()+"Override/");
 	}
 	
 	return FileNames;
+}
+
+TArray<FString> UOmegaModSubsystem::GetModAssetFile(const FString& filename, bool IncludeBaseOverride)
+{
+	TArray<FString> out;
+	TArray<FString> file;
+	for(FString str : GetModListPaths(IncludeBaseOverride))
+	{
+		IFileManager::Get().FindFiles(file,*(str+filename),true,false);
+		for(FString to : file)
+		{
+			out.AddUnique(str+to);
+		}
+	}
+
+	return out;
 }
 
 FString UOmegaModSubsystem::GetModsDirectory()

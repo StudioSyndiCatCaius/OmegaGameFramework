@@ -3,46 +3,89 @@
 
 #include "DataAssets/DA_AssetLib.h"
 
-UAnimSequence* UOmegaAssetLibrary_Animation::GetAnimation_Named(FName Name,bool& Result,UAnimSequence* fall_back)
+template<typename T>
+const T& GetRandomElement(const TArray<T>& Array)
+{
+	check(Array.Num() > 0);
+	int32 RandomIndex = FMath::RandRange(0, Array.Num() - 1);
+	return Array[RandomIndex];
+}
+
+UAnimSequence* UOmegaAssetLibrary_Animation::GetAnimation_Named(FName Name, bool RandomFromList, bool& Result, UAnimSequence* fall_back)
 {
 	Result=false;
-	if(Anims_Named.Contains(Name))
+	if(RandomFromList)
 	{
-		Result=true;
-		return Anims_Named[Name];
+		if(Anims_NamedLists.Contains(Name) && !Anims_NamedLists[Name].List.IsEmpty())
+		{
+			Result=true;
+			return GetRandomElement(Anims_NamedLists[Name].List);
+		}
+	}
+	else
+	{
+		if(Anims_Named.Contains(Name))
+		{
+			Result=true;
+			return Anims_Named[Name];
+		}
 	}
 	if(Fallback)
 	{
-		return Fallback->GetAnimation_Named(Name,Result);
+		return Fallback->GetAnimation_Named(Name,RandomFromList,Result);
 	}
 	return fall_back;
 }
 
-UAnimMontage* UOmegaAssetLibrary_Animation::GetMontage_Named(FName Name,bool& Result,UAnimMontage* fall_back)
+UAnimMontage* UOmegaAssetLibrary_Animation::GetMontage_Named(FName Name, bool RandomFromList, bool& Result, UAnimMontage* fall_back)
 {
 	Result=false;
-	if(Montages_Named.Contains(Name))
+	if(RandomFromList)
 	{
-		Result=true;
-		return Montages_Named[Name];
+		if(Montages_NamedList.Contains(Name) && !Montages_NamedList[Name].List.IsEmpty())
+		{
+			Result=true;
+			return GetRandomElement(Montages_NamedList[Name].List);
+		}
+	}
+	else
+	{
+		if(Montages_Named.Contains(Name))
+		{
+			Result=true;
+			return Montages_Named[Name];
+		}
+		
 	}
 	if(Fallback)
 	{
-		return Fallback->GetMontage_Named(Name,Result);
+		return Fallback->GetMontage_Named(Name,RandomFromList,Result);
 	}
 	return fall_back;
 }
-ULevelSequence* UOmegaAssetLibrary_Animation::GetLevelSequence_Named(FName Name,bool& Result,ULevelSequence* fall_back)
+ULevelSequence* UOmegaAssetLibrary_Animation::GetLevelSequence_Named(FName Name, bool RandomFromList, bool& Result, ULevelSequence* fall_back)
 {
 	Result=false;
-	if(LevelSequences_Named.Contains(Name))
+	if(RandomFromList)
 	{
-		Result=true;
-		return LevelSequences_Named[Name];
+		if(LevelSequences_NamedList.Contains(Name) && !LevelSequences_NamedList[Name].List.IsEmpty())
+		{
+			Result=true;
+			return GetRandomElement(LevelSequences_NamedList[Name].List);
+		}
+	}
+	else
+	{
+		if(LevelSequences_Named.Contains(Name))
+		{
+			Result=true;
+			return LevelSequences_Named[Name];
+		}
+		
 	}
 	if(Fallback)
 	{
-		return Fallback->GetLevelSequence_Named(Name,Result);
+		return Fallback->GetLevelSequence_Named(Name,RandomFromList,Result);
 	}
 	return fall_back;
 }
@@ -118,7 +161,7 @@ TArray<ULevelSequence*> UOmegaAssetLibrary_Animation::GetLevelSequence_NamedList
 	return out;
 }
 
-USoundBase* UOmegaAssetLibrary_Sound::GetSound_Named(FName Name, bool& Result,USoundBase* fall_back)
+USoundBase* UOmegaAssetLibrary_Sound::GetSound_Named(FName Name, bool& Result, USoundBase* fall_back)
 {
 	Result=false;
 	if(Sounds_Named.Contains(Name))
@@ -133,7 +176,7 @@ USoundBase* UOmegaAssetLibrary_Sound::GetSound_Named(FName Name, bool& Result,US
 	return fall_back;
 }
 
-FSlateBrush UOmegaAssetLibrary_SlateBrush::GetBrush_Named(FName Name, bool& Result,FSlateBrush fall_back)
+FSlateBrush UOmegaAssetLibrary_SlateBrush::GetBrush_Named(FName Name, bool& Result, FSlateBrush fall_back)
 {
 	Result=false;
 	if(Brushes_Named.Contains(Name))

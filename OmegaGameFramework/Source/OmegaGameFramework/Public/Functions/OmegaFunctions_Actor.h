@@ -90,8 +90,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorFunctions : public UBlueprintFunctionLib
 
 public:
 	UFUNCTION(BlueprintCallable,Category="Actor Condition")
-	static void SnapActorToSuface(AActor* Actor, FVector Trace_Start,FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType);
-	
+	static void SnapActorToSurface(AActor* Actor, FVector Trace_Start,FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType);
 
 	UFUNCTION(BlueprintCallable,Category="Actor Condition")
 	static bool CheckActorCondition(AActor* Actor, FOmegaConditions_Actor Conditions);
@@ -122,6 +121,36 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor")
 	static float GetActorWeight(AActor* Actor, FActorWeighter Weighter,float fallback);
+	
+	// =====================================================================================================================
+	// Tags
+	// =====================================================================================================================
+	//Extracts a tag from an Actor or ActorComponent as a param;
+	UFUNCTION(BlueprintPure,Category="Omega|Actor")
+	static FString GetTagAsParam(UObject* Target, FName TagKey, bool& Valid,FName Delimiter="=");
+
+	
+	// =====================================================================================================================
+	// BoundParam
+	// =====================================================================================================================
+	UFUNCTION(BlueprintPure,Category="Omega|Actor|BoundParam")
+	static FString GetActorBoundParam_String(AActor* Actor, FName Key, const FString& Fallback);
+	UFUNCTION(BlueprintPure,Category="Omega|Actor|BoundParam")
+	static float GetActorBoundParam_Float(AActor* Actor, FName Key, float Fallback);
+	UFUNCTION(BlueprintPure,Category="Omega|Actor|BoundParam")
+	static int32 GetActorBoundParam_Int32(AActor* Actor, FName Key, int32 Fallback);
+	UFUNCTION(BlueprintPure,Category="Omega|Actor|BoundParam")
+	static bool GetActorBoundParam_Bool(AActor* Actor, FName Key, bool Fallback);
+
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|BoundParam")
+	static void SetActorBoundParam_String(AActor* Actor, FName Key, const FString& Value);
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|BoundParam")
+	static void SetActorBoundParam_Float(AActor* Actor, FName Key, float Value);
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|BoundParam")
+	static void SetActorBoundParam_Int32(AActor* Actor, FName Key, int32 Value);
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|BoundParam")
+	static void SetActorBoundParam_Bool(AActor* Actor, FName Key, bool Value);
 };
 
 // =====================================================================================================================

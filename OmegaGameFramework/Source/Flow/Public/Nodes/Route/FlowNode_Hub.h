@@ -31,11 +31,13 @@ class FLOW_API UFlowNode_ToHub : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()
 
+	UFUNCTION() TArray<FName> GetHubKeys() const;
+
 public:
 	
 	virtual void ExecuteInput(const FName& PinName) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default",meta=(GetOptions="GetHubKeys"))
 	FName TargetHub;
 
 

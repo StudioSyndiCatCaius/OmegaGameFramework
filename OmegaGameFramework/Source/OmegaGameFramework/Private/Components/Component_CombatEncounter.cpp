@@ -191,7 +191,7 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 				{
 					if(temp_ability)
 					{
-						comb_ref->GrantAbility(temp_ability);
+						comb_ref->SetAbilityGranted(temp_ability,true);
 					}
 				}
 				new_char->FinishSpawning(Transform);

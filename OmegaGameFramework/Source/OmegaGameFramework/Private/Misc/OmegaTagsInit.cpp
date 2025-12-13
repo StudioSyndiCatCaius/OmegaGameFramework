@@ -71,18 +71,24 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Adv_Enemy,"Combat.Advantage.Enemy");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Consumable,"Item.Consumable");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Key,"Item.Key");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Equipment_Weapon,"Item.Equipment.Weapon");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Equipment_Armor,"Item.Equipment.Armor");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Equipment_Belt,"Item.Equipment.Belts");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Equipment_Legs,"Item.Equipment.Legs");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Equipment_Accessory,"Item.Equipment.Accessory");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Equipment,"Item.Equipment");
+
+// --------------------------------------------------------------------------------------------------------
+// Character
+// --------------------------------------------------------------------------------------------------------
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_ID_Player,"Character.ID.Player");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Sex_Male,"Character.Sex.Male");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Sex_Female,"Character.Sex.Female");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Age_Child,"Character.Age.Infant");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Age_Teen,"Character.Age.Teen");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Age_Adult,"Character.Age.Adult");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Age_Old,"Character.Age.Old");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Neutral,"Character.Mood.Neutral");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Type_Field,"Character.Type.Field");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Type_Battle,"Character.Type.Battle");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Type_Scene,"Character.Type.Scene");
+
+// --------------------------------------------------------------------------------------------------------
+// Message
+// --------------------------------------------------------------------------------------------------------
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Message_Dlg,"Message.Dialog");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Message_Combat,"Message.Combat");
@@ -96,20 +102,6 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Bgm_Scene,"BGM.Scene");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Bgm_Battle,"BGM.Battle");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Bgm_Menu,"BGM.Menu");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Bgm_Jingle,"BGM.Jingle");
-
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Neutral,"Character.Mood.Neutral");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Happy,"Character.Mood.Happy");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Joy,"Character.Mood.Joy");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Sad,"Character.Mood.Sad");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Angry,"Character.Mood.Angry");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Suprised,"Character.Mood.Suprised");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Annoyed,"Character.Mood.Annoyed");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Fear,"Character.Mood.Fear");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Thinking,"Character.Mood.Thinking");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Shy,"Character.Mood.Shy");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_Mood_Embarrassed,"Character.Mood.Embarrassed");
-
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Character_ID_Player,"Character.ID.Player");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_00,"Story.Chapter.00");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Story_Chapter_01,"Story.Chapter.01");

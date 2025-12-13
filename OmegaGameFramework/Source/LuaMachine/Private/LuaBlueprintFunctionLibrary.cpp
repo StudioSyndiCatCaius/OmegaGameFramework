@@ -159,28 +159,33 @@ void ULuaBlueprintFunctionLibrary::LuaStateReload(UObject* WorldContextObject, T
 	LOCAL_getLuaState(WorldContextObject,State);
 }
 
-FString ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(const FLuaValue& Value)
+FString ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(const FLuaValue& Value, const FString& NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	return Value.ToString();
 }
 
-FVector ULuaBlueprintFunctionLibrary::Conv_LuaValueToFVector(const FLuaValue& Value)
+FVector ULuaBlueprintFunctionLibrary::Conv_LuaValueToFVector(const FLuaValue& Value, FVector NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	return LuaTableToVector(Value);
 }
 
-FName ULuaBlueprintFunctionLibrary::Conv_LuaValueToName(const FLuaValue& Value)
+FName ULuaBlueprintFunctionLibrary::Conv_LuaValueToName(const FLuaValue& Value, FName NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	return FName(*Value.ToString());
 }
 
-FText ULuaBlueprintFunctionLibrary::Conv_LuaValueToText(const FLuaValue& Value)
+FText ULuaBlueprintFunctionLibrary::Conv_LuaValueToText(const FLuaValue& Value, FText NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	return FText::FromString(Value.ToString());
 }
 
-UObject* ULuaBlueprintFunctionLibrary::Conv_LuaValueToObject(const FLuaValue& Value)
+UObject* ULuaBlueprintFunctionLibrary::Conv_LuaValueToObject(const FLuaValue& Value, UObject* NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	if (Value.Type == ELuaValueType::UObject)
 	{
 		return Value.Object;
@@ -242,18 +247,21 @@ FLuaValue ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue_Array(UObject* Wor
 }
 
 
-int32 ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(const FLuaValue& Value)
+int32 ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(const FLuaValue& Value, int32 NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	return Value.ToInteger();
 }
 
-float ULuaBlueprintFunctionLibrary::Conv_LuaValueToFloat(const FLuaValue& Value)
+float ULuaBlueprintFunctionLibrary::Conv_LuaValueToFloat(const FLuaValue& Value, float NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	return Value.ToFloat();
 }
 
-bool ULuaBlueprintFunctionLibrary::Conv_LuaValueToBool(const FLuaValue& Value)
+bool ULuaBlueprintFunctionLibrary::Conv_LuaValueToBool(const FLuaValue& Value, bool NilFallback)
 {
+	if(Value.IsNil()) { return NilFallback; }
 	return Value.ToBool();
 }
 

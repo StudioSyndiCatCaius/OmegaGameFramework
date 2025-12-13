@@ -5,13 +5,26 @@
 
 #include "Components/BoxComponent.h"
 #include "Components/Component_ActorIdentity.h"
+#include "Functions/OmegaFunctions_ComponentMod.h"
+
 
 AGameplay_Region::AGameplay_Region()
 {
-	Range=CreateDefaultSubobject<UBoxComponent>("Range");
-	RootComponent=Range;
 	ID=CreateOptionalDefaultSubobject<UActorIdentityComponent>("ID");
-	Range->ShapeColor=FColor::Yellow;
-	Range->SetBoxExtent(FVector(200,200,200));
-	Range->SetLineThickness(2.5);
 }
+void AGameplay_Region::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	if(RegionIdentity)
+	{
+		if(ID)
+		{
+			ID->SetIdentitySourceAsset(RegionIdentity);
+		}
+		if(RegionIdentity->DebugMaterial)
+		{
+			Volume->SetMaterial(0,RegionIdentity->DebugMaterial);
+		}
+	}
+}
+

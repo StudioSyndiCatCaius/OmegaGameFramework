@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Selector_Object.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Selector_Entity.generated.h"
@@ -10,44 +11,46 @@
 class UOmegaSaveSubsystem;
 
 
-UCLASS(Abstract)
-class OMEGAGAMEFRAMEWORK_API UOmegaEntity_Linker : public UOmegaInstancableObject
+UCLASS(Abstract,NotBlueprintable)
+class OMEGAGAMEFRAMEWORK_API UOmegaSelector_Entity : public UOmegaSelector_Object
 {
 	GENERATED_BODY()
 	
 public:
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Selector")
-	FOmegaEntity GetEntityData(UOmegaSaveSubsystem* Subsystem) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Selector")
-	void SetEntityData(UOmegaSaveSubsystem* Subsystem,FOmegaEntity Data) const;
+	virtual FOmegaEntity GetEntityData(UOmegaSaveSubsystem* Subsystem) const;
+	virtual void SetEntityData(UOmegaSaveSubsystem* Subsystem,FOmegaEntity Data) const;
 };
 
+inline FOmegaEntity UOmegaSelector_Entity::GetEntityData(UOmegaSaveSubsystem* Subsystem) const
+{
+	return FOmegaEntity();
+}
 
-USTRUCT(BlueprintType)
-struct FOmegaEntity_LinkerData
+inline void UOmegaSelector_Entity::SetEntityData(UOmegaSaveSubsystem* Subsystem, FOmegaEntity Data) const
+{
+}
+
+
+UCLASS(DisplayName="(Entity) Data Asset")
+class OMEGAGAMEFRAMEWORK_API UOmegaSelector_Entity_Asset : public UOmegaSelector_Entity
 {
 	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Default") UPrimaryDataAsset* Key;
+};
 
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Entity") UOmegaEntity_Linker* Linker;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Entity") FName Default_Dataset;
+UCLASS(DisplayName="(Entity) Guid")
+class OMEGAGAMEFRAMEWORK_API UOmegaSelector_Entity_Guid : public UOmegaSelector_Entity
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Default") FGuid Key;
+};
 
-	void Set_Dataset(UOmegaSaveSubsystem* sys, const FOmegaEntityDataset& dataset) const
-	{
-		if(Linker)
-		{
-			FOmegaEntity E=Linker->GetEntityData(sys);
-			E.Dataset_Set(Default_Dataset,dataset);
-			Linker->SetEntityData(sys,E);
-		}
-	}
-	FOmegaEntityDataset Get_Dataset(UOmegaSaveSubsystem* sys) const
-	{
-		if(Linker)
-		{
-			FOmegaEntity E=Linker->GetEntityData(sys);
-			return E.Dataset_Get(Default_Dataset);
-		}
-		return FOmegaEntityDataset();
-	}
+UCLASS(DisplayName="(Entity) Name")
+class OMEGAGAMEFRAMEWORK_API UOmegaSelector_Entity_Name : public UOmegaSelector_Entity
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Default") FName Key;
 };

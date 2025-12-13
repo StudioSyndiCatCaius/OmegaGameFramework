@@ -23,7 +23,7 @@ class OMEGAGAMEFRAMEWORK_API UActorModifierScript : public UObject
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent,Category="Script")
+	UFUNCTION(BlueprintNativeEvent,Category="Script")
 	bool OnAppliedToActor(AActor* Actor) const;
 	
 };

@@ -36,3 +36,12 @@ UPrimaryDataAsset* UOmegaObjectFunctions::RunSelector_DataAsset(UObject* WorldCo
 	}
 	return nullptr;
 }
+
+bool UOmegaObjectFunctions::CheckCondition_DataAsset(UPrimaryDataAsset* Asset, FOmegaConditions_DataAsset Selector,TArray<FText>& Reasons)
+{
+	if(Asset)
+	{
+		return Selector.CheckConditions(Asset,Reasons);
+	}
+	return false;
+}

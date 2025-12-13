@@ -21,12 +21,11 @@ void UAsyncAction_ActivateAbility::NativeShutdown(bool bCancelled)
 
 void UAsyncAction_ActivateAbility::Activate()
 {
-	AOmegaAbility* AbilityRef;
-	if(CombatantRef && !CombatantRef->IsAbilityActive(LocalAbilityClass, AbilityRef))
+	if(CombatantRef && !CombatantRef->IsAbilityActive(LocalAbilityClass))
 	{
 		if(b_autoGrant)
 		{
-			CombatantRef->GrantAbility(LocalAbilityClass);
+			CombatantRef->SetAbilityGranted(LocalAbilityClass,true);
 		}
 		bool IsSuccess;
 		AOmegaAbility* LocalAbility = CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);

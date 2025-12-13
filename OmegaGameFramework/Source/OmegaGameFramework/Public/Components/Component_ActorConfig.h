@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Types/Struct_RandomRange.h"
 #include "Component_ActorConfig.generated.h"
 
 // =======================================================================================================================
@@ -36,8 +37,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Actors")
 	TArray<UOmegaActorConfigScript*> Scripts;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Actors")
+	FOmegaRandomRangeFloat BeginPlayMod_Delay;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Actors")
 	TArray<UActorModifierScript*> BeginPlay_Modifiers;
+
+	
 };
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
@@ -45,6 +51,9 @@ class OMEGAGAMEFRAMEWORK_API UActorConfigComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
+	UPROPERTY() FTimerHandle timer_modDelay;
+	UFUNCTION() void L_TimerEnd();
+	virtual UOmegaActorConfig* L_GetConfig();
 	virtual void BeginPlay() override;
 
 public:

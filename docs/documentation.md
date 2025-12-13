@@ -2,6 +2,10 @@
 
 **NOTE**: OGF is desgined as an alternative to UE's "Gameplay Ability System". While not technically *incompatible*, it is NOT recommended to have both active in a project.
 
+* [GettingStarted](docs/tutorial/1_install.md)
+
+
+
 ____
 ### Subsystems
 ||Name|Type|Description|Doc Status|

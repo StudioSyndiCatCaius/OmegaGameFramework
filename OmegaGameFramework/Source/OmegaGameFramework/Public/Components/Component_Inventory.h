@@ -9,7 +9,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "Component_Inventory.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UDataAsset*, Asset, int32, Amount, bool, IsFull);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UPrimaryDataAsset*, Asset, int32, Amount, bool, IsFull);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetRemoved, UDataAsset*, Asset, int32, Amount, bool, IsEmpty);
 
 

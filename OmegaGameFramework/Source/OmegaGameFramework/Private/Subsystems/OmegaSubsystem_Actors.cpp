@@ -4,10 +4,56 @@
 #include "Subsystems/OmegaSubsystem_Actors.h"
 #include "Components/Component_ActorIdentity.h"
 #include "OmegaSettings_Gameplay.h"
+#include "Misc/OmegaUtils_Methods.h"
 
 void UOmegaActorSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
+}
+
+TMap<FName, FString>& UOmegaActorSubsystem::GetA_PMap(AActor* a)
+{
+	return actors_meta.FindOrAdd(a).boundParam;
+}
+
+FString UOmegaActorSubsystem::GetAParam_string(AActor* a, FName key, FString def)
+{
+	return OGF_SoftParam::Conv_string(GetA_PMap(a),key,def);
+}
+
+float UOmegaActorSubsystem::GetAParam_float(AActor* a, FName key, float def)
+{
+	return OGF_SoftParam::Conv_float(GetA_PMap(a),key,def);
+}
+
+int32 UOmegaActorSubsystem::GetAParam_int(AActor* a, FName key, int32 def)
+{
+	return OGF_SoftParam::Conv_int(GetA_PMap(a),key,def);
+}
+
+bool UOmegaActorSubsystem::GetAParam_bool(AActor* a, FName key, bool def)
+{
+	return OGF_SoftParam::Conv_bool(GetA_PMap(a),key,def);
+}
+
+void UOmegaActorSubsystem::SetAParam_string(AActor* a, FName key, FString def)
+{
+	if(a) { OGF_SoftParam::set_string(GetA_PMap(a),key,def); }
+}
+
+void UOmegaActorSubsystem::SetAParam_float(AActor* a, FName key, float def)
+{
+	if(a) { OGF_SoftParam::set_float(GetA_PMap(a),key,def); }
+}
+
+void UOmegaActorSubsystem::SetAParam_int(AActor* a, FName key, int32 def)
+{
+	if(a) { OGF_SoftParam::set_int(GetA_PMap(a),key,def); }
+}
+
+void UOmegaActorSubsystem::SetAParam_bool(AActor* a, FName key, bool def)
+{
+	if(a) { OGF_SoftParam::set_bool(GetA_PMap(a),key,def); }
 }
 
 
@@ -38,13 +84,13 @@ TArray<UActorIdentityComponent*> UOmegaActorSubsystem::GetAllActorIdentityCompon
 	return out;
 }
 
-AActor* UOmegaActorSubsystem::GetFirstActorIfIdentity(UPrimaryDataAsset* Identity)
+AActor* UOmegaActorSubsystem::GetFirstActorIfIdentity(UPrimaryDataAsset* Identity,TSubclassOf<AActor> FilterClass)
 {
 	if(Identity)
 	{
 		for(auto* a : GetAllActorIdentityComponents())
 		{
-			if(a && a->GetIdentitySourceAsset()==Identity)
+			if(a && a->GetIdentitySourceAsset()==Identity && (!FilterClass || a->GetClass()->IsChildOf(FilterClass)))
 			{
 				return a->GetOwner();
 			}

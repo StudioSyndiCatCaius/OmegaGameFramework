@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataAssets/DA_Appearance.h"
 #include "Engine/DataAsset.h"
 #include "Functions/OmegaFunctions_ComponentMod.h"
 #include "Functions/OmegaFunctions_TagEvent.h"
@@ -10,6 +11,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "Actor_Prop.generated.h"
 
+class UOAsset_Appearance;
 class UNiagaraSystem;
 class UStateTreeComponent;
 class UOmegaSaveableComponent;
@@ -17,7 +19,7 @@ class UNiagaraComponent;
 class UBoxComponent;
 
 UCLASS(DisplayName="Ω Prop")
-class OMEGAGAMEFRAMEWORK_API UOmegaProp_Preset : public UOmegaDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaProp_Preset : public UOmegaDataAsset, public IDataInterface_AppearanceSource
 {
 	GENERATED_BODY()
 
@@ -25,9 +27,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaProp_Preset : public UOmegaDataAsset
 	void L_InitToSocket(USceneComponent* target, USceneComponent* socket_source,FName socket);
 
 public:
+	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop") bool SetRangeToMeshBounds=false;
-		
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop") bool bCanTick=false;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop")
 	TEnumAsByte<ECollisionEnabled::Type> CollisionType=ECollisionEnabled::NoCollision;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop")
@@ -44,6 +47,11 @@ public:
 	USoundBase* Audio;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop")
 	UNiagaraSystem* Niagara;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Appearance")
+	UOAsset_Appearance* Appearance_Preset;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Appearance")
+	UOAsset_Appearance* Appearance_Custom;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop",AdvancedDisplay) FName Audio_AttachSocket=TEXT("root_fx");
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop",AdvancedDisplay) FName Niagara_AttachSocket=TEXT("root_fx");
@@ -61,11 +69,13 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaProp : public AActor, public IActorTagEventInterface
+class OMEGAGAMEFRAMEWORK_API AOmegaProp : public AActor, public IActorTagEventInterface, public IDataInterface_General, public IDataInterface_AppearanceSource
 {
 	GENERATED_BODY()
 
 public:
+	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
+	
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	virtual UOmegaProp_Preset* L_GetPreset();
@@ -86,5 +96,6 @@ public:
 	//properties
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop") UOmegaProp_Preset* Preset=nullptr;
 	
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 };
 

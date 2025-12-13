@@ -757,6 +757,15 @@ UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObj
 {
 	if(ModuleClass)
 	{
+		//first get module from world
+		if(WorldContextObject
+		&& WorldContextObject->GetWorld()->GetGameInstance()
+		&& WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
+		{
+			return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass);
+		}
+
+		//If nor world (I.E. Editor) get from settings
 		if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
 		{
 			for(auto* a : set->GetModules())
@@ -767,13 +776,8 @@ UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObj
 				}
 			}
 		}
-		if(WorldContextObject
-		&& WorldContextObject->GetWorld()->GetGameInstance()
-		&& WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass))
-		{
-			return WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->GetGameplayModule(ModuleClass);
-		}
-		
+
+		//if all else fails, fallback to default (to true)
 		if(bFallbackToDefault)
 		{
 			return ModuleClass.GetDefaultObject();

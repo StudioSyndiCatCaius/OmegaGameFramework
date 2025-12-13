@@ -12,6 +12,7 @@
 #include "Selectors/Selector_Montage.h"
 #include "DA_CommonSkill.generated.h"
 
+class UOmegaCondition_Actor;
 class UOAsset_EffectsPreset;
 class ULevelSequence;
 class UAnimMontage;
@@ -31,8 +32,8 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	int32 Rank;
 
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Skill",DisplayName="Condition - Can Use?")
-	TArray<UOmegaCondition_Combatant*> Conditions_CanUse;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Skill",DisplayName="Actor Condition - Can Use?")
+	TArray<UOmegaCondition_Actor*> Conditions_CanUse;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	TMap<UOmegaAttribute*, float> AttributeUseCost;

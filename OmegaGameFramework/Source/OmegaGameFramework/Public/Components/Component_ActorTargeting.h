@@ -29,6 +29,9 @@ public:
 	UPROPERTY(BlueprintAssignable) FOnActorRegisteredUpdate OnActorRegisteredUpdate;
 	UPROPERTY(BlueprintAssignable) FOnActorTargetUpdate OnActorTargetUpdate;
 
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ActorTargeting")
+	FName AutobindDataWidgetWithTag;
 	//Classes that are required to be added to target registry. Blank will allow all classes.
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="ActorTargeting")
 	TArray<UActorModifierScript*> ActorMods_OnRegister;

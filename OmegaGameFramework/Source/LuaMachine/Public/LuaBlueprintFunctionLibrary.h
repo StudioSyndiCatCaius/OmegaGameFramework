@@ -393,25 +393,25 @@ public:
 
 	// String
 	UFUNCTION(BlueprintPure, meta=(DisplayName = "Lua - -> String", BlueprintAutocast), Category="Lua")
-	static FString Conv_LuaValueToString(const FLuaValue& Value);
+	static FString Conv_LuaValueToString(const FLuaValue& Value,const FString& NilFallback="");
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "String -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_StringToLuaValue(const FString& Value);
 
 	// Text
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Text", BlueprintAutocast), Category="Lua")
-	static FText Conv_LuaValueToText(const FLuaValue& Value);
+	static FText Conv_LuaValueToText(const FLuaValue& Value,FText NilFallback=FText());
 	UFUNCTION(BlueprintPure, meta = (BDisplayName = "Text -> Lua", lueprintAutocast), Category="Lua")
 	static FLuaValue Conv_TextToLuaValue(const FText& Value);
 
 	//Name
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Name", BlueprintAutocast), Category="Lua")
-	static FName Conv_LuaValueToName(const FLuaValue& Value);
+	static FName Conv_LuaValueToName(const FLuaValue& Value,FName NilFallback="");
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Name -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_NameToLuaValue(const FName Value);
 
 	//Object
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Object", BlueprintAutocast), Category="Lua")
-	static UObject* Conv_LuaValueToObject(const FLuaValue& Value);
+	static UObject* Conv_LuaValueToObject(const FLuaValue& Value,UObject* NilFallback=nullptr);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Object -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_ObjectToLuaValue(UObject* Object);
 
@@ -423,23 +423,23 @@ public:
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Float -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_FloatToLuaValue(const float Value);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Float", BlueprintAutocast), Category="Lua")
-	static float Conv_LuaValueToFloat(const FLuaValue& Value);
+	static float Conv_LuaValueToFloat(const FLuaValue& Value,float NilFallback=0.0);
 
 	// Int
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Int", BlueprintAutocast), Category="Lua")
-	static int32 Conv_LuaValueToInt(const FLuaValue& Value);
+	static int32 Conv_LuaValueToInt(const FLuaValue& Value,int32 NilFallback=0);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Int -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_IntToLuaValue(const int32 Value);
 	
 	//Vector
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Vector", BlueprintAutocast), Category = "Lua")
-	static FVector Conv_LuaValueToFVector(const FLuaValue& Value);
+	static FVector Conv_LuaValueToFVector(const FLuaValue& Value,FVector NilFallback);
 	UFUNCTION()
 	static FVector LuaTableToVector(FLuaValue Value);
 	
 	//Bool
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Bool", BlueprintAutocast), Category="Lua")
-	static bool Conv_LuaValueToBool(const FLuaValue& Value);
+	static bool Conv_LuaValueToBool(const FLuaValue& Value,bool NilFallback=false);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Bool -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_BoolToLuaValue(const bool Value);
 

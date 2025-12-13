@@ -27,9 +27,11 @@
 #include "Components/Component_UtilMesh.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/TextRenderComponent.h"
+#include "Functions/OmegaFunctions_Camera.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/OmegaSubsystem_DynamicCamera.h"
 
 UZoneEntityComponent::UZoneEntityComponent()
 {
@@ -782,15 +784,24 @@ void UOmegaZoneSubsystem::Local_OnFinishLoadTask(bool LoadState)
 				}
 			}
 		}
-		if (Incoming_SpawnPoint)
-		{
-			if(APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this, 0))
+		if(APawn* PawnRef = UGameplayStatics::GetPlayerPawn(this, 0))
+        {
+			if(L_GetSettings()->bDynamicCameraViewTargetOnTransit)
 			{
-				PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
-				UGameplayStatics::GetPlayerController(this, 0)->SetControlRotation(PawnRef->GetActorRotation());
+				if(APlayerController* c=Cast<APlayerController>(PawnRef->GetController()))
+				{
+					UOmegaCameraFunctions::SetViewTargetToDynamicCamera(this,c);
+					c->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SnapToCurrentSource();
+				}
 			}
-			OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this, 0), Incoming_SpawnPoint);
-		}
+        	if (Incoming_SpawnPoint)
+            {
+            	PawnRef->SetActorTransform(Incoming_SpawnPoint->GetActorTransform());
+            	UGameplayStatics::GetPlayerController(this, 0)->SetControlRotation(PawnRef->GetActorRotation());
+            	OnPlaySpawnedAtPoint.Broadcast(UGameplayStatics::GetPlayerController(this, 0), Incoming_SpawnPoint);
+            }
+        }
+		
 
 		Local_OnBeginTransitSequence(false);
 	}

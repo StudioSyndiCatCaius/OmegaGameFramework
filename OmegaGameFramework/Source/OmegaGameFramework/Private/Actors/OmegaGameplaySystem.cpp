@@ -309,7 +309,7 @@ void AOmegaBaseSystem::CompleteShutdown()
 		{
 			for(auto* TempComb : GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
 			{
-				TempComb->UngrantAbility(TempData.AbilityClass);
+				TempComb->SetAbilityGranted(TempData.AbilityClass,true);
 			}	
 		}
 		
@@ -381,7 +381,7 @@ void AOmegaBaseSystem::Local_GrantAbilities(UCombatantComponent* Combatant)
 
 			if(AcceptFaction & AcceptTags)
 			{
-				Combatant->GrantAbility(TempData.AbilityClass);
+				Combatant->SetAbilityGranted(TempData.AbilityClass,true);
 			}
 		}
 	}
