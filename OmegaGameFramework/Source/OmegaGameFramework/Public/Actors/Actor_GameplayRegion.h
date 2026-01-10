@@ -7,7 +7,7 @@
 #include "Components/Component_ActorIdentity.h"
 #include "DataAssets/DA_ActorIdentity.h"
 #include "GameFramework/Actor.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Misc/GeneralDataObject.h"
 #include "Types/Struct_Material.h"
 #include "Actor_GameplayRegion.generated.h"

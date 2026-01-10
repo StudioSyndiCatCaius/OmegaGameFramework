@@ -8,9 +8,10 @@
 #include "Misc/OmegaAttribute.h"
 #include "Condition/Condition_Actor.h"
 #include "DataAssets/DA_Appearance.h"
+#include "Interfaces/I_BitFlag.h"
 #include "Types/Struct_CombatantSource.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Combatant.h"
+#include "Interfaces/I_Skill.h"
 #include "DA_CommonEquipment.generated.h"
 
 
@@ -49,7 +50,7 @@ public:
 	
 	virtual bool CanEquipItem_Implementation(UEquipmentComponent* Component,UEquipmentSlot* Slot) override;
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
-	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 

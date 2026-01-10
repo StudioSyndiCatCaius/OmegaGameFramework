@@ -8,11 +8,11 @@
 #include "OmegaSettings_Gameplay.h"
 #include "Components/Component_CombatEncounter.h"
 #include "Kismet/GameplayStatics.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
-#include "Subsystems/OmegaSubsystem_Quest.h"
-#include "Subsystems/OmegaSubsystem_Zone.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_Quest.h"
+#include "Subsystems/Subsystem_Zone.h"
+#include "Subsystems/Subsystem_GameManager.h"
 
 UFlowNode_GameplaySystemBASE::UFlowNode_GameplaySystemBASE()
 {
@@ -93,9 +93,9 @@ FString UFlowNode_System_Encounter::GetNodeDescription() const
 
 TSubclassOf<AOmegaGameplaySystem> UFlowNode_System_Encounter::L_GetSystem() const
 {
-	if(UOmegaSettings_Gameplay* set= UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if(TSubclassOf<AOmegaGameplaySystem> _class=GetMutableDefault<UOmegaSettings>()->System_FlowEncounter.LoadSynchronous())
 	{
-		return set->System_CombatEncounter.LoadSynchronous();
+		return _class;
 	}
 	return nullptr;
 }
@@ -139,9 +139,9 @@ FString UFlowNode_System_DlgFlow::GetNodeDescription() const
 
 TSubclassOf<AOmegaGameplaySystem> UFlowNode_System_DlgFlow::L_GetSystem() const
 {
-	if(UOmegaSettings_Gameplay* set= UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if(TSubclassOf<AOmegaGameplaySystem> _class=GetMutableDefault<UOmegaSettings>()->System_FlowAsset.LoadSynchronous())
 	{
-		return set->System_FlowAsset.LoadSynchronous();
+		return _class;
 	}
 	return nullptr;
 }

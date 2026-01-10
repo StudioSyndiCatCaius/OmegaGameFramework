@@ -6,7 +6,7 @@
 #include "DA_CombatSource.h"
 #include "Components/Component_TurnBasedManager.h"
 
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
+#include "Functions/F_ScriptedEffects.h"
 #include "Misc/GeneralDataObject.h"
 #include "DA_EffectsPreset.generated.h"
 

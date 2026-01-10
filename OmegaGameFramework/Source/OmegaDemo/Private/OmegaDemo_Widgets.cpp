@@ -7,10 +7,10 @@
 #include "Components/ProgressBar.h"
 #include "Components/WidgetSwitcher.h"
 #include "DataAssets/DA_Body.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 #include "Kismet/KismetStringLibrary.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
-#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_Zone.h"
 #include "Widget/DataList.h"
 
 
@@ -610,7 +610,7 @@ void UDataWidgetBase_SaveSlot::OnSourceAssetChanged_Implementation(UObject* Asse
 			{
 				if(sav->ActiveZone)
 				{
-					txt->SetText(sav->ActiveZone->ZoneName);
+					txt->SetText(sav->ActiveZone->DisplayName);
 				}
 				else
 				{

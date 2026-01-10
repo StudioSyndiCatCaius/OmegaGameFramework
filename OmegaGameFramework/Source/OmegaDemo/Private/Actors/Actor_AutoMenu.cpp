@@ -2,11 +2,11 @@
 
 #include "Actors/Actor_AutoMenu.h"
 #include "Components/Component_ActorConfig.h"
-#include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Interfaces/I_ObjectTraits.h"
 #include "Components/TextRenderComponent.h"
 #include "Misc/OmegaGameMode.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
-#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_Zone.h"
 
 void AOmegaAutoMenu::Native_OnMenuClosed(FGameplayTagContainer GameplayTags, UObject* Context, FString Flag)
 {

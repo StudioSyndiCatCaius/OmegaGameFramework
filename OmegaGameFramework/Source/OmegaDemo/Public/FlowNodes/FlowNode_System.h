@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "OmegaDemo_Const.h"
 #include "Actors/OmegaGameplaySystem.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "Selectors/Selector_Object.h"
 #include "Nodes/FlowNode.h"
-#include "Subsystems/OmegaSubsystem_Quest.h"
+#include "Subsystems/Subsystem_Quest.h"
 #include "Widget/Menu.h"
 #include "FlowNode_System.generated.h"
 
@@ -32,7 +32,7 @@ public:
 	virtual void ExecuteInput(const FName& PinName) override;
 
 #if WITH_EDITOR
-	virtual FString GetNodeCategory() const override { return "Game"; };
+	virtual FString GetNodeCategory() const override { return "Gameplay"; };
 	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override{ OutColor=COLOR_DEMO_FLOW; return true;};
 #endif
 	
@@ -51,6 +51,7 @@ class OMEGADEMO_API UFlowNode_GameplaySystem : public UFlowNode_GameplaySystemBA
 public:
 	
 #if WITH_EDITOR
+	virtual FString GetNodeCategory() const override { return "Gameplay"; };
 	virtual FString GetNodeDescription() const override;
 #endif
 	
@@ -66,7 +67,7 @@ public:
 	FString Flag;
 };
 
-UCLASS(DisplayName="System - Combat Encounter",Category="Game")
+UCLASS(DisplayName="⚔️System - Combat Encounter",Category="Game")
 class OMEGADEMO_API UFlowNode_System_Encounter : public UFlowNode_GameplaySystemBASE
 {
 	GENERATED_BODY()
@@ -74,6 +75,7 @@ class OMEGADEMO_API UFlowNode_System_Encounter : public UFlowNode_GameplaySystem
 public:
 
 #if WITH_EDITOR
+	virtual FString GetNodeCategory() const override { return "Gameplay"; };
 	virtual FString GetNodeDescription() const override;
 #endif
 	
@@ -89,7 +91,7 @@ public:
 	FString Flag;
 };
 
-UCLASS(DisplayName="System - Flow Asset",Category="Game")
+UCLASS(DisplayName="💬System - Flow Asset",Category="Game")
 class OMEGADEMO_API UFlowNode_System_DlgFlow : public UFlowNode_GameplaySystemBASE
 {
 	GENERATED_BODY()
@@ -99,6 +101,7 @@ class OMEGADEMO_API UFlowNode_System_DlgFlow : public UFlowNode_GameplaySystemBA
 public:
 	
 #if WITH_EDITOR
+	virtual FString GetNodeCategory() const override { return "Gameplay"; };
 	virtual FString GetNodeDescription() const override;
 #endif
 	

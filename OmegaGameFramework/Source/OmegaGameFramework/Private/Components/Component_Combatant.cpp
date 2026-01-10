@@ -3,7 +3,9 @@
 
 #include "Components/Component_Combatant.h"
 
+#include "OmegaSettings.h"
 #include "OmegaSettings_Gameplay.h"
+#include "OmegaSettings_Global.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
@@ -14,10 +16,10 @@
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_GameplayEffect.h"
 
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Gameplay.h"
 
-#include "Interfaces/OmegaInterface_Widget.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/I_Widget.h"
+#include "Interfaces/I_Combatant.h"
 
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaDamageType.h"
@@ -25,19 +27,40 @@
 #include "Misc/OmegaFaction.h"
 
 #include "Components/PrimitiveComponent.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
+#include "Misc/OmegaUtils_Macros.h"
 
 
-float UCombatantComponent::L_ModifyDamage(UOmegaAttribute* Attribute,UObject* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context)
+float UCombatantComponent::L_ModifyDamage(UOmegaAttribute* Attribute,UCombatantComponent* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context)
 {
 	float FinalDamage = BaseDamage;
-	for(auto* TempMod : GetDamageModifiers())
+	
+	if (Attribute)
 	{
-		FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, DamageType, Context); //Apply Damage Modifier
+		UE_LOG(LogTemp, Log, TEXT("Modifying damage to '%s' on attribute '%s' with starting value: '%f' "), *GetName(),*Attribute->GetName(),FinalDamage);
+		UOmegaGlobalSettings* globSet=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings();
+	
+	
+		FinalDamage=globSet->Combatant_ModifyDamage_PreMod(Attribute,this,Instigator,BaseDamage,DamageType,Context);
+		UE_LOG(LogTemp, Log, TEXT("		---  Applying PRE SOURCE modifiers. Result: '%f' "),FinalDamage);
+		
+		UE_LOG(LogTemp, Log, TEXT("		---  Applying SOURCE modifiers."));
+		for(auto* TempMod : GetDamageModifiers())
+		{
+			if (TempMod)
+			{
+				FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, DamageType, Context); //Apply Damage Modifier
+				UE_LOG(LogTemp, Log, TEXT("				-----  Applying SOURCE modifier from '%s' with result: %f."), *TempMod->GetName(), FinalDamage);
+			}
+		}
+		
+		FinalDamage=globSet->Combatant_ModifyDamage_PostMod(Attribute,this,Instigator,BaseDamage,DamageType,Context);
+		UE_LOG(LogTemp, Log, TEXT("		---  Applying POST SOURCE modifiers. Result: '%f' "),FinalDamage);
 	}
+	
 	return FinalDamage;
 }
 
@@ -49,12 +72,9 @@ UCombatantComponent::UCombatantComponent()
 void UCombatantComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if(UOmegaAttributeSet* NewSet=GetMutableDefault<UOmegaSettings>()->Default_AttributeSet.LoadSynchronous())
 	{
-		if(!AttributeSet && set->Default_AttributeSet)
-		{
-			AttributeSet=set->Default_AttributeSet;
-		}
+		AttributeSet=NewSet;
 	}
     
 	auto* WorldSubsystem = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
@@ -66,10 +86,14 @@ void UCombatantComponent::BeginPlay()
 	ref_OwnerPawn = Cast<APawn>(GetOwner());
 
 	// Grant StarterAbilities
-	for (const auto& TempAbClass : GrantedAbilities)
+	for (auto ab: OGF_CFG()->Default_Abilities)
 	{
-		SetAbilityGranted(TempAbClass,true);
+		if (TSubclassOf<AOmegaAbility> abc=ab.LoadSynchronous())
+		{
+			SetAbilityGranted(abc,true);
+		}
 	}
+	SetAbilitiesGranted(GrantedAbilities,true);
 
 	InitializeAttributes();
 }
@@ -97,8 +121,39 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+void UCombatantComponent::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
+	FText& Description)
+{
+	if(CombatantDataAsset && CombatantDataAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralDataText(CombatantDataAsset,Label,Context,Name,Description);	
+	}
+	if(GetOwner()->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralDataText(GetOwner(),Label,Context,Name,Description);	
+	}
+}
+
+void UCombatantComponent::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
+	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	if(CombatantDataAsset && CombatantDataAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralDataImages(CombatantDataAsset,Label,Context,Texture,Material,Brush);	
+	}
+	if(GetOwner()->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	{
+		IDataInterface_General::Execute_GetGeneralDataImages(GetOwner(),Label,Context,Texture,Material,Brush);	
+	}
+}
+
+void UCombatantComponent::GetGeneralAssetColor_Implementation(FLinearColor& Color)
+{
+	Color=GetFactionColor();
+}
+
 float UCombatantComponent::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+                                                       UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
 	return L_ModifyDamage(Attribute,Instigator,BaseDamage,DamageType,Context);
 }
@@ -139,12 +194,12 @@ FGameplayTagContainer UCombatantComponent::GetCombatantTags()
 	return CombatantTags;
 }
 
-bool UCombatantComponent::CombatantHasTag(FGameplayTag Tag)
+bool UCombatantComponent::CombatantHasTag(FGameplayTag Tag) const
 {
 	return CombatantTags.HasTag(Tag);
 }
 
-bool UCombatantComponent::CombatantHasAnyTag(FGameplayTagContainer Tags, bool Exact)
+bool UCombatantComponent::CombatantHasAnyTag(FGameplayTagContainer Tags, bool Exact) const
 {
 	if (Exact)
 	{
@@ -156,7 +211,7 @@ bool UCombatantComponent::CombatantHasAnyTag(FGameplayTagContainer Tags, bool Ex
 	}
 }
 
-bool UCombatantComponent::CombatantHasAllTag(FGameplayTagContainer Tags, bool Exact)
+bool UCombatantComponent::CombatantHasAllTag(FGameplayTagContainer Tags, bool Exact) const
 {
 	if(Exact)
 	{
@@ -242,7 +297,7 @@ bool UCombatantComponent::SetAbilityGranted(TSubclassOf<AOmegaAbility> AbilityCl
 		
 				if (Cast<ACharacter>(GetOwner()))
 				{
-					LocalAbility->CachedCharacter = Cast<ACharacter>(GetOwner());
+					LocalAbility->ref_character = Cast<ACharacter>(GetOwner());
 				}
 				if (Cast<APawn>(GetOwner()))
 				{
@@ -309,20 +364,13 @@ AOmegaAbility* UCombatantComponent::GetAbility(TSubclassOf<AOmegaAbility> Abilit
 AOmegaAbility* UCombatantComponent::ExecuteAbility(TSubclassOf<AOmegaAbility> AbilityClass, class UObject* Context, bool& bSuccess)
 {
 	bSuccess = false;
-	if (AbilityClass == nullptr || IsAbilityTagBlocked(AbilityClass.GetDefaultObject()->AbilityTags))
+	bool bValidAbility=false;
+	if(AOmegaAbility* _ability = GetAbility(AbilityClass, bValidAbility))
 	{
-		return nullptr;
-	}
-
-	AOmegaAbility* _ability = GetAbility(AbilityClass, bSuccess);
-	if (bSuccess && !IsAbilityActive(AbilityClass))
-	{
-		_ability->ContextObject = Context;
-		_ability->Native_Execute();
-		bSuccess = true;
+		_ability->ContextObject=Context;
+		bSuccess=_ability->Native_Execute();
 		return _ability;
 	}
-
 	return nullptr;
 }
 
@@ -363,7 +411,7 @@ TArray<AOmegaAbility*> UCombatantComponent::GetActiveAbilities()
 	TArray<AOmegaAbility*> out;
 	for(auto* a : abilities_granted)
 	{
-		if(a && IsAbilityActive(a->GetClass()))
+		if(a && a->bIsActive)
 		{
 			out.Add(a);
 		}
@@ -378,7 +426,7 @@ TArray<AOmegaAbility*> UCombatantComponent::GetActiveAbilitiesWithTags(FGameplay
 	{
 		if(TempAbility)
 		{
-			if (TempAbility->AbilityTags.HasAnyExact(Tags))
+			if (!Tags.IsEmpty() && TempAbility->AbilityTags.HasAnyExact(Tags))
 			{
 				FoundAbilities.Add(TempAbility);
 			}
@@ -539,6 +587,7 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
 			}
 		}
 	}
+	OutSkills.Append(GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Combatant_Append_Skills(this));
 	return OutSkills;
 }
 
@@ -698,16 +747,17 @@ float UCombatantComponent::GetAttributeBaseValue(UOmegaAttribute* Attribute)
 	return Attribute->GetAttributeValue(Level, GetAttributeLevel(Attribute), AttributeValueCategory);
 }
 
-
-
 bool UCombatantComponent::IsAbilityTagBlocked(FGameplayTagContainer Tags)
 {
+	if(Tags.IsEmpty()) { return false; }
 	for (AOmegaAbility* TempAbility : GetActiveAbilities())
 	{
 		if(TempAbility)
 		{
-			if (TempAbility->BlockAbilities.HasAnyExact(Tags))
+			if (!TempAbility->BlockAbilities.IsEmpty() && TempAbility->BlockAbilities.HasAnyExact(Tags))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("Ability Tag: %s is blocked on %s"),*Tags.ToString(),*TempAbility->GetName());
+
 				return true;
 			}
 		}

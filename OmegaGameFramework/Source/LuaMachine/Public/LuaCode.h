@@ -34,9 +34,21 @@ private:
 };
 
 
-/**
- * 
- */
+USTRUCT(BlueprintType)
+struct FOmegaLuaCode
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lua")
+	FString LuaCode;
+
+	FOmegaLuaCode()
+		: LuaCode(TEXT(""))
+	{
+	}
+};
+
+
 UCLASS(BlueprintType)
 class LUAMACHINE_API ULuaCode : public UDataAsset
 {

@@ -2,22 +2,37 @@
 
 #include "Actors/Actor_Interactable.h"
 
+#include "LuaConst.h"
+#include "LuaSubsystem.h"
+#include "OmegaSettings.h"
 #include "OmegaSettings_Gameplay.h"
+#include "OmegaSettings_Global.h"
 #include "Components/Component_ActorConfig.h"
+#include "Components/Component_Interactable.h"
 #include "Components/Component_Saveable.h"
 #include "Components/Component_UtilMesh.h"
-#include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Interfaces/I_ObjectTraits.h"
 #include "Components/TextRenderComponent.h"
 #include "Condition/Condition_Interact.h"
 #include "DataAssets/DA_ActorModifierCollection.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Gameplay.h"
 
 
 
 void AOmegaInteractable::OnConstruction(const FTransform& Transform)
 {
 	Update();
+#if WITH_EDITOR
+	if(!GetActorLabel().Contains("OmegaInteractable") && Lists.CustomNamedList.FindOrAdd("dialog").Option.IsNone())
+	{
+		Lists.CustomNamedList.FindOrAdd("dialog").ListID="dialog";
+		Lists.CustomNamedList.FindOrAdd("dialog").Option=*GetActorLabel();
+	}
+#endif
+	SetPreviewColor(PreviewColor);
 	Super::OnConstruction(Transform);
 }
 
@@ -38,7 +53,6 @@ AOmegaInteractable::AOmegaInteractable()
 		RangeBox->SetLineThickness(1.5);
 		RangeBox->ShapeColor=FColor(0,100,255);
 		ActorID=CreateOptionalDefaultSubobject<UActorIdentityComponent>("ActorID");
-		ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
 		NameText=CreateOptionalDefaultSubobject<UTextRenderComponent>("Text");
 		NameText->SetMaterial(0,LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")));
 		NameText->SetTextRenderColor(FColor::Blue);
@@ -60,6 +74,7 @@ AOmegaInteractable::AOmegaInteractable()
 			SpringArm->TargetArmLength=300;
 		}
 
+		Interactable=CreateOptionalDefaultSubobject<UOmegaComponent_Interactable>("Interactable");
 		UtilMesh=CreateOptionalDefaultSubobject<UUtilMeshComponent>("UtilMesh");
 		UtilMesh->SetupAttachment(RootComponent);
 #if WITH_EDITOR
@@ -130,8 +145,22 @@ void AOmegaInteractable::OnInteraction_Implementation(AActor* InteractInstigator
 		{
 			if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
 			{
-				
+				FGameplayTag _targetType=OGF_CFG()->Default_InteractTag;
+				if (RequiredInteractType.IsValid())
+				{
+					_targetType=RequiredInteractType;
+				}
+				if (Tag==_targetType)
+				{
+					if (Oneshot && !Saveable->GetSaveParam_Bool("dead"))
+					{
+						Saveable->SetSaveParam_Bool("dead",true);
+						SetActorEnableCollision(false);
+						SetActorHiddenInGame(true);
+					}
+				}
 			}
+			
 		}
 	}
 }
@@ -150,8 +179,6 @@ void AOmegaInteractable::Update()
 		SpringArm->TargetArmLength=_dis;
 	}
 
-
-	
 #if WITH_EDITOR
 	if(Interactable_Preset && GetActorLabel()=="OmegaInteractable")
 	{
@@ -178,10 +205,35 @@ void AOmegaInteractable::AutosetName()
 	
 }
 
+void AOmegaInteractable::SetPreviewColor(FColor Color)
+{
+	PreviewColor=Color;
+	if (NameText)
+	{
+		NameText->SetTextRenderColor(Color);
+	}
+	if(RangeBox)
+	{
+		RangeBox->ShapeColor=Color;
+	}
+	if (UtilMesh)
+	{
+		if (!dynaMat_PointerMesh)
+		{
+			dynaMat_PointerMesh=UtilMesh->CreateAndSetMaterialInstanceDynamic(0);
+		}
+		if(dynaMat_PointerMesh)
+		{
+			dynaMat_PointerMesh->SetVectorParameterValue("Tint",Color);
+		}
+	}
+}
+
 UOmegaInteractable_Preset::UOmegaInteractable_Preset()
 {
 	CollisionType=ECollisionEnabled::QueryAndPhysics;
 }
+
 
 void AOmegaInteractable::L_InteractionSystemEnd(UObject* Context, FString Flag)
 {

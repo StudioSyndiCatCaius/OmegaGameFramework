@@ -14,37 +14,167 @@
 	"CanContainContent": true,
 	"Installed": true,
 	"Modules": [
-		{"Name": "LuaMachine", 			"Type": "Runtime", 		"LoadingPhase": "Default"},
-		{"Name": "LuaMachineEditor", 	"Type": "Editor", 		"LoadingPhase": "Default", 			"WhitelistPlatforms": ["Linux", "Mac", "Win64"]},
-		{"Name": "FileSDK", 			"Type": "Runtime", 		"LoadingPhase": "PreLoadingScreen",	"WhitelistPlatforms": [ "Win64", "Mac", "Linux"]},
-		{"Name": "OmegaGameFramework", 	"Type": "Runtime", 		"LoadingPhase": "Default", 			"WhitelistPlatforms": ["Win64", "Linux", "Mac"]},
-		{"Name": "OmegaEditor", 		"Type": "Editor", 		"LoadingPhase": "PostEngineInit", 	"WhitelistPlatforms": ["Win64", "Linux", "Mac"]},
-		{"Name": "OmegaData", 			"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "OmegaDemo", 			"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "OmegaFlow", 			"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "OmegaSequence", 		"Type": "Runtime", 		"LoadingPhase": "Default" },
-		{"Name": "OmegaOnline", 		"Type": "Runtime", 		"loadingPhase": "Default" },
-		{"Name": "OmegaDebug",	 		"Type": "Runtime", 		"loadingPhase": "Default" },
-		{"Name": "OmegaMutable", 		"Type": "Runtime", 		"loadingPhase": "Default" },
-		{"Name": "OmegaWorld", 			"Type": "Runtime", 		"loadingPhase": "Default" },
-		{"Name": "Flow", 				"Type": "Runtime", 		"LoadingPhase": "PreDefault"},
-		{"Name": "FlowEditor", 			"Type": "Editor", 		"LoadingPhase": "Default"}
+		{
+			"Name": "_OmegaCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LuaMachine",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LuaMachineEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Linux",
+				"Mac",
+				"Win64"
+			]
+		},
+		{
+			"Name": "FileSDK",
+			"Type": "Runtime",
+			"LoadingPhase": "PreLoadingScreen",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Mac",
+				"Linux"
+			]
+		},
+		{
+			"Name": "OmegaGameFramework",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "OmegaEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "OmegaData",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaDemo",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaFlow",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaSequence",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaOnline",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaDebug",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaMutable",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "OmegaWorld",
+			"Type": "Runtime",
+			"loadingPhase": "Default"
+		},
+		{
+			"Name": "Flow",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "FlowEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
 	],
 	"Plugins": [
-		{"Name": "EnhancedInput", 			"Enabled": true},
-		{"Name": "Mutable", 				"Enabled": true},
-		{"Name": "JsonBlueprintUtilities", 	"Enabled": true},
-		{"Name": "GameFeatures", 			"Enabled": true},
-		{"Name": "ModularGameplay", 		"Enabled": true},
-		{"Name": "AssetSearch", 			"Enabled": true},
-		{"Name": "CommonUI",				"Enabled": true},
-		{"Name": "Metasound",				"Enabled": true},
-		{"Name": "Niagara",					"Enabled": true}, 
-		{"Name": "SkeletalMerging",			"Enabled": true},
-		{"Name": "SequencerScripting",		"Enabled": true},
-		{"Name": "BinkMedia",				"Enabled": true},
-		{"Name": "PCG",						"Enabled": true},
-		{"Name": "StateTree",				"Enabled": true},
-		{"Name": "GameplayStateTree",		"Enabled": true}
+		{
+			"Name": "EnhancedInput",
+			"Enabled": true
+		},
+		{
+			"Name": "Mutable",
+			"Enabled": true
+		},
+		{
+			"Name": "JsonBlueprintUtilities",
+			"Enabled": true
+		},
+		{
+			"Name": "GameFeatures",
+			"Enabled": true
+		},
+		{
+			"Name": "ModularGameplay",
+			"Enabled": true
+		},
+		{
+			"Name": "AssetSearch",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonUI",
+			"Enabled": true
+		},
+		{
+			"Name": "Metasound",
+			"Enabled": true
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "SkeletalMerging",
+			"Enabled": true
+		},
+		{
+			"Name": "SequencerScripting",
+			"Enabled": true
+		},
+		{
+			"Name": "BinkMedia",
+			"Enabled": true
+		},
+		{
+			"Name": "PCG",
+			"Enabled": true
+		},
+		{
+			"Name": "StateTree",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayStateTree",
+			"Enabled": true
+		}
 	]
 }

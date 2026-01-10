@@ -3,13 +3,53 @@
 
 #include "OmegaSettings.h"
 
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "OmegaSettings_Global.h"
+#include "Actors/OmegaGameplaySystem.h"
+#include "Functions/F_File.h"
+#include "PhysicsEngine/PhysicsSettings.h"
+#include "Subsystems/Subsystem_Save.h"
+#include "Widget/Menu.h"
 
 
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	RuntimeImport_BaseDirectory.Add("/Override/");
+    Default_InteractTag=FGameplayTag::RequestGameplayTag("Event.Actor.Interact");
+    
+    System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
+   // System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
+    System_Interaction=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
+}
 
+TSubclassOf<AOmegaGameplaySystem> UOmegaSettings::CorrectClass_System(TSubclassOf<AOmegaGameplaySystem> Class) const
+{
+    TMap<TSoftClassPtr<AOmegaGameplaySystem>,TSoftClassPtr<AOmegaGameplaySystem>> _rep=Replacement_Systems;
+    if (TSubclassOf<AOmegaGameplaySystem> _NewVal=_rep.FindOrAdd(TSoftClassPtr<AOmegaGameplaySystem>(Class)).LoadSynchronous())
+    {
+        return _NewVal;
+    }
+    return Class;
+}
+
+TSubclassOf<UMenu> UOmegaSettings::CorrectClass_Menu(TSubclassOf<UMenu> Class) const
+{
+    TMap<TSoftClassPtr<UMenu>,TSoftClassPtr<UMenu>> _rep=Replacement_Menus;
+    if (TSubclassOf<UMenu> _NewVal=_rep.FindOrAdd(TSoftClassPtr<UMenu>(Class)).LoadSynchronous())
+    {
+        return _NewVal;
+    }
+    return Class;
+}
+
+TSubclassOf<UHUDLayer> UOmegaSettings::CorrectClass_HUD(TSubclassOf<UHUDLayer> Class) const
+{
+    TMap<TSoftClassPtr<UHUDLayer>,TSoftClassPtr<UHUDLayer>> _rep=Replacement_HUDLayers;
+    if (TSubclassOf<UHUDLayer> _NewVal=_rep.FindOrAdd(TSoftClassPtr<UHUDLayer>(Class)).LoadSynchronous())
+    {
+        return _NewVal;
+    }
+    return Class;
 }
 
 TArray<TSubclassOf<UOmegaGameplayModule>> UOmegaSettings::GetGameplayModuleClasses() const
@@ -29,9 +69,126 @@ UClass* UOmegaSettings::GetOmegaGameSaveClass() const
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGame::StaticClass();
 }
 
+
 UClass* UOmegaSettings::GetOmegaGlobalSaveClass() const
 {
 	UClass* const LocalSaveClass = GlobalSaveClass.IsValid() ? LoadObject<UClass>(NULL, *GlobalSaveClass.ToString()) : nullptr;
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGlobal::StaticClass();
 }
 
+UOmegaGlobalSettings* UOmegaSettings::GetGlobalSettings()
+{
+	if(TSoftClassPtr<UOmegaGlobalSettings> _cls=GetMutableDefault<UOmegaSettings>()->GlobalSettingsClass)
+	{
+		return Cast<UOmegaGlobalSettings>(_cls.LoadSynchronous()->GetDefaultObject());
+	}
+	return GetMutableDefault<UOmegaGlobalSettings>();
+}
+
+UOmegaFileManagerSettings* UOmegaSettings::GetSettings_File() const
+{
+    if (UOmegaFileManagerSettings* set=Cast<UOmegaFileManagerSettings>(DefaultSettings_FileManager.TryLoad()))
+    {
+        return set;
+    }
+    return nullptr;
+}
+
+//BitFlag -------------------------------------------------------
+
+
+
+
+const FOmegaBitmaskEditorData* UOmegaSettings::GetEditorDataForClass(UClass* Class) const
+{
+    if (!Class)
+    {
+        return nullptr;
+    }
+
+    // First, try exact match
+    TSoftClassPtr<UObject> SoftClassPtr(Class);
+    if (const FOmegaBitmaskEditorData* Found = ClassBitflagData.Find(SoftClassPtr))
+    {
+        //Check if should CopyFromOther
+        if (Found->CopyFrom.IsValid())
+        {
+            if (const FOmegaBitmaskEditorData* Found2 = ClassBitflagData.Find(Found->CopyFrom))
+            {
+                return Found2;
+            }
+        }
+        return Found;
+    }
+
+    // If no exact match, check parent classes
+    UClass* ParentClass = Class->GetSuperClass();
+    while (ParentClass)
+    {
+        TSoftClassPtr<UObject> ParentSoftClassPtr(ParentClass);
+        if (const FOmegaBitmaskEditorData* Found = ClassBitflagData.Find(ParentSoftClassPtr))
+        {
+            return Found;
+        }
+        ParentClass = ParentClass->GetSuperClass();
+    }
+
+    const FOmegaBitmaskEditorData output=GetGlobalSettings()->Bitflags_GetByObject(Class);
+    return &output;
+}
+
+FText UOmegaSettings::GetBitflagName(UClass* Class, int32 BitIndex) const
+{
+    const FOmegaBitmaskEditorData* Data = GetEditorDataForClass(Class);
+    
+    if (Data && Data->Bitflags.IsValidIndex(BitIndex))
+    {
+        return Data->Bitflags[BitIndex].Title;
+    }
+    return FText::FromString("Unknown");
+}
+
+FText UOmegaSettings::GetBitEnumName(UClass* Class, int32 EnumIndex) const
+{
+    const FOmegaBitmaskEditorData* Data = GetEditorDataForClass(Class);
+    
+    if (Data && Data->BitEnums.IsValidIndex(EnumIndex))
+    {
+        return Data->BitEnums[EnumIndex].Title;
+    }
+    return FText::FromString("Unknown");
+}
+
+FText UOmegaSettings::GetBitEnumOptionName(UClass* Class, int32 EnumIndex, int32 OptionIndex) const
+{
+    const FOmegaBitmaskEditorData* Data = GetEditorDataForClass(Class);
+    
+    if (Data && Data->BitEnums.IsValidIndex(EnumIndex))
+    {
+        const FOmegaBitmaskEditorEnumData& EnumData = Data->BitEnums[EnumIndex];
+        if (EnumData.Options.IsValidIndex(OptionIndex))
+        {
+            return EnumData.Options[OptionIndex].Title;
+        }
+    }
+    return FText::FromString(FString::Printf(TEXT("%d"), OptionIndex));
+}
+
+#if WITH_EDITOR
+FText UOmegaSettings::GetSectionText() const
+{
+    return FText::FromString("Omega Settings");
+}
+
+FText UOmegaSettings::GetSectionDescription() const
+{
+    return FText::FromString("Configure Omega system settings");
+}
+
+void UOmegaSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+    Super::PostEditChangeProperty(PropertyChangedEvent);
+    
+    SaveConfig();
+}
+#endif

@@ -10,7 +10,7 @@
 class UOmegaModifier_Save;
 class UOmegaSaveCondition;
 
-UCLASS(DisplayName="Save - Edit",Category="Save")
+UCLASS(DisplayName="💾Save - Edit",Category="Save")
 class OMEGADEMO_API UFlowNode_SaveEdit : public UFlowNode
 {
 	GENERATED_BODY()
@@ -35,7 +35,7 @@ public:
 };
 
 	
-UCLASS(DisplayName="Save - Condition?",Category="Save")
+UCLASS(DisplayName="💾Save - Condition?",Category="Save")
 class OMEGADEMO_API UFlowNode_SaveCondition : public UFlowNode
 {
 	GENERATED_BODY()
@@ -59,7 +59,7 @@ public:
 	bool bGlobal;
 };
 
-UCLASS(DisplayName="Once Per Save?",Category="Save")
+UCLASS(DisplayName="💾Once Per Save?",Category="Save")
 class OMEGADEMO_API UFlowNode_SaveOnce : public UFlowNode
 {
 	GENERATED_BODY()

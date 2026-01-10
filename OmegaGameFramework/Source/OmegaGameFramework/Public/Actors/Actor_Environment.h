@@ -6,7 +6,8 @@
 #include "Landscape.h"
 #include "GameFramework/Actor.h"
 #include "Misc/GeneralDataObject.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "Actor_Environment.generated.h"
 
 class UArrowComponent;
@@ -73,7 +74,8 @@ public:
 	
 	UPROPERTY(EditAnywhere,Category="Environment")
 	UPCGGraphInterface* PCGAsset;
-
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Environment") FOmegaClassNamedLists NamedLists;
 	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset")
 	UOmegaEnvironmentPreset* current_preset;
 	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Lock Preset?")

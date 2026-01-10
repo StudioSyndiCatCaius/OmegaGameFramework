@@ -28,3 +28,24 @@ protected:
 	TArray<TSharedPtr<FString>> ValidLuaFunctions;
 };
 
+
+class FOmegaLuaCodeCustomization : public IPropertyTypeCustomization
+{
+public:
+	static TSharedRef<IPropertyTypeCustomization> MakeInstance();
+
+	virtual void CustomizeHeader(TSharedRef<IPropertyHandle> PropertyHandle, 
+								FDetailWidgetRow& HeaderRow, 
+								IPropertyTypeCustomizationUtils& CustomizationUtils) override;
+
+	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, 
+								  IDetailChildrenBuilder& ChildBuilder, 
+								  IPropertyTypeCustomizationUtils& CustomizationUtils) override;
+
+private:
+	TSharedPtr<IPropertyHandle> LuaCodePropertyHandle;
+    
+	FText GetLuaCodeText() const;
+	void OnLuaCodeTextChanged(const FText& NewText);
+	void OnLuaCodeTextCommitted(const FText& NewText, ETextCommit::Type CommitType);
+};

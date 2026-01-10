@@ -10,9 +10,11 @@
 #include "GameFramework/Actor.h"
 #include "Components/Component_ActorIdentity.h"
 #include "Components/StateTreeComponent.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
+#include "Interfaces/I_NamedLists.h"
+#include "Subsystems/Subsystem_Actors.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "Actor_InventoryBox.generated.h"
 
 class UDataAssetCollectionComponent;
@@ -26,6 +28,8 @@ class OMEGADEMO_API AOmegaInventoryBox : public AOmegaProp, public IActorInterfa
 {
 	GENERATED_BODY()
 
+
+	
 	UFUNCTION() void L_AssetChange(UPrimaryDataAsset* Asset, int32 Amount, bool IsFull);
 
 public:
@@ -33,8 +37,7 @@ public:
 	AOmegaInventoryBox();
 
 	virtual bool IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override { return !CanInteract; };
-
-
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="InventoryBox") bool bSaveInventory=true;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="InventoryBox") bool CanInteract=true;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="InventoryBox") TMap<UPrimaryDataAsset*,int32> Items;
@@ -42,7 +45,6 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="InventoryBox") TArray<UPrimaryDataAsset*> Bulk_Items;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UDataAssetCollectionComponent* Inventory;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
 	UPROPERTY() UTextRenderComponent* NameText;
 	UPROPERTY() UUtilMeshComponent* UtilMesh;
 

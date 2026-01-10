@@ -21,21 +21,22 @@ void UAsyncAction_ActivateAbility::NativeShutdown(bool bCancelled)
 
 void UAsyncAction_ActivateAbility::Activate()
 {
-	if(CombatantRef && !CombatantRef->IsAbilityActive(LocalAbilityClass))
+	if(CombatantRef)
 	{
 		if(b_autoGrant)
 		{
 			CombatantRef->SetAbilityGranted(LocalAbilityClass,true);
 		}
 		bool IsSuccess;
-		AOmegaAbility* LocalAbility = CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);
-		if(IsSuccess)
+		if(AOmegaAbility* LocalAbility=CombatantRef->GetAbility(LocalAbilityClass,IsSuccess))
 		{
-			LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::UAsyncAction_ActivateAbility::NativeShutdown);
-			return;
-		}
-		else
-		{
+			IsSuccess=false;
+			if(LocalAbility->CanActivate(LocalContext))
+			{
+				CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);
+				LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::UAsyncAction_ActivateAbility::NativeShutdown);
+				return;
+			}
 			Failed.Broadcast();
 			SetReadyToDestroy();
 		}

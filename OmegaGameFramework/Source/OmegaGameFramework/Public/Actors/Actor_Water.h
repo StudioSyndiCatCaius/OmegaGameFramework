@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/Component_Combatant.h"
 #include "Components/PostProcessComponent.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
+#include "Functions/F_Component.h"
+#include "Functions/F_ScriptedEffects.h"
 #include "GameFramework/Actor.h"
 #include "Actor_Water.generated.h"
 

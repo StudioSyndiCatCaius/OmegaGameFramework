@@ -7,7 +7,7 @@
 #include "JsonObjectWrapper.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataAsset.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_TagEvent.h"
 #include "Component_Subscript.generated.h"
 
 

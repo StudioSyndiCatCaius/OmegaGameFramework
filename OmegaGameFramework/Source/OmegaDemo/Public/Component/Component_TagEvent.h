@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_TagEvent.h"
 #include "Component_TagEvent.generated.h"
 
 

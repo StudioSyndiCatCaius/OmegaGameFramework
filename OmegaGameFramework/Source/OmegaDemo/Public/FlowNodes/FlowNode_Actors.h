@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
 #include "FlowNode_Actors.generated.h"
@@ -16,6 +16,9 @@ class OMEGADEMO_API UFlowNode_ActorBase : public UFlowNode
 	GENERATED_BODY()
 
 public:
+
+	virtual AActor* GetNodeInstigator() override;
+	
 	UFUNCTION(BlueprintPure,Category="Flow")
 	AActor* GetActor() const;
 	UFUNCTION(BlueprintPure,Category="Flow")

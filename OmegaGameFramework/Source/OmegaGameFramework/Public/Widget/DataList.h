@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "GameplayTagContainer.h"
-#include "Interfaces/OmegaInterface_Widget.h"
+#include "Interfaces/I_Widget.h"
 #include "Types/SlateEnums.h"
 #include "Components/SlateWrapperTypes.h"
 #include "Blueprint/UserWidget.h"
@@ -13,9 +13,12 @@
 #include "Math/Vector2D.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Delegates.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "DataList.generated.h"
 
+class UOmegaSlateStyle_Text;
+class UOverlay;
+class UOmegaSlateStyle_Border;
 class SConstraintCanvas;
 class UPanelWidget;
 class UPrimaryDataAsset;
@@ -53,7 +56,10 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 {
 	GENERATED_BODY()
 
+
 public:
+
+	UPROPERTY() UDataTooltip* override_tooltip;
 	
 	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntrySelected;
 	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntryHovered;
@@ -64,16 +70,24 @@ public:
 	UPROPERTY(BlueprintAssignable) FOnDataListInputAxis OnInputNavigate;
 	UPROPERTY(BlueprintAssignable) FOnDataListInputPage OnInputPage;
 	
-	//###########################################
-	// Class
-	//###########################################
-
+	// ============================================================================================================
+	// UPROPERTIES
+	// ============================================================================================================
+	
+	// ---------------------------------------------------------------
+	// Border
+	// ---------------------------------------------------------------
+	
+	UPROPERTY(EditInstanceOnly, Category="List")
+	UOmegaSlateStyle_Border* BorderStyle;
+	
+	// ---------------------------------------------------------------
+	// List
+	// ---------------------------------------------------------------
+	
 	UPROPERTY(EditInstanceOnly, Instanced, Category="List")
 	UDataListFormat* ListFormat;
-	
-	//###########################################
-	// Entry
-	//###########################################
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = "List",AdvancedDisplay)
 	EDataListFormat Format;
 
@@ -98,7 +112,11 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List")
 	UWidgetSwitcher* LinkedWidgetSwitcher;
-	//##### ENTRY CLASS #####//
+
+	// ---------------------------------------------------------------
+	// Entry
+	// ---------------------------------------------------------------
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
 	UPROPERTY(EditAnywhere, Instanced, Category="Entry")
@@ -144,18 +162,33 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Entry")
 	void RefreshAllEntries();
-
+	
+	// ---------------------------------------------------------------
+	// Overrides
+	// ---------------------------------------------------------------
+	
 	UPROPERTY(EditAnywhere,Category="EntryOverrides")
 	bool bCanOverrideSize;
 	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideSize"))
 	FVector2D OverrideSize;
+	UPROPERTY(EditAnywhere,Category="EntryOverrides")
+	bool bCanOverrideIconSize;
+	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideIconSize"))
+	FVector2D OverrideIconSize;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	UMaterialInterface* Override_IconMaterial;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	UCurveVector* OverrideHoverOffset_Curve;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	FVector OverrideHoverOffset_Scale=FVector::One();
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	UOmegaSlateStyle_Text* OverrideTextStyle_Name;
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	UOmegaSlateStyle_Text* OverrideTextStyle_Description;
 
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	TSubclassOf<UDataTooltip> Override_TooltipClass;
+	
 private:
 	UFUNCTION()
 	void SetNewControl(UUserWidget* NewWidget);
@@ -165,9 +198,13 @@ public:
 	//###########################################
 	UPROPERTY()
 	TArray<UDataWidget*> Entries;
-
-	UPROPERTY(meta = (BindWidget))
-	UCanvasPanel* ParentPanel;
+	
+	//Clears all ENTRIES from the list
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataList")
+	UOverlay* GetWidgetOverlay();
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataList")
+	UBorder* GetWidgetBorder();
 
 	//Clears all ENTRIES from the list
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
@@ -281,6 +318,7 @@ protected:
 
 	//virtual UClass* GetSlotClass() const override;
 	virtual void NativePreConstruct() override;
+	virtual void NativeConstruct() override;
 
 	UFUNCTION()
 	void RebuildList();

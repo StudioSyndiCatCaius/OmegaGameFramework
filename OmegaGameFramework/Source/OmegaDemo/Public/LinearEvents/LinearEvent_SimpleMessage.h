@@ -3,13 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "LuaCode.h"
+#include "Interfaces/I_Common.h"
 #include "Event/OmegaLinearEvent.h"
-#include "Functions/OmegaFunctions_SoftProperty.h"
+#include "Functions/F_SoftProperty.h"
+#include "Interfaces/I_BitFlag.h"
 #include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
 #include "Styling/SlateBrush.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
+#include "Subsystems/Subsystem_Message.h"
 #include "UObject/Object.h"
 #include "LinearEvent_SimpleMessage.generated.h"
 
@@ -18,6 +20,7 @@ class UOmegaSelector_Montage;
 class UOmegaMessageTrait;
 class UOmegaDataItem;
 
+class UOAsset_TransformPreset;
 
 // Fires the GlobalEvent "Message_Start" with this event as the context. Uses GetGeneralDataTexts to get event text. Finishes on GlobalEvent "Message_End";
 UCLASS(DisplayName="(Event) Simple Message")
@@ -32,8 +35,6 @@ public:
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(ExposeOnSpawn="true"),DisplayName="Instigator (Asset)")
 	UPrimaryDataAsset* Instigator_Asset;
-	UPROPERTY(Instanced, EditInstanceOnly, BlueprintReadOnly, Category="Event",DisplayName="Instigator (Actor)")
-	UOmegaSelector_Object* Instigator_Alt;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn="true"))
 	FText Text;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message", meta=(ExposeOnSpawn="true"))
@@ -47,11 +48,14 @@ public:
 	UFUNCTION() void LocalGEvent(FName Event, UObject* Context);
 };
 
-UCLASS(DisplayName="Simple Message")
-class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IDataInterface_General, public IOmegaSoftPropertyInterface
+UCLASS(DisplayName="💬 Message")
+class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IDataInterface_General, public IOmegaSoftPropertyInterface, public IDataInterface_MessageContext
 {
 	GENERATED_BODY()
 
+	bool CanPlayMessage();
+	void getNodeIndexFromList(TArray<UFlowNode*> baseList);
+	
 	AActor* local_GetInstigatorActor() const;
 	UObject* local_GetInstigator() const;
 	UFUNCTION() void LocalGEvent(FName Event, UObject* Context);
@@ -63,49 +67,49 @@ public:
 	virtual  TMap<FName, FString> GetSoftPropertyMap_Implementation() override;
 
 #if WITH_EDITOR
+	virtual FString GetNodeCategory() const override { return "Gameplay"; };
 	virtual FString GetNodeDescription() const override;
-	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override { OutColor=FLinearColor::Yellow; return true; };
+	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override;
 #endif
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="Instigator")
 	UPrimaryDataAsset* Instigator_Asset;
-	UPROPERTY(Instanced, EditInstanceOnly, BlueprintReadOnly,AdvancedDisplay, Category="Message",DisplayName="Instigator (Alt)")
-	UOmegaSelector_Object* Instigator_Alt;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",meta=(MultiLine))
 	FText Text;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
 	FGameplayTagContainer Tags;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message")
 	UMaterialInterface* Portrait=nullptr;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message")
-	float FinishDelay;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
-	TMap<FName,FString> ExtraParams;
-
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",AdvancedDisplay="AdvancedDisplay")
-	FGameplayTag MessageCategory  = FGameplayTag::RequestGameplayTag(FName("Message.Dialog"));
+	FOmegaBitflagsBase Flags;
+	
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",AdvancedDisplay)
 	FName MessageKey;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message",AdvancedDisplay)
+	TMap<FName,FString> ExtraParams;
 	
-	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Actor")
-	UOmegaSelector_Montage* Montage;
-	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Actor")
-	UOmegaSelector_LevelSequence* Sequence;
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Lua",meta=(MultiLine))
+	FOmegaLuaCode LuaScript;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Lua",meta=(MultiLine))
+	FOmegaLuaCode LuaCondition;
+	
 	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Actor")
-	TSoftObjectPtr<UOAsset_TransformPreset> Position;
-
-	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Look Aim")
+	UAnimMontage* Montage;
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Actor")
+	ULevelSequence* Sequence;
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Actor")
+	UOAsset_TransformPreset* Position;
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Actor",DisplayName="Target")
 	UPrimaryDataAsset* LookAt;
+	
 	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Look Aim")
 	TArray<UPrimaryDataAsset*> Listeners;
 	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Look Aim")
 	UOmegaActorSelector* LookAt_Alt;
 	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Look Aim")
 	bool ClearLookAt;
-	
-	UPROPERTY(EditInstanceOnly,Instanced,BlueprintReadWrite, Category="Misc")
-	TArray<UActorModifierScript*> InstigatorModifiers;
-	
+
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor")
 	void Autokey_ByNext();
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor")
@@ -115,4 +119,6 @@ public:
 	
 	UFUNCTION()
 	void LocalFinish(UOmegaLinearEvent* Event, const FString& Flag);
+
+	virtual UOAsset_TransformPreset* GetMessage_TransformPreset_Implementation() override;
 };

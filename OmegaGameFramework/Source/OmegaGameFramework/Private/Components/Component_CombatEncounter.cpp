@@ -2,12 +2,16 @@
 
 
 #include "Components/Component_CombatEncounter.h"
+
+#include "LevelSequence.h"
+#include "OmegaSettings.h"
 #include "Components/Component_Combatant.h"
 #include "OmegaSettings_Gameplay.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Subsystems/Subsystem_BGM.h"
 
 UWorld* UOmegaCombatEncounterScript::GetWorld() const { return WorldPrivate; }
 UGameInstance* UOmegaCombatEncounterScript::GetGameInstance() const { return WorldPrivate->GetGameInstance(); }
@@ -89,11 +93,11 @@ ULevelSequence* UOmegaCombatEncounter_Component::GetEncounter_SequenceIntro() co
 	{
 		return REF_Instance->OverrideSequence_Intro;
 	}
-	if(UOmegaEncounter_Asset* asset=Cast<UOmegaEncounter_Asset>(encounter_source))
+	if(encounter_source && encounter_source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
-		if(asset->Override_IntroSequence)
+		if(ULevelSequence* _U=IDataInterface_CombatEncounter::Execute_GetCombatEncounter_IntroSequence(encounter_source))
 		{
-			return asset->Override_IntroSequence;
+			return _U;
 		}
 	}
 	return Default_SequenceIntro;
@@ -106,11 +110,11 @@ UOmegaBGM* UOmegaCombatEncounter_Component::GetEncounter_BGM() const
 	{
 		return REF_Instance->OverrideBGM;
 	}
-	if(UOmegaEncounter_Asset* asset=Cast<UOmegaEncounter_Asset>(encounter_source))
+	if(encounter_source && encounter_source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
-		if(asset->Override_BGM)
+		if(UOmegaBGM* _bgm=IDataInterface_CombatEncounter::Execute_GetCombatEncounter_BGM(encounter_source))
 		{
-			return asset->Override_BGM;
+			return _bgm;
 		}
 	}
 	return Default_BGM;
@@ -173,12 +177,9 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
                                                           FTransform Transform, ESpawnActorCollisionHandlingMethod CollisionMethod)
 {
 	TSubclassOf<ACharacter> in_class=BattlerCharacterClass;
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if (TSubclassOf<ACharacter> _NewClass= GetMutableDefault<UOmegaSettings>()->Default_EncounterCharacter.LoadSynchronous())
 	{
-		if(set->Default_EncounterCharacter)
-		{
-			in_class=set->Default_EncounterCharacter;
-		}
+		in_class=_NewClass;
 	}
 	if(REF_Instance)
 	{

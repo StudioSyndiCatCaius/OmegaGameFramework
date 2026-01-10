@@ -5,9 +5,10 @@
 #include "CoreMinimal.h"
 #include "DA_CommonBattleAction.h"
 #include "Components/Component_Inventory.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Functions/F_Component.h"
+#include "Functions/F_ScriptedEffects.h"
+#include "Interfaces/I_BitFlag.h"
+#include "Interfaces/I_Skill.h"
 
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"

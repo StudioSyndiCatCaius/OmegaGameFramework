@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "Actor_GameplayEffect.generated.h"

@@ -16,6 +16,13 @@
 #include "OmegaEffectFactory.h"
 #include "Actors/Actor_Environment.h"
 #include "Actor_EventVolume.h"
+#include "Customization_ClassNamedLists.h"
+#include "Customization_CustomNamedList.h"
+#include "Customization_OmegaLinearChoices.h"
+#include "Customization_Bitflags.h"
+#include "OmegaObjectCustomization.h"
+#include "OmegaSettings.h"
+#include "OmegaSettings_Global.h"
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_GameplayEffect.h"
 #include "Actors/Actor_Interactable.h"
@@ -138,7 +145,6 @@ void FOmegaEditor::StartupModule()
 	FString ConfigFilePath = ContentDir+"/Config/OmegaEditor.ini";
 	
 	UE_LOG(LogTemp, Log, TEXT("attempting load config file: %s"), *ConfigFilePath);
-	FConfigFile ConfigFile;
 	ConfigFile.Read(ConfigFilePath);
 	const FConfigSection* ThumbnailSection = ConfigFile.FindSection(TEXT("thumbnails"));
 	TMap<FString, int32> ThumbnailConfig;
@@ -223,18 +229,7 @@ void FOmegaEditor::StartupModule()
 	int Priority = 42;
 	FPlacementCategoryInfo OmegaGameFramework( LOCTEXT("OmegaGameFramework", "Omega Game Framework"), "OmegaGameFramework", TEXT("PMOmegaGameFramework"), Priority);
 	IPlacementModeModule::Get().RegisterPlacementCategory(OmegaGameFramework);
-	/*
-	// Find and register actors to category
-	UBlueprint* OmegaCharacter = Cast<UBlueprint>(FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/OmegaDemoCharacter.OmegaDemoCharacter")).TryLoad());
-	if (OmegaCharacter) {
-		IPlacementModeModule::Get().RegisterPlaceableItem(OmegaGameFramework.UniqueHandle, MakeShareable(new FPlaceableItem(
-			*UActorFactory::StaticClass(), FAssetData(OmegaCharacter, true),FName("OmegaCharacter.Thumbnail"),
-#if ENGINE_MAJOR_VERSION == 5
-			FName("OmegaCharacter.Icon"),
-#endif
-			TOptional<FLinearColor>(), TOptional<int32>(), NSLOCTEXT("PlacementMode", "Character", "Character")
-		))); }
-	*/
+
 	OMACRO_ADDPLACEABLE(OmegaCharacter,"Character")
 	OMACRO_ADDPLACEABLE(OmegaEncounterCharacter,"Character - Encounter")
 	OMACRO_ADDPLACEABLE(OmegaReferenceCharacter,"Character - Reference")
@@ -245,7 +240,80 @@ void FOmegaEditor::StartupModule()
 	OMACRO_ADDPLACEABLE(OmegaZonePoint,"Zone: Spawn Point")
 	OMACRO_ADDPLACEABLE(OmegaZoneTransit,"Zone: Transit Point")
 	OMACRO_ADDPLACEABLE(OmegaSplineActor,"Spline")
+
+	// ==================================================================================================================================
+	// CUSTOM PROPERTY EDITORS
+	// ==================================================================================================================================
 	
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	
+	_bitflagTypes.Add(FOmegaBitflagsBase::StaticStruct()->GetFName());
+	
+	for (FName n : _bitflagTypes)
+	{
+		PropertyModule.RegisterCustomPropertyTypeLayout(
+		n,FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOmegaBitflagsCustomization::MakeInstance));
+	}
+	FName StructName = FOmegaCustomNamedList::StaticStruct()->GetFName();
+	UE_LOG(LogTemp, Warning, TEXT("Registering customization for: %s"), *StructName.ToString());
+    
+    
+	// Register FOmegaCustomNamedList
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FOmegaCustomNamedList::StaticStruct()->GetFName(),
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_CustomNamedList::MakeInstance)
+	);
+    
+	// Register FOmegaClassNamedLists
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FOmegaClassNamedLists::StaticStruct()->GetFName(),
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_ClassNamedLists::MakeInstance)
+	);
+	
+	// Register for specific classes or all UObjects
+	PropertyModule.RegisterCustomClassLayout(
+		UObject::StaticClass()->GetFName(),
+		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaObjectCustomization::MakeInstance)
+	);
+
+	// Bind to command events
+	//UOmegaEditorSettings::Get()->OnCommandEvent.AddRaw(this, &FYourEditorModule::OnCommandExecuted);
+
+	
+}
+
+
+void FOmegaEditor::RegisterToolbarExtension()
+{
+	FToolMenuOwnerScoped OwnerScoped(this);
+    
+	UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.User");
+	FToolMenuSection& Section = Menu->FindOrAddSection("MyCustomButtons");
+    
+	Section.AddEntry(FToolMenuEntry::InitToolBarButton(
+		"WorldInit",
+		FExecuteAction::CreateRaw(this, &FOmegaEditor::OnButtonClicked),
+		FText::FromString("WORLD INIT"),
+		FText::FromString("Rerun WORL INIT function in `Global Settings`"),
+		FSlateIcon(FAppStyle::GetAppStyleSetName(), "PlayWorld.PlayInViewport")
+	));
+}
+
+void FOmegaEditor::OnButtonClicked()
+{
+	if (GEditor)
+	{
+		UWorld* World = GEditor->GetEditorWorldContext().World();
+		if (World)
+		{
+			GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnWorldInit(World);
+			//ULuaWorldSubsystem* Subsystem = World->GetSubsystem<ULuaWorldSubsystem>();
+			//if (Subsystem)
+			//{
+			//	Subsystem->RerunLua();
+			//}
+		}
+	}
 }
 
 void FOmegaEditor::ShutdownModule()
@@ -255,6 +323,23 @@ void FOmegaEditor::ShutdownModule()
 	{
 		UThumbnailManager::Get().UnregisterCustomRenderer(UOmegaDataItem::StaticClass());
 	}
+
+	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+	{
+		FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		
+		//PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaLinearChoices::StaticStruct()->GetFName());
+		for (FName n : _bitflagTypes)
+		{
+			PropertyModule.UnregisterCustomPropertyTypeLayout(n);
+		}
+		
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaCustomNamedList::StaticStruct()->GetFName());
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaClassNamedLists::StaticStruct()->GetFName());
+		PropertyModule.UnregisterCustomClassLayout(UObject::StaticClass()->GetFName());
+	}
+	
+
 }
 
 

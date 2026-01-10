@@ -17,7 +17,7 @@
 #include "Nodes/Route/FlowNode_Hub.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
+#include "Subsystems/Subsystem_Actors.h"
 
 class UOmegaActorSubsystem;
 
@@ -447,7 +447,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 	PreStartFlow();
 
 	//Run Traits
-	for(UFlowAssetTrait* TempTrait : Traits)
+	for(UFlowAssetTrait* TempTrait : L_GetTraits())
 	{
 		if(TempTrait)
 		{
@@ -480,7 +480,7 @@ void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool b
 {
 	FinishPolicy = InFinishPolicy;
 
-	for(UFlowAssetTrait* TempTrait : Traits)
+	for(UFlowAssetTrait* TempTrait : L_GetTraits())
 	{
 		if(TempTrait)
 		{
@@ -544,7 +544,7 @@ void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, bool 
 			ActiveNodes.Add(Node);
 			RecordedNodes.Add(Node);
 		}
-		for(auto* t : Traits)
+		for(auto* t : L_GetTraits())
 		{
 			if(t)
 			{
@@ -742,6 +742,29 @@ FGameplayTagContainer UFlowAsset::GetObjectGameplayTags_Implementation()
 	return GameplayTags;
 }
 
+FGameplayTag UFlowAsset::GetMessageCategoryTag() const
+{
+	if(MessageCategory.IsValid()) { return MessageCategory; }
+	return GetMutableDefault<UFlowSettings>()->DefaultMessageCategory;
+}
+
+TArray<UFlowAssetTrait*> UFlowAsset::L_GetTraits() const
+{
+	TArray<UFlowAssetTrait*> out;
+	for(auto* i: Trait_Collections)
+	{
+		if(i)
+		{
+			out.Append(i->Traits);
+		}
+	}
+	for(auto* i : Traits)
+	{
+		if(i) { out.Add(i);}
+	}
+	return out;
+}
+
 TArray<UFlowNode*> UFlowAsset::GetAllNodes()
 {
 	TArray<UFlowNode*> OutNodes;
@@ -828,7 +851,7 @@ AActor* UFlowAsset::GetActorByBinding_Name(FName Name)
 
 void UFlowAsset::FireFlowSignal(FName Signal, UObject* Context)
 {
-	for(auto* TempTrait : Traits)
+	for(auto* TempTrait : L_GetTraits())
 	{
 		if(TempTrait)
 		{

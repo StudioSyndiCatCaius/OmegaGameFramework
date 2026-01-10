@@ -8,14 +8,14 @@
 #include "GameFramework/Actor.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/DataAsset.h"
-#include "Interfaces/OmegaInterface_Common.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Common.h"
+#include "Interfaces/I_Combatant.h"
+#include "Interfaces/I_Skill.h"
 #include "Engine/GameInstance.h"
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
 #include "Components/Component_Inventory.h"
-#include "Functions/OmegaFunctions_SoftProperty.h"
+#include "Functions/F_SoftProperty.h"
 
 
 #include "OmegaDataItem.generated.h"

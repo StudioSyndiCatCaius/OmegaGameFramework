@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "DA_CommonBattleAction.h"
 #include "Functions/OmegaFunctions_CombatantFilter.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_BitFlag.h"
+#include "Interfaces/I_Skill.h"
 
 #include "Misc/GeneralDataObject.h"
 #include "Selectors/Selector_LevelSequence.h"
@@ -25,7 +26,7 @@ class OMEGADEMO_API UOAsset_CommonSkill : public UOAsset_CommonBattleAction
 public:
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual bool CanUseSkill_Implementation(UCombatantComponent* Combatant) override;
-
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags")
 	bool bAppendEffectsDescription;
 	

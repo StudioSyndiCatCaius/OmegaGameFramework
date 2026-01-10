@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Components/Component_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/I_Skill.h"
+#include "Interfaces/I_Combatant.h"
 #include "Component_CombatantExtension.generated.h"
 
 

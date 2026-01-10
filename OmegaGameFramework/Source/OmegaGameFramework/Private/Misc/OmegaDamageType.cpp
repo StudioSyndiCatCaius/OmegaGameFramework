@@ -74,7 +74,7 @@ void UOmegaDamageTypeReactionAsset::GetGeneralAssetColor_Implementation(FLinearC
 }
 
 float UOmegaDamageTypeReactionAsset::ModifyDamage_Implementation(UOmegaAttribute* Attribute,
-	UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+	UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
 	float dmg=BaseDamage;
 	for(auto* s : ReactionScripts)

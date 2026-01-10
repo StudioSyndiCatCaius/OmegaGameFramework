@@ -6,9 +6,9 @@
 #include "Components/Component_TurnBasedManager.h"
 #include "Engine/GameInstance.h"
 
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_TagEvent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_GameManager.h"
 
 
 // Sets default values for this component's properties

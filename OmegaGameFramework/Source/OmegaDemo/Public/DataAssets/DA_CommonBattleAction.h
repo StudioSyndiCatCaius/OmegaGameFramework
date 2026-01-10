@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Functions/OmegaFunctions_CombatantFilter.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Functions/F_ScriptedEffects.h"
+#include "Interfaces/I_Skill.h"
 #include "Misc/GeneralDataObject.h"
 #include "Selectors/Selector_LevelSequence.h"
 #include "Selectors/Selector_Montage.h"

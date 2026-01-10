@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Component_ActorConfig.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "GameFramework/Actor.h"
 #include "Actor_Openable.generated.h"
 
@@ -81,7 +81,6 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
-
 	UPROPERTY(EditAnywhere,Category="Openable") bool bStartOpen;
 	UPROPERTY(EditAnywhere,Category="Openable") bool bLocked;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Openable") UOmegaOpenable_Config* Config;

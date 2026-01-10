@@ -5,7 +5,7 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "CommonUILibrary.h"
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -13,11 +13,12 @@
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Subsystems/Subsystem_Player.h"
 #include "Widget/DataList.h"
 #include "TimerManager.h"
-#include "Functions/OmegaFunctions_Utility.h"
-#include "..\..\Public\OmegaSettings_Slate.h"
+#include "Functions/F_Utility.h"
+#include "OmegaSettings_Slate.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Widget/DataTooltip.h"
 
 bool UDataWidgetTraits::CanAddObjectToList_Implementation(UObject* SourceObject) const
@@ -311,6 +312,12 @@ void UDataWidget::Refresh()
 			t->OnRefreshed(this,ReferencedAsset,LocalListOwner);
 		}
 	}
+	
+	if (DefaultCreatedTooltip)
+	{
+		DefaultCreatedTooltip->Refresh();
+	}
+	
 	Native_OnRefreshed(ReferencedAsset,LocalListOwner);
 	OnWidgetRefreshed.Broadcast(this);
 }
@@ -365,7 +372,7 @@ void UDataWidget::Native_SetHovered(bool bHovered)
 				}
 				else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
 				{
-					GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Hover);
+					GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Hover.LoadSynchronous());
 				}
 	
 				if (GetHoverAnimation())
@@ -496,7 +503,7 @@ void UDataWidget::Select()
 			}
 			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
 			{
-				GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Select);
+				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Select.LoadSynchronous());
 			}
 		}
 	}
@@ -510,7 +517,7 @@ void UDataWidget::Select()
 			}
 			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
 			{
-				GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Error);
+				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Error.LoadSynchronous());
 			}
 		}
 	}
@@ -594,7 +601,16 @@ void UDataWidget::OnSourceAssetChanged_Implementation(UObject* Asset)
 
 UDataTooltip* UDataWidget::GetDataTooltipWidget()
 {
+	if (GetOwningList() && GetOwningList()->override_tooltip)
+	{
+		return GetOwningList()->override_tooltip;
+	}
 	return DefaultCreatedTooltip;
+}
+
+UObject* UDataWidget::GetTooltip_SourceObject_Implementation()
+{
+	return ReferencedAsset;
 }
 
 void UDataWidget::Local_UpdateTooltip(UObject* AssetRef)
@@ -603,28 +619,9 @@ void UDataWidget::Local_UpdateTooltip(UObject* AssetRef)
 	{
 		return;
 	}
-	if(DefaultCreatedTooltip)
+	if(UDataTooltip* target_tooltip=GetDataTooltipWidget())
 	{
-		DefaultCreatedTooltip->OnOwnerSourceAssetChanged(AssetRef);
-
-		if(AssetRef->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-		{
-			FText LocalDesc;
-			FText LocalName;
-		
-			IDataInterface_General::Execute_GetGeneralDataText(AssetRef, AssetLabel, this, LocalName, LocalDesc);
-		
-			//update name widget
-			if(DefaultCreatedTooltip->GetAssetNameWidget())
-			{
-				DefaultCreatedTooltip->GetAssetNameWidget()->SetText(L_FormatText(LocalName));
-			}
-			//update description widget
-			if(DefaultCreatedTooltip->GetAssetNameWidget())
-			{
-				DefaultCreatedTooltip->GetAssetDescriptionWidget()->SetText(L_FormatText(LocalDesc));
-			}
-		}
+		target_tooltip->SetOwningWidget(this);
 		
 	}
 }

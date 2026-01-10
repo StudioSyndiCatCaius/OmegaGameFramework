@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Combatant.h"
+#include "Interfaces/I_Skill.h"
 #include "Misc/GeneralDataObject.h"
 #include "Types/Struct_CombatantSource.h"
 #include "DA_CombatSource.generated.h"
@@ -20,7 +20,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combatant") FOmegaCombatantSources Sources;
 	
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
-	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override; 
 
 };
@@ -32,7 +32,7 @@ inline TArray<FOmegaAttributeModifier> UOAsset_CombatSource::GetModifierValues_I
 }
 
 inline float UOAsset_CombatSource::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+	UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
 	return Sources.GetDamageMods(Attribute,Target,Instigator,BaseDamage,DamageType,Context);
 }

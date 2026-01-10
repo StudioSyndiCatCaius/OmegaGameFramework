@@ -177,6 +177,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
 	bool OnEncounterBegin(UOmegaCombatEncounter_Component* Component);
+
+	UFUNCTION(BlueprintNativeEvent,Category="Encounter") UOmegaBGM* GetCombatEncounter_BGM();
+	UFUNCTION(BlueprintNativeEvent,Category="Encounter") ULevelSequence* GetCombatEncounter_IntroSequence();
 };
 
 UCLASS(Blueprintable,BlueprintType,Const,Abstract,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
@@ -211,5 +214,7 @@ public:
 	virtual TSubclassOf<AOmegaCombatEncounter_Instance> GetCombatEncounter_InstanceClass_Implementation() override { return InstanceClass;}
 	virtual FGameplayTag GetCombatEncounter_StageID_Implementation() override { return StageTag;};
 	virtual bool OnEncounterBegin_Implementation(UOmegaCombatEncounter_Component* Component) override;
+	virtual UOmegaBGM* GetCombatEncounter_BGM_Implementation() override { return Override_BGM; };
+	virtual ULevelSequence* GetCombatEncounter_IntroSequence_Implementation() override { return Override_IntroSequence; };
 	
 };

@@ -6,8 +6,8 @@
 #include "GeneralDataObject.h"
 
 #include "Engine/DataAsset.h"
-#include "Functions/OmegaFunctions_AVContext.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Functions/F_AVContext.h"
+#include "Interfaces/I_Combatant.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaDamageType.generated.h"
 
@@ -113,7 +113,7 @@ public:
 	FLinearColor ReactionColor;
 
 	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
-	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;	
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category="Default")
 	TArray<UOmegaDamageTypeReaction*> ReactionScripts;
 

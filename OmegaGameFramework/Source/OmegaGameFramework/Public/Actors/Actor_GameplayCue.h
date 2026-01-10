@@ -6,7 +6,7 @@
 #include "NiagaraSystem.h"
 #include "Engine/HitResult.h"
 #include "GameFramework/Actor.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Actor_GameplayCue.generated.h"

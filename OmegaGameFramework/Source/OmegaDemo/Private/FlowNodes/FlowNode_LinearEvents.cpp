@@ -4,7 +4,7 @@
 #include "FlowNodes/FlowNode_LinearEvents.h"
 
 #include "Event/OmegaLinearEventInstance.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
 
 
 UFlowNode_LinearEvents::UFlowNode_LinearEvents()
@@ -13,9 +13,7 @@ UFlowNode_LinearEvents::UFlowNode_LinearEvents()
 	InputPins.Add(FFlowPin(TEXT("Begin")));
 	OutputPins.Empty();
 	OutputPins.Add(FFlowPin(TEXT("Finish")));
-#if WITH_EDITOR
-	Category = TEXT("GameFlow");
-#endif
+
 }
 
 void UFlowNode_LinearEvents::ExecuteInput(const FName& PinName)

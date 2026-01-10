@@ -9,6 +9,29 @@
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/OmegaUtils_Methods.h"
 
+TArray<UOmegaLocalizedVoice_Preset*> UOmegaSettings_Localization::L_GetVoicePresets() const
+{
+	TArray<UOmegaLocalizedVoice_Preset*> out=VoiceScript_Preset;
+	if(VoiceScript_custom)
+	{
+		out.Add(VoiceScript_custom);
+	}
+	return out;
+}
+
+TArray<UOmegaLocalizedVoice_Script*> UOmegaSettings_Localization::L_GetVoiceScripts() const
+{
+	TArray<UOmegaLocalizedVoice_Script*> out;
+	for(auto* a : L_GetVoicePresets())
+	{
+		if(a)
+		{
+			out.Append(a->Scripts);
+		}
+	}
+	return out;
+}
+
 void UOmegaLocalizationFunctions::PlayVoiceClip(AActor* Instigator, FString VoiceClip)
 {
 	if(Instigator && GetCurrentSettings_Localization())
@@ -57,6 +80,24 @@ UOmegaSettings_Localization* UOmegaLocalizationFunctions::GetCurrentSettings_Loc
 	if(UObject* style_ref = GetMutableDefault<UOmegaSettings>()->DefaultSettings_Localization.TryLoad())
 	{
 		return Cast<UOmegaSettings_Localization>(style_ref);
+	}
+	return nullptr;
+}
+
+USoundBase* UOmegaSubsystem_Localization::GetVoiceClipByKey(FName key)
+{
+	if(UOmegaSettings_Localization* set=UOmegaLocalizationFunctions::GetCurrentSettings_Localization())
+	{
+		for(auto* a : set->L_GetVoiceScripts())
+		{
+			if(a)
+			{
+				if(USoundBase* s=a->GetVoiceClipByKey(this,key))
+				{
+					return s;
+				}
+			}
+		}
 	}
 	return nullptr;
 }

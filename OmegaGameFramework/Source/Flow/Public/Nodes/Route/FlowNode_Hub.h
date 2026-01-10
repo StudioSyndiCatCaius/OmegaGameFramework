@@ -7,7 +7,7 @@
 #include "FlowNode_Hub.generated.h"
 
 
-UCLASS(NotBlueprintable, meta = (DisplayName = "HUB"))
+UCLASS(NotBlueprintable, meta = (DisplayName = "🚩HUB"))
 class FLOW_API UFlowNode_Hub : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()
@@ -26,7 +26,7 @@ public:
 /**
  * Reroutes to a named HUB node.
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = "To HUB"))
+UCLASS(NotBlueprintable, meta = (DisplayName = "🚩To HUB"))
 class FLOW_API UFlowNode_ToHub : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()

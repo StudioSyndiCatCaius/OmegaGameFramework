@@ -43,7 +43,9 @@ public class LuaMachineEditor : ModuleRules
                 "Projects",
                 "InputCore",
                 "EditorStyle",
-                "LuaMachine"
+                "LuaMachine",
+                "ToolMenus",
+                "LevelEditor",
             }
             );
 

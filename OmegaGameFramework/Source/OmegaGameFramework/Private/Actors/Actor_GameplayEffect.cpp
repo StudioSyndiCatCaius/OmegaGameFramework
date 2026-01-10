@@ -4,7 +4,7 @@
 #include "Actors/Actor_GameplayEffect.h"
 #include "Components/TextBlock.h"
 #include "Misc/OmegaAttribute.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 #include "TimerManager.h"
 #include "Components/Component_Combatant.h"
 #include "Kismet/KismetMathLibrary.h"

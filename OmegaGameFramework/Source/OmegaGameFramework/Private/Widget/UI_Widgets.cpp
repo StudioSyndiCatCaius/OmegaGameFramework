@@ -4,6 +4,7 @@
 #include "Widget/UI_Widgets.h"
 
 #include "OmegaSettings_Slate.h"
+#include "Misc/OmegaUtils_Macros.h"
 
 void UOmegaSlateStyle_Button::Apply(UButton* button)
 {
@@ -65,11 +66,16 @@ UOmegaSlateStyle_Button* UOmegaButton::L_GetStyle() const
 
 void UOmegaButton::OnWidgetRebuilt()
 {
+	SetStyleAsset(L_GetStyle());
+	Super::OnWidgetRebuilt();
+}
+
+void UOmegaButton::SetStyleAsset(UOmegaSlateStyle_Button* Style)
+{
 	if(L_GetStyle())
 	{
 		L_GetStyle()->Apply(this);
 	}
-	Super::OnWidgetRebuilt();
 }
 
 UOmegaSlateStyle_Slider* UOmegaSlider::L_GetStyle() const
@@ -79,25 +85,50 @@ UOmegaSlateStyle_Slider* UOmegaSlider::L_GetStyle() const
 
 void UOmegaSlider::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		SetWidgetStyle(L_GetStyle()->Brush_Slider);
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaSlider::SetStyleAsset(UOmegaSlateStyle_Slider* Style)
+{
+	if (Style)
+	{
+		StyleAsset=Style;
+		if(L_GetStyle())
+		{
+			SetWidgetStyle(L_GetStyle()->Brush_Slider);
+		}
+	}
 }
 
 UOmegaSlateStyle_ProgressBar* UOmegaProgressBar::L_GetStyle() const
 {
+	if (UseDefaultStyle)
+	{
+		if (UOmegaSlateStyle_ProgressBar* _style=OGF_CFG_STYLE()->ProgressBar_Default.LoadSynchronous())
+		{
+			return _style;
+		}
+	}
 	if(StyleAsset) { return StyleAsset; } return nullptr;
 }
 
 void UOmegaProgressBar::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		SetWidgetStyle(L_GetStyle()->Brush_ProgressBar);
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaProgressBar::SetStyleAsset(UOmegaSlateStyle_ProgressBar* Style)
+{
+	if (Style)
+	{
+		StyleAsset=Style;
+		if(L_GetStyle())
+		{
+			SetWidgetStyle(L_GetStyle()->Brush_ProgressBar);
+		}
+	}
 }
 
 UOmegaSlateStyle_CheckBox* UOmegaCheckBox::L_GetStyle() const
@@ -107,11 +138,20 @@ UOmegaSlateStyle_CheckBox* UOmegaCheckBox::L_GetStyle() const
 
 void UOmegaCheckBox::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		L_GetStyle()->Apply(this);
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaCheckBox::SetStyleAsset(UOmegaSlateStyle_CheckBox* Style)
+{
+	if (Style)
+	{
+		StyleAsset=Style;
+		if(L_GetStyle())
+		{
+			L_GetStyle()->Apply(this);
+		}
+	}
 }
 
 UOmegaSlateStyle_ComboBox* UOmegaComboBox::L_GetStyle() const
@@ -121,23 +161,30 @@ UOmegaSlateStyle_ComboBox* UOmegaComboBox::L_GetStyle() const
 
 void UOmegaComboBox::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		L_GetStyle()->Apply(this);
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaComboBox::SetStyleAsset(UOmegaSlateStyle_ComboBox* Style)
+{
+	if (Style)
+	{
+		StyleAsset=Style;
+		if(L_GetStyle())
+		{
+			L_GetStyle()->Apply(this);
+		}
+	}
 }
 
 UOmegaSlateStyle_Border* UOmegaBorder::L_GetStyle() const
 {
 	if(bUseDefaultStyle)
 	{
-		if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
+		UOmegaStyleSettings* set=OGF_CFG_STYLE();
+		if(set->Styled_Borders.Contains(DefaultStyleToUse))
 		{
-			if(set->Styled_Borders.Contains(DefaultStyleToUse))
-			{
-				return set->Styled_Borders[DefaultStyleToUse].LoadSynchronous();
-			}
+			return set->Styled_Borders[DefaultStyleToUse].LoadSynchronous();
 		}
 	}
 	if(StyleAsset) { return StyleAsset; } return nullptr;
@@ -145,11 +192,20 @@ UOmegaSlateStyle_Border* UOmegaBorder::L_GetStyle() const
 
 void UOmegaBorder::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		L_GetStyle()->Apply(this);
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaBorder::SetStyleAsset(UOmegaSlateStyle_Border* Style)
+{
+	if (Style)
+	{
+		StyleAsset=Style;
+		if(L_GetStyle())
+		{
+			L_GetStyle()->Apply(this);
+		}
+	}
 }
 
 UOmegaSlateStyle_Text* UOmegaTextBlock::L_GetStyle() const
@@ -169,11 +225,20 @@ UOmegaSlateStyle_Text* UOmegaTextBlock::L_GetStyle() const
 
 void UOmegaTextBlock::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		L_GetStyle()->Apply(this);
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaTextBlock::SetStyleAsset(UOmegaSlateStyle_Text* Style)
+{
+	if (Style)
+	{
+		StyleAsset=Style;
+		if(L_GetStyle())
+		{
+			L_GetStyle()->Apply(this);
+		}
+	}
 }
 
 UOmegaSlateStyle_RichText* UOmegaRichTextBlock::L_GetStyle() const
@@ -183,11 +248,20 @@ UOmegaSlateStyle_RichText* UOmegaRichTextBlock::L_GetStyle() const
 
 void UOmegaRichTextBlock::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaRichTextBlock::SetStyleAsset(UOmegaSlateStyle_RichText* NewStyle)
+{
+	if (NewStyle)
+	{
+		StyleAsset=NewStyle;
+		if(L_GetStyle())
+		{
+		
+		}
+	}
 }
 
 UOmegaSlateStyle_ExpandableArea* UOmegaExpandableArea::L_GetStyle() const
@@ -197,9 +271,18 @@ UOmegaSlateStyle_ExpandableArea* UOmegaExpandableArea::L_GetStyle() const
 
 void UOmegaExpandableArea::OnWidgetRebuilt()
 {
-	if(L_GetStyle())
-	{
-		SetStyle(L_GetStyle()->Style);
-	}
+	SetStyleAsset(L_GetStyle());
 	Super::OnWidgetRebuilt();
+}
+
+void UOmegaExpandableArea::SetStyleAsset(UOmegaSlateStyle_ExpandableArea* NewStyle)
+{
+	if (NewStyle)
+	{
+		StyleAsset=NewStyle;
+		if(L_GetStyle())
+		{
+			SetStyle(L_GetStyle()->Style);
+		}
+	}
 }

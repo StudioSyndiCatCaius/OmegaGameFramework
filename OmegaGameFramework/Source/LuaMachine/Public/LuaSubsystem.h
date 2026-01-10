@@ -19,10 +19,12 @@ class LUAMACHINE_API ULuaSubsystem : public UGameInstanceSubsystem
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+	
 	UPROPERTY()
 	ULuaSettings* settings_ref;
 
 public:
+	bool b_IsInitialized=false;
 	UPROPERTY()
 	TMap<FString, ULuaObject*> globalLuaObjects;
 	
@@ -34,6 +36,30 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Lua")
 	void RunLocalFilesInPath(const FString& path,bool bRecursive,bool bNonLocal);
+	
+};
+
+UCLASS()
+class LUAMACHINE_API ULuaEngineSubsystem : public UEngineSubsystem
+{
+	GENERATED_BODY()
+
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+public:
+
+};
+
+UCLASS()
+class LUAMACHINE_API ULuaWorldSubsystem : public UWorldSubsystem
+{
+	GENERATED_BODY()
+
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+public:
+	TArray<FName> GetGlobalKeys(FString global);
+	void RerunLua();
 };
 
 UCLASS()

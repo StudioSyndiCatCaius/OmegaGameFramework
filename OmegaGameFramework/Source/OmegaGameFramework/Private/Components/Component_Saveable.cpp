@@ -3,7 +3,7 @@
 
 #include "Components/Component_Saveable.h"
 
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
 
 
 void UOmegaSaveableComponent::BeginPlay()

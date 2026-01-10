@@ -10,7 +10,7 @@
 #include "Components/Component_Leveling.h"
 #include "Components/Component_TurnBasedManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Gameplay.h"
 
 // ----------------------------------------------------------------------
 // Combat Instance

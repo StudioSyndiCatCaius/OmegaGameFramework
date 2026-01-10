@@ -5,9 +5,9 @@
 #include "Condition/Condition_Actor.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
-#include "Functions/OmegaFunctions_Common.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_Common.h"
+#include "Functions/F_Component.h"
+#include "Functions/F_TagEvent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 

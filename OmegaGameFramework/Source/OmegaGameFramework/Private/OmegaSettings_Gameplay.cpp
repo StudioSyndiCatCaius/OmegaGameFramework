@@ -2,8 +2,15 @@
 
 
 #include "OmegaSettings_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
+
+#include "MaterialKeyGeneratorContext.h"
+#include "Subsystems/Subsystem_Gameplay.h"
 #include "OmegaSettings.h"
+
+UOmegaSettings_Gameplay::UOmegaSettings_Gameplay()
+{
+	//DefaultInteractionType=FGameplayTag::RequestGameplayTag("Event.Actor.Interact");
+}
 
 TArray<UOmegaGameplayModule*> UOmegaSettings_Gameplay::GetModules()
 {
@@ -29,48 +36,12 @@ UOmegaSettings_Gameplay* UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle()
 	return nullptr;
 }
 
-UOmegaGameplayMetaSettings* UOmegaGameplayStyleFunctions::GetCurrentGameplayMetaStyle(
-	TSubclassOf<UOmegaGameplayMetaSettings> Class)
-{
-	if(!Class)
-	{
-		return nullptr;
-	}
-	if(GetCurrentGameplayStyle())
-	{
-		for(auto* temp_set : GetCurrentGameplayStyle()->GetAllMetaSettings())
-		{
-			if(temp_set && temp_set->GetClass()==Class)
-			{
-				return temp_set;
-			}
-		}
-	}
-	
-	
-	return Cast<UOmegaGameplayMetaSettings>(Class->ClassDefaultObject);
-}
-
 bool UOmegaGameplayStyleFunctions::OmegaGameplayInputCall(APlayerController* Player, const FKey& Key, bool End)
 {
 	bool out=false;
 	if(Player && GetCurrentGameplayStyle())
 	{
-		for(auto* temp_event : GetCurrentGameplayStyle()->CustomInputEvents)
-		{
-			if(temp_event && temp_event->InputKeys.Contains(Key))
-			{
-				if(End)
-				{
-					temp_event->OnInput_End(Player,Player->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>());
-				}
-				else
-				{
-					temp_event->OnInput_Start(Player,Player->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>());	
-				}
-				out=true;
-			}
-		}
+		
 	}
 	return out;
 }
@@ -97,4 +68,3 @@ UOmegaDataAssetMetaSetting* UOmegaGameplayStyleFunctions::GetDataAssetMetaSettin
 	Result=false;
 	return nullptr;
 }
-

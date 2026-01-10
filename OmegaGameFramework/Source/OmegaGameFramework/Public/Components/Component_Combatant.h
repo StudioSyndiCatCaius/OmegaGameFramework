@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 
-#include "Interfaces/OmegaInterface_Common.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Common.h"
+#include "Interfaces/I_Skill.h"
 #include "Engine/DataAsset.h"
 #include "Engine/EngineTypes.h"
 #include "Components/ActorComponent.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/I_Combatant.h"
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Component_Combatant.generated.h"
@@ -51,11 +51,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatantNotify, UCombatantCom
 
 UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent), CollapseCategories="Sockets,Component Tick,Component Replication,Activation,Cooking" )
 class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UActorComponent, public IDataInterface_SkillSource, public IGameplayTagsInterface,
-																			public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier
+																			public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier,
+																			public IDataInterface_General
 {
 	GENERATED_BODY()
 
-	float L_ModifyDamage(UOmegaAttribute* Attribute,UObject* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context);
+	float L_ModifyDamage(UOmegaAttribute* Attribute,UCombatantComponent* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context);
 	void L_CacheAttributeMods();
 	float L_GetAllModsOfAttribute(TArray<UObject*> Modifiers, float BaseValue, UOmegaAttribute* Attribute);
 
@@ -75,8 +76,11 @@ public:
 	UCombatantComponent();
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
-	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override; 
+
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override; 
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return CombatantTags; };
@@ -242,9 +246,9 @@ public:
 	/// ------ TAGS ----------
 
 	UFUNCTION(BlueprintPure, Category = "Tags") FGameplayTagContainer GetCombatantTags();
-	UFUNCTION(BlueprintPure, Category = "Tags") bool CombatantHasTag(FGameplayTag Tag);
-	UFUNCTION(BlueprintPure, Category = "Tags,", meta=(AdvancedDisplay = "Exact")) 	bool CombatantHasAnyTag(FGameplayTagContainer Tags, bool Exact=true);
-	UFUNCTION(BlueprintPure, Category = "Tags", meta=(AdvancedDisplay = "Exact")) bool CombatantHasAllTag(FGameplayTagContainer Tags, bool Exact=true);
+	UFUNCTION(BlueprintPure, Category = "Tags") bool CombatantHasTag(FGameplayTag Tag) const;
+	UFUNCTION(BlueprintPure, Category = "Tags,", meta=(AdvancedDisplay = "Exact")) 	bool CombatantHasAnyTag(FGameplayTagContainer Tags, bool Exact=true) const;
+	UFUNCTION(BlueprintPure, Category = "Tags", meta=(AdvancedDisplay = "Exact")) bool CombatantHasAllTag(FGameplayTagContainer Tags, bool Exact=true) const;
 	
 	/// ------ Abilities ----------
 	UFUNCTION(BlueprintCallable, Category = "Ability")

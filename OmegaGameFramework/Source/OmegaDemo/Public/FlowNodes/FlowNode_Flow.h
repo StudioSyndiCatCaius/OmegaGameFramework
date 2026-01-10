@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "OmegaDemo_Const.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
 #include "FlowNode_Flow.generated.h"

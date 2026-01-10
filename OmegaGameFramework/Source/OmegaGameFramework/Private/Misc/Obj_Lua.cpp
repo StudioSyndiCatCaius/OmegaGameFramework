@@ -4,7 +4,7 @@
 #include "Misc/Obj_Lua.h"
 
 #include "LuaBlueprintFunctionLibrary.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 
 TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {

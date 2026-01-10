@@ -2,15 +2,34 @@
 
 #include "Actors/Actor_Character.h"
 
+#include "LuaConst.h"
+#include "OmegaSettings.h"
 #include "OmegaSettings_Gameplay.h"
+#include "OmegaSettings_Global.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/Component_DebugText.h"
 #include "Components/StateTreeComponent.h"
 #include "DataAssets/DA_ActorModifierCollection.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Misc/OmegaUtils_Methods.h"
+
 
 void AOmegaBaseCharacter::N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPrimaryDataAsset* new_asset)
 {
+}
+
+void AOmegaBaseCharacter::RebuildAppearance()
+{
+	if(UOAsset_Appearance* ap=IDataInterface_AppearanceSource::Execute_GetAppearanceAsset(this))
+	{
+		ap->Apply(this);
+	}
+}
+
+TSubclassOf<UAnimInstance> AOmegaBaseCharacter::GetContext_AnimClass()
+{
+	return GetMutableDefault<UOmegaSettings>()->DefaultCharacter_AnimClass.LoadSynchronous();
 }
 
 
@@ -26,19 +45,16 @@ void AOmegaBaseCharacter::OnConstruction(const FTransform& Transform)
 	float	bound_rad;
 	UKismetSystemLibrary::GetComponentBounds(GetMesh(),bound_origin,bound_ext,bound_rad);
 	// if(BoundsComponent) { BoundsComponent->SetBoxExtent(bound_ext); }
-	if(UOAsset_Appearance* ap=IDataInterface_AppearanceSource::Execute_GetAppearanceAsset(this))
-	{
-		ap->Apply(this);
-	}
+	RebuildAppearance();
 }
 
 void AOmegaBaseCharacter::BeginPlay()
 {
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if (TSubclassOf<UAnimInstance> _inAnim=GetContext_AnimClass())
 	{
-		if(set->DefaultCharacter_AnimClass && GetMesh()->GetAnimationMode()==EAnimationMode::AnimationBlueprint && !GetMesh()->GetAnimClass())
+		if(GetMesh()->GetAnimationMode()==EAnimationMode::AnimationBlueprint && !GetMesh()->GetAnimClass())
 		{
-			GetMesh()->SetAnimInstanceClass(set->DefaultCharacter_AnimClass.LoadSynchronous());
+			GetMesh()->SetAnimInstanceClass(_inAnim);
 		}
 	}
 	Super::BeginPlay();
@@ -53,6 +69,8 @@ AOmegaBaseCharacter::AOmegaBaseCharacter()
 	
 	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
 	StateTree=CreateDefaultSubobject<UStateTreeComponent>(TEXT("State Tree"));
+	DebugText=CreateOptionalDefaultSubobject<UComponent_DebugText>("DebugText");
+	DebugText->SetupAttachment(RootComponent);
 
 	if(GetMesh() && GetCapsuleComponent())
 	{
@@ -67,8 +85,14 @@ AOmegaBaseCharacter::AOmegaBaseCharacter()
 	}
 	if(Seed<0)
 	{
-		Seed=UKismetMathLibrary::RandomIntegerInRange(0,999999999);
+		//RandomizeSeed();
 	}
+}
+
+void AOmegaBaseCharacter::RandomizeSeed()
+{
+	Seed=UKismetMathLibrary::RandomIntegerInRange(0,999999999);
+	RebuildAppearance();
 }
 
 void AOmegaBaseCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)

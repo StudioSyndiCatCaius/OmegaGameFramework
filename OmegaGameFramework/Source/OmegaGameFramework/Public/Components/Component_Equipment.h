@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Common.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Common.h"
+#include "Interfaces/I_Combatant.h"
+#include "Interfaces/I_Skill.h"
 #include "GameplayTagContainer.h"
 #include "OmegaGameplayComponent.h"
 #include "Components/ActorComponent.h"
@@ -65,15 +65,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, Instanced,Category="Equipment")
 	UEquipmentScript* Script;
 
-	UPROPERTY(EditAnywhere, Category="Equipment")
+	UPROPERTY(VisibleAnywhere, Category="Equipment")
 	TArray<UObject*> Sources;
     	
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
 	TMap<UEquipmentSlot*, UPrimaryDataAsset*> GetEquipment();
 	UFUNCTION(BlueprintCallable, Category="Equipment")
 	void SetEquipment(TMap<UEquipmentSlot*, UPrimaryDataAsset*> Equipment);
-	UFUNCTION(BlueprintCallable, Category="Equipment",DisplayName="Set Equipment (From Source)")
-	void SetEquipment_FromSource(UObject* Source);
+
+	UFUNCTION(BlueprintCallable, Category="Equipment")
+	void SetEquipment_SourceActive(UObject* Source, bool bActiveSource);
+
 	
 	UFUNCTION(BlueprintPure, Category="Equipment", meta=(CompactNodeTitle="Equipment"))
 	TArray<UPrimaryDataAsset*> GetEquippedItems();
@@ -116,7 +118,7 @@ public:
 	
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
-	float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
+	float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
 	//----------------------
 	// Data Collect
 	//----------------------

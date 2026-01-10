@@ -22,6 +22,8 @@ public:
 	
 	UPROPERTY(EditAnywhere,Category="SortedClassData")
 	bool AutoscanPathsOnStartup=true;
+	UPROPERTY(EditAnywhere,Category="SortedClassData")
+	FString ExternalFileDirectoryName;
 };
 
 
@@ -31,10 +33,13 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Paths : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
-
+	
 	UFUNCTION(BlueprintPure,Category="Omega|Paths")
 	TArray<FString> GetPathsFromAssetName(const FString& AssetName, TSubclassOf<UObject> Class);
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Paths")
+	TArray<UOmegaSettings_Paths*> ImportedPaths;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Paths")
 	TMap<TSubclassOf<UObject>, FOmegaSortedClassPathData> ClassPaths;
 };

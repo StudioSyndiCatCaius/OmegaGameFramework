@@ -29,6 +29,8 @@ public class LuaMachine : ModuleRules
             {
                 "Core",
                 "HTTP",
+                "SlateCore",
+                "Slate",
                 "Json",
                 "DeveloperSettings",
                 "GameplayTags",
@@ -63,7 +65,8 @@ public class LuaMachine : ModuleRules
         {
             PrivateDependencyModuleNames.AddRange(new string[]{
                 "UnrealEd",
-                "Projects"
+                "Projects",
+                "PropertyEditor",
             });
         }
 

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Interfaces/OmegaInterface_Widget.h"
+#include "Interfaces/I_Widget.h"
 #include "Components/Image.h"
 #include "Misc/OmegaUtils_Structs.h"
 

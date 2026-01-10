@@ -100,12 +100,14 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Leveling
 	//Adds to the base XpRate value.
 	UFUNCTION(BlueprintNativeEvent, Category="Leveling")
 	float GetXPRateOffset();
+	
+	
 
 };
 
 
-UCLASS(BlueprintType, Blueprintable)
-class OMEGAGAMEFRAMEWORK_API UOmegaLevelingAsset : public UDataAsset
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaLevelingAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 	

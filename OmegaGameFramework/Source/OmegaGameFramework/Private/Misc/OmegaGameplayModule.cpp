@@ -4,15 +4,15 @@
 #include "Misc/OmegaGameplayModule.h"
 
 #include "Components/Component_Combatant.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_GameManager.h"
 #include "UObject/Object.h"
 #include "UObject/UObjectGlobals.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/GeneralDataObject.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
-#include "Subsystems/OmegaSubsystem_QueueEvents.h"
+#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_QueueEvents.h"
 
 UOmegaGameplayModule::UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {

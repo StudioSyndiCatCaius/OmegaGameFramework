@@ -15,6 +15,8 @@ public class OmegaEditor : ModuleRules
 			"UnrealEd",
 			"InputCore",
 			"OmegaGameFramework", 
+			"OmegaSequence", 
+			"PropertyEditor",
 			"RenderCore",
 			"OmegaData",
 			"LuaMachine",
@@ -38,7 +40,9 @@ public class OmegaEditor : ModuleRules
 				"KismetCompiler",
 				"PropertyPath",
 				"ContentBrowser",
-				"AssetTools"
+				"AssetTools",
+				"DeveloperSettings",
+                "ToolMenus",
 		// ... add private dependencies that you statically link with here ...	
 	}
 	);

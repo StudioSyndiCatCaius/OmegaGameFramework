@@ -17,11 +17,7 @@ struct FOmegaBodyAppearanceData
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
 	TMap<FName, FName> params_name;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
-	TMap<FName, int32> params_int;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
 	TMap<FName, float> params_float;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
-	TMap<FName, FLinearColor> params_color;
 };
 
 

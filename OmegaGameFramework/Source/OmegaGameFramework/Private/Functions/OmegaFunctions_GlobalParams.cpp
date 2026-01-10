@@ -7,9 +7,9 @@
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Misc/OmegaUtils_Structs.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Save.h"
 
 FOmegaGlobalVarsContainer& local_GetJsonFromTarget(UObject* WorldContextObject, EOmegaGlobalParamTarget Target, FOmegaGlobalVarsContainer& dum)
 {

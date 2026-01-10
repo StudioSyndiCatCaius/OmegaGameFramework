@@ -6,7 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-#include "Subsystems/OmegaSubsystem_QueueEvents.h"
+#include "Subsystems/Subsystem_QueueEvents.h"
 #include "AsyncAction_GameplaySystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShutdown, UObject*, Context, FString, Flag);

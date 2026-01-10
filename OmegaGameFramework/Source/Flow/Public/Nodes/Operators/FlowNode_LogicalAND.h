@@ -16,14 +16,20 @@ class FLOW_API UFlowNode_LogicalAND final : public UFlowNode
 
 private:
 	UPROPERTY(SaveGame)
-	TSet<FName> ExecutedInputNames;
+	TArray<FName> ExecutedInputNames;
 	
 #if WITH_EDITOR
 public:
+	virtual FText GetNodeTitle() const override;
 	virtual bool CanUserAddInput() const override { return true; }
 #endif
 
 protected:
 	virtual void ExecuteInput(const FName& PinName) override;
 	virtual void Cleanup() override;
+	
+public:
+	
+	UPROPERTY(EditAnywhere, Category = "Defaults")
+	bool bSaved;
 };

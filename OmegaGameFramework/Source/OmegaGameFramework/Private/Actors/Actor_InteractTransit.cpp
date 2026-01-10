@@ -5,8 +5,8 @@
 
 #include "Components/BillboardComponent.h"
 #include "Components/TextRenderComponent.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
-#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Functions/F_Component.h"
+#include "Subsystems/Subsystem_Zone.h"
 
 
 FText AInteractTransit::L_GetName() const

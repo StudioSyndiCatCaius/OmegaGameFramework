@@ -9,8 +9,8 @@
 #include "Widget/HUDLayer.h"
 #include "GameplayTagContainer.h"
 #include "Actor_Ability.h"
-#include "Subsystems/OmegaSubsystem_QueueEvents.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_QueueEvents.h"
+#include "Subsystems/Subsystem_Save.h"
 
 #include "OmegaGameplaySystem.generated.h"
 
@@ -54,6 +54,7 @@ public:
 	// Sets default values for this actor's properties
 	AOmegaBaseSystem();
 	
+	void Native_Activate(UObject* Context, const FString& Flag);
 	virtual void L_CleanupStateChange(bool state);
 	virtual TArray<APlayerController*> L_GetPlayers();
 protected:
@@ -332,7 +333,7 @@ struct FOmegaBaseSystemStats
 			DummySystem->ActivationFlag=Flag;
 			DummySystem->SystemMeta=meta;
 			Validate();
-			DummySystem->SystemActivated(Context, Flag);
+			DummySystem->Native_Activate(Context, Flag);
 			UE_LOG(LogTemp, Log, TEXT("System %s - Successfully Activated "), *DummySystem->GetName());
 			return DummySystem;
 		}

@@ -5,7 +5,7 @@
 
 #include "Components/BoxComponent.h"
 #include "Components/Component_ActorIdentity.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 
 
 AGameplay_Region::AGameplay_Region()

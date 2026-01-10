@@ -4,9 +4,14 @@
 #include "FlowNodes/FlowNode_Actors.h"
 
 #include "FlowAsset.h"
-#include "Functions/OmegaFunctions_Actor.h"
+#include "Functions/F_Actor.h"
 #include "GameFramework/Character.h"
 
+
+AActor* UFlowNode_ActorBase::GetNodeInstigator()
+{
+	return GetActor();
+}
 
 AActor* UFlowNode_ActorBase::GetActor() const
 {

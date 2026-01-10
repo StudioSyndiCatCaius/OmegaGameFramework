@@ -8,7 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Actor.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
+#include "Subsystems/Subsystem_Actors.h"
 #include "Actor_InteractTransit.generated.h"
 
 class UBillboardComponent;

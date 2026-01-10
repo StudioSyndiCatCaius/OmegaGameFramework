@@ -13,7 +13,7 @@
 #include "GlobalRenderResources.h"
 #include "Engine/Texture2D.h"
 #include "UnrealClient.h"
-#include "Interfaces/OmegaInterface_AssetThumbnail.h"
+#include "Interfaces/I_AssetThumbnail.h"
 #include "Misc/GeneralDataObject.h"
 
 UDataItemThumbnailRender::UDataItemThumbnailRender(const FObjectInitializer& ObjectInitializer)

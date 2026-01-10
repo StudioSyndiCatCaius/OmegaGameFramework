@@ -246,6 +246,29 @@ FLuaValue ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue_Array(UObject* Wor
 	return out;
 }
 
+TArray<FName> ULuaBlueprintFunctionLibrary::Conv_LuaValueToName_Array(const FLuaValue& Value)
+{
+	TArray<FName> out;
+	for(FLuaValue temp_val : LuaTableGetValues(Value))
+	{
+		out.Add(*temp_val.String);
+	}
+	return out;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::Conv_NameToLuaValue_Array(UObject* WorldContextObject, TArray<FName> Value)
+{
+	FLuaValue out=LuaCreateTable(WorldContextObject,nullptr);
+	for (FName temp_string : Value)
+	{
+		FLuaValue in_val;
+		in_val.Type=ELuaValueType::String;
+		in_val.String=temp_string.ToString();
+		out.SetFieldByIndex(Value.Find(temp_string)+1,in_val);
+	}
+	return out;
+}
+
 
 int32 ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(const FLuaValue& Value, int32 NilFallback)
 {
@@ -444,6 +467,7 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaRunFile(UObject* WorldContextObject, 
 	if (!L)
 		return ReturnValue;
 
+	
 	if (!L->RunFile(Filename, bIgnoreNonExistent, 1))
 	{
 		if (L->bLogError)
@@ -452,6 +476,7 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaRunFile(UObject* WorldContextObject, 
 	}
 	else
 	{
+		UE_LOG(LogLuaMachine, Log, TEXT("Doing Content Lua file: %s"), *Filename);
 		ReturnValue = L->ToLuaValue(-1);
 	}
 
@@ -462,11 +487,10 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaRunFile(UObject* WorldContextObject, 
 FLuaValue ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& Filename, const bool bIgnoreNonExistent)
 {
 	FLuaValue ReturnValue;
-
+	
 	ULuaState* L = LOCAL_getLuaState(WorldContextObject,State);
 	if (!L)
 		return ReturnValue;
-
 	if (!L->RunFile(Filename, bIgnoreNonExistent, 1, true))
 	{
 		if (L->bLogError)
@@ -475,6 +499,7 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(UObject* WorldConte
 	}
 	else
 	{
+		UE_LOG(LogLuaMachine, Log, TEXT("Doing Non-Content Lua file: %s"), *Filename);
 		ReturnValue = L->ToLuaValue(-1);
 	}
 
@@ -2129,27 +2154,36 @@ FLuaValue ULuaTableFunctionLibrary::MergeTablesFromObjects(UObject* WorldContext
 // --- Value Functions ---
 
 bool ULuaValuesFunctionLibrary::GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	const FString& Global)
+                                                    const FString& Global, bool Fallback)
 {
-	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Bool;
+	FLuaValue _luaVal= ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global);
+	if (_luaVal.IsNil()) { return Fallback; }
+	return _luaVal.Bool;
 }
 
 int32 ULuaValuesFunctionLibrary::GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	const FString& Global)
+                                                    const FString& Global, int32 Fallback)
 {
-	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).Integer;
+	FLuaValue _luaVal= ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global);
+	if (_luaVal.IsNil()) { return Fallback; }
+	return _luaVal.Integer;
 }
 
 float ULuaValuesFunctionLibrary::GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	const FString& Global)
+                                                      const FString& Global, float Fallback)
 {
-	return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global).ToFloat();
+	FLuaValue _luaVal= ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global);
+	if (_luaVal.IsNil()) { return Fallback; }
+	return _luaVal.ToFloat();
 }
 
 FString ULuaValuesFunctionLibrary::GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,
-	const FString& Global)
+                                                         const FString& Global, const FString& Fallback)
 {
-	return ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global));
+	FLuaValue _luaVal= ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,Global);
+	if (_luaVal.IsNil()) { return Fallback; }
+	return ULuaBlueprintFunctionLibrary::Conv_LuaValueToString(_luaVal);
+
 }
 
 

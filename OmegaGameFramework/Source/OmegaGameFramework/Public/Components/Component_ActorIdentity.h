@@ -6,7 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "OmegaGameplayComponent.h"
 #include "Components/ActorComponent.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_TagEvent.h"
 #include "Misc/GeneralDataObject.h"
 #include "Component_ActorIdentity.generated.h"
 
@@ -23,6 +23,7 @@ class OMEGAGAMEFRAMEWORK_API UActorIdentityComponent : public UOmegaGameplayComp
 
 	void L_Init();
 	bool Local_IsSourceAssetValid() const;
+	void Local_RunConstruct();
 	TArray<UActorIdentityScript*> Local_GetScripts() const;
 
 public:

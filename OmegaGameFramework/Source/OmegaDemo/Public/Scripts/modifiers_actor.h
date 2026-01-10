@@ -4,7 +4,7 @@
 
 
 #include "Condition/Condition_Actor.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "modifiers_actor.generated.h"
 
 

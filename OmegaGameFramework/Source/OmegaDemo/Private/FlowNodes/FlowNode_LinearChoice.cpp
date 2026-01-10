@@ -6,10 +6,12 @@
 #include "FlowAsset.h"
 #include "FlowTypes.h"
 #include "OmegaLinearEventSubsystem.h"
+#include "OmegaSettings.h"
 #include "OmegaSettings_Gameplay.h"
 #include "Engine/World.h"
 #include "LinearEvents/LinearChoice_SimpleChoice.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
+
 
 UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 {
@@ -29,6 +31,7 @@ UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 #if WITH_EDITOR
 	
 	Category = TEXT("GameFlow");
+	SubscribeToAssetChanges();
 #endif
 }
 
@@ -46,24 +49,16 @@ void UFlowNode_LinearChoice::LocalChoiceSelect(UOmegaLinearChoice* Choice, int32
 	TriggerOutput(FName(OutputLocalName));
 }
 
-#if WITH_EDITOR
-bool UFlowNode_LinearChoice::CanUserAddOutput() const
-{
-	return true;
-}
-#endif
+
 
 void UFlowNode_LinearChoice::ExecuteInput(const FName& PinName)
 {
 	TSubclassOf<AOmegaLinearChoiceInstance> class_in=InstanceClass;
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if(!class_in)
 	{
-		if(set)
+		if (TSubclassOf<AOmegaLinearChoiceInstance> newClass=GetMutableDefault<UOmegaSettings>()->DefaultChoiceInstance.LoadSynchronous())
 		{
-			if(Cast<AOmegaLinearChoiceInstance>(set->DefaultChoiceInstance))
-			{
-				class_in=set->DefaultChoiceInstance;
-			}
+			class_in=newClass;
 		}
 	}
 	ChoiceInst = GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>()->PlayLinearChoice(Choices, class_in);
@@ -71,3 +66,47 @@ void UFlowNode_LinearChoice::ExecuteInput(const FName& PinName)
 	
 	Super::ExecuteInput(PinName);
 }
+
+#if WITH_EDITOR
+TArray<FName> UFlowNode_LinearChoice::GetContextOutputs()
+{
+	TArray<FName> out;
+	int32 last_ind=-1;
+	for (auto* a : Choices.Choices)
+	{
+		last_ind+=1;
+		out.Add(*FString::FromInt(last_ind));
+	}
+	
+	return out;
+}
+
+void UFlowNode_LinearChoice::PostLoad()
+{
+	Super::PostLoad();
+	SubscribeToAssetChanges();
+}
+
+void UFlowNode_LinearChoice::PreEditChange(FProperty* PropertyAboutToChange)
+{
+	Super::PreEditChange(PropertyAboutToChange);
+	//SubscribeToAssetChanges();
+}
+
+void UFlowNode_LinearChoice::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	SubscribeToAssetChanges();
+}
+
+void UFlowNode_LinearChoice::SubscribeToAssetChanges()
+{
+	TWeakObjectPtr<UFlowNode_LinearChoice> SelfWeakPtr(this);
+	if (SelfWeakPtr.IsValid())
+	{
+		SelfWeakPtr->OnReconstructionRequested.ExecuteIfBound();
+	}
+}
+
+
+#endif

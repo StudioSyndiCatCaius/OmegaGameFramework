@@ -5,6 +5,7 @@
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/Component_ActorConfig.h"
 #include "Components/Component_Saveable.h"
 #include "Components/StateTreeComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -164,8 +165,6 @@ AOmegaProp::AOmegaProp()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	
-	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
-	
 	RangeBox=CreateOptionalDefaultSubobject<UBoxComponent>("Range");
 	RangeBox->SetupAttachment(RootComponent);
 	
@@ -185,6 +184,7 @@ AOmegaProp::AOmegaProp()
 	
 	Saveable=CreateOptionalDefaultSubobject<UOmegaSaveableComponent>("Savable");
 	StateTree=CreateOptionalDefaultSubobject<UStateTreeComponent>("StateTree");
+	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
 
 	RootComponent->SetMobility(EComponentMobility::Type::Static);
 	TArray<USceneComponent*> childComps;

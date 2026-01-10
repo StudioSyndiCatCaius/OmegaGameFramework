@@ -63,6 +63,19 @@ public:
 	static bool LevelStream_IsLoading(UWorld* World);
 };
 
+// ================================================================================================================
+// FILE
+// ================================================================================================================
+
+class OGF_File
+{
+public:
+	static FString PathCorrect(const FString& path);
+	
+	static TArray<FString> ListFilesInDirectory(const FString& path, bool bRecursive);
+	static TArray<FString> ListFilesInDirectoryList(TArray<FString> paths, bool bRecursive);
+};
+
 
 class OGF_Actor
 {
@@ -98,6 +111,9 @@ public:
 class OGF_SoftParam
 {
 public:
+
+	static void Bitmask_Set(int32& bitmask, uint8 flag, bool Value);
+	static bool Bitmask_Get(int32 bitmask, uint8 flag);
 	
 	static float Conv_float(TMap<FName,FString> params, FName key, float def);
 	static int32 Conv_int(TMap<FName,FString> params, FName key, int32 def);
@@ -108,4 +124,11 @@ public:
 	static void set_int(TMap<FName,FString>& params, FName key, int32 def);
 	static void set_bool(TMap<FName,FString>& params, FName key, bool def);
 	static void set_string(TMap<FName,FString>& params, FName key, FString def);
+};
+
+class OGF_Lua
+{
+public:
+
+	static TArray<FName> GKeys(UWorld* World, const FString global);
 };

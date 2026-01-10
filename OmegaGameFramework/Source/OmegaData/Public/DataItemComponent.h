@@ -6,7 +6,7 @@
 #include "OmegaDataItem.h"
 #include "Components/ActorComponent.h"
 #include "Delegates/DelegateCombinations.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_TagEvent.h"
 #include "DataItemComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataItemChanged, UOmegaDataItem*, Item);

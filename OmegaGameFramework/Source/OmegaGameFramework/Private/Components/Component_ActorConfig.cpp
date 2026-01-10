@@ -3,8 +3,9 @@
 
 #include "Components/Component_ActorConfig.h"
 
+#include "OmegaSettings.h"
 #include "OmegaSettings_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
+#include "Subsystems/Subsystem_Actors.h"
 
 void UActorConfigComponent::L_TimerEnd()
 {
@@ -23,12 +24,10 @@ void UActorConfigComponent::L_TimerEnd()
 
 UOmegaActorConfig* UActorConfigComponent::L_GetConfig()
 {
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if (UOmegaActorConfig* _Newconfig= GetMutableDefault<UOmegaSettings>()->ActorConfig_PerClass
+		.FindOrAdd(TSoftClassPtr<AActor>(GetOwner()->GetClass())).LoadSynchronous())
 	{
-		if(set->ActorConfig_ByClass.Contains(GetOwner()->GetClass()))
-		{
-			return set->ActorConfig_ByClass[GetOwner()->GetClass()];
-		}
+		return _Newconfig;
 	}
 	return DefaultConfig;
 }

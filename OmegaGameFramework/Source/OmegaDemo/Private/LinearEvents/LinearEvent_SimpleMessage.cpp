@@ -6,33 +6,27 @@
 #include "FlowAsset.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
+#include "LuaBlueprintFunctionLibrary.h"
 #include "OmegaDemo_Const.h"
 #include "Selectors/Selector_Object.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_GameManager.h"
 #include "OmegaLinearEventSubsystem.h"
 #include "GameFramework/Character.h"
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Components/Component_AimTargeter.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Selectors/Selector_LevelSequence.h"
 #include "Selectors/Selector_Montage.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
+#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_Message.h"
 
 UObject* ULinearEvent_SimpleMessage::local_GetInstigator() const
 {
 	if(GetWorld())
 	{
-		if(Instigator_Alt)
-		{
-			if(UObject* out = Instigator_Alt->GetSelected_Obj(this))
-			{
-				return out;
-			}
-		}
-		
+
 		if(Instigator_Asset)
 		{
 			return Instigator_Asset;
@@ -79,18 +73,23 @@ void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
 	}
 }
 
+bool UFlowNode_SimpleMessage::CanPlayMessage()
+{
+	if (Text.IsEmpty()) { return false; }
+	FLuaValue _luaVal=ULuaBlueprintFunctionLibrary::LuaRunString(this,nullptr,LuaCondition.LuaCode);
+	if (_luaVal.Type==ELuaValueType::Bool)
+	{
+		return _luaVal.ToBool();
+	}
+	return true;
+}
+
+
 AActor* UFlowNode_SimpleMessage::local_GetInstigatorActor() const
 {
 	if(Instigator_Asset)
 	{
 		if(AActor* a=GetFlowAsset()->GetActorByBinding_Asset(Instigator_Asset,true))
-		{
-			return a;
-		}
-	}
-	if(Instigator_Alt)
-	{
-		if(AActor* a=Cast<AActor>(Instigator_Alt->GetSelected_Obj(this)))
 		{
 			return a;
 		}
@@ -102,13 +101,6 @@ UObject* UFlowNode_SimpleMessage::local_GetInstigator() const
 {
 	if(GetWorld())
 	{
-		if(Instigator_Alt)
-		{
-			if(UObject* out = Instigator_Alt->GetSelected_Obj(this))
-			{
-				return out;
-			}
-		}
 		if(Instigator_Asset)
 		{
 			return Instigator_Asset;
@@ -146,6 +138,7 @@ UFlowNode_SimpleMessage::UFlowNode_SimpleMessage()
 	Autokey_ByNext();
 }
 
+
 void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 {
 	Super::ExecuteInput(PinName);
@@ -155,14 +148,15 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	LocalMessage->EventEnded.AddDynamic(this, &UFlowNode_SimpleMessage::LocalFinish);
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UFlowNode_SimpleMessage::LocalGEvent);
 	
-	if(Instigator_Alt) { LocalMessage->Instigator_Alt= Instigator_Alt; }
 	if(Instigator_Asset) { LocalMessage->Instigator_Asset= Instigator_Asset; }
 	LocalMessage->Text = Text;
+	LocalMessage->MessageCategory=GetFlowAsset()->GetMessageCategoryTag();
 	FOmegaGameplayMessageMeta msg_meta;
 	msg_meta.CommonMeta.Context=this;
 	msg_meta.Brush.SetResourceObject(Portrait);
 	msg_meta.Tags=Tags;
 	msg_meta.key=MessageKey;
+	msg_meta.Flags=Flags;
 	LocalMessage->meta=msg_meta;
 	LocalMessage->Native_Begin("");
 
@@ -170,15 +164,15 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	{
 		if(ACharacter* c=Cast<ACharacter>(a))
 		{
-			if(Montage && Montage->GetMontage(c))
+			if(Montage)
 			{
-				c->PlayAnimMontage(Montage->GetMontage(c));
+				c->PlayAnimMontage(Montage);
 			}
-			if(Sequence && Sequence->GetLevelSequence(c))
+			if(Sequence)
 			{
 				FMovieSceneSequencePlaybackSettings seqSettings;
 				ALevelSequenceActor* seActor;
-				ULevelSequencePlayer* seqPlayer=ULevelSequencePlayer::CreateLevelSequencePlayer(this,Sequence->GetLevelSequence(c),seqSettings,seActor);
+				ULevelSequencePlayer* seqPlayer=ULevelSequencePlayer::CreateLevelSequencePlayer(this,Sequence,seqSettings,seActor);
 				seActor->AddBindingByTag(TEXT("Instigator"),c);
 				seqPlayer->Play();
 			}
@@ -211,12 +205,8 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 				}
 			}
 		}
-
-		FActorModifiers m;
-		m.Script=InstigatorModifiers;
-		m.ApplyMods(a);
 	}
-	
+	ULuaBlueprintFunctionLibrary::LuaRunString(this,nullptr,LuaScript.LuaCode);
 	TriggerOutput("Begin", false,  EFlowPinActivationType::Default);
 }
 
@@ -241,6 +231,15 @@ FString UFlowNode_SimpleMessage::GetNodeDescription() const
 
 	return OutText.ToString();
 }
+
+bool UFlowNode_SimpleMessage::GetDynamicTitleColor(FLinearColor& OutColor) const
+{
+	if (Text.IsEmpty())
+	{
+		OutColor=FLinearColor(0.2,0.2,0.2,0.8); return true;		
+	}
+	OutColor=FLinearColor(1,0.2,0,1); return true;
+}
 #endif
 
 void UFlowNode_SimpleMessage::GetGeneralAssetLabel_Implementation(FString& Label)
@@ -253,42 +252,39 @@ TMap<FName, FString> UFlowNode_SimpleMessage::GetSoftPropertyMap_Implementation(
 	return ExtraParams;
 }
 
+
+void UFlowNode_SimpleMessage::getNodeIndexFromList(TArray<UFlowNode*> baseList)
+{
+	TArray<UFlowNode_SimpleMessage*> nodesU;
+	for(auto* n : baseList)
+	{
+		if(n && n->GetClass()==GetClass())
+		{
+			nodesU.Add(Cast<UFlowNode_SimpleMessage>(n));
+		}
+	}
+	
+	if (nodesU.Contains(this))
+	{
+		int32 ind=nodesU.Find(this);
+		FString str = FString::FromInt(ind);
+		MessageKey=FName(GetFlowAsset()->GetName()+"_"+str);
+	}
+}
+
 void UFlowNode_SimpleMessage::Autokey_ByNext()
 {
 	if(GetFlowAsset())
 	{
-		TArray<UFlowNode*> nodes=GetFlowAsset()->GetAllNodes();
-		TArray<UFlowNode_SimpleMessage*> nodesU;
-		for(auto* n : nodes)
-		{
-			if(n && n->GetClass()==GetClass())
-			{
-				nodesU.Add(Cast<UFlowNode_SimpleMessage>(n));
-			}
-		}
-		for(auto* n : nodesU)
-		{
-			if(n && n->GetClass()==GetClass())
-			{
-				int32 ind=nodes.Find(n);
-				FString str = FString::Printf(TEXT("%03d"), ind);
-				MessageKey=FName(GetFlowAsset()->GetName()+"_"+str);
-			}
-		}
+		getNodeIndexFromList(GetFlowAsset()->GetAllNodes());
 	}
 }
 
 void UFlowNode_SimpleMessage::Autokey_ByPosition()
 {
-	TArray<UFlowNode*> nodes=GetFlowAsset()->GetNodes_OrderedByPosition();
-	for(auto* n : nodes)
+	if(GetFlowAsset())
 	{
-		if(n && n->GetClass()==GetClass())
-		{
-			int32 ind=nodes.Find(n);
-			FString str = FString::Printf(TEXT("%03d"), ind);
-			MessageKey=FName(GetFlowAsset()->GetName()+"_"+str);
-		}
+		getNodeIndexFromList(GetFlowAsset()->GetNodes_OrderedByPosition());
 	}
 }
 
@@ -297,3 +293,13 @@ void UFlowNode_SimpleMessage::LocalFinish(UOmegaLinearEvent* Event, const FStrin
 {
 	//TriggerFirstOutput(true);
 }
+
+UOAsset_TransformPreset* UFlowNode_SimpleMessage::GetMessage_TransformPreset_Implementation()
+{
+	return Position;
+}
+
+//UOAsset_TransformPreset* UFlowNode_SimpleMessage::GetMessage_TransformPreset_Implementation()
+//{
+//	return Position.LoadSynchronous();
+//}

@@ -8,7 +8,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Component_InputReceiver.generated.h"
 
 class APlayerController;
@@ -32,29 +32,46 @@ public:
 	
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputStart);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputTrigger, float, DeltaTime);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputComplete);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInputCancel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputReceiverDelegate,FVector,Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInputReceiverTrigger, float, DeltaTime,FVector,Value);
+
 
 UCLASS( ClassGroup=("Input"), meta=(BlueprintSpawnableComponent), DisplayName="Local Input Component" )
 class OMEGAGAMEFRAMEWORK_API UInputReceiverComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
 	
 	UPROPERTY() float cached_dt;
-
+	UPROPERTY() APlayerController* CachedPlayerController;
+	UPROPERTY() AActor* ContextOwner;
+	
+	bool bIsInputActive;
+	FVector cached_InputValue;
+	
+	APlayerController* GetContextPlayer();
+	bool CheckKeysPressed() const;
+	bool CheckPrerequisiteKeys() const;
+	TArray<FKey> GetKeys() const;
+	FVector GetKey_InputValue(FKey Key);
+	
 public:	
-	// Sets default values for this component's properties
 	UInputReceiverComponent();
-
-protected:
-	// Called when the game starts
+	
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-public:	
 
+	UPROPERTY(BlueprintAssignable, DisplayName="Input Start") FOnInputReceiverDelegate OnInputStarted;
+	UPROPERTY(BlueprintAssignable, DisplayName="Input Update") FOnInputReceiverTrigger OnInputTriggered;
+	UPROPERTY(BlueprintAssignable, DisplayName="Input End") FOnInputReceiverDelegate OnInputCompleted;
+	
+	// At least ONE of these keys must be pressed to trigger input
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")
+	TMap<FKey,FVector> Keys;
+
+	// ALL of these keys must be held down for input to trigger (e.g., modifier keys like Ctrl, Shift)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")
+	TArray<FKey> PrerequisiteKeys;
+	
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void OverrideInputOwner(AActor* NewOwner);
 
@@ -64,13 +81,12 @@ public:
 	UPROPERTY() APlayerController* REF_OwningController;
 	
 	
-	UPROPERTY(EditAnywhere, Category="Input", DisplayName="UE Input Action (Depc)")
+	UPROPERTY(EditAnywhere, Category="Input", DisplayName="Input Action")
 	UInputAction* InputAction;
 	
 	UPROPERTY() TArray<FEnhancedActionKeyMapping> KeyMappings;
 	UPROPERTY() class UEnhancedInputComponent* OwnerInputComp;
-
-	UPROPERTY() bool bIsInputActive;
+	
 
 	UFUNCTION() void Native_Started();
 	UFUNCTION() void Native_Triggered();
@@ -78,16 +94,14 @@ public:
 	UFUNCTION() void Native_Cancel();
 	UFUNCTION() void Native_Ongoing();
 
-	UPROPERTY(BlueprintAssignable, DisplayName="Input Start") FOnInputStart OnInputStarted;
-	UPROPERTY(BlueprintAssignable, DisplayName="Input Update") FOnInputTrigger OnInputTriggered;
-	UPROPERTY(BlueprintAssignable, DisplayName="Input End") FOnInputComplete OnInputCompleted;
-	UPROPERTY(BlueprintAssignable) FOnInputCancel OnInputCancel;
-
+	
 	UFUNCTION()
 	void OnOwningControllerChange(APawn* Pawn, AController* OldController, AController* NewController);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void BindToPawn(APawn* Pawn);
+	
+	
 	
 };
 

@@ -8,14 +8,61 @@
 #include "Components/Component_InputReceiver.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_GameManager.h"
 #include "Components/TimelineComponent.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Condition/Condition_Actor.h"
+#include "Functions/F_TagEvent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Subsystems/Subsystem_Player.h"
 #include "Engine/GameInstance.h"
+#include "Functions/F_Component.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Gameplay.h"
 #include "Widget/HUDLayer.h"
+
+bool UOmegaAbilityConfig::L_CanActivate(AOmegaAbility* ability, UObject* Context) const
+{
+	if(ability)
+	{
+		FOmegaConditions_Actor con;
+		con.Conditions=OwnerConditions_CanActivate;
+		if(!con.CheckConditions(ability->CombatantOwner->GetOwner()))
+		{
+			return false;
+		}
+		
+		UOmegaGameplaySubsystem* sys=ability->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+		if(!sys->IsSystemTagActive(Required_SystemTags) && !Required_SystemTags.IsEmpty())
+		{
+			return false;
+		}
+		if(!Restricted_SystemTags.IsEmpty() && sys->IsSystemTagActive(Restricted_SystemTags) )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void UOmegaAbilityConfig::L_OnActivate(AOmegaAbility* ability, UObject* Context) const
+{
+	if(ability)
+	{
+		FActorModifiers m;
+		m.Script=Modifiers_OnActivate;
+		m.ApplyMods(ability->CombatantOwner->GetOwner());
+	}
+}
+
+void UOmegaAbilityConfig::L_OnFinish(AOmegaAbility* ability, UObject* Context, bool cancelled) const
+{
+	if(ability)
+	{
+		FActorModifiers m;
+		m.Script=Modifiers_OnFinish;
+		m.ApplyMods(ability->CombatantOwner->GetOwner());
+	}
+}
 
 // Sets default values
 AOmegaAbility::AOmegaAbility()
@@ -39,7 +86,7 @@ void AOmegaAbility::BeginPlay()
 	//Bind Default Inputs
 	if(bActivateOnStarted)
 	{
-		DefaultInputReceiver->OnInputStarted.AddDynamic(this, &AOmegaAbility::Native_Start);
+		DefaultInputReceiver->OnInputStarted.AddDynamic(this, &AOmegaAbility::L_OnInput_Start);
 	}
 	if(bActivateOnTriggered)
 	{
@@ -47,11 +94,11 @@ void AOmegaAbility::BeginPlay()
 	}
 	if(bFinishOnInputComplete)
 	{
-		DefaultInputReceiver->OnInputCompleted.AddDynamic(this, &AOmegaAbility::CompleteAbility);
+		DefaultInputReceiver->OnInputCompleted.AddDynamic(this, &AOmegaAbility::L_OnInput_End);
 	}
 	if(bFinishOnInputCancel)
 	{
-		DefaultInputReceiver->OnInputCancel.AddDynamic(this, &AOmegaAbility::CancelAbility);
+	//	DefaultInputReceiver->OnInputCompleted.AddDynamic(this, &AOmegaAbility::L_OnInput_End);
 	}
 	
 	GetGameInstance()->GetOnPawnControllerChanged().AddDynamic(this, &AOmegaAbility::TryAssignControlInput);
@@ -64,11 +111,11 @@ void AOmegaAbility::BeginPlay()
 	//COOLDOWN
 	if(BeginInCooldown)
 	{
-		CooldownLerp = 0;
+		f_cooldownTime = 1;
 	}
 	else
 	{
-		CooldownLerp = 1;
+		f_cooldownTime = 0;
 	}
 	
 	SetInputEnabledForOwner(true);
@@ -110,15 +157,33 @@ void AOmegaAbility::TryAssignControlInput(APawn* Pawn, AController* Controller)
 	}
 }
 
+void AOmegaAbility::Local_SetInputEnabled(bool Enabled)
+{
+	if(GetAbilityOwnerPlayer())
+	{
+		if(Enabled)
+		{
+			EnableInput(GetAbilityOwnerPlayer());
+		}
+		else
+		{
+			DisableInput(GetAbilityOwnerPlayer());
+		}
+	}
+}
+
 void AOmegaAbility::Native_AbilityActivated(UObject* Context)
 {
-	Local_TriggerEvents(EventsOnActivate);
+	if(Config)
+	{
+		Config->L_OnActivate(this,Context);
+	}
 	if(GetAbilityActivationTimeline())
 	{
 		GetAbilityActivationTimeline()->Play();
 	}
 	OGF_Actor::SetTagsActive(GetOwner(),ActiveActorOwnerTags,true);
-
+	
 	if(bEnableInputOnActivation && GetAbilityOwnerPlayer())
 	{
 		EnableInput(GetAbilityOwnerPlayer());
@@ -128,15 +193,9 @@ void AOmegaAbility::Native_AbilityActivated(UObject* Context)
 
 void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
 {
-	//EVENTS
-	Local_TriggerEvents(EventsOnFinish);
-	if(Cancelled)
+	if(Config)
 	{
-		Local_TriggerEvents(EventsOnCancel);
-	}
-	else
-	{
-		Local_TriggerEvents(EventsOnComplete);
+		Config->L_OnFinish(this,ContextObject,Cancelled);
 	}
 	
 	if(GetAbilityActivationTimeline())
@@ -162,7 +221,28 @@ void AOmegaAbility::Native_ActivatedTick(float DeltaTime)
 
 bool AOmegaAbility::Native_CanActivate(UObject* Context)
 {
-	return CanActivate(Context);
+	if(bIsActive) { return false; }
+	if(Config && !Config->L_CanActivate(this,Context))
+	{
+		return false;
+	}
+	if(CombatantOwner)
+	{
+		// is in cooldown
+		if(IsAbilityInCooldown()) { return false; }
+
+		// ability tags are blocked
+		if(!AbilityTags.IsEmpty() && CombatantOwner->IsAbilityTagBlocked(AbilityTags)) { return false; }
+		
+		// Doesn't have required tags
+		if(!RequiredOwnerTags.IsEmpty() && !CombatantOwner->CombatantHasAllTag(RequiredOwnerTags)) { return false; }
+		
+		// Has restricted owner tags
+		if(!RestrictedOwnerTags.IsEmpty() && CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags)) { return false; }
+
+		return CanActivate(Context);
+	}
+	return false;
 }
 
 // Called every frame
@@ -175,27 +255,36 @@ void AOmegaAbility::Tick(float DeltaTime)
 	}
 
 	//COOLDOWN TICk
-	if(!bIsActive && !IsAbilityInCooldown())
+	if(!bIsActive && IsAbilityInCooldown())
 	{
-		CooldownLerp  = UKismetMathLibrary::FInterpTo_Constant(CooldownLerp, 1.0, DeltaTime, 1/GetCooldownTime());
+		f_cooldownTime-=DeltaTime;
 	}
 }
 
-void AOmegaAbility::Execute(UObject* Context)
+void AOmegaAbility::L_OnInput_Start(FVector Value)
+{
+	Execute(nullptr);
+}
+
+void AOmegaAbility::L_OnInput_End(FVector Value)
+{
+	CompleteAbility();
+}
+
+bool AOmegaAbility::Execute(UObject* Context)
 {
 	// Success if:
-	if(!bIsActive																							// Ability is not already active
-		&& !CombatantOwner->IsAbilityTagBlocked(AbilityTags)												// Ability tags are not blocked
-		&& Native_CanActivate(Context) && !CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags)				// Combatant does not have any restricted tags
-		&& (CombatantOwner->CombatantHasAllTag(RequiredOwnerTags) || RequiredOwnerTags.IsEmpty())			// Combatant has all required tags.
-		&& !IsAbilityInCooldown()																			// Is Ability In Cooldown?
-		)
+	if(Native_CanActivate(Context))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Valid Execute"));
-		bIsActive = true;
 		CombatantOwner->CancelAbilitiesWithTags(CancelAbilities);
 		CombatantOwner->CancelAbilitiesWithTags(BlockAbilities);
-
+		
+		ContextObject=Context;
+		if(!Context)
+		{
+			ContextObject = nullptr;
+		}
+		bIsActive = true;
 		UActorTagEventFunctions::FireTagEventsOnActor(CombatantOwner->GetOwner(),OwnerEventsOnActivate);
 		
 		// TIMLEINE
@@ -203,18 +292,15 @@ void AOmegaAbility::Execute(UObject* Context)
 		{
 			GetAbilityActivationTimeline()->Play();
 		}
-		if(!Context)
-		{
-			Context = nullptr;
-		}
 		Native_AbilityActivated(Context);
+		return true;
 	}
+	return false;
 }
 
-void AOmegaAbility::Native_Execute()
+bool AOmegaAbility::Native_Execute() 
 {
-	UE_LOG(LogTemp, Warning, TEXT("Try Execute"));
-	Execute(ContextObject);
+	return Execute(ContextObject);
 }
 
 void AOmegaAbility::Native_Start()
@@ -273,9 +359,11 @@ void AOmegaAbility::CancelAbility()
 	RecieveFinish(true);
 }
 
+
+
 ACharacter* AOmegaAbility::GetAbilityOwnerCharacter()
 {
-	return CachedCharacter;
+	return ref_character;
 }
 
 APlayerController* AOmegaAbility::GetAbilityOwnerPlayer()
@@ -285,14 +373,14 @@ APlayerController* AOmegaAbility::GetAbilityOwnerPlayer()
 
 UCharacterMovementComponent* AOmegaAbility::GetAbilityOwnerCharacterMoveComponent()
 {
-	if(!CachedCharacter)
+	if(!ref_character)
 	{
 		return nullptr;
 	}
-	TempMoveComp = CachedCharacter->GetMovementComponent();
-	if (TempMoveComp)
+	rev_moveComp = ref_character->GetMovementComponent();
+	if (rev_moveComp)
 	{
-		return Cast<UCharacterMovementComponent>(TempMoveComp);
+		return Cast<UCharacterMovementComponent>(rev_moveComp);
 	}
 	else
 	{
@@ -303,33 +391,13 @@ UCharacterMovementComponent* AOmegaAbility::GetAbilityOwnerCharacterMoveComponen
 
 USkeletalMeshComponent* AOmegaAbility::GetAbilityOwnerMesh()
 {
-	if (CachedCharacter)
+	if (ref_character)
 	{
-		return CachedCharacter->GetMesh();
+		return ref_character->GetMesh();
 	}
 	else
 	{
 		return nullptr;
-	}
-}
-
-void AOmegaAbility::AddBlockedAbilityTags(FGameplayTagContainer AddedTags)
-{
-	TArray<FGameplayTag> TagList;
-	AddedTags.GetGameplayTagArray(TagList);
-	for (FGameplayTag TempTag : TagList)
-	{
-		BlockAbilities.AddTag(TempTag);
-	}
-}
-
-void AOmegaAbility::RemoveBlockedAbilityTags(FGameplayTagContainer RemovedTags)
-{
-	TArray<FGameplayTag> TagList;
-	RemovedTags.GetGameplayTagArray(TagList);
-	for (FGameplayTag TempTag : TagList)
-	{
-		BlockAbilities.RemoveTag(TempTag);
 	}
 }
 
@@ -338,13 +406,13 @@ void AOmegaAbility::RemoveBlockedAbilityTags(FGameplayTagContainer RemovedTags)
 //------------------//
 bool AOmegaAbility::IsAbilityInCooldown() const
 {
-	return CooldownLerp < 1;
+	return f_cooldownTime > 0.0;
 }
 
 void AOmegaAbility::GetRemainingCooldownValues(float& Normalized, float& Seconds)
 {
-	Normalized = CooldownLerp;
-	Seconds = GetCooldownTime()/CooldownLerp;
+	Normalized = f_cooldownTime;
+	Seconds = GetCooldownTime()/f_cooldownTime;
 }
 
 /////////////////////
@@ -366,6 +434,7 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 		{
 			GetAbilityActivationTimeline()->Reverse();
 		}
+		f_cooldownTime=GetCooldownTime();
 	}
 }
 

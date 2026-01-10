@@ -5,7 +5,7 @@
 #include "Components/ArrowComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/TextRenderComponent.h"
-#include "Functions/OmegaFunctions_Actor.h"
+#include "Functions/F_Actor.h"
 
 void AOmegaDebugNote::OnConstruction(const FTransform& Transform)
 {

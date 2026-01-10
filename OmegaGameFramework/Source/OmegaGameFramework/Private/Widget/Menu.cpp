@@ -7,10 +7,11 @@
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_Player.h"
 #include "Widget/DataList.h"
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
@@ -59,9 +60,9 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		{
 			PlaySound(OpenSound);
 		}
-		else if(DefaultToStyleSounds && UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open)
+		else if(DefaultToStyleSounds && !OGF_CFG_STYLE()->Sound_Menu_Open.IsNull())
 		{
-			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open);
+			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Open.LoadSynchronous());
 		}
 		
 		if(GetOpenAnimation())
@@ -111,9 +112,9 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			PlaySound(CloseSound);
 		}
-		else if(DefaultToStyleSounds && UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close)
+		else if(DefaultToStyleSounds && OGF_CFG_STYLE()->Sound_Menu_Close)
 		{
-			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close);
+			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Close.LoadSynchronous());
 		}
 		
 		//ANIMATION

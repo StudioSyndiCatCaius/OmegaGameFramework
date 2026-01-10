@@ -3,9 +3,9 @@
 
 #include "Widget/HUDLayer.h"
 #include "Engine/GameInstance.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_Player.h"
 
 //#include "Engine/Engine.h"
 

@@ -2,6 +2,9 @@
 
 
 #include "Components/Component_Inventory.h"
+
+#include "OmegaSettings.h"
+#include "OmegaSettings_Global.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -151,6 +154,7 @@ TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap(
 			}
 		}
 	}
+	OutMap.Append(GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Append_Inventory(this));
 	return OutMap;
 }
 

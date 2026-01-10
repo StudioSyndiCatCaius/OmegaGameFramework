@@ -6,7 +6,7 @@
 #include "OmegaDemo_Const.h"
 #include "Animation/WidgetAnimation.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
+#include "Subsystems/Subsystem_Message.h"
 
 
 void UHudBase_Dialogue::NativeConstruct()

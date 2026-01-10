@@ -8,7 +8,7 @@
 
 class UOmegaActorSelector;
 
-UCLASS(DisplayName="Camera - Fade")
+UCLASS(DisplayName="🎥Camera - Fade")
 class OMEGADEMO_API UFlowNode_Camera_Fade : public UFlowNode
 {
 	GENERATED_BODY()
@@ -19,6 +19,11 @@ class OMEGADEMO_API UFlowNode_Camera_Fade : public UFlowNode
 public:
 	UFlowNode_Camera_Fade();
 	virtual void ExecuteInput(const FName& PinName) override;
+	
+#if WITH_EDITOR
+	virtual FString GetNodeCategory() const override { return "Camera"; };
+#endif
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
 	float BeginAlpha = 1.0;
@@ -34,7 +39,7 @@ public:
 	bool bHoldOnEnd=true;
 };
 
-UCLASS(DisplayName="Camera - Blend")
+UCLASS(DisplayName="🎥Camera - Blend")
 class OMEGADEMO_API UFlowNode_Camera_Blend : public UFlowNode
 {
 	GENERATED_BODY()
@@ -45,7 +50,10 @@ class OMEGADEMO_API UFlowNode_Camera_Blend : public UFlowNode
 public:
 	UFlowNode_Camera_Blend();
 	virtual void ExecuteInput(const FName& PinName) override;
-
+#if WITH_EDITOR
+	virtual FString GetNodeCategory() const override { return "Camera"; };
+#endif
+	
 	UPROPERTY(EditAnywhere,Instanced, BlueprintReadWrite, Category="Fade")
 	UOmegaActorSelector* BlendTarget;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")

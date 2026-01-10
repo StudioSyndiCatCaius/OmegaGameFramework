@@ -3,14 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actor_Gameplay.h"
 #include "DataAssets/DA_Appearance.h"
 #include "Engine/DataAsset.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_Component.h"
+#include "Functions/F_TagEvent.h"
 #include "GameFramework/Actor.h"
 #include "Misc/GeneralDataObject.h"
 #include "Actor_Prop.generated.h"
 
+class UActorConfigComponent;
 class UOAsset_Appearance;
 class UNiagaraSystem;
 class UStateTreeComponent;
@@ -69,7 +71,7 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaProp : public AActor, public IActorTagEventInterface, public IDataInterface_General, public IDataInterface_AppearanceSource
+class OMEGAGAMEFRAMEWORK_API AOmegaProp : public AOmegaGameplayActor, public IActorTagEventInterface, public IDataInterface_General, public IDataInterface_AppearanceSource
 {
 	GENERATED_BODY()
 
@@ -92,6 +94,8 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UOmegaSaveableComponent* Saveable;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UStateTreeComponent* StateTree;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
 
 	//properties
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop") UOmegaProp_Preset* Preset=nullptr;

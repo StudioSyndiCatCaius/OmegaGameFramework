@@ -6,9 +6,9 @@
 #include "LuaBlueprintFunctionLibrary.h"
 #include "LuaObject.h"
 #include "LuaInterface.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/I_Combatant.h"
 #include "Actors/Actor_GameplayEffect.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 
 
 

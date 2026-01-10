@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_Component.h"
+#include "Functions/F_TagEvent.h"
 #include "GameFramework/Actor.h"
 #include "Actor_ModifierVolume.generated.h"
 

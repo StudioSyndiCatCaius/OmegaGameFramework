@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/Component_TurnBasedManager.h"
 #include "DataAssets/DA_CombatSource.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
+#include "Functions/F_ScriptedEffects.h"
 #include "DA_TurnEffect.generated.h"
 
 

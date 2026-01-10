@@ -21,6 +21,13 @@ TArray<FString> UOmegaSettings_Paths::GetPathsFromAssetName(const FString& Asset
 			out.Add(new_path);
 		}
 	}
+	for(auto* a : ImportedPaths)
+	{
+		if(a)
+		{
+			out.Append(a->GetPathsFromAssetName(AssetName,Class));
+		}
+	}
 	return out;
 }
 

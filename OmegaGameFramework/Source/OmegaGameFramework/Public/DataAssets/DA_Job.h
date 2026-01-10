@@ -5,7 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Component_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Skill.h"
 #include "Misc/GeneralDataObject.h"
 #include "DA_Job.generated.h"
 

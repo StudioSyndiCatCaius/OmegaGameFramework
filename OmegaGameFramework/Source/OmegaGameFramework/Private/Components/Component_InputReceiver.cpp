@@ -6,40 +6,118 @@
 #include "InputMappingContext.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
 
 
 void UOmegaInputAction::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
+                                                          FText& Description)
 {
 	Name=ActionDescription;
 	Description=DisplayDescription;
 	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
 }
 
-// Sets default values for this component's properties
-UInputReceiverComponent::UInputReceiverComponent()
+APlayerController* UInputReceiverComponent::GetContextPlayer()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = false;
-
-	// ...
+	if (CachedPlayerController) { return CachedPlayerController; }
+	if (ContextOwner)
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(ContextOwner))
+		{
+			CachedPlayerController = PlayerController;
+			return PlayerController;
+		}
+		if (APawn* Pawn = Cast<APawn>(ContextOwner))
+		{
+			if (APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController()))
+			{
+				CachedPlayerController = PlayerController;
+				return PlayerController;
+			}
+		}
+	}
+	return nullptr;
 }
 
+bool UInputReceiverComponent::CheckKeysPressed() const
+{
+	if (!CachedPlayerController)
+	{
+		return false;
+	}
 
-// Called when the game starts
+	// At least ONE key must be pressed
+	for (const FKey& Key : GetKeys())
+	{
+		if (CachedPlayerController->IsInputKeyDown(Key))
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool UInputReceiverComponent::CheckPrerequisiteKeys() const
+{
+	
+	if (!CachedPlayerController)
+	{
+		return false;
+	}
+
+	// If no prerequisite keys, condition is always met
+	if (PrerequisiteKeys.Num() == 0)
+	{
+		return true;
+	}
+
+	// ALL prerequisite keys must be pressed
+	for (const FKey& Key : PrerequisiteKeys)
+	{
+		if (!CachedPlayerController->IsInputKeyDown(Key))
+		{
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+TArray<FKey> UInputReceiverComponent::GetKeys() const
+{
+	TArray<FKey> out;
+	Keys.GetKeys(out);
+	return out;
+}
+
+FVector UInputReceiverComponent::GetKey_InputValue(FKey Key)
+{
+	if (Keys.Contains(Key)) { return Keys[Key]; }
+	return FVector();
+}
+
+UInputReceiverComponent::UInputReceiverComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+	bIsInputActive = false;
+}
+
 void UInputReceiverComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	OverrideInputOwner(GetOwner());
-
-	//Local_InputAction = NewObject<UInputAction>(this, UInputAction::StaticClass());
 	
 	BindToPawn(Cast<APawn>(GetOwner()));
+	if (APawn* playerPawn=UGameplayStatics::GetPlayerPawn(this,GetOwner()->AutoReceiveInput-1))
+	{
+		OverrideInputOwner(playerPawn);
+	}
+	else
+	{
+		OverrideInputOwner(GetOwner());
+	}
 }
-
-
 
 void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	FActorComponentTickFunction* ThisTickFunction)
@@ -47,16 +125,62 @@ void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	cached_dt=DeltaTime;
 	
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
+	cached_InputValue=FVector(0,0,0);
+	
+	// Early exit if no valid data
+	if (!CachedPlayerController || Keys.Num() == 0)
+	{
+		// If input was active but no longer valid, complete it
+		if (bIsInputActive)
+		{
+			bIsInputActive = false;
+			OnInputCompleted.Broadcast(cached_InputValue);
+		}
+		return;
+	}
+	
+	//calculate input value from keys down
+	for (FKey Key : GetKeys())
+	{
+		if (CachedPlayerController->IsInputKeyDown(Key))
+		{
+			cached_InputValue+=GetKey_InputValue(Key);
+		}
+	}
+	
+	// Check if input condition is met: Prerequisites AND at least one main key
+	bool bInputConditionMet = CheckPrerequisiteKeys() && CheckKeysPressed();
+
+	// Handle state transitions
+	if (bInputConditionMet)
+	{
+		if (!bIsInputActive)
+		{
+			// Input just started
+			bIsInputActive = true;
+			OnInputStarted.Broadcast(cached_InputValue);
+		}
+		
+		// Input is active (continuing or just started)
+		OnInputTriggered.Broadcast(DeltaTime,cached_InputValue);
+	}
+	else
+	{
+		if (bIsInputActive)
+		{
+			// Input just ended
+			bIsInputActive = false;
+			OnInputCompleted.Broadcast(cached_InputValue);
+		}
+	}
 }
 
 void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)
 {
-	if(NewOwner && GetWorld())
+	if (NewOwner)
 	{
-		
-	}
-	if(NewOwner && InputAction)
-	{
+		ContextOwner=NewOwner;
 		//Use custom input action
 		if(InputAction)
 		{
@@ -76,18 +200,9 @@ void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)
 			}
 		}
 	}
-	else
-	{
-		//UE_LOG(LogTemp, Display, TEXT("Ckecing Input Action: %s"), *InputAction->GetName());
-		if(!InputAction)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Input Action invalid on %s"), *GetOwner()->GetClass()->GetName());
-		}
-		if (!NewOwner)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Input Owner invalid on %s"), *GetOwner()->GetClass()->GetName());
-		}
-	}
+	CachedPlayerController=nullptr;
+	GetContextPlayer();
+	
 }
 
 FInputActionValue UInputReceiverComponent::GetInputActionValue()
@@ -102,26 +217,22 @@ FInputActionValue UInputReceiverComponent::GetInputActionValue()
 
 void UInputReceiverComponent::Native_Started()
 {
-	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Started") );
-	OnInputStarted.Broadcast();
+	OnInputStarted.Broadcast(cached_InputValue);
 }
 
 void UInputReceiverComponent::Native_Triggered()
 {
-	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Triggered") );
-	OnInputTriggered.Broadcast(cached_dt);
+	OnInputTriggered.Broadcast(cached_dt,cached_InputValue);
 }
 
 void UInputReceiverComponent::Native_Complete()
 {
-	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Completed") );
-	OnInputCompleted.Broadcast();
+	OnInputCompleted.Broadcast(cached_InputValue);
 }
 
 void UInputReceiverComponent::Native_Cancel()
 {
-	UE_LOG(LogTemp, Display, TEXT("Attempted Input Reciever Action: Canceled") );
-	OnInputCancel.Broadcast();
+	OnInputCompleted.Broadcast(cached_InputValue);
 }
 
 void UInputReceiverComponent::Native_Ongoing()

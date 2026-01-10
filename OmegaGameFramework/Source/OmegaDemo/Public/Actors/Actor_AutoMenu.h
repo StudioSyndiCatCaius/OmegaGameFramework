@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Subsystems/OmegaSubsystem_DynamicCamera.h"
+#include "Subsystems/Subsystem_DynamicCamera.h"
 #include "Actor_AutoMenu.generated.h"
 
 class UMenu;

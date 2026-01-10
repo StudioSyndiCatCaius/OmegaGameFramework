@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DA_AssetLib.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "GameFramework/Character.h"
 #include "Misc/GeneralDataObject.h"
 #include "DA_Appearance.generated.h"

@@ -2,6 +2,8 @@
 
 
 #include "Components/Component_DataWidget.h"
+
+#include "OmegaSettings.h"
 #include "GameFramework/Actor.h"
 #include "Widget/DataWidget.h"
 
@@ -52,7 +54,21 @@ void UDataWidgetComponent::SetWidget(UUserWidget* InWidget)
 void UDataWidgetComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SetWidget(GetWidget());
+	if (!GetWidgetClass())
+	{
+		if(TSubclassOf<UDataWidget> _NewClass=GetMutableDefault<UOmegaSettings>()->DataWidgets_PerClass.FindOrAdd(
+			TSoftClassPtr<AActor>(GetOwner()->GetClass())).LoadSynchronous())
+		{
+			if (UDataWidget* _dw=CreateWidget<UDataWidget>(GetWorld(),_NewClass))
+			{
+				SetWidget(_dw);
+			}
+		}
+	}
+	else
+	{
+		SetWidget(GetWidget());
+	}
 }
 
 UDataWidget* UDataWidgetComponent::GetDataWidget()

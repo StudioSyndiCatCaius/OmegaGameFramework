@@ -2,11 +2,13 @@
 
 #include "Misc/OmegaUtils_Methods.h"
 
-#include "OmegaSettings_Assets.h"
+#include "LuaSubsystem.h"
+#include "OmegaSettings.h"
 #include "Engine/Engine.h"
 #include "GameFramework/SaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/PlatformFilemanager.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Misc/FileHelper.h"
 // Define static color constants
 const FColor OGF_Log::ErrorColor = FColor::Red;
@@ -98,6 +100,9 @@ void OGF_Log::PrintToScreen(const FString& Message, FColor Color, float Duration
     }
 }
 
+// ================================================================================================================
+// LOAD
+// ================================================================================================================
 bool OGF_Load::LevelStream_IsLoading(UWorld* World)
 {
     if(World)
@@ -113,6 +118,53 @@ bool OGF_Load::LevelStream_IsLoading(UWorld* World)
     return false;
 }
 
+FString OGF_File::PathCorrect(const FString& path)
+{
+    FString out=path;
+    out=out.Replace(TEXT("{project}"),*FPaths::ProjectDir());
+    out=out.Replace(TEXT("{content}"),*FPaths::ProjectContentDir());
+    out=out.Replace(TEXT("{mods}"),*FPaths::ProjectModsDir());
+    out=out.Replace(TEXT("{saves}"),*FPaths::GameAgnosticSavedDir());
+    out=out.Replace(TEXT("//"),TEXT("/"));
+    
+    FPaths::NormalizeFilename(out);
+    return out;
+}
+
+TArray<FString> OGF_File::ListFilesInDirectory(const FString& path, bool bRecursive)
+{
+    FString _Path=PathCorrect(path);
+    TArray<FString> FoundFiles;
+    
+    if (bRecursive)
+    {
+        // Search recursively for all files in the directory and subdirectories
+        IFileManager::Get().FindFilesRecursive(FoundFiles, *_Path, TEXT("*"), true, false);
+    }
+    else
+    {
+        // Search only in the specified directory (non-recursive)
+        FString SearchPath = _Path / TEXT("*");
+        IFileManager::Get().FindFiles(FoundFiles, *SearchPath, true, false);
+    }
+    
+    return FoundFiles;
+}
+
+TArray<FString> OGF_File::ListFilesInDirectoryList(TArray<FString> paths, bool bRecursive)
+{
+    TArray<FString> out;
+    for (FString dir : paths)
+    {
+        out.Append(ListFilesInDirectory(dir, bRecursive));
+    }
+    return out;
+}
+
+
+// ================================================================================================================
+// ACTOR
+// ================================================================================================================
 void OGF_Actor::SetTagActive(AActor* a, FName tag, bool is_active)
 {
     if(a && !tag.IsNone())
@@ -233,29 +285,14 @@ USaveGame* OGF_Save::LoadGame(const FString& path,const FString& filename)
 TArray<FName> OGF_Assets::Keys_Attribute()
 {
     TArray<FName> out;
-    if(UOmegaSettings_Assets* set=UOmegaSettings_AssetsFunctions::GetCurrentAssetSettings())
-    {
-        set->Named_Attributes.GetKeys(out);
-    }
+
     return out;
 }
 
 TMap<FName, UOmegaAttribute*> OGF_Assets::Map_NamedAttribute(TArray<FName> names)
 {
     TMap<FName, UOmegaAttribute*> out;
-    for(FName n : names)
-    {
-        if(UOmegaSettings_Assets* set=UOmegaSettings_AssetsFunctions::GetCurrentAssetSettings())
-        {
-            if(set->Named_Attributes.Contains(n))
-            {
-                if(set->Named_Attributes[n])
-                {
-                    out.Add(n,set->Named_Attributes[n]);
-                }
-            }
-        }
-    }
+
     return out;
 }
 
@@ -273,6 +310,38 @@ TMap<UOmegaAttribute*, float> OGF_Assets::NamedAttributes_ToFloat(TMap<FName, fl
         }
     }
     return out;
+}
+
+void OGF_SoftParam::Bitmask_Set(int32& bitmask, uint8 flag, bool Value)
+{
+    // Ensure the bit index is valid (0-31 for int32)
+    if (flag < 0 || flag > 31)
+    {
+        return;
+    }
+    
+    if (Value)
+    {
+        // Set the bit using bitwise OR
+        bitmask |= (1 << flag);
+    }
+    else
+    {
+        // Clear the bit using bitwise AND with inverted mask
+        bitmask &= ~(1 << flag);
+    }
+}
+
+bool OGF_SoftParam::Bitmask_Get(int32 bitmask, uint8 flag)
+{
+    // Ensure the bit index is valid (0-31 for int32)
+    if (flag < 0 || flag > 31)
+    {
+        return false;
+    }
+    
+    // Use bitwise AND to check if the bit is set
+    return (bitmask & (1 << flag)) != 0;
 }
 
 float OGF_SoftParam::Conv_float(TMap<FName, FString> params, FName key, float def)
@@ -319,5 +388,17 @@ void OGF_SoftParam::set_string(TMap<FName, FString>& params, FName key, FString 
 {
     params.Add(key,def);
 }
+
+TArray<FName> OGF_Lua::GKeys(UWorld* World, const FString global)
+{
+    TArray<FName> out;
+    if(World)
+    {
+        return World->GetSubsystem<ULuaWorldSubsystem>()->GetGlobalKeys(global);
+    }
+    return out;
+}
+
+
 
 

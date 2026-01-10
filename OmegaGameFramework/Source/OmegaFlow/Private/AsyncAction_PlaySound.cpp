@@ -3,7 +3,7 @@
 
 #include "AsyncAction_PlaySound.h"
 #include "Kismet/GameplayStatics.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_GameManager.h"
 #include "Components/AudioComponent.h"
 
 

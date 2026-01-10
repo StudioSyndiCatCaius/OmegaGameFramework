@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "GameFramework/Actor.h"
 #include "LevelSequence.h"
 #include "GameplayTagContainer.h"
 #include "LuaInterface.h"
-#include "Functions/OmegaFunctions_SoftProperty.h"
+#include "Functions/F_SoftProperty.h"
 #include "OmegaDataTrait.generated.h"
 
 class AActor;

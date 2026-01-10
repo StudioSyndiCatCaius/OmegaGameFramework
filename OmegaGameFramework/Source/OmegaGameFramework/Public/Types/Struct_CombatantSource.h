@@ -2,8 +2,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Combatant.h"
+#include "Interfaces/I_Skill.h"
 #include "Misc/OmegaAttribute.h"
 #include "Struct_CombatantSource.generated.h"
 
@@ -32,7 +32,7 @@ struct FOmegaCombatantSources
 		return mod.GatherModifiers(c);
 	}
 	float GetDamageMods(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-		UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) const
+		UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) const
 	{
 		FOmegaScripted_DamageModifiers mod;
 		mod.Modifiers=Damage_Mods;

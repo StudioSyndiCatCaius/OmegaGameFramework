@@ -3,8 +3,11 @@
 
 #include "Components/Component_ActorIdentity.h"
 
+#include "OmegaSettings.h"
+#include "OmegaSettings_Global.h"
 #include "Misc/OmegaUtils_Enums.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Subsystems/Subsystem_Actors.h"
 
 void UActorIdentityComponent::L_Init()
 {
@@ -24,6 +27,20 @@ bool UActorIdentityComponent::Local_IsSourceAssetValid() const
 		return true;
 	}
 	return false;
+}
+
+void UActorIdentityComponent::Local_RunConstruct()
+{
+	SetIdentitySourceAsset(IdentitySource);
+	OGF_GLOBAL_SETTINGS()->ActorID_OnConstruct(GetOwner(),this);
+	if(Local_IsSourceAssetValid())
+	{
+		IDataInterface_ActorIdentitySource::Execute_OnActorConstruction(IdentitySource,GetOwner(),this);
+		for(auto* i : Local_GetScripts())
+		{
+			if(i) { i->OnActorConstruction(GetOwner(),this); }
+		}
+	}
 }
 
 TArray<UActorIdentityScript*> UActorIdentityComponent::Local_GetScripts() const
@@ -72,15 +89,7 @@ void UActorIdentityComponent::OnTagEvent_Implementation(FGameplayTag Event)
 #if WITH_EDITOR
 void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	SetIdentitySourceAsset(IdentitySource);
-	if(Local_IsSourceAssetValid())
-	{
-		IDataInterface_ActorIdentitySource::Execute_OnActorConstruction(IdentitySource,GetOwner(),this);
-		for(auto* i : Local_GetScripts())
-		{
-			if(i) { i->OnActorConstruction(GetOwner(),this); }
-		}
-	}
+	Local_RunConstruct();
 	if(PropertyChangedEvent.GetPropertyName()=="IdentitySource")
 	{
 		L_Init();
@@ -91,7 +100,9 @@ void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 
 void UActorIdentityComponent::BeginPlay()
 {
+	Local_RunConstruct();
 	GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,true);
+	OGF_GLOBAL_SETTINGS()->ActorID_OnBeginPlay(GetOwner(),this);
 	if(Local_IsSourceAssetValid())
 	{
 		IDataInterface_ActorIdentitySource::Execute_OnActorBeginPlay(IdentitySource,GetOwner(),this);

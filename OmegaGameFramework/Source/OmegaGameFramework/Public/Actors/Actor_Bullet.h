@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
+#include "Functions/F_ScriptedEffects.h"
 #include "Actor_Bullet.generated.h"
 
 class USphereComponent;

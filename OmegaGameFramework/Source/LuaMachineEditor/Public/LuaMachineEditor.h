@@ -38,4 +38,9 @@ private:
 	EAssetTypeCategories::Type LuaMachineAssetCategoryBit;
 	/** All created asset type actions.  Cached here so that we can unregister them during shutdown. */
 	TArray< TSharedPtr<IAssetTypeActions> > CreatedAssetTypeActions;
+
+	void RegisterToolbarExtension();
+	void OnButtonClicked();
+    
+	TSharedPtr<class FUICommandList> PluginCommands;
 };

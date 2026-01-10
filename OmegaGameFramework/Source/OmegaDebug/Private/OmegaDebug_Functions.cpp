@@ -3,7 +3,7 @@
 #include "OmegaDebug_Functions.h"
 
 #include "Modifiers/Modifier_Save.h"
-#include "Subsystems/OmegaSubsystem_Quest.h"
+#include "Subsystems/Subsystem_Quest.h"
 
 UOmegaDebugDevSettings::UOmegaDebugDevSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

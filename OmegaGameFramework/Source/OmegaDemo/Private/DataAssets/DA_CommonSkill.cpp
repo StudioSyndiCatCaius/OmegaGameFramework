@@ -4,7 +4,7 @@
 #include "LevelSequence.h"
 #include "Animation/AnimMontage.h"
 #include "Components/Component_Combatant.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
+#include "Functions/F_ScriptedEffects.h"
 #include "Condition/Condition_Actor.h"
 #include "Condition/Condition_Combatant.h"
 

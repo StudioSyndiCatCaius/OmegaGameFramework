@@ -7,7 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Math/Vector2D.h"
 #include "Blueprint/IUserObjectListEntry.h"
-#include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Interfaces/I_ObjectTraits.h"
 #include "Misc/OmegaUtils_Delegates.h"
 #include "Widget/OmegaUserWidget.h"
 #include "DataWidget.generated.h"
@@ -343,6 +343,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Tooltip")
 	UDataTooltip* GetDataTooltipWidget();
 
+	UFUNCTION(BlueprintNativeEvent, Category="Tooltip")
+	UObject* GetTooltip_SourceObject();
+	
 	UFUNCTION()
 	void Local_UpdateTooltip(UObject* AssetRef);
 	

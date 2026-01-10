@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "UObject/Object.h"
 #include "SaveCondition_QueryTags.generated.h"
 
@@ -19,6 +19,23 @@ class OMEGADEMO_API USaveCondition_QueryTags : public UOmegaSaveCondition
 public:
 	UPROPERTY(EditInstanceOnly, Category="Condition")
 	FGameplayTagQuery TagQuery;
+	UPROPERTY(EditInstanceOnly, Category="Condition")
+	bool GlobalSave;
+	
+	virtual bool CheckSaveCondition_Implementation(UOmegaSaveSubsystem* SaveSubsystem) const override;
+	
+};
+
+UCLASS(DisplayName="Condition (Story State)")
+class OMEGADEMO_API USaveCondition_StoryState : public UOmegaSaveCondition
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditInstanceOnly, Category="Condition")
+	FGameplayTag StateTag;
+	UPROPERTY(EditInstanceOnly, Category="Condition")
+	bool bExact=true;
 	UPROPERTY(EditInstanceOnly, Category="Condition")
 	bool GlobalSave;
 	

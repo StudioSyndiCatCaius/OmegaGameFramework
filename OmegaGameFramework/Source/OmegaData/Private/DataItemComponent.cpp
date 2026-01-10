@@ -3,7 +3,7 @@
 
 #include "DataItemComponent.h"
 #include "Components/Component_Combatant.h"
-#include "OmegaDataSubsystem.h"
+
 
 // Sets default values for this component's properties
 UDataItemComponent::UDataItemComponent()
@@ -21,7 +21,6 @@ void UDataItemComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaDataSubsystem>()->RegisterDataComponent(this);
 
 	if(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
 	{

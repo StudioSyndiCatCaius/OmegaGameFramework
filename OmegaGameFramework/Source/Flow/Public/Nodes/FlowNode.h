@@ -9,11 +9,14 @@
 #include "Templates/SubclassOf.h"
 
 #include "FlowTypes.h"
-#include "Interfaces/OmegaInterface_Common.h"
-#include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Interfaces/I_Common.h"
+#include "Interfaces/I_NamedLists.h"
+#include "Interfaces/I_ObjectTraits.h"
 #include "Nodes/FlowPin.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "FlowNode.generated.h"
 
+class UOmegaGlobalSettings;
 class UFlowAsset;
 class UFlowSubsystem;
 
@@ -27,14 +30,26 @@ class FLOW_API UFlowNodeTrait : public UOmegaObjectTrait
 	GENERATED_BODY()
 public:
 
-	UFUNCTION(BlueprintNativeEvent,Category="Flow") void OnNodeEnter(UFlowNode* Node) const;
+	UFUNCTION(BlueprintNativeEvent,Category="Flow") void OnNodeInput(UFlowNode* Node, FName Pin) const;
+	UFUNCTION(BlueprintNativeEvent,Category="Flow") void OnNodeOutput(UFlowNode* Node, FName Pin) const;
 };
+
+UCLASS()
+class FLOW_API UFlowNodeTrait_Collection : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Node")
+	TArray<UFlowNodeTrait*> Traits;
+
+};
+
 
 /**
  * A Flow Node is UObject-based node designed to handle entire gameplay feature within single node.
  */
 UCLASS(Abstract, Blueprintable, HideCategories = Object)
-class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID, public IDataInterface_Traits
+class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID, public IDataInterface_Traits, public IDataInterface_NamedLists
 {
 	GENERATED_UCLASS_BODY()
 
@@ -49,6 +64,9 @@ class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInte
 // Node
 
 private:
+	
+	UOmegaGlobalSettings* L_GetGlobalSettings() const;
+	
 	UPROPERTY()
 	UEdGraphNode* GraphNode;
 
@@ -112,13 +130,23 @@ protected:
 	FString K2_GetNodeDescription() const;
 
 	// Inherits Guid after graph node
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Node") FOmegaClassNamedLists NamedLists;
 	UPROPERTY(VisibleInstanceOnly, Category="Node")
 	FGuid NodeGuid;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Node")
 	TArray<UFlowNodeTrait*> Traits;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Node")
+	TArray<UFlowNodeTrait_Collection*> Trait_Collections;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override
 	{
 		TArray<UOmegaObjectTrait*> out;
+		for(auto* i: Trait_Collections)
+		{
+			if(i)
+			{
+				out.Append(i->Traits);
+			}
+		}
 		for(auto* i : Traits)
 		{
 			if(i) { out.Add(i);}
@@ -131,7 +159,7 @@ public:
 	UFUNCTION(BlueprintPure, Category="Flow Node")
 	FGuid GetGuid() const { return NodeGuid; }
 	virtual FGuid GetObjectGuid_Implementation() const  override { return NodeGuid; };
-
+	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override { return NamedLists; };
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowAsset* GetFlowAsset() const;
 
@@ -435,4 +463,9 @@ private:
 
 	UPROPERTY()
 	TArray<FName> OutputNames_DEPRECATED;
+
+public:
+
+	UFUNCTION(BlueprintPure,Category="FlowNode")
+	virtual AActor* GetNodeInstigator() { return nullptr; }
 };

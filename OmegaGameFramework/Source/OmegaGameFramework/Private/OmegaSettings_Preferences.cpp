@@ -4,7 +4,7 @@
 #include "OmegaSettings_Preferences.h"
 
 #include "OmegaSettings.h"
-#include "Subsystems/OmegaSubsystem_GamePreferences.h"
+#include "Subsystems/Subsystem_GamePreferences.h"
 
 UOmegaSettings_Preferences* UOmegaPreferenceSettingsFunctions::GetSettings_Preferences()
 {

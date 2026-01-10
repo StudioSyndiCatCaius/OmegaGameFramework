@@ -5,10 +5,14 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
+#include "UObject/Interface.h"
 #include "ScreenWidget.h"
 #include "HUDLayer.generated.h"
 
 class UOmegaPlayerSubsystem;
+
+
+
 
 UCLASS(HideFunctions = (Construct, Destruct))
 class OMEGAGAMEFRAMEWORK_API UHUDLayer : public UOmegaScreenWidget
@@ -67,4 +71,15 @@ private:
 	void Local_RemoveAnimFinished();
 
 
+};
+
+UINTERFACE(MinimalAPI) class UDataInterface_HUDSource : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_HUDSource
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|HUD")
+	TSubclassOf<UHUDLayer> GetHUDLayerClass(FName Name);
 };

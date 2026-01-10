@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Functions/F_Component.h"
 #include "Condition/Condition_Actor.h"
 #include "Misc/GeneralDataObject.h"
 #include "DA_ActorModifierCollection.generated.h"

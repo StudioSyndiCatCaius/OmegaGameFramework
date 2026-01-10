@@ -2,13 +2,16 @@
 
 #pragma once
 
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "FlowSave.h"
 #include "FlowTypes.h"
+#include "Interfaces/I_NamedLists.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Templates/SubclassOf.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "FlowAsset.generated.h"
 
+class UFlowAssetTrait_Collection;
 class UOmegaActorSelector;
 class UFlowNode;
 class UFlowNode_CustomInput;
@@ -42,7 +45,7 @@ DECLARE_DELEGATE(FFlowAssetEvent);
  * Single asset containing flow nodes.
  */
 UCLASS(BlueprintType, hideCategories = Object)
-class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, public IDataInterface_General, public IDataInterface_GUID
+class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, public IDataInterface_General, public IDataInterface_GUID, public IDataInterface_NamedLists
 {
 	GENERATED_UCLASS_BODY()
 
@@ -53,7 +56,11 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 
 	friend class FFlowAssetDetails;
 	friend class UFlowGraphSchema;
-
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Flow Asset")
+	FOmegaClassNamedLists NamedLists;
+	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override { return NamedLists; };
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	FGuid AssetGuid;
 
@@ -367,23 +374,32 @@ public:
 	FGameplayTag GameplayCategory;
 	UPROPERTY(EditAnywhere, Category="GameplayTags")
 	FGameplayTagContainer GameplayTags;
-
+	UPROPERTY(EditAnywhere, Category="GameplayTags")
+	FGameplayTag MessageCategory;
+	
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
-
+	FGameplayTag GetMessageCategoryTag() const;
 	//--------------------------------------------------------//
 	// TRAITS
 	//--------------------------------------------------------//
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
 	TArray<UFlowAssetTrait*> Traits;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Misc")
+	TArray<UFlowAssetTrait_Collection*> Trait_Collections;
+	TArray<UFlowAssetTrait*> L_GetTraits() const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Bindings")
 	TMap<UPrimaryDataAsset*,UOmegaActorSelector*> ActorBindings_ByAsset;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Bindings")
 	TMap<FName,UOmegaActorSelector*> ActorBindings_ByName;
 
 	UFUNCTION(BlueprintPure,Category="FlowAsset") AActor* GetActorByBinding_Asset(UPrimaryDataAsset* Asset,bool bFallbackToFirstIdentity);
 	UFUNCTION(BlueprintPure,Category="FlowAsset") AActor* GetActorByBinding_Name(FName Name);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Bindings")
+	TArray<FName> LocalParams;
 	
 	//--------------------------------------------------------//
 	// NOTIFY

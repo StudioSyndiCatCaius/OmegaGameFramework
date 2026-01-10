@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "GameplayTagContainer.h"
 #include "Engine/DeveloperSettings.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Templates/SubclassOf.h"
@@ -18,7 +19,8 @@ class UFlowSettings final : public UDeveloperSettings
 	GENERATED_UCLASS_BODY()
 
 	static UFlowSettings* Get() { return CastChecked<UFlowSettings>(UFlowSettings::StaticClass()->GetDefaultObject()); }
-
+	UPROPERTY(Config, EditAnywhere, Category = "Flow")
+	FGameplayTag DefaultMessageCategory=FGameplayTag::RequestGameplayTag("Message.Dialog");
 	// Set if to False, if you don't want to create client-side Flow Graphs
 	// And you don't access to the Flow Component registry on clients
 	UPROPERTY(Config, EditAnywhere, Category = "Networking")

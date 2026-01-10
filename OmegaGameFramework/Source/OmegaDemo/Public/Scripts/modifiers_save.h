@@ -25,23 +25,23 @@ public:
 		{
 			for(auto& p : params_int)
 			{
-				Save->SetSaveProperty_Int(p.Key.ToString(),p.Value);
+				Save->Prop_int.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_float)
 			{
-				Save->SetSaveProperty_Float(p.Key.ToString(),p.Value);
+				Save->Prop_float.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_bool)
 			{
-				Save->SetSaveProperty_Bool(p.Key.ToString(),p.Value);
+				Save->Prop_bool.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_string)
 			{
-				Save->SetSaveProperty_String(p.Key.ToString(),p.Value);
+				Save->Prop_string.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_asset)
 			{
-				Save->SetSaveProperty_Asset(p.Key.ToString(),p.Value.LoadSynchronous());
+				Save->Prop_Asset.Add(p.Key,p.Value.LoadSynchronous());
 			}
 		}
 		return true;
@@ -65,7 +65,7 @@ public:
 			{
 				if(UPrimaryDataAsset* a=Selector->Get_DataAsset(subsystem))
 				{
-					Save->SetSaveProperty_Asset(ParamName.ToString(),a);
+					Save->Prop_Asset.Add(ParamName,a);
 				}
 			}
 		}
@@ -110,7 +110,7 @@ public:
 			}
 			for(auto* a: BulkAdd_Tags_List)
 			{
-				subsystem->SetSaveTagsOnDataAsset(a,BulkAdd_Tags,false,bGlobal);
+				subsystem->SetSaveTagsOnDataAsset(a,BulkAdd_Tags,true,bGlobal);
 			}
 		}
 		return true;
@@ -127,13 +127,19 @@ public:
 	FGameplayTagContainer SaveTags_Added;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Save")
 	FGameplayTagContainer SaveTags_Removed;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Save")
+	FGameplayTag StoryState;
 	
 	virtual bool Modify_Save_Implementation(UOmegaSaveBase* Save, UOmegaSaveSubsystem* subsystem, bool bGlobal) const override
 	{
 		if(Save && subsystem)
 		{
-			Save->StoryTags.RemoveTags(SaveTags_Removed);
-			Save->StoryTags.AppendTags(SaveTags_Added);
+			subsystem->AddStoryTags(SaveTags_Added,bGlobal);
+			subsystem->RemoveStoryTags(SaveTags_Removed,bGlobal);
+		}
+		if(StoryState.IsValid())
+		{
+			subsystem->SetStoryState(StoryState,bGlobal);
 		}
 		return true;
 	};

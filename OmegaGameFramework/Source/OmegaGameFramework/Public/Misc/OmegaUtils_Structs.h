@@ -230,12 +230,26 @@ struct FOmegaEntityDataset
 };
 
 USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaEntityID
+{
+	GENERATED_BODY()
+	/*
+	 * 0 = Data Asset
+	 * 1 = Name
+	 * 3 = GUID
+	 **/
+    UPROPERTY() uint8 entity_type;
+    UPROPERTY() FString entity_string;
+};
+
+USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaEntity
 {
 	GENERATED_BODY()
 	UPROPERTY() TMap<int8,int8> internal_flags;
 	UPROPERTY() FTransform Transform;
 	
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars",meta=(Bitmask)) int32 BitFlags;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FGameplayTagContainer Tags;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TArray<FName> Tags_Named;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FJsonObjectWrapper JsonData;
@@ -247,6 +261,7 @@ struct FOmegaEntity
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,int32> params_int32;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,float> params_float;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FString> params_string;
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FOmegaList_DataAsset> AssetList_Named;
 	

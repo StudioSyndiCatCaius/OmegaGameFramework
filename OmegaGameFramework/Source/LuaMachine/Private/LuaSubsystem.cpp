@@ -11,22 +11,16 @@
 
 void ULuaSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	settings_ref = GetMutableDefault<ULuaSettings>();
-	if(settings_ref->bAutorunFiles)
-	{
-		RunLocalFile(settings_ref->Autorun_InitFile,false);
-	}
 
-	for(TSoftObjectPtr<ULuaCode> temp_asset: settings_ref->AutorunCodeAssets)
-	{
-		ULuaBlueprintFunctionLibrary::LuaRunCodeAsset(GetWorld(),ULuaBlueprintFunctionLibrary::GetDefaultLuaState(),temp_asset.LoadSynchronous());
-	}
 	Super::Initialize(Collection);
 }
 
 FString ULuaSubsystem::GetLocalFilesPath()
 {
-	return UKismetSystemLibrary::GetProjectContentDirectory()+settings_ref->Autorun_ContentPath+"/";
+	FString A=UKismetSystemLibrary::GetProjectContentDirectory();
+	FString B=A+GetMutableDefault<ULuaSettings>()->Autorun_ContentPath;
+	FString C=B+"/";
+	return C;
 }
 
 FLuaValue ULuaSubsystem::RunLocalFile(const FString& file, bool bNonLocal)
@@ -37,7 +31,6 @@ FLuaValue ULuaSubsystem::RunLocalFile(const FString& file, bool bNonLocal)
 	{
 		target_path=file;
 	}
-	UE_LOG(LogTemp, Log, TEXT("Tried to autorun Luafile: %s"), *target_path);
 	return ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(GetWorld(),ULuaBlueprintFunctionLibrary::GetDefaultLuaState(),target_path,true);
 }
 
@@ -71,8 +64,90 @@ void ULuaSubsystem::RunLocalFilesInPath(const FString& path, bool bRecursive,boo
 	}
 }
 
+
+
+void GetAllLuaFiles(const FString& Directory, TArray<FString>& OutFiles)
+{
+	IFileManager& FileManager = IFileManager::Get();
+    
+	// Search pattern for .lua files
+	FString SearchPattern = Directory / TEXT("*.lua");
+    
+	// Find all .lua files in the current directory
+	TArray<FString> FoundFiles;
+	FileManager.FindFiles(FoundFiles, *SearchPattern, true, false);
+    
+	// Add full paths to output array
+	for (const FString& File : FoundFiles)
+	{
+		OutFiles.Add(Directory / File);
+	}
+    
+	// Find all subdirectories
+	TArray<FString> SubDirectories;
+	FileManager.FindFiles(SubDirectories, *(Directory / TEXT("*")), false, true);
+    
+	// Recursively search subdirectories
+	for (const FString& SubDir : SubDirectories)
+	{
+		GetAllLuaFiles(Directory / SubDir, OutFiles);
+	}
+}
+
+
+// =====================================================================================================================
+// ENGINE SUBSYSTEM
+// =====================================================================================================================
+
+void ULuaEngineSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+}
+
+// =====================================================================================================================
+// WORLD SUBSYSTEM
+// =====================================================================================================================
+
+void ULuaWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	RerunLua();
+}
+
+TArray<FName> ULuaWorldSubsystem::GetGlobalKeys(FString global)
+{
+	TArray<FName> out;
+	FLuaValue _v=ULuaBlueprintFunctionLibrary::LuaGetGlobal(this,nullptr,global);
+	TArray<FLuaValue> _list=ULuaBlueprintFunctionLibrary::LuaTableGetKeys(_v);
+	for(FLuaValue val : _list)
+	{
+		if(val.Type==ELuaValueType::String)
+		{
+			out.Add(*val.ToString());
+		}
+	}
+	// Sort alphabetically (case-insensitive)
+	out.Sort([](const FName& A, const FName& B)
+	{
+		return A.ToString() < B.ToString();
+	});
+	return out;
+}
+
+void ULuaWorldSubsystem::RerunLua()
+{
+	FString _path=FPaths::ProjectDir()+"/Override/autorun/";
+	TArray<FString> _outFiles;
+	GetAllLuaFiles(_path,_outFiles);
+	for(FString i : _outFiles)
+	{
+		ULuaBlueprintFunctionLibrary::LuaRunFile(this,nullptr,i,true);
+	}
+}
+
+
 ULuaObject* ULuaGlobalObjectFunctions::GetGlobalLuaObject_FromTag(UObject* WorldContextObject, FGameplayTag name,
-	TSubclassOf<ULuaState> State)
+                                                                  TSubclassOf<ULuaState> State)
 {
 	return  GetGlobalLuaObject_FromString(WorldContextObject,name.ToString(),State);
 }

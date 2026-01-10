@@ -64,7 +64,7 @@ TArray<FOmegaAttributeModifier> UOAsset_CommonEquipment::GetModifierValues_Imple
 }
 
 float UOAsset_CommonEquipment::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+	UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
 	return L_GetCombatMods().GetDamageMods(Attribute,Target,Instigator,BaseDamage,DamageType,Context);
 }

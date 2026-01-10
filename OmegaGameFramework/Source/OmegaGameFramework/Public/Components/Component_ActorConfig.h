@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Functions/OmegaFunctions_ComponentMod.h"
+#include "Condition/Condition_Actor.h"
+#include "Functions/F_Component.h"
 #include "Types/Struct_RandomRange.h"
 #include "Component_ActorConfig.generated.h"
 
@@ -43,7 +44,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Actors")
 	TArray<UActorModifierScript*> BeginPlay_Modifiers;
 
-	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable")
+	FOmegaConditions_Actor CanInteract_Target;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable")
+	FOmegaConditions_Actor CanInteract_Instigator;
 };
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))

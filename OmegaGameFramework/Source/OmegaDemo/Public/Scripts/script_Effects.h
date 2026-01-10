@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
+#include "Functions/F_ScriptedEffects.h"
 #include "script_Effects.generated.h"
 
 

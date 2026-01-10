@@ -21,13 +21,18 @@
 class FOmegaEditor : public IModuleInterface
 {
 public:
-
+	TArray<FName> _bitflagTypes;
+	
 	TSharedPtr<FSlateStyleSet> StyleSet;
 
 	EAssetTypeCategories::Type AssetCategory_Omega;
 	EAssetTypeCategories::Type AssetCategory_OmegaDemo;
-
+	FConfigFile ConfigFile;
+	
 	FString GetPluginFilePath(const FString& RelativePath);
+	
+	void RegisterToolbarExtension();
+	void OnButtonClicked();
 	
 	/* Called when the module is loaded */
 	virtual void StartupModule() override;

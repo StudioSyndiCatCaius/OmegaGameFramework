@@ -7,7 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "ScreenWidget.h"
 #include "Components/WidgetSwitcher.h"
-#include "Interfaces/OmegaInterface_Widget.h"
+#include "Interfaces/I_Widget.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Menu.generated.h"
@@ -202,4 +202,15 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Menu|State")
 	int32 GetMenuState() const { return menu_state;};
+};
+
+UINTERFACE(MinimalAPI) class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_MenuSource
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|HUD")
+	TSubclassOf<UMenu> GetMenuClass(FName Name);
 };

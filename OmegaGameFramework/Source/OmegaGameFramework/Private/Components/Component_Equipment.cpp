@@ -2,13 +2,16 @@
 
 
 #include "Components/Component_Equipment.h"
+
+#include "OmegaSettings.h"
+#include "OmegaSettings_Global.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_Inventory.h"
 #include "Condition/Condition_DataAsset.h"
 #include "Engine/DataAsset.h"
 #include "Engine/GameInstance.h"
-#include "Functions/OmegaFunctions_Common.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Functions/F_Common.h"
+#include "Interfaces/I_Common.h"
 
 
 // Sets default values for this component's properties
@@ -62,7 +65,8 @@ TMap<UEquipmentSlot*, UPrimaryDataAsset*> UEquipmentComponent::GetEquipment()
 			out.Append(IDataInterface_EquipmentSource::Execute_GetEquipment(s));
 		}
 	}
-	return Slots;
+	out.Append(GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Append_Equipment(this));
+	return out;
 }
 
 void UEquipmentComponent::SetEquipment(TMap<UEquipmentSlot*, UPrimaryDataAsset*> Equipment)
@@ -80,14 +84,21 @@ void UEquipmentComponent::SetEquipment(TMap<UEquipmentSlot*, UPrimaryDataAsset*>
 	}
 }
 
-
-void UEquipmentComponent::SetEquipment_FromSource(UObject* Source)
+void UEquipmentComponent::SetEquipment_SourceActive(UObject* Source, bool bActiveSource)
 {
-	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_EquipmentSource::StaticClass()))
+	if (Source && Source->GetClass()->ImplementsInterface(UDataInterface_EquipmentSource::StaticClass()))
 	{
-		SetEquipment(IDataInterface_EquipmentSource::Execute_GetEquipment(Source));
+		if(bActiveSource && !Sources.Contains(Source))
+		{
+			Sources.AddUnique(Source);
+		}
+		else if(!bActiveSource && Sources.Contains(Source))
+		{
+			Sources.Remove(Source);
+		}
 	}
 }
+
 
 TArray<UPrimaryDataAsset*> UEquipmentComponent::GetEquippedItems()
 {
@@ -237,10 +248,11 @@ bool UEquipmentComponent::UnequipSlot(UEquipmentSlot* Slot)
 
 UPrimaryDataAsset* UEquipmentComponent::GetEquipmentInSlot(UEquipmentSlot* Slot, bool& bValidItem)
 {
-	if(Slots.FindOrAdd(Slot))
+	TMap<UEquipmentSlot*,UPrimaryDataAsset*> tempEQ=GetEquipment();
+	if(tempEQ.FindOrAdd(Slot))
 	{
 		bValidItem = true;
-		return Slots.FindOrAdd(Slot);
+		return tempEQ.FindOrAdd(Slot);
 	}
 	bValidItem = false;
 	return nullptr;
@@ -283,7 +295,7 @@ TArray<UPrimaryDataAsset*> UEquipmentComponent::GetSkills_Implementation(UCombat
 }
 
 float UEquipmentComponent::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-	UObject* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+	UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
 	if(!bModifyDamage) { return BaseDamage; }
 	

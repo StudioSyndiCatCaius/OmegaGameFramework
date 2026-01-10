@@ -3,7 +3,7 @@
 
 #include "Actors/Actor_ZoneEntityMesh.h"
 
-#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Subsystems/Subsystem_Zone.h"
 
 AZoneEntity_Mesh::AZoneEntity_Mesh()
 {

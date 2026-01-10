@@ -3,18 +3,20 @@
 
 #include "Actors/OmegaGameplaySystem.h"
 #include "Engine/GameInstance.h"
-#include "Functions/OmegaFunctions_Common.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Functions/F_Common.h"
+#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "EnhancedInputSubsystems.h"
+#include "OmegaSettings.h"
+#include "OmegaSettings_Global.h"
 #include "Actors/Actor_Player.h"
 #include "Components/Component_Combatant.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/GeneralDataObject.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
+#include "Subsystems/Subsystem_Actors.h"
 
 void AOmegaBaseSystem::L_CleanupStateChange(bool state)
 {
@@ -50,6 +52,12 @@ AOmegaBaseSystem::AOmegaBaseSystem()
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorHiddenInGame(true);
 	//bIsSpatiallyLoaded = false;
+}
+
+void AOmegaBaseSystem::Native_Activate(UObject* Context, const FString& Flag)
+{
+	GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnGameplaySystem_Activate(this,Context,Flag);
+	SystemActivated(Context, Flag);
 }
 
 // Called when the game starts or when spawned
@@ -332,12 +340,15 @@ void AOmegaBaseSystem::CompleteShutdown()
 			}
 		}
 		local_globalEventTags(GlobalEvents_OnShutdown);
+		GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnGameplaySystem_Shutdown(this);
+		
 		K2_DestroyActor();
 	}
 }
 
 void AOmegaBaseSystem::OutputNotify(UObject* Context, const FString& Flag)
 {
+	GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnGameplaySystem_Notify(this,Context,Flag);
 	OnSystemNotify.Broadcast(Context,Flag);
 }
 

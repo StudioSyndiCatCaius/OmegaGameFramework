@@ -2,10 +2,15 @@
 
 #include "Actors/Actor_InventoryBox.h"
 
+#include "LuaConst.h"
+#include "LuaSubsystem.h"
 #include "Components/Component_ActorConfig.h"
 #include "Components/Component_Inventory.h"
 #include "Components/Component_Saveable.h"
-#include "Functions/OmegaFunctions_Save.h"
+#include "Functions/F_Save.h"
+#include "Misc/OmegaUtils_Methods.h"
+
+
 
 void AOmegaInventoryBox::L_AssetChange(UPrimaryDataAsset* Asset, int32 Amount, bool IsFull)
 {
@@ -42,5 +47,4 @@ AOmegaInventoryBox::AOmegaInventoryBox()
 {
 	Inventory=CreateOptionalDefaultSubobject<UDataAssetCollectionComponent>("Inventory");
 	Inventory->OnAssetAdded.AddDynamic(this,&AOmegaInventoryBox::L_AssetChange);
-	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
 }

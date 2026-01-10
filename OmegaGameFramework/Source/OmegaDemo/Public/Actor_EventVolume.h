@@ -7,8 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "OmegaLinearEventSubsystem.h"
 #include "Actors/Actor_GameplayCue.h"
-#include "Functions/OmegaFunctions_ScriptedTrace.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Functions/F_Trace.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "Actor_EventVolume.generated.h"
 
 class UCombatantComponent;

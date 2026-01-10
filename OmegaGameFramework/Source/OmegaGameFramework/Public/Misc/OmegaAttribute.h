@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Styling/SlateBrush.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "GameplayTagContainer.h"
-#include "Functions/OmegaFunctions_AVContext.h"
+#include "Functions/F_AVContext.h"
 #include "OmegaAttribute.generated.h"
 
 class UCombatantComponent;

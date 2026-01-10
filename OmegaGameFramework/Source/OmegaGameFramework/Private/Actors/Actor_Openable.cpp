@@ -6,7 +6,7 @@
 #include "Components/Component_ActorState.h"
 #include "Components/Component_Inventory.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
 
 void UOmegaOpenableStyle::Apply(AOmegaOpenableActor* Actor)
 {

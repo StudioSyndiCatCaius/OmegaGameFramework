@@ -4,6 +4,11 @@
 
 #include "FlowAsset.h"
 
+TArray<FName> UFlowNode_LocalParam_Check::get_local_params()
+{
+	return GetFlowAsset()->LocalParams;
+}
+
 UFlowNode_LocalParam_Check::UFlowNode_LocalParam_Check()
 {
 	InputPins.Empty();
@@ -40,6 +45,11 @@ FString UFlowNode_LocalParam_Check::GetNodeDescription() const
 }
 #endif
 
+TArray<FName> UFlowNode_LocalParam_If::get_local_params()
+{
+	return GetFlowAsset()->LocalParams;
+}
+
 UFlowNode_LocalParam_If::UFlowNode_LocalParam_If()
 {
 	InputPins.Empty();
@@ -69,6 +79,11 @@ FString UFlowNode_LocalParam_If::GetNodeDescription() const
 	return "if '"+Param.ToString()+" == "+FString::FromInt(CheckedValue);
 }
 #endif
+
+TArray<FName> UFlowNode_LocalParam_Set::get_local_params()
+{
+	return GetFlowAsset()->LocalParams;
+}
 
 UFlowNode_LocalParam_Set::UFlowNode_LocalParam_Set()
 {

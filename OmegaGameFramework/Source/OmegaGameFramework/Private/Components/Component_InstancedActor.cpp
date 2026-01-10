@@ -2,7 +2,7 @@
 
 
 #include "Components/Component_InstancedActor.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 

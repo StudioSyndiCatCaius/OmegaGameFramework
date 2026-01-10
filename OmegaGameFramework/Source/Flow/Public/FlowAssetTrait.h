@@ -35,4 +35,12 @@ public:
 	void NodeOutput(UFlowNode* FlowNode,FName Pin) const;
 };
 
-
+UCLASS()
+class FLOW_API UFlowAssetTrait_Collection : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+public:
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
+	TArray<UFlowAssetTrait*> Traits;
+};

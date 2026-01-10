@@ -1,6 +1,25 @@
 
 #include "NativeGameplayTags.h"
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_BITFLAG,"BITFLAG");
+
+// --------------------------------------------------------------------------------------------------------
+// Skill
+// --------------------------------------------------------------------------------------------------------
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_DA,"Global.DataAsset");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_DAC,"Global.DataAssetClass");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_Attribute,"Global.Attribute");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_EquipSlot,"Global.EquipSlot");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_Faction,"Global.Faction");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_Menu,"Global.Menu");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_HUD,"Global.HUD");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_System,"Global.System");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Global_Ability,"Global.Ability");
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_GlobalList_DA,"Global.List.DataAsset");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_GlobalList_Anim,"Global.List.Animation");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_GlobalList_Sound,"Global.List.Sound");
+
 // --------------------------------------------------------------------------------------------------------
 // Attribute
 // --------------------------------------------------------------------------------------------------------
@@ -292,6 +311,7 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Quest_Type_Side,"Quest.Type.Side");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Quest_Type_Hunt,"Quest.Type.Hunt");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Exploration,"System.Exploration");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_SubExplore,"System.SubExplore");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Combat,"System.Combat");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Menu,"System.Menu");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_System_Pause,"System.Pause");

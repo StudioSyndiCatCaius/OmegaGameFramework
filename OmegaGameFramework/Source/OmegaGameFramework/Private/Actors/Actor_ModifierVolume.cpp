@@ -6,7 +6,7 @@
 #include "Actors/Actor_ModifierVolume.h"
 
 #include "Condition/Condition_Actor.h"
-#include "Functions/OmegaFunctions_Actor.h"
+#include "Functions/F_Actor.h"
 
 void AActor_ModifierVolume::L_RunModifier()
 {

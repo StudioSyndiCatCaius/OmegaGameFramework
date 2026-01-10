@@ -15,7 +15,7 @@
 #include "Async/TaskGraphInterfaces.h"
 #include "Components/AudioComponent.h"
 #include "Engine/World.h"
-#include "Subsystems/OmegaSubsystem_BGM.h"
+#include "Subsystems/Subsystem_BGM.h"
 
 
 class UOmegaBGMSubsystem;
