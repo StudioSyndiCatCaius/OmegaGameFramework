@@ -58,7 +58,7 @@ public:
 	virtual void L_CleanupStateChange(bool state);
 	virtual TArray<APlayerController*> L_GetPlayers();
 protected:
-	
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
@@ -132,6 +132,16 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Events")
 	void OnActor_Interaction(AActor* InteractInstigator, AActor* Target, FGameplayTag Tag, FOmegaCommonMeta Context);
 	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta Meta);
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGameplayStateChange(FGameplayTag NewState);
+
+	UFUNCTION(BlueprintImplementableEvent,Category="Save")
+	void OnNewGameStarted(UOmegaSaveGame* NewSave, FGameplayTagContainer GameplayTags);
+	
+	
 	UFUNCTION(BlueprintNativeEvent, DisplayName="On Activated")
 	void SystemActivated(class UObject* Context, const FString& Flag);
 	
@@ -155,13 +165,6 @@ public:
 	//Shutdown and restart the system
 	UFUNCTION(BlueprintCallable, Category="Omega|GameplaySystem", meta=(AdvancedDisplay="Context,Flag"))
 	void Restart(UObject* Context, FString Flag);
-	
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnGameplayStateChange(FGameplayTag NewState);
-
-	UFUNCTION(BlueprintImplementableEvent,Category="Save")
-	void OnNewGameStarted(UOmegaSaveGame* NewSave, FGameplayTagContainer GameplayTags);
 	
 	UFUNCTION(BlueprintPure,Category="Omega|Systems")
 	virtual AOmegaPlayer* GetSystemOwningPlayer() const;

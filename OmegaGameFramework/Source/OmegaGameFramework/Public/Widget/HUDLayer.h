@@ -25,6 +25,7 @@ private:
 	bool bRemoving;
 
 public:
+
 	virtual void NativeConstruct() override;
 	
 	virtual void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
@@ -55,6 +56,8 @@ public:
 	
 	UFUNCTION() void Local_BindGlobalEvent();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnActorTaggedTargetChanged(AActor* Instigator, FGameplayTag Tag, AActor* Target, bool bRegsitered);
 	UFUNCTION(BlueprintNativeEvent)
 	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
 	UFUNCTION(BlueprintImplementableEvent)

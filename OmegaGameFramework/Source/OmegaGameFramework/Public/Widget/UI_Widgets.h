@@ -144,7 +144,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaProgressBar : public UProgressBar
 	UOmegaSlateStyle_ProgressBar* L_GetStyle() const;
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style")  bool UseDefaultStyle;
-	UPROPERTY(EditAnywhere,Category="Style",meta=(EditCondition = "UseDefaultStyle"))  UOmegaSlateStyle_ProgressBar* StyleAsset;
+	UPROPERTY(EditAnywhere,Category="Style",meta=(EditCondition = "!UseDefaultStyle"))  UOmegaSlateStyle_ProgressBar* StyleAsset;
 	virtual void OnWidgetRebuilt() override;
 	
 	UFUNCTION(BlueprintCallable, Category="Widget")

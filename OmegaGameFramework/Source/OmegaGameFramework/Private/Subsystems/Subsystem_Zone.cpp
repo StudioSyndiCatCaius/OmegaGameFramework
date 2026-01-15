@@ -51,12 +51,9 @@ void UZoneEntityComponent::BeginPlay()
 	{
 		inClass=LegendAsset->DefaultDisplayActor;
 	}
-	else if(UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+	if(TSubclassOf<AZoneEntityDisplayActor> tempClass = GetMutableDefault<UOmegaSettings>()->DefaultZoneEntityDisplayActor.LoadSynchronous())
 	{
-		if(TSubclassOf<AZoneEntityDisplayActor> tempClass = GetMutableDefault<UOmegaSettings>()->DefaultZoneEntityDisplayActor.LoadSynchronous())
-		{
-			inClass=tempClass;
-		}
+		inClass=tempClass;
 	}
 	if(inClass)
 	{
@@ -236,19 +233,6 @@ void AZoneEntityViewCamera::ClearAllViewFilterActors()
 	L_RefreshView();
 }
 
-UOmegaSettings_Gameplay* UOmegaZoneSubsystem::L_GetSettings()
-{
-	if(settings_gameplay)
-	{
-		return settings_gameplay;
-	}
-	if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
-	{
-		settings_gameplay=set;
-		return  settings_gameplay;
-	}
-	return GetMutableDefault<UOmegaSettings_Gameplay>();
-}
 
 
 // =============================================================================================================

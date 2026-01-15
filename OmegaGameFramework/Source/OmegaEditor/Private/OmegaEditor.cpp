@@ -21,6 +21,7 @@
 #include "Customization_OmegaLinearChoices.h"
 #include "Customization_Bitflags.h"
 #include "OmegaObjectCustomization.h"
+#include "OmegaPropertyHidingCustomization.h"
 #include "OmegaSettings.h"
 #include "OmegaSettings_Global.h"
 #include "Actors/Actor_Ability.h"
@@ -275,10 +276,14 @@ void FOmegaEditor::StartupModule()
 		UObject::StaticClass()->GetFName(),
 		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaObjectCustomization::MakeInstance)
 	);
+	
+	PropertyModule.RegisterCustomClassLayout(
+		UObject::StaticClass()->GetFName(),
+		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaPropertyHidingCustomization::MakeInstance)
+	);
+	
 
-	// Bind to command events
-	//UOmegaEditorSettings::Get()->OnCommandEvent.AddRaw(this, &FYourEditorModule::OnCommandExecuted);
-
+	PropertyModule.NotifyCustomizationModuleChanged();
 	
 }
 

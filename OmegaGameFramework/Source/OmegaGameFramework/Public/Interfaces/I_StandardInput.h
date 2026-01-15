@@ -15,15 +15,17 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_StandardInput
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable,Category="ΩI|Input",DisplayName="Input - On Move")
-	void OnReceiveInput_Movement(FVector2D Value, APlayerController* Controller);
-	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="ΩI|Input",DisplayName="Input - On Control")
-	void OnReceiveInput_Control(FVector2D Value, APlayerController* Controller);
-
-	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Input",DisplayName="Input - On Page Int")
-	void OnReceiveInput_PageShoulder(int32 Value, bool bActive, APlayerController* Controller);
-	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Input",DisplayName="Input - On Page Float")
-	void OnReceiveInput_PageTrigger(float Value, bool bActive, APlayerController* Controller);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable,Category="ΩI|Input",DisplayName="Input - On Vector2D")
+	void OnReceiveInput_Vector2D(FVector2D Value, APlayerController* Controller, int32 InputIndex);
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Input",DisplayName="Input - on Int")
+	void OnReceiveInput_Int(int32 Value, APlayerController* Controller, int32 InputIndex);
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Input",DisplayName="Input - On Float")
+	void OnReceiveInput_Float(float Value, APlayerController* Controller, int32 InputIndex);
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Input",DisplayName="Input - On Name")
+	void OnReceiveInput_Named(FName Value, APlayerController* Controller, int32 InputIndex);
 };
 
 

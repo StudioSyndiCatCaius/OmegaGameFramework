@@ -1,4 +1,5 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
+// Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #pragma once
 

@@ -66,6 +66,13 @@ TArray<FName> UOmegaFunctions_Asset::nameOptions_HUD()
     return out;
 }
 
+TArray<FName> UOmegaFunctions_Asset::nameOptions_List_Asset()
+{
+    TArray<FName> out;
+    GetMutableDefault<UOmegaAssetSettings>()->NamedList_DataAssets.GetKeys(out);
+    return out;
+}
+
 UClass* UOmegaFunctions_Asset::GetClassByName(const FString& ClassName, bool& result)
 {
     result=true;
@@ -271,5 +278,10 @@ TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOmegaFunctions_Asset::ConvNamed_Equip
         out.Add(GetNamed_EquipSlot(Name),In[Name]);
     }
     return out;
+}
+
+TArray<UPrimaryDataAsset*> UOmegaFunctions_Asset::GetNamedList_DataAsset(FName Name)
+{
+    return GetMutableDefault<UOmegaAssetSettings>()->NamedList_DataAssets.FindOrAdd(Name).GetAssets();
 }
 

@@ -212,12 +212,9 @@ UOmegaSlateStyle_Text* UOmegaTextBlock::L_GetStyle() const
 {
 	if(bUseDefaultStyle)
 	{
-		if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
+		if (UOmegaSlateStyle_Text* _style= GetMutableDefault<UOmegaStyleSettings>()->Styled_Text.FindOrAdd(DefaultStyleToUse).LoadSynchronous())
 		{
-			if(set->Styled_Text.Contains(DefaultStyleToUse))
-			{
-				return set->Styled_Text[DefaultStyleToUse].LoadSynchronous();
-			}
+			return _style;
 		}
 	}
 	if(StyleAsset) { return StyleAsset; } return nullptr;

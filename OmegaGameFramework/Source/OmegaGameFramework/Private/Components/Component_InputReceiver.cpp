@@ -4,6 +4,7 @@
 #include "Components/Component_InputReceiver.h"
 
 #include "InputMappingContext.h"
+#include "OmegaSettings.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
@@ -84,17 +85,31 @@ bool UInputReceiverComponent::CheckPrerequisiteKeys() const
 	return true;
 }
 
+TMap<FKey, FVector> UInputReceiverComponent::GetKeyValues() const
+{
+	TMap<FKey, FVector> out=GetMutableDefault<UOmegaSettings>()->GetInputActionConfig(InputPresetToUse).KeyInputs;
+	out.Append(Keys);
+	return out;
+}
+
 TArray<FKey> UInputReceiverComponent::GetKeys() const
 {
 	TArray<FKey> out;
-	Keys.GetKeys(out);
+	GetKeyValues().GetKeys(out);
 	return out;
 }
 
 FVector UInputReceiverComponent::GetKey_InputValue(FKey Key)
 {
-	if (Keys.Contains(Key)) { return Keys[Key]; }
+	if (GetKeyValues().Contains(Key)) { return GetKeyValues()[Key]; }
 	return FVector();
+}
+
+TArray<FName> UInputReceiverComponent::L_GetInputNames() const
+{
+	TArray<FName> out;
+	GetMutableDefault<UOmegaSettings>()->GetAllInputActionConfigs().GetKeys(out);
+	return out;
 }
 
 UInputReceiverComponent::UInputReceiverComponent()
@@ -106,7 +121,10 @@ UInputReceiverComponent::UInputReceiverComponent()
 void UInputReceiverComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if (bStartInCooldown)
+	{
+		f_cooldownTime=CooldownTime;
+	}
 	
 	BindToPawn(Cast<APawn>(GetOwner()));
 	if (APawn* playerPawn=UGameplayStatics::GetPlayerPawn(this,GetOwner()->AutoReceiveInput-1))
@@ -123,57 +141,71 @@ void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	cached_dt=DeltaTime;
+	f_cooldownTime=-DeltaTime;
 	
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
 	cached_InputValue=FVector(0,0,0);
 	
-	// Early exit if no valid data
-	if (!CachedPlayerController || Keys.Num() == 0)
+	if (!IsInputInCooldown())
 	{
-		// If input was active but no longer valid, complete it
-		if (bIsInputActive)
+		// Early exit if no valid data
+		if (!CachedPlayerController || Keys.Num() == 0)
 		{
-			bIsInputActive = false;
-			OnInputCompleted.Broadcast(cached_InputValue);
+			// If input was active but no longer valid, complete it
+			if (bIsInputActive)
+			{
+				bIsInputActive = false;
+				OnInputCompleted.Broadcast(cached_InputValue);
+			}
+			return;
 		}
-		return;
-	}
 	
-	//calculate input value from keys down
-	for (FKey Key : GetKeys())
-	{
-		if (CachedPlayerController->IsInputKeyDown(Key))
+		//calculate input value from keys down
+		for (FKey Key : GetKeys())
 		{
-			cached_InputValue+=GetKey_InputValue(Key);
+			if (CachedPlayerController->IsInputKeyDown(Key))
+			{
+				cached_InputValue+=GetKey_InputValue(Key);
+			}
 		}
-	}
 	
-	// Check if input condition is met: Prerequisites AND at least one main key
-	bool bInputConditionMet = CheckPrerequisiteKeys() && CheckKeysPressed();
+		// Check if input condition is met: Prerequisites AND at least one main key
+		bool bInputConditionMet = CheckPrerequisiteKeys() && CheckKeysPressed();
 
-	// Handle state transitions
-	if (bInputConditionMet)
-	{
-		if (!bIsInputActive)
+		// Handle state transitions
+		if (bInputConditionMet)
 		{
-			// Input just started
-			bIsInputActive = true;
-			OnInputStarted.Broadcast(cached_InputValue);
-		}
+			if (!bIsInputActive)
+			{
+				// Input just started
+				bIsInputActive = true;
+				OnInputStarted.Broadcast(cached_InputValue);
+			}
 		
-		// Input is active (continuing or just started)
-		OnInputTriggered.Broadcast(DeltaTime,cached_InputValue);
-	}
-	else
-	{
-		if (bIsInputActive)
+			// Input is active (continuing or just started)
+			OnInputTriggered.Broadcast(DeltaTime,cached_InputValue);
+		}
+		else
 		{
-			// Input just ended
-			bIsInputActive = false;
-			OnInputCompleted.Broadcast(cached_InputValue);
+			if (bIsInputActive)
+			{
+				// Input just ended
+				bIsInputActive = false;
+				OnInputCompleted.Broadcast(cached_InputValue);
+				f_cooldownTime=CooldownTime;
+			}
 		}
 	}
+}
+
+bool UInputReceiverComponent::IsInputInCooldown() const
+{
+	if (f_cooldownTime<=0.0)
+	{
+		return false;
+	}
+	return true;
 }
 
 void UInputReceiverComponent::OverrideInputOwner(AActor* NewOwner)

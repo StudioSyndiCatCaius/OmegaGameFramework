@@ -210,6 +210,17 @@ public:
 // Attribute Set
 // ==================================================================================================================
 
+USTRUCT(BlueprintType)
+struct FOmegaAttributeSetOverride
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute") bool bOverrideMax;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute",meta=(EditCondition="bOverrideMax")) float MaxOverride;
+	
+};
+
+
 UCLASS(BlueprintType, Blueprintable)
 class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
 {
@@ -220,20 +231,18 @@ public:
 	TArray<UOmegaAttributeSet*> InheritedSets;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
-	TArray<class UOmegaAttribute*> Attributes;
+	TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> Attributes;
 
 	UPROPERTY()
 	FGameplayTag ValueCategory;
 
-	UFUNCTION(BlueprintPure, Category="Attributes")
-	TArray<UOmegaAttribute*> GetAllAttributes();
-	UFUNCTION(BlueprintPure, Category="Attributes")
-	TArray<UOmegaAttribute*> GetMetricAttributes();
-	UFUNCTION(BlueprintPure, Category="Attributes")
-	TArray<UOmegaAttribute*> GetStaticAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetAllAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetMetricAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetStaticAttributes();
 	
-	UFUNCTION()
-	TArray<UOmegaAttribute*> Local_GetAtt(bool bStatic);
+	UFUNCTION() float GetAttributeMax(UOmegaAttribute* Attribute);
+	UFUNCTION() TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> GetAttributeConfigs();
+	UFUNCTION() TArray<UOmegaAttribute*> Local_GetAtt(bool bStatic);
 };
 
 // This class does not need to be modified.

@@ -19,6 +19,7 @@ class UEquipmentSlot;
 class UOmegaAttribute;
 class UAnimMontage;
 class UAnimSequence;
+class UPrimitiveComponent;
 class ULevelSequence;
 
 USTRUCT(Blueprintable,BlueprintType)
@@ -71,6 +72,8 @@ struct FOmegaActorMeta
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FGameplayTag,AActor*> TaggedTargets;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FGameplayTagContainer Tags;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FString> boundParam;
+	
+	UPROPERTY() TMap<UPrimitiveComponent*,FGameplayTag> tagTarget_componentLinks;
 };
 
 
@@ -142,6 +145,29 @@ struct FOmegaList_DataAsset
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<UPrimaryDataAsset*> List;
 };
+
+
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaList_DataAsset_Soft
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<TSoftObjectPtr<UPrimaryDataAsset>> List;
+	
+	TArray<UPrimaryDataAsset*> GetAssets() const
+	{
+		TArray<UPrimaryDataAsset*>  out;
+		for (auto i : List)
+		{
+			if (UPrimaryDataAsset* asset=i.LoadSynchronous())
+			{
+				out.Add(asset);
+			}
+		}
+		return out;
+	}
+};
+
+
 
 
 USTRUCT(Blueprintable,BlueprintType)

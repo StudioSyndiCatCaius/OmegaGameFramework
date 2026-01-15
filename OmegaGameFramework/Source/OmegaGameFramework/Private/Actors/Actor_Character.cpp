@@ -12,6 +12,7 @@
 #include "DataAssets/DA_ActorModifierCollection.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 
 
@@ -46,6 +47,8 @@ void AOmegaBaseCharacter::OnConstruction(const FTransform& Transform)
 	UKismetSystemLibrary::GetComponentBounds(GetMesh(),bound_origin,bound_ext,bound_rad);
 	// if(BoundsComponent) { BoundsComponent->SetBoxExtent(bound_ext); }
 	RebuildAppearance();
+	
+	OGF_CFG()->OverrideActorLabel(this);
 }
 
 void AOmegaBaseCharacter::BeginPlay()
@@ -87,6 +90,8 @@ AOmegaBaseCharacter::AOmegaBaseCharacter()
 	{
 		//RandomizeSeed();
 	}
+	
+
 }
 
 void AOmegaBaseCharacter::RandomizeSeed()

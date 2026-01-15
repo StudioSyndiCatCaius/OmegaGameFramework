@@ -41,16 +41,6 @@ bool UOmegaActorFunctions::CheckActorCondition(AActor* Actor, FOmegaConditions_A
 	return Conditions.CheckConditions(Actor);
 }
 
-bool UOmegaActorFunctions::CheckIsActorInteractable(AActor* Actor, AActor* Instigator,FGameplayTag Tag,FOmegaCommonMeta meta, bool& Result)
-{
-	Result=false;
-	if(Actor)
-	{
-		Result=Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->CanInteract(Instigator,Actor,Tag,meta);
-	}
-	return Result;
-}
-
 bool UOmegaActorFunctions::IsActorPlayer(AActor* Actor, APawn*& Pawn, APlayerController*& Controller, bool& Result)
 {
 	if(Actor)
@@ -318,6 +308,44 @@ void UOmegaActorFunctions::SetActorBoundParam_Bool(AActor* Actor, FName Key, boo
 	{
 		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_bool(Actor,Key,Value);
 	}
+}
+
+AActor* UOmegaActorFunctions::GetActorTagTarget(AActor* Actor, FGameplayTag Tag, bool& Result)
+{
+	if (Actor)
+	{
+		if (AActor* out_target=Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetActorTaggedTarget(Actor,Tag))
+		{
+			Result=true;
+			return out_target;
+		}
+	}
+	Result=false;
+	return nullptr;
+}
+
+
+void UOmegaActorFunctions::SetActorTagTarget(AActor* Actor, FGameplayTag Tag, AActor* Target)
+{
+	Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetActorTaggedTarget(Actor,Tag,Target);
+}
+
+
+bool UOmegaActorFunctions::CheckIsActorInteractable(AActor* Actor, AActor* Instigator,FGameplayTag Tag,FOmegaCommonMeta meta, bool& Result)
+{
+	Result=false;
+	if(Actor)
+	{
+		Result=Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->CanInteract(Instigator,Actor,Tag,meta);
+	}
+	return Result;
+}
+
+
+void UOmegaActorFunctions::PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag,
+	FOmegaCommonMeta meta)
+{
+	Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->PerformInteraction(Actor,Instigator,Tag,meta);
 }
 
 // =====================================================================================================================

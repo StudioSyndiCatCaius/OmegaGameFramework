@@ -856,7 +856,7 @@ UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObj
 		}
 
 		//If nor world (I.E. Editor) get from settings
-		if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+		for(UOmegaSettings_Gameplay* set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
 		{
 			for(auto* a : set->GetModules())
 			{

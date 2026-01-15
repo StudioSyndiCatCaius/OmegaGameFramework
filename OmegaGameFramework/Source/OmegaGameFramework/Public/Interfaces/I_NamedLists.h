@@ -19,6 +19,9 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_NamedLists
 
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="NamedList")
 	FOmegaClassNamedLists GetClassNamedLists();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="NamedList")
+	TArray<FName> Override_ObjectLists();
 };
 
 UCLASS()

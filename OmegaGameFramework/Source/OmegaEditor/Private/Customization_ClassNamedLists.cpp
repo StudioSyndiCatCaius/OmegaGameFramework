@@ -14,6 +14,7 @@
 #include "Styling/AppStyle.h"
 #include "OmegaSettings.h"
 #include "OmegaSettings_Global.h"
+#include "Interfaces/I_NamedLists.h"
 #include "Types/Struct_CustomNamedList.h"
 
 
@@ -72,7 +73,15 @@ void FCustomization_ClassNamedLists::CustomizeChildren(
     UObject* OuterObject = OuterObjects[0];
 
     // Get the list of ListIDs from settings
-    TArray<FName> Lists=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->CustomList_GetListFromObject(OuterObject);
+    TArray<FName> Lists;
+    if (OuterObject->GetClass()->ImplementsInterface(UDataInterface_NamedLists::StaticClass()))
+    {
+        Lists=IDataInterface_NamedLists::Execute_Override_ObjectLists(OuterObject);
+    }
+    if (Lists.Num() == 0)
+    {
+        GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->CustomList_GetListFromObject(OuterObject);
+    }
 
     // Create a darker background container for all dropdowns
     StructBuilder.AddCustomRow(FText::GetEmpty())

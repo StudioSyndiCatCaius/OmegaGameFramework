@@ -57,7 +57,7 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 			ActivateModuleFromClass(TempModule);
 		}
 	}
-	if(UOmegaSettings_Gameplay* _set=Cast<UOmegaSettings_Gameplay>(GetMutableDefault<UOmegaSettings>()->DefaultSettings_Gameplay.TryLoad()))
+	for(UOmegaSettings_Gameplay* _set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
 	{
 		for(auto* c : _set->GetModules())
 		{

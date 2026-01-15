@@ -4,12 +4,23 @@
 #include "Actors/Actor_Gameplay.h"
 
 #include "LuaBlueprintFunctionLibrary.h"
+#include "OmegaSettings.h"
 #include "Components/BillboardComponent.h"
+#include "Misc/OmegaUtils_Macros.h"
 
 AOmegaGameplayActor::AOmegaGameplayActor()
 {
 	RootBillboard=CreateOptionalDefaultSubobject<UBillboardComponent>("ROOT");
 	RootComponent=RootBillboard;
+	
+	
+
+}
+
+void AOmegaGameplayActor::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	OGF_CFG()->OverrideActorLabel(this);
 }
 
 void AOmegaGameplayActor::BeginPlay()

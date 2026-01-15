@@ -7,15 +7,6 @@
 
 void AFloatingCombatant::OnConstruction(const FTransform& Transform)
 {
-	if(Config)
-	{
-		//ActorConfig->SetConfig(Config);
-	}
-	else if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
-	{
-		//ActorConfig->SetConfig(set->DefaultActorConfig_FloatingCombatant);
-	}
-
 	if(Combatant)
 	{
 		NameText->SetText(UDataInterface_General::GetObjectName(Combatant));

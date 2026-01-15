@@ -8,6 +8,7 @@
 #include "UObject/Object.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "NiagaraSystem.h"
+#include "Types/Struct_InputConfig.h"
 #include "OmegaSettings_Gameplay.generated.h"
 
 class UOmegaFaction;
@@ -79,6 +80,8 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Modules")
 	TArray<UOmegaGameplayModule*> ScriptedModules;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Player")
+	TMap<FName,FOmegaInputConfig> InputActionConfigs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="DataAssets",AdvancedDisplay)
 	TArray<UOmegaDataAssetMetaSettingCollection*> DataAssetSettingCollections;
@@ -107,14 +110,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayStyleFunctions : public UBlueprintFun
 
 public:
 
-	UFUNCTION(BlueprintPure,Category="Omega|Settings", DisplayName="Get OMEGA Settings (Gameplay)")
-	static UOmegaSettings_Gameplay* GetCurrentGameplayStyle();
+	
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay")
-	static bool OmegaGameplayInputCall(APlayerController* Player, const FKey& Key, bool End);
-	
-	UFUNCTION(BlueprintCallable,Category="Omega|Gameplay",meta=(DeterminesOutputType="Class", ExpandBoolAsExecs="Result"))
-	static UOmegaDataAssetMetaSetting* GetDataAssetMetaSetting(UPrimaryDataAsset* DataAsset, TSubclassOf<UOmegaDataAssetMetaSetting> Class, bool& Result);
-	
 };
 

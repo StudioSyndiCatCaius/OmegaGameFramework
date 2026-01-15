@@ -3,6 +3,8 @@
 
 #include "OmegaSettings_Global.h"
 
+#include "Misc/OmegaDamageType.h"
+
 
 bool UOmegaGlobalSettings::FlowNode_CanPlay_Implementation(UObject* Node, FName Input) const
 {
@@ -28,8 +30,15 @@ void UOmegaGlobalSettings::WorldInit(UWorld* World) const
 	OnWorldInit(World);
 }
 
+float UOmegaGlobalSettings::Attribute_GetMaxValue_Implementation(UCombatantComponent* Combatant,
+	UOmegaAttribute* Attribute, int32 AttributeRank, float BaseValue) const
+{
+	return BaseValue;
+}
+
+
 FText UOmegaGlobalSettings::Text_PostGameplayFormat_Implementation(const FText& Text, FGameplayTag Tag,
-	FOmegaCommonMeta meta) const
+                                                                   FOmegaCommonMeta meta) const
 {
 	return Text;
 }

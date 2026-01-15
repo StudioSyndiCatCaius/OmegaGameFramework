@@ -33,10 +33,19 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") void OnGame_LevelStart(UGameInstance* GameInstance, const FString& LevelName) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") void OnWorldInit(UWorld* World) const;
 	
+	UFUNCTION(BlueprintImplementableEvent,Category="Keys") TArray<FName> Object_AppendMetatags(UObject* WorldContext, UObject* Object) const;
+	UFUNCTION(BlueprintImplementableEvent,Category="Keys") FString Object_OverrideSoftProperty(UObject* Object, FName ParamName) const;
+	UFUNCTION(BlueprintImplementableEvent,Category="Keys") FString Object_RunClassCommand(UObject* Object, int32 command) const;
+	UFUNCTION(BlueprintImplementableEvent,Category="Keys") void Object_EditorHideVariables(UObject* Object, TArray<FName>& HiddenProperties, TArray<FName>& HiddenCategories) const;
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="Keys") bool Conditional_Check(UObject* WorldContext, FName conditional) const;
+	
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") void OnSave_Created(UOmegaSaveGame* Save,UGameInstance* GameInstance) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") void OnSave_Started(UOmegaSaveGame* Save,UGameInstance* GameInstance) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") void OnSave_Saved(UOmegaSaveGame* Save,UGameInstance* GameInstance) const;
 	
+	UFUNCTION(BlueprintNativeEvent,Category="Keys") float Attribute_GetMaxValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, int32 AttributeRank, float BaseValue) const;
+
 	UFUNCTION(BlueprintNativeEvent,Category="Keys") FText Text_PreGameplayFormat(const FText& Text, FGameplayTag Tag, FOmegaCommonMeta meta) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Keys") FText Text_PostGameplayFormat(const FText& Text, FGameplayTag Tag, FOmegaCommonMeta meta) const;
 	
@@ -55,9 +64,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent,Category="Keys") bool FlowNode_CanPlay(UObject* Node, FName Input) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") void FlowNode_OnStart(UObject* Node, FName Input) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Keys") TArray<FName> Object_AppendMetatags(UObject* WorldContext, UObject* Object) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Keys") FString Object_OverrideSoftProperty(UObject* Object, FName ParamName) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Keys") FString Object_RunClassCommand(UObject* Object, int32 command) const;
+
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") FOmegaBitmaskEditorData Bitflags_GetByObject(UClass* Object) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Keys") TArray<FName> CustomList_GetOptions(FName ListID) const;

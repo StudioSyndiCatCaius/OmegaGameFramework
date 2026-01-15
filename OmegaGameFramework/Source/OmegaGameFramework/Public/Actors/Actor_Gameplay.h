@@ -23,6 +23,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaGameplayActor : public AActor, public IDataIn
 public:
 
 	AOmegaGameplayActor();
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Gameplay") FOmegaBitflagsBase Flags;

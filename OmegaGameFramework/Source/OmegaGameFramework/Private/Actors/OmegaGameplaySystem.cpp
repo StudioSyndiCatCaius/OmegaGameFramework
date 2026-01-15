@@ -17,6 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/GeneralDataObject.h"
 #include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_Message.h"
 
 void AOmegaBaseSystem::L_CleanupStateChange(bool state)
 {
@@ -82,6 +83,8 @@ void AOmegaBaseSystem::BeginPlay()
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaBaseSystem::OnGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaBaseSystem::OnTaggedGlobalEvent);
 	GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnNewGameStarted.AddDynamic(this, &AOmegaBaseSystem::OnNewGameStarted);
+	GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &AOmegaBaseSystem::OnGameplayMessage);
+	
 	GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>()->SetQueuedDelaySourceRegistered(this,true);
 	
 	if(UOmegaSubsystem_QueueEvents* REF_QuerySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>()) 

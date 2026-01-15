@@ -12,8 +12,10 @@
 #include "MetasoundSource.h"
 #include "UObject/SoftObjectPath.h"
 #include "Interfaces/I_BitFlag.h"
+#include "Types/Struct_InputConfig.h"
 #include "OmegaSettings.generated.h"
 
+class UOmegaSettings_Gameplay;
 class AOmegaAbility;
 class UOmegaFileManagerSettings;
 class UEquipmentSlot;
@@ -125,8 +127,6 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets")
 	TSoftClassPtr<UOmegaGlobalSettings> GlobalSettingsClass;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Gameplay"))
-	FSoftObjectPath DefaultSettings_Gameplay{"/OmegaGameFramework/Settings/Settings_OMEGA_Gameplay.Settings_OMEGA_Gameplay"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Slate"))
 	FSoftObjectPath DefaultSettings_Slate{"/OmegaGameFramework/Settings/Settings_OMEGA_Slate.Settings_OMEGA_Slate"};
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Preferences"),AdvancedDisplay)
@@ -141,11 +141,19 @@ public:
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Settings Assets",AdvancedDisplay)
 	TSoftObjectPtr<UOmegaTextFormater_Collection> DefaultSettings_Text;
 	
+	// ---------------------------------------------------------------------------
+	// Player
+	// ---------------------------------------------------------------------------
+	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Player")
+	TMap<FName,FOmegaInputConfig> InputActionConfigs;
 	
-	//Will automatically scan these directories at startup to try and load and actiavate modules from them. NOTE: This can be a slow process. Try and only set these paths to folders containing GameplayModules.
-	//UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
-	UPROPERTY()
-	TArray<FDirectoryPath> AutoModuleScanPaths;
+	TMap<FName,FOmegaInputConfig> GetAllInputActionConfigs() const;
+	FOmegaInputConfig GetInputActionConfig(FName input_action) const;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
+	TArray<TSoftObjectPtr<UOmegaSettings_Gameplay>> Imported_GameplaySettings;
+	
+	TArray<UOmegaSettings_Gameplay*> GetAllGameplaySettings() const;
 	
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
 	TArray<FSoftClassPath> RegisteredGameplayModules;
@@ -169,6 +177,10 @@ public:
 	//System used by the "Interaction Component" by Tag
 	UPROPERTY(EditAnywhere, config, BlueprintReadOnly,Category = "Systems",DisplayName="⚙️ System - Interaction (By Tag)")
 	TMap<FGameplayTag,TSoftClassPtr<AOmegaGameplaySystem>> System_Interaction_ByTag;
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Settings") TSubclassOf<AOmegaGameplaySystem> GetSystem_FlowAsset() const;
+	UFUNCTION(BlueprintPure, Category="Omega|Settings") TSubclassOf<AOmegaGameplaySystem> GetSystem_Encounter() const;
+	UFUNCTION(BlueprintPure, Category="Omega|Settings") TSubclassOf<AOmegaGameplaySystem> GetSystem_Interact() const;
 	
 	//SAVE
 	UClass* GetOmegaGameSaveClass() const;
@@ -246,7 +258,7 @@ public:
 	// Interaction
 	// ---------------------------------------------------------------------------
 	//Gives unique IDs to Attributes for quick access
-	UPROPERTY(EditAnywhere, config, Category = "Interaction")
+	UPROPERTY(EditAnywhere, config, BlueprintReadOnly, Category = "Interaction")
 	FGameplayTag Default_InteractTag;
 	
 	// ---------------------------------------------------------------------------
@@ -325,7 +337,10 @@ public:
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Editor")
 	TSoftObjectPtr<USkeletalMesh> CharacterMesh_Cinematic = TSoftObjectPtr<ULevelSequence>(FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male_green.SK_MannequinDemo_Male_green")));
 
+	UPROPERTY(Config, EditAnywhere, Category = "Editor")
+	TMap<TSoftClassPtr<AActor>, FString> ActorLabelDefaultOverrides;
 	
+	void OverrideActorLabel(AActor* actor);
 	//########################################################
 	//BitFlags
 	//########################################################
@@ -355,7 +370,8 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 	
-
+	
+	
 };
 
 

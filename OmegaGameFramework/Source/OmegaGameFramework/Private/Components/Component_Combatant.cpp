@@ -744,7 +744,10 @@ void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& C
 //Get Attribute Base Value
 float UCombatantComponent::GetAttributeBaseValue(UOmegaAttribute* Attribute)
 {
-	return Attribute->GetAttributeValue(Level, GetAttributeLevel(Attribute), AttributeValueCategory);
+	int32 attribute_rank=GetAttributeLevel(Attribute);
+	float _baseVal=Attribute->GetAttributeValue(Level, attribute_rank, AttributeValueCategory);
+	_baseVal=OGF_GLOBAL_SETTINGS()->Attribute_GetMaxValue(this,Attribute,attribute_rank,_baseVal);
+	return _baseVal;
 }
 
 bool UCombatantComponent::IsAbilityTagBlocked(FGameplayTagContainer Tags)
@@ -830,17 +833,23 @@ void UCombatantComponent::InitializeAttributes()
 	{
 		float CurrentVal = 0.0f;
 		float DumVal = 0.0f;
-		for (UOmegaAttribute* TempAtt : AttributeSet->Attributes)
+		TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> temp_confg=AttributeSet->GetAttributeConfigs();
+		TArray<UOmegaAttribute*> TempAtts;
+		temp_confg.GetKeys(TempAtts);
+		
+		for (UOmegaAttribute* TempAtt : TempAtts)
 		{
 			if(TempAtt)
 			{
-				if (AttributeLevels.Contains(TempAtt))
+				FOmegaAttributeSetOverride f=temp_confg.FindOrAdd(TempAtt);
+				// if attributeSet overrides max value AND max values is not already overwritten
+				if(f.bOverrideMax && !OverrideMaxAttributes.Contains(TempAtt))
 				{
-					int32 DumRank = 0;
-					DumRank = AttributeLevels[TempAtt];
+					OverrideMaxAttributes.Add(TempAtt,f.MaxOverride);
 				}
+
 				GetAttributeValue(TempAtt, CurrentVal, DumVal);	
-				//DumVal = GetAttributeBaseValue(TempAtt);
+
 				if(!TempAtt->bIsValueStatic)
 				{
 					CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);	

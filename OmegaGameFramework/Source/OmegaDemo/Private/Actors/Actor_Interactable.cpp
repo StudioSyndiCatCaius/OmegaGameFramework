@@ -143,21 +143,18 @@ void AOmegaInteractable::OnInteraction_Implementation(AActor* InteractInstigator
 	{
 		if(pawn->IsPlayerControlled())
 		{
-			if(UOmegaSettings_Gameplay* set=UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
+			FGameplayTag _targetType=OGF_CFG()->Default_InteractTag;
+			if (RequiredInteractType.IsValid())
 			{
-				FGameplayTag _targetType=OGF_CFG()->Default_InteractTag;
-				if (RequiredInteractType.IsValid())
+				_targetType=RequiredInteractType;
+			}
+			if (Tag==_targetType)
+			{
+				if (Oneshot && !Saveable->GetSaveParam_Bool("dead"))
 				{
-					_targetType=RequiredInteractType;
-				}
-				if (Tag==_targetType)
-				{
-					if (Oneshot && !Saveable->GetSaveParam_Bool("dead"))
-					{
-						Saveable->SetSaveParam_Bool("dead",true);
-						SetActorEnableCollision(false);
-						SetActorHiddenInGame(true);
-					}
+					Saveable->SetSaveParam_Bool("dead",true);
+					SetActorEnableCollision(false);
+					SetActorHiddenInGame(true);
 				}
 			}
 			

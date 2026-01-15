@@ -67,6 +67,13 @@ public:
 	void SetAParam_int(AActor* a, FName key, int32 def);
 	void SetAParam_bool(AActor* a, FName key, bool def);
 	
+	UFUNCTION()
+	void OnCompBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnCompEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION()
+	void LinkComponentToTagTarget(UPrimitiveComponent* Component, AActor* Actor, FGameplayTag Tag, bool bLinked);
+	
 	UPROPERTY(BlueprintAssignable) FOnActorInteraction OnActorInteraction;
 	UPROPERTY(BlueprintAssignable) FOnActorTaggedTargetChange OnActorTaggedTargetChange;
 	UPROPERTY(BlueprintAssignable) FOnActorTagEvent OnActorTagEvent;

@@ -30,6 +30,7 @@ public:
 	UFUNCTION() static TArray<FName> nameOptions_Menu();
 	UFUNCTION() static TArray<FName> nameOptions_HUD();
 	
+	UFUNCTION() static TArray<FName> nameOptions_List_Asset();
 	
 	/**
 	 * Get a UClass by its name (e.g., "Actor", "Character", "MyCustomClass")
@@ -73,8 +74,12 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|Asset",meta=(AdvancedDisplay="Fallback"))
 	static TSubclassOf<UHUDLayer> GetNamed_HUD(UPARAM(meta = (GetOptions = "nameOptions_HUD")) FName Name, TSubclassOf<UHUDLayer> Fallback=nullptr);
-	
 		
 	UFUNCTION(BlueprintPure, Category = "Omega|Asset")
 	static TMap<UEquipmentSlot*, UPrimaryDataAsset*> ConvNamed_Equipment(TMap<FName, UPrimaryDataAsset*> In);
+	
+		
+	UFUNCTION(BlueprintPure, Category = "Omega|Asset")
+	static TArray<UPrimaryDataAsset*> GetNamedList_DataAsset(UPARAM(meta = (GetOptions = "nameOptions_List_Asset")) FName Name);
+	
 };

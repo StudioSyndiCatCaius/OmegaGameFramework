@@ -55,7 +55,7 @@ void UDataWidgetBase_Combatant::Native_OnRefreshed(UObject* SourceAsset, UObject
 		if(REF_combatant)
 		{
 			GetDataList_Attributes()->ClearList();
-			for (UOmegaAttribute* temp_att : REF_combatant->AttributeSet->Attributes)
+			for (UOmegaAttribute* temp_att : REF_combatant->AttributeSet->GetAllAttributes())
 			{
 				GetDataList_Attributes()->AddAssetToList(temp_att,"");
 			}

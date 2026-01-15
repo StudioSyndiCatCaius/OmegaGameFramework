@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "UObject/Object.h"
 #include "OmegaSettings_Assets.generated.h"
 
@@ -20,6 +21,7 @@ class UOAsset_Appearance;
 class UOmegaFaction;
 class UNiagaraSystem;
 class ULevelSequence;
+
 
 UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Omega: Asset"))
 class OMEGAGAMEFRAMEWORK_API UOmegaAssetSettings : public UDeveloperSettings
@@ -55,5 +57,10 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Named Classes")
 	TMap<FName, TSoftClassPtr<UHUDLayer>> Named_HUDLayers;
 	
+	// ---------------------------------------------------------------------------
+	// Named Lists
+	// ---------------------------------------------------------------------------
+	UPROPERTY(EditAnywhere, config, Category = "Named Lists")
+	TMap<FName, FOmegaList_DataAsset_Soft> NamedList_DataAssets;
 };
 

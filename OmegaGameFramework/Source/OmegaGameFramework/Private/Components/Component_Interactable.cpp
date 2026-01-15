@@ -20,9 +20,12 @@ TSubclassOf<AOmegaGameplaySystem> UOmegaComponent_Interactable::GetContext_Syste
 	{
 		return set->System_Interaction_ByTag[Tag].LoadSynchronous();
 	}
-	if (Tag==set->Default_InteractTag && set->System_Interaction.IsValid())
+	if (Tag==set->Default_InteractTag)
 	{
-		return set->System_Interaction.LoadSynchronous();
+		if (TSubclassOf<AOmegaGameplaySystem> sys=set->System_Interaction.LoadSynchronous())
+		{
+			return sys;
+		}
 	}
 	
 	return nullptr;

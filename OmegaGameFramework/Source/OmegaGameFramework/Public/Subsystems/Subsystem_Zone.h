@@ -171,7 +171,6 @@ UCLASS(DisplayName="Omega Subsystem: Zones")
 class OMEGAGAMEFRAMEWORK_API UOmegaZoneSubsystem : public UWorldSubsystem, public FTickableGameObject
 {
 	UPROPERTY() UOmegaSettings_Gameplay* settings_gameplay;
-	UOmegaSettings_Gameplay* L_GetSettings();
 	
 	GENERATED_BODY()
 

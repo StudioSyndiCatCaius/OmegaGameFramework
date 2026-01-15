@@ -61,6 +61,37 @@ void UOmegaActorSubsystem::SetAParam_bool(AActor* a, FName key, bool def)
 }
 
 
+void UOmegaActorSubsystem::OnCompBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	
+}
+
+void UOmegaActorSubsystem::OnCompEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	
+}
+
+void UOmegaActorSubsystem::LinkComponentToTagTarget(UPrimitiveComponent* Component, AActor* Actor, FGameplayTag Tag, bool bLinked)
+{
+	if (Component && Actor)
+	{
+		if (bLinked)
+		{
+			Component->OnComponentBeginOverlap.AddDynamic(this, &UOmegaActorSubsystem::OnCompBeginOverlap);
+			Component->OnComponentEndOverlap.AddDynamic(this, &UOmegaActorSubsystem::OnCompEndOverlap);	
+		}
+		else
+		{
+			Component->OnComponentBeginOverlap.RemoveDynamic(this, &UOmegaActorSubsystem::OnCompBeginOverlap);
+			Component->OnComponentEndOverlap.RemoveDynamic(this, &UOmegaActorSubsystem::OnCompEndOverlap);	
+		}
+		
+	}
+}
+
+
 void UOmegaActorSubsystem::local_RegisterActorIdComp(UActorIdentityComponent* Component, bool bIsRegister)
 {
 	if(Component)

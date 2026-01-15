@@ -33,9 +33,6 @@ public:
 	static bool CheckActorCondition(AActor* Actor, FOmegaConditions_Actor Conditions);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(ExpandBoolAsExecs="Result"))
-	static bool CheckIsActorInteractable(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta, bool& Result);
-	
-	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(ExpandBoolAsExecs="Result"))
 	static bool IsActorPlayer(AActor* Actor, APawn*& Pawn, APlayerController*& Controller, bool& Result);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor")
@@ -86,6 +83,29 @@ public:
 	static void SetActorBoundParam_Int32(AActor* Actor, FName Key, int32 Value);
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor|BoundParam",DisplayName="Actor - Set Bounrd Param (Bool)")
 	static void SetActorBoundParam_Bool(AActor* Actor, FName Key, bool Value);
+	
+	// =====================================================================================================================
+	// Interact
+	// =====================================================================================================================
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget",meta=(ExpandBoolAsExecs="Result"))
+	static AActor* GetActorTagTarget(AActor* Actor, FGameplayTag Tag, bool& Result);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget")
+	static void SetActorTagTarget(AActor* Actor, FGameplayTag Tag, AActor* Target);
+	
+	//UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget")
+	//static void LinkComponentOverlapToTagTarget(UPrimitiveComponent* Component, AActor* Actor, FGameplayTag Tag);
+	
+	
+	// =====================================================================================================================
+	// Interact
+	// =====================================================================================================================
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",meta=(ExpandBoolAsExecs="Result"),DisplayName="Actor - Is Interactable?")
+	static bool CheckIsActorInteractable(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta, bool& Result);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",DisplayName="Actor - Perform Interaction")
+	static void PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta);
+	
 };
 
 // =====================================================================================================================

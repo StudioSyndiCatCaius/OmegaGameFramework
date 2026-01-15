@@ -51,8 +51,13 @@ class OMEGAGAMEFRAMEWORK_API UInputReceiverComponent : public UActorComponent
 	APlayerController* GetContextPlayer();
 	bool CheckKeysPressed() const;
 	bool CheckPrerequisiteKeys() const;
+	
+	TMap<FKey,FVector> GetKeyValues() const;
 	TArray<FKey> GetKeys() const;
 	FVector GetKey_InputValue(FKey Key);
+	
+	UFUNCTION()
+	TArray<FName> L_GetInputNames() const;
 	
 public:	
 	UInputReceiverComponent();
@@ -65,12 +70,24 @@ public:
 	UPROPERTY(BlueprintAssignable, DisplayName="Input End") FOnInputReceiverDelegate OnInputCompleted;
 	
 	// At least ONE of these keys must be pressed to trigger input
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input",meta=(GetOptions="L_GetInputNames"))
+	FName InputPresetToUse;
+	
+	// At least ONE of these keys must be pressed to trigger input
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")
 	TMap<FKey,FVector> Keys;
 
 	// ALL of these keys must be held down for input to trigger (e.g., modifier keys like Ctrl, Shift)
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")
 	TArray<FKey> PrerequisiteKeys;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")
+    float CooldownTime;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")
+	bool bStartInCooldown;
+	
+	float f_cooldownTime;
+	bool IsInputInCooldown() const;
 	
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void OverrideInputOwner(AActor* NewOwner);

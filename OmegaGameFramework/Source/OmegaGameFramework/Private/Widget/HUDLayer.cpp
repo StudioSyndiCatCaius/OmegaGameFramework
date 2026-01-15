@@ -3,6 +3,7 @@
 
 #include "Widget/HUDLayer.h"
 #include "Engine/GameInstance.h"
+#include "Subsystems/Subsystem_Actors.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_Message.h"
 #include "Subsystems/Subsystem_Player.h"
@@ -14,6 +15,8 @@ void UHUDLayer::NativeConstruct()
 	Local_BindGlobalEvent();
 	GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UHUDLayer::OnGameplayMessage);
 	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UHUDLayer::OnInputMethodChanged);
+	GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->OnActorTaggedTargetChange.AddDynamic(this, &UHUDLayer::OnActorTaggedTargetChanged);
+	
 	PlayAnimationForward(GetAppearAnimation());
 	Super::NativeConstruct();
 }
