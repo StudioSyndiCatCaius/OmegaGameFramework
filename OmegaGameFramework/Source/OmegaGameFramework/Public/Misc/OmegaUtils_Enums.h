@@ -5,14 +5,6 @@
 #include "CoreMinimal.h"
 #include "OmegaUtils_Enums.generated.h"
 
-UENUM(Blueprintable,BlueprintType)
-enum EOmegaGlobalParamTarget
-{
-	WORLD,
-	GAME_INSTANCE,
-	SAVE_GAME,
-	SAVE_GLOBAL,
-};
 
 UENUM(Blueprintable, BlueprintType)
 enum EFactionAffinity

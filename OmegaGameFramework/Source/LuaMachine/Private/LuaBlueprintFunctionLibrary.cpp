@@ -246,6 +246,16 @@ FLuaValue ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue_Array(UObject* Wor
 	return out;
 }
 
+TArray<FString> ULuaBlueprintFunctionLibrary::Conv_LuaArrayToString_Array(TArray<FLuaValue> Value)
+{
+	TArray<FString> out;
+	for (FLuaValue v : Value)
+	{
+		out.Add(v.ToString());
+	}
+	return out;
+}
+
 TArray<FName> ULuaBlueprintFunctionLibrary::Conv_LuaValueToName_Array(const FLuaValue& Value)
 {
 	TArray<FName> out;

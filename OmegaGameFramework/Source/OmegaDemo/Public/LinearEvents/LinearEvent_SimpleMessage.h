@@ -72,20 +72,20 @@ public:
 	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override;
 #endif
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="Instigator")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="Instigator")
 	UPrimaryDataAsset* Instigator_Asset;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",meta=(MultiLine))
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",meta=(MultiLine))
 	FText Text;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
-	FGameplayTagContainer Tags;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message")
-	UMaterialInterface* Portrait=nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
-	FOmegaBitflagsBase Flags;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node")
+	FGameplayTagContainer Tags;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node")
+	UMaterialInterface* Portrait=nullptr;
+
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",AdvancedDisplay)
 	FName MessageKey;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message",AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node",AdvancedDisplay)
 	TMap<FName,FString> ExtraParams;
 	
 	

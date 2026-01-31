@@ -28,13 +28,15 @@ class OMEGADEMO_API UOmegaEventVolumeTriggerScript : public UObject
 		if(WorldPrivate) { return WorldPrivate->GetGameInstance();}
 		return Cast<UGameInstance>(GetOuter());
 	};
+
+	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
+	
+public:
+
 	UOmegaEventVolumeTriggerScript(const FObjectInitializer& ObjectInitializer)
 	{
 		if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
 	};
-	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
-	
-public:
 	
 	UPROPERTY() AOmega_EventVolume* REF_Owner=nullptr;
 	UFUNCTION(BlueprintPure,Category="TriggerScript")
@@ -43,10 +45,10 @@ public:
 	UFUNCTION(BlueprintCallable,Category="TriggerScript")
 	void TriggerEvent() const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="TriggerScript")
+	UFUNCTION(BlueprintNativeEvent,Category="TriggerScript")
 	void OnBeginPlay(AOmega_EventVolume* Owner);
 
-	UFUNCTION(BlueprintImplementableEvent,Category="TriggerScript")
+	UFUNCTION(BlueprintNativeEvent,Category="TriggerScript")
 	FLinearColor GetVolumeColor() const;
 };
 
@@ -60,8 +62,8 @@ public:
 	UFUNCTION(BlueprintPure,Category="SequenceScript")
 	AOmega_EventVolume* GetOwningActor() const;
 
-	UFUNCTION(BlueprintImplementableEvent,Category="SequenceScript")
-	void OnEventTriggered(const AActor* Owner) const;
+	UFUNCTION(BlueprintNativeEvent,Category="SequenceScript")
+	void OnEventTriggered(AActor* Owner) const;
 	
 };
 
@@ -76,7 +78,7 @@ public:
 	AOmega_EventVolume();
 	
 	UFUNCTION()
-	void Local_TryPlay() const;
+	void Local_TryPlay();
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Volume")
 	UCombatantComponent* Combatant;

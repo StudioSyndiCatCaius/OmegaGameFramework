@@ -2,10 +2,14 @@
 
 
 #include "Subsystems/Subsystem_Quest.h"
+
+#include "OmegaGameCore.h"
+#include "OmegaSettings.h"
 #include "Engine/World.h"
 #include "Functions/F_Common.h"
 #include "Functions/F_Save.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Subsystems/Subsystem_AssetHandler.h"
 #include "Subsystems/Subsystem_Save.h"
 
@@ -166,7 +170,8 @@ void UOmegaQuestComponent::BeginPlay()
 	{
 		TryLoad_Auto();
 	}
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->local_RegisterQuestComponent(this,true);
+	subsystem_quest=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>();
+	subsystem_quest->local_RegisterQuestComponent(this,true);
 	Super::BeginPlay();
 }
 
@@ -199,7 +204,7 @@ void UOmegaQuestComponent::SetQuestAsset(UOmegaQuest* Quest)
 
 bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
  {
-	if(CanQuestStart())
+	if(CanQuestStart() && subsystem_quest)
 	{
 		if(Quest || !QuestAsset)
 		{
@@ -209,7 +214,8 @@ bool UOmegaQuestComponent::StartQuest(UOmegaQuest* Quest)
 		{
 			QuestData.Status=Active;
 			QuestAsset->QuestScript->OnQuestStart(this);
-			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->OnQuestStart.Broadcast(this,Quest);
+			OGF_GAME_CORE()->Quest_OnStart(QuestAsset,subsystem_quest);
+			subsystem_quest->OnQuestStart.Broadcast(this,Quest);
 			OnQuestStart.Broadcast(this,Quest);
 			return  true;
 		}
@@ -221,7 +227,8 @@ bool UOmegaQuestComponent::EndQuest(bool bComplete)
 {
 	if(IsQuestActive())
 	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->OnQuestEnd.Broadcast(this,QuestAsset);
+		subsystem_quest->OnQuestEnd.Broadcast(this,QuestAsset);
+		OGF_GAME_CORE()->Quest_OnEnd(QuestAsset,subsystem_quest);
 		OnQuestEnd.Broadcast(this,QuestAsset);
 		if (bComplete)
 		{
@@ -269,6 +276,7 @@ bool UOmegaQuestComponent::CanQuestStart() const
 	{
 		return !IsQuestActive() &&
 			!IsQuestComplete() &&
+				OGF_GAME_CORE()->Quest_CanStart(QuestAsset,subsystem_quest) &&
 			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(QuestAsset->Condition_ToStart);
 	}
 	return false;

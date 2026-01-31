@@ -7,7 +7,7 @@
 #include "FlowTypes.h"
 #include "OmegaLinearEventSubsystem.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
 #include "Engine/World.h"
 #include "LinearEvents/LinearChoice_SimpleChoice.h"
 #include "Subsystems/Subsystem_Save.h"
@@ -61,7 +61,10 @@ void UFlowNode_LinearChoice::ExecuteInput(const FName& PinName)
 			class_in=newClass;
 		}
 	}
-	ChoiceInst = GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>()->PlayLinearChoice(Choices, class_in);
+	FOmegaLinearChoices c=Choices;
+	c.flags=Flags;
+	c.NamedLists=NamedLists;
+	ChoiceInst = GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>()->PlayLinearChoice(c, class_in);
 	ChoiceInst->OnChoiceSelected.AddDynamic(this, &UFlowNode_LinearChoice::LocalChoiceSelect);
 	
 	Super::ExecuteInput(PinName);

@@ -660,6 +660,15 @@ void UDataList::SetListOwner(UObject* NewOwner)
 void UDataList::NativePreConstruct()
 {
 	Super::NativePreConstruct();
+	
+	if (EntryClass)
+	{
+		if (UDataWidget* mut=GetMutableDefault<UDataWidget>(EntryClass))
+		{
+
+		}
+	}
+	
 	if (UBorder* _border=GetWidgetBorder())
 	{
 		if (UOmegaBorder* _oborder=Cast<UOmegaBorder>(_border))

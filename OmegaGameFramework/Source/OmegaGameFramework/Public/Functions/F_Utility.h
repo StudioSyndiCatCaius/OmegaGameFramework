@@ -205,3 +205,4 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static TMap<UPrimaryDataAsset*,float> InvertMapValues_Assetfloat(TMap<UPrimaryDataAsset*,float> in);
 };
+

@@ -10,7 +10,7 @@
 #include "Subsystems/Subsystem_Save.h"
 #include "EnhancedInputSubsystems.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 #include "Actors/Actor_Player.h"
 #include "Components/Component_Combatant.h"
 #include "GameFramework/GameModeBase.h"
@@ -57,7 +57,7 @@ AOmegaBaseSystem::AOmegaBaseSystem()
 
 void AOmegaBaseSystem::Native_Activate(UObject* Context, const FString& Flag)
 {
-	GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnGameplaySystem_Activate(this,Context,Flag);
+	GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnGameplaySystem_Activate(this,Context,Flag);
 	SystemActivated(Context, Flag);
 }
 
@@ -343,7 +343,7 @@ void AOmegaBaseSystem::CompleteShutdown()
 			}
 		}
 		local_globalEventTags(GlobalEvents_OnShutdown);
-		GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnGameplaySystem_Shutdown(this);
+		GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnGameplaySystem_Shutdown(this);
 		
 		K2_DestroyActor();
 	}
@@ -351,7 +351,7 @@ void AOmegaBaseSystem::CompleteShutdown()
 
 void AOmegaBaseSystem::OutputNotify(UObject* Context, const FString& Flag)
 {
-	GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnGameplaySystem_Notify(this,Context,Flag);
+	GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnGameplaySystem_Notify(this,Context,Flag);
 	OnSystemNotify.Broadcast(Context,Flag);
 }
 

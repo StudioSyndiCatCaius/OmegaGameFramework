@@ -59,6 +59,8 @@ class LUAMACHINE_API ULuaWorldSubsystem : public UWorldSubsystem
 
 public:
 	TArray<FName> GetGlobalKeys(FString global);
+	
+	UFUNCTION(BlueprintCallable,Category="Lua")
 	void RerunLua();
 };
 

@@ -21,6 +21,7 @@ class UGamePreferenceBool;
 class UGamePreferenceFloat;
 class AOmegaAbility;
 class UOmegaSaveGame;
+class UOmegaGameCore;
 class UOmegaInputMode;
 
 USTRUCT(BlueprintType)

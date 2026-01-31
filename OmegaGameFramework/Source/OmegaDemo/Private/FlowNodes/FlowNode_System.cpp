@@ -4,10 +4,12 @@
 #include "FlowNodes/FlowNode_System.h"
 
 #include "FlowAsset.h"
+#include "OmegaGameCore.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
 #include "Components/Component_CombatEncounter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Subsystems/Subsystem_Gameplay.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_Quest.h"
@@ -22,7 +24,27 @@ UFlowNode_GameplaySystemBASE::UFlowNode_GameplaySystemBASE()
 }
 
 
-void UFlowNode_GameplaySystemBASE::L_SystemEnd(UObject* context, FString flag)
+
+FOmegaCommonMeta UFlowNode_SystemClassBASE::L_GetMeta() const
+{
+	if (GetFlowAsset() && LocalMetaToUse.IsValid())
+	{
+		return GetFlowAsset()->LocalMeta.FindOrAdd(LocalMetaToUse);
+	}
+	return FOmegaCommonMeta();
+}
+
+TArray<FString> UFlowNode_SystemClassBASE::L_GetFlags()
+{
+	return OGF_GAME_CORE()->Object_GetDefaultFlags(this);
+}
+
+TSubclassOf<UObject> UFlowNode_GameplaySystemBASE::L_GetFlagClass() const
+{
+	return L_GetSystem();
+}
+
+void UFlowNode_GameplaySystemBASE::L_SystemEnd(UObject* context, FString _flag)
 {
 	TriggerOutput(TEXT("Shutdown"),true);
 }
@@ -74,6 +96,8 @@ UObject* UFlowNode_GameplaySystem::L_GetContext() const
 }
 
 #if WITH_EDITOR
+
+
 FString UFlowNode_GameplaySystem::GetNodeDescription() const
 {
 	FString appnd=""; if(System) { return System->GetName(); }
@@ -100,20 +124,12 @@ TSubclassOf<AOmegaGameplaySystem> UFlowNode_System_Encounter::L_GetSystem() cons
 	return nullptr;
 }
 
-FString UFlowNode_System_Encounter::L_GetFlag() const
-{
-	return Flag;
-}
 
 UObject* UFlowNode_System_Encounter::L_GetContext() const
 {
 	if(!Encounter.IsNull())
 	{
 		return Encounter.LoadSynchronous(); 
-	}
-	if(Encounter_Custom)
-	{
-		return Encounter_Custom;
 	}
 	return nullptr;
 }
@@ -129,6 +145,7 @@ void UFlowNode_System_DlgFlow::L_SystemEnd(UObject* context, FString flag)
 	}
 	Super::L_SystemEnd(context, flag);
 }
+
 
 #if WITH_EDITOR
 FString UFlowNode_System_DlgFlow::GetNodeDescription() const
@@ -170,7 +187,8 @@ UObject* UFlowNode_Menu::L_GetContext() const
 	return nullptr;
 }
 
-void UFlowNode_Menu::L_End(FGameplayTagContainer inTags, UObject* context, FString flag)
+
+void UFlowNode_Menu::L_End(FGameplayTagContainer inTags, UObject* context, FString _flag)
 {
 	TriggerOutput(TEXT("Finished"),true);
 }

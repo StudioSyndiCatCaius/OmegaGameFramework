@@ -5,7 +5,7 @@
 
 #include "LuaInterface.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 
 FLuaValue UOmegaLuaFunctions::GetObjectLua_Value(UObject* Object,const FString& Flag)
 {
@@ -19,7 +19,7 @@ FLuaValue UOmegaLuaFunctions::GetObjectLua_Value(UObject* Object,const FString& 
 	}
 	if (LuaObject.IsNil())
 	{
-		LuaObject=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Lua_GetObjectValue(Object);
+		LuaObject=GetMutableDefault<UOmegaSettings>()->GetGameCore()->Lua_GetObjectValue(Object);
 	}
 	return LuaObject;
 	

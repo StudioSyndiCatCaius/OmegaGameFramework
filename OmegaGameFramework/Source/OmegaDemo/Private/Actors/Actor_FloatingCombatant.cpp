@@ -2,7 +2,7 @@
 
 #include "Actors/Actor_FloatingCombatant.h"
 
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
 #include "Functions/F_Common.h"
 
 void AFloatingCombatant::OnConstruction(const FTransform& Transform)

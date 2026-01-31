@@ -6,6 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "JsonObjectWrapper.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Types/Struct_SoftParams.h"
 #include "Subsystem_GameManager.generated.h"
 
 class UOmegaSettings;
@@ -52,7 +53,7 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Omega") FOmegaEntitySet Entities;
 	
-	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
+	UPROPERTY() FOmegaSoftParams GlobalVars;
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
 	
 	UFUNCTION() UOmegaGameplayModule* ActivateModuleFromClass(const UClass* ModuleClass);

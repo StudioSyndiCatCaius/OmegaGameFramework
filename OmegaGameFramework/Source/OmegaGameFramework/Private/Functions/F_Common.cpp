@@ -19,9 +19,9 @@
 #include "Dom/JsonObject.h"
 #include "LuaInterface.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
-#include "OmegaSettings_Global.h"
-#include "OmegaSettings_Paths.h"
+#include "OmegaGameplayConfig.h"
+#include "OmegaGameCore.h"
+#include "OmegaSettings_Assets.h"
 #include "OmegaSettings_Slate.h"
 #include "Functions/F_Assets.h"
 #include "Functions/F_Combatant.h"
@@ -32,8 +32,10 @@
 #include "Interfaces/I_Common.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/FileHelper.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Misc/Paths.h"
+#include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_AssetHandler.h"
 #include "Subsystems/Subsystem_Gameplay.h"
 
@@ -57,6 +59,11 @@ UOmegaSettings* UOmegaGameFrameworkBPLibrary::GetSettings_Omega()
 UOmegaStyleSettings* UOmegaGameFrameworkBPLibrary::GetSettings_Style()
 {
 	return GetMutableDefault<UOmegaStyleSettings>();
+}
+
+UOmegaAssetSettings* UOmegaGameFrameworkBPLibrary::GetSettings_Asset()
+{
+	return GetMutableDefault<UOmegaAssetSettings>();
 }
 
 bool UOmegaGameFrameworkBPLibrary::HasTags_Advance(FGameplayTagContainer Tags, FGameplayTagContainer Has, bool bAll, bool bExact)
@@ -487,6 +494,19 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 	}
 	UE_LOG(LogTemp, Warning, TEXT("	LOADING ASSET of class '%s' from path: %s"), *class_name,  *AssetPath);
 	
+	//try load override
+	if (UObject* obj=OGF_GAME_CORE()->Override_GetAssetFromPath(AssetPath,Class))
+	{
+		if (!Class || !obj->GetClass()->IsChildOf(Class))
+		{
+			Outcome=true;
+			return obj;
+		}
+	}
+	
+	TArray<FString> in_path;
+	in_path.Add(AssetPath);
+	
 	UOmegaSubsystem_AssetHandler* sub_ah=GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>();
 	//USE = already imported override file if it exits.
 	if(UObject* override_file = sub_ah->GetSortedAsset_FromLabel(AssetPath))
@@ -501,61 +521,33 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 	//USE = external file imported as new sorted asset
 	else
 	{
-		if(UOmegaSettings_Paths* set_path=UOmegaSettings_PathFunctions::GetOmegaPathSettings())
-		{
+		for(UOmegaGameplayConfig* set_path : OGF_CFG()->GetAllGameplaySettings())
+		{	
+			//add the paths from the OmegPathSettings Asset to list that needs checking
+			in_path.Append(set_path->GetPathsFromAssetName(AssetPath,Class));
+			
 			if(set_path->ClassPaths.Contains(Class))
 			{
-				UOmegaSettings* _settings=GetMutableDefault<UOmegaSettings>();
+				FOmegaSortedClassPathData path_data=set_path->GetAssetDataFromClass(Class);
 				
-				if(UOmegaFileManagerSettings* fset=_settings->GetSettings_File())
+				if (UObject* got_obj=path_data.getAssetFromPath(AssetPath,Class))
 				{
-					//ITERATE THOUGH ALL FILE CONFIGS
-					for(auto* s : fset->ImportScripts)
+					if (got_obj->GetClass()->IsChildOf(Class))
 					{
-						if(s && s->ImportClass==Class)
-						{
-							for(FString _baseDir: _settings->RuntimeImport_BaseDirectory)
-							{
-								for(FString _ext: s->ValidExtensions)
-								{
-									//get target path for this file config
-									FString final_path=FPaths::ProjectDir()+_baseDir+AssetPath+"."+_ext;
-									FPaths::NormalizeFilename(final_path);
-									final_path=final_path.Replace(TEXT("//"),TEXT("/"));
-									
-									UE_LOG(LogTemp, Warning, TEXT("ATTEMPTING TO FIND EXTERNAL ASSET: %s"), *final_path);
-									if(FPaths::FileExists(final_path))
-									{
-										UE_LOG(LogTemp, Warning, TEXT("			RESULT = SUCCESS"));
-										UObject* obj=fset->ImportFile(final_path);
-										if(obj && obj->GetClass()->IsChildOf(Class))
-										{
-											sub_ah->Register_SortedAsset(obj,AssetPath,true);
-											return obj;
-										}
-									}
-								}
-							}
-						}
+						Outcome=true;
+						UE_LOG(LogTemp, Warning, TEXT("		✅ FOUND ASSET - In Path Settings Scripted GET"));
+						return got_obj;
 					}
 				}
 			}
 		}
 	}
-	
-	TArray<FString> in_path;
-	in_path.Add(AssetPath);
-
-	//add the paths from the OmegPathSettings Asset to list that needs checking
-	if(UOmegaSettings_Paths* path_settings = UOmegaSettings_PathFunctions::GetOmegaPathSettings())
-    {
-		in_path.Append(path_settings->GetPathsFromAssetName(AssetPath,Class));
-    }
+	in_path.Append(UOmegaGameCore::GetPathsFromAssetName(OGF_GAME_CORE()->ClassPaths,AssetPath,Class));
 
 	//Run through path check list and return first valid asset.
 	for (FString path_to_check : in_path)
 	{
-		path_to_check=OGF_File::PathCorrect(path_to_check);
+		path_to_check=OMEGA_File::PathCorrect(path_to_check);
 		
 		FSoftObjectPath SoftObjectPath(path_to_check);
 		if (!path_to_check.IsEmpty() && SoftObjectPath.IsValid())
@@ -856,7 +848,7 @@ UOmegaGameplayModule* UOmegaGameFrameworkBPLibrary::GetGameplayModule(const UObj
 		}
 
 		//If nor world (I.E. Editor) get from settings
-		for(UOmegaSettings_Gameplay* set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
+		for(UOmegaGameplayConfig* set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
 		{
 			for(auto* a : set->GetModules())
 			{
@@ -1523,7 +1515,7 @@ TArray<FName> UOmegaGameFrameworkBPLibrary::GetObjectMetatags(UObject* WorldCont
 		{
 			dum_obj=WorldContextObject;
 		}
-		out.Append(GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Object_AppendMetatags(dum_obj,Object));
+		out.Append(GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_AppendMetatags(dum_obj,Object));
 		if (bAppendActorTags)
 		{
 			if (AActor* a=Cast<AActor>(Object))

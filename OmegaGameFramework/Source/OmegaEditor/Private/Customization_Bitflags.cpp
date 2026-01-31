@@ -16,7 +16,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Text/STextBlock.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 #include "Types/Struct_CustomNamedList.h"
 
 

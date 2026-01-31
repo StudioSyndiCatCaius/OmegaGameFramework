@@ -4,8 +4,8 @@
 #include "Functions/F_Text.h"
 
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameplayConfig.h"
+#include "OmegaGameCore.h"
 #include "OmegaSettings_Slate.h"
 
 
@@ -37,13 +37,13 @@ FText UOmegaTextFormater_Collection::ApplyTextFormat(FText in,UObject* WorldCont
 FText UOmegaTextFunctions::ApplyGameplayTextFormating(UObject* WorldContextObject,FText In, FGameplayTag Tag, FOmegaCommonMeta meta)
 {
 	FText out=In;
-	UOmegaGlobalSettings* _set=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings();
-	out=_set->Text_PreGameplayFormat(out,Tag,meta);
+	UOmegaGameCore* _set=GetMutableDefault<UOmegaSettings>()->GetGameCore();
+	out=_set->Text_PreGameplayFormat(out,Tag,meta,WorldContextObject);
 	if(UOmegaTextFormater_Collection* set=GetMutableDefault<UOmegaSettings>()->DefaultSettings_Text.LoadSynchronous())
 	{
 		out=set->ApplyTextFormat(In, WorldContextObject, Tag,meta);
 	}
-	out=_set->Text_PostGameplayFormat(out,Tag,meta);
+	out=_set->Text_PostGameplayFormat(out,Tag,meta,WorldContextObject);
 	return out;
 }
 

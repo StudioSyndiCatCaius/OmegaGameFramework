@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "UObject/Object.h"
 #include "Widget/UI_Widgets.h"
 #include "OmegaSettings_Slate.generated.h"
@@ -28,11 +29,21 @@ class OMEGAGAMEFRAMEWORK_API UOmegaStyleSettings : public UDeveloperSettings
 
 public:
 	
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Texts")
+	TArray<UOmegaTextFormater_Collection*> L_GetTextFormaters();
+	FText L_FormatGameplayText(FText text, UObject* WorldContext,FGameplayTag Tag,FOmegaCommonMeta meta);
+	
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Text")
 	TMap<TEnumAsByte<EOmegaSlateTextType>,TSoftObjectPtr<UOmegaSlateStyle_Text>> Styled_Text;
 	
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Texts")
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Text")
 	TMap<TEnumAsByte<EOmegaSlateBorderType>,TSoftObjectPtr<UOmegaSlateStyle_Border>> Styled_Borders;
+	
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Text")
+	TArray<TSoftObjectPtr<UOmegaTextFormater_Collection>> TextFormaters;
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Text")
+	FGameplayTag DefaultTextFormatTag;
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Text")
+	bool bAutoFormatText_onDataWidgets=true;
 	
 	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Elements")
 	TSoftObjectPtr<UOmegaUIStyle_Background> Background_Default;
@@ -65,67 +76,12 @@ public:
 
 };
 
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Slate : public UPrimaryDataAsset
-{
-	GENERATED_BODY()
-
-public:
-	UOmegaSettings_Slate();
-
-	FText L_FormatDataWidgetText(UDataWidget* w, FText t) const;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
-	TMap<TSoftObjectPtr<UPrimaryDataAsset>,FText> Override_AssetNames;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
-	TMap<TSoftObjectPtr<UPrimaryDataAsset>,FSlateBrush> Override_AssetIcon;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
-	TMap<TSoftObjectPtr<UPrimaryDataAsset>,FSlateBrush> Override_AssetColor;
-	
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
-	TMap<TEnumAsByte<EOmegaSlateTextType>,TSoftObjectPtr<UOmegaSlateStyle_Text>> Styled_Text;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Texts")
-	TMap<FGameplayTag,TSoftClassPtr<UCommonTextStyle>> Tagged_Text;
-	
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Text")
-    UOmegaTextFormater_Collection* TextFormater;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Text")
-	bool DataWidgets_AutoFormatText=true;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Text")
-	FGameplayTag DataWidgets_TextFormatTag;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Widgets")
-	TSubclassOf<UDataWidget> DataWidget_SaveSlot;
-	
-	// Images
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
-	FSlateBrush LogoDefault;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
-	FSlateBrush LoadingIndicator;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
-	TArray<FSlateBrush> SplashImages;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Images")
-	FSlateBrush GenericMenu_Background;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="BGM")
-	UOmegaBGM* BGM_Title;
-	
-};
-
-
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSlateFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
-
-	UFUNCTION(BlueprintPure,Category="Omega|Settings", DisplayName="Get OMEGA Settings (Slate)")
-	static UOmegaSettings_Slate* GetCurrentSlateStyle();
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate")
 	static void SetSlateStyle_AllWidgets(UPanelWidget* Parent, EOmegaSlateTextType TextType, EOmegaSlateBorderType BorderType);

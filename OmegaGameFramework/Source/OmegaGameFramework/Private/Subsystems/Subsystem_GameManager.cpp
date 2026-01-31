@@ -8,13 +8,13 @@
 #include "LuaSubsystem.h"
 #include "OmegaSettings.h"
 #include "Misc/OmegaGameplayModule.h"
-#include "OmegaSettings_Gameplay.h"
-#include "OmegaSettings_Global.h"
-#include "OmegaSettings_Paths.h"
+#include "OmegaGameplayConfig.h"
+#include "OmegaGameCore.h"
 #include "Engine/GameInstance.h"
 #include "Functions/F_File.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_AssetHandler.h"
 #include "Subsystems/Subsystem_Mods.h"
 
@@ -57,15 +57,18 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 			ActivateModuleFromClass(TempModule);
 		}
 	}
-	for(UOmegaSettings_Gameplay* _set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
+	TArray<UOmegaGameplayModule*> _tempModules=OGF_GAME_CORE()->GameplayModules;
+	for(UOmegaGameplayConfig* _set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
 	{
-		for(auto* c : _set->GetModules())
+		_tempModules.Append(_set->GetModules());
+	}
+	
+	for (auto* _module: _tempModules)
+	{
+		if(_module)
 		{
-			if(c)
-			{
-				UOmegaGameplayModule* new_mod=DuplicateObject(c,GetGameInstance());
-				ModuleInit(new_mod);
-			}
+			UOmegaGameplayModule* new_mod=DuplicateObject(_module,GetGameInstance());
+			ModuleInit(new_mod);
 		}
 	}
 	
@@ -84,7 +87,7 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 			for (FString dir_path : OGF_CFG()->RuntimeImport_BaseDirectory)
 			{
 				UE_LOG(LogInit, Log, TEXT("		📁 IMPORTING DIRECTORY:  %s"), *dir_path);
-				for (FString path : OGF_File::ListFilesInDirectory(dir_path,true))
+				for (FString path : OMEGA_File::ListFilesInDirectory(dir_path,true))
 				{
 					if (UObject* new_file=set->ImportFile(path))
 					{
@@ -114,7 +117,7 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	
 	for (FString f : settings_ref->Autorun_FilePaths)
 	{
-		lsub->RunLocalFilesInPath(FPaths::ProjectContentDir()+"/"+OGF_File::PathCorrect(f),true,true);
+		lsub->RunLocalFilesInPath(FPaths::ProjectContentDir()+"/"+OMEGA_File::PathCorrect(f),true,true);
 	}
 	
 
@@ -156,14 +159,14 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	}
 	
 
-	settings_omega->GetGlobalSettings()->OnGame_Begin(GetWorld()->GetGameInstance());
+	settings_omega->GetGameCore()->OnGame_Begin(GetWorld()->GetGameInstance());
 	
 }
 
 void UOmegaGameManager::Deinitialize()
 {
 	UOmegaSettings* _set=GetMutableDefault<UOmegaSettings>();
-	_set->GetGlobalSettings()->OnGame_Begin(GetWorld()->GetGameInstance());
+	_set->GetGameCore()->OnGame_Begin(GetWorld()->GetGameInstance());
 	
 	for(UOmegaGameplayModule* TempModule : ActiveModules)
 	{

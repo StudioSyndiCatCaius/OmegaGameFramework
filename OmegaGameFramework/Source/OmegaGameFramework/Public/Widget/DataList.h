@@ -119,6 +119,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
+	
 	UPROPERTY(EditAnywhere, Instanced, Category="Entry")
 	TArray<UOmegaObjectTrait*> EntryTraits;
 	UPROPERTY(EditAnywhere, Instanced, Category = "Entry")

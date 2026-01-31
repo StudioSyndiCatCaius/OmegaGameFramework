@@ -8,7 +8,7 @@
 #include "Widgets/Layout/SWrapBox.h"
 #include "OmegaEditorSettings.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 
 TSharedRef<IDetailCustomization> FOmegaObjectCustomization::MakeInstance()
 {
@@ -80,7 +80,7 @@ void FOmegaObjectCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
                     {
                         if (UObject* Obj = WeakObj.Get())
                         {
-                            GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Object_RunClassCommand(Obj, CommandIndex);
+                            GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_RunClassCommand(Obj, CommandIndex);
                            // Settings->FireCommandEvent(Obj, CommandIndex);
                         }
                     }

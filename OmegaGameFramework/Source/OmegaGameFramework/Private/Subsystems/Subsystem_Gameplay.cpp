@@ -3,12 +3,12 @@
 
 #include "Subsystems/Subsystem_Gameplay.h"
 
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 #include "Components/Component_Combatant.h"
 #include "Functions/F_Combatant.h"
 #include "Subsystems/Subsystem_Quest.h"
@@ -34,7 +34,7 @@ void UOmegaGameplaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	}
 	
 	UOmegaSettings* _set=GetMutableDefault<UOmegaSettings>();
-	_set->GetGlobalSettings()->OnGame_LevelStart(GetWorld()->GetGameInstance(),level_name);
+	_set->GetGameCore()->OnGame_LevelStart(GetWorld()->GetGameInstance(),level_name);
 }
 
 AOmegaGameplaySystem* UOmegaGameplaySubsystem::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag,FOmegaCommonMeta meta)

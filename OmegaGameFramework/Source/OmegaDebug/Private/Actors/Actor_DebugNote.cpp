@@ -2,16 +2,19 @@
 
 #include "Actors/Actor_DebugNote.h"
 
+#include "OmegaSettings.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Functions/F_Actor.h"
+#include "Misc/OmegaUtils_Macros.h"
 
 void AOmegaDebugNote::OnConstruction(const FTransform& Transform)
 {
 	UOmegaComponentFunctions::PointArrowComponentToTarget(Arrow,ArrowPoint);
 	Arrow->SetArrowColor(Color);
 	Text->SetText(Note);
+	OGF_CFG()->OverrideActorLabel(this);
 	Super::OnConstruction(Transform);
 }
 
@@ -24,7 +27,7 @@ AOmegaDebugNote::AOmegaDebugNote()
 	Arrow->SetupAttachment(RootComponent);
 	Arrow->ArrowSize=2;
 	Text=CreateOptionalDefaultSubobject<UTextRenderComponent>("TEXT");
-	Text->SetMaterial(0,LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/m_OutlineText.m_OutlineText")));
+	Text->SetMaterial(0,OGF_UASSET_MAT_TEXT_OUTLINE());
 	Text->SetupAttachment(RootComponent);
 	Text->HorizontalAlignment=EHTA_Center;
 	Text->SetRelativeLocation(FVector(0,0,50.0));

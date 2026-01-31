@@ -19,6 +19,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Types/Struct_SoftParams.h"
 #include "Subsystem_Save.generated.h"
 
 class UOmegaBGM;
@@ -69,11 +70,8 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
 	
-	
-	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
-	class UOmegaSaveGame* ActiveSaveData;
-	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem")
-	class UOmegaSaveGlobal* GlobalSaveData;
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem") UOmegaSaveGame* ActiveSaveData;
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem") UOmegaSaveGlobal* GlobalSaveData;
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|SaveSubsystem")
 	static void GetSaveSlotName(int32 Slot, FString& OutName);
@@ -222,57 +220,6 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"),DisplayName="Guid - Get w/ Tags")
 	TArray<FGuid> GetSaveGuids_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const;
 	
-	//###############################################################################################
-	// Soft Properties
-	//###############################################################################################
-	
-		//bool
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Bool")
-	void SetSoftProperty_Bool(const FString& Property, bool Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | Bool")
-	bool GetSoftProperty_Bool(const FString& Property, bool bGlobal);
-		//float
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Float")
-	void SetSoftProperty_Float(const FString& Property, float Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | Float")
-	float GetSoftProperty_Float(const FString& Property, bool bGlobal);
-		//int
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Int32")
-	void SetSoftProperty_Int32(const FString& Property, int32 Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | Int32")
-	int32 GetSoftProperty_Int32(const FString& Property, bool bGlobal);
-		//string
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | String")
-	void SetSoftProperty_String(const FString& Property, FString Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | String")
-	FString GetSoftProperty_String(const FString& Property, bool bGlobal);
-		//tag
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Tag")
-	void SetSoftProperty_Tag(const FString& Property, FGameplayTag Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | Tag")
-	FGameplayTag GetSoftProperty_Tag(const FString& Property, bool bGlobal);
-		//vec
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Vector")
-	void SetSoftProperty_Vector(const FString& Property, FVector Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | Vector")
-	FVector GetSoftProperty_Vector(const FString& Property, bool bGlobal);
-		//rot
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Rotator")
-	void SetSoftProperty_Rotator(const FString& Property, FRotator Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | Rotator")
-	FRotator GetSoftProperty_Rotator(const FString& Property, bool bGlobal);
-		//transform
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | Transform")
-	void SetSoftProperty_Transform(const FString& Property, FTransform Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | Transform")
-	FTransform GetSoftProperty_Transform(const FString& Property, bool bGlobal);
-		//transform
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Set Save Property | DataAsset")
-	void SetSoftProperty_DataAsset(const FString& Property, UPrimaryDataAsset* Value, bool bGlobal);
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|SoftProperties", DisplayName="Get Save Property | DataAsset")
-	UPrimaryDataAsset* GetSoftProperty_DataAsset(const FString& Property, bool bGlobal);
-		//guid
-	
 	///MESSAGE LOGGING
 	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem")
 	bool CustomSaveConditionsMet(FOmegaSaveConditions Conditions);
@@ -386,12 +333,12 @@ public:
 	FLuaValue Lua_LoadTable(UObject* context) const;
 	void Lua_SaveTable(UObject* context, FLuaValue LuaValue);
 	
-	UPROPERTY()  FOmegaGlobalVarsContainer GlobalVars;
-	
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Base")  FGuid SaveGuid;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Base")  int32 SaveSeed;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") FOmegaEntitySet Entities;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Save") FOmegaSoftParams GlobalVars;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Save") TArray<UPrimaryDataAsset*> CollectedDataAssets;
@@ -415,17 +362,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") FTimespan Playtime;
 	
-	//Soft Property
-	UPROPERTY(EditAnywhere,Category="Properties") TMap<FName, bool> Prop_bool;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, float> Prop_float;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, int32> Prop_int;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, FString> Prop_string;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, FGameplayTag> Prop_Tag;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, FGameplayTagContainer> Prop_Tags;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, UPrimaryDataAsset*> Prop_Asset;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, FVector> Prop_Vector;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, FRotator> Prop_Rotator;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Properties") TMap<FName, FTransform> Prop_Transform;
+
 	
 	UFUNCTION(BlueprintPure, Category="Playtime")
 	FString GetPlaytimeString(bool bIncludeMilliseconds);
@@ -467,27 +404,14 @@ public:
 	UPROPERTY() FTransform SavedPlayerTransform;
 	UPROPERTY() UOmegaZoneData* ActiveZone;
 	
-	UPROPERTY(BlueprintReadOnly, Category="Save")
-	FDateTime SaveDate;
-
-	UFUNCTION(BlueprintImplementableEvent, Category="Save")
-	void OnGameStarted(FGameplayTagContainer Tags);
+	UPROPERTY(BlueprintReadOnly, Category="Save") FDateTime SaveDate;
+	UPROPERTY(BlueprintReadWrite, Category="Tags") TMap<TSoftObjectPtr<AActor>, FGameplayTag> ActorStates;
+	UPROPERTY(BlueprintReadWrite, Category="Tags") TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
+	UPROPERTY(BlueprintReadOnly, Category="Save") UTexture2D* SaveScreenshot;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Save") TMap<FGameplayTag,UOmegaBGM*> BgmOverrides;
 	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintPure, Category="Save")
-	FText GetDisplayName();
-
-	UPROPERTY(BlueprintReadWrite, Category="Tags")
-	TMap<TSoftObjectPtr<AActor>, FGameplayTag> ActorStates;
-	
-	UPROPERTY(BlueprintReadWrite, Category="Tags")
-	TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
-
-	UPROPERTY(BlueprintReadOnly, Category="Save")
-	UTexture2D* SaveScreenshot;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Save")
-	TMap<FGameplayTag,UOmegaBGM*> BgmOverrides;
-
+	UFUNCTION(BlueprintImplementableEvent, Category="Save") void OnGameStarted(FGameplayTagContainer Tags);
+	UFUNCTION(BlueprintImplementableEvent, Category="Save") FText GetDisplayName();
 };
 
 UCLASS()

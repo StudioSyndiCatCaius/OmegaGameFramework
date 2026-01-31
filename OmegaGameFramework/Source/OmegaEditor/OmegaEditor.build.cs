@@ -14,6 +14,7 @@ public class OmegaEditor : ModuleRules
 			"AssetTools",
 			"UnrealEd",
 			"InputCore",
+			"OmegaCORE",
 			"OmegaGameFramework", 
 			"OmegaSequence", 
 			"PropertyEditor",

@@ -13,7 +13,7 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Styling/AppStyle.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 #include "Interfaces/I_NamedLists.h"
 #include "Types/Struct_CustomNamedList.h"
 
@@ -37,7 +37,7 @@ void FCustomization_ClassNamedLists::CustomizeHeader(
         [
             SNew(STextBlock)
             .Text(StructPropertyHandle->GetPropertyDisplayName().ToUpper())
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
             .ColorAndOpacity(FLinearColor(0.8f, 0.9f, 1.0f, 1.0f)) // Light blue tint
             
         ]
@@ -80,7 +80,7 @@ void FCustomization_ClassNamedLists::CustomizeChildren(
     }
     if (Lists.Num() == 0)
     {
-        GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->CustomList_GetListFromObject(OuterObject);
+        Lists=GetMutableDefault<UOmegaSettings>()->GetGameCore()->CustomList_GetListFromObject(OuterObject);
     }
 
     // Create a darker background container for all dropdowns
@@ -123,7 +123,7 @@ TSharedRef<SWidget> FCustomization_ClassNamedLists::CreateDropdownList(
             + SHorizontalBox::Slot()
             .AutoWidth()
             .VAlign(VAlign_Center)
-            .Padding(FMargin(0.0f, 0.0f, 8.0f, 0.0f))
+            .Padding(FMargin(0.0f, 0.0f, 5.0f, 0.0f))
             [
                 SNew(SBox)
                 .MinDesiredWidth(120.0f)
@@ -170,7 +170,7 @@ TSharedRef<SWidget> FCustomization_ClassNamedLists::CreateDropdownForList(
         .OnGetMenuContent_Lambda([this, ListID, StructPropertyHandle]() -> TSharedRef<SWidget>
         {
             // Get options for this specific ListID
-            TArray<FName> Options=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->CustomList_GetOptions(ListID);
+            TArray<FName> Options=GetMutableDefault<UOmegaSettings>()->GetGameCore()->CustomList_GetOptions(ListID);
 
             // Build menu
             FMenuBuilder MenuBuilder(true, nullptr);

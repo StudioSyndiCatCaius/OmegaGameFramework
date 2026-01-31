@@ -23,6 +23,7 @@ class UOmegaPlayerSubsystem;
 class UOmegaInputMode;
 class ALevelInstance;
 class UCurveFloat;
+class UOmegaAssetSettings;
 
 UENUM(Blueprintable)
 enum EOmegaFlagResult
@@ -46,6 +47,8 @@ public:
 	static UOmegaSettings* GetSettings_Omega();
 	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Stlye")
 	static UOmegaStyleSettings* GetSettings_Style();
+	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Asset")
+	static UOmegaAssetSettings* GetSettings_Asset();
 	
 	//###############################################################################
 	// Gameplay tags

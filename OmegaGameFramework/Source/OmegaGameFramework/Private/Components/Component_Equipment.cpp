@@ -4,7 +4,7 @@
 #include "Components/Component_Equipment.h"
 
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_Inventory.h"
 #include "Condition/Condition_DataAsset.h"
@@ -65,7 +65,7 @@ TMap<UEquipmentSlot*, UPrimaryDataAsset*> UEquipmentComponent::GetEquipment()
 			out.Append(IDataInterface_EquipmentSource::Execute_GetEquipment(s));
 		}
 	}
-	out.Append(GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Append_Equipment(this));
+	out.Append(GetMutableDefault<UOmegaSettings>()->GetGameCore()->Append_Equipment(this));
 	return out;
 }
 

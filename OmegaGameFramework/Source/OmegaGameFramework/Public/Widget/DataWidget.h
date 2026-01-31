@@ -9,10 +9,12 @@
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Misc/OmegaUtils_Delegates.h"
+#include "Types/Struct_WidgetOverrides.h"
 #include "Widget/OmegaUserWidget.h"
 #include "DataWidget.generated.h"
 
-class UOmegaObjectTrait;class UOmegaPlayerSubsystem;
+class UOmegaPlayerSubsystem;
+class UOmegaObjectTrait;
 class UOmegaSettings_Slate;
 class UDataList;
 class UTextBlock;
@@ -174,6 +176,8 @@ public:
 	UFUNCTION(BlueprintPure,Category="Meta",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Outcome"))
 	UDataWidgetTraits* GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Class, bool FallbackToDefault, bool& Outcome);
 	
+	UFUNCTION(BlueprintImplementableEvent,Category="Meta")
+	FOmegaWidgetOverride_Bindings GetWidgetBindings();
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight

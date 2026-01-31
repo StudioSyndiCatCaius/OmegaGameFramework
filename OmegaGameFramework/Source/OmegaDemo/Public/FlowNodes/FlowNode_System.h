@@ -16,17 +16,37 @@ class UOmegaEncounter_Asset;
 class UOmegaQuestComponent;
 
 UCLASS(Abstract)
-class OMEGADEMO_API UFlowNode_GameplaySystemBASE : public UFlowNode
+class OMEGADEMO_API UFlowNode_SystemClassBASE : public UFlowNode
+{
+	GENERATED_BODY()
+	
+public:
+	
+	virtual UObject* L_GetContext() const { return nullptr;};
+	virtual FString L_GetFlag() const { return "";};
+	virtual TSubclassOf<UObject> L_GetFlagClass() const { return nullptr;};
+	virtual FOmegaCommonMeta L_GetMeta() const;
+	
+	UFUNCTION() virtual TArray<FString> L_GetFlags();
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",meta=(GetOptions="L_GetLocalMetaList"))
+	FName LocalMetaToUse;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",meta=(GetOptions="L_GetFlags"))
+	FString Flag;
+};
+
+
+UCLASS(Abstract)
+class OMEGADEMO_API UFlowNode_GameplaySystemBASE : public UFlowNode_SystemClassBASE
 {
 	GENERATED_BODY()
 	virtual TSubclassOf<AOmegaGameplaySystem> L_GetSystem() const { return nullptr;};
-	virtual UObject* L_GetContext() const { return nullptr;};
-	virtual FString L_GetFlag() const { return "";};
-
 	UPROPERTY() AOmegaGameplaySystem* l_sys=nullptr;
+	
+	virtual TSubclassOf<UObject> L_GetFlagClass() const override;
 
 public:
-	UFUNCTION() virtual void L_SystemEnd(UObject* context, FString flag);
+	UFUNCTION() virtual void L_SystemEnd(UObject* context, FString _flag);
 	UFlowNode_GameplaySystemBASE();
 
 	virtual void ExecuteInput(const FName& PinName) override;
@@ -63,8 +83,6 @@ public:
 	TSubclassOf<AOmegaGameplaySystem> System;
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Game")
 	UOmegaSelector_Object* Context;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
-	FString Flag;
 };
 
 UCLASS(DisplayName="⚔️System - Combat Encounter",Category="Game")
@@ -80,15 +98,10 @@ public:
 #endif
 	
 	virtual TSubclassOf<AOmegaGameplaySystem> L_GetSystem() const override;
-	virtual FString L_GetFlag() const override;
 	virtual UObject* L_GetContext() const override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	TSoftObjectPtr<UOmegaEncounter_Asset> Encounter;
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Game")
-	UOmegaEncounter_Asset* Encounter_Custom;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
-	FString Flag;
 };
 
 UCLASS(DisplayName="💬System - Flow Asset",Category="Game")
@@ -97,6 +110,8 @@ class OMEGADEMO_API UFlowNode_System_DlgFlow : public UFlowNode_GameplaySystemBA
 	GENERATED_BODY()
 
 	virtual void L_SystemEnd(UObject* context, FString flag) override;
+
+
 
 public:
 	
@@ -112,26 +127,25 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	TSoftObjectPtr<UFlowAsset> FlowAsset;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
-	FString Flag;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	TSoftObjectPtr<AActor> TransitOnFinish;
 };
 
 
 
 // ==============================================================================================================
-// -
+// -Menu
 // ==============================================================================================================
 
 UCLASS(DisplayName="Menu",Category="Game")
-class OMEGADEMO_API UFlowNode_Menu : public UFlowNode
+class OMEGADEMO_API UFlowNode_Menu : public UFlowNode_SystemClassBASE
 {
 	GENERATED_BODY()
 
-	UObject* L_GetContext() const;
-	
+	virtual UObject* L_GetContext() const override;
+	virtual TSubclassOf<UObject> L_GetFlagClass() const override { return Menu;};
+
 	UPROPERTY() UMenu* l_menu=nullptr;
-	UFUNCTION() void L_End(FGameplayTagContainer inTags, UObject* context, FString flag);
+	UFUNCTION() void L_End(FGameplayTagContainer inTags, UObject* context, FString _flag);
 
 public:
 	UFlowNode_Menu();
@@ -150,8 +164,7 @@ public:
 	UOmegaSelector_Object* Context;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	FGameplayTagContainer Tags;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
-	FString Flag;
+
 };
 
 

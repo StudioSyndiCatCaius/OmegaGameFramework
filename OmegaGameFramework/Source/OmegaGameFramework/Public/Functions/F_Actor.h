@@ -96,7 +96,6 @@ public:
 	//UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget")
 	//static void LinkComponentOverlapToTagTarget(UPrimitiveComponent* Component, AActor* Actor, FGameplayTag Tag);
 	
-	
 	// =====================================================================================================================
 	// Interact
 	// =====================================================================================================================
@@ -106,6 +105,27 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",DisplayName="Actor - Perform Interaction")
 	static void PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta);
 	
+	// =====================================================================================================================
+	// Relative Actors
+	// =====================================================================================================================
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Relative")
+	static AActor* GetRelative(AActor* Actor, FName Relative);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Relative (Actor List)")
+	static TArray<AActor*> GetRelativeList(TArray<AActor*> Actors, FName Relative, bool bIncludeEmpty);
+	
+	// =====================================================================================================================
+	// Combatant
+	// =====================================================================================================================
+	UFUNCTION(BlueprintPure,Category="Omega|Actor|Combatant",DisplayName="Actor - Get Faction")
+	static FGameplayTag GetFaction_Tag(AActor* Actor);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Faction Affinity")
+	static EFactionAffinity GetFaction_Affinity(AActor* Actor, FGameplayTag FactionTag);
+	
+		
+	UFUNCTION(BlueprintPure,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Faction Affinity To Target")
+	static EFactionAffinity GetFaction_AffinityToTarget(AActor* Actor, AActor* Target);
 };
 
 // =====================================================================================================================

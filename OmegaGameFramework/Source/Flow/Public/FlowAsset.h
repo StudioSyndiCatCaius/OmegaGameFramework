@@ -63,7 +63,9 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	FGuid AssetGuid;
+	
 
+	
 	UPROPERTY() FOmegaCommonMeta FlowMeta;
 	UFUNCTION(BlueprintPure,Category="FlowAsset") FOmegaCommonMeta GetFlowMeta() const { return FlowMeta; }
 	
@@ -400,7 +402,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Bindings")
 	TArray<FName> LocalParams;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Bindings")
+	TMap<FName,FOmegaCommonMeta> LocalMeta;
 	//--------------------------------------------------------//
 	// NOTIFY
 	//--------------------------------------------------------//

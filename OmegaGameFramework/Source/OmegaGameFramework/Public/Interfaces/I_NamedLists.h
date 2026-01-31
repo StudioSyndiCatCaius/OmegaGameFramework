@@ -31,9 +31,11 @@ class UOmegaFunctions_NamedLists : public UBlueprintFunctionLibrary
 
 public:
 
-	UFUNCTION(BlueprintPure,Category="Omega|BitFlags")
+	UFUNCTION(BlueprintPure,Category="Omega|NamedList")
     static FName GetObjectNamedListOption(UObject* object, FName List);
 
+	UFUNCTION(BlueprintCallable,Category="Omega|NamedList",meta=(DeterminesOutputType="Class"))
+	static TArray<UObject*> FilterObjectsWithNamedListValue(TArray<UObject*> object, TSubclassOf<UObject> Class, FName List, FName Value);
 };
 
 inline FName UOmegaFunctions_NamedLists::GetObjectNamedListOption(UObject* object, FName List)
@@ -44,5 +46,22 @@ inline FName UOmegaFunctions_NamedLists::GetObjectNamedListOption(UObject* objec
 		return NamedLists.CustomNamedList.FindOrAdd(List).Option;
 	}
 	return FName();
+}
+
+inline TArray<UObject*> UOmegaFunctions_NamedLists::FilterObjectsWithNamedListValue(TArray<UObject*> object,
+	TSubclassOf<UObject> Class, FName List, FName Value)
+{
+	TArray<UObject*> out; 
+	for (auto* item : object)
+	{
+		if (item)
+		{
+			if (GetObjectNamedListOption(item, List)==Value && (!Class || item->GetClass()->IsChildOf(Class)))
+			{
+				out.Add(item);
+			}
+		}
+	}
+	return out;
 }
 

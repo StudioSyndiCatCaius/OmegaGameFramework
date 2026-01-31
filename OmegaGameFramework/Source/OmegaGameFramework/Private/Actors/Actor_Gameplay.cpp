@@ -12,9 +12,6 @@ AOmegaGameplayActor::AOmegaGameplayActor()
 {
 	RootBillboard=CreateOptionalDefaultSubobject<UBillboardComponent>("ROOT");
 	RootComponent=RootBillboard;
-	
-	
-
 }
 
 void AOmegaGameplayActor::OnConstruction(const FTransform& Transform)

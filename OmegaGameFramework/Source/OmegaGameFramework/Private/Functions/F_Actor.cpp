@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/Subsystem_Actors.h"
+#include "Types/Struct_ActorRelatives.h"
 
 // =====================================================================================================================
 // ACTOR
@@ -346,6 +347,66 @@ void UOmegaActorFunctions::PerformInteraction(AActor* Actor, AActor* Instigator,
 	FOmegaCommonMeta meta)
 {
 	Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->PerformInteraction(Actor,Instigator,Tag,meta);
+}
+
+AActor* UOmegaActorFunctions::GetRelative(AActor* Actor, FName Relative)
+{
+	FOmegaActorRelatives rel;
+	if (Actor && Actor->GetClass()->ImplementsInterface(UActorInterface_Relatives::StaticClass()))
+	{
+		rel=IActorInterface_Relatives::Execute_ActorRelatives_Get(Actor);
+	}
+	if (AActor* a=rel.RelativeActors.FindOrAdd(Relative).LoadSynchronous())
+	{
+		return a;
+	}
+	return nullptr;
+}
+
+TArray<AActor*> UOmegaActorFunctions::GetRelativeList(TArray<AActor*> Actors, FName Relative, bool bIncludeEmpty)
+{
+	TArray<AActor*> _out;
+	
+	for (auto* actor : Actors)
+	{
+		if (AActor* rel=GetRelative(actor,Relative))
+		{
+			_out.Add(rel);
+		}
+		else if (bIncludeEmpty)
+		{
+			_out.Add(nullptr);
+		}
+	}
+	
+	return _out;
+}
+
+FGameplayTag UOmegaActorFunctions::GetFaction_Tag(AActor* Actor)
+{
+	if (Actor)
+	{
+		
+	}
+	return FGameplayTag();
+}
+
+EFactionAffinity UOmegaActorFunctions::GetFaction_Affinity(AActor* Actor, FGameplayTag FactionTag)
+{
+	if (Actor)
+	{
+		
+	}
+	return EFactionAffinity::NeutralAffinity;
+}
+
+EFactionAffinity UOmegaActorFunctions::GetFaction_AffinityToTarget(AActor* Actor, AActor* Target)
+{
+	if (Actor && Target)
+	{
+		return GetFaction_Affinity(Actor,GetFaction_Tag(Target));
+	}
+	return EFactionAffinity::NeutralAffinity;
 }
 
 // =====================================================================================================================

@@ -5,7 +5,7 @@
 
 #include "OmegaSettings.h"
 #include "Components/Component_ActorIdentity.h"
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
 #include "Components/Component_ActorConfig.h"
 #include "Misc/OmegaUtils_Methods.h"
 

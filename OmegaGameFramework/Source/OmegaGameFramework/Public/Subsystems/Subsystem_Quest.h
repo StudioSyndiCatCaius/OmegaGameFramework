@@ -48,21 +48,13 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaQuest : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaQuest : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 
 public:
 	UOmegaQuest();
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",DisplayName="Name",meta=(ExposeOnSpawn)) FText DisplayName;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Icon",meta=(ExposeOnSpawn)) FSlateBrush Icon;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(MultiLine),DisplayName="Description",meta=(ExposeOnSpawn)) FText DisplayDescription;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay,meta=(ExposeOnSpawn)) FString CustomLabel;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(ExposeOnSpawn)) FGameplayTag CategoryTag;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General",meta=(ExposeOnSpawn)) FGameplayTagContainer GameplayTags;
-	OMACRO_ADDPARAMS_GENERAL()
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="General",DisplayName="Name") FGuid Guid;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Quest")
 	FOmegaSaveConditions Condition_ToStart;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Quest",meta=(ExposeOnSpawn))
@@ -107,7 +99,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaQuestComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	//UOmegaQuestComponent();
-	UPROPERTY()UOmegaSaveSubsystem* SaveSubsystem;
+	UPROPERTY() UOmegaSaveSubsystem* SaveSubsystem;
+	UPROPERTY() UOmegaQuestSubsystem* subsystem_quest;
 
 	UPROPERTY() UObject* QuestContextObject=nullptr;
 	

@@ -4,7 +4,7 @@
 #include "Components/Component_ActorIdentity.h"
 
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Subsystems/Subsystem_Actors.h"
@@ -32,7 +32,7 @@ bool UActorIdentityComponent::Local_IsSourceAssetValid() const
 void UActorIdentityComponent::Local_RunConstruct()
 {
 	SetIdentitySourceAsset(IdentitySource);
-	OGF_GLOBAL_SETTINGS()->ActorID_OnConstruct(GetOwner(),this);
+	OGF_GAME_CORE()->ActorID_OnConstruct(GetOwner(),this);
 	if(Local_IsSourceAssetValid())
 	{
 		IDataInterface_ActorIdentitySource::Execute_OnActorConstruction(IdentitySource,GetOwner(),this);
@@ -102,7 +102,7 @@ void UActorIdentityComponent::BeginPlay()
 {
 	Local_RunConstruct();
 	GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,true);
-	OGF_GLOBAL_SETTINGS()->ActorID_OnBeginPlay(GetOwner(),this);
+	OGF_GAME_CORE()->ActorID_OnBeginPlay(GetOwner(),this);
 	if(Local_IsSourceAssetValid())
 	{
 		IDataInterface_ActorIdentitySource::Execute_OnActorBeginPlay(IdentitySource,GetOwner(),this);

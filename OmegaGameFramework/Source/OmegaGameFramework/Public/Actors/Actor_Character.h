@@ -11,6 +11,7 @@
 #include "Interfaces/I_NamedLists.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Interfaces/I_Seed.h"
+#include "Types/Struct_ActorRelatives.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "Actor_Character.generated.h"
 
@@ -34,7 +35,7 @@ UCLASS(HideCategories=("Skeletal Mesh, Physics"))
 class OMEGAGAMEFRAMEWORK_API AOmegaBaseCharacter : public ACharacter, public IDataInterface_Json, public IDataInterface_Traits,
 																	public IDataInterface_AppearanceSource, public IDataInterface_AssetLibraries,
 																public IDataInterface_General, public IDataInterface_Seed, public IDataInterface_BitFlag,
-																	public IDataInterface_NamedLists
+																	public IDataInterface_NamedLists, public IActorInterface_Relatives
 {
 	GENERATED_BODY()
 	
@@ -58,6 +59,7 @@ public:
 	void RandomizeSeed();
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter") FOmegaClassNamedLists NamedLists;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter") FOmegaActorRelatives ActorRelatives;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="OmegaCharacter")
 	int32 Seed=-1;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="OmegaCharacter")
@@ -82,6 +84,7 @@ public:
 
 	virtual FOmegaBitflagsBase Bitflags_Get_Implementation() override { return Flags; };
 	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override { return NamedLists; };
+	virtual FOmegaActorRelatives ActorRelatives_Get_Implementation() override { return ActorRelatives; };
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 	virtual void GetAppearanceLibraries_Implementation(UOmegaAssetLibrary_Animation*& Anim, UOmegaAssetLibrary_Sound*& Sound, UOmegaAssetLibrary_SlateBrush*& Slate) override;

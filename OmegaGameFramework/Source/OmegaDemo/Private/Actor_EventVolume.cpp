@@ -3,8 +3,10 @@
 
 #include "Actor_EventVolume.h"
 
+#include "OmegaSettings.h"
 #include "Components/Component_Combatant.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/OmegaUtils_Macros.h"
 
 
 void UOmegaEventVolumeTriggerScript::TriggerEvent() const
@@ -13,6 +15,15 @@ void UOmegaEventVolumeTriggerScript::TriggerEvent() const
 	{
 		REF_Owner->Local_TryPlay();
 	}
+}
+
+void UOmegaEventVolumeTriggerScript::OnBeginPlay_Implementation(AOmega_EventVolume* Owner)
+{
+}
+
+FLinearColor UOmegaEventVolumeTriggerScript::GetVolumeColor_Implementation() const
+{
+	return FLinearColor::Black;
 }
 
 AOmega_EventVolume* UOmegaEventVolumeSequenceScript::GetOwningActor() const
@@ -24,13 +35,18 @@ AOmega_EventVolume* UOmegaEventVolumeSequenceScript::GetOwningActor() const
 	return nullptr;
 }
 
+void UOmegaEventVolumeSequenceScript::OnEventTriggered_Implementation(AActor* Owner) const
+{
+}
+
+
 AOmega_EventVolume::AOmega_EventVolume()
 {
 	Combatant = CreateDefaultSubobject<UCombatantComponent>("Combatant");
 	Shape=EVolumeShape::OmegaVolume_Box;
 }
 
-void AOmega_EventVolume::Local_TryPlay() const
+void AOmega_EventVolume::Local_TryPlay()
 {
 	if(GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(Conditions))
 	{
@@ -47,6 +63,7 @@ void AOmega_EventVolume::OnConstruction(const FTransform& Transform)
 	{
 		Color=TriggerScript->GetVolumeColor();
 	}
+	OGF_CFG()->OverrideActorLabel(this);
 	Super::OnConstruction(Transform);
 }
 

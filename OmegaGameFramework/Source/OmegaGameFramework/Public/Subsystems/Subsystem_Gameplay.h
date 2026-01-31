@@ -13,6 +13,7 @@
 #include "JsonObjectWrapper.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Types/Struct_SoftParams.h"
 #include "Subsystem_Gameplay.generated.h"
 
 class AOmegaGameplaySystem;
@@ -37,7 +38,7 @@ public:
 	
 	
 	UPROPERTY() FOmegaBaseSystemStats SystemsData;
-	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
+	UPROPERTY() FOmegaSoftParams GlobalVars;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Omega") FOmegaEntitySet Entities;
 	
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;

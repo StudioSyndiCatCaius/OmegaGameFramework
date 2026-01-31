@@ -15,6 +15,7 @@
 #include "Async/TaskGraphInterfaces.h"
 #include "Components/AudioComponent.h"
 #include "Engine/World.h"
+#include "Functions/F_GlobalParam.h"
 #include "Subsystems/Subsystem_BGM.h"
 
 
@@ -24,14 +25,14 @@ void AOmegaActorEnvironment::L_PresetSave()
 {
 	if(GetGameInstance() && current_preset)
 	{
-		GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->SetSoftProperty_DataAsset(SaveField_Preset.ToString(),current_preset,false);
+		UOmegaFunctions_GlobalVars::SetGlobalVariable_DataAsset(this,EOmegaGlobalParamTarget::SAVE_GAME,SaveField_Preset,current_preset);
 	}
 }
 
 void AOmegaActorEnvironment::L_PresetLoad()
 {
 	if(UOmegaEnvironmentPreset* p=Cast<UOmegaEnvironmentPreset>(
-			GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->GetSoftProperty_DataAsset(SaveField_Preset.ToString(),false)))
+			UOmegaFunctions_GlobalVars::GetGlobalVariable_DataAsset(this,EOmegaGlobalParamTarget::SAVE_GAME,SaveField_Preset)))
 	{
 		Set_Preset(p);
 	}

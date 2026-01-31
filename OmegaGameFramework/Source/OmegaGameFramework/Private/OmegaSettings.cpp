@@ -3,8 +3,8 @@
 
 #include "OmegaSettings.h"
 
-#include "OmegaSettings_Gameplay.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameplayConfig.h"
+#include "OmegaGameCore.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Functions/F_File.h"
 #include "PhysicsEngine/PhysicsSettings.h"
@@ -22,6 +22,7 @@ UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
    // System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
     System_Interaction=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
 }
+
 
 TSubclassOf<AOmegaGameplaySystem> UOmegaSettings::CorrectClass_System(TSubclassOf<AOmegaGameplaySystem> Class) const
 {
@@ -104,13 +105,13 @@ UClass* UOmegaSettings::GetOmegaGlobalSaveClass() const
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGlobal::StaticClass();
 }
 
-UOmegaGlobalSettings* UOmegaSettings::GetGlobalSettings()
+UOmegaGameCore* UOmegaSettings::GetGameCore() const
 {
-	if(TSoftClassPtr<UOmegaGlobalSettings> _cls=GetMutableDefault<UOmegaSettings>()->GlobalSettingsClass)
+	if (UOmegaGameCore* _core=GetMutableDefault<UOmegaGameCore>(GlobalSettingsClass.LoadSynchronous()))
 	{
-		return Cast<UOmegaGlobalSettings>(_cls.LoadSynchronous()->GetDefaultObject());
+	    return _core;
 	}
-	return GetMutableDefault<UOmegaGlobalSettings>();
+	return GetMutableDefault<UOmegaGameCore>();
 }
 
 UOmegaFileManagerSettings* UOmegaSettings::GetSettings_File() const
@@ -141,12 +142,12 @@ FOmegaInputConfig UOmegaSettings::GetInputActionConfig(FName input_action) const
     return temp.FindOrAdd(input_action);
 }
 
-TArray<UOmegaSettings_Gameplay*> UOmegaSettings::GetAllGameplaySettings() const
+TArray<UOmegaGameplayConfig*> UOmegaSettings::GetAllGameplaySettings() const
 {
-    TArray<UOmegaSettings_Gameplay*> out;
+    TArray<UOmegaGameplayConfig*> out;
     for (auto set : Imported_GameplaySettings)
     {
-        if (UOmegaSettings_Gameplay* s=set.LoadSynchronous())
+        if (UOmegaGameplayConfig* s=set.LoadSynchronous())
         {
             out.Add(s);
         }
@@ -206,7 +207,7 @@ const FOmegaBitmaskEditorData* UOmegaSettings::GetEditorDataForClass(UClass* Cla
         ParentClass = ParentClass->GetSuperClass();
     }
 
-    const FOmegaBitmaskEditorData output=GetGlobalSettings()->Bitflags_GetByObject(Class);
+    const FOmegaBitmaskEditorData output=GetGameCore()->Bitflags_GetByObject(Class);
     return &output;
 }
 

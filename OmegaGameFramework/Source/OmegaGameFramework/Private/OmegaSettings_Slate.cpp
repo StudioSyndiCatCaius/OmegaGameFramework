@@ -37,34 +37,30 @@ UOmegaStyleSettings::UOmegaStyleSettings(const FObjectInitializer& ObjectInitial
 	
 }
 
-
-UOmegaSettings_Slate::UOmegaSettings_Slate()
+TArray<UOmegaTextFormater_Collection*> UOmegaStyleSettings::L_GetTextFormaters()
 {
-	
-}
-
-FText UOmegaSettings_Slate::L_FormatDataWidgetText(UDataWidget* w, FText t) const
-{
-	if(TextFormater && w && DataWidgets_AutoFormatText)
+	TArray<UOmegaTextFormater_Collection*> out;
+	for (auto t :TextFormaters)
 	{
-		FOmegaCommonMeta met;
-		met.Context=nullptr;
-		if(w->ReferencedAsset)
+		if (UOmegaTextFormater_Collection* o=Cast<UOmegaTextFormater_Collection>(t.LoadSynchronous()))
 		{
-			met.Context=w->ReferencedAsset;
+			out.Add(o);
 		}
-		return TextFormater->ApplyTextFormat(t, w,DataWidgets_TextFormatTag,met);
 	}
-	return t;
+	return out;
 }
 
-UOmegaSettings_Slate* UOmegaSlateFunctions::GetCurrentSlateStyle()
+FText UOmegaStyleSettings::L_FormatGameplayText(FText text, UObject* WorldContext, FGameplayTag Tag, FOmegaCommonMeta meta)
 {
-	if(UObject* style_ref = GetMutableDefault<UOmegaSettings>()->DefaultSettings_Slate.TryLoad())
+	FText out=text;
+	for (auto* o : L_GetTextFormaters())
 	{
-		return Cast<UOmegaSettings_Slate>(style_ref);
+		if (o)
+		{
+			out=o->ApplyTextFormat(out,WorldContext,Tag,meta);
+		}
 	}
-	return nullptr;
+	return out;
 }
 
 void UOmegaSlateFunctions::SetSlateStyle_AllWidgets(UPanelWidget* Parent, EOmegaSlateTextType TextType, EOmegaSlateBorderType BorderType)

@@ -4,19 +4,20 @@
 #include "Functions/F_SoftProperty.h"
 
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
+#include "Functions/F_GlobalParam.h"
 
 //#####################################################################################################
 // Soft PROPERTY FUNCTIONS
 //#####################################################################################################
 FString UOmegaSoftPropertyFunctions::GetSoftProperty_String(UObject* Object, FName PropertyName)
 {
-	FString temp_val=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Object_OverrideSoftProperty(Object, PropertyName);
+	FString temp_val=GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_OverrideSoftProperty(Object, PropertyName);
 	if (!temp_val.IsEmpty())
 	{
 		return temp_val;
 	}
-	
+
 	FString OutVal;
 	
 	if(Object && Object->GetClass()->ImplementsInterface(UOmegaSoftPropertyInterface::StaticClass()))

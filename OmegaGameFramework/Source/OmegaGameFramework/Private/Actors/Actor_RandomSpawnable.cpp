@@ -6,7 +6,7 @@
 #include "Algo/RandomShuffle.h"
 #include "Components/ChildActorComponent.h"
 #include "Components/SphereComponent.h"
-#include "Functions/OmegaFunctions_GlobalParams.h"
+#include "Functions/F_GlobalParam.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -40,7 +40,7 @@ AOmega_RandomSpawnable::AOmega_RandomSpawnable()
 
 void AOmega_RandomSpawnable::BeginPlay()
 {
-	int32 in_seed=UOmegaGlobalVariables_Named::GetGlobalVariable_Int32(this,Seed_GlobalParamSource,Seed_GlobalParamName.ToString());
+	int32 in_seed=UOmegaFunctions_GlobalVars::GetGlobalVariable_Int32(this,Seed_GlobalParamSource,Seed_GlobalParamName);
 	Super::BeginPlay();
 	FRandomStream stream=FRandomStream(in_seed+2346);
 	float chance=stream.FRand();

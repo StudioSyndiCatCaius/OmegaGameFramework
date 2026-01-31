@@ -19,14 +19,7 @@ UWidgetSwitcher* UMenuBase_Title::GetWidget_WidgetSwitcher_State_Implementation(
 void UMenuBase_Title::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-	if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
-	{
-		if(IMG_Logo)
-		{
-			IMG_Logo->SetBrushResourceObject(set->LogoDefault.GetResourceObject());
-		}
-		
-	}
+	
 }
 
 void UMenuBase_SaveLoad::L_SetSavePathCategory(int32 cat)

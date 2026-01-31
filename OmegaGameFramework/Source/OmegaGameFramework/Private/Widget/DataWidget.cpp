@@ -18,6 +18,7 @@
 #include "TimerManager.h"
 #include "Functions/F_Utility.h"
 #include "OmegaSettings_Slate.h"
+#include "Functions/F_Text.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Widget/DataTooltip.h"
 
@@ -53,6 +54,9 @@ void UDataWidget::NativePreConstruct()
 			t->OnInit(this);
 		}
 	}
+	
+
+	
 	Refresh();
 
 }
@@ -73,9 +77,9 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 
 FText UDataWidget::L_FormatText(FText t)
 {
-	if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
+	if (OGF_CFG_STYLE()->bAutoFormatText_onDataWidgets)
 	{
-		return set->L_FormatDataWidgetText(this,t);
+		return UOmegaTextFunctions::ApplyGameplayTextFormating(this,t,OGF_CFG_STYLE()->DefaultTextFormatTag,FOmegaCommonMeta());
 	}
 	return t;
 }
@@ -370,10 +374,7 @@ void UDataWidget::Native_SetHovered(bool bHovered)
 				{
 					GetPlayerSubsystem()->PlayUiSound(HoverSound);
 				}
-				else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-				{
-					GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Hover.LoadSynchronous());
-				}
+				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Hover.LoadSynchronous());
 	
 				if (GetHoverAnimation())
 				{
@@ -501,10 +502,7 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(SelectSound);
 			}
-			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-			{
-				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Select.LoadSynchronous());
-			}
+			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Select.LoadSynchronous());
 		}
 	}
 	else
@@ -515,10 +513,7 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(ErrorSound);
 			}
-			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-			{
-				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Error.LoadSynchronous());
-			}
+			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Error.LoadSynchronous());
 		}
 	}
 }

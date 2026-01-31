@@ -451,6 +451,9 @@ public:
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "String -> Lua [Array]", BlueprintAutocast, Keywords="to, convert", WorldContext="WorldContextObject"), Category="Lua")
 	static FLuaValue Conv_StringToLuaValue_Array(UObject* WorldContextObject, TArray<FString> Value);
 
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua [Array] -> String [Array]", BlueprintAutocast, Keywords="to, convert"), Category="Lua")
+	static TArray<FString> Conv_LuaArrayToString_Array(TArray<FLuaValue> Value);
+	
 	// --------------------------------------------------
 	// Array
 	// --------------------------------------------------

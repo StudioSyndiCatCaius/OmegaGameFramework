@@ -11,7 +11,7 @@
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameCore.h"
 #include "Types/Struct_CustomNamedList.h"
 
 TSharedRef<IPropertyTypeCustomization> FCustomization_CustomNamedList::MakeInstance()
@@ -54,7 +54,7 @@ void FCustomization_CustomNamedList::CustomizeHeader(
             }
 
             // Get options from settings
-            TArray<FName> Options=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->CustomList_GetOptions(CurrentListID);
+            TArray<FName> Options=GetMutableDefault<UOmegaSettings>()->GetGameCore()->CustomList_GetOptions(CurrentListID);
 
             // Build menu
             FMenuBuilder MenuBuilder(true, nullptr);

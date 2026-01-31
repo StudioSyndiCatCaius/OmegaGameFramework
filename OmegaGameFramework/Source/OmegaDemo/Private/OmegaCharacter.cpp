@@ -9,7 +9,7 @@
 #include "Functions/F_Combatant.h"
 #include "OmegaMutable_Functions.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
