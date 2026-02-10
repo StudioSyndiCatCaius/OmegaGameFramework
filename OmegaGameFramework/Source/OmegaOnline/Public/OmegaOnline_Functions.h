@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "UObject/Object.h"
 #include "FindSessionsCallbackProxy.h"
 #include "Kismet/BlueprintFunctionLibrary.h"

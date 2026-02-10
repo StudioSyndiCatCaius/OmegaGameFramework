@@ -3,7 +3,7 @@
 
 #include "Components/Component_GroupedActorSpawner.h"
 
-#include "Functions/OmegaFunctions_Utility.h"
+#include "Functions/F_Utility.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UGroupedActorSpawnerComponent::BeginPlay()

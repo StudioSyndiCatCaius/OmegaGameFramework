@@ -21,18 +21,22 @@ void UAsyncAction_ActivateAbility::NativeShutdown(bool bCancelled)
 
 void UAsyncAction_ActivateAbility::Activate()
 {
-	AOmegaAbility* AbilityRef;
-	if(CombatantRef && !CombatantRef->IsAbilityActive(LocalAbilityClass, AbilityRef))
+	if(CombatantRef)
 	{
-		bool IsSuccess;
-		AOmegaAbility* LocalAbility = CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);
-		if(IsSuccess)
+		if(b_autoGrant)
 		{
-			LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::UAsyncAction_ActivateAbility::NativeShutdown);
-			return;
+			CombatantRef->SetAbilityGranted(LocalAbilityClass,true);
 		}
-		else
+		bool IsSuccess;
+		if(AOmegaAbility* LocalAbility=CombatantRef->GetAbility(LocalAbilityClass,IsSuccess))
 		{
+			IsSuccess=false;
+			if(LocalAbility->CanActivate(LocalContext))
+			{
+				CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);
+				LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::UAsyncAction_ActivateAbility::NativeShutdown);
+				return;
+			}
 			Failed.Broadcast();
 			SetReadyToDestroy();
 		}
@@ -45,13 +49,13 @@ void UAsyncAction_ActivateAbility::Activate()
 }
 
 UAsyncAction_ActivateAbility* UAsyncAction_ActivateAbility::ActivateAbility(UCombatantComponent* Combatant,
-                                                                            const TSubclassOf<AOmegaAbility> Ability, UObject* Context)
+                                                                            const TSubclassOf<AOmegaAbility> Ability, UObject* Context, bool bForceGrant)
 {
 	UAsyncAction_ActivateAbility* NewAbility = NewObject<UAsyncAction_ActivateAbility>();
 
 	NewAbility->CombatantRef = Combatant;
 	NewAbility->LocalAbilityClass = Ability;
 	NewAbility->LocalContext = Context;
-
+	NewAbility->b_autoGrant=bForceGrant;
 	return NewAbility;
 }

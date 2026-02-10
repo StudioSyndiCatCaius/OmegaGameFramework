@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Choice/OmegaLinearChoice.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "UObject/Object.h"
 #include "LinearChoice_SimpleChoice.generated.h"
 
@@ -24,7 +24,8 @@ public:
 	FOmegaSaveConditions Conditions;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
 	FGameplayTagContainer Tags;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
+	FOmegaBitflagsBase Flags;
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual bool IsChoiceAvailable_Implementation() const override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override {return Tags;};

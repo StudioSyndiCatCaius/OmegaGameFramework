@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Misc/OmegaUtils_Structs.h"
-
 #include "OmegaSettings_Preferences.generated.h"
 
 

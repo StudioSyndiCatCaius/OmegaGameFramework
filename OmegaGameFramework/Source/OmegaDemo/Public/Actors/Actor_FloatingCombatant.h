@@ -9,7 +9,7 @@
 #include "Components/Component_Combatant.h"
 #include "Components/TextRenderComponent.h"
 #include "Curves/CurveFloat.h"
-#include "Functions/OmegaFunctions_Actor.h"
+#include "Functions/F_Actor.h"
 
 #include "GameFramework/Actor.h"
 #include "Actor_FloatingCombatant.generated.h"
@@ -40,5 +40,5 @@ public:
 	UOmegaActorConfig* Config;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
+	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
 };

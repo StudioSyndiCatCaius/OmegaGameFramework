@@ -3,7 +3,7 @@
 
 #include "DataItemComponent.h"
 #include "Components/Component_Combatant.h"
-#include "OmegaDataSubsystem.h"
+
 
 // Sets default values for this component's properties
 UDataItemComponent::UDataItemComponent()
@@ -21,12 +21,11 @@ void UDataItemComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaDataSubsystem>()->RegisterDataComponent(this);
 
 	if(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
 	{
 		UCombatantComponent* LocalCombatant = Cast<UCombatantComponent>(GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()));
-		LocalCombatant->AddAttrbuteModifier(this);
+		LocalCombatant->SetAttributeModifierActive(this,true);
 		LocalCombatant->SetSkillSourceActive(this, true);
 	}
 
@@ -83,13 +82,13 @@ void UDataItemComponent::ApplyToActor(const FString& Flag, FGameplayTagContainer
 	}
 }
 
-TArray<FOmegaAttributeModifier> UDataItemComponent::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UDataItemComponent::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	if(DataItem)
 	{
-		return IDataInterface_AttributeModifier::Execute_GetModifierValues(DataItem);
+		return IDataInterface_AttributeModifier::Execute_GetModifierValues(DataItem,CombatantComponent);
 	}
-	return IDataInterface_AttributeModifier::GetModifierValues_Implementation();
+	return IDataInterface_AttributeModifier::GetModifierValues_Implementation(CombatantComponent);
 }
 
 TArray<UPrimaryDataAsset*> UDataItemComponent::GetSkills_Implementation(UCombatantComponent* Combatant)

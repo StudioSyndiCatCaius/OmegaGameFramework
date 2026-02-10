@@ -13,3 +13,4 @@ AActor* USaveCondition_ActorBase::GetConditionActor()
 	}
 	return nullptr;
 }
+

@@ -10,6 +10,7 @@ void UOmegaDamageType::GetGeneralDataText_Implementation(const FString& Label, c
                                                          FText& Description)
 {
 	Name = DamageTypeName;
+	Description= DisplayDescription;
 }
 
 void UOmegaDamageType::GetGeneralAssetColor_Implementation(FLinearColor& Color)
@@ -43,47 +44,64 @@ FGameplayTagContainer UOmegaDamageType::GetObjectGameplayTags_Implementation()
 //################################################################
 
 
+void UOmegaDamageTypeReaction::OnEffectApplied_Implementation(UCombatantComponent* Combatant,
+	AOmegaGameplayEffect* Effect) const
+{
+}
+
+float UOmegaDamageTypeReaction::OnDamageApplied_Implementation(UCombatantComponent* Combatant,
+	UOmegaAttribute* Attribute, float BaseDamage) const
+{
+	return BaseDamage;
+}
+
+UOmegaDamageTypeReactionAsset::UOmegaDamageTypeReactionAsset()
+{
+	if(!b_init)
+	{
+		b_init=true;
+		if(ReactionScript)
+		{
+			ReactionScripts.Add(ReactionScript);
+			ReactionScript=nullptr;
+		}
+	}
+}
+
 void UOmegaDamageTypeReactionAsset::GetGeneralAssetColor_Implementation(FLinearColor& Color)
 {
 	Color = ReactionColor;
 }
 
-void UOmegaDamageTypeReactionAsset::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
-	FText& Name, FText& Description)
+float UOmegaDamageTypeReactionAsset::ModifyDamage_Implementation(UOmegaAttribute* Attribute,
+	UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
-	Name = ReactionName;
-	Description = ReactionDescription;
+	float dmg=BaseDamage;
+	for(auto* s : ReactionScripts)
+	{
+		if(s)
+		{
+			dmg=s->OnDamageApplied(Target,Attribute,BaseDamage);
+		}
+	}
+	return dmg;
 }
 
-FGameplayTagContainer UOmegaDamageTypeReactionAsset::GetObjectGameplayTags_Implementation()
-{
-	return ReactionTags;
-}
 
 UOmegaDamageTypeReaction* UOmegaDamageTypeFunctions::GetScriptFromCombatantDamageReaction(UCombatantComponent* Combatant,
-	UOmegaDamageType* DamageType, TSubclassOf<UOmegaDamageTypeReaction> ScriptClass)
+                                                                                          UOmegaDamageType* DamageType, TSubclassOf<UOmegaDamageTypeReaction> ScriptClass)
 {
 	if(Combatant && DamageType)
 	{
 		if(const UOmegaDamageTypeReactionAsset* ReactAsset = Combatant->DamageTypeReactions.FindOrAdd(DamageType))
 		{
-			if(ReactAsset->ReactionScript)
-			{
-				return ReactAsset->ReactionScript;
-			}
+			
 		}
 	}
 	return nullptr;
 }
 
-void UOmegaDamageTypeReaction::OnEffectApplied_Implementation(AOmegaGameplayEffect* Effect) const
-{
-}
 
-float UOmegaDamageTypeReaction::OnDamageApplied_Implementation(UOmegaAttribute* Attribute, float BaseDamage) const
-{
-	return BaseDamage;
-}
 
 //################################################################
 // DAMAGE SCRIPT

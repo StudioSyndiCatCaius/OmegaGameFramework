@@ -5,13 +5,13 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Styling/SlateBrush.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "GameplayTagContainer.h"
-#include "Curves/CurveFloat.h"
-#include "Functions/OmegaFunctions_AVContext.h"
+#include "Functions/F_AVContext.h"
 #include "OmegaAttribute.generated.h"
 
 class UCombatantComponent;
+class UCurveFloat;
 
 USTRUCT(BlueprintType)
 struct FOmegaAttributeModifier
@@ -24,6 +24,55 @@ struct FOmegaAttributeModifier
 	float Incrementer = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
 	float Multiplier = 0;
+
+	static TArray<FOmegaAttributeModifier> Simplify(TArray<FOmegaAttributeModifier> in)
+	{
+		TArray<FOmegaAttributeModifier> out;
+		TArray<UOmegaAttribute*> att_list;
+		TMap<UOmegaAttribute*,float> att_inc;
+		TMap<UOmegaAttribute*,float> att_mult;
+		for(auto a : in)
+		{
+			if(a.Attribute)
+			{
+				att_list.AddUnique(a.Attribute);
+				att_inc.Add(a.Attribute,att_inc.FindOrAdd(a.Attribute)+a.Incrementer);
+				att_mult.Add(a.Attribute,att_mult.FindOrAdd(a.Attribute)+a.Multiplier);
+			}
+		}
+		for(auto* a : att_list)
+		{
+			FOmegaAttributeModifier mod;
+			mod.Attribute=a;
+			mod.Incrementer=att_inc.FindOrAdd(a);
+			mod.Multiplier=att_mult.FindOrAdd(a);
+			out.Add(mod);
+		}
+		return out;
+	}
+
+	static TArray<FOmegaAttributeModifier> FromFlat(TMap<UOmegaAttribute*, float> vals, bool bMultiplier=false)
+	{
+		TArray<FOmegaAttributeModifier> out;
+		for(auto& p :vals)
+		{
+			if(p.Key)
+			{
+				FOmegaAttributeModifier mod;
+				mod.Attribute=p.Key;
+				if(bMultiplier)
+				{
+					mod.Multiplier=p.Value;
+				}
+				else
+				{
+					mod.Incrementer=p.Value;
+				}
+				out.Add(mod);
+			}
+		}
+		return out;
+	}
 };
 
 UCLASS()
@@ -161,6 +210,17 @@ public:
 // Attribute Set
 // ==================================================================================================================
 
+USTRUCT(BlueprintType)
+struct FOmegaAttributeSetOverride
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute") bool bOverrideMax;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute",meta=(EditCondition="bOverrideMax")) float MaxOverride;
+	
+};
+
+
 UCLASS(BlueprintType, Blueprintable)
 class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
 {
@@ -171,20 +231,18 @@ public:
 	TArray<UOmegaAttributeSet*> InheritedSets;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
-	TArray<class UOmegaAttribute*> Attributes;
+	TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> Attributes;
 
 	UPROPERTY()
 	FGameplayTag ValueCategory;
 
-	UFUNCTION(BlueprintPure, Category="Attributes")
-	TArray<UOmegaAttribute*> GetAllAttributes();
-	UFUNCTION(BlueprintPure, Category="Attributes")
-	TArray<UOmegaAttribute*> GetMetricAttributes();
-	UFUNCTION(BlueprintPure, Category="Attributes")
-	TArray<UOmegaAttribute*> GetStaticAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetAllAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetMetricAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetStaticAttributes();
 	
-	UFUNCTION()
-	TArray<UOmegaAttribute*> Local_GetAtt(bool bStatic);
+	UFUNCTION() float GetAttributeMax(UOmegaAttribute* Attribute);
+	UFUNCTION() TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> GetAttributeConfigs();
+	UFUNCTION() TArray<UOmegaAttribute*> Local_GetAtt(bool bStatic);
 };
 
 // This class does not need to be modified.
@@ -200,8 +258,42 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_AttributeModifier
 public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Attributes|Modifiers")
-	TArray<FOmegaAttributeModifier> GetModifierValues();
+	TArray<FOmegaAttributeModifier> GetModifierValues(UCombatantComponent* CombatantComponent);
 };
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const,Abstract)
+class UOmegaScripted_AttributeModifier : public UObject, public IDataInterface_AttributeModifier
+{
+	GENERATED_BODY()
+
+public:
+
+	
+};
+
+
+USTRUCT(BlueprintType)
+struct FOmegaScripted_AttributeModifiers
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="AttributeModifiers")
+	TArray<UOmegaScripted_AttributeModifier*> Modifiers;
+
+	TArray<FOmegaAttributeModifier> GatherModifiers(UCombatantComponent* CombatantComponent) const
+	{
+		TArray<FOmegaAttributeModifier> out;
+		for(auto* i : Modifiers)
+		{
+			if(i)
+			{
+				out.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(i,CombatantComponent));
+			}
+		}
+		return out;
+	};
+};
+
+
 
 // ==================================================================================================================
 // Modifier Container
@@ -213,7 +305,7 @@ class OMEGAGAMEFRAMEWORK_API UAttributeModifierContainer : public UObject, publi
 	GENERATED_BODY()
 
 public:
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 
 	UPROPERTY() UOmegaAttribute* Attribute;
 	UPROPERTY() float IncValue;

@@ -6,6 +6,11 @@
 #include "Blueprint/UserWidget.h"
 #include "OmegaUserWidget.generated.h"
 
+class UImage;
+class UCommonTextBlock;
+class UCommonBorder;
+class USizeBox;
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaUserWidget : public UUserWidget
 {
@@ -13,26 +18,13 @@ class OMEGAGAMEFRAMEWORK_API UOmegaUserWidget : public UUserWidget
 
 public:
 	//---------------------------------------------------------------------------------------------//
-	//	State
+	//	Bindings
 	//---------------------------------------------------------------------------------------------//
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OmegaWidget")
-	TArray<UPrimaryDataAsset*> Traits;
-
-	UFUNCTION(BlueprintCallable,Category="Traits")
-	void SetTraitActive(UPrimaryDataAsset* Subscript, bool Active)
-	{
-		if(Active && !Traits.Contains(Subscript))
-		{
-			Traits.AddUnique(Subscript);
-		}
-		if(!Active && Traits.Contains(Subscript))
-		{
-			Traits.Remove(Subscript);
-		}
-	};
-	
-	UFUNCTION(BlueprintPure,Category="Traits")
-	bool HasTrait(UPrimaryDataAsset* Subscript) const { return Traits.Contains(Subscript); }
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") USizeBox* GetSizeBox_ByName(FName Name);
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") UCommonBorder* GetBorder_ByName(FName Name);
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") UCommonTextBlock* GetText_ByName(FName Name);
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") UImage* GetImage_ByName(FName Name);
+	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") UUserWidget* GetUserWidget_ByName(FName Name);
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Tags

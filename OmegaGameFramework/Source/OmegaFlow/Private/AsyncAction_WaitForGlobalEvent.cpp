@@ -4,14 +4,14 @@
 #include "AsyncAction_WaitForGlobalEvent.h"
 
 #include "Engine/GameInstance.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Player.h"
 
 // ==============================================
 // Name
 // ==============================================
 
-void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Context)
+void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Context,FOmegaCommonMeta _meta)
 {
 	if(Event == EventRef)
 	{
@@ -39,7 +39,7 @@ UAsyncAction_WaitForGlobalEvent* UAsyncAction_WaitForGlobalEvent::WaitForGlobalE
 // Tagged
 // ==============================================
 
-void UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent(FGameplayTag Event, UObject* Context)
+void UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta _meta)
 {
 	if(Event == EventRef)
 	{

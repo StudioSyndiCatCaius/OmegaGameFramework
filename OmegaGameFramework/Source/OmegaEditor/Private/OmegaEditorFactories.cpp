@@ -7,6 +7,7 @@
 #include "DetailCategoryBuilder.h"
 #include "IAssetTools.h"
 #include "KismetCompilerModule.h"
+#include "WidgetBlueprint.h"
 #include "Kismet2/KismetEditorUtilities.h"
 
 
@@ -177,12 +178,13 @@ UObject* UOmegaMenu_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, 
 	}
 	else
 	{
-		return FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, Name, BPTYPE_Normal, UBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(), CallingContext);
+		return FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, Name, BPTYPE_Normal, UWidgetBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(), CallingContext);
 	}
 }
 
 //////// Hud Layer ////////
 UOmegaHudLayer_Factory::UOmegaHudLayer_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) {
+	
 	SupportedClass = UHUDLayer::StaticClass();
 	ParentClass = UHUDLayer::StaticClass();
 	bEditAfterNew = true;
@@ -202,7 +204,7 @@ UObject* UOmegaHudLayer_Factory::FactoryCreateNew(UClass* Class, UObject* InPare
 	}
 	else
 	{
-		return FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, Name, BPTYPE_Normal, UBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(), CallingContext);
+		return FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, Name, BPTYPE_Normal, UWidgetBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(), CallingContext);
 	}
 }
 

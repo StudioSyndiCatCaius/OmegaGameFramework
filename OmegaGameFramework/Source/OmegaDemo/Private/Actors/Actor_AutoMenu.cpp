@@ -2,10 +2,11 @@
 
 #include "Actors/Actor_AutoMenu.h"
 #include "Components/Component_ActorConfig.h"
-#include "Interfaces/OmegaInterface_ObjectTraits.h"
+#include "Interfaces/I_ObjectTraits.h"
 #include "Components/TextRenderComponent.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
-#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Misc/OmegaGameMode.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_Zone.h"
 
 void AOmegaAutoMenu::Native_OnMenuClosed(FGameplayTagContainer GameplayTags, UObject* Context, FString Flag)
 {
@@ -20,6 +21,13 @@ void AOmegaAutoMenu::Native_OnMenuClosed(FGameplayTagContainer GameplayTags, UOb
 	}
 }
 
+void AOmegaAutoMenu::L_OpenMenu()
+{
+	UOmegaPlayerSubsystem* _sys = GetWorld()->GetFirstPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+	REF_Menu=_sys->OpenMenu(Menu,MenuContext,MenuTags,MenuFlag);
+	REF_Menu->OnClosed.AddDynamic(this, &AOmegaAutoMenu::Native_OnMenuClosed);
+}
+
 AOmegaAutoMenu::AOmegaAutoMenu()
 {
 	AutoPossessPlayer=EAutoReceiveInput::Player0;
@@ -27,8 +35,13 @@ AOmegaAutoMenu::AOmegaAutoMenu()
 
 void AOmegaAutoMenu::BeginPlay()
 {
-	UOmegaPlayerSubsystem* _sys = GetWorld()->GetFirstPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
-	REF_Menu=_sys->OpenMenu(Menu,MenuContext,MenuTags,MenuFlag);
-	REF_Menu->OnClosed.AddDynamic(this, &AOmegaAutoMenu::Native_OnMenuClosed);
+	if(AOmegaGameMode* _gm=Cast<AOmegaGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		_gm->OnLoadEventFinish.AddDynamic(this,&AOmegaAutoMenu::L_OpenMenu);
+	}
+	else
+	{
+		L_OpenMenu();
+	}
 	Super::BeginPlay();
 }

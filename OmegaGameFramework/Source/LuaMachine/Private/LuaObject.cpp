@@ -115,16 +115,6 @@ FLuaValue ULuaObjectFunctions::ConvertTableKeysToValues(UObject* WorldContextObj
 	return new_table;
 }
 
-FLuaValue ULuaObjectFunctions::RunLuaScriptContainer(UObject* WorldContextObject, FLuaScriptContainer Script,
-	TSubclassOf<ULuaState> State)
-{
-	if(Script.code_asset)
-	{
-		return ULuaBlueprintFunctionLibrary::LuaRunCodeAsset(WorldContextObject, State,Script.code_asset);
-	}
-	return ULuaBlueprintFunctionLibrary::LuaRunString(WorldContextObject, State,Script.code_string);
-}
-
 void ULuaObjectFunctions::GetObjectKeyAndValue(UObject* Object, FLuaValue& Key, FLuaValue& Value)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(ULuaInterface::StaticClass()))

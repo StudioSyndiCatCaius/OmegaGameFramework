@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GeneralDataObject.h"
 
 #include "Engine/DataAsset.h"
-#include "Functions/OmegaFunctions_AVContext.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Functions/F_AVContext.h"
+#include "Interfaces/I_Combatant.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "OmegaDamageType.generated.h"
 
@@ -26,9 +27,10 @@ public:
 	//General
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Name")
 	FText DamageTypeName;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Icon")
 	FSlateBrush DamageTypeIcon;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Description",meta=(MultiLine))
+	FText DisplayDescription;	
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="General", DisplayName="Color")
 	FLinearColor DamageTypeColor;
@@ -85,10 +87,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReaction : public UObject
 public:
 
 	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
-	float OnDamageApplied(UOmegaAttribute* Attribute, float BaseDamage) const;
+	float OnDamageApplied(UCombatantComponent* Combatant,UOmegaAttribute* Attribute, float BaseDamage) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category="Damage Type")
-	void OnEffectApplied(AOmegaGameplayEffect* Effect) const;
+	void OnEffectApplied(UCombatantComponent* Combatant,AOmegaGameplayEffect* Effect) const;
 
 };
 
@@ -97,32 +99,25 @@ public:
 //##################################################################################################################
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReactionAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeReactionAsset : public UOmegaDataAsset, public IDataInterface_DamageModifier
 {
 	GENERATED_BODY()
 
+	// remove this in future versions
+	UPROPERTY() bool b_init;
+	UPROPERTY() UOmegaDamageTypeReaction* ReactionScript;
 public:
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
-	FText ReactionName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
-	FText ReactionDescription;
+	UOmegaDamageTypeReactionAsset();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Default")
 	FLinearColor ReactionColor;
 
 	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-												   FText& Description) override;
-
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category="Default")
-	UOmegaDamageTypeReaction* ReactionScript;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Default")
-	FGameplayTagContainer ReactionTags;
+	TArray<UOmegaDamageTypeReaction*> ReactionScripts;
 
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+	
 };
 
 //##################################################################################################################
@@ -134,6 +129,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaDamageTypeFunctions : public UBlueprintFuncti
 {
 	GENERATED_BODY()
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Combat|DamageType|Reactions", meta=(DeterminesOutputType="ScriptClass"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combat|DamageType|Reactions", meta=(DeterminesOutputType="ScriptClass",DeprecatedFunction))
 	static UOmegaDamageTypeReaction* GetScriptFromCombatantDamageReaction(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, TSubclassOf<UOmegaDamageTypeReaction> ScriptClass);
 };

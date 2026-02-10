@@ -4,7 +4,7 @@
 #include "AsyncAction_WaitForFlag.h"
 
 #include "Engine/GameInstance.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_GameManager.h"
 
 
 void UAsyncAction_WaitForFlag::Native_OnFlagEvent(FString Flag, bool State)

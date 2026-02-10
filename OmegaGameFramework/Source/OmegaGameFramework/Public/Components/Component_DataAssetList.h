@@ -3,9 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "Misc/OmegaUtils_Enums.h"
 #include "Component_DataAssetList.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDataAssetListEdited, UDataAssetListComponent*, Component, UPrimaryDataAsset*, Asset, bool, bAdded);
@@ -15,8 +13,6 @@ UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UDataAssetListComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
-
 	
 public:
 

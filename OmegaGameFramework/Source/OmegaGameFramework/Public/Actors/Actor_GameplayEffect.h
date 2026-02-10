@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Blueprint/UserWidget.h"
-#include "Misc/OmegaDamageType.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "Actor_GameplayEffect.generated.h"
 
 class AOmegaGameplayEffect;
 class CombatantComponent;
+class UOmegaDamageType;
 
 // ==============================================================================
 // Formula
@@ -102,21 +102,8 @@ enum class EOmegaEffectReplacement : uint8
 
 };
 
-USTRUCT(BlueprintType)
-struct FOmegaEffectContainer
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
-	TSubclassOf<AOmegaGameplayEffect> EffectClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
-	float Power = 1.0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
-	FGameplayTagContainer AddedTags;
-};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEffectTriggered, AOmegaGameplayEffect*, Effect, float, DamageValue);
-
 
 UENUM()
 enum class EEffectLifetime : uint8
@@ -144,18 +131,13 @@ class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IGamep
 {
 	GENERATED_BODY()
 
-
-public:	
-	// Sets default values for this actor's properties
+public:
 	AOmegaGameplayEffect();
-
-protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-public:
-
+	
+	UPROPERTY(BlueprintAssignable) FOnEffectTriggered OnEffectTriggered;
+	
 	//This is the default chance this effect has of being successfully applied. 1 = Always successful
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
 	float DefaultSuccessRate = 1.0;
@@ -174,16 +156,19 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Effect Triggered", Category = "Ω|Gameplay|Effects")
-		void EffectApplied(float DamageValue);
+	void EffectApplied(float DamageValue);
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Gameplay|Effects")
-		void TriggerEffect();
+	void TriggerEffect();
 
-	UPROPERTY(BlueprintAssignable)
-	FOnEffectTriggered OnEffectTriggered;
+	UFUNCTION(BlueprintCallable, Category = "Ω|Gameplay|Effects")
+	void RemoveEffects_OfThisClass();
 
+	UFUNCTION(BlueprintCallable, Category = "Ω|Gameplay|Effects",meta=(ExpandBoolAsExecs="result"))
+	AOmegaGameplayEffect* TryGetEffect_OfThisClass(bool& result);
+	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
-		FHitResult GetImpactHitResult();
+	FHitResult GetImpactHitResult();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
 	void EffectBeginPlay(UObject* Context);

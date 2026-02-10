@@ -30,25 +30,3 @@ public:
 	void Local_TimerEnd();
 };
 
-UCLASS(DisplayName="Camera: Fade")
-class OMEGADEMO_API UFlowNode_Camera_Fade : public UFlowNode
-{
-	GENERATED_BODY()
-
-public:
-	UFlowNode_Camera_Fade();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
-	float BeginAlpha = 1.0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
-	float EndAlpha;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
-	FLinearColor Color;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
-	float Duration = 0.5;
-
-	
-	virtual void ExecuteInput(const FName& PinName) override;
-	UFUNCTION()
-	void LocalFinish(UOmegaLinearEvent* Event, const FString& Flag);
-};

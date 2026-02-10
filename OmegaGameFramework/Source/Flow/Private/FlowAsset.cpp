@@ -13,8 +13,13 @@
 #include "Nodes/Route/FlowNode_SubGraph.h"
 
 #include "Engine/World.h"
+#include "Misc/OmegaUtils_Actor.h"
+#include "Nodes/Route/FlowNode_Hub.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
+#include "Subsystems/Subsystem_Actors.h"
+
+class UOmegaActorSubsystem;
 
 UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -32,6 +37,34 @@ UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	{
 		AssetGuid = FGuid::NewGuid();
 	}
+}
+
+
+void UFlowAsset::SetLocalParam_Bool(FName Param, bool val)
+{
+	FlowParams.Add(Param,val);
+}
+
+void UFlowAsset::SetLocalParam_Int(FName Param, int32 val, bool Add)
+{
+	if(Add)
+	{
+		FlowParams.Add(Param,FlowParams.FindOrAdd(Param)+val);
+	}
+	else
+	{
+		FlowParams.Add(Param,val);
+	}
+}
+
+bool UFlowAsset::GetLocalParam_Bool(FName Param)
+{
+	if(FlowParams.FindOrAdd(Param)) { return 1; } return 0;
+}
+
+int32 UFlowAsset::GetLocalParam_Int(FName Param)
+{
+	return FlowParams.FindOrAdd(Param);
 }
 
 #if WITH_EDITOR
@@ -105,7 +138,7 @@ void UFlowAsset::RegisterNode(const FGuid& NewGuid, UFlowNode* NewNode)
 {
 	NewNode->SetGuid(NewGuid);
 	Nodes.Emplace(NewGuid, NewNode);
-
+	
 	HarvestNodeConnections();
 }
 
@@ -206,7 +239,47 @@ void UFlowAsset::HarvestNodeConnections()
 		}
 	}
 }
+
+UEdGraphNode* GetGraphNodeFromFlowNode(UEdGraph* graph, const UFlowNode* node)
+{
+	if(node)
+	{
+		for(TObjectPtr<UEdGraphNode> gnode : graph->Nodes)
+		{
+			if(gnode->NodeGuid==node->GetGuid())
+			{
+				return gnode;
+			}
+		}
+	}
+	return nullptr;
+}
+
+
 #endif
+
+TArray<UFlowNode*> UFlowAsset::GetNodes_OrderedByPosition()
+{
+	TArray<UFlowNode*> out_nodes = GetAllNodes();
+#if WITH_EDITOR
+
+	// Sort by score in ascending order
+	out_nodes.Sort([this](const UFlowNode& A, const UFlowNode& B) {
+		int32 a_val=0;
+		int32 b_val=0;
+		if(UEdGraphNode* gnode = GetGraphNodeFromFlowNode(GetGraph(),&A))
+		{
+			a_val=gnode->NodePosY+gnode->NodePosX;
+		}
+		if(UEdGraphNode* gnode = GetGraphNodeFromFlowNode(GetGraph(),&B))
+		{
+			b_val=gnode->NodePosY+gnode->NodePosX;
+		}
+		return a_val < b_val;
+	});
+#endif
+	return out_nodes;
+}
 
 void UFlowAsset::AddInstance(UFlowAsset* Instance)
 {
@@ -374,7 +447,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 	PreStartFlow();
 
 	//Run Traits
-	for(UFlowAssetTrait* TempTrait : Traits)
+	for(UFlowAssetTrait* TempTrait : L_GetTraits())
 	{
 		if(TempTrait)
 		{
@@ -384,7 +457,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 	
 	ensureAlways(StartNode);
 	RecordedNodes.Add(StartNode);
-
+	FlowMeta=OverrideData.meta;
 	//Try Override Nodes
 	if(OverrideData.bOverrideStartingNodes)
 	{
@@ -407,7 +480,7 @@ void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool b
 {
 	FinishPolicy = InFinishPolicy;
 
-	for(UFlowAssetTrait* TempTrait : Traits)
+	for(UFlowAssetTrait* TempTrait : L_GetTraits())
 	{
 		if(TempTrait)
 		{
@@ -471,7 +544,7 @@ void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, bool 
 			ActiveNodes.Add(Node);
 			RecordedNodes.Add(Node);
 		}
-		for(auto* t : Traits)
+		for(auto* t : L_GetTraits())
 		{
 			if(t)
 			{
@@ -669,6 +742,29 @@ FGameplayTagContainer UFlowAsset::GetObjectGameplayTags_Implementation()
 	return GameplayTags;
 }
 
+FGameplayTag UFlowAsset::GetMessageCategoryTag() const
+{
+	if(MessageCategory.IsValid()) { return MessageCategory; }
+	return GetMutableDefault<UFlowSettings>()->DefaultMessageCategory;
+}
+
+TArray<UFlowAssetTrait*> UFlowAsset::L_GetTraits() const
+{
+	TArray<UFlowAssetTrait*> out;
+	for(auto* i: Trait_Collections)
+	{
+		if(i)
+		{
+			out.Append(i->Traits);
+		}
+	}
+	for(auto* i : Traits)
+	{
+		if(i) { out.Add(i);}
+	}
+	return out;
+}
+
 TArray<UFlowNode*> UFlowAsset::GetAllNodes()
 {
 	TArray<UFlowNode*> OutNodes;
@@ -709,20 +805,69 @@ void UFlowAsset::ForceActivateNode(FGuid NodeGuid, FName InputName)
 	TriggerInput(NodeGuid, InputName);
 }
 
-void UFlowAsset::NotifyFlow(FName Notify, UObject* Context)
+bool UFlowAsset::ForceActivateHubNode(FName HubName)
 {
-	for(auto* TempTrait : Traits)
+	for(auto* f : GetAllNodes())
+	{
+		if(f)
+		{
+			if(f->GetClass()->IsChildOf(UFlowNode_Hub::StaticClass()) && Cast<UFlowNode_Hub>(f)->HubName==HubName)
+			{
+				f->TriggerInput("In", EFlowPinActivationType::Forced);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+AActor* UFlowAsset::GetActorByBinding_Asset(UPrimaryDataAsset* Asset,bool bFallbackToFirstIdentity)
+{
+	if(GetWorld() && ActorBindings_ByAsset.Contains(Asset) && ActorBindings_ByAsset[Asset])
+	{
+		return ActorBindings_ByAsset[Asset]->Private_GetActor(GetWorld());
+	}
+	if(bFallbackToFirstIdentity)
+	{
+		if(UOmegaActorSubsystem* actor_subsystem=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+		{
+			if(AActor* a= actor_subsystem->GetFirstActorIfIdentity(Asset))
+			{
+				return a;
+			}
+		}
+	}
+	return nullptr;
+}
+
+AActor* UFlowAsset::GetActorByBinding_Name(FName Name)
+{
+	if(GetWorld() && ActorBindings_ByName.Contains(Name) && ActorBindings_ByName[Name])
+	{
+		return ActorBindings_ByName[Name]->Private_GetActor(GetWorld());
+	}
+	return nullptr;
+}
+
+void UFlowAsset::FireFlowSignal(FName Signal, UObject* Context)
+{
+	for(auto* TempTrait : L_GetTraits())
 	{
 		if(TempTrait)
 		{
-			TempTrait->FlowNotified(this,Notify,Context);
+			TempTrait->FlowNotified(this,Signal,Context);
 		}
 	}
 	for(auto* TempNode : GetAllNodes())
 	{
 		if(TempNode)
 		{
-			TempNode->FlowNotified(Notify,Context);
+			TempNode->FlowNotified(Signal,Context);
 		}
 	}
+	if(UFlowSubsystem* subsystem=GetFlowSubsystem())
+	{
+		subsystem->OnFlowSignal.Broadcast(this,Signal,Context);
+	}
 }
+

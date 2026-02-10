@@ -6,13 +6,7 @@ public class OmegaGameFramework : ModuleRules
 {
 	public OmegaGameFramework(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
-		//bEnforceIWYU = true;
-		bUseUnity = false;
-
-		PrecompileForTargets = PrecompileTargetsType.Any;
-
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -34,6 +28,7 @@ public class OmegaGameFramework : ModuleRules
 			{
 				"Core",
 				"CoreUObject",
+				"OmegaCore",
 				"CommonUI",
 				"CommonInput",
 				"EnhancedInput",
@@ -58,10 +53,6 @@ public class OmegaGameFramework : ModuleRules
 				"BinkMediaPlayer",
 				"StateTreeModule",
 				"GameplayStateTreeModule",
-				//"GameplayTasks",
-				//"GameFeatures",
-				//"ModularGameplay"
-				// ... add other public dependencies that you statically link with here ...
 			}
 			);
 		
@@ -78,7 +69,6 @@ public class OmegaGameFramework : ModuleRules
 				"PropertyPath",
 				"DeveloperSettings",
 				"AudioPlatformConfiguration",
-				// ... add private dependencies that you statically link with here ...	
 			}
 			);
 		

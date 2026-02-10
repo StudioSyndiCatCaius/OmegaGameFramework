@@ -38,12 +38,13 @@ public class LuaMachineEditor : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-				// ... add private dependencies that you statically link with here ...
                 "UnrealEd",
                 "Projects",
                 "InputCore",
                 "EditorStyle",
-                "LuaMachine"
+                "LuaMachine",
+                "ToolMenus",
+                "LevelEditor",
             }
             );
 
@@ -51,7 +52,6 @@ public class LuaMachineEditor : ModuleRules
         DynamicallyLoadedModuleNames.AddRange(
             new string[]
             {
-				// ... add any modules that your module loads dynamically here ...
 			}
             );
     }

@@ -7,7 +7,8 @@
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "AsyncAction_StartFlowAsset.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFlowTaskFinish, FName, Node, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnFlowTaskFinish, UFlowAsset*, Instance, FName, Node, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFlowTaskStart, UFlowAsset*, Instance);
 
 UCLASS()
 class OMEGAFLOW_API UAsyncAction_StartFlowAsset : public UBlueprintAsyncActionBase
@@ -16,8 +17,8 @@ class OMEGAFLOW_API UAsyncAction_StartFlowAsset : public UBlueprintAsyncActionBa
 
 public:
 
-	UPROPERTY(BlueprintAssignable)
-	FOnFlowTaskFinish OnFinish;
+	UPROPERTY(BlueprintAssignable) FOnFlowTaskFinish OnFinish;
+	UPROPERTY(BlueprintAssignable) FOnFlowTaskStart Begin;
 
 	UPROPERTY() const UObject* LocalWorldContext;
 	UPROPERTY() FFlowAssetOverrideData Local_StartNode;
@@ -25,6 +26,7 @@ public:
 	UPROPERTY() FName Local_Input;
 	UPROPERTY() bool Local_MultiInst;
 	UPROPERTY() UFlowAsset* Local_FlowAsset;
+	UPROPERTY() UFlowAsset* Local_FlowInst;
 
 	UFUNCTION()
 	void Native_OnFinishFlow(UFlowAsset* FlowAsset, FName Output, const FString& Flag);

@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Components/ActorComponent.h"
-#include "GameFramework/Actor.h"
 #include "Component_InstancedActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInstanceNotify, AOmegaInstanceActor*, Instance, FName, Notify);
@@ -21,6 +20,7 @@ class OMEGAGAMEFRAMEWORK_API UInstanceActorComponent : public UActorComponent, p
 protected:
 
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	UInstanceActorComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
@@ -29,6 +29,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Instanced Actor Component", meta=(ExposeOnSpawn))
 	TSubclassOf<AOmegaInstanceActor> InstancedActorClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Instanced Actor Component", meta=(ExposeOnSpawn))
+	FName Instance_NamePrefex;
 	
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component", meta=(AdvancedDisplay="LocalTransform"))
 	AOmegaInstanceActor* CreateInstance(UObject* Context, const FString& Flag, FTransform LocalTransform);
@@ -36,8 +38,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component", meta=(AdvancedDisplay="LocalTransform"))
 	void CreateInstances(TArray<UObject*> Contexts, const FString& Flag, FTransform LocalTransform);
 	
+	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component",DisplayName="Try Get Instance",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Result"))
+    AOmegaInstanceActor* TryGetInstanceByContext(UObject* Context, bool CreateIfInvalid, TSubclassOf<AOmegaInstanceActor> Class, bool& Result);
+	
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component",DisplayName="Get Instance (By Context)")
 	AOmegaInstanceActor* GetInstanceByContext(UObject* Context);
+
+	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
+	TArray<AOmegaInstanceActor*> GetInstancesByContexts(TArray<UObject*> Contexts);
 
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component",DisplayName="Get Instance (By Name)")
 	AOmegaInstanceActor* GetInstanceByName(const FString& Name);

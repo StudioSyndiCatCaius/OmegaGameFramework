@@ -67,13 +67,15 @@ void UFlowSubsystem::AbortActiveFlows()
 	RootInstances.Empty();
 }
 
-void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, FFlowAssetOverrideData OverrideData, const FName InputName, const bool bAllowMultipleInstances)
+UFlowAsset* UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, FFlowAssetOverrideData OverrideData, const FName InputName, const bool bAllowMultipleInstances)
 {
 	UFlowAsset* NewFlow = CreateRootFlow(Owner, FlowAsset, bAllowMultipleInstances);
 	if (NewFlow)
 	{
 		NewFlow->StartFlow(GetGameInstance(), OverrideData, InputName);
+		return NewFlow;
 	}
+	return nullptr;
 }
 
 UFlowAsset* UFlowSubsystem::CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances)

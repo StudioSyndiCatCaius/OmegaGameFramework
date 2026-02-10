@@ -3,7 +3,7 @@
 
 #include "AsyncAction_WaitForFadeState.h"
 
-#include "Subsystems/OmegaSubsystem_GameManager.h"
+#include "Subsystems/Subsystem_GameManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 

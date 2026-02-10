@@ -62,12 +62,12 @@ public:
 
 	UFUNCTION() virtual void Native_Begin(const FString& Flag="");
 	
-	UFUNCTION(BlueprintImplementableEvent) void OnEventBegin(const FString& Flag);
-	UFUNCTION(BlueprintImplementableEvent) void OnEventEnd(const FString& Flag);
+	UFUNCTION(BlueprintNativeEvent) void OnEventBegin(const FString& Flag);
+	UFUNCTION(BlueprintNativeEvent) void OnEventEnd(const FString& Flag);
 
 	
-	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context);
-	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context,FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context,FOmegaCommonMeta meta);
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="JumpToID"))
 	void Finish(const FString& Flag, const FName JumpToID = FName(""));
@@ -97,7 +97,7 @@ struct FOmegaLinearEventReaderData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,Instanced, BlueprintReadWrite,Category="LinearEventReader")
-	UOmegaLinearEventReader* Reader;
+	UOmegaLinearEventReader* Reader=nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="LinearEventReader")
 	FString SourceString;
 };

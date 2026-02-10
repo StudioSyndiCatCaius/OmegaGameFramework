@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/OmegaGameplaySystem.h"
 #include "Components/ActorComponent.h"
 #include "Component_GameplaySystems.generated.h"
 
+class AOmegaGameplaySystem;
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UGameplaySystemsComponent : public UActorComponent
@@ -14,11 +14,11 @@ class OMEGAGAMEFRAMEWORK_API UGameplaySystemsComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
+	float f_lastFeq;
+
 	UGameplaySystemsComponent();
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
@@ -26,7 +26,7 @@ protected:
 	void Local_ShutdownSystems();
 	
 public:
-	// Called every frame
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -35,6 +35,9 @@ public:
 	TArray<TSubclassOf<AOmegaGameplaySystem>> GameplaySystems;
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
 	FString ActivationFlag;
-
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
+	TArray<TSubclassOf<AOmegaGameplaySystem>> PersistentSystems;
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
+	float PersistentSystems_Frequency=0.2;
 	
 };

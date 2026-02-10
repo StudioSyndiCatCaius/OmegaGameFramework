@@ -6,9 +6,9 @@
 #include "LuaBlueprintFunctionLibrary.h"
 #include "LuaObject.h"
 #include "LuaInterface.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
+#include "Interfaces/I_Combatant.h"
 #include "Actors/Actor_GameplayEffect.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 
 
 
@@ -278,29 +278,17 @@ int32 UOmegaDataItem::GetMaxCollectionNumber_Implementation()
 	return MaxCollectionAmount;
 }
 
-TArray<FOmegaAttributeModifier> UOmegaDataItem::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UOmegaDataItem::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	TArray<FOmegaAttributeModifier> OutMods;
 	for(auto* TempTrait : GetAllValidTraits())
 	{
 		if(TempTrait->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
 		{
-			OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempTrait));
+			OutMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(TempTrait,CombatantComponent));
 		}
 	}
 	return OutMods;
-}
-
-TArray<FOmegaEffectContainer> UOmegaDataItem::GetOmegaEffects_Implementation()
-{
-	TArray<FOmegaEffectContainer> OutEffects;
-	//OutEffects = Effects;
-	
-	for(auto* TempTrait : GetTraitsWithInterface(UDataInterface_OmegaEffect::StaticClass()))
-	{
-		OutEffects.Append(IDataInterface_OmegaEffect::Execute_GetOmegaEffects(TempTrait));
-	}
-	return OutEffects;
 }
 
 TArray<UPrimaryDataAsset*> UOmegaDataItem::GetSkills_Implementation(UCombatantComponent* Combatant)
@@ -318,7 +306,7 @@ TArray<UPrimaryDataAsset*> UOmegaDataItem::GetSkills_Implementation(UCombatantCo
 // Soft properties
 //############################################################################################################
 
-FString UOmegaDataItem::GetSoftProperty_Implementation(const FString& Property)
+FString UOmegaDataItem::GetSoftProperty_Implementation(FName Property)
 {
 	FString OutVal;
 	
@@ -333,9 +321,9 @@ FString UOmegaDataItem::GetSoftProperty_Implementation(const FString& Property)
 	return OutVal;
 }
 
-TMap<FString, FString> UOmegaDataItem::GetSoftPropertyMap_Implementation()
+TMap<FName, FString> UOmegaDataItem::GetSoftPropertyMap_Implementation()
 {
-	TMap<FString, FString> OutVal;
+	TMap<FName, FString> OutVal;
 	for(auto* TempTrait : GetTraitsWithInterface(UOmegaSoftPropertyInterface::StaticClass()))
 	{
 		OutVal.Append(IOmegaSoftPropertyInterface::Execute_GetSoftPropertyMap(TempTrait));

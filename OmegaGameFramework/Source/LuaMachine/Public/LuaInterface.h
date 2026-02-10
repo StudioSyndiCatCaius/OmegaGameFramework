@@ -25,7 +25,7 @@ class LUAMACHINE_API ILuaInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Lua")
-	void SetValue(FLuaValue Value,const FString& Field="");
+	void SetValue(FLuaValue Value,const FString& Flag="");
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Lua")
 	void SetKey(FLuaValue Key);

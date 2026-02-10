@@ -3,57 +3,42 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DA_CommonBattleAction.h"
 #include "Functions/OmegaFunctions_CombatantFilter.h"
-#include "Functions/OmegaFunctions_ScriptedEffects.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_BitFlag.h"
+#include "Interfaces/I_Skill.h"
 
 #include "Misc/GeneralDataObject.h"
+#include "Selectors/Selector_LevelSequence.h"
+#include "Selectors/Selector_Montage.h"
 #include "DA_CommonSkill.generated.h"
 
+class UOmegaCondition_Actor;
+class UOAsset_EffectsPreset;
 class ULevelSequence;
 class UAnimMontage;
+class UOmegaCondition_Combatant;
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGADEMO_API UOAsset_CommonSkill : public UOmegaDataAsset, public IDataInterface_Skill, public IDataInterface_CombatantFilter,
-											public IOmegaScriptedEffectsInterface
+class OMEGADEMO_API UOAsset_CommonSkill : public UOAsset_CommonBattleAction
 {
 	GENERATED_BODY()
 public:
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual bool CanUseSkill_Implementation(UCombatantComponent* Combatant) override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags")
+	bool bAppendEffectsDescription;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	int32 Rank;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FCombatantFilterData TargetFilterData;
-	virtual FCombatantFilterData GetSkillTargetFilterData_Implementation() override {return TargetFilterData;} ;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill",AdvancedDisplay)
-	TSubclassOf<UCombatantFilter> TargetFilter;
-	virtual TSubclassOf<UCombatantFilter> GetSkillTargetFilter_Implementation() override;
+
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Skill",DisplayName="Actor Condition - Can Use?")
+	TArray<UOmegaCondition_Actor*> Conditions_CanUse;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	TMap<UOmegaAttribute*, float> AttributeUseCost;
 	virtual TMap<UOmegaAttribute*, float> GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,UObject* Context) override;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FOmegaCustomScriptedEffects Effects_Target;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
-	FOmegaCustomScriptedEffects Effects_Instigator;
-	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation() override;
-	
-	//ANIMATIOn
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") UAnimMontage* DefaultMontage_Asset;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") FGameplayTag DefaultMontage_Tag;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") TMap<FGameplayTag, UAnimMontage*> TaggedMontages;
-	virtual ULevelSequence* GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag) override;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") ULevelSequence* DefaultSequence_Asset;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") FGameplayTag DefaultSequence_Tag;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Animation") TMap<FGameplayTag, ULevelSequence*> TaggedSequences;
-	virtual UAnimMontage* GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag) override;
 
-	// Realtives
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Relative") UOmegaAttribute* Related_Attribute;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Relative") UOmegaDamageType* Related_DamageType;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Relative") UCombatantFilterCollection* Related_TargetFilter;
 };

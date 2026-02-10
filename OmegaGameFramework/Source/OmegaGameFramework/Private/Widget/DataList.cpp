@@ -16,12 +16,20 @@
 
 #include "Widgets/Layout/Anchors.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/Border.h"
+#include "Components/CanvasPanel.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/DataAsset.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_Save.h"
+#include "Widget/DataTooltip.h"
+#include "Widget/UI_Widgets.h"
 
 
-
+class UOmegaSaveSubsystem;
 
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
@@ -47,6 +55,54 @@ void UDataList::Native_WidgetNotify(UDataWidget* Widget, FName Notify)
 }
 
 
+void UDataList::AddAllOverrides()
+{
+	if (EntryClass)
+	{
+		UDataWidget* _default=GetMutableDefault<UDataWidget>(EntryClass);
+		TMap<FName,UWidget*> _binds=_default->WidgetBinding_Get();
+		TArray<FName> _bindNames;
+		_binds.GetKeys(_bindNames);
+		
+		for (FName n : _bindNames)
+		{
+			if (!WidgetOverride_Styles.Contains(n))
+			{
+				WidgetOverride_Styles.Add(n,nullptr);
+			}
+		}
+	}
+}
+
+TArray<FName> UDataList::L_getOverrideNames_Asset()
+{
+	TArray<FName> out;
+	if (EntryClass)
+	{
+		GetMutableDefault<UDataWidget>(EntryClass)->WidgetBinding_Get().GetKeys(out);
+	}
+	return out;
+}
+
+TArray<FName> UDataList::L_getOverrideNames_float()
+{
+	TArray<FName> out;
+	if (EntryClass)
+	{
+		GetMutableDefault<UDataWidget>(EntryClass)->GetOverrideFields_Floats().GetKeys(out);
+	}
+	return out;
+}
+
+TArray<FName> UDataList::L_getOverrideNames_Bool()
+{
+	TArray<FName> out;
+	if (EntryClass)
+	{
+		GetMutableDefault<UDataWidget>(EntryClass)->GetOverrideFields_Bools().GetKeys(out);
+	}
+	return out;
+}
 
 void UDataList::SetNewControl(UUserWidget* NewWidget)
 {
@@ -65,8 +121,6 @@ void UDataList::ClearList()
 	Entries.Empty();
 	CurrentA = 0;
 	CurrentB = 0;
-
-	UE_LOG(LogTemp, Warning, TEXT("ListCleared"));
 }
 
 void UDataList::RemoveEntryFromList(int32 Index)
@@ -110,6 +164,21 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		UE_LOG(LogTemp, Warning, TEXT("Failed to Add Asset. Invalid Widget Class."));
 		return nullptr;
 	}
+	if(Asset->GetClass()->ImplementsInterface(UDataInterface_DataWidget::StaticClass()))
+	{
+		if(IDataInterface_DataWidget::Execute_ShouldBlockFromDataList(Asset,this))
+		{
+			return nullptr;
+		}
+		FOmegaSaveConditions cond=IDataInterface_DataWidget::Execute_GetRequiredSaveConditions(Asset);
+		if(GetWorld() && GetWorld()->GetGameInstance())
+		{
+			if(!GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(cond))
+			{
+				return nullptr;
+			}
+		}
+	}
 	//check metadata
 	for(auto* TempMeta : EntryMetadata)
 	{
@@ -122,9 +191,8 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
 	TempEntry->WidgetTags=EntryAutoTags;
-	TempEntry->WidgetMetadata=EntryMetadata;
-	TempEntry->bCanOverrideSize=bCanOverrideSize;
-	TempEntry->OverrideSize=OverrideSize;
+	TempEntry->WidgetTraits=EntryMetadata;
+	TempEntry->Traits=EntryTraits;
 	if(OverrideHoverOffset_Curve)
 	{
 		TempEntry->HoverOffset_Curve=OverrideHoverOffset_Curve;
@@ -134,11 +202,23 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	{
 		TempEntry->Override_IconMaterial=Override_IconMaterial;
 	}
-	
 	if(OverrideEntryTooltip)
 	{
 		TempEntry->DefaultTooltipWidget = OverrideEntryTooltip;
 	}
+	
+	if(bCanOverrideIconSize)
+	{
+		bool can_override;
+		FVector2D override_siz;
+		if (UImage* img=TempEntry->GetBrushImage(can_override,override_siz))
+		{
+			img->SetDesiredSizeOverride(OverrideIconSize);
+		}
+	}
+	
+
+	
 	// Do not add if hidden
 	if(TempEntry->IsEntityHidden(Asset))
 	{
@@ -232,8 +312,9 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		}
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("Added WidgetToList"));
 	TempEntry->AddedToDataList(this, Entries.Find(TempEntry), Asset, ListTags, Flag);
+	
+
 	
 	return TempEntry;
 }
@@ -248,7 +329,6 @@ TArray<UDataWidget*> UDataList::AddAssetsToList(TArray<UObject*> Assets, FString
 	TArray<UDataWidget*> LocalEntryList;
 	for (UObject* TempAsset : Assets)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Attempted to add Widget To List"));
 		UDataWidget* LocalEntry = AddAssetToList(TempAsset, Flag);
 		LocalEntryList.Add(LocalEntry);
 	}
@@ -301,14 +381,20 @@ void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 		incoming_index=RememberedHoverIndex;
 	}
 	
-	if(GetEntry(incoming_index))
+	if(UDataWidget* target_wig= GetEntry(incoming_index))
 	{
-		GetEntry(incoming_index)->Hover();
+		target_wig->Hover();
+		if (override_tooltip)
+		{
+			override_tooltip->SetOwningWidget(target_wig);
+		}
 	}
 	else
 	{
 		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetControlWidget(this);
 	}
+	
+	
 }
 
 void UDataList::ClearHoveredEntry()
@@ -336,7 +422,12 @@ void UDataList::SelectHoveredEntry()
 	if(HoveredEntry)
 	{
 		HoveredEntry->Select();
+		if(LinkedWidgetSwitcher && Entries.Contains(HoveredEntry))
+		{
+			LinkedWidgetSwitcher->SetActiveWidgetIndex(Entries.Find(HoveredEntry));
+		}
 	}
+	
 }
 
 void UDataList::SelectEntry(int32 Index)
@@ -353,7 +444,6 @@ bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 	//Return false if amount = 0
 	if(Amount==0)
 	{
-	UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: Cycle Amount is 0"));
 		return false;
 	}
 	
@@ -367,7 +457,6 @@ bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: List Empty"));
 		return false;
 	}
 
@@ -389,7 +478,7 @@ bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 		NewEntry = Tempindex;
 		return true;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: Invalid Entry at index %d"), Tempindex);
+	//UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: Invalid Entry at index %d"), Tempindex);
 	return false;
 }
 
@@ -610,8 +699,36 @@ void UDataList::SetListOwner(UObject* NewOwner)
 void UDataList::NativePreConstruct()
 {
 	Super::NativePreConstruct();
+	
+	if (EntryClass)
+	{
+		if (UDataWidget* mut=GetMutableDefault<UDataWidget>(EntryClass))
+		{
+			AddAllOverrides();
+		}
+	}
+
+	if (UBorder* _border=GetWidgetBorder())
+	{
+		if (UOmegaBorder* _oborder=Cast<UOmegaBorder>(_border))
+		{
+			if (BorderStyle)
+			{
+				_oborder->SetStyleAsset(BorderStyle);
+			}
+		}
+	}
 	RebuildList();
 	ListOwner=GetParent();
+}
+
+void UDataList::NativeConstruct()
+{
+	if (OverrideEntryTooltip)
+	{
+		override_tooltip=Cast<UDataTooltip>(CreateWidget(this,OverrideEntryTooltip));
+	}
+	Super::NativeConstruct();
 }
 
 ////////////////////////
@@ -623,7 +740,7 @@ void UDataList::RebuildList()
 	//Clear Panel
 	ClearList();
 	
-	if (!ParentPanel)
+	if (!GetWidgetOverlay())
 	{
 		return;
 	}
@@ -635,7 +752,7 @@ void UDataList::RebuildList()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Rebuilding List"));
+		//UE_LOG(LogTemp, Warning, TEXT("Rebuilding List"));
 		//Create Content Panel
 		switch (Format)
 		{
@@ -664,13 +781,17 @@ void UDataList::RebuildList()
 	}
 
 	//Add to Content Panel and Align
-	ParentPanel->AddChildToCanvas(ListPanel);
-	UCanvasPanelSlot* TempSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(ListPanel);
-	const FAnchors DumAnc = FAnchors(0.0, 0.0, 1.0, 1.0);
-	const FVector2D DumVec = FVector2D(0.0);
-	TempSlot->SetAnchors(DumAnc);
-	TempSlot->SetSize(DumVec);
-	TempSlot->SetAutoSize(bAutoSizeList);
+	if (UOverlay* _overlay=GetWidgetOverlay())
+	{
+		_overlay->AddChildToOverlay(ListPanel);
+	}
+	if (UOverlaySlot* TempSlot = UWidgetLayoutLibrary::SlotAsOverlaySlot(ListPanel))
+	{
+		TempSlot->SetHorizontalAlignment(HAlign_Fill);
+		TempSlot->SetVerticalAlignment(VAlign_Fill);
+		//TempSlot->SetAutoSize(bAutoSizeList);
+	}
+
 	
 	///Assets and ENtires
 	CurrentA = 0;

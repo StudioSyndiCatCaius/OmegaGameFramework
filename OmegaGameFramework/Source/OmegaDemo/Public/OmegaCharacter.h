@@ -13,21 +13,27 @@
 #include "Components/Component_AimTargeter.h"
 #include "Components/Component_CombatEncounter.h"
 #include "Components/Component_Equipment.h"
+#include "Components/Component_Saveable.h"
 #include "Components/Component_Skin.h"
 #include "Components/Component_Subscript.h"
-#include "Functions/OmegaFunctions_Animation.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
+#include "Functions/F_Animation.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "GameFramework/Character.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Zone.h"
 #include "OmegaCharacter.generated.h"
 
-
+class UDataWidgetComponent;
 class UAudioComponent;
+class UBillboardComponent;
+class UCameraComponent;
+class UStateTreeComponent;
+class UUtilMeshComponent;
+class UOmegaComponent_Interactable;
 
-UCLASS()
+UCLASS(HideCategories=("Skeletal Mesh, Physics"),DisplayName="Ω Character")
 class OMEGADEMO_API AOmegaCharacter : public AOmegaBaseCharacter, public IGameplayTagsInterface, public IActorInterface_AimTarget,
-										public IDataInterface_FlowAsset, public IDataInterface_General, public IDataInterface_Traits
+										public IDataInterface_FlowAsset, public IActorTagEventInterface, public IActorInterface_Interactable
 {
 	GENERATED_BODY()
 
@@ -38,78 +44,109 @@ class OMEGADEMO_API AOmegaCharacter : public AOmegaBaseCharacter, public IGamepl
 	{
 		for(auto * s : ss)
 		{
-			if(s) { SubscriptComponent->SetSubscriptCollectionActive(s,true);}
+			//if(s) { SubscriptComponent->SetSubscriptCollectionActive(s,true);}
 		}
 	}
 
-	bool b_IdentityHasGeneralInterface();
-
+	bool b_IdentityHasGeneralInterface() const;
+	void L_Camera_Update() const;
+	virtual void N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPrimaryDataAsset* new_asset) override;
+	virtual int32 GetInteraction_BitFlags_Implementation() override { return Flags.Bitmask;};
+	virtual void Bitflags_Set_Implementation(FOmegaBitflagsBase bitmask) override { Flags=bitmask; };
 	
 public:
 	// Sets default values for this character's properties 
 	AOmegaCharacter();
 
-
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
+	
 	void Local_AddCombatantSource(UObject* Source);
-	UFUNCTION() void Local_LevelUpdate(ULevelingComponent* comp,int32 NewLevel);
+	UFUNCTION() void Local_LevelUpdate(ULevelingComponent* comp,int32 NewLevel,int32 LastLevel,UOmegaLevelingAsset* asset);
 	UFUNCTION() void Local_UpdateDataItem(UOmegaDataItem* NewItem);
 
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="0_OmegaCharacter")
-	TArray<UOmegaObjectTrait*> Traits;
-	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override;
-	//virtual void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override { Traits=NewTraits; };
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="0_OmegaCharacter")
-	UPrimaryDataAsset* CharacterAsset;
+	//EDITOR
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="EDTIOR")
+	void Camera_Front();
 
-	UFUNCTION(BlueprintCallable, Category="0_OmegaCharacter")
-	void SetCharacterAsset(UPrimaryDataAsset* Asset);
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS") bool UseCameraPull;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS") bool CanInteract=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS") bool UseIdentityTraits;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="OmegaCharacter",meta=(EditCondition="!CharacterAsset"))
+	FText OverrideName;
 
 	UPROPERTY(EditAnywhere,Category="Animation")
 	UOmegaAnimationEmote* DefaultEmote;
 
 	// DIALOGUE
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="0_OmegaCharacter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter")
 	TSoftObjectPtr<UFlowAsset> DialogueFlow=nullptr;
 	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override { return DialogueFlow.LoadSynchronous(); };
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="0_OmegaCharacter",DisplayName="Subscripts")
-	TArray<USubscriptCollection*> SubscriptCollections;
-
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Animation")
-	FName LookAimSocketName=TEXT("LookPoint");
 	
-	UPROPERTY(EditAnywhere,Category="0_OmegaCharacter")
-	FGameplayTagContainer CharacterTags;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return CharacterTags; };
-
-	UPROPERTY(EditDefaultsOnly,Category="0_OmegaCharacter",AdvancedDisplay)
-	bool Autobind_NamedGlobalEvents;
-	UPROPERTY(EditDefaultsOnly,Category="0_OmegaCharacter",AdvancedDisplay)
-	bool Autobind_TaggedGlobalEvents;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Animation") FName LookAimSocketName=TEXT("LookPoint");
+	UPROPERTY(EditAnywhere,Category="OmegaCharacter") FGameplayTagContainer CharacterTags;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="0_OmegaCharacter")
-	void OnGlobalEvent_Named(FName Event, UObject* Context);
-	UFUNCTION(BlueprintImplementableEvent,Category="0_OmegaCharacter")
-	void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget)) FVector CameraPull;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget)) FVector CameraOffset;
 
 	virtual FVector GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UActorIdentityComponent* ActorIdentity;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataItemComponent* DataItem;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UCombatantComponent* Combatant;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UEquipmentComponent* Equipment;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataAssetCollectionComponent* Inventory;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) ULevelingComponent* Leveling;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UActorStateComponent* ActorState;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaSaveableComponent* Saveable;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaSaveStateComponent* SaveVisibility;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaComponent_Interactable* Interactable;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAudioComponent* AudioComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UChildActorComponent* SkinTarget;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UGameplayPauseComponent* GameplayPause;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UZoneEntityComponent* ZoneEntity;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAimTargetComponent* LookAim;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataWidgetComponent* DataWidget;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) USpringArmComponent* CameraBoom;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UCameraComponent* MainCamera;
+	
+	UPROPERTY() UBillboardComponent* Icon_Faction;
+	UPROPERTY() UTextRenderComponent* Text_Name;
+
+private:
+	FText L_GetDisplayName();
+	FText L_GetDisplayDescript();
+public:
+	
+	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return CharacterTags; };
+	virtual bool IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override { return !CanInteract; };
+	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
+};
+
+// ========================================================================================================
+// Encounter Character
+// ========================================================================================================
+
+UCLASS(DisplayName="Ω Character - Encounter")
+class OMEGADEMO_API AOmegaEncounterCharacter : public AOmegaBaseCharacter, public IDataInterface_CombatEncounter
+{
+	GENERATED_BODY()
+
+	UFUNCTION() TArray<FName> GetKeys_Encounter();
+public:
+	AOmegaEncounterCharacter();
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UBoxComponent* OverlapRange;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UActorIdentityComponent* ActorIdentity;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaSaveStateComponent* SaveVisibility;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) USubscriptComponent* SubscriptComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) USkinComponent* SkinComponent;
@@ -118,39 +155,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UGameplayPauseComponent* GameplayPause;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UZoneEntityComponent* ZoneEntity;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAimTargetComponent* LookAim;
-
+	UPROPERTY() UUtilMeshComponent* UtilMesh;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UStateTreeComponent* StateTree;
 	
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
-};
-
-// ========================================================================================================
-// Encounter Character
-// ========================================================================================================
-
-UCLASS()
-class OMEGADEMO_API AOmegaEncounterCharacter : public AOmegaCharacter, public IDataInterface_CombatEncounter
-{
-	GENERATED_BODY()
-
-public:
-	AOmegaEncounterCharacter();
-	virtual void OnConstruction(const FTransform& Transform) override;
-	
-	UPROPERTY(EditAnywhere,Category="CombatEncounter")
-	TSubclassOf<AOmegaCombatEncounter_Instance> EncounterClass;
-	UPROPERTY(EditAnywhere,Category="CombatEncounter")
-	FGameplayTag StageID;
-	
-	virtual TSubclassOf<AOmegaCombatEncounter_Instance> GetCombatEncounter_InstanceClass_Implementation() override
-	{
-		return EncounterClass;
-	}
-	virtual FGameplayTag GetCombatEncounter_StageID_Implementation() override
-	{
-		return StageID;
-	}
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CombatEncounter")
+	UOmegaEncounter_Asset* Encounter;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="LUA",meta=(GetOptions="GetKeys_Encounter"))
+	FName Encounter_Key;
+	UFUNCTION(BlueprintPure,Category="CombatEncounter") UOmegaEncounter_Asset* GetEncounterAsset() const;
 };
 
 
@@ -158,7 +170,7 @@ public:
 // Reference Character
 // ========================================================================================================
 
-UCLASS(hideCategories = (Info, Rendering, MovementReplication, Collision))
+UCLASS(hideCategories = (Info, Rendering, MovementReplication, Collision), DisplayName="Ω Character - Reference")
 class OMEGADEMO_API AOmegaReferenceCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -167,4 +179,16 @@ public:
 	AOmegaReferenceCharacter();
 	//virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
+};
+
+UCLASS(hideCategories = (Info, Rendering, MovementReplication, Collision))
+class OMEGADEMO_API AOmegaCinematicCharacter : public ACharacter
+{
+	GENERATED_BODY()
+
+public:
+	AOmegaCinematicCharacter();
+	//virtual void Const
+
+	UPROPERTY(EditAnywhere,Category="Components") UActorIdentityComponent* ActorIdentityComponent;
 };

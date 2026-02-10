@@ -3,78 +3,78 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaGameplayComponent.h"
 #include "Engine/DataAsset.h"
-#include "Curves/CurveFloat.h"
 #include "UObject/Interface.h"
 #include "Components/ActorComponent.h"
 #include "Component_Leveling.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnXpUpdated, ULevelingComponent*, Component, float, XP, float, AmountChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelUp, ULevelingComponent*, Component, int32, NewLevel);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelDown, ULevelingComponent*, Component, int32, NewLevel);
+class UCurveFloat;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnXpUpdated, ULevelingComponent*, Component, float, XP, float, AmountChanged,UOmegaLevelingAsset*, Asset);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnLevelChange, ULevelingComponent*, Component, int32, NewLevel,int32,PreviousLevel,UOmegaLevelingAsset*, Asset);
 
 // A leveling component that manages experience points (XP) progression using customizable curves and rates, with support for level-up/down events and UI integration through widget interfaces.
-UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API ULevelingComponent : public UActorComponent
+UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent),HideCategories="Navigation, Cooking, Activation, AssetUserData, Asset User Data")
+class OMEGAGAMEFRAMEWORK_API ULevelingComponent : public UOmegaGameplayComponent
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	ULevelingComponent();
-
-protected:
-	// Called when the game starts
+	
+	UPROPERTY(BlueprintAssignable) FOnLevelChange OnLevelUp;
+	UPROPERTY(BlueprintAssignable) FOnLevelChange OnLevelDown;
+	UPROPERTY(BlueprintAssignable) FOnXpUpdated OnXPUpdated;
+	
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UOmegaLevelingAsset* L_ValidateLevelAsset(UOmegaLevelingAsset* Asset) const;
 
-public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-							   FActorComponentTickFunction* ThisTickFunction) override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling", meta=(ExposeOnSpawn="true"))
-	UOmegaLevelingAsset* LevelingAsset;
-
-	UFUNCTION(BlueprintCallable,Category="Leveling")
-	void SetLevelingAsset(UOmegaLevelingAsset* Asset);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling", meta=(ExposeOnSpawn="true"),DisplayName="Default Leveling Asset")
+	UOmegaLevelingAsset* LevelingAsset=nullptr;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Leveling")
+	TMap<UOmegaLevelingAsset*,float> XP;
 	
 	//Multiplier used to offset xp when "Add XP" is called. E.G., a rate multiplier of "0.75" when using AddXP, 100 XP becomes 75 XP.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Leveling", meta=(ExposeOnSpawn="true"))
 	float XPGainRate = 1.0;
 
+	UFUNCTION(BlueprintCallable,Category="Leveling")
+	void SetLevelingAsset(UOmegaLevelingAsset* Asset);
+	
 	UFUNCTION(BlueprintPure, Category="Leveling")
 	float GetXPRate();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Leveling")
-	float XP;
+	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="bUseRateMultipler,Leveling_Asset"))
+	void AddXP (float Amount, bool bUseRateMultipler = true,UOmegaLevelingAsset* Leveling_Asset=nullptr);
+	UFUNCTION(BlueprintPure, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	float GetXP (UOmegaLevelingAsset* Leveling_Asset=nullptr) const;
+	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="bUseRateMultipler,Leveling_Asset"))
+	void SetXP (float NewValue, bool bUseRateMultipler = true,UOmegaLevelingAsset* Leveling_Asset=nullptr);
+	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	void SetLevel (int32 Level,UOmegaLevelingAsset* Leveling_Asset=nullptr);
+	UFUNCTION(BlueprintPure, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	int32 GetCurrentLevel(UOmegaLevelingAsset* Leveling_Asset=nullptr) const;
+
+	UFUNCTION(BlueprintPure, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	float GetPercentageToNextLevel(UOmegaLevelingAsset* Leveling_Asset=nullptr);
+
+	UFUNCTION(BlueprintPure, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	float GetCurrentLevelMinXP(UOmegaLevelingAsset* Leveling_Asset=nullptr);
 	
-	UPROPERTY(BlueprintAssignable)
-	FOnLevelUp OnLevelUp;
-	UPROPERTY(BlueprintAssignable)
-	FOnLevelDown OnLevelDown;
-	UPROPERTY(BlueprintAssignable)
-	FOnXpUpdated OnXPUpdated;
+	UFUNCTION(BlueprintPure, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	float GetCurrentLevelMaxXP(UOmegaLevelingAsset* Leveling_Asset=nullptr) const;
 
-	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="bUseRateMultipler"))
-	void AddXP (float Amount, bool bUseRateMultipler = true);
-
-	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="bUseRateMultipler"))
-	void SetXP (float NewValue, bool bUseRateMultipler = true);
-
-	UFUNCTION(BlueprintPure, Category="Leveling")
-	int32 GetCurrentLevel() const;
-
-	UFUNCTION(BlueprintPure, Category="Leveling")
-	float GetPercentageToNextLevel();
-
-	UFUNCTION(BlueprintPure, Category="Leveling")
-	float GetCurrentLevelMinXP();
+	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	bool TransferXP_One(ULevelingComponent* To, float Amount, bool TransferAll,UOmegaLevelingAsset* Asset);
 	
-	UFUNCTION(BlueprintPure, Category="Leveling")
-	float GetCurrentLevelMaxXP();
-
+	UFUNCTION(BlueprintCallable, Category="Leveling", meta=(AdvancedDisplay ="Leveling_Asset"))
+	bool TransferXP_All(ULevelingComponent* To, float Amount, bool TransferAll);
+	
 	UFUNCTION()
-	float AdjustXPRate(float InXP, bool UseAdjust);
+	float AdjustXPRate(float InXP, bool UseAdjust,UOmegaLevelingAsset* Leveling_Asset=nullptr);
 
 protected:
 	UFUNCTION()
@@ -100,12 +100,14 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Leveling
 	//Adds to the base XpRate value.
 	UFUNCTION(BlueprintNativeEvent, Category="Leveling")
 	float GetXPRateOffset();
+	
+	
 
 };
 
 
-UCLASS(BlueprintType, Blueprintable)
-class OMEGAGAMEFRAMEWORK_API UOmegaLevelingAsset : public UDataAsset
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaLevelingAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 	

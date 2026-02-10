@@ -18,11 +18,15 @@ class FLOW_API UFlowNode_SubGraph : public UFlowNode
 
 	static FFlowPin StartPin;
 	static FFlowPin FinishPin;
-	
+		
+	UPROPERTY() UFlowAsset* subflow;
 private:
+	virtual void FlowNotified_Implementation(FName Notify, UObject* Context) override;
+	
 	UPROPERTY(EditAnywhere, Category = "Graph")
 	TSoftObjectPtr<UFlowAsset> Asset;
-
+	UPROPERTY(EditAnywhere, Category = "Graph")
+	bool ReplicateSignals=true;
 	/*
 	 * Allow to create instance of the same Flow Asset as the asset containing this node
 	 * Enabling it may cause an infinite loop, if graph would keep creating copies of itself

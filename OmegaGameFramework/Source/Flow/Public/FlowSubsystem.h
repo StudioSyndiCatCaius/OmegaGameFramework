@@ -6,10 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-
 #include "FlowComponent.h"
 #include "FlowSubsystem.generated.h"
-
 
 
 class UFlowAsset;
@@ -20,6 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSimpleFlowComponentEvent, UFlowComp
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaggedFlowComponentEvent, UFlowComponent*, Component, const FGameplayTagContainer&, Tags);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnFlowEventFinish, UFlowAsset*, FlowAsset, FName, Output, const FString&, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnFlowNodeEntered, UFlowAsset*, FlowAsset, UFlowNode*, Node, FName, Input);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnFlowSignal, UFlowAsset*, FlowAsset, FName, Signal, UObject*, Context);
 
 /*
  * Flow Subsystem
@@ -69,7 +68,7 @@ public:
 
 	/* Start the root Flow, graph that will eventually instantiate next Flow Graphs through the SubGraph node */
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta=(AdvancedDisplay="OverrideData, StartingNode, bAllowMultipleInstances, InputName"))
-	virtual void StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, FFlowAssetOverrideData OverrideData, const FName InputName="", const bool bAllowMultipleInstances = true);
+	virtual UFlowAsset* StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, FFlowAssetOverrideData OverrideData, const FName InputName="", const bool bAllowMultipleInstances = true);
 
 	virtual UFlowAsset* CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true);
 
@@ -82,11 +81,9 @@ public:
 
 	//------END
 
-	UPROPERTY(BlueprintAssignable)
-	FOnFlowEventFinish OnFlowEventFinish;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnFlowNodeEntered OnFlowNodeEntered;
+	UPROPERTY(BlueprintAssignable) FOnFlowEventFinish OnFlowEventFinish;
+	UPROPERTY(BlueprintAssignable) FOnFlowNodeEntered OnFlowNodeEntered;
+	UPROPERTY(BlueprintAssignable) FOnFlowSignal OnFlowSignal;
 
 	void Native_EndFlow(UFlowAsset* Asset, FName Output, const FString& Flag);
 	

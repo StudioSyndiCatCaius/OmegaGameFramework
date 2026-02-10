@@ -3,8 +3,22 @@
 
 #include "Components/Component_ActorIdentity.h"
 
+#include "OmegaSettings.h"
+#include "OmegaGameCore.h"
 #include "Misc/OmegaUtils_Enums.h"
-#include "Subsystems/OmegaSubsystem_Actors.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Subsystems/Subsystem_Actors.h"
+
+void UActorIdentityComponent::L_Init()
+{
+	if(IdentitySource)
+	{
+		if(Local_IsSourceAssetValid())
+		{
+			IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner(),this);
+		}
+	}
+}
 
 bool UActorIdentityComponent::Local_IsSourceAssetValid() const
 {
@@ -13,6 +27,20 @@ bool UActorIdentityComponent::Local_IsSourceAssetValid() const
 		return true;
 	}
 	return false;
+}
+
+void UActorIdentityComponent::Local_RunConstruct()
+{
+	SetIdentitySourceAsset(IdentitySource);
+	OGF_GAME_CORE()->ActorID_OnConstruct(GetOwner(),this);
+	if(Local_IsSourceAssetValid())
+	{
+		IDataInterface_ActorIdentitySource::Execute_OnActorConstruction(IdentitySource,GetOwner(),this);
+		for(auto* i : Local_GetScripts())
+		{
+			if(i) { i->OnActorConstruction(GetOwner(),this); }
+		}
+	}
 }
 
 TArray<UActorIdentityScript*> UActorIdentityComponent::Local_GetScripts() const
@@ -27,18 +55,19 @@ TArray<UActorIdentityScript*> UActorIdentityComponent::Local_GetScripts() const
 
 void UActorIdentityComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAsset)
 {
+	if(IdentitySource)
+	{
+		if(Local_IsSourceAssetValid())
+		{
+			IDataInterface_ActorIdentitySource::Execute_OnIdentityUninit(IdentitySource,GetOwner(),this);
+		}
+	}
 	if(SourceAsset!=IdentitySource)
 	{
 		if(SourceAsset)
 		{
 			IdentitySource=SourceAsset;
-			if(IdentitySource)
-			{
-				if(Local_IsSourceAssetValid())
-				{
-					IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner(),this);
-				}
-			}
+			L_Init();
 		}
 		else
 		{
@@ -60,14 +89,10 @@ void UActorIdentityComponent::OnTagEvent_Implementation(FGameplayTag Event)
 #if WITH_EDITOR
 void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	SetIdentitySourceAsset(IdentitySource);
-	if(Local_IsSourceAssetValid())
+	Local_RunConstruct();
+	if(PropertyChangedEvent.GetPropertyName()=="IdentitySource")
 	{
-		IDataInterface_ActorIdentitySource::Execute_OnActorConstruction(IdentitySource,GetOwner(),this);
-		for(auto* i : Local_GetScripts())
-		{
-			if(i) { i->OnActorConstruction(GetOwner(),this); }
-		}
+		L_Init();
 	}
 	//Super::PostEditChangeProperty(PropertyChangedEvent);
 }
@@ -75,7 +100,9 @@ void UActorIdentityComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 
 void UActorIdentityComponent::BeginPlay()
 {
+	Local_RunConstruct();
 	GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,true);
+	OGF_GAME_CORE()->ActorID_OnBeginPlay(GetOwner(),this);
 	if(Local_IsSourceAssetValid())
 	{
 		IDataInterface_ActorIdentitySource::Execute_OnActorBeginPlay(IdentitySource,GetOwner(),this);
@@ -91,7 +118,10 @@ void UActorIdentityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if(EndPlayReason==EEndPlayReason::Destroyed)
 	{
-		GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,false);
+		if(GetWorld() && GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+		{
+			GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->local_RegisterActorIdComp(this,false);
+		}
 	}
 	Super::EndPlay(EndPlayReason);
 }

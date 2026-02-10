@@ -6,7 +6,7 @@
 #include "OmegaDataItem.h"
 #include "Components/ActorComponent.h"
 #include "Delegates/DelegateCombinations.h"
-#include "Functions/OmegaFunctions_TagEvent.h"
+#include "Functions/F_TagEvent.h"
 #include "DataItemComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataItemChanged, UOmegaDataItem*, Item);
@@ -53,7 +53,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="DataItem")
 	void ApplyToActor(const FString& Flag, FGameplayTagContainer Tags);
 
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 
 	virtual void OnTagEvent_Implementation(FGameplayTag Event) override;

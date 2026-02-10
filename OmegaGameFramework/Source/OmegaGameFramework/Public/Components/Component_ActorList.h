@@ -7,9 +7,6 @@
 #include "Components/ActorComponent.h"
 #include "Component_ActorList.generated.h"
 
-
-
-
 UCLASS(Abstract)
 class OMEGAGAMEFRAMEWORK_API UActorListComponent : public UActorComponent
 {

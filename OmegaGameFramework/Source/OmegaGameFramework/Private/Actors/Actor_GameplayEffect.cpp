@@ -4,7 +4,7 @@
 #include "Actors/Actor_GameplayEffect.h"
 #include "Components/TextBlock.h"
 #include "Misc/OmegaAttribute.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
 #include "TimerManager.h"
 #include "Components/Component_Combatant.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -210,6 +210,37 @@ void AOmegaGameplayEffect::TriggerEffect()
 		K2_DestroyActor();
 	}
 	
+}
+
+void AOmegaGameplayEffect::RemoveEffects_OfThisClass()
+{
+	if(TargetedCombatant)
+	{
+		for(auto* e : TargetedCombatant->GetAllEffects())
+		{
+			if(e && e!=this && e->GetClass()==GetClass())
+			{
+				e->K2_DestroyActor();
+			}
+		}
+	}
+}
+
+AOmegaGameplayEffect* AOmegaGameplayEffect::TryGetEffect_OfThisClass(bool& result)
+{
+	if(TargetedCombatant)
+	{
+		for(auto* e : TargetedCombatant->GetAllEffects())
+		{
+			if(e && e!=this && e->GetClass()==GetClass())
+			{
+				result=true;
+				return e;
+			}
+		}
+	}
+	result=false;
+	return nullptr;
 }
 
 UOmegaDamageType* AOmegaGameplayEffect::GetDamageType_Implementation(UObject* Context)

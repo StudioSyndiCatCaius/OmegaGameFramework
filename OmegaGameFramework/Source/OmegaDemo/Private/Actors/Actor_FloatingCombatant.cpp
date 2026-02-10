@@ -2,20 +2,11 @@
 
 #include "Actors/Actor_FloatingCombatant.h"
 
-#include "OmegaSettings_Gameplay.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "OmegaGameplayConfig.h"
+#include "Functions/F_Common.h"
 
 void AFloatingCombatant::OnConstruction(const FTransform& Transform)
 {
-	if(Config)
-	{
-		ActorConfig->SetConfig(Config);
-	}
-	else if(UOmegaSettings_Gameplay* set = UOmegaGameplayStyleFunctions::GetCurrentGameplayStyle())
-	{
-		ActorConfig->SetConfig(set->DefaultActorConfig_FloatingCombatant);
-	}
-
 	if(Combatant)
 	{
 		NameText->SetText(UDataInterface_General::GetObjectName(Combatant));
@@ -32,7 +23,7 @@ AFloatingCombatant::AFloatingCombatant()
 	RangeBox=CreateDefaultSubobject<UBoxComponent>("Range");
 	RangeBox->SetBoxExtent(FVector(100,100,100));
 	Combatant=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
-	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
+	//ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
 	NameText=CreateOptionalDefaultSubobject<UTextRenderComponent>("Text");
 	NameText->HorizontalAlignment=EHTA_Center;
 	NameText->SetupAttachment(RangeBox);

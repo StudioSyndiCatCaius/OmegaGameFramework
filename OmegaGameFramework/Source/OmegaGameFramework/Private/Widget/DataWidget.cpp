@@ -5,7 +5,7 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "CommonUILibrary.h"
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -13,13 +13,16 @@
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Subsystems/Subsystem_Player.h"
 #include "Widget/DataList.h"
 #include "TimerManager.h"
-#include "Functions/OmegaFunctions_Utility.h"
-#include "..\..\Public\OmegaSettings_Slate.h"
+#include "Functions/F_Utility.h"
+#include "OmegaSettings_Slate.h"
+#include "Functions/F_Text.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Widget/DataTooltip.h"
 
-bool UDataWidgetMetadata::CanAddObjectToList_Implementation(UObject* SourceObject) const
+bool UDataWidgetTraits::CanAddObjectToList_Implementation(UObject* SourceObject) const
 {
 	return true;
 }
@@ -31,25 +34,9 @@ void UDataWidget::NativePreConstruct()
 	bIsFocusable = true;
 	if(GetNameTextWidget())
 	{
-		GetNameTextWidget()->SetText(NameText);
-		if(OverrideTextStyle_Name)
-		{
-			if(UCommonTextBlock* _txt = Cast<UCommonTextBlock>(GetNameTextWidget()))
-			{
-				_txt->SetStyle(OverrideTextStyle_Name);
-			}
-		}
+		GetNameTextWidget()->SetText(L_FormatText(NameText));
 	}
-	if(GetDescriptionTextWidget())
-	{
-		if(OverrideTextStyle_Description)
-		{
-			if(UCommonTextBlock* _txt = Cast<UCommonTextBlock>(GetDescriptionTextWidget()))
-			{
-				_txt->SetStyle(OverrideTextStyle_Description);
-			}
-		}
-	}
+
 	//Setup Source Asset
 	SetSourceAsset(ReferencedAsset);
 	SetIsEnabled(!IsEntityDisabled(ReferencedAsset));
@@ -59,8 +46,17 @@ void UDataWidget::NativePreConstruct()
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HoverWidgetPropertyName,0);
 		GetHoveredMaterialInstance()->SetScalarParameterValue(HighlightWidgetPropertyName,0);
 	}
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnInit(this);
+		}
+	}
+	
 	Refresh();
-	RefreshMeta();
+
 }
 
 void UDataWidget::NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent)
@@ -73,6 +69,17 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 {
 	Super::OnRemovedFromFocusPath(InFocusEvent);
 	Unhover();
+}
+
+
+
+FText UDataWidget::L_FormatText(FText t)
+{
+	if (OGF_CFG_STYLE()->bAutoFormatText_onDataWidgets)
+	{
+		return UOmegaTextFunctions::ApplyGameplayTextFormating(this,t,OGF_CFG_STYLE()->DefaultTextFormatTag,FOmegaCommonMeta());
+	}
+	return t;
 }
 
 void UDataWidget::LC_UpdateBlendStateVal(bool& bBlending, bool bTarget, float& val, float DT, float max_time, UCurveFloat* curve, FName MatParamName, int type)
@@ -176,31 +183,96 @@ UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 }
 
 
-
-UDataWidgetMetadata* UDataWidget::GetWidgetMetadata_FromClass(TSubclassOf<UDataWidgetMetadata> Class)
+TArray<FName> UDataWidget::L_getOvrParamName_Float()
 {
-	for(auto* tempMeta : WidgetMetadata)
+	TArray<FName>out;
+	GetOverrideFields_Floats().GetKeys(out);
+	return out;
+}
+
+TArray<FName> UDataWidget::L_getOvrParamName_Bool()
+{
+	TArray<FName>out;
+	GetOverrideFields_Bools().GetKeys(out);
+	return out;
+}
+
+float UDataWidget::GetWidgetOverride_Float(FName field)
+{
+	TMap<FName,float> tbl=GetOverrideFields_Floats();
+	if (GetOwningList())
 	{
-		if(tempMeta && tempMeta->GetClass()->IsChildOf(Class))
+		if (GetOwningList()->WidgetOverride_Floats.Contains(field))
 		{
-			return tempMeta;
+			return GetOwningList()->WidgetOverride_Floats[field];
 		}
 	}
+	return tbl.FindOrAdd(field);
+}
+
+bool UDataWidget::GetWidgetOverride_Bool(FName field)
+{
+	TMap<FName,bool> tbl=GetOverrideFields_Bools();
+	if (GetOwningList())
+	{
+		if (GetOwningList()->WidgetOverride_Bools.Contains(field))
+		{
+			return GetOwningList()->WidgetOverride_Bools[field];
+		}
+	}
+	return tbl.FindOrAdd(field);
+}
+
+UDataWidgetTraits* UDataWidget::GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Class, bool FallbackToDefault,
+                                               bool& Outcome)
+{
+	if(Class)
+	{
+		for(auto* tempMeta : WidgetTraits)
+		{
+			if(tempMeta && tempMeta->GetClass()->IsChildOf(Class))
+			{
+				Outcome=true;
+				return tempMeta;
+			}
+		}
+		if(FallbackToDefault)
+		{
+			Outcome=true;
+			return Class.GetDefaultObject();
+		}
+	}
+	Outcome=false;
 	return  nullptr;
 }
 
-void UDataWidget::RefreshMeta()
+TMap<FName, UWidget*> UDataWidget::WidgetBinding_Get_Implementation()
 {
-	for(auto* tempMeta : WidgetMetadata)
+	TMap<FName, UWidget*> out;
+	if (GetNameTextWidget())
 	{
-		if(tempMeta)
-		{
-			tempMeta->OnMetaApplied(this);
-		}
-		MetaRefreshed();
+		out.Add("text_name", GetNameTextWidget());
 	}
+	if (GetDescriptionTextWidget())
+	{
+		out.Add("text_description", GetDescriptionTextWidget());
+	}
+	return  out;
 }
 
+void UDataWidget::WidgetBinding_Apply_Implementation(FName name, UWidget* widget,UOmegaSlateStyle* Asset)
+{
+	ApplyDefaultWidgetBinding(name,widget,Asset);
+}
+
+void UDataWidget::ApplyDefaultWidgetBinding(FName name, UWidget* widget,UOmegaSlateStyle* Asset)
+{
+	if (widget && Asset)
+	{
+		// Safe check and call
+		Asset->ApplyStyleAgnostic(widget);
+	}
+}
 
 void UDataWidget::private_refresh(UDataWidget* widget)
 {
@@ -230,11 +302,11 @@ void UDataWidget::Refresh()
 		IDataInterface_General::Execute_GetGeneralDataText(ReferencedAsset, AssetLabel, this, LocalName, LocalDesc);
 		if (GetNameTextWidget())
 		{
-			GetNameTextWidget()->SetText(LocalName);
+			GetNameTextWidget()->SetText(L_FormatText(LocalName));
 		}
 		if (GetDescriptionTextWidget())
 		{
-			GetDescriptionTextWidget()->SetText(LocalDesc);
+			GetDescriptionTextWidget()->SetText(L_FormatText(LocalDesc));
 		}
 
 		//get source asset images
@@ -285,34 +357,71 @@ void UDataWidget::Refresh()
 				}
 			}
 		}
-		
-			
 	}//Finish widget setup
-
-	if(GetWidget_SizeBox() && bCanOverrideSize)
-	{
-		GetWidget_SizeBox()->SetWidthOverride(OverrideSize.X);
-		GetWidget_SizeBox()->SetHeightOverride(OverrideSize.Y);
-	}
 	
 	SetIsEnabled(GetIsEntitySelectable());
 	UObject* LocalListOwner = nullptr;
-	if(GetOwningList() && GetOwningList()->ListOwner)
+	if(UDataList* _list=GetOwningList())
 	{
-		LocalListOwner = GetOwningList()->ListOwner;
+		//Apply style overrides
+		TMap<FName,UWidget*> _wigs=WidgetBinding_Get();
+	
+		TMap<FName,UOmegaSlateStyle*> _binds=_list->WidgetOverride_Styles;
+		TArray<FName> _bindNames;
+		_binds.GetKeys(_bindNames);
+	
+		for (FName Name : _bindNames)
+		{
+			WidgetBinding_Apply(Name,_wigs.FindOrAdd(Name),_binds.FindOrAdd(Name));
+		}
+		
+		if (_list->ListOwner)
+		{
+			LocalListOwner = GetOwningList()->ListOwner;
+		}
 	}
-	RefreshMeta();
+
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnRefreshed(this,ReferencedAsset,LocalListOwner);
+		}
+	}
+	
+	if (DefaultCreatedTooltip)
+	{
+		DefaultCreatedTooltip->Refresh();
+	}
+	
 	Native_OnRefreshed(ReferencedAsset,LocalListOwner);
 	OnWidgetRefreshed.Broadcast(this);
 }
 
 void UDataWidget::Native_OnSourceAssetChanged(UObject* SourceAsset)
 {
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnSourceChanged(this,ReferencedAsset);
+		}
+	}
 	OnSourceAssetChanged(ReferencedAsset);
 }
 
 void UDataWidget::Native_OnListOwnerChanged(UObject* ListOwner)
 {
+	//traits
+	for(auto* t : WidgetTraits)
+	{
+		if(t)
+		{
+			t->OnListOwnerChanged(this,GetOwningList(),ListOwner);
+		}
+	}
 	OnNewListOwner(ListOwner);
 }
 
@@ -338,10 +447,7 @@ void UDataWidget::Native_SetHovered(bool bHovered)
 				{
 					GetPlayerSubsystem()->PlayUiSound(HoverSound);
 				}
-				else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-				{
-					GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Hover);
-				}
+				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Hover.LoadSynchronous());
 	
 				if (GetHoverAnimation())
 				{
@@ -433,10 +539,10 @@ void UDataWidget::OnNewListOwner_Implementation(UObject* ListOwner)
 {
 }
 
-FString UDataWidget::GetAssetLabel()
+FString UDataWidget::GetAssetLabel() const
 {
 	FString OutString = "None";
-	if (ReferencedAsset)
+	if (ReferencedAsset && ReferencedAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
 		IDataInterface_General::Execute_GetGeneralAssetLabel(ReferencedAsset, OutString);
 	}
@@ -469,10 +575,7 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(SelectSound);
 			}
-			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-			{
-				GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Select);
-			}
+			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Select.LoadSynchronous());
 		}
 	}
 	else
@@ -483,10 +586,7 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(ErrorSound);
 			}
-			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
-			{
-				GetPlayerSubsystem()->PlayUiSound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Error);
-			}
+			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Error.LoadSynchronous());
 		}
 	}
 }
@@ -569,7 +669,16 @@ void UDataWidget::OnSourceAssetChanged_Implementation(UObject* Asset)
 
 UDataTooltip* UDataWidget::GetDataTooltipWidget()
 {
+	if (GetOwningList() && GetOwningList()->override_tooltip)
+	{
+		return GetOwningList()->override_tooltip;
+	}
 	return DefaultCreatedTooltip;
+}
+
+UObject* UDataWidget::GetTooltip_SourceObject_Implementation()
+{
+	return ReferencedAsset;
 }
 
 void UDataWidget::Local_UpdateTooltip(UObject* AssetRef)
@@ -578,28 +687,9 @@ void UDataWidget::Local_UpdateTooltip(UObject* AssetRef)
 	{
 		return;
 	}
-	if(DefaultCreatedTooltip)
+	if(UDataTooltip* target_tooltip=GetDataTooltipWidget())
 	{
-		DefaultCreatedTooltip->OnOwnerSourceAssetChanged(AssetRef);
-
-		if(AssetRef->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-		{
-			FText LocalDesc;
-			FText LocalName;
-		
-			IDataInterface_General::Execute_GetGeneralDataText(AssetRef, AssetLabel, this, LocalName, LocalDesc);
-		
-			//update name widget
-			if(DefaultCreatedTooltip->GetAssetNameWidget())
-			{
-				DefaultCreatedTooltip->GetAssetNameWidget()->SetText(LocalName);
-			}
-			//update description widget
-			if(DefaultCreatedTooltip->GetAssetNameWidget())
-			{
-				DefaultCreatedTooltip->GetAssetDescriptionWidget()->SetText(LocalDesc);
-			}
-		}
+		target_tooltip->SetOwningWidget(this);
 		
 	}
 }

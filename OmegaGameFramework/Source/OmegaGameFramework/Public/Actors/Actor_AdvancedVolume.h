@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/Component_Combatant.h"
+#include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "GameFramework/Actor.h"
 #include "Actor_AdvancedVolume.generated.h"
@@ -11,7 +12,7 @@
 class UTextRenderComponent;
 class UBillboardComponent;
 
-UCLASS()
+UCLASS(Abstract)
 class OMEGAGAMEFRAMEWORK_API AAdvancedVolume : public AActor
 {
 	GENERATED_BODY()
@@ -25,14 +26,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	UPROPERTY()
-	UStaticMesh* ShapeMeshRef_sphere;
-	UPROPERTY()
-	UStaticMesh* ShapeMeshRef_box;
-	UPROPERTY()
-	UMaterialInterface* VolumeMaterial_ref;
-	UPROPERTY()
-	UStaticMesh* ShapeMeshRef;
+	UPROPERTY() UStaticMesh* ShapeMeshRef_sphere;
+	UPROPERTY() UStaticMesh* ShapeMeshRef_box;
+	UPROPERTY() UMaterialInterface* VolumeMaterial_ref;
+	UPROPERTY() UStaticMesh* ShapeMeshRef;
 
 public:
 	
@@ -51,12 +48,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Volume")
 	FText GetVolumeText();
 	
-	UPROPERTY()
-	UStaticMeshComponent* Volume;
-	UPROPERTY()
-	UTextRenderComponent* TextDisplay;
-	UPROPERTY()
-	UBillboardComponent* IconDisplay;
+	UPROPERTY() UStaticMeshComponent* Volume;
+	UPROPERTY() UBoxComponent* Bounds_box;
+	UPROPERTY() USphereComponent* Bounds_sphere;
+	UPROPERTY() UTextRenderComponent* TextDisplay;
+	UPROPERTY() UBillboardComponent* IconDisplay;
 };
 
 // ====================================================================================================

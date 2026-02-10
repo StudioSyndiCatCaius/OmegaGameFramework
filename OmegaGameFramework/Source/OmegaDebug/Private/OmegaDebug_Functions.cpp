@@ -2,7 +2,8 @@
 
 #include "OmegaDebug_Functions.h"
 
-#include "Subsystems/OmegaSubsystem_Quest.h"
+#include "Modifiers/Modifier_Save.h"
+#include "Subsystems/Subsystem_Quest.h"
 
 UOmegaDebugDevSettings::UOmegaDebugDevSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -10,14 +11,55 @@ UOmegaDebugDevSettings::UOmegaDebugDevSettings(const FObjectInitializer& ObjectI
 
 }
 
+
+UOmegaSettings_Debug* UOmegaDebugSubsystem::L_GetSettingsAsset() const
+{
+	if(GetMutableDefault<UOmegaDebugDevSettings>()->GetDefaultSettings())
+	{
+		return GetMutableDefault<UOmegaDebugDevSettings>()->GetDefaultSettings();
+	}
+	return GetMutableDefault<UOmegaSettings_Debug>();
+}
+
+UOmegaDebugProfile* UOmegaDebugSubsystem::L_GetProfileDefault() const
+{
+	if(L_GetSettingsAsset()->DefaultSettingsProfile)
+	{
+		return L_GetSettingsAsset()->DefaultSettingsProfile;
+	}
+	return GetMutableDefault<UOmegaDebugProfile>();
+}
+
+void UOmegaDebugSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	if(L_GetSettingsAsset()->bRunDebugProfile)
+	{
+		GetWorld()->GetTimerManager().SetTimer(timer_starProf,this,&UOmegaDebugSubsystem::StartDebugProfile_Default,
+			GetMutableDefault<UOmegaDebugDevSettings>()->Delay_AutostartProfile);
+	}
+	
+}
+
 void UOmegaDebugSubsystem::StartDebugProfile(UOmegaDebugProfile* Profile)
 {
 	if(Profile)
 	{
-		if(UOmegaSaveGame* sav = Cast<UOmegaSaveGame>(Profile->DebugSave.LoadSynchronous()))
+		if(Profile->DebugSave)
 		{
-			GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->StartGame(sav,Profile->Save_LoadLevel,Profile->Save_Tags);
+			if(TSubclassOf<UOmegaSaveGame> _cl=Profile->DebugSave.LoadSynchronous())
+			{
+				if(UOmegaSaveGame* sav = NewObject<UOmegaSaveGame>(this,_cl))
+				{
+					GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->StartGame(sav,Profile->Save_LoadLevel,Profile->Save_Tags);
+				}
+			}
 		}
+		UOmegaSaveGame* _sav=GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData;
+		
+		FOmegaModifiers_Save smods;
+		smods.Modifiers=Profile->SaveMods;
+		smods.Modify(_sav,GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>(),false);
 		for(auto* i : Profile->Scripts)
 		{
 			if(i)

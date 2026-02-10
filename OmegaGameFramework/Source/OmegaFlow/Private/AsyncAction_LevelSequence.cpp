@@ -56,20 +56,31 @@ void UAsyncAction_LevelSequence::Activate()
 	}
 	if(LocalSeqActor)
 	{
-		if(Local_OverrideInstanceData)
+		if(L_config.bOverrideInstance)
 		{
-			LocalSeqActor->bOverrideInstanceData = Local_OverrideInstanceData;
+			LocalSeqActor->bOverrideInstanceData = L_config.bOverrideInstance;
 			UDefaultLevelSequenceInstanceData* TempSeqData = Cast<UDefaultLevelSequenceInstanceData>(LocalSeqActor->DefaultInstanceData);
 
 			if(LocalSeqActor)
 			{
-				TempSeqData->TransformOriginActor = Local_OriginActor;
+				TempSeqData->TransformOriginActor = L_config.OriginActor;
 			}
-			TempSeqData->TransformOrigin = Local_OriginTransform;
+			TempSeqData->TransformOrigin = L_config.OriginTransform;
 		}
 	
 		LocalPlayer->OnFinished.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Finish);
 		LocalPlayer->OnStop.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Stop);
+		
+		//setup bindings
+		TArray<FName> Bind_list;
+		L_config.ActorBindings.GetKeys(Bind_list);
+		for (FName name : Bind_list)
+		{
+			if (AActor* a=L_config.ActorBindings[name])
+			{
+				LocalSeqActor->AddBindingByTag(name,a);
+			}
+		}
 
 		Local_Play();
 	}
@@ -81,8 +92,7 @@ void UAsyncAction_LevelSequence::Activate()
 }
 
 UAsyncAction_LevelSequence* UAsyncAction_LevelSequence::PlayLevelSequence(UObject* WorldContextObject,
-	ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, bool bOverrideInstanceData,
-	AActor* OriginActor, FTransform OriginTransform)
+	ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, FOmegaLevelSequenceConfig Config)
 {
 	UAsyncAction_LevelSequence* NewSeq = NewObject<UAsyncAction_LevelSequence>();
 
@@ -90,19 +100,15 @@ UAsyncAction_LevelSequence* UAsyncAction_LevelSequence::PlayLevelSequence(UObjec
 	{
 		NewSeq->LocalContext = WorldContextObject;
 	}
-	if(OriginActor)
-	{
-		NewSeq->Local_OriginActor = OriginActor;
-	}
 	if(LevelSequence)
 	{
 		NewSeq->LocalLevelSequence = LevelSequence;
 	}
+	NewSeq->L_config=Config;
 	NewSeq->LocalLevelSequence = LevelSequence;
 	NewSeq->LocalSettings = Settings;
-	NewSeq->Local_OverrideInstanceData = bOverrideInstanceData;
-	NewSeq->Local_OriginTransform = OriginTransform;
 
+	
 	TArray<FMovieSceneMarkedFrame> loc_frames = LevelSequence->GetMovieScene()->GetMarkedFrames();
 	for(FMovieSceneMarkedFrame TempFrame: loc_frames)
 	{

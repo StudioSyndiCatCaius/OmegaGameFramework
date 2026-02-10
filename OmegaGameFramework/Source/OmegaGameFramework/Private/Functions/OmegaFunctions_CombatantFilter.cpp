@@ -33,3 +33,27 @@ TArray<UCombatantComponent*> UCombatantFilterFunctions::FilterCombatants_ByAsset
 	}
 	return out;
 }
+
+UPrimaryDataAsset* UCombatantFilterFunctions::SelectFirstSkillThatCanTarget(UCombatantComponent* Instigator,
+	TArray<UPrimaryDataAsset*> Skills, UCombatantComponent* Target, bool& Outcome)
+{
+	if(Instigator && Target)
+	{
+		for(auto* s : Skills)
+		{
+			if(s)
+			{
+				TArray<UCombatantComponent*> lis;
+				lis.Add(Target);
+				lis=FilterCombatants_ByAsset(Instigator,lis,s);
+				if(lis.Contains(Target))
+				{
+					Outcome=true;
+					return s;
+				}
+			}
+		}
+	}
+	Outcome=false;
+	return nullptr;
+}

@@ -25,9 +25,8 @@ TArray<AActor*> UOmegaActorEventBase::GetEventActorList()
 	return out;
 }
 
-void UOmegaActorEvent_Teleport::Native_Begin(const FString& Flag)
+void UOmegaActorEvent_Teleport::OnEventBegin_Implementation(const FString& Flag)
 {
-	Super::Native_Begin(Flag);
 	if(GetEventActor() && TargetPoint && TargetPoint->Private_GetActor(GetWorld()))
 	{
 		FHitResult dumphit;
@@ -35,3 +34,6 @@ void UOmegaActorEvent_Teleport::Native_Begin(const FString& Flag)
 	}
 	Finish(" ");
 }
+
+
+

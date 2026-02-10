@@ -21,6 +21,15 @@ UFlowNode_SubGraph::UFlowNode_SubGraph(const FObjectInitializer& ObjectInitializ
 	OutputPins = {FinishPin};
 }
 
+void UFlowNode_SubGraph::FlowNotified_Implementation(FName Notify, UObject* Context)
+{
+	if(ReplicateSignals && subflow)
+	{
+		subflow->FireFlowSignal(Notify,Context);
+	}
+	Super::FlowNotified_Implementation(Notify, Context);
+}
+
 bool UFlowNode_SubGraph::CanBeAssetInstanced() const
 {
 	return !Asset.IsNull() && (bCanInstanceIdenticalAsset || Asset->GetPathName() != GetFlowAsset()->GetTemplateAsset()->GetPathName());
@@ -63,7 +72,7 @@ void UFlowNode_SubGraph::ExecuteInput(const FName& PinName)
 	{
 		if (GetFlowSubsystem())
 		{
-			GetFlowSubsystem()->CreateSubFlow(this);
+			subflow=GetFlowSubsystem()->CreateSubFlow(this);
 		}
 	}
 	else if (!PinName.IsNone())

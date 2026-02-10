@@ -11,7 +11,11 @@ public class Flow : ModuleRules
 		PublicDependencyModuleNames.AddRange(new[] 
 		{
 			"LevelSequence",
-			"OmegaGameFramework"
+			"OmegaGameFramework",
+			"Json",
+			"LuaMachine",
+			"JsonBlueprintUtilities",
+			"JsonUtilities",
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new[] 

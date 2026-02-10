@@ -196,4 +196,6 @@ struct LUAMACHINE_API FLuaValue
 	void Unref();
 
 	FMulticastScriptDelegate* MulticastScriptDelegate = nullptr;
+	
+	
 };

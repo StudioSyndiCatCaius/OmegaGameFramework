@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Subsystems/OmegaSubsystem_DynamicCamera.h"
+#include "Subsystems/Subsystem_DynamicCamera.h"
 #include "Actor_AutoMenu.generated.h"
 
 class UMenu;
@@ -20,6 +20,8 @@ class OMEGADEMO_API AOmegaAutoMenu : public AOmegaDynamicCamera
 	UFUNCTION()
 	void Native_OnMenuClosed(FGameplayTagContainer GameplayTags, UObject* Context, FString Flag);
 
+	UFUNCTION() void L_OpenMenu();
+	
 public:
 	AOmegaAutoMenu();
 	virtual void BeginPlay() override;

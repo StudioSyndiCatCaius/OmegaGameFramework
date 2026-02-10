@@ -5,8 +5,7 @@ public class OmegaData : ModuleRules
 {
 	public OmegaData(ReadOnlyTargetRules Target) : base(Target)
 	{
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        bUseUnity = false;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PrecompileForTargets = PrecompileTargetsType.Any;
 		PublicDependencyModuleNames.AddRange(new string[]

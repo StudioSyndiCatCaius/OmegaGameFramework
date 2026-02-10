@@ -126,12 +126,13 @@ void UOmegaAttribute::GetGeneralAssetLabel_Implementation(FString& Label)
 
 TArray<UOmegaAttribute*> UOmegaAttributeSet::GetAllAttributes()
 {
-	TArray<UOmegaAttribute*> out=Attributes;
+	TArray<UOmegaAttribute*> out;
+	Attributes.GetKeys(out);
 	for (auto* TempSet : InheritedSets)
 	{
 		if(TempSet)
 		{
-			out.Append(TempSet->Attributes);
+			out.Append(TempSet->GetAllAttributes());
 		}
 	}
 	return out;
@@ -147,6 +148,36 @@ TArray<UOmegaAttribute*> UOmegaAttributeSet::GetStaticAttributes()
 	return Local_GetAtt(true);
 }
 
+float UOmegaAttributeSet::GetAttributeMax(UOmegaAttribute* Attribute)
+{
+	if (GetAllAttributes().Contains(Attribute))
+	{
+		TMap<UOmegaAttribute*, FOmegaAttributeSetOverride> temp=GetAttributeConfigs();
+		FOmegaAttributeSetOverride f= temp.FindOrAdd(Attribute);
+		if (f.bOverrideMax)
+		{
+			return f.MaxOverride;
+		}
+	}
+	return 0;
+}
+
+TMap<UOmegaAttribute*, FOmegaAttributeSetOverride> UOmegaAttributeSet::GetAttributeConfigs()
+{
+	TMap<UOmegaAttribute*, FOmegaAttributeSetOverride> out;
+	for (auto* TempSet : InheritedSets)
+	{
+		if (TempSet)
+		{
+			out.Append(TempSet->GetAttributeConfigs());
+		}
+	}
+	out.Append(Attributes);
+	
+	return out;
+}
+
+
 TArray<UOmegaAttribute*> UOmegaAttributeSet::Local_GetAtt(bool bStatic)
 {
 	TArray<UOmegaAttribute*> OutAtts;
@@ -161,7 +192,7 @@ TArray<UOmegaAttribute*> UOmegaAttributeSet::Local_GetAtt(bool bStatic)
 }
 
 
-TArray<FOmegaAttributeModifier> UAttributeModifierContainer::GetModifierValues_Implementation()
+TArray<FOmegaAttributeModifier> UAttributeModifierContainer::GetModifierValues_Implementation(UCombatantComponent* CombatantComponent)
 {
 	FOmegaAttributeModifier LocalMod;
 	LocalMod.Attribute = Attribute;

@@ -7,6 +7,8 @@
 #include "FlowModule.h"
 #include "FlowSubsystem.h"
 #include "FlowTypes.h"
+#include "OmegaSettings.h"
+#include "OmegaGameCore.h"
 
 #include "Engine/Engine.h"
 #include "Engine/ViewportStatsSubsystem.h"
@@ -23,6 +25,15 @@ FString UFlowNode::MissingIdentityTag = TEXT("Missing Identity Tag");
 FString UFlowNode::MissingNotifyTag = TEXT("Missing Notify Tag");
 FString UFlowNode::MissingClass = TEXT("Missing class");
 FString UFlowNode::NoActorsFound = TEXT("No actors found");
+
+void UFlowNodeTrait::OnNodeInput_Implementation(UFlowNode* Node, FName Pin) const
+{
+}
+
+void UFlowNodeTrait::OnNodeOutput_Implementation(UFlowNode* Node, FName Pin) const
+{
+}
+
 
 UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -46,6 +57,23 @@ UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
 	OutputPins = {DefaultOutputPin};
 }
 
+
+
+
+UOmegaGameCore* UFlowNode::L_GetGlobalSettings() const
+{
+	return GetMutableDefault<UOmegaSettings>()->GetGameCore();
+}
+
+TArray<FName> UFlowNode::L_GetLocalMetaList() const
+{
+	TArray<FName> out;
+	if (GetFlowAsset())
+	{
+		GetFlowAsset()->LocalMeta.GetKeys(out);
+	}
+	return out;
+}
 #if WITH_EDITOR
 void UFlowNode::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -453,6 +481,20 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 	if (SignalMode == EFlowSignalMode::Enabled)
 	{
 		ExecuteInput(PinName);
+		for(auto* t : GetFlowAsset()->Traits)
+		{
+			if(t)
+			{
+				t->NodeInput(this,PinName);
+			}
+		}
+		for(auto* t : Traits)
+		{
+			if(t)
+			{
+				t->OnNodeInput(this,PinName);
+			}
+		}
 	}
 	else if (SignalMode == EFlowSignalMode::PassThrough)
 	{
@@ -462,7 +504,11 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 
 void UFlowNode::ExecuteInput(const FName& PinName)
 {
-	K2_ExecuteInput(PinName);
+	if (L_GetGlobalSettings()->FlowNode_CanPlay(this,PinName))
+	{
+		L_GetGlobalSettings()->FlowNode_OnStart(this,PinName);
+		K2_ExecuteInput(PinName);	
+	}
 }
 
 void UFlowNode::TriggerFirstOutput(const bool bFinish)
@@ -513,7 +559,14 @@ void UFlowNode::TriggerOutput(FName PinName, const bool bFinish /*= false*/, con
 	{
 		if(t)
 		{
-			t->NodeInput(this,PinName);
+			t->NodeOutput(this,PinName);
+		}
+	}
+	for(auto* t : Traits)
+	{
+		if(t)
+		{
+			t->OnNodeOutput(this,PinName);
 		}
 	}
 	
@@ -638,6 +691,10 @@ AActor* UFlowNode::GetActorToFocus()
 	return K2_GetActorToFocus();
 }
 #endif
+
+void UFlowNode::FlowNotified_Implementation(FName Notify, UObject* Context)
+{
+}
 
 FString UFlowNode::GetIdentityTagDescription(const FGameplayTag& Tag)
 {

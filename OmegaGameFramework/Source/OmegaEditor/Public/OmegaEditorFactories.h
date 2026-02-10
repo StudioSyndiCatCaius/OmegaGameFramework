@@ -8,44 +8,53 @@
 
 #include "Misc/OmegaAttribute.h"
 #include "Misc/OmegaFaction.h"
-#include "Misc/OmegaDemoAssets.h"
 #include "OmegaDataItem.h"
 #include "OmegaDebug_Functions.h"
 
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_Character.h"
 #include "Actors/OmegaGameplaySystem.h"
-#include "Subsystems/OmegaSubsystem_Save.h"
-#include "Subsystems/OmegaSubsystem_Quest.h"
-#include "Subsystems/OmegaSubsystem_Zone.h"
+#include "Subsystems/Subsystem_Save.h"
+#include "Subsystems/Subsystem_Quest.h"
+#include "Subsystems/Subsystem_Zone.h"
 
 #include "DataAssets/DA_CommonCharacter.h"
 #include "DataAssets/DA_CommonItem.h"
 #include "DataAssets/DA_CommonSkill.h"
 #include "DataAssets/DA_CommonInteractable.h"
+#include "DataAssets/DA_CombatantGambits.h"
+#include "DataAssets/DA_CommonEquipment.h"
+#include "DataAssets/DA_Common_EquipType.h"
+#include "DataAssets/DA_CommonRace.h"
+#include "DataAssets/DA_Job.h"
 
-#include "Misc/CombatantGambits.h"
+#include "Misc/OmegaDamageType.h"
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
 #include "Components/Component_Leveling.h"
 #include "Components/Component_Subscript.h"
 #include "Factories/BlueprintFactory.h"
-#include "Functions/OmegaFunctions_Actor.h"
-#include "Functions/OmegaFunctions_Animation.h"
-#include "Functions/OmegaFunctions_Combatant.h"
+#include "Functions/F_Actor.h"
+#include "Functions/F_Animation.h"
+#include "Functions/F_Combatant.h"
 #include "Misc/OmegaGameplayModule.h"
-#include "Subsystems/OmegaSubsystem_BGM.h"
+#include "Subsystems/Subsystem_BGM.h"
 #include "Widget/Menu.h"
+#include "Widget/UI_Widgets.h"
 #include "OmegaEditorFactories.generated.h"
 
 #define OMACRO_ASSETTYPE_HEADERFIELD(AssetName, DisplayName, AssetDescription, AssetColor, AssetCategory) \
 inline UObject* U##AssetName##_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) \
 { \
-	check(Class->IsChildOf(U##AssetName##::StaticClass())); \
-	return NewObject<U##AssetName##>(InParent, Class, Name, Flags | RF_Transactional); \
+    check(Class->IsChildOf(U##AssetName##::StaticClass())); \
+    return NewObject<U##AssetName##>(InParent, Class, Name, Flags | RF_Transactional); \
+} \
+inline bool U##AssetName##_Factory::ShouldShowInNewMenu() const \
+{ \
+    return false; \
 } \
 inline U##AssetName##_Factory::U##AssetName##_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) { \
-	SupportedClass = U##AssetName##::StaticClass(); bEditAfterNew = true; bCreateNew = true; \
+    SupportedClass = U##AssetName##::StaticClass(); bEditAfterNew = true; bCreateNew = true; \
 } \
 class FAssetTypeActions_##AssetName: public FAssetTypeActions_Base \
 { \
@@ -59,17 +68,33 @@ virtual const TArray<FText>& GetSubMenus() const override \
 { static const TArray<FText> SubMenus { NSLOCTEXT("AssetTypeActions", "OmegaAssetSubMenu_"#AssetCategory, AssetCategory) }; return SubMenus; }; \
 private: \
 EAssetTypeCategories::Type OmegaAssetCategory; \
-}; \
+};
 
-////////////////////////////////////////////
+// ==================================================================================================
 ////////---Asset Factories---//////////////
-///////////////////////////////////////////
+// ==================================================================================================
+
+// COLORS
+inline FColor _color_bp=FColor(0,0,200);
+inline FColor _color_debug=FColor(200,200,200);
+const FColor col_common=FColor(255, 30, 30);
+
+
+//Attributes
+UCLASS() class OMEGAEDITOR_API UOmegaSlateStyle_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaSlateStyle,"Slate Style", "Asset Desc here", FColor(9,255,212),"Gameplay")
 
 //Attributes
 UCLASS() class OMEGAEDITOR_API UOmegaAttribute_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaAttribute,"Attribute", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
@@ -78,6 +103,7 @@ UCLASS() class OMEGAEDITOR_API UOmegaFaction_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaFaction,"Faction", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
@@ -85,7 +111,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaFaction,"Faction", "Asset Desc here", FColor(2
 UCLASS() class OMEGAEDITOR_API UOmegaDamageType_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaDamageType,"Damage Type", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
@@ -93,7 +120,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaDamageType,"Damage Type", "Asset Desc here", F
 UCLASS() class OMEGAEDITOR_API UCombatantGambitAsset_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(CombatantGambitAsset,"Combat Gambit", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
@@ -101,7 +129,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(CombatantGambitAsset,"Combat Gambit", "Asset Desc h
 UCLASS() class OMEGAEDITOR_API UOmegaQuest_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaQuest,"Quest", "Asset Desc here",FColor(201, 29, 85),"Gameplay")
 
@@ -112,7 +141,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaQuest,"Quest", "Asset Desc here",FColor(201, 2
 UCLASS() class OMEGAEDITOR_API USubscriptCollection_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(SubscriptCollection,"Subscript Collection", "Asset Desc here",FColor(40, 120, 255),"Gameplay")
 
@@ -120,7 +150,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(SubscriptCollection,"Subscript Collection", "Asset 
 UCLASS() class OMEGAEDITOR_API UOmegaBGM_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaBGM,"BGM", "Asset Desc here", FColor(100, 0, 225),"Audio")
 
@@ -129,7 +160,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaBGM,"BGM", "Asset Desc here", FColor(100, 0, 2
 UCLASS() class OMEGAEDITOR_API UOmegaLevelData_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaLevelData,"Level: World Data", "Asset Desc here", FColor(225, 150, 0),"World")
 
@@ -137,7 +169,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaLevelData,"Level: World Data", "Asset Desc her
 UCLASS() class OMEGAEDITOR_API UOmegaZoneData_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaZoneData,"Level: Zone Data", "Asset Desc here", FColor(225, 150, 0),"World")
 
@@ -146,7 +179,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaZoneData,"Level: Zone Data", "Asset Desc here"
 UCLASS() class OMEGAEDITOR_API UZoneLegendAsset_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(ZoneLegendAsset,"Level: Zone Legend", "Asset Desc here", FColor(225, 155, 40),"World")
 
@@ -155,7 +189,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(ZoneLegendAsset,"Level: Zone Legend", "Asset Desc h
 UCLASS() class OMEGAEDITOR_API UOmegaStoryStateAsset_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaStoryStateAsset,"Story State", "Asset Desc here", FColor(201, 29, 85),"Save")
 
@@ -164,7 +199,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaStoryStateAsset,"Story State", "Asset Desc her
 UCLASS() class OMEGAEDITOR_API UOmegaAnimationEmote_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaAnimationEmote,"Emote", "Asset Desc here", FColor(0, 225, 110),"Animation")
 
@@ -172,7 +208,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaAnimationEmote,"Emote", "Asset Desc here", FCo
 UCLASS() class OMEGAEDITOR_API UOmegaLevelingAsset_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaLevelingAsset,"Leveling Asset", "Asset Desc here", FColor(0, 225, 110),"Gameplay")
 
@@ -181,7 +218,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaLevelingAsset,"Leveling Asset", "Asset Desc he
 UCLASS() class OMEGAEDITOR_API UOmegaActorConfig_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaActorConfig,"Actor Config", "Asset Desc here", FColor(50, 50, 50),"Util")
 
@@ -190,11 +228,12 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaActorConfig,"Actor Config", "Asset Desc here",
 UCLASS() class OMEGAEDITOR_API UOmegaCharacterConfig_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaCharacterConfig,"Character Config", "Asset Desc here", FColor(50, 50, 50),"Util")
 
-inline FColor _color_debug=FColor(200,200,200);
+
 
 
 
@@ -206,7 +245,7 @@ class OMEGAEDITOR_API UOmegaDataItems_Factory : public UFactory
 	GENERATED_UCLASS_BODY()
 public:
 
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
 };
 
 class FAssetTypeActions_OmegaDataItems : public FAssetTypeActions_Base
@@ -243,7 +282,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaAbility", "Blueprint Ability"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_AbilityContextDesc", "This is Ability"); }
 	virtual UClass* GetSupportedClass() const override { return AOmegaAbility::StaticClass(); }
 private:
@@ -266,7 +305,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGameplaySystem", "Gameplay System"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GameplaySystemContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return AOmegaGameplaySystem::StaticClass(); }
 private:
@@ -289,7 +328,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGameplayModule", "Gameplay Module"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GameplayModuleContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaGameplayModule::StaticClass(); }
 private:
@@ -312,7 +351,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGameSave", "Game Save"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 200, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GameSaveContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaSaveGame::StaticClass(); }
 private:
@@ -335,7 +374,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegaGlobalSave", "Global Save"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 200, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_GlobalSaveContextDesc", "An singleton actor that handles a specific game system."); }
 	virtual UClass* GetSupportedClass() const override { return UOmegaSaveGlobal::StaticClass(); }
 private:
@@ -361,7 +400,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_Menu", "Menu"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_MenuContextDesc", "Menu"); }
 	virtual UClass* GetSupportedClass() const override { return UMenu::StaticClass(); }
 private:
@@ -384,7 +423,7 @@ public:
 	
 	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_HudLayer", "HUD Layer"); }
 	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor( 63, 126, 255 ); }
+	virtual FColor GetTypeColor() const override { return _color_bp; }
 	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_HudLayerContextDesc", "Hud Layer"); }
 	virtual UClass* GetSupportedClass() const override { return UHUDLayer::StaticClass(); }
 private:
@@ -396,13 +435,14 @@ private:
 // COMMON TYPES
 // =====================================================================================================================
 
-const FColor col_common=FColor(255, 30, 30);
+
 
 //Skill
 UCLASS() class OMEGAEDITOR_API UOAsset_CommonSkill_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonSkill,"Common Skill", "Asset Desc here",col_common,"Common")
 
@@ -410,7 +450,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonSkill,"Common Skill", "Asset Desc here
 UCLASS() class OMEGAEDITOR_API UOAsset_CommonCharacter_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonCharacter,"Common Character", "Asset Desc here",col_common,"Common")
 
@@ -418,15 +459,44 @@ OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonCharacter,"Common Character", "Asset D
 UCLASS() class OMEGAEDITOR_API UOAsset_CommonItem_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonItem,"Common Item", "Asset Desc here",col_common,"Common")
+
+//eQUIP
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonEquipment_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonEquipment,"Common Equipment", "Asset Desc here",col_common,"Common")
+
+//EquipType
+UCLASS() class OMEGAEDITOR_API UOAsset_Common_EquipType_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_Common_EquipType,"Common Equip Type", "Asset Desc here",col_common,"Common")
+
+//EquipType
+UCLASS() class OMEGAEDITOR_API UOAsset_CommonRace_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonRace,"Common Race", "Asset Desc here",col_common,"Common")
 
 //Interactables
 UCLASS() class OMEGAEDITOR_API UOAsset_CommonInteractable_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OAsset_CommonInteractable,"Common Interactable", "Asset Desc here",col_common,"Common")
 
@@ -441,7 +511,8 @@ const FColor col_asLib=FColor(150, 100, 255);
 UCLASS() class OMEGAEDITOR_API UOmegaAssetLibrary_Animation_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaAssetLibrary_Animation,"Animation Library", "Asset Desc here",col_asLib,"Asset Library")
 
@@ -449,7 +520,8 @@ OMACRO_ASSETTYPE_HEADERFIELD(OmegaAssetLibrary_Animation,"Animation Library", "A
 UCLASS() class OMEGAEDITOR_API UOmegaAssetLibrary_Sound_Factory : public UFactory
 {
 	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaAssetLibrary_Sound,"Sound Library", "Asset Desc here",col_asLib,"Asset Library")
 

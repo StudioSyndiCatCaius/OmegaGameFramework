@@ -19,6 +19,7 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "LuaUserDataObject.h"
 #include "LuaCodeFactory.h"
+#include "LuaSubsystem.h"
 
 #define LOCTEXT_NAMESPACE "FLuaMachineEditorModule"
 
@@ -30,6 +31,7 @@ FLuaMachineEditorModule::FLuaMachineEditorModule()
 
 void FLuaMachineEditorModule::StartupModule()
 {
+	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FLuaMachineEditorModule::RegisterToolbarExtension));
 	FCoreDelegates::OnPostEngineInit.AddRaw(this, &FLuaMachineEditorModule::OnPostEngineInit);
 
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -75,6 +77,11 @@ void FLuaMachineEditorModule::StartupModule()
 #endif
 			, "DebugTools.TabIcon"))
 		.SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsMiscCategory());
+    
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FOmegaLuaCode::StaticStruct()->GetFName(),
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOmegaLuaCodeCustomization::MakeInstance)
+	);
 }
 
 void FLuaMachineEditorModule::OnPostEngineInit()
@@ -516,6 +523,38 @@ TSharedRef<SDockTab> FLuaMachineEditorModule::CreateLuaMachineDebugger(const FSp
 		];
 }
 
+void FLuaMachineEditorModule::RegisterToolbarExtension()
+{
+	FToolMenuOwnerScoped OwnerScoped(this);
+    
+	UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.User");
+	FToolMenuSection& Section = Menu->FindOrAddSection("MyCustomButtons");
+    
+	Section.AddEntry(FToolMenuEntry::InitToolBarButton(
+		"RunLua",
+		FExecuteAction::CreateRaw(this, &FLuaMachineEditorModule::OnButtonClicked),
+		FText::FromString("Rerun Lua"),
+		FText::FromString("Execute World Subsystem Function"),
+		FSlateIcon(FAppStyle::GetAppStyleSetName(), "PlayWorld.PlayInViewport")
+	));
+}
+
+void FLuaMachineEditorModule::OnButtonClicked()
+{
+	if (GEditor)
+	{
+		UWorld* World = GEditor->GetEditorWorldContext().World();
+		if (World)
+		{
+			ULuaWorldSubsystem* Subsystem = World->GetSubsystem<ULuaWorldSubsystem>();
+			if (Subsystem)
+			{
+				Subsystem->RerunLua();
+			}
+		}
+	}
+}
+
 void FLuaMachineEditorModule::ShutdownModule()
 {
 	FCoreDelegates::OnPostEngineInit.RemoveAll(this);
@@ -530,6 +569,14 @@ void FLuaMachineEditorModule::ShutdownModule()
 		}
 	}
 	CreatedAssetTypeActions.Empty();
+	UToolMenus::UnRegisterStartupCallback(this);
+	UToolMenus::UnregisterOwner(this);
+	
+	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+	{
+		FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaLuaCode::StaticStruct()->GetFName());
+	}
 }
 
 FLuaMachineEditorModule& FLuaMachineEditorModule::Get()

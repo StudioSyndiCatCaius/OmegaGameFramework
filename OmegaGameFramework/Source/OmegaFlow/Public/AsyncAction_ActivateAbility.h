@@ -16,6 +16,8 @@ class OMEGAFLOW_API UAsyncAction_ActivateAbility : public UBlueprintAsyncActionB
 {
 	GENERATED_BODY()
 
+	bool b_autoGrant;
+
 public:
 	
 	UPROPERTY(BlueprintAssignable)
@@ -25,12 +27,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FAbilityFailed Failed;
 
-	UPROPERTY()
-	TSubclassOf<AOmegaAbility> LocalAbilityClass;
-	UPROPERTY()
-	UObject* LocalContext = nullptr;
-	UPROPERTY()
-	UCombatantComponent* CombatantRef;
+	UPROPERTY() TSubclassOf<AOmegaAbility> LocalAbilityClass;
+	UPROPERTY() UObject* LocalContext = nullptr;
+	UPROPERTY() UCombatantComponent* CombatantRef;
 	
 	UFUNCTION()
 	void NativeShutdown(bool bCancelled);
@@ -38,6 +37,6 @@ public:
 	virtual void Activate() override;
 	
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Activate Ability")
-	static UAsyncAction_ActivateAbility* ActivateAbility(UCombatantComponent* Combatant, const TSubclassOf<AOmegaAbility> Ability, UObject* Context);
+	static UAsyncAction_ActivateAbility* ActivateAbility(UCombatantComponent* Combatant, const TSubclassOf<AOmegaAbility> Ability, UObject* Context, bool bForceGrant);
 
 };

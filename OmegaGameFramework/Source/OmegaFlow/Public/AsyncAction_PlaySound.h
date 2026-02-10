@@ -19,6 +19,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnAsyncSoundFinished Finished;
+	UPROPERTY(BlueprintAssignable)
+	FOnAsyncSoundFinished Failed;
 
 	UPROPERTY()
 	const UObject* LocalWorldContext;

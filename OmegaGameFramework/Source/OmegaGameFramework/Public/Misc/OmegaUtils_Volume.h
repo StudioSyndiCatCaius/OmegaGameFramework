@@ -18,14 +18,9 @@ struct FVolumeSphereData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category = "Volume")
-		FName VolumeName;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Volume")
-		FVector WorldLocation;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Volume")
-		float Radius;
+	UPROPERTY(BlueprintReadWrite, Category = "Volume") FName VolumeName;
+	UPROPERTY(BlueprintReadWrite, Category = "Volume") FVector WorldLocation=FVector();
+	UPROPERTY(BlueprintReadWrite, Category = "Volume") float Radius=0.0f;
 
 };
 
@@ -34,17 +29,10 @@ struct FVolumeBoxData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category = "Volume")
-		FName VolumeName;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Volume")
-		FVector WorldLocation;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Volume")
-		FRotator WorldRotation;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Volume")
-		FVector BoxExtent;
+	UPROPERTY(BlueprintReadWrite, Category = "Volume") FName VolumeName;
+	UPROPERTY(BlueprintReadWrite, Category = "Volume") FVector WorldLocation=FVector(); 
+	UPROPERTY(BlueprintReadWrite, Category = "Volume") FRotator WorldRotation=FRotator();
+	UPROPERTY(BlueprintReadWrite, Category = "Volume") FVector BoxExtent=FVector::Zero();
 };
 
 class OMEGAGAMEFRAMEWORK_API VolumeUtils

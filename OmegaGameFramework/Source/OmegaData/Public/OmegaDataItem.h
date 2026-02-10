@@ -8,14 +8,14 @@
 #include "GameFramework/Actor.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/DataAsset.h"
-#include "Interfaces/OmegaInterface_Common.h"
-#include "Interfaces/OmegaInterface_Combatant.h"
-#include "Interfaces/OmegaInterface_Skill.h"
+#include "Interfaces/I_Common.h"
+#include "Interfaces/I_Combatant.h"
+#include "Interfaces/I_Skill.h"
 #include "Engine/GameInstance.h"
 #include "OmegaDataTrait.h"
 #include "OmegaDataTraitCollection.h"
 #include "Components/Component_Inventory.h"
-#include "Functions/OmegaFunctions_SoftProperty.h"
+#include "Functions/F_SoftProperty.h"
 
 
 #include "OmegaDataItem.generated.h"
@@ -27,7 +27,7 @@ class ULevelSequence;
 
 UCLASS()
 class OMEGADATA_API UOmegaDataItem : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataAssetCollectionInterface,
-																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier, public IDataInterface_OmegaEffect,
+																public IOmegaSoftPropertyInterface, public IDataInterface_AttributeModifier,
 																public IDataInterface_SkillSource, public IDataInterface_Skill, public ILuaInterface
 {
 	GENERATED_BODY()
@@ -174,15 +174,14 @@ public:
 	//###############################################################################
 	// Combatant
 	//###############################################################################
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
-	virtual TArray<FOmegaEffectContainer> GetOmegaEffects_Implementation() override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	
 	//###############################################################################
 	// Soft Properties
 	//###############################################################################
-	virtual FString GetSoftProperty_Implementation(const FString& Property) override;
-	virtual TMap<FString, FString> GetSoftPropertyMap_Implementation() override;
+	virtual FString GetSoftProperty_Implementation(const FName Property) override;
+	virtual TMap<FName, FString> GetSoftPropertyMap_Implementation() override;
 
 	//###############################################################################
 	// Asset Actions

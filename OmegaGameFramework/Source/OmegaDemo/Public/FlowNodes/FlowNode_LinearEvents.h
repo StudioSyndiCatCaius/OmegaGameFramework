@@ -6,12 +6,12 @@
 #include "Event/OmegaLinearEvent.h"
 #include "GameplayTags.h"
 #include "UObject/Object.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "Nodes/FlowNode.h"
 #include "FlowNode_LinearEvents.generated.h"
 
 	
-UCLASS(DisplayName="Linear Events")
+UCLASS(DisplayName="➡️Linear Events")
 class OMEGADEMO_API UFlowNode_LinearEvents : public UFlowNode, public IDataInterface_General, public IGameplayTagsInterface
 {
 	GENERATED_BODY()
@@ -23,6 +23,7 @@ public:
 
 #if WITH_EDITOR
 	virtual FString GetNodeDescription() const override;
+	virtual FString GetNodeCategory() const override { return "Gameplay"; };
 #endif
 
 	UPROPERTY(EditAnywhere,Category="General") FText NodeName;

@@ -21,6 +21,15 @@ ULevelingComponent::ULevelingComponent()
 	// ...
 }
 
+UOmegaLevelingAsset* ULevelingComponent::L_ValidateLevelAsset(UOmegaLevelingAsset* Asset) const
+{
+	if(Asset)
+	{
+		return Asset;
+	}
+	return LevelingAsset;
+}
+
 
 // Called when the game starts
 void ULevelingComponent::BeginPlay()
@@ -50,78 +59,155 @@ void ULevelingComponent::SetLevelingAsset(UOmegaLevelingAsset* Asset)
 }
 
 
-void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler)
+void ULevelingComponent::AddXP(float Amount, bool bUseRateMultipler,UOmegaLevelingAsset* Leveling_Asset)
 {
 	//Save current Level
-	const int32 LastLevel = GetCurrentLevel();
+	const int32 LastLevel = GetCurrentLevel(Leveling_Asset);
 	//Add XP
-	XP = XP+Amount;
+
+	SetXP(GetXP(Leveling_Asset)+Amount,bUseRateMultipler,Leveling_Asset);
 	
 	//If new level is greater than last level
-	if(GetCurrentLevel()>LastLevel)
+	if(GetCurrentLevel(Leveling_Asset)>LastLevel)
 	{
-		OnLevelUp.Broadcast(this,GetCurrentLevel());
+		OnLevelUp.Broadcast(this,GetCurrentLevel(Leveling_Asset),LastLevel,Leveling_Asset);
 	}
 	//If Level is less than last level, level down.
-	else if (GetCurrentLevel()<LastLevel)
+	else if (GetCurrentLevel(Leveling_Asset)<LastLevel)
 	{
-		OnLevelDown.Broadcast(this,GetCurrentLevel());
+		OnLevelDown.Broadcast(this,GetCurrentLevel(Leveling_Asset),LastLevel,Leveling_Asset);
 	}
 
-	OnXPUpdated.Broadcast(this,XP, Amount);
-	Native_Update();
+	OnXPUpdated.Broadcast(this,GetXP(Leveling_Asset), Amount,Leveling_Asset);
+
 }
 
-void ULevelingComponent::SetXP(float NewValue, bool bUseRateMultipler)
+float ULevelingComponent::GetXP(UOmegaLevelingAsset* Leveling_Asset) const
 {
-	XP = NewValue;
-	OnXPUpdated.Broadcast(this,XP, XP);
-	Native_Update();
+	
+	if(UOmegaLevelingAsset* a=L_ValidateLevelAsset(Leveling_Asset))
+	{
+		if(XP.Contains(a))
+		{
+			return XP[a];
+		}
+	}
+	return 0.0;
 }
 
-int32 ULevelingComponent::GetCurrentLevel() const
+void ULevelingComponent::SetXP(float NewValue, bool bUseRateMultipler,UOmegaLevelingAsset* Leveling_Asset)
 {
-	if(!LevelingAsset)
+	if(UOmegaLevelingAsset* a=L_ValidateLevelAsset(Leveling_Asset))
+	{
+		XP.Add(a,NewValue);
+		OnXPUpdated.Broadcast(this,GetXP(Leveling_Asset), NewValue,Leveling_Asset);
+		Native_Update();
+	}
+}
+
+void ULevelingComponent::SetLevel(int32 Level,UOmegaLevelingAsset* Leveling_Asset)
+{
+	if(L_ValidateLevelAsset(Leveling_Asset))
+	{
+		float min;
+		float max;
+		L_ValidateLevelAsset(Leveling_Asset)->GetXPFromLevel(Level,min,max);
+		SetXP(min);
+	}
+}
+
+int32 ULevelingComponent::GetCurrentLevel(UOmegaLevelingAsset* Leveling_Asset) const
+{
+	if(!L_ValidateLevelAsset(Leveling_Asset))
 	{
 		return 0;
 	}
-	return LevelingAsset->GetLevelFromXP(XP);
+	return L_ValidateLevelAsset(Leveling_Asset)->GetLevelFromXP(GetXP(Leveling_Asset));
 }
 
-float ULevelingComponent::GetPercentageToNextLevel()
+float ULevelingComponent::GetPercentageToNextLevel(UOmegaLevelingAsset* Leveling_Asset)
 {
-	return (XP-GetCurrentLevelMinXP())/(GetCurrentLevelMaxXP()-GetCurrentLevelMinXP());
+	float offset=GetCurrentLevelMinXP(Leveling_Asset);
+	float cur=GetXP(Leveling_Asset)-offset;
+	float max=GetCurrentLevelMaxXP(Leveling_Asset)-offset;
+	return cur/max;
 }
 
-float ULevelingComponent::GetCurrentLevelMinXP()
+float ULevelingComponent::GetCurrentLevelMinXP(UOmegaLevelingAsset* Leveling_Asset)
 {
-	if(!LevelingAsset)
+	if(!L_ValidateLevelAsset(Leveling_Asset))
 	{
 		return 0.0;
 	}
 	float DumFloat = 0;
 	float OutXP = 0.0;
-	LevelingAsset->GetXPFromLevel(GetCurrentLevel(), OutXP, DumFloat);
+	L_ValidateLevelAsset(Leveling_Asset)->GetXPFromLevel(GetCurrentLevel(Leveling_Asset), OutXP, DumFloat);
 	return OutXP;
 }
 
-float ULevelingComponent::GetCurrentLevelMaxXP()
+float ULevelingComponent::GetCurrentLevelMaxXP(UOmegaLevelingAsset* Leveling_Asset) const
 {
-	if(!LevelingAsset)
+	if(!L_ValidateLevelAsset(Leveling_Asset))
 	{
 		return 0.0;
 	}
 	float DumFloat = 0;
 	float OutXP = 0.0;
-	LevelingAsset->GetXPFromLevel(GetCurrentLevel(), DumFloat, OutXP);
+	L_ValidateLevelAsset(Leveling_Asset)->GetXPFromLevel(GetCurrentLevel(Leveling_Asset), DumFloat, OutXP);
 	return OutXP;
 }
 
-float ULevelingComponent::AdjustXPRate(float InXP, bool UseAdjust)
+bool ULevelingComponent::TransferXP_One(ULevelingComponent* To, float Amount, bool TransferAll,
+	UOmegaLevelingAsset* Asset)
+{
+	if(To && Asset)
+	{
+		if(TransferAll)
+		{
+			if(GetXP(Asset)>0.0)
+			{
+				float _in=GetXP(Asset);
+				AddXP(_in*-1,true,Asset);
+				To->AddXP(_in,true,Asset);
+				return true;
+			}
+		}
+		else
+		{
+			if(GetXP(Asset)>=Amount)
+			{
+				AddXP(Amount*-1,true,Asset);
+				To->AddXP(Amount,true,Asset);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool ULevelingComponent::TransferXP_All(ULevelingComponent* To, float Amount, bool TransferAll)
+{
+	bool _out=false;
+	TArray<UOmegaLevelingAsset*> _assets;
+	XP.GetKeys(_assets);
+	for(auto* i :_assets)
+	{
+		if(i)
+		{
+			if(TransferXP_One(To,Amount,TransferAll,i))
+			{
+				_out=true;
+			}
+		}
+	}
+	return _out;
+}
+
+float ULevelingComponent::AdjustXPRate(float InXP, bool UseAdjust,UOmegaLevelingAsset* Leveling_Asset)
 {
 	if(UseAdjust)
 	{
-		return GetXPRate()*XP;
+		return GetXPRate()*GetXP();
 	}
 	else
 	{
@@ -132,66 +218,6 @@ float ULevelingComponent::AdjustXPRate(float InXP, bool UseAdjust)
 void ULevelingComponent::Native_Update()
 {
 	//Update Widgets
-	TArray<UUserWidget*> WidgetList;
-	UWidgetBlueprintLibrary::GetAllWidgetsWithInterface(this, WidgetList, UWidgetInterface_LevelingComponent::StaticClass(), false);
-	for(auto* TempWidget : WidgetList)
-	{
-		if(IWidgetInterface_LevelingComponent::Execute_GetLevelingComponent(TempWidget) && (this == IWidgetInterface_LevelingComponent::Execute_GetLevelingComponent(TempWidget)))
-		{
-			// set progress bar
-			UProgressBar* LocalProgBar;
-			IWidgetInterface_LevelingComponent::Execute_GetLevelingProgressBar(TempWidget, LocalProgBar);
-			if(LocalProgBar)
-			{
-				LocalProgBar->SetPercent(GetPercentageToNextLevel());
-			}
-			// Set texts
-			UTextBlock* Local_CurText;
-			UTextBlock* Local_MaxText;
-			UTextBlock* Local_CurLev;
-			IWidgetInterface_LevelingComponent::Execute_GetLevelingTexts(TempWidget, Local_CurText, Local_MaxText, Local_CurLev);
-				//Set "Current XP" Widget
-			if(Local_CurText)
-			{
-				FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
-					(
-						XP,
-						LevelingAsset->RoundingMode,
-						LevelingAsset->bAlwaysSign,
-						LevelingAsset->bUseGrouping,
-						LevelingAsset->MinIntegralDigits,
-						LevelingAsset->MaxIntegralDigits,
-						LevelingAsset->MinFractionalDigits,
-						LevelingAsset->MaxFractionalDigits
-						);
-					
-				Local_CurText->SetText(LocalText_Val);
-			}
-			//Set "Max XP" Widget
-			if(Local_MaxText)
-			{
-				FText LocalText_Val = UKismetTextLibrary::Conv_FloatToText
-					(
-						GetCurrentLevelMaxXP(),
-						LevelingAsset->RoundingMode,
-						LevelingAsset->bAlwaysSign,
-						LevelingAsset->bUseGrouping,
-						LevelingAsset->MinIntegralDigits,
-						LevelingAsset->MaxIntegralDigits,
-						LevelingAsset->MinFractionalDigits,
-						LevelingAsset->MaxFractionalDigits
-						);
-					
-				Local_MaxText->SetText(LocalText_Val);
-			}
-				//Set "Level" Widget
-			if(Local_CurLev)
-			{
-				FText LocalText_Val = UKismetTextLibrary::Conv_IntToText(GetCurrentLevel());
-				Local_CurLev->SetText(LocalText_Val);
-			}
-		}
-	}
 	
 }
 

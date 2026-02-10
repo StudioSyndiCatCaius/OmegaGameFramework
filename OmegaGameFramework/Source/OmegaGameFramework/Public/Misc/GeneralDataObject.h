@@ -3,13 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
-#include "Interfaces/OmegaInterface_Common.h"
+#include "Interfaces/I_Common.h"
 #include "GameplayTagContainer.h"
-#include "LuaObject.h"
-#include "Functions/OmegaFunctions_ObjectTraits.h"
-#include "Interfaces/OmegaInterface_AssetThumbnail.h"
-#include "Misc/OmegaAttribute.h"
+#include "LuaInterface.h"
+#include "Interfaces/I_ObjectTraits.h"
+#include "Functions/F_SoftProperty.h"
+#include "Interfaces/I_AssetThumbnail.h"
+#include "Interfaces/I_BitFlag.h"
+#include "Interfaces/I_DataAsset.h"
+#include "Interfaces/I_NamedLists.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "GeneralDataObject.generated.h"
 
 
@@ -21,13 +24,6 @@ virtual void GetGeneralDataImages_Implementation(const FString& Label, const UOb
 virtual void GetGeneralAssetLabel_Implementation(FString& Label) override { if(!CustomLabel.IsEmpty()) {Label=CustomLabel; return; } Label=GetName(); return; }; \
 virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; }; \
 virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return  GameplayTags; }; \
-
-#define OMACRO_INSTALL_QUEUEDQUERY() \
-if(UOmegaSubsystem_QueuedQuery* REF_QuerySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueuedQuery>()) \
-{ \
-	REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); \
-} \
-
 
 
 USTRUCT(BlueprintType)
@@ -85,19 +81,6 @@ public:
 };
 
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaLuaBaseObject : public ULuaObject, public IDataInterface_AttributeModifier
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(EditDefaultsOnly,Category="FieldNames") FString Param_AttributeMods="attributes";
-
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation() override;
-};
-
-
 UCLASS(Blueprintable,BlueprintType,Abstract,Const,EditInlineNew,meta=(ShowWorldContextPin))
 class OMEGAGAMEFRAMEWORK_API UOmegaInstancableObject : public UObject
 {
@@ -106,14 +89,18 @@ class OMEGAGAMEFRAMEWORK_API UOmegaInstancableObject : public UObject
 public:
 	
 };
-
-UCLASS(meta=(ShowWorldContextPin))
+UCLASS(meta=(ShowWorldContextPin,DisallowCreateNew),EditInlineNew)
 class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface, public IDataInterface_AssetThumbnail,
-																			public IDataInterface_GUID, public IDataInterface_ObjectHierarchy, public IDataInterface_Traits
+																			public IDataInterface_GUID, public IDataInterface_Traits,
+																			public IOmegaSoftPropertyInterface , public ILuaInterface, public IDataInterface_DataAsset,
+																			public IDataInterface_NamedLists
 {
 	GENERATED_BODY()
 public:
 	UOmegaDataAsset();
+
+	UPROPERTY() FLuaValue LuaData;
+	UPROPERTY() FName LuaKey;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="Name") FText DisplayName;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
@@ -121,25 +108,35 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General") FGameplayTagContainer GameplayTags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General") FOmegaBitflagsBase Flags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General") FOmegaClassNamedLists NamedLists;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TArray<FName> Metatags;
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FGuid Guid;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) int32 AssetSeed=-1;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) FString CustomLabel;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TMap<FName,FString> ExtraParams;
 	OMACRO_ADDPARAMS_GENERAL();
 	
 	virtual FGuid GetObjectGuid_Implementation() { return Guid; }
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="General",AdvancedDisplay) TArray<UOmegaObjectTrait*> Traits;
+	virtual TMap<FName, FString> GetSoftPropertyMap_Implementation() override { return ExtraParams; };
+	virtual FString GetSoftProperty_Implementation(FName Property) override;
+	virtual TArray<FName> GetMetatags_Implementation() override;
+	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,AdvancedDisplay,Category="General") TArray<UOmegaObjectTrait*> Traits;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override { return Traits; };
 	//virtual// void SetTraits_Implementation(TArray<UOmegaObjectTrait*> NewTraits) override{ Traits=NewTraits; };
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) UPrimaryDataAsset* ParentAsset;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) TArray<UPrimaryDataAsset*> ChildAssets;
+	UFUNCTION(BlueprintNativeEvent,Category="Editor") bool UseIconAsThumbnail();
 
-	virtual UObject* GetObject_Parent_Implementation() const override;
-	virtual TArray<UObject*> GetObject_Children_Implementation() const override;
+	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field) override;
+	virtual void SetKey_Implementation(FLuaValue Key) override;
+	virtual FLuaValue GetValue_Implementation(const FString& Field) override { return LuaData; };
+	virtual FLuaValue GetKey_Implementation() override { return FLuaValue(LuaKey.ToString()); };
 	
-	UFUNCTION(BlueprintNativeEvent,Category="DataAsset") bool UseIconAsThumbnail();
-
+	virtual FLinearColor GetThumbnailBack_Tint_Implementation() override { return FLinearColor::Gray; };
 	virtual FSlateBrush GetThumbnail_Brush_Implementation() override { return Icon;};
 	virtual FText GetThumbnail_Text_Implementation() override { return DisplayName;};
+	virtual UPrimaryDataAsset* GetDataAsset_Named_Implementation(FName name) override;
 };

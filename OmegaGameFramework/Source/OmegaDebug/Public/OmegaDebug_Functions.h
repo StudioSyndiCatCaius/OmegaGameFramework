@@ -9,6 +9,7 @@
 #include "OmegaDebug_Functions.generated.h"
 
 
+class UOmegaModifier_Save;
 class UOmegaSaveGame;
 class UOmegaQuest;
 class UGamePreference;
@@ -49,7 +50,8 @@ public:
 	
 	UPROPERTY(EditAnywhere,Category="Save")
 	FGameplayTagContainer AutoSaveTags;
-	
+	UPROPERTY(EditAnywhere,Instanced,Category="DebugProfile")
+	TArray<UOmegaModifier_Save*> SaveMods;
 	UPROPERTY(EditAnywhere,Instanced,Category="DebugProfile")
 	TArray<UOmegaDebugProfileScript*> Scripts;
 
@@ -86,7 +88,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Debug"))
 	FSoftObjectPath DefaultSettings_Debug;
-
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Debug"))
+	float Delay_AutostartProfile=0.3f;
+	
 	UOmegaSettings_Debug* GetDefaultSettings() const
 	{
 		if(UObject* o=DefaultSettings_Debug.TryLoad())
@@ -106,7 +110,13 @@ class UOmegaDebugSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
+	UPROPERTY() FTimerHandle timer_starProf;
+	void L_AutostartProfile();
+	UOmegaSettings_Debug* L_GetSettingsAsset() const;
+	UOmegaDebugProfile* L_GetProfileDefault() const;
+	
 public:
+	void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Debug")
 	void StartDebugProfile(UOmegaDebugProfile* Profile);

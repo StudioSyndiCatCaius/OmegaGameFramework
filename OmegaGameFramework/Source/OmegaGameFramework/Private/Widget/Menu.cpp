@@ -7,16 +7,17 @@
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_Player.h"
 #include "Widget/DataList.h"
-
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
 	if(Context) { ContextObject=Context;}
-	AddToPlayerScreen(200);
+	AddToPlayerScreen(SlateLayerIndex);
 	
 	if(GetDefaultDataList() && ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_CommonMenu::StaticClass()))
 	{
@@ -26,9 +27,6 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	if (!bIsOpen)
 	{
 		//BIND EVENTS
-		GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UMenu::OnGameplayMessage);
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UMenu::OnInputMethodChanged);
-		Local_BindGlobalEvent();
 
 		Reset();
 		
@@ -59,9 +57,9 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		{
 			PlaySound(OpenSound);
 		}
-		else if(DefaultToStyleSounds && UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open)
+		else if(DefaultToStyleSounds && !OGF_CFG_STYLE()->Sound_Menu_Open.IsNull())
 		{
-			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Open);
+			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Open.LoadSynchronous());
 		}
 		
 		if(GetOpenAnimation())
@@ -111,9 +109,9 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			PlaySound(CloseSound);
 		}
-		else if(DefaultToStyleSounds && UOmegaSlateFunctions::GetCurrentSlateStyle() && UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close)
+		else if(DefaultToStyleSounds && OGF_CFG_STYLE()->Sound_Menu_Close)
 		{
-			PlaySound(UOmegaSlateFunctions::GetCurrentSlateStyle()->Sound_Menu_Close);
+			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Close.LoadSynchronous());
 		}
 		
 		//ANIMATION
@@ -229,16 +227,20 @@ void UMenu::Native_CompleteClose()
 	}
 }
 
+void UMenu::MenuClosed_Implementation(FGameplayTagContainer Tags, const FString& Flag)
+{
+}
+
+void UMenu::MenuOpened_Implementation(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
+{
+}
+
 bool UMenu::InputBlocked_Implementation()
 {
 	return IsInputBlocked();
 }
 
-void UMenu::Local_BindGlobalEvent()
-{
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UMenu::OnGlobalEvent);
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UMenu::OnTaggedGlobalEvent);
-}
+
 
 void UMenu::Native_UpdateState()
 {
@@ -249,6 +251,11 @@ void UMenu::Native_UpdateState()
 	OnMenuStateChanged(menu_state);
 }
 
+UWidgetSwitcher* UMenu::GetWidget_WidgetSwitcher_State_Implementation()
+{
+	return nullptr;
+}
+
 void UMenu::SetMenuState(int32 state)
 {
 	if(state!=menu_state)
@@ -256,9 +263,4 @@ void UMenu::SetMenuState(int32 state)
 		menu_state=state;
 		Native_UpdateState();
 	}
-}
-
-void UMenu::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
-                                             FLuaValue meta)
-{
 }

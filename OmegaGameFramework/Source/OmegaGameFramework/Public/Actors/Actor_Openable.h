@@ -3,43 +3,157 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ArrowComponent.h"
-#include "Curves/CurveFloat.h"
-
+#include "Components/Component_ActorConfig.h"
+#include "Functions/F_Component.h"
 #include "GameFramework/Actor.h"
 #include "Actor_Openable.generated.h"
 
+class UBoxComponent;
+class UDataAssetCollectionComponent;
 class UActorStateComponent;
+class UArrowComponent;
 class UOmegaSaveStateComponent;
+class UCurveFloat;
 
 UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaOpenableStyle : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Openable") UComponentModScript_SkeletalMesh* Mesh;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable") UAnimSequence* Anim_Open;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable") FTransform RangeTransform;
+	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable") UAnimSequence* Anim_Close;
+
+	void Apply(AOmegaOpenableActor* Actor);
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaOpenable_Config : public UOmegaActorConfig
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable")
+	TArray<TSubclassOf<AActor>> AutoOpenFor_Actors;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable")
+	TArray<TSubclassOf<AController>> AutoOpenFor_Controllers;
+	
+	void Apply(AOmegaOpenableActor* Actor);
+	bool CanOpen(AOmegaOpenableActor* Openable,AActor* TargetActor);
+	bool CanAutoOpen(AOmegaOpenableActor* Openable,AActor* TargetActor);
+	
+};
+
+
+
+
+
+UCLASS(Abstract)
 class OMEGAGAMEFRAMEWORK_API AOmegaOpenableActor : public AActor
 {
 	GENERATED_BODY()
 
-	UPROPERTY() bool bIsOpening;
-	UPROPERTY() bool bIsOpening_Forward;
+	UPROPERTY() float l_blendVal;
+	UPROPERTY() bool l_openForward;
+	UPROPERTY() bool L_IsOpening;
+
+	void L_Init();
+	float F_GetMaxOpenTime() const
+	{
+		if(Mesh->AnimationData.AnimToPlay)
+		{
+			return Mesh->AnimationData.AnimToPlay->GetPlayLength();
+		}
+		return 1.0f;
+	}
+
+	UOmegaOpenable_Config* GetConfig() const;
+
 public:
-	// Sets default values for this actor's properties
 	AOmegaOpenableActor();
+	
+	UFUNCTION() void N_ActorOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	UFUNCTION() void N_ActorOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void BeginPlay() override;
+	UPROPERTY(EditAnywhere,Category="Openable") bool bStartOpen;
+	UPROPERTY(EditAnywhere,Category="Openable") bool bLocked;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Openable") UOmegaOpenable_Config* Config;
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Openable") UOmegaOpenableStyle* GetOpenableStyle();
+	UFUNCTION(BlueprintNativeEvent,Category="Openable") void OnOpenBegin(bool bForward);
+	UFUNCTION(BlueprintNativeEvent,Category="Openable") void OnOpenEnd(bool bForward);
+	UFUNCTION(BlueprintNativeEvent,Category="Openable") void OnOpenUpdate(float time,bool bForward);
+	
+	UFUNCTION(BlueprintPure,Category="Openable")
+	bool CanOpen() const;
+	UFUNCTION(BlueprintCallable,Category="Openable")
+	void SetLocked(bool Locked);
+	
+	UFUNCTION(BlueprintCallable,Category="Openable")
+	void StartOpening(bool bForward=true,bool bSnap=false);
+	UFUNCTION(BlueprintCallable,Category="Openable")
+	void SetAnimPosition(float position);
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Openable") USkeletalMeshComponent* Mesh;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Openable") UBoxComponent* Range;
+};
 
-	UPROPERTY(EditAnywhere,Category="Openable",meta=(ClampMax="1.0",ClampMin="0.0",UIMax="1.0",UIMin="0.0"))
-	float Position;
+// ====================================================================================================================
+// DOOR
+// ====================================================================================================================
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaOpenable_Door_Style : public UOmegaOpenableStyle
+{
+	GENERATED_BODY()
+
+public:
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Openable") UArrowComponent* RootPoint;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Openable") UArrowComponent* OpenPoint;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Openable") UArrowComponent* ClosedPoint;
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="RandomizedMesh") UActorStateComponent* ActorState;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="RandomizedMesh") UOmegaSaveStateComponent* SaveVisibility;
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API AOmegaOpenable_Door : public AOmegaOpenableActor
+{
+	GENERATED_BODY()
+
+	virtual UOmegaOpenableStyle* GetOpenableStyle_Implementation() override { return Style;};
+public:
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Openable")
-	UCurveFloat* OpenAnimationCurve;
+	UOmegaOpenable_Door_Style* Style;
+};
 
-	UFUNCTION(BlueprintCallable,Category="Openable")
-	void SetOpen_Blend(float Value);
+// ====================================================================================================================
+// Chest
+// ====================================================================================================================
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaOpenable_Chest_Style : public UOmegaOpenableStyle
+{
+	GENERATED_BODY()
+
+public:
 	
-	UFUNCTION(BlueprintCallable,Category="Openable")
-	void SetOpen_State(bool bState,bool bSnap);
+	
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API AOActor_Chest : public AOmegaOpenableActor
+{
+	GENERATED_BODY()
+
+	virtual UOmegaOpenableStyle* GetOpenableStyle_Implementation() override { return Style;};
+public:
+	AOActor_Chest();
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable",AdvancedDisplay) UDataAssetCollectionComponent* Inventory;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Openable")
+	UOmegaOpenable_Chest_Style* Style;
 };

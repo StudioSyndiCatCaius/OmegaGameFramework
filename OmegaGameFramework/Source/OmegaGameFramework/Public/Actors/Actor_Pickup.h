@@ -3,9 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actor_GameplayCue.h"
 #include "GameFramework/Actor.h"
 #include "Actor_Pickup.generated.h"
+
+class AOmegaGameplayCue;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaPickupActor : public AActor

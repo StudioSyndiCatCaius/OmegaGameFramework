@@ -3,9 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actor_GameplayCue.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "Actor_WidgetDisplay.generated.h"
 
 class USpringArmComponent;

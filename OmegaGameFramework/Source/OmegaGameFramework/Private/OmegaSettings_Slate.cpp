@@ -2,16 +2,65 @@
 
 
 #include "OmegaSettings_Slate.h"
+
+#include "CommonBorder.h"
+#include "CommonTextBlock.h"
 #include "OmegaSettings.h"
 #include "Components/Button.h"
+#include "Functions/F_Text.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Widget/DataWidget.h"
 
-UOmegaSettings_Slate* UOmegaSlateFunctions::GetCurrentSlateStyle()
+
+UOmegaStyleSettings::UOmegaStyleSettings(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-	if(UObject* style_ref = GetMutableDefault<UOmegaSettings>()->DefaultSettings_Slate.TryLoad())
+	Styled_Borders.Add(EOmegaSlateBorderType::Background,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Big,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Button,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Medium,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Minimal,nullptr);
+	Styled_Borders.Add(EOmegaSlateBorderType::Small,nullptr);
+
+	Styled_Text.Add(EOmegaSlateTextType::Header1,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Header2,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Header3,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Paragraph,nullptr);
+	Styled_Text.Add(EOmegaSlateTextType::Tiny,nullptr);
+	
+	Sound_Cycle=OGF_UASSET_SOUND_UI(wav_ui_maximize_003);
+	Sound_Error=OGF_UASSET_SOUND_UI(wav_ui_error);
+	Sound_Hover=OGF_UASSET_SOUND_UI(wav_ui_tick_001);
+	Sound_Menu_Close=OGF_UASSET_SOUND_UI(wav_ui_minimize_001);
+	Sound_Menu_Open=OGF_UASSET_SOUND_UI(wav_ui_maximize_001);
+	Sound_Select=OGF_UASSET_SOUND_UI(wav_ui_click1);
+	
+}
+
+TArray<UOmegaTextFormater_Collection*> UOmegaStyleSettings::L_GetTextFormaters()
+{
+	TArray<UOmegaTextFormater_Collection*> out;
+	for (auto t :TextFormaters)
 	{
-		return Cast<UOmegaSettings_Slate>(style_ref);
+		if (UOmegaTextFormater_Collection* o=Cast<UOmegaTextFormater_Collection>(t.LoadSynchronous()))
+		{
+			out.Add(o);
+		}
 	}
-	return nullptr;
+	return out;
+}
+
+FText UOmegaStyleSettings::L_FormatGameplayText(FText text, UObject* WorldContext, FGameplayTag Tag, FOmegaCommonMeta meta)
+{
+	FText out=text;
+	for (auto* o : L_GetTextFormaters())
+	{
+		if (o)
+		{
+			out=o->ApplyTextFormat(out,WorldContext,Tag,meta);
+		}
+	}
+	return out;
 }
 
 void UOmegaSlateFunctions::SetSlateStyle_AllWidgets(UPanelWidget* Parent, EOmegaSlateTextType TextType, EOmegaSlateBorderType BorderType)
@@ -21,16 +70,16 @@ void UOmegaSlateFunctions::SetSlateStyle_AllWidgets(UPanelWidget* Parent, EOmega
 	for (int32 i = 0; i < Parent->GetChildrenCount(); ++i) {
 		if (auto* ChildWidget = Cast<UWidget>(Parent->GetChildAt(i))) {
 
-			if (auto* Border = Cast<UCommonBorder>(ChildWidget)) {
+			if (auto* Border = Cast<UOmegaBorder>(ChildWidget)) {
 				SetSlateStyle_Border(Border,BorderType);
 			} else if (auto* Text = Cast<UCommonTextBlock>(ChildWidget)) {
-				SetSlateStyle_Text(Text,TextType);
+				//SetSlateStyle_Text(Text,TextType);
 			} else if (auto* Slider = Cast<USlider>(ChildWidget)) {
 				SetSlateStyle_Slider(Slider);
 			} else if (auto* ProgressBar = Cast<UProgressBar>(ChildWidget)) {
 				SetSlateStyle_ProgressBar(ProgressBar);
 			} else if (auto* ComboBox = Cast<UComboBoxString>(ChildWidget)) {
-				SetSlateStyle_ComboBox(ComboBox);
+				//SetSlateStyle_ComboBox(ComboBox);
 			} else if (auto* Button = Cast<UButton>(ChildWidget)) {
 				SetSlateStyle_Button(Button);
 			} else if (auto* CheckBox = Cast<UCheckBox>(ChildWidget)) {
@@ -45,26 +94,6 @@ void UOmegaSlateFunctions::SetSlateStyle_AllWidgets(UPanelWidget* Parent, EOmega
 	}
 }
 
-void UOmegaSlateFunctions::SetSlateStyle_Text(UCommonTextBlock* widget, EOmegaSlateTextType Type)
-{
-	if(GetCurrentSlateStyle() && widget)
-	{
-		switch (Type) {
-			case Header1:
-				widget->SetStyle(GetCurrentSlateStyle()->Text_Header_1);
-				break;
-			case Header2:
-				widget->SetStyle(GetCurrentSlateStyle()->Text_Header_2); break;
-			case Header3:
-				widget->SetStyle(GetCurrentSlateStyle()->Text_Header_3); break;
-			case Paragraph:
-				widget->SetStyle(GetCurrentSlateStyle()->Text_Paragraph); break;
-			case Tiny:
-				widget->SetStyle(GetCurrentSlateStyle()->Text_Tiny); break;
-			default: ;
-		}
-	}
-}
 
 void UOmegaSlateFunctions::SetSlateStyle_WidgetChildren_Text(UPanelWidget* widget, EOmegaSlateTextType Type)
 {
@@ -72,94 +101,63 @@ void UOmegaSlateFunctions::SetSlateStyle_WidgetChildren_Text(UPanelWidget* widge
 	{
 		for(auto* temp_child : widget->GetAllChildren())
 		{
-			if(UCommonTextBlock* text = Cast<UCommonTextBlock>(temp_child))
-			{
-				SetSlateStyle_Text(text,Type);
-			}
+			
 		}
 	}
 }
 
 
 
-void UOmegaSlateFunctions::SetSlateStyle_Border(UCommonBorder* widget, EOmegaSlateBorderType type)
-{
-	if(GetCurrentSlateStyle() && widget)
-	{
-		switch (type) {
-		case Big: 
-			widget->SetStyle(GetCurrentSlateStyle()->Border_Big); break;
-		case Medium: 
-			widget->SetStyle(GetCurrentSlateStyle()->Border_Medium); break;
-		case Small: 
-			widget->SetStyle(GetCurrentSlateStyle()->Border_Small); break;
-		case Button: 
-			widget->SetStyle(GetCurrentSlateStyle()->Border_Button); break;
-		case Minimal:
-			widget->SetStyle(GetCurrentSlateStyle()->Border_Minimal); break;
-		case Background:
-			widget->SetStyle(GetCurrentSlateStyle()->Border_Background); break;
-			default: ;
-		}
-	}
-}
 
 void UOmegaSlateFunctions::SetSlateStyle_Button(UButton* widget)
 {
-	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->Button_Default)
+	if(widget)
 	{
-		widget->SetStyle(GetCurrentSlateStyle()->Button_Default->Brush_Button);
+		if (UOmegaSlateStyle_Button* style=GetMutableDefault<UOmegaStyleSettings>()->Button_Default.LoadSynchronous())
+		{
+			widget->SetStyle(style->ButtonStyle);			
+		}
+	}
+}
+
+void UOmegaSlateFunctions::SetSlateStyle_Border(UOmegaBorder* widget, EOmegaSlateBorderType type)
+{
+	if(widget)
+	{
+		widget->SetStyleAsset(OGF_CFG_STYLE()->Styled_Borders.FindOrAdd(type).LoadSynchronous());
 	}
 }
 
 void UOmegaSlateFunctions::SetSlateStyle_ProgressBar(UProgressBar* widget)
 {
-	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->ProgressBar_Default)
+	if(widget)
 	{
-		widget->SetWidgetStyle(GetCurrentSlateStyle()->ProgressBar_Default->Brush_ProgressBar);
+		if (UOmegaSlateStyle_ProgressBar* style=GetMutableDefault<UOmegaStyleSettings>()->ProgressBar_Default.LoadSynchronous())
+		{
+			widget->SetWidgetStyle(style->Brush_ProgressBar);
+		}
 	}
 }
 
 void UOmegaSlateFunctions::SetSlateStyle_Slider(USlider* widget)
 {
-	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->Slider_Default)
+	if(widget)
 	{
-		widget->SetWidgetStyle(GetCurrentSlateStyle()->Slider_Default->Brush_Slider);
+		if (UOmegaSlateStyle_Slider* style=GetMutableDefault<UOmegaStyleSettings>()->Slider_Default.LoadSynchronous())
+		{
+		widget->SetWidgetStyle(style->Brush_Slider);
+		}
 	}
 }
 
 void UOmegaSlateFunctions::SetSlateStyle_Checkbox(UCheckBox* widget)
 {
-	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->Checkbox_default)
+	if(widget)
 	{
-		widget->SetWidgetStyle(GetCurrentSlateStyle()->Checkbox_default->Brush_CheckBox);
+		if (UOmegaSlateStyle_CheckBox* style=GetMutableDefault<UOmegaStyleSettings>()->Checkbox_default.LoadSynchronous())
+		{
+		widget->SetWidgetStyle(style->CheckBox);
+		}
 	}
-}
-
-void UOmegaSlateFunctions::SetSlateStyle_ComboBox(UComboBoxString* widget)
-{
-	if(GetCurrentSlateStyle() && widget && GetCurrentSlateStyle()->ComboBox_Default)
-	{
-		widget->SetWidgetStyle(GetCurrentSlateStyle()->ComboBox_Default->Brush_Box);
-		widget->SetItemStyle(GetCurrentSlateStyle()->ComboBox_Default->Brush_Item);
-	}
-}
-
-FLinearColor UOmegaSlateFunctions::GetSlateColor_ByIndex(int32 index)
-{
-	if(GetCurrentSlateStyle())
-	{
-		if(index==0) {return GetCurrentSlateStyle()->Color_1; }
-		if(index==1) {return GetCurrentSlateStyle()->Color_2; }
-		if(index==2) {return GetCurrentSlateStyle()->Color_3; }
-		if(index==3) {return GetCurrentSlateStyle()->Color_4; }
-	}
-	return FLinearColor();
-}
-
-FLinearColor UOmegaSlateFunctions::GetSlateColor_ByTag(FGameplayTag Tag, FLinearColor Fallback)
-{
-	if(GetCurrentSlateStyle()->Colors_Tagged.Contains(Tag)){ return GetCurrentSlateStyle()->Colors_Tagged.FindOrAdd(Tag);}
-	return Fallback;
 }
 

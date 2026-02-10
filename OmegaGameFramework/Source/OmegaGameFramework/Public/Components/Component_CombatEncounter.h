@@ -3,13 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "GameFramework/Actor.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaFaction.h"
-#include "Subsystems/OmegaSubsystem_BGM.h"
 #include "Component_CombatEncounter.generated.h"
+
+class UOmegaFaction;
+class UOmegaBGM;
+class ULevelSequence;
+class AOmegaAbility;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaCombatEncounter_Stage : public AActor
@@ -42,8 +44,20 @@ public:
 
 
 
+UINTERFACE(MinimalAPI)
+class UActorInterface_EncounterBattler : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IActorInterface_EncounterBattler
+{
+	GENERATED_BODY()
+public:
 
-//
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Encounter|Battler")
+	void OnBattlerInit(UOmegaCombatEncounter_Component* Component, UPrimaryDataAsset* Identity, UOmegaFaction* Faction);
+
+};
+
+
+
 UCLASS(Blueprintable,BlueprintType,Abstract,EditInlineNew,Const)
 class OMEGAGAMEFRAMEWORK_API UOmegaCombatEncounterScript : public UObject
 {
@@ -83,14 +97,14 @@ class OMEGAGAMEFRAMEWORK_API UOmegaCombatEncounter_Component : public UActorComp
 	UPROPERTY() AOmegaCombatEncounter_Stage* REF_Stage;
 	UPROPERTY() AOmegaCombatEncounter_Instance* REF_Instance;
 
-	UPROPERTY()
-	TArray<UCombatantComponent*> REF_BattlerCombatants;
-
+	UPROPERTY() TArray<UCombatantComponent*> REF_BattlerCombatants;
+	UPROPERTY() UObject* encounter_source;
 	UPROPERTY() float encounter_xp;
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	UOmegaCombatEncounter_Component();
 
 public:
@@ -106,7 +120,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Encounter")
 	AOmegaCombatEncounter_Stage* GetStageFromID(FGameplayTag ID);
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter",meta=(MustImplement="ActorInterface_EncounterBattler"))
 	TSubclassOf<ACharacter> BattlerCharacterClass;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
@@ -132,7 +146,8 @@ public:
 	bool EndEncounter();
 	
 	UFUNCTION(BlueprintCallable,Category="Encounter")
-	ACharacter* SpawnBattler(UPrimaryDataAsset* DataAsset, UOmegaFaction* Faction, FTransform Transform);
+	ACharacter* SpawnBattler(UPrimaryDataAsset* DataAsset, UOmegaFaction* Faction, FTransform Transform,
+		ESpawnActorCollisionHandlingMethod CollisionMethod=ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 
 	UFUNCTION(BlueprintPure,Category="Encounter")
 	AOmegaCombatEncounter_Stage* GetCurrent_Stage() const;
@@ -162,6 +177,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
 	bool OnEncounterBegin(UOmegaCombatEncounter_Component* Component);
+
+	UFUNCTION(BlueprintNativeEvent,Category="Encounter") UOmegaBGM* GetCombatEncounter_BGM();
+	UFUNCTION(BlueprintNativeEvent,Category="Encounter") ULevelSequence* GetCombatEncounter_IntroSequence();
 };
 
 UCLASS(Blueprintable,BlueprintType,Const,Abstract,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))
@@ -186,11 +204,17 @@ public:
 	TSubclassOf<AOmegaCombatEncounter_Instance> InstanceClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Encounter")
 	FGameplayTag StageTag;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Encounter")
+	ULevelSequence* Override_IntroSequence;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Encounter")
+	UOmegaBGM* Override_BGM;
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite,Category="Encounter")
 	UOmegaEncounter_AssetScript* Script;
 
 	virtual TSubclassOf<AOmegaCombatEncounter_Instance> GetCombatEncounter_InstanceClass_Implementation() override { return InstanceClass;}
 	virtual FGameplayTag GetCombatEncounter_StageID_Implementation() override { return StageTag;};
 	virtual bool OnEncounterBegin_Implementation(UOmegaCombatEncounter_Component* Component) override;
+	virtual UOmegaBGM* GetCombatEncounter_BGM_Implementation() override { return Override_BGM; };
+	virtual ULevelSequence* GetCombatEncounter_IntroSequence_Implementation() override { return Override_IntroSequence; };
 	
 };

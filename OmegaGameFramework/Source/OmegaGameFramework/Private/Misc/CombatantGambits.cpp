@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Misc/CombatantGambits.h"
+#include "DataAssets/DA_CombatantGambits.h"
 
-TArray<FCombatantGambit> UCombatantGambitAsset::GetAllGambitActions()
+TArray<UCombatantGambitAction*> UCombatantGambitAsset::GetAllGambitActions()
 {
-	TArray<FCombatantGambit> OutActions;
+	TArray<UCombatantGambitAction*> OutActions;
 	
 	for(auto* TempGambit : PrecedingGambits)
 	{

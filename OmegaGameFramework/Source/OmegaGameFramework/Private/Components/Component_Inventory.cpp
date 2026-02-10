@@ -2,7 +2,29 @@
 
 
 #include "Components/Component_Inventory.h"
+
+#include "OmegaSettings.h"
+#include "OmegaGameCore.h"
 #include "Kismet/KismetMathLibrary.h"
+
+
+bool L_AssetUsesInterface(const UPrimaryDataAsset* asset)
+{
+	if (asset && asset->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+	{
+		return true;
+	}
+	return false;
+}
+
+int32 L_GetAssetSize(UPrimaryDataAsset* asset, int32 amount)
+{
+	if(L_AssetUsesInterface(asset))
+	{
+		return IDataAssetCollectionInterface::Execute_GetSizePerAmount(asset)*amount;
+	}
+	return 0;
+}
 
 // Sets default values for this component's properties
 UDataAssetCollectionComponent::UDataAssetCollectionComponent()
@@ -24,7 +46,7 @@ void UDataAssetCollectionComponent::AddAsset(UPrimaryDataAsset* Asset, int32 Amo
 {
 	bool bIsFull = false;
 	int32 AmountAdded = 0;
-	if(Asset)
+	if(Asset && (L_GetAssetSize(Asset,Amount)+GetCurrentSize()<MaxSize || MaxSize<1))
 	{
 		int32 curval = GetAssetNumberOfType(Asset)+Amount;
 		UKismetMathLibrary::Clamp(curval,0,9999999);
@@ -70,6 +92,27 @@ int32 UDataAssetCollectionComponent::GetAssetNumberTotal()
 	return TotalNumber;
 }
 
+
+int32 UDataAssetCollectionComponent::GetCurrentSize()
+{
+	int32 out=0;
+	TArray<UPrimaryDataAsset*> OutList;
+	InventoryAssets.GetKeys(OutList);
+	for (auto* a : OutList)
+	{
+		if(a)
+		{
+			int32 a_size=0;
+			if(a->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+			{
+				a_size=IDataAssetCollectionInterface::Execute_GetSizePerAmount(a);
+			}
+			out+=GetAssetNumberOfType(a)*a_size;
+		}
+	}
+	return out;
+}
+
 TArray<UPrimaryDataAsset*> UDataAssetCollectionComponent::GetCollectionAsArray(UPrimaryDataAsset* Asset)
 {
 	TArray<UPrimaryDataAsset*> OutList;
@@ -85,7 +128,7 @@ void UDataAssetCollectionComponent::SetCollectionMap(TMap<UPrimaryDataAsset*, in
 	InventoryAssets=Map;
 }
 
-TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap(int32 Min)
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap(int32 Min,bool IncludeSources)
 {
 	TMap<UPrimaryDataAsset*, int32> OutMap;
 	TArray<UPrimaryDataAsset*> asset_list;
@@ -97,6 +140,21 @@ TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionComponent::GetCollectionMap(
 			OutMap.Add(tempAsset,GetAssetNumberOfType(tempAsset));
 		}
 	}
+	if(IncludeSources)
+	{
+		for(auto* a : InventorySources)
+		{
+			if(a && a->GetClass()->ImplementsInterface(UDataInterface_InventorySource::StaticClass()))
+			{
+				for(const auto& p : IDataInterface_InventorySource::Execute_GetInventory(a))
+				{
+					int32 b=OutMap.FindOrAdd(p.Key);
+					OutMap.Add(p.Key,b+p.Value);
+				}
+			}
+		}
+	}
+	OutMap.Append(GetMutableDefault<UOmegaSettings>()->GetGameCore()->Append_Inventory(this));
 	return OutMap;
 }
 
@@ -169,16 +227,7 @@ bool UDataAssetCollectionComponent::HasMinimumAssets(TMap<UPrimaryDataAsset*, in
 	return true;
 }
 
-
-void UDataAssetCollectionFunctions::SetInventory_FromSource(UDataAssetCollectionComponent* Component, UObject* Source)
-{
-	if(Component && Source && Source->GetClass()->ImplementsInterface(UDataInterface_InventorySource::StaticClass()))
-	{
-		Component->SetCollectionMap(IDataInterface_InventorySource::Execute_GetInventory(Source));
-	}
-}
-
-TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetTotalAssetListTradeCost(
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetListTradeCost_Total(
 	TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag)
 {
 	TMap<UPrimaryDataAsset*, int32> out;
@@ -207,53 +256,113 @@ TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetTotalAssetList
 	return out;
 }
 
-int32 UDataAssetCollectionFunctions::GetTotalAssetListTradeCost_One(TMap<UPrimaryDataAsset*, int32> Assets, UPrimaryDataAsset* TradeAsset,
+int32 UDataAssetCollectionFunctions::GetListTradeCost_One(TMap<UPrimaryDataAsset*, int32> Assets, UPrimaryDataAsset* TradeAsset,
 	FGameplayTag TradeTag)
 {
-	return GetTotalAssetListTradeCost(Assets,TradeTag).FindOrAdd(TradeAsset);
+	return GetListTradeCost_Total(Assets,TradeTag).FindOrAdd(TradeAsset);
 }
 
-int32 UDataAssetCollectionFunctions::GetDataAssetTradeValue_One(UPrimaryDataAsset* Asset, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag)
+int32 UDataAssetCollectionFunctions::GetDataAssetTradeValue_One(UPrimaryDataAsset* Asset, int32 AssetAmount, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag)
 {
-	return GetDataAssetTradeValue_All(Asset,TradeTag).FindOrAdd(TradeAsset);
+	return GetDataAssetTradeValue_All(Asset,AssetAmount,TradeTag).FindOrAdd(TradeAsset);
 }
 
-TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetDataAssetTradeValue_All(UPrimaryDataAsset* Asset,
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetDataAssetTradeValue_All(UPrimaryDataAsset* Asset, int32 AssetAmount,
 	FGameplayTag TradeTag)
 {
 	TMap<UPrimaryDataAsset*, int32> out;
+	//if uses interface
 	if(Asset && Asset->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
 	{
-		return IDataAssetCollectionInterface::Execute_GetTradeAssetRequirements(Asset,TradeTag);
+		for (const auto& p : IDataAssetCollectionInterface::Execute_GetTradeAssetRequirements(Asset,TradeTag))
+		{
+			if(p.Key)
+			{
+				//add asset base cost * AssetAmount to output
+				out.Add(p.Key,p.Value*AssetAmount);
+			}
+		}
 	}
 	return out;
 }
 
 bool UDataAssetCollectionFunctions::CanInventoryPerformTrade_ForAsset(UDataAssetCollectionComponent* Component,
-	UPrimaryDataAsset* Asset, FGameplayTag TradeTag)
+	UPrimaryDataAsset* Asset, int32 Amount, FGameplayTag TradeTag)
 {
 	if(Asset && Component)
 	{
-		TMap<UPrimaryDataAsset*,int32> cost=GetDataAssetTradeValue_All(Asset,TradeTag);
+		TMap<UPrimaryDataAsset*,int32> cost=GetDataAssetTradeValue_All(Asset,Amount,TradeTag);
 		return Component->HasMinimumAssets(cost);
 	}
 	return false;
 }
 
-bool UDataAssetCollectionFunctions::PerformTrade_Single(UDataAssetCollectionComponent* Component, UPrimaryDataAsset* Asset,
-	FGameplayTag TradeTag, bool bForce,bool bWithholdAsset)
+bool UDataAssetCollectionFunctions::CanInventoryPerformTrade_ForList(UDataAssetCollectionComponent* Component,
+	TMap<UPrimaryDataAsset*, int32> Assets, bool bInvert, FGameplayTag TradeTag)
 {
-	if(Asset && Component && (bForce || CanInventoryPerformTrade_ForAsset(Component,Asset,TradeTag)))
+	if(Component)
 	{
-		Component->AddAssets(GetDataAssetTradeValue_All(Asset,TradeTag),true);
-		if(!bWithholdAsset)
+		if(bInvert)
 		{
-			Component->AddAsset(Asset,1);
+			return Component->HasMinimumAssets(Assets);
 		}
-		return true;
+		else
+		{
+			return Component->HasMinimumAssets(GetListTradeCost_Total(Assets,TradeTag));
+		}
 	}
 	return false;
 }
+
+FString UDataAssetCollectionFunctions::PerformTrade_Single(UDataAssetCollectionComponent* Component,
+                                                           UPrimaryDataAsset* Asset, int32 Amount,  FGameplayTag TradeTag, bool& Outcome, bool bInvert, bool bForce, bool bWithholdAsset)
+{
+	int32 m=Amount;
+	if(bInvert) {m=m*-1;}
+	if(Asset && Component && (bForce || CanInventoryPerformTrade_ForAsset(Component,Asset,m,TradeTag)))
+	{
+		Component->AddAssets(GetDataAssetTradeValue_All(Asset,m,TradeTag),!bInvert);
+		if(!bWithholdAsset)
+		{
+			Component->AddAsset(Asset,m);
+		}
+		Outcome=true;
+		return "";
+	}
+	Outcome=false;
+	return "";
+}
+
+FString UDataAssetCollectionFunctions::PerformTrade_List(UDataAssetCollectionComponent* Component,
+	TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag, bool& Outcome, bool bInvert, bool bForce, bool bWithholdAsset)
+{
+	Outcome=false;
+	TMap<UPrimaryDataAsset*, int32> _price=GetListTradeCost_Total(Assets,TradeTag);
+	TMap<UPrimaryDataAsset*, int32> _goods=Assets;
+	if(bInvert)
+	{
+		_price=Assets;
+		_goods=GetListTradeCost_Total(Assets,TradeTag);
+	}
+	if(Component)
+	{
+		//check if price is owned
+		if(bForce || Component->HasMinimumAssets(_price))
+		{
+			Component->AddAssets(_price,true);
+			//deduct cost
+			if(!bWithholdAsset)
+			{
+				Component->AddAssets(_goods);
+			}
+			Outcome=true;
+			return "";
+		}
+	}
+	return "Invalid Component";
+}
+
+
 
 TMap<UPrimaryDataAsset*, int32> UOmegaCommonInventory::GetInventory_Implementation()
 {

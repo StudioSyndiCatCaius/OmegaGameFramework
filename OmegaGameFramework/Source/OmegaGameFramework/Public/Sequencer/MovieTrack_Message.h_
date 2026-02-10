@@ -1,0 +1,47 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MovieSceneNameableTrack.h"
+#include "Channels/MovieSceneAudioTriggerChannel.h"
+#include "Channels/MovieSceneBoolChannel.h"
+#include "Channels/MovieSceneFloatChannel.h"
+#include "Channels/MovieSceneIntegerChannel.h"
+#include "Channels/MovieSceneStringChannel.h"
+#include "Components/AudioComponent.h"
+#include "CoreMinimal.h"
+#include "EntitySystem/IMovieSceneEntityProvider.h"
+#include "MovieSceneSection.h"
+#include "Sections/MovieSceneActorReferenceSection.h"
+#include "Sound/SoundAttenuation.h"
+#include "UObject/ObjectMacros.h"
+#include "MovieTrack_Message.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UMovieTrack_Message : public UMovieSceneNameableTrack
+{
+	GENERATED_UCLASS_BODY()
+
+	UMovieTrack_Message();
+
+	virtual FText GetDefaultDisplayName() const override { return FText::FromString("Messages"); };
+	
+public:
+
+};
+
+
+/*
+UCLASS(MinimalAPI)
+class UMovieSection_Message : public UMovieSceneSection , public IMovieSceneEntityProvider
+{
+	GENERATED_BODY()
+
+public:
+
+};
+*/

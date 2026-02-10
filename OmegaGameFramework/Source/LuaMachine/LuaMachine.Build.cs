@@ -8,6 +8,7 @@ public class LuaMachine : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
+        PrecompileForTargets = PrecompileTargetsType.Any;
 		
         PublicIncludePaths.AddRange(
             new string[] {
@@ -28,10 +29,13 @@ public class LuaMachine : ModuleRules
             {
                 "Core",
                 "HTTP",
+                "SlateCore",
+                "Slate",
                 "Json",
                 "DeveloperSettings",
                 "GameplayTags",
-                "PakFile"
+                "PakFile",
+                "OmegaCore",
 				// ... add other public dependencies that you statically link with here ...
 			}
             );
@@ -62,7 +66,8 @@ public class LuaMachine : ModuleRules
         {
             PrivateDependencyModuleNames.AddRange(new string[]{
                 "UnrealEd",
-                "Projects"
+                "Projects",
+                "PropertyEditor",
             });
         }
 

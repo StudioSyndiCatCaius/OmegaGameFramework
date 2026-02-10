@@ -265,8 +265,11 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category = "Lua")
 	static FLuaValue LuaRunNonContentFile(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& Filename, const bool bIgnoreNonExistent);
 
-	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua",DisplayName="Lua - Run Code Asset")
 	static FLuaValue LuaRunCodeAsset(UObject* WorldContextObject, TSubclassOf<ULuaState> State, ULuaCode* CodeAsset);
+
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject",AutoCreateRefTerm = "Args"), Category="Lua",DisplayName="Lua - Run Code Asset (as Function)")
+	static FLuaValue LuaRunCodeAsset_AsFunction(UObject* WorldContextObject, TSubclassOf<ULuaState> State, ULuaCode* CodeAsset, TArray<FLuaValue> Args);
 	
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
 	static FLuaValue LuaRunByteCode(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const TArray<uint8>& ByteCode, const FString& CodePath);
@@ -393,25 +396,25 @@ public:
 
 	// String
 	UFUNCTION(BlueprintPure, meta=(DisplayName = "Lua - -> String", BlueprintAutocast), Category="Lua")
-	static FString Conv_LuaValueToString(const FLuaValue& Value);
+	static FString Conv_LuaValueToString(const FLuaValue& Value,const FString& NilFallback="");
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "String -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_StringToLuaValue(const FString& Value);
 
 	// Text
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Text", BlueprintAutocast), Category="Lua")
-	static FText Conv_LuaValueToText(const FLuaValue& Value);
+	static FText Conv_LuaValueToText(const FLuaValue& Value,FText NilFallback=FText());
 	UFUNCTION(BlueprintPure, meta = (BDisplayName = "Text -> Lua", lueprintAutocast), Category="Lua")
 	static FLuaValue Conv_TextToLuaValue(const FText& Value);
 
 	//Name
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Name", BlueprintAutocast), Category="Lua")
-	static FName Conv_LuaValueToName(const FLuaValue& Value);
+	static FName Conv_LuaValueToName(const FLuaValue& Value,FName NilFallback="");
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Name -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_NameToLuaValue(const FName Value);
 
 	//Object
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Object", BlueprintAutocast), Category="Lua")
-	static UObject* Conv_LuaValueToObject(const FLuaValue& Value);
+	static UObject* Conv_LuaValueToObject(const FLuaValue& Value,UObject* NilFallback=nullptr);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Object -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_ObjectToLuaValue(UObject* Object);
 
@@ -423,23 +426,23 @@ public:
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Float -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_FloatToLuaValue(const float Value);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Float", BlueprintAutocast), Category="Lua")
-	static float Conv_LuaValueToFloat(const FLuaValue& Value);
+	static float Conv_LuaValueToFloat(const FLuaValue& Value,float NilFallback=0.0);
 
 	// Int
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Int", BlueprintAutocast), Category="Lua")
-	static int32 Conv_LuaValueToInt(const FLuaValue& Value);
+	static int32 Conv_LuaValueToInt(const FLuaValue& Value,int32 NilFallback=0);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Int -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_IntToLuaValue(const int32 Value);
 	
 	//Vector
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Vector", BlueprintAutocast), Category = "Lua")
-	static FVector Conv_LuaValueToFVector(const FLuaValue& Value);
+	static FVector Conv_LuaValueToFVector(const FLuaValue& Value,FVector NilFallback);
 	UFUNCTION()
 	static FVector LuaTableToVector(FLuaValue Value);
 	
 	//Bool
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Bool", BlueprintAutocast), Category="Lua")
-	static bool Conv_LuaValueToBool(const FLuaValue& Value);
+	static bool Conv_LuaValueToBool(const FLuaValue& Value,bool NilFallback=false);
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Bool -> Lua", BlueprintAutocast), Category="Lua")
 	static FLuaValue Conv_BoolToLuaValue(const bool Value);
 
@@ -451,6 +454,17 @@ public:
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "String -> Lua [Array]", BlueprintAutocast, Keywords="to, convert", WorldContext="WorldContextObject"), Category="Lua")
 	static FLuaValue Conv_StringToLuaValue_Array(UObject* WorldContextObject, TArray<FString> Value);
 
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua [Array] -> String [Array]", BlueprintAutocast, Keywords="to, convert"), Category="Lua")
+	static TArray<FString> Conv_LuaArrayToString_Array(TArray<FLuaValue> Value);
+	
+	// --------------------------------------------------
+	// Array
+	// --------------------------------------------------
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Name [Array]", BlueprintAutocast, Keywords="to, convert"), Category="Lua")
+	static TArray<FName> Conv_LuaValueToName_Array(const FLuaValue& Value);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Name -> Lua [Array]", BlueprintAutocast, Keywords="to, convert", WorldContext="WorldContextObject"), Category="Lua")
+	static FLuaValue Conv_NameToLuaValue_Array(UObject* WorldContextObject, TArray<FName> Value);
+	
 private:
 	static void HttpRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSubclassOf<ULuaState> LuaState, TWeakObjectPtr<UWorld> World, const FString SecurityHeader, const FString SignaturePublicExponent, const FString SignatureModulus, FLuaHttpSuccess Completed);
 	static void HttpGenericRequestDone(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TWeakPtr<FLuaSmartReference> Context, FLuaHttpResponseReceived ResponseReceived, FLuaHttpError Error);
@@ -484,13 +498,13 @@ public:
 
 	// Globals - Get
 	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global <🔴Bool>")
-	static bool GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+	static bool GetLuaGlobal_AsBool(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, bool Fallback=false);
 	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global <🔷Int>")
-	static int32 GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+	static int32 GetLuaGlobal_AsInt(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, int32 Fallback=0);
 	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global <📗Float>")
-	static float GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+	static float GetLuaGlobal_AsFloat(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, float Fallback=0.0);
 	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Get LUA Global <🌸String>")
-	static FString GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global);
+	static FString GetLuaGlobal_AsString(UObject* WorldContextObject, TSubclassOf<ULuaState> State,  const FString& Global, const FString& Fallback="");
 
 	// Globals - Set
 	UFUNCTION(BlueprintCallable,Category="Lua|Globals",meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"),DisplayName="Set LUA Global <🔴Bool>")

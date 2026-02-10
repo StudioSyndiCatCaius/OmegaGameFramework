@@ -3,19 +3,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actor_Null.h"
 #include "Landscape.h"
-#include "Actor_GameplayCue.h"
-#include "PCGComponent.h"
-#include "Components/ArrowComponent.h"
-#include "Components/VolumetricCloudComponent.h"
 #include "GameFramework/Actor.h"
-#include "Subsystems/OmegaSubsystem_BGM.h"
+#include "Misc/GeneralDataObject.h"
+#include "Subsystems/Subsystem_Save.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "Actor_Environment.generated.h"
 
-UCLASS(DisplayName="OmegaActor: Environment")
-class OMEGAGAMEFRAMEWORK_API AOmegaActorEnvironment : public AActor
+class UArrowComponent;
+class UDirectionalLightComponent;
+class UExponentialHeightFogComponent;
+class USkyAtmosphereComponent;
+class USkyLightComponent;
+class UVolumetricCloudComponent;
+class UPCGComponent;
+class UOmegaBGM;
+class UPostProcessComponent;
+class UPCGGraphInterface;
+
+UCLASS(DisplayName="Ω Environment")
+class OMEGAGAMEFRAMEWORK_API AOmegaActorEnvironment : public AOmegaBASEActor, public IOmegaSaveInterface
 {
 	GENERATED_BODY()
+
+	void L_PresetSave();
+	void L_PresetLoad();
 	
 public:
 	// Sets default values for this actor's properties
@@ -26,14 +39,14 @@ protected:
 	//virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 public:
 	//~ Begin AActor Interface
 #if WITH_EDITOR
 	virtual bool GetReferencedContentObjects(TArray<UObject*>& Objects) const override;
 #endif // WITH_EDITOR
 	//~ End AActor Interface
-
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USceneComponent* EnvironmentRoot;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USkyLightComponent* SkyLight;
@@ -58,12 +71,18 @@ public:
 	void SaveToPreset();
 
 	UPROPERTY(EditAnywhere,Category="Environment")
+	bool SaveCurrentPreset;
+	
+	UPROPERTY(EditAnywhere,Category="Environment")
 	UPCGGraphInterface* PCGAsset;
-
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Environment") FOmegaClassNamedLists NamedLists;
 	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset")
 	UOmegaEnvironmentPreset* current_preset;
-	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset")
+	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Lock Preset?")
 	bool lock_preset;
+	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset Save Field")
+	FName SaveField_Preset="Environment";
 	UFUNCTION(BlueprintCallable,Category="Environment")
 	void Set_Preset(UOmegaEnvironmentPreset* Preset);
 	UFUNCTION(BlueprintCallable,Category="Environment")
@@ -96,23 +115,29 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaEnvironmentPreset : public UPrimaryDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaEnvironmentPreset : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 	
+
+	void L_SetCompVis(USceneComponent* comp, bool b)
+	{
+		if(comp)
+		{
+			comp->SetVisibility(b);
+		}
+	};
+	
 public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_SkyLight=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_SunLight=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_Fog=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_Atmosphere=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_Clouds=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_Skybox=false;
 	UPROPERTY(Instanced,EditAnywhere,BlueprintReadWrite,Category="Environment")
 	TArray<UOmegaEnvironmentPresetScript*> Scripts;
-
+	
 	UFUNCTION()
-	void Local_Update(AOmegaActorEnvironment* EnvironmentActor)
-	{
-		if(EnvironmentActor)
-		{
-			for(auto* Script: Scripts)
-			{
-				if(Script) {Script->OnUpdated(EnvironmentActor);}
-			}
-		}
-	}
+	void Local_Update(AOmegaActorEnvironment* EnvironmentActor);
 };

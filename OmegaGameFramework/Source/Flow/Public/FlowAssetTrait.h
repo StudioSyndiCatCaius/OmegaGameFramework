@@ -26,7 +26,7 @@ public:
 	void FlowBegin(UFlowAsset* FlowInstance) const; 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
 	void FlowEnd(UFlowAsset* FlowInstance,FName Output, const FString& Flag) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
+	UFUNCTION(BlueprintImplementableEvent, Category="Trait", DisplayName="On Flow Signal")
 	void FlowNotified(UFlowAsset* FlowInstance,FName Notify, UObject* Context) const;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Trait")
@@ -35,4 +35,12 @@ public:
 	void NodeOutput(UFlowNode* FlowNode,FName Pin) const;
 };
 
-
+UCLASS()
+class FLOW_API UFlowAssetTrait_Collection : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+public:
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
+	TArray<UFlowAssetTrait*> Traits;
+};

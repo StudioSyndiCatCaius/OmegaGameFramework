@@ -9,18 +9,10 @@
 #include "Styling/SlateBrush.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Misc/GeneralDataObject.h"
+#include "Types/Struct_Appearance.h"
 #include "Component_Skin.generated.h"
 
-USTRUCT(Blueprintable,BlueprintType)
-struct FOmegaBodyAppearanceData
-{
-	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Body")
-	UOmegaBodyType* BodyType;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Body")
-	TMap<UOmegaBodySlot*, FVector> Params;
-};
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API USkinComponent : public UActorComponent
@@ -70,11 +62,11 @@ public:
 	UPROPERTY()
 	TArray<USkeletalMeshComponent*> MeshComponents;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly)
-	FOmegaBodyAppearanceData Appearance;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Omega|Skin")
+	FOmegaBodyAppearanceInfo Appearance;
 	// BODY APPEARANCE
 	UFUNCTION(BlueprintCallable,Category="Omega|Skin|Body")
-	void SetBodyAppearanceData(FOmegaBodyAppearanceData AppearanceData);
+	void SetBodyAppearanceData(FOmegaBodyAppearanceInfo AppearanceData);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Skin|Body")
 	void SetBody_Type(UOmegaBodyType* BodyType);
@@ -216,92 +208,3 @@ public:
 };
 
 
-// ======================================================================================================
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaBodyPreset : public UOmegaDataAsset
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Body")
-	FOmegaBodyAppearanceData AppearanceData;
-};
-
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaBodyType : public UOmegaDataAsset
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, Category="Omega")
-	TSubclassOf<AOmegaSkin> DefaultSkin;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Body")
-	TArray<UOmegaBodySlot*> DefaultSlots;
-};
-
-UENUM(BlueprintType)
-enum class EOmegaBodySlotType: uint8
-{
-	BODYSLOT_BOOL, BODYSLOT_INTEGER, BODYSLOT_FLOAT, BODYSLOT_OBJECTLIST, BODYSLOT_COLOR
-};
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaBodySlot : public UOmegaDataAsset
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(Instanced,EditAnywhere,Category="Body Slot")
-	UOmegaBodySlotScript* Script;
-
-	UFUNCTION(BlueprintPure,Category="Body Slot")
-	FVector GetDefaultValue();
-	UFUNCTION(BlueprintPure,Category="Body Slot")
-	FVector GetMaxValue();
-	UFUNCTION(BlueprintPure,Category="Body Option")
-	EOmegaBodySlotType GetSlotType();
-};
-
-UCLASS(Const,Abstract)
-class OMEGAGAMEFRAMEWORK_API UOmegaBodySlotScript : public UOmegaInstancableObject
-{
-	GENERATED_BODY()
-public:
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	EOmegaBodySlotType GetScriptSlotType() const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	void OnApplied_ToSkin(AOmegaSkin* Skin, FVector OptionValue) const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	void OnApplied_ToMeshComponent(USkeletalMeshComponent* Component, FVector OptionValue) const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	FVector GetMaxValue() const;
-};
-
-
-
-UCLASS(Const,Abstract)
-class OMEGAGAMEFRAMEWORK_API UOmegaBodyOptionScript : public UOmegaInstancableObject
-{
-	GENERATED_BODY()
-public:
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	EOmegaBodySlotType GetScriptSlotType() const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	void OnApplied_ToSkin(AOmegaSkin* Skin, FVector OptionValue) const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	void OnApplied_ToMeshComponent(USkeletalMeshComponent* Component, FVector OptionValue) const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
-	FVector GetMaxValue() const;
-};
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaBodyOption : public UOmegaDataAsset
-{
-	GENERATED_BODY()
-public:
-};

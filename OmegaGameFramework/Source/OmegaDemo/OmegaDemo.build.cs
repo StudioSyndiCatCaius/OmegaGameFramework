@@ -4,11 +4,7 @@ public class OmegaDemo : ModuleRules
 {
 	public OmegaDemo(ReadOnlyTargetRules Target) : base(Target)
 	{
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
-        bUseUnity = false;
-
-        PrecompileForTargets = PrecompileTargetsType.Any;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         
 		PublicDependencyModuleNames.AddRange(new string[] { 
 			"Core", 
@@ -19,19 +15,23 @@ public class OmegaDemo : ModuleRules
 			"UMG",
 			"SlateCore",
 			"CustomizableObject",
+			"Json",
 			"JsonUtilities",
 			"LevelSequence",
 			"AssetRegistry",
 			"AnimGraphRuntime",
 			"OmegaGameFramework",
 			"SequencerScripting",
+			"MovieScene",
 			"OmegaSequence",
 			"OmegaData",
 			"OmegaMutable",
-			"Flow"
+			"Flow",
+			"GameplayStateTreeModule",
+			"OmegaCore"
 		});
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaDemo/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaDemo/Private"});
+		PublicIncludePaths.AddRange(new string[] {});
+		PrivateIncludePaths.AddRange(new string[] {});
 	}
 }

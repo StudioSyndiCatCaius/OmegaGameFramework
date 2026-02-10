@@ -5,32 +5,34 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "GameplayTagContainer.h"
-#include "LuaObject.h"
-#include "Interfaces/OmegaInterface_Widget.h"
+#include "Interfaces/I_Widget.h"
 #include "Types/SlateEnums.h"
 #include "Components/SlateWrapperTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Widget/DataWidget.h"
 #include "Math/Vector2D.h"
-#include "Components/CanvasPanel.h"
 #include "Misc/GeneralDataObject.h"
-
+#include "Misc/OmegaUtils_Delegates.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "DataList.generated.h"
 
+class UOmegaSlateStyle_Text;
+class UOverlay;
+class UOmegaSlateStyle_Border;
 class SConstraintCanvas;
 class UPanelWidget;
 class UPrimaryDataAsset;
 class UDataWidget;
+class UCanvasPanel;
+class UWidgetSwitcher;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntrySelected, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntryHovered, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntryUnhovered, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnListDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnEntryDelegate, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnEntryHighlighted, UDataWidget*, Entry, FString, Label, UObject*, Asset, int32, Index, bool, IsHighlighted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEntryNotify, UDataWidget*, DataWidget, FName, Notify);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDataListInputCancel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListInputPage, float, Axis);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListInputNavigate, FVector2D, Axis);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListNavigationOverflow, FVector2D, Axis);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDataListInputAxis, FVector2D, Axis);
+
 
 UENUM()
 enum class EDataListFormat : uint8
@@ -54,18 +56,38 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 {
 	GENERATED_BODY()
 
-public:
-	
-	//###########################################
-	// Class
-	//###########################################
 
+public:
+
+	UPROPERTY() UDataTooltip* override_tooltip;
+	
+	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntrySelected;
+	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntryHovered;
+	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntryUnhovered;
+	UPROPERTY(BlueprintAssignable) FOnEntryHighlighted OnEntryHighlighted;
+	UPROPERTY(BlueprintAssignable) FOnDataListInputAxis OnNavigationOverflow;
+	UPROPERTY(BlueprintAssignable) FOnListDelegate OnInputCancel;
+	UPROPERTY(BlueprintAssignable) FOnDataListInputAxis OnInputNavigate;
+	UPROPERTY(BlueprintAssignable) FOnDataListInputPage OnInputPage;
+	
+	// ============================================================================================================
+	// UPROPERTIES
+	// ============================================================================================================
+	
+	// ---------------------------------------------------------------
+	// Border
+	// ---------------------------------------------------------------
+	
+	UPROPERTY(EditInstanceOnly, Category="List")
+	UOmegaSlateStyle_Border* BorderStyle;
+	
+	// ---------------------------------------------------------------
+	// List
+	// ---------------------------------------------------------------
+	
 	UPROPERTY(EditInstanceOnly, Instanced, Category="List")
 	UDataListFormat* ListFormat;
-	
-	//###########################################
-	// Entry
-	//###########################################
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = "List",AdvancedDisplay)
 	EDataListFormat Format;
 
@@ -83,12 +105,25 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List")
 	bool bAutoSizeList;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "List")
+	int32 UniformGridMaxValue = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",DisplayName="List Gameplay Tags")
+	FGameplayTagContainer ListTags;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List")
+	UWidgetSwitcher* LinkedWidgetSwitcher;
 
-	//##### ENTRY CLASS #####//
+	// ---------------------------------------------------------------
+	// Entry
+	// ---------------------------------------------------------------
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
+	
+	UPROPERTY(EditAnywhere, Instanced, Category="Entry")
+	TArray<UOmegaObjectTrait*> EntryTraits;
 	UPROPERTY(EditAnywhere, Instanced, Category = "Entry")
-	TArray<UDataWidgetMetadata*> EntryMetadata;
+	TArray<UDataWidgetTraits*> EntryMetadata;
 
 	UFUNCTION(BlueprintCallable, Category="Entry", meta=(AdvancedDisplay="KeepEntires"))
 	void SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries=true);
@@ -104,15 +139,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",AdvancedDisplay)
 	TArray<FCustomAssetData> CustomEntries;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "List")
-	int32 UniformGridMaxValue = 1;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString EntryLabel;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",DisplayName="List Gameplay Tags")
-	FGameplayTagContainer ListTags;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry")
     TArray<FName> EntryAutoTags;
@@ -134,11 +163,30 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Entry")
 	void RefreshAllEntries();
-
+	
+	// ---------------------------------------------------------------
+	// Overrides
+	// ---------------------------------------------------------------
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="StyleOverrides")
+	void AddAllOverrides();
+	
+	UFUNCTION() TArray<FName> L_getOverrideNames_Asset();
+	UFUNCTION() TArray<FName> L_getOverrideNames_float();
+	UFUNCTION() TArray<FName> L_getOverrideNames_Bool();
+	
+	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_Asset"))
+	TMap<FName,UOmegaSlateStyle*> WidgetOverride_Styles;
+	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_float")) TMap<FName,float> WidgetOverride_Floats;
+	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_Bool")) TMap<FName,bool> WidgetOverride_Bools;
+	
 	UPROPERTY(EditAnywhere,Category="EntryOverrides")
 	bool bCanOverrideSize;
 	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideSize"))
 	FVector2D OverrideSize;
+	UPROPERTY(EditAnywhere,Category="EntryOverrides")
+	bool bCanOverrideIconSize;
+	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideIconSize"))
+	FVector2D OverrideIconSize;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	UMaterialInterface* Override_IconMaterial;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
@@ -146,6 +194,10 @@ public:
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	FVector OverrideHoverOffset_Scale=FVector::One();
 
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	TSubclassOf<UDataTooltip> Override_TooltipClass;
+
+	
 private:
 	UFUNCTION()
 	void SetNewControl(UUserWidget* NewWidget);
@@ -155,9 +207,13 @@ public:
 	//###########################################
 	UPROPERTY()
 	TArray<UDataWidget*> Entries;
-
-	UPROPERTY(meta = (BindWidget))
-	UCanvasPanel* ParentPanel;
+	
+	//Clears all ENTRIES from the list
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataList")
+	UOverlay* GetWidgetOverlay();
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataList")
+	UBorder* GetWidgetBorder();
 
 	//Clears all ENTRIES from the list
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataList")
@@ -225,10 +281,7 @@ public:
 	//###########################################
 	// Linked Widgets
 	//###########################################
-
-	// Widget the player's control will change to when input navigation in this direct goes over the max.
-	UPROPERTY(BlueprintAssignable)
-	FOnDataListNavigationOverflow OnNavigationOverflow;
+	
 
 	UPROPERTY(EditInstanceOnly, Category="Linked Widgets")
 	TArray<UDataWidget*> LinkedSelectedWidgets;
@@ -274,6 +327,7 @@ protected:
 
 	//virtual UClass* GetSlotClass() const override;
 	virtual void NativePreConstruct() override;
+	virtual void NativeConstruct() override;
 
 	UFUNCTION()
 	void RebuildList();
@@ -310,21 +364,6 @@ protected:
 	
 	//Delegate Props
 
-	UPROPERTY(BlueprintAssignable)
-	FOnEntrySelected OnEntrySelected;
-	UPROPERTY(BlueprintAssignable)
-	FOnEntryHovered OnEntryHovered;
-	UPROPERTY(BlueprintAssignable)
-	FOnEntryUnhovered OnEntryUnhovered;
-	UPROPERTY(BlueprintAssignable)
-	FOnEntryHighlighted OnEntryHighlighted;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnDataListInputCancel OnInputCancel;
-	UPROPERTY(BlueprintAssignable)
-	FOnDataListInputNavigate OnInputNavigate;
-	UPROPERTY(BlueprintAssignable)
-	FOnDataListInputPage OnInputPage;
 
 	//---------------------------------------------------------------------------------------------//
 	//	Tags
@@ -335,6 +374,21 @@ protected:
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|DataList")
 	bool AnyEntryHasTag(FName Tag);
 };
+
+UINTERFACE(MinimalAPI) class UDataInterface_DataWidget : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_DataWidget
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="DataWidget")
+	bool ShouldBlockFromDataList(UDataList* DataList);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="DataWidget")
+	FOmegaSaveConditions GetRequiredSaveConditions();
+};
+
 
 
 UCLASS(EditInlineNew, Blueprintable,BlueprintType,CollapseCategories,Abstract)

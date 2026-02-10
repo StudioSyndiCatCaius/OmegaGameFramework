@@ -4,7 +4,10 @@
 #include "Misc/GeneralDataObject.h"
 #include "LuaBlueprintFunctionLibrary.h"
 //#include "Misc/OmegaUtils_Enums.h"
-#include "Functions/OmegaFunctions_Common.h"
+#include "Functions/F_Common.h"
+
+
+#define LUACFG() GetMutableDefault<ULuaSettings>()
 
 void UGeneralDataObject::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description)
 {
@@ -28,46 +31,84 @@ void UGeneralDataObject::GetGeneralAssetLabel_Implementation(FString& Label)
 }
 
 
-TArray<FOmegaAttributeModifier> UOmegaLuaBaseObject::GetModifierValues_Implementation()
-{
-	TArray<FOmegaAttributeModifier> out;
-	FLuaValue mod_list = ILuaInterface::Execute_GetValue(this,"").GetField(Param_AttributeMods);
-	for(FLuaValue att_name : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(mod_list))
-	{
-		bool result;
-		UObject* output = UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(att_name.String,UOmegaAttribute::StaticClass(),result);
-		if(output && result)
-		{
-			FOmegaAttributeModifier new_mod;
-			new_mod.Attribute=Cast<UOmegaAttribute>(output);
-			new_mod.Incrementer=mod_list.GetField(att_name.String).ToFloat();
-			out.Add(new_mod);
-		}
-	}
-	return out;
-}
-
 UOmegaDataAsset::UOmegaDataAsset()
 {
 	if(!Guid.IsValid()) { Guid= FGuid::NewGuid();}
 }
 
-UObject* UOmegaDataAsset::GetObject_Parent_Implementation() const
+FString UOmegaDataAsset::GetSoftProperty_Implementation(FName Property)
 {
-	return ParentAsset;
+	FLuaValue val=LuaData.GetField(Property.ToString());
+	if (val.IsNil())
+	{
+		return "";
+	}
+	return val.ToString();
 }
 
-TArray<UObject*> UOmegaDataAsset::GetObject_Children_Implementation() const
+TArray<FName> UOmegaDataAsset::GetMetatags_Implementation()
 {
-	TArray<UObject*> out;
-	for(auto* c : ChildAssets)
+	TArray<FName> out=Metatags;
+	out.Append(ULuaBlueprintFunctionLibrary::Conv_LuaValueToName_Array(LuaData.GetField(
+		LUACFG()->FieldKey_Metatags)));
+	return out;
+}
+
+FOmegaClassNamedLists UOmegaDataAsset::GetClassNamedLists_Implementation()
+{
+	FOmegaClassNamedLists out=NamedLists;
+	FLuaValue fieldtemp=LuaData.GetField(LUACFG()->FieldKey_CustomLists);
+	for (FLuaValue v : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(fieldtemp))
 	{
-		if(c) { out.Add(c); }
+		FOmegaCustomNamedList l;
+		l.ListID=v.ToName();
+		l.Option=fieldtemp.GetField(v.ToString()).ToName();
+		out.CustomNamedList.Add(v.ToName(),l);
 	}
 	return out;
 }
+
+void UOmegaDataAsset::SetValue_Implementation(FLuaValue Value, const FString& Field)
+{
+	if(DisplayName.IsEmpty() && !Value.GetField("name").ToString().IsEmpty())
+	{
+		DisplayName=FText::FromString(Value.GetField("name").ToString());
+	}
+	if(DisplayName.IsEmpty() && !Value.GetField("description").ToString().IsEmpty())
+	{
+		DisplayName=FText::FromString(Value.GetField("description").ToString());
+	}
+	if(GameplayTags.IsEmpty())
+	{
+		
+	}
+	if(!CategoryTag.IsValid() && !Value.GetField("category").ToString().IsEmpty())
+	{
+		FString _TargetTag=Value.GetField("category").ToString();
+		if (FGameplayTag::IsValidGameplayTagString(_TargetTag))
+		{
+			CategoryTag=FGameplayTag::RequestGameplayTag(*_TargetTag);	
+		}
+	}
+	LuaData=Value;
+}
+
+void UOmegaDataAsset::SetKey_Implementation(FLuaValue Key)
+{
+	LuaKey=Key.ToName();
+	CustomLabel=LuaKey.ToString();
+}
+
+UPrimaryDataAsset* UOmegaDataAsset::GetDataAsset_Named_Implementation(FName name)
+{
+
+	return nullptr;
+}
+
 
 bool UOmegaDataAsset::UseIconAsThumbnail_Implementation()
 {
 	{ return false;}
 }
+
+#undef LUACFG

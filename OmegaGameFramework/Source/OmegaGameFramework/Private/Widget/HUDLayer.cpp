@@ -3,17 +3,15 @@
 
 #include "Widget/HUDLayer.h"
 #include "Engine/GameInstance.h"
-#include "Subsystems/OmegaSubsystem_GameManager.h"
-#include "Subsystems/OmegaSubsystem_Message.h"
-#include "Subsystems/OmegaSubsystem_Player.h"
+#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_Player.h"
 
 //#include "Engine/Engine.h"
 
 void UHUDLayer::NativeConstruct()
 {
-	Local_BindGlobalEvent();
-	GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UHUDLayer::OnGameplayMessage);
-	GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UHUDLayer::OnInputMethodChanged);
 	PlayAnimationForward(GetAppearAnimation());
 	Super::NativeConstruct();
 }
@@ -49,18 +47,6 @@ void UHUDLayer::RemoveHUDLayer()
 	{
 		Local_RemoveAnimFinished();
 	}
-}
-
-
-void UHUDLayer::Local_BindGlobalEvent()
-{
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UHUDLayer::OnGlobalEvent);
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UHUDLayer::OnTaggedGlobalEvent);
-}
-
-void UHUDLayer::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
-	FLuaValue meta)
-{
 }
 
 void UHUDLayer::Local_RemoveAnimFinished()

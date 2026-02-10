@@ -13,7 +13,7 @@
 #include "GlobalRenderResources.h"
 #include "Engine/Texture2D.h"
 #include "UnrealClient.h"
-#include "Interfaces/OmegaInterface_AssetThumbnail.h"
+#include "Interfaces/I_AssetThumbnail.h"
 #include "Misc/GeneralDataObject.h"
 
 UDataItemThumbnailRender::UDataItemThumbnailRender(const FObjectInitializer& ObjectInitializer)
@@ -55,91 +55,100 @@ void UDataItemThumbnailRender::Draw(UObject* Object, int32 X, int32 Y, uint32 Wi
 			
 			const bool bUseTranslucentBlend = TileSheetTexture->HasAlphaChannel();
 
-		// Draw the grid behind the sprite
-		if (bUseTranslucentBlend)
-		{
-			static UTexture2D* GridTexture = nullptr;
-			if (GridTexture == nullptr)
+			// Draw the grid behind the sprite
+			if (bUseTranslucentBlend)
 			{
-				GridTexture = LoadObject<UTexture2D>(nullptr, TEXT("/OmegaGameFramework/Textures/ui/T_UI_Omega_IconBack1.T_UI_Omega_IconBack1"), nullptr, LOAD_None, nullptr);
-			}
+				static UTexture2D* GridTexture = nullptr;
+				FLinearColor bkg_tint=FLinearColor::White;
+				if(!FUObjectThreadContext::Get().IsRoutingPostLoad)
+				{
+					if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_AssetThumbnail::StaticClass()))
+					{
+						GridTexture=IDataInterface_AssetThumbnail::Execute_GetThumbnailBack_Texture(Object);
+						bkg_tint=IDataInterface_AssetThumbnail::Execute_GetThumbnailBack_Tint(Object);
+					}
+				}
+				if (GridTexture == nullptr)
+				{
+					GridTexture = LoadObject<UTexture2D>(nullptr, TEXT("/OmegaGameFramework/Textures/ui/T_UI_Omega_IconBack1.T_UI_Omega_IconBack1"), nullptr, LOAD_None, nullptr);
+				}
 
-			const bool bAlphaBlend = false;
-			
-			Canvas->DrawTile(
-				(float)X,
-				(float)Y,
-				(float)Width,
-				(float)Height,
-				0.0f,
-				0.0f,
-				1.0f,
-				1.0f,
-				FLinearColor::White,
-				GridTexture->GetResource(),
-				bAlphaBlend);
-			}
-
-			// Draw the sprite itself
-			const float TextureWidth = TileSheetTexture->GetSurfaceWidth();
-			const float TextureHeight = TileSheetTexture->GetSurfaceHeight();
-
-			const FMargin Margin = icon.Margin;
-
-			float FinalX = (float)X;
-			float FinalY = (float)Y;
-			float FinalWidth = (float)Width;
-			float FinalHeight = (float)Height;
-			const float DesiredWidth = TextureWidth - Margin.GetDesiredSize().X;
-			const float DesiredHeight = TextureHeight - Margin.GetDesiredSize().Y;
-
-			const FLinearColor BlackBarColor(0.0f, 0.0f, 0.0f, 0.5f);
-
-			if (DesiredWidth > DesiredHeight)
-			{
-				const float ScaleFactor = Width / DesiredWidth;
-				FinalHeight = ScaleFactor * DesiredHeight;
-				FinalY += (Height - FinalHeight) * 0.5f;
-
-				// Draw black bars (on top and bottom)
-				const bool bAlphaBlend = true;
-				Canvas->DrawTile(X, Y, Width, FinalY-Y, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
-				Canvas->DrawTile(X, FinalY+FinalHeight, Width, Height-FinalHeight, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
-			}
-			else
-			{
-				const float ScaleFactor = Height / DesiredHeight;
-				FinalWidth = ScaleFactor * DesiredWidth;
-				FinalX += (Width - FinalWidth) * 0.5f;
-
-				// Draw black bars (on either side)
-				const bool bAlphaBlend = true;
-				Canvas->DrawTile(X, Y, FinalX-X, Height, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
-				Canvas->DrawTile(FinalX+FinalWidth, Y, Width-FinalWidth, Height, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
-			}
-
-			// Draw the tile sheet 
-			const float InvWidth = 1.0f / TextureWidth;
-			const float InvHeight = 1.0f / TextureHeight;
-			Canvas->DrawTile(
-				FinalX,
-				FinalY,
-				FinalWidth,
-				FinalHeight,
-				Margin.Left * InvWidth,
-				Margin.Top * InvHeight,
-				(TextureWidth - Margin.Right) * InvWidth,
-				(TextureHeight - Margin.Bottom) * InvHeight,
-				FLinearColor::White,
-				TileSheetTexture->GetResource(),
-				bUseTranslucentBlend);
+				const bool bAlphaBlend = false;
 				
-			Canvas->DrawShadowedText(5,5,local_GetText(Object),GEngine->GetMediumFont(),FLinearColor::White);
-			
-return;
-		// Draw a label overlay
-		//@TODO: Looks very ugly: DrawShadowedStringZ(Canvas, X, Y + Height * 0.8f, 1.0f, TEXT("Tile\nSet"), GEngine->GetSmallFont(), FLinearColor::White);
-		}
+				Canvas->DrawTile(
+					(float)X,
+					(float)Y,
+					(float)Width,
+					(float)Height,
+					0.0f,
+					0.0f,
+					1.0f,
+					1.0f,
+					bkg_tint,
+					GridTexture->GetResource(),
+					bAlphaBlend);
+				}
+
+				// Draw the sprite itself
+				const float TextureWidth = TileSheetTexture->GetSurfaceWidth();
+				const float TextureHeight = TileSheetTexture->GetSurfaceHeight();
+
+				const FMargin Margin = icon.Margin;
+
+				float FinalX = (float)X;
+				float FinalY = (float)Y;
+				float FinalWidth = (float)Width;
+				float FinalHeight = (float)Height;
+				const float DesiredWidth = TextureWidth - Margin.GetDesiredSize().X;
+				const float DesiredHeight = TextureHeight - Margin.GetDesiredSize().Y;
+
+				const FLinearColor BlackBarColor(0.0f, 0.0f, 0.0f, 0.5f);
+
+				if (DesiredWidth > DesiredHeight)
+				{
+					const float ScaleFactor = Width / DesiredWidth;
+					FinalHeight = ScaleFactor * DesiredHeight;
+					FinalY += (Height - FinalHeight) * 0.5f;
+
+					// Draw black bars (on top and bottom)
+					const bool bAlphaBlend = true;
+					Canvas->DrawTile(X, Y, Width, FinalY-Y, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
+					Canvas->DrawTile(X, FinalY+FinalHeight, Width, Height-FinalHeight, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
+				}
+				else
+				{
+					const float ScaleFactor = Height / DesiredHeight;
+					FinalWidth = ScaleFactor * DesiredWidth;
+					FinalX += (Width - FinalWidth) * 0.5f;
+
+					// Draw black bars (on either side)
+					const bool bAlphaBlend = true;
+					Canvas->DrawTile(X, Y, FinalX-X, Height, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
+					Canvas->DrawTile(FinalX+FinalWidth, Y, Width-FinalWidth, Height, 0, 0, 1, 1, BlackBarColor, GWhiteTexture, bAlphaBlend);
+				}
+
+				// Draw the tile sheet 
+				const float InvWidth = 1.0f / TextureWidth;
+				const float InvHeight = 1.0f / TextureHeight;
+				Canvas->DrawTile(
+					FinalX,
+					FinalY,
+					FinalWidth,
+					FinalHeight,
+					Margin.Left * InvWidth,
+					Margin.Top * InvHeight,
+					(TextureWidth - Margin.Right) * InvWidth,
+					(TextureHeight - Margin.Bottom) * InvHeight,
+					FLinearColor::White,
+					TileSheetTexture->GetResource(),
+					bUseTranslucentBlend);
+					
+				Canvas->DrawShadowedText(5,5,local_GetText(Object),GEngine->GetMediumFont(),FLinearColor::White);
+				
+				return;
+			// Draw a label overlay
+			//@TODO: Looks very ugly: DrawShadowedStringZ(Canvas, X, Y + Height * 0.8f, 1.0f, TEXT("Tile\nSet"), GEngine->GetSmallFont(), FLinearColor::White);
+			}
 	}
 	//Super::Draw(Object, X, Y,  Width,  Height, Viewport, Canvas, bAdditionalViewFamily);
 }

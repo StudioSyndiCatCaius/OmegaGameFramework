@@ -1,16 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Components/Component_GameplaySystems.h"
-#include "Subsystems/OmegaSubsystem_Gameplay.h"
+
+#include "Functions/F_Common.h"
+#include "Subsystems/Subsystem_Gameplay.h"
 
 // Sets default values for this component's properties
 UGameplaySystemsComponent::UGameplaySystemsComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 
@@ -19,9 +17,6 @@ void UGameplaySystemsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	Local_ActivateSystems();
-	
-	// ...
-	
 }
 
 void UGameplaySystemsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -50,6 +45,7 @@ void UGameplaySystemsComponent::Local_ShutdownSystems()
 			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys, GetOwner(), ActivationFlag);
 		}
 	}
+	UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(this,PersistentSystems,false,"",this);
 }
 
 
@@ -57,9 +53,12 @@ void UGameplaySystemsComponent::Local_ShutdownSystems()
 void UGameplaySystemsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                               FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	f_lastFeq+=DeltaTime;
+	if(f_lastFeq>=PersistentSystems_Frequency)
+	{
+		f_lastFeq=0.0;
+		UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(this,PersistentSystems,true,"",this);
+	}
 }
 
 
