@@ -26,7 +26,7 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta) override;
-	virtual void OnGlobalEvent_Implementation(FName Event, UObject* Context,FOmegaCommonMeta meta) override;
+	virtual void OnGlobalEvent_Implementation(FName Event, UObject* Context) override;
 	
 	UPROPERTY(EditAnywhere,Category="Menu") FGameplayTagContainer AllowedMessageTypes;
 	UPROPERTY(EditAnywhere,Category="Menu") float MessageEnd_WaitForNext=0.1f;

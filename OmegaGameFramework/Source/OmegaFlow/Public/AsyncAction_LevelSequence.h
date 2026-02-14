@@ -17,21 +17,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStoppedSequence);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailedPlay);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMarkedFrame, ALevelSequenceActor*, SequenceActor, FMovieSceneMarkedFrame, MarkedFrame);
 
-USTRUCT(BlueprintType,Blueprintable)
-struct FOmegaLevelSequenceConfig
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") bool bOverrideInstance;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") AActor* OriginActor;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") FTransform OriginTransform;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") TMap<FName,AActor*> ActorBindings;
-	
-};
-
-
 UCLASS()
 class OMEGAFLOW_API UAsyncAction_LevelSequence : public UBlueprintAsyncActionBase, public FTickableGameObject
 {
@@ -78,11 +63,17 @@ public:
 	UPROPERTY() TMap<int32,FMovieSceneMarkedFrame> mapped_frames;
 	UPROPERTY() TArray<int32> seen_frames;
 
-	UPROPERTY() FOmegaLevelSequenceConfig L_config;
+	UPROPERTY()
+	bool Local_OverrideInstanceData;
+	UPROPERTY()
+	AActor* Local_OriginActor;
+	UPROPERTY()
+	FTransform Local_OriginTransform;
+	
 	
 	virtual void Activate() override;
 	
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="bOverrideInstanceData, OriginActor, OriginTransform"),
 		DisplayName="Ω🔷 Play Level Sequence") 
-	static UAsyncAction_LevelSequence* PlayLevelSequence(UObject* WorldContextObject, ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, FOmegaLevelSequenceConfig Config);
+	static UAsyncAction_LevelSequence* PlayLevelSequence(UObject* WorldContextObject, ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, bool bOverrideInstanceData, AActor* OriginActor, FTransform OriginTransform);
 };

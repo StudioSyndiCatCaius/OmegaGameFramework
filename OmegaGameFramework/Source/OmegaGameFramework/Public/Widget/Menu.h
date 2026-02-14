@@ -163,12 +163,25 @@ public:
 	
 	///PROPERTIES//
 
-	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu") bool bIsOpen;
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu")
+	bool bIsOpen;
 
 	///DELGATES//
-	UPROPERTY(BlueprintAssignable) FOpened OnOpened;
-	UPROPERTY(BlueprintAssignable) FClosed OnClosed;
+	UPROPERTY(BlueprintAssignable)
+		FOpened OnOpened;
+	UPROPERTY(BlueprintAssignable)
+		FClosed OnClosed;
 
+	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Name)")
+	void OnGlobalEvent(FName Event, UObject* Context);
+	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Tag)")
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
+	UFUNCTION() void Local_BindGlobalEvent();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnInputMethodChanged(bool bIsGamepad);
 
 	//----------------------------------------------------------------------
 	// State

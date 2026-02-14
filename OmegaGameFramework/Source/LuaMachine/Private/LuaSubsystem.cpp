@@ -8,7 +8,6 @@
 #include "HAL/FileManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Algo/Sort.h"
-#include "Statics/OMEGA_File.h"
 
 void ULuaSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -138,16 +137,11 @@ TArray<FName> ULuaWorldSubsystem::GetGlobalKeys(FString global)
 void ULuaWorldSubsystem::RerunLua()
 {
 	FString _path=FPaths::ProjectDir()+"/Override/autorun/";
-	for (FString pt : GetMutableDefault<ULuaSettings>()->Autorun_FilePaths)
+	TArray<FString> _outFiles;
+	GetAllLuaFiles(_path,_outFiles);
+	for(FString i : _outFiles)
 	{
-		FString final_path=OMEGA_File::PathCorrect(pt);
-		TArray<FString> _foundFiles;
-		GetAllLuaFiles(final_path,_foundFiles);
-		
-		for(FString i : _foundFiles)
-		{
-			ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(this,nullptr,i,true);
-		}
+		ULuaBlueprintFunctionLibrary::LuaRunFile(this,nullptr,i,true);
 	}
 }
 

@@ -4,7 +4,14 @@
 
 #include "DiffResults.h"
 #include "IAssetTypeActions.h"
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
 #include "Editor/Kismet/Private/DiffControl.h"
+#else
+#include "Editor/Kismet/Internal/DiffControl.h"
+#endif
+
+
 
 struct FDiffResultItem;
 class UEdGraph;

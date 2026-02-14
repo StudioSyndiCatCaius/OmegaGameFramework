@@ -9,13 +9,10 @@
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Misc/OmegaUtils_Delegates.h"
-#include "Types/Struct_WidgetOverrides.h"
 #include "Widget/OmegaUserWidget.h"
 #include "DataWidget.generated.h"
 
-class UOmegaSlateStyle;
-class UOmegaPlayerSubsystem;
-class UOmegaObjectTrait;
+class UOmegaObjectTrait;class UOmegaPlayerSubsystem;
 class UOmegaSettings_Slate;
 class UDataList;
 class UTextBlock;
@@ -173,26 +170,10 @@ public:
 	{
 		return WidgetTraits;
 	}
-	UFUNCTION() TArray<FName> L_getOvrParamName_Float();
-	UFUNCTION() TArray<FName> L_getOvrParamName_Bool();
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Override") TMap<FName,float> GetOverrideFields_Floats();
-	UFUNCTION(BlueprintImplementableEvent,Category="Override") TMap<FName,bool> GetOverrideFields_Bools();
-	
-	UFUNCTION(BlueprintPure,Category="Override") float GetWidgetOverride_Float(UPARAM(meta = (GetOptions = "L_getOvrParamName_Float")) FName Name);
-	UFUNCTION(BlueprintPure,Category="Override") bool GetWidgetOverride_Bool(UPARAM(meta = (GetOptions = "L_getOvrParamName_Bool")) FName Name);
-	
-	UFUNCTION(BlueprintPure,Category="Override",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Outcome"))
+
+	UFUNCTION(BlueprintPure,Category="Meta",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Outcome"))
 	UDataWidgetTraits* GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Class, bool FallbackToDefault, bool& Outcome);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Override")
-	TMap<FName,UWidget*> WidgetBinding_Get();
-	
-	UFUNCTION(BlueprintNativeEvent,Category="Override")
-	void WidgetBinding_Apply(FName name, UWidget* widget,UOmegaSlateStyle* Asset);
-	
-	UFUNCTION(BlueprintCallable,Category="Override")
-	void ApplyDefaultWidgetBinding(FName name, UWidget* widget,UOmegaSlateStyle* Asset);
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
@@ -235,7 +216,7 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="DataWidget")
 	bool IsHighlighted() const {return b_IsHighlighted;}
-	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="CurveFloat"))
+	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="/Script/Engine.CurveFloat"))
 	FSoftObjectPath HighlightBlendCurve{"/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"};
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Highlight Widget Duration")
 	float HighlightWidgetSpeed = 0.1;
@@ -248,8 +229,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	void OnHoverStateChange(bool bHovered);
 	
-	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="CurveFloat"))
-	FSoftObjectPath HoverBlendCurve{"/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"};
+	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="/Script/Engine.CurveFloat"))
+	FSoftObjectPath HoverBlendCurve;
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Hover Widget Duration")
 	float HoverWidgetSpeed = 0.1;
 	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)

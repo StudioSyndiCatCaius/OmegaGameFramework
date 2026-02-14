@@ -66,8 +66,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent) void OnEventEnd(const FString& Flag);
 
 	
-	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context,FOmegaCommonMeta meta);
-	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context,FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context);
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="JumpToID"))
 	void Finish(const FString& Flag, const FName JumpToID = FName(""));

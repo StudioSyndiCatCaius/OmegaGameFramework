@@ -3,7 +3,7 @@
 
 #include "Actors/Actor_WorldMapPoint.h"
 
-#include "OmegaGameplayConfig.h"
+#include "OmegaSettings_Gameplay.h"
 #include "Components/BillboardComponent.h"
 #include "Components/Component_ActorConfig.h"
 #include "Components/Component_DataWidget.h"

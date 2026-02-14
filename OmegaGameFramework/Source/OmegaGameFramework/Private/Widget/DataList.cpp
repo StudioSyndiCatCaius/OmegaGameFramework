@@ -55,54 +55,6 @@ void UDataList::Native_WidgetNotify(UDataWidget* Widget, FName Notify)
 }
 
 
-void UDataList::AddAllOverrides()
-{
-	if (EntryClass)
-	{
-		UDataWidget* _default=GetMutableDefault<UDataWidget>(EntryClass);
-		TMap<FName,UWidget*> _binds=_default->WidgetBinding_Get();
-		TArray<FName> _bindNames;
-		_binds.GetKeys(_bindNames);
-		
-		for (FName n : _bindNames)
-		{
-			if (!WidgetOverride_Styles.Contains(n))
-			{
-				WidgetOverride_Styles.Add(n,nullptr);
-			}
-		}
-	}
-}
-
-TArray<FName> UDataList::L_getOverrideNames_Asset()
-{
-	TArray<FName> out;
-	if (EntryClass)
-	{
-		GetMutableDefault<UDataWidget>(EntryClass)->WidgetBinding_Get().GetKeys(out);
-	}
-	return out;
-}
-
-TArray<FName> UDataList::L_getOverrideNames_float()
-{
-	TArray<FName> out;
-	if (EntryClass)
-	{
-		GetMutableDefault<UDataWidget>(EntryClass)->GetOverrideFields_Floats().GetKeys(out);
-	}
-	return out;
-}
-
-TArray<FName> UDataList::L_getOverrideNames_Bool()
-{
-	TArray<FName> out;
-	if (EntryClass)
-	{
-		GetMutableDefault<UDataWidget>(EntryClass)->GetOverrideFields_Bools().GetKeys(out);
-	}
-	return out;
-}
 
 void UDataList::SetNewControl(UUserWidget* NewWidget)
 {
@@ -215,9 +167,20 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		{
 			img->SetDesiredSizeOverride(OverrideIconSize);
 		}
+	}if(OverrideTextStyle_Name)
+	{
+		if (UOmegaTextBlock* txt_nam=Cast<UOmegaTextBlock>(TempEntry->GetNameTextWidget()))
+		{
+			txt_nam->SetStyleAsset(OverrideTextStyle_Name);
+		}
 	}
-	
-
+	if(OverrideTextStyle_Description)
+	{
+		if (UOmegaTextBlock* txt_nam=Cast<UOmegaTextBlock>(TempEntry->GetDescriptionTextWidget()))
+		{
+			txt_nam->SetStyleAsset(OverrideTextStyle_Description);
+		}
+	}
 	
 	// Do not add if hidden
 	if(TempEntry->IsEntityHidden(Asset))
@@ -313,8 +276,6 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	}
 	
 	TempEntry->AddedToDataList(this, Entries.Find(TempEntry), Asset, ListTags, Flag);
-	
-
 	
 	return TempEntry;
 }
@@ -699,15 +660,6 @@ void UDataList::SetListOwner(UObject* NewOwner)
 void UDataList::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-	
-	if (EntryClass)
-	{
-		if (UDataWidget* mut=GetMutableDefault<UDataWidget>(EntryClass))
-		{
-			AddAllOverrides();
-		}
-	}
-
 	if (UBorder* _border=GetWidgetBorder())
 	{
 		if (UOmegaBorder* _oborder=Cast<UOmegaBorder>(_border))

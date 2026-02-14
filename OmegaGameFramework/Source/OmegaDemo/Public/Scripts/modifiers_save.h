@@ -25,23 +25,23 @@ public:
 		{
 			for(auto& p : params_int)
 			{
-				Save->GlobalVars.params_int.Add(p.Key,p.Value);
+				Save->Prop_int.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_float)
 			{
-				Save->GlobalVars.params_float.Add(p.Key,p.Value);
+				Save->Prop_float.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_bool)
 			{
-				Save->GlobalVars.params_bool.Add(p.Key,p.Value);
+				Save->Prop_bool.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_string)
 			{
-				Save->GlobalVars.params_string.Add(p.Key,p.Value);
+				Save->Prop_string.Add(p.Key,p.Value);
 			}
 			for(auto& p : params_asset)
 			{
-				Save->GlobalVars.params_DataAsset.Add(p.Key,p.Value.LoadSynchronous());
+				Save->Prop_Asset.Add(p.Key,p.Value.LoadSynchronous());
 			}
 		}
 		return true;
@@ -65,7 +65,7 @@ public:
 			{
 				if(UPrimaryDataAsset* a=Selector->Get_DataAsset(subsystem))
 				{
-					Save->GlobalVars.params_DataAsset.Add(ParamName,a);
+					Save->Prop_Asset.Add(ParamName,a);
 				}
 			}
 		}

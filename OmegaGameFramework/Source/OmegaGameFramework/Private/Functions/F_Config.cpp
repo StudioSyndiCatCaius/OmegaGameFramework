@@ -6,10 +6,8 @@
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 #include "JsonObjectConverter.h"
-#include "OmegaSettings.h"
-#include "Misc/OmegaUtils_Macros.h"
 
-FJsonObject UOmegaFunctions_Config::GetOmegaConfigJsonObject()
+FJsonObject UOmegaConfigFunctions::GetOmegaConfigJsonObject()
 {
 	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
 	const FString FilePath = FPaths::ProjectDir() + TEXT("OmegaConfig.json");
@@ -30,7 +28,7 @@ FJsonObject UOmegaFunctions_Config::GetOmegaConfigJsonObject()
 	return *JsonObject;
 }
 
-FJsonObjectWrapper UOmegaFunctions_Config::GetOmegaConfigJson()
+FJsonObjectWrapper UOmegaConfigFunctions::GetOmegaConfigJson()
 {
 
 	FJsonObjectWrapper JsonObjectWrapper;
@@ -43,29 +41,7 @@ FJsonObjectWrapper UOmegaFunctions_Config::GetOmegaConfigJson()
 	return JsonObjectWrapper;
 }
 
-bool UOmegaFunctions_Config::GetCustom_Bool(const FName Param)
-{
-	return OGF_CFG()->CustomParams_Bool.FindOrAdd(Param);
-}
-
-float UOmegaFunctions_Config::GetCustom_float(const FName Param)
-{
-	return OGF_CFG()->CustomParams_Float.FindOrAdd(Param);
-}
-
-int32 UOmegaFunctions_Config::GetCustom_Int32(const FName Param)
-{
-	return OGF_CFG()->CustomParams_Int32.FindOrAdd(Param);
-}
-
-FString UOmegaFunctions_Config::GetCustom_String(const FName Param)
-{
-	return OGF_CFG()->CustomParams_String.FindOrAdd(Param);
-}
-
-
-
-FString UOmegaFunctions_Config::GetOmegaConfigProperty_String(const FString Property)
+FString UOmegaConfigFunctions::GetOmegaConfigProperty_String(const FString Property)
 {
 	FString FieldValue;
 	if (GetOmegaConfigJsonObject().TryGetStringField(Property, FieldValue))
@@ -76,7 +52,7 @@ FString UOmegaFunctions_Config::GetOmegaConfigProperty_String(const FString Prop
 	return FString();
 }
 
-bool UOmegaFunctions_Config::GetOmegaConfigProperty_Bool(const FString Property)
+bool UOmegaConfigFunctions::GetOmegaConfigProperty_Bool(const FString Property)
 {
 	const FString FieldValue = GetOmegaConfigProperty_String(Property);
 	if (!FieldValue.IsEmpty())
@@ -87,7 +63,7 @@ bool UOmegaFunctions_Config::GetOmegaConfigProperty_Bool(const FString Property)
 	return false;
 }
 
-int32 UOmegaFunctions_Config::GetOmegaConfigProperty_Int(const FString Property)
+int32 UOmegaConfigFunctions::GetOmegaConfigProperty_Int(const FString Property)
 {
 	const FString FieldValue = GetOmegaConfigProperty_String(Property);
 	if (!FieldValue.IsEmpty())

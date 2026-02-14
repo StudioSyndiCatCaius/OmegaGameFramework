@@ -96,6 +96,7 @@ public:
 	//UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget")
 	//static void LinkComponentOverlapToTagTarget(UPrimitiveComponent* Component, AActor* Actor, FGameplayTag Tag);
 	
+	
 	// =====================================================================================================================
 	// Interact
 	// =====================================================================================================================
@@ -105,52 +106,6 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",DisplayName="Actor - Perform Interaction")
 	static void PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta);
 	
-	// =====================================================================================================================
-	// Relative Actors
-	// =====================================================================================================================
-	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Relative")
-	static AActor* GetRelative(AActor* Actor, FName Relative);
-	
-	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Relative (Actor List)")
-	static TArray<AActor*> GetRelativeList(TArray<AActor*> Actors, FName Relative, bool bIncludeEmpty);
-	
-	// =====================================================================================================================
-	// Combatant
-	// =====================================================================================================================
-	UFUNCTION(BlueprintPure,Category="Omega|Actor|Combatant",DisplayName="Actor - Get Faction")
-	static FGameplayTag GetFaction_Tag(AActor* Actor);
-	
-	UFUNCTION(BlueprintPure,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Faction Affinity")
-	static EFactionAffinity GetFaction_Affinity(AActor* Actor, FGameplayTag FactionTag);
-	
-		
-	UFUNCTION(BlueprintPure,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Faction Affinity To Target")
-	static EFactionAffinity GetFaction_AffinityToTarget(AActor* Actor, AActor* Target);
-	
-	// =====================================================================================================================
-	// metadata
-	// =====================================================================================================================
-	// Get World Manager helper
-	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Get World Manager")
-	static AOmegaWorldManager* GetWorldManager(AActor* Actor);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Bool")
-	static bool GetMeta_Bool(AActor* Actor, FName Param, bool Fallback = false);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Int")
-	static int32 GetMeta_Int(AActor* Actor, FName Param, int32 Fallback = 0);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Float")
-	static float GetMeta_Float(AActor* Actor, FName Param, float Fallback = 0.0f);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get String")
-	static FString GetMeta_String(AActor* Actor, FName Param, const FString& Fallback = "");
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get DataAsset")
-	static UPrimaryDataAsset* GetMeta_DataAsset(AActor* Actor, FName Param);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Actor")
-	static AActor* GetMeta_Actor(AActor* Actor, FName Param);
 };
 
 // =====================================================================================================================

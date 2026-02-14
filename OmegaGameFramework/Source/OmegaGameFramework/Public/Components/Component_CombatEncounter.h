@@ -120,7 +120,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Encounter")
 	AOmegaCombatEncounter_Stage* GetStageFromID(FGameplayTag ID);
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter",meta=(MustImplement="ActorInterface_EncounterBattler"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter",meta=(MustImplement="/Script/OmegaGameFramework.ActorInterface_EncounterBattler"))
 	TSubclassOf<ACharacter> BattlerCharacterClass;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")

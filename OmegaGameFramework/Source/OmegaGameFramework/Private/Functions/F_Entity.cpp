@@ -6,30 +6,11 @@
 #include "Subsystems/Subsystem_Save.h"
 
 
-FOmegaEntity* UOmegaFunctions_Entity::getEntityRefById(const UObject* WorldContextObject, FOmegaEntityID ID, bool bGlobal)
-{
-	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
-	{
-		switch (ID.entity_type)
-		{
-		case 0:
-			return  &_sav->Entities.Entities_Asset.FindOrAdd(Conv_EntityID_2_DataAsset(ID));
-			;
-		case 1:
-			return &_sav->Entities.Entities_Named.FindOrAdd(Conv_EntityID_2_Name(ID));
-			;
-		case 2:
-			return &_sav->Entities.Entities_Guid.FindOrAdd(Conv_EntityID_2_GUID(ID));
-			;
-		default: ;
-		}
-	}
-	return nullptr;
-}
+
 
 UOmegaSaveBase* UOmegaFunctions_Entity:: _getEntitySaveObj(const UObject* context,bool bGlobal)
 {
-	if(context && context->GetWorld()->GetGameInstance()) 
+	if(context) 
 	{
 		return context->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->GetSaveObject(bGlobal);
 	}
@@ -60,9 +41,21 @@ void UOmegaFunctions_Entity::SetEntity_ByID(const UObject* WorldContextObject, F
 
 FOmegaEntity UOmegaFunctions_Entity::GetEntity_ByID(const UObject* WorldContextObject, FOmegaEntityID ID, bool bGlobal)
 { 
-	if(FOmegaEntity* _entity=getEntityRefById(WorldContextObject,ID,bGlobal))
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
 	{
-		return *_entity;
+		switch (ID.entity_type)
+		{
+		case 0:
+			return  _sav->Entities.Entities_Asset.FindOrAdd(Conv_EntityID_2_DataAsset(ID));
+			;
+		case 1:
+			return _sav->Entities.Entities_Named.FindOrAdd(Conv_EntityID_2_Name(ID));
+			;
+		case 2:
+			return _sav->Entities.Entities_Guid.FindOrAdd(Conv_EntityID_2_GUID(ID));
+			;
+		default: ;
+		}
 	}
 	return FOmegaEntity();
 }

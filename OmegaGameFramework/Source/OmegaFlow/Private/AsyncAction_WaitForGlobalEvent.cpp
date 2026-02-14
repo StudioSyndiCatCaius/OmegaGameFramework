@@ -11,7 +11,7 @@
 // Name
 // ==============================================
 
-void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Context,FOmegaCommonMeta _meta)
+void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Context)
 {
 	if(Event == EventRef)
 	{
@@ -39,7 +39,7 @@ UAsyncAction_WaitForGlobalEvent* UAsyncAction_WaitForGlobalEvent::WaitForGlobalE
 // Tagged
 // ==============================================
 
-void UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta _meta)
+void UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent(FGameplayTag Event, UObject* Context)
 {
 	if(Event == EventRef)
 	{

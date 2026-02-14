@@ -86,9 +86,9 @@ class UOmegaDebugDevSettings : public UDeveloperSettings
 
 public:
 	
-	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Debug"))
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="/Script/OmegaGameFramework.OmegaSettings_Debug"))
 	FSoftObjectPath DefaultSettings_Debug;
-	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Debug"))
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets")
 	float Delay_AutostartProfile=0.3f;
 	
 	UOmegaSettings_Debug* GetDefaultSettings() const

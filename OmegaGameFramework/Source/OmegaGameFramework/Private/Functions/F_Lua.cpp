@@ -3,30 +3,9 @@
 
 #include "Functions/F_Lua.h"
 
-#include "LuaBlueprintFunctionLibrary.h"
 #include "LuaInterface.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
-
-FString UOmegaLuaParser::TrimQuotes(const FString& Str)
-{
-	FString Trimmed = Str;
-	if (Trimmed.StartsWith("\"") && Trimmed.EndsWith("\"") && Trimmed.Len() >= 2)
-	{
-		Trimmed = Trimmed.Mid(1, Trimmed.Len() - 2);
-	}
-	return Trimmed;
-}
-
-FLuaValue UOmegaLuaParser::CreateLuaTable() const
-{
-	return ULuaBlueprintFunctionLibrary::LuaCreateTable(WorldContextObject,nullptr);
-}
-
-FLuaValue UOmegaLuaParser::ParseStringToTable_Implementation(UObject* WorldContext, const FString& String)
-{
-	return FLuaValue();
-}
+#include "OmegaSettings_Global.h"
 
 FLuaValue UOmegaLuaFunctions::GetObjectLua_Value(UObject* Object,const FString& Flag)
 {
@@ -40,7 +19,7 @@ FLuaValue UOmegaLuaFunctions::GetObjectLua_Value(UObject* Object,const FString& 
 	}
 	if (LuaObject.IsNil())
 	{
-		LuaObject=GetMutableDefault<UOmegaSettings>()->GetGameCore()->Lua_GetObjectValue(Object);
+		LuaObject=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Lua_GetObjectValue(Object);
 	}
 	return LuaObject;
 	
@@ -72,16 +51,4 @@ AActor* UOmegaLuaFunctions::Conv_LuaToActor(FLuaValue LuaValue)
 		}
 	}
 	return nullptr;
-}
-
-FLuaValue UOmegaLuaFunctions::ParseStringToLuaTable(UObject* WorldContextObject, const FString& String,
-	TSubclassOf<UOmegaLuaParser> Parser)
-{
-	if (WorldContextObject && Parser)
-	{
-		UOmegaLuaParser* _parser=Parser.GetDefaultObject();
-		_parser->WorldContextObject=WorldContextObject;
-		return _parser->ParseStringToTable(WorldContextObject,String);
-	}
-	return FLuaValue();
 }

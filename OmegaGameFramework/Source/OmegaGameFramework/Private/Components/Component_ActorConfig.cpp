@@ -4,7 +4,7 @@
 #include "Components/Component_ActorConfig.h"
 
 #include "OmegaSettings.h"
-#include "OmegaGameplayConfig.h"
+#include "OmegaSettings_Gameplay.h"
 #include "Subsystems/Subsystem_Actors.h"
 
 void UActorConfigComponent::L_TimerEnd()

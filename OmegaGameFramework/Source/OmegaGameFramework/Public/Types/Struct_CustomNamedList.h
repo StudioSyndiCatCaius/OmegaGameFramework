@@ -10,10 +10,10 @@ struct FOmegaCustomNamedList
 {
 	GENERATED_BODY()
     
-	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Data")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName ListID;
     
-	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Data")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName Option;
 };
 
@@ -22,7 +22,7 @@ struct FOmegaClassNamedLists
 {
 	GENERATED_BODY()
     
-	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Data")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<FName, FOmegaCustomNamedList> CustomNamedList;
     
 

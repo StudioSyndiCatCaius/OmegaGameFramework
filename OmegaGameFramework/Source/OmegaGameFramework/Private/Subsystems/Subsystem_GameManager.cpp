@@ -8,14 +8,13 @@
 #include "LuaSubsystem.h"
 #include "OmegaSettings.h"
 #include "Misc/OmegaGameplayModule.h"
-#include "OmegaGameplayConfig.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Gameplay.h"
+#include "OmegaSettings_Global.h"
+#include "OmegaSettings_Paths.h"
 #include "Engine/GameInstance.h"
 #include "Functions/F_File.h"
-#include "Kismet/KismetStringLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
-#include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_AssetHandler.h"
 #include "Subsystems/Subsystem_Mods.h"
 
@@ -37,10 +36,12 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 {
 	UOmegaSubsystem_AssetHandler* subsys_asset=GEngine->GetEngineSubsystem<UOmegaSubsystem_AssetHandler>();
 	UOmegaSettings* settings_omega=GetMutableDefault<UOmegaSettings>();
+
 	
 #if !PLATFORM_ANDROID
 	subsys_asset->ClearSortedAssets_All();
 #endif
+	
 	
 	// Run init Lua code
 	//ULuaBlueprintFunctionLibrary::LuaRunString(this,nullptr,OGF_CFG_LUA()->Code_Init.LuaCode);
@@ -56,18 +57,15 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 			ActivateModuleFromClass(TempModule);
 		}
 	}
-	TArray<UOmegaGameplayModule*> _tempModules=OGF_GAME_CORE()->GameplayModules;
-	for(UOmegaGameplayConfig* _set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
+	for(UOmegaSettings_Gameplay* _set : GetMutableDefault<UOmegaSettings>()->GetAllGameplaySettings())
 	{
-		_tempModules.Append(_set->GetModules());
-	}
-	
-	for (auto* _module: _tempModules)
-	{
-		if(_module)
+		for(auto* c : _set->GetModules())
 		{
-			UOmegaGameplayModule* new_mod=DuplicateObject(_module,GetGameInstance());
-			ModuleInit(new_mod);
+			if(c)
+			{
+				UOmegaGameplayModule* new_mod=DuplicateObject(c,GetGameInstance());
+				ModuleInit(new_mod);
+			}
 		}
 	}
 	
@@ -77,20 +75,16 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	
 	if (settings_omega->bAutoImportRuntimeAssets)
 	{
-		UE_LOG(LogInit, Log, TEXT("======================================================"));
-		UE_LOG(LogInit, Log, TEXT("	STARTING RUNTIME FILE IMPORT"));
-		UE_LOG(LogInit, Log, TEXT("======================================================"));
-			
-		for (FString dir_path : OGF_CFG()->RuntimeImport_BaseDirectory)
+		if (UOmegaFileManagerSettings* set=settings_omega->GetSettings_File())
 		{
-			UE_LOG(LogInit, Log, TEXT("		📁 IMPORTING DIRECTORY:  %s"), *dir_path);
-			for (FString path : OMEGA_File::ListFilesInDirectory(dir_path,true))
+			UE_LOG(LogInit, Log, TEXT("======================================================"));
+			UE_LOG(LogInit, Log, TEXT("	STARTING RUNTIME FILE IMPORT"));
+			UE_LOG(LogInit, Log, TEXT("======================================================"));
+			
+			for (FString dir_path : OGF_CFG()->RuntimeImport_BaseDirectory)
 			{
-				
-				
-				
-				//VIA - File Manager
-				if (UOmegaFileManagerSettings* set=settings_omega->GetSettings_File())
+				UE_LOG(LogInit, Log, TEXT("		📁 IMPORTING DIRECTORY:  %s"), *dir_path);
+				for (FString path : OGF_File::ListFilesInDirectory(dir_path,true))
 				{
 					if (UObject* new_file=set->ImportFile(path))
 					{
@@ -103,13 +97,8 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 						UE_LOG(LogInit, Log, TEXT("				❌ IMPORT FAILED: %s"), *path);
 					}
 				}
-				
-			}
-		}	
-		
-		
-		
-		
+			}	
+		}
 	}
 	
 	// --------------------------------------
@@ -125,7 +114,7 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	
 	for (FString f : settings_ref->Autorun_FilePaths)
 	{
-		lsub->RunLocalFilesInPath(FPaths::ProjectContentDir()+"/"+OMEGA_File::PathCorrect(f),true,true);
+		lsub->RunLocalFilesInPath(FPaths::ProjectContentDir()+"/"+OGF_File::PathCorrect(f),true,true);
 	}
 	
 
@@ -167,14 +156,14 @@ void UOmegaGameManager::Initialize(FSubsystemCollectionBase& Colection)
 	}
 	
 
-	settings_omega->GetGameCore()->OnGame_Begin(GetWorld()->GetGameInstance());
+	settings_omega->GetGlobalSettings()->OnGame_Begin(GetWorld()->GetGameInstance());
 	
 }
 
 void UOmegaGameManager::Deinitialize()
 {
 	UOmegaSettings* _set=GetMutableDefault<UOmegaSettings>();
-	_set->GetGameCore()->OnGame_Begin(GetWorld()->GetGameInstance());
+	_set->GetGlobalSettings()->OnGame_Begin(GetWorld()->GetGameInstance());
 	
 	for(UOmegaGameplayModule* TempModule : ActiveModules)
 	{
@@ -226,14 +215,14 @@ TArray<UOmegaGameplayModule*> UOmegaGameManager::GetGameplayModules()
 	return ActiveModules;
 }
 
-void UOmegaGameManager::FireGlobalEvent(FName Event, UObject* Context,FOmegaCommonMeta meta)
+void UOmegaGameManager::FireGlobalEvent(FName Event, UObject* Context)
 {
-	OnGlobalEvent.Broadcast(Event, Context,meta);
+	OnGlobalEvent.Broadcast(Event, Context);
 }
 
-void UOmegaGameManager::FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta meta)
+void UOmegaGameManager::FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context)
 {
-	OnTaggedGlobalEvent.Broadcast(Event,Context,meta);
+	OnTaggedGlobalEvent.Broadcast(Event,Context);
 }
 
 void UOmegaGameManager::SetFlagActive(FString Flag, bool bActive)

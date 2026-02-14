@@ -112,6 +112,7 @@ UTexture2D* UOmegaFileFunctions::OmegaImport_Texture2D(const FString& FilePath,T
 	if(Texture)
 	{
 		//Texture->MipGenSettings=MipGenSettings;
+		Texture->MipGenSettings = MipGenSettings;
 		Texture->RefreshSamplerStates();
 		Texture->UpdateResource();
 		return Texture;

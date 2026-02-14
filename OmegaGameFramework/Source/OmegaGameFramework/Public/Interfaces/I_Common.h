@@ -7,8 +7,6 @@
 #include "Styling/SlateBrush.h"
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
-#include "Types/Struct_Bitflag.h"
-#include "Types/Struct_CustomNamedList.h"
 #include "I_Common.generated.h"
 
 UINTERFACE(MinimalAPI)
@@ -41,7 +39,6 @@ public:
 	static FText GetObjectName(UObject* obj);
 	static FText GetObjectDesc(UObject* obj);
 	static FString GetObjectLabel(UObject* obj);
-	static int32 getSeed(UObject* obj,FName name);
 };
 
 
@@ -50,41 +47,22 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_General
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Texts"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Texts"), DisplayName="General - Get Text")
 	void GetGeneralDataText (const FString& Label, const class UObject* Context, FText& Name, FText& Description);
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Images"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Images"), DisplayName="General - Get Images")
 	void GetGeneralDataImages (const FString& Label, const class UObject* Context,class UTexture2D*& Texture,class UMaterialInterface*& Material,FSlateBrush& Brush);
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Color"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Color"), DisplayName="General - Get Color")
 	void GetGeneralAssetColor(FLinearColor& Color);
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="General Label"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="General Label"), DisplayName="General - Get Label")
 	void GetGeneralAssetLabel(FString& Label);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Metatags"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Metatags"))
 	TArray<FName> GetMetatags();
 	
-	//Bitflags
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="BitFlag") void Bitflags_Set(FOmegaBitflagsBase bitmask);
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="BitFlag") FOmegaBitflagsBase Bitflags_Get();
-	
-	// Seeds
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="IntState") int32 GetSeed(FName Name);
-	
-	// Named Lists
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="NamedList") FOmegaClassNamedLists GetClassNamedLists();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="NamedList") TArray<FName> Override_ObjectLists();
 };
-
-inline int32 UDataInterface_General::getSeed(UObject* obj,FName name)
-{
-	if(obj && obj->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		return IDataInterface_General::Execute_GetSeed(obj,name);
-	}
-	return 0;
-}
 
 
 inline FText UDataInterface_General::GetObjectName(UObject* obj)

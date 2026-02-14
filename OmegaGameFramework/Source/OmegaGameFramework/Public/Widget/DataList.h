@@ -119,7 +119,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	TSubclassOf<UDataWidget> EntryClass;
-	
 	UPROPERTY(EditAnywhere, Instanced, Category="Entry")
 	TArray<UOmegaObjectTrait*> EntryTraits;
 	UPROPERTY(EditAnywhere, Instanced, Category = "Entry")
@@ -167,17 +166,6 @@ public:
 	// ---------------------------------------------------------------
 	// Overrides
 	// ---------------------------------------------------------------
-	UFUNCTION(BlueprintCallable,CallInEditor,Category="StyleOverrides")
-	void AddAllOverrides();
-	
-	UFUNCTION() TArray<FName> L_getOverrideNames_Asset();
-	UFUNCTION() TArray<FName> L_getOverrideNames_float();
-	UFUNCTION() TArray<FName> L_getOverrideNames_Bool();
-	
-	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_Asset"))
-	TMap<FName,UOmegaSlateStyle*> WidgetOverride_Styles;
-	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_float")) TMap<FName,float> WidgetOverride_Floats;
-	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_Bool")) TMap<FName,bool> WidgetOverride_Bools;
 	
 	UPROPERTY(EditAnywhere,Category="EntryOverrides")
 	bool bCanOverrideSize;
@@ -193,10 +181,13 @@ public:
 	UCurveVector* OverrideHoverOffset_Curve;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	FVector OverrideHoverOffset_Scale=FVector::One();
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	UOmegaSlateStyle_Text* OverrideTextStyle_Name;
+	UPROPERTY(EditAnywhere, Category="EntryOverrides")
+	UOmegaSlateStyle_Text* OverrideTextStyle_Description;
 
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	TSubclassOf<UDataTooltip> Override_TooltipClass;
-
 	
 private:
 	UFUNCTION()

@@ -81,8 +81,6 @@ public:
 	static TArray<FString> GetCommandLineArgs();
 };
 
-
-
 UCLASS()
 class UOmegaStringFunctions : public UBlueprintFunctionLibrary
 {
@@ -207,4 +205,3 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Math")
 	static TMap<UPrimaryDataAsset*,float> InvertMapValues_Assetfloat(TMap<UPrimaryDataAsset*,float> in);
 };
-

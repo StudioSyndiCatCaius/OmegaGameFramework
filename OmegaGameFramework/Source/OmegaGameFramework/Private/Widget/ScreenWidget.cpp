@@ -5,17 +5,8 @@
 #include "Misc/GeneralDataObject.h"
 
 #include "Components/TextBlock.h"
-#include "Subsystems/Subsystem_Actors.h"
-#include "Subsystems/Subsystem_GameManager.h"
-#include "Subsystems/Subsystem_Message.h"
-#include "Subsystems/Subsystem_Player.h"
 #include "Widget/DataList.h"
 
-
-void UOmegaScreenWidget::OnInputMethodChanged_Implementation(bool bIsGamepad)
-{
-	
-}
 
 void UOmegaScreenWidget::NativeConstruct()
 {
@@ -48,32 +39,5 @@ void UOmegaScreenWidget::NativeConstruct()
 		}
 	}
 	
-	if (GetGameInstance())
-	{
-		GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UOmegaScreenWidget::OnGlobalEvent);
-		GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaScreenWidget::OnTaggedGlobalEvent);
-		GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UOmegaScreenWidget::OnGameplayMessage);
-		GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->OnActorTaggedTargetChange.AddDynamic(this, &UOmegaScreenWidget::OnActorTaggedTargetChanged);
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UOmegaScreenWidget::OnInputMethodChanged);
-	}
-	
 	Super::NativeConstruct();
-}
-
-void UOmegaScreenWidget::OnGlobalEvent_Implementation(FName Event, UObject* Context,FOmegaCommonMeta meta)
-{
-}
-
-void UOmegaScreenWidget::OnTaggedGlobalEvent_Implementation(FGameplayTag Event, UObject* Context,FOmegaCommonMeta meta)
-{
-}
-
-void UOmegaScreenWidget::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
-	FOmegaGameplayMessageMeta meta)
-{
-}
-
-void UOmegaScreenWidget::OnActorTaggedTargetChanged_Implementation(AActor* Instigator, FGameplayTag Tag, AActor* Target,
-	bool bRegsitered)
-{
 }

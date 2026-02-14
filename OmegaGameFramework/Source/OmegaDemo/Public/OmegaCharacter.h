@@ -19,6 +19,7 @@
 #include "Functions/F_Animation.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/I_BitFlag.h"
 #include "Subsystems/Subsystem_Gameplay.h"
 #include "Subsystems/Subsystem_Zone.h"
 #include "OmegaCharacter.generated.h"
@@ -70,14 +71,24 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	//virtual void OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, UObject* Context) override;
+	virtual bool IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override { return !CanInteract; };
 	
 	//EDITOR
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="EDTIOR")
 	void Camera_Front();
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS") bool UseCameraPull;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS") bool CanInteract=true;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS") bool UseIdentityTraits;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS")
+	bool UseCameraPull;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS")
+	bool CanInteract=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="FLAGS")
+	bool UseIdentityTraits;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="OmegaCharacter")
+	TArray<UOmegaObjectTrait*> Traits;
+	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="OmegaCharacter",meta=(EditCondition="!CharacterAsset"))
 	FText OverrideName;
@@ -89,16 +100,36 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter")
 	TSoftObjectPtr<UFlowAsset> DialogueFlow=nullptr;
 	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override { return DialogueFlow.LoadSynchronous(); };
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter",DisplayName="Subscripts")
+	TArray<USubscriptCollection*> SubscriptCollections;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Animation")
+	FName LookAimSocketName=TEXT("LookPoint");
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Animation") FName LookAimSocketName=TEXT("LookPoint");
-	UPROPERTY(EditAnywhere,Category="OmegaCharacter") FGameplayTagContainer CharacterTags;
+	UPROPERTY(EditAnywhere,Category="OmegaCharacter")
+	FGameplayTagContainer CharacterTags;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return CharacterTags; };
+
+	UPROPERTY(EditDefaultsOnly,Category="OmegaCharacter",AdvancedDisplay)
+	bool Autobind_NamedGlobalEvents;
+	UPROPERTY(EditDefaultsOnly,Category="OmegaCharacter",AdvancedDisplay)
+	bool Autobind_TaggedGlobalEvents;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget))
+	FVector CameraPull;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget))
+	FVector CameraOffset;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget)) FVector CameraPull;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget)) FVector CameraOffset;
+	UFUNCTION(BlueprintImplementableEvent,Category="OmegaCharacter")
+	void OnGlobalEvent_Named(FName Event, UObject* Context);
+	UFUNCTION(BlueprintImplementableEvent,Category="OmegaCharacter")
+	void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
 
 	virtual FVector GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UActorIdentityComponent* ActorIdentity;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataItemComponent* DataItem;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UCombatantComponent* Combatant;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UEquipmentComponent* Equipment;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataAssetCollectionComponent* Inventory;
@@ -126,8 +157,7 @@ public:
 	
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return CharacterTags; };
-	virtual bool IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override { return !CanInteract; };
+
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 };
 

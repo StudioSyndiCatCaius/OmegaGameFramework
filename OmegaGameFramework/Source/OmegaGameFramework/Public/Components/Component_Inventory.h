@@ -28,12 +28,12 @@ protected:
 
 public:
 
-	UPROPERTY(EditAnywhere,Category="Inventory",meta=(MustImplement="DataAssetCollectionInterface"))
+	UPROPERTY(EditAnywhere,Category="Inventory",meta=(MustImplement="/Script/OmegaGameFramework.DataAssetCollectionInterface"))
 	TMap<UPrimaryDataAsset*, int32> InventoryAssets;
 	//Assets can have a per-count size. This is the max total size for all assets. If <1, you have infinite size.
 	UPROPERTY(EditAnywhere,Category="Inventory") int32 MaxSize=-1;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Inventory",meta=(MustImplement="DataInterface_InventorySource"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Inventory",meta=(MustImplement="/Script/OmegaGameFramework.DataInterface_InventorySource"))
 	TArray<UObject*> InventorySources;
 	
 	// Called every frame

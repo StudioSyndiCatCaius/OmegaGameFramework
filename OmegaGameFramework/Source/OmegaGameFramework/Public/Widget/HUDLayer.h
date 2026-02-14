@@ -44,10 +44,29 @@ public:
 	FGameplayTagContainer HUDTags;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
+	int32 SlateLayerIndex;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	bool bReverseCloseAnim=true;
+	
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Global Event (Name)")
+	void OnGlobalEvent(FName Event, UObject* Context);
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Global Event (Tag)")
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
+	
+	UFUNCTION() void Local_BindGlobalEvent();
 
-	UFUNCTION(BlueprintImplementableEvent) UWidgetAnimation* GetAppearAnimation();
-	UFUNCTION(BlueprintImplementableEvent) UWidgetAnimation* GetRemovedAnimation();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnActorTaggedTargetChanged(AActor* Instigator, FGameplayTag Tag, AActor* Target, bool bRegsitered);
+	UFUNCTION(BlueprintNativeEvent)
+	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnInputMethodChanged(bool bIsGamepad);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	UWidgetAnimation* GetAppearAnimation();
+	UFUNCTION(BlueprintImplementableEvent)
+	UWidgetAnimation* GetRemovedAnimation();
 
 private:
 

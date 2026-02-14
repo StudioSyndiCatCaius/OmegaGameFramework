@@ -8,7 +8,6 @@ public class OmegaFlow : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "GameplayTags", 
-			"LuaMachine",
 			"OmegaGameFramework", 
 			"Flow", 
 			"LevelSequence", 

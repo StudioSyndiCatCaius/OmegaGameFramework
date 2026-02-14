@@ -74,9 +74,9 @@ public:
 	bool GameFileSaved(UOmegaSaveGame* SaveFile);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
-	void OnGlobalEvent(FName Event, UObject* Instigator,FOmegaCommonMeta meta);
+	void OnGlobalEvent(FName Event, UObject* Instigator);
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
-	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Instigator,FOmegaCommonMeta meta);
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Instigator);
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnLevelOpened(const FString& LevelName, AOmegaGameMode* GameMode);

@@ -145,7 +145,7 @@ void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-
+	cached_InputValue=FVector(0,0,0);
 	
 	if (!IsInputInCooldown())
 	{
@@ -160,8 +160,7 @@ void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType
 			}
 			return;
 		}
-		
-		cached_InputValue=FVector(0,0,0);
+	
 		//calculate input value from keys down
 		for (FKey Key : GetKeys())
 		{

@@ -12,11 +12,10 @@
 #include "MetasoundSource.h"
 #include "UObject/SoftObjectPath.h"
 #include "Interfaces/I_BitFlag.h"
-#include "Misc/OmegaUtils_Enums.h"
 #include "Types/Struct_InputConfig.h"
 #include "OmegaSettings.generated.h"
 
-class UOmegaGameplayConfig;
+class UOmegaSettings_Gameplay;
 class AOmegaAbility;
 class UOmegaFileManagerSettings;
 class UEquipmentSlot;
@@ -26,7 +25,7 @@ class UMenu;
 class UOmegaActorConfig;
 class AOmegaBaseCharacter;
 class UDataWidget;
-class UOmegaGameCore;
+class UOmegaGlobalSettings;
 class AOmegaGameplaySystem;
 class UOmegaGameplayModule;
 class UGamePreferenceFloat;
@@ -51,6 +50,8 @@ enum class EOmegaInputModeType : uint8
 	UI,
 	GameAndUI,
 };
+
+
 
 //// Single entry for a bitflag
 USTRUCT(BlueprintType)
@@ -119,61 +120,51 @@ public:
 	UPROPERTY() TArray<FString> LuaFields_AutoSavedToGame;
 	UClass* GetOmegaGlobalSaveClass() const;
 
-	UOmegaGameCore* GetGameCore() const;
+	static UOmegaGlobalSettings* GetGlobalSettings();
 	UOmegaFileManagerSettings* GetSettings_File() const;
 
 	// Settings
-	UPROPERTY(EditAnywhere, config, Category = "Settings Assets",DisplayName="⚛️ GAME CORE")
-	TSoftClassPtr<UOmegaGameCore> GlobalSettingsClass;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets")
+	TSoftClassPtr<UOmegaGlobalSettings> GlobalSettingsClass;
 	
-	UPROPERTY()
-	FSoftObjectPath DefaultSettings_Preferences{"/OmegaGameFramework/Settings/Settings_OMEGA_Preferences.Settings_OMEGA_Preferences"};
-	UPROPERTY()
-	FSoftObjectPath DefaultSettings_FileManager{"/OmegaGameFramework/Settings/Settings_OMEGA_File.Settings_OMEGA_File"};
-	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="OmegaSettings_Localization"), AdvancedDisplay)
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="/Script/OmegaGameFramework.OmegaSettings_Slate"))
+	FSoftObjectPath DefaultSettings_Slate;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="/Script/OmegaGameFramework.OmegaSettings_Preferences"),AdvancedDisplay)
+	FSoftObjectPath DefaultSettings_Preferences;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="/Script/OmegaGameFramework.OmegaSettings_Paths"), AdvancedDisplay)
+	FSoftObjectPath DefaultSettings_Paths;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="/Script/OmegaGameFramework.OmegaFileManagerSettings"), AdvancedDisplay)
+	FSoftObjectPath DefaultSettings_FileManager;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="/Script/OmegaGameFramework.OmegaSettings_Localization"), AdvancedDisplay)
 	FSoftObjectPath DefaultSettings_Localization;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Settings Assets",AdvancedDisplay)
 	TSoftObjectPtr<UOmegaTextFormater_Collection> DefaultSettings_Text;
-	
-	// ---------------------------------------------------------------------------
-	// Custom Params
-	// ---------------------------------------------------------------------------
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="⚙️Custom Param") TMap<FName, bool> CustomParams_Bool;
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="⚙️Custom Param") TMap<FName, int32> CustomParams_Int32;
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="⚙️Custom Param") TMap<FName, float> CustomParams_Float;
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="⚙️Custom Param") TMap<FName, FString> CustomParams_String;
 	
 	// ---------------------------------------------------------------------------
 	// Player
 	// ---------------------------------------------------------------------------
-
-	// ---------------------------------------------------------------------------
-	// Gameplay
-	// ---------------------------------------------------------------------------
-	
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
-	TArray<TSoftObjectPtr<UOmegaGameplayConfig>> Imported_GameplaySettings;
-	
-	TArray<UOmegaGameplayConfig*> GetAllGameplaySettings() const;
-	
-	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "OmegaGameplayModule"))
-	TArray<FSoftClassPath> RegisteredGameplayModules;
-	
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Gameplay")
+	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Player")
 	TMap<FName,FOmegaInputConfig> InputActionConfigs;
 	
 	TMap<FName,FOmegaInputConfig> GetAllInputActionConfigs() const;
 	FOmegaInputConfig GetInputActionConfig(FName input_action) const;
 	
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay")
+	TArray<TSoftObjectPtr<UOmegaSettings_Gameplay>> Imported_GameplaySettings;
 	
-	UPROPERTY()
+	TArray<UOmegaSettings_Gameplay*> GetAllGameplaySettings() const;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay", meta = (MetaClass = "/Script/OmegaGameFramework.OmegaGameplayModule"))
+	TArray<FSoftClassPath> RegisteredGameplayModules;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay")
 	TMap<TSoftClassPtr<AOmegaGameplaySystem>,TSoftClassPtr<AOmegaGameplaySystem>> Replacement_Systems;
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay")
 	TMap<TSoftClassPtr<UMenu>,TSoftClassPtr<UMenu>> Replacement_Menus;
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, config, Category = "Gameplay")
 	TMap<TSoftClassPtr<UHUDLayer>,TSoftClassPtr<UHUDLayer>> Replacement_HUDLayers;
 	
 	UPROPERTY(EditAnywhere, config, BlueprintReadOnly,Category = "Systems",DisplayName="⚙️ System - Flow Asset")
@@ -194,11 +185,11 @@ public:
 	//SAVE
 	UClass* GetOmegaGameSaveClass() const;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "OmegaSaveGame"))
+	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "/Script/OmegaGameFramework.OmegaSaveGame"))
 	FSoftClassPath GameSaveClass;
 	UPROPERTY(EditAnywhere, config, Category = "Save")
 	FString SaveGamePrefex = "save_";
-	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "OmegaSaveGlobal"))
+	UPROPERTY(EditAnywhere, config, Category = "Save", meta = (MetaClass = "/Script/OmegaGameFramework.OmegaSaveGlobal"))
 	FSoftClassPath GlobalSaveClass;
 	UPROPERTY(EditAnywhere, config, Category = "Save")
 	FString GlobalSaveName = "global";
@@ -209,10 +200,10 @@ public:
 	//Input
 
 	// Root path used in the "Get Sorted Asset" function
-	UPROPERTY(EditAnywhere, config, Category = "Assets", meta = (MetaClass = "OmegaGameplayModule"))
+	UPROPERTY(EditAnywhere, config, Category = "Assets")
 	FDirectoryPath SortedAssetsRootPath;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Assets", meta = (MetaClass = "OmegaGameplayModule"))
+	UPROPERTY(EditAnywhere, config, Category = "Assets")
     TMap<TSubclassOf<UObject>, FDirectoryPath> SortedAssetsRootPathByClass;
 	
 	//########################################################
@@ -230,11 +221,6 @@ public:
 
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="✊Combatant")
 	TArray<TSoftClassPtr<AOmegaAbility>> Default_Abilities;
-	
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="✊Combatant")
-	TEnumAsByte<EFactionAffinity> Default_FactionAffinity;
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="✊Combatant", meta=(ForceInlineRow))
-	TMap<FGameplayTag,TEnumAsByte<EFactionAffinity>> Default_FactionTagAffinity;
 	
 	//########################################################
 	//Asset Defaults
@@ -298,7 +284,7 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "BGM")
 	bool FadeBGMOnLevelTransit = true;
 
-	UPROPERTY(EditAnywhere, config, Category = "BGM", meta=(MetaClass="MetasoundSource"))
+	UPROPERTY(EditAnywhere, config, Category = "BGM", meta=(MetaClass="/Script/MetasoundEngine.MetasoundSource"))
 	FSoftObjectPath BgmMetasound{"/OmegaGameFramework/DEMO/MetaSound/DemoMS_BGM.DemoMS_BGM"};
 
 	UMetaSoundSource* GetMetaSoundSourceFromPath() const
@@ -313,7 +299,7 @@ public:
 	//########################################################
 	//Dyna Cam
 	//########################################################
-	UPROPERTY(EditAnywhere, config, Category = "Dynamic Camera", meta = (MetaClass = "OmegaDynamicCamera"))
+	UPROPERTY(EditAnywhere, config, Category = "Dynamic Camera", meta = (MetaClass = "/Script/OmegaGameFramework.OmegaDynamicCamera"))
 	FSoftClassPath DynamicCameraClass;
 	
 
@@ -331,9 +317,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Mods")
 	bool bAutoInitializeMods=true;
-	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaModManager"))
+	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "/Script/OmegaGameFramework.OmegaModManager"))
 	TArray<FString> ModPaths;
-	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "OmegaMod"))
+	UPROPERTY(EditAnywhere, config, Category = "Mods", meta = (MetaClass = "/Script/OmegaGameFramework.OmegaMod"))
     FSoftClassPath ModClass;
 	
 	UPROPERTY()
@@ -354,7 +340,7 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Editor")
 	TMap<TSoftClassPtr<AActor>, FString> ActorLabelDefaultOverrides;
 	
-	void OverrideActorLabel(AActor* actor,const FString& string="");
+	void OverrideActorLabel(AActor* actor);
 	//########################################################
 	//BitFlags
 	//########################################################

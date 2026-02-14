@@ -7,7 +7,6 @@
 #include "UObject/Object.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "Types/OmegaActorInstanceMetadata.h"
 #include "Subsystem_Actors.generated.h"
 
 
@@ -40,6 +39,8 @@ public:
 	int32 GetInteraction_BitFlags();
 };
 
+
+
 // =======================================================================================================================
 // SUBSYSTEM
 // =======================================================================================================================
@@ -50,7 +51,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 	
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 	UPROPERTY() TArray<UActorIdentityComponent*> REF_ActorIdComps;
@@ -66,13 +66,6 @@ public:
 	void SetAParam_float(AActor* a, FName key, float def);
 	void SetAParam_int(AActor* a, FName key, int32 def);
 	void SetAParam_bool(AActor* a, FName key, bool def);
-	
-	// Get or spawn the world manager
-	UFUNCTION(BlueprintCallable, Category = "Omega")
-	AOmegaWorldManager* GetWorldManager();
-	
-	UPROPERTY()
-	AOmegaWorldManager* WorldManager;
 	
 	UFUNCTION()
 	void OnCompBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -132,30 +125,4 @@ public:
 	UFUNCTION(BlueprintPure,Category="ActorSubsystem|Groups")
 	AActor* GetActorTaggedTarget(AActor* Instigator, FGameplayTag Tag);
 
-};
-
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaWorldManager : public AActor
-{
-	GENERATED_BODY()
-
-public:
-	AOmegaWorldManager();
-
-	// Map storing actor metadata
-	UPROPERTY()
-	TMap<AActor*, FOmegaActorInstanceMetadata> ActorInstanceMetadata;
-
-	// Get metadata for an actor (returns default if not found)
-	FOmegaActorInstanceMetadata GetActorMetadata(AActor* Actor) const;
-
-	// Set metadata for an actor
-	void SetActorMetadata(AActor* Actor, const FOmegaActorInstanceMetadata& Metadata);
-
-	// Remove metadata for an actor
-	void RemoveActorMetadata(AActor* Actor);
-
-protected:
-	virtual void BeginPlay() override;
 };

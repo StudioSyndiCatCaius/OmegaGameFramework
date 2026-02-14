@@ -10,17 +10,7 @@
 #include "F_Lua.generated.h"
 
 
-UCLASS(Blueprintable,BlueprintType,meta=(ShowWorldContextPin))
-class OMEGAGAMEFRAMEWORK_API UOmegaLuaParser : public UObject
-{
-	GENERATED_BODY()
-public:
-	static FString TrimQuotes(const FString& Str);
-	FLuaValue CreateLuaTable() const;
-	UPROPERTY() UObject* WorldContextObject=nullptr;
-	
-	UFUNCTION(BlueprintNativeEvent,Category="Omega|Lua") FLuaValue ParseStringToTable(UObject* WorldContext, const FString& String);
-};
+
 
 
 UCLASS()
@@ -39,6 +29,4 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Lua",DisplayName="Lua -> Actor")
 	static AActor* Conv_LuaToActor(FLuaValue LuaValue);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Lua",meta=(WorldContext="WorldContextObject"))
-	static FLuaValue ParseStringToLuaTable(UObject* WorldContextObject, const FString& String, TSubclassOf<UOmegaLuaParser> Parser);
 };

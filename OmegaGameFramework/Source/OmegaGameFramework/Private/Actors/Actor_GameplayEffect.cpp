@@ -185,7 +185,7 @@ void AOmegaGameplayEffect::TriggerEffect()
 		}
 		else
 		{
-			LocalPopup->Incoming_Text = UKismetTextLibrary::Conv_FloatToText(DamageFinal, ERoundingMode::FromZero);
+			LocalPopup->Incoming_Text = UKismetTextLibrary::Conv_DoubleToText(DamageFinal, ERoundingMode::FromZero);
 		}
 		
 			

@@ -61,10 +61,10 @@ void ULinearEvent_SimpleMessage::Native_Begin(const FString& Flag)
 	
 	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
 	msg=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->FireCustomGameplayMessage(local_GetInstigator(),Text,MessageCategory,meta);
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(FName(GE_MESSAGE_START), msg.Message, FOmegaCommonMeta());
+	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(FName(GE_MESSAGE_START), msg.Message);
 }
 
-void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context,FOmegaCommonMeta _meta)
+void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
 {
 	if(Event==FName(GE_MESSAGE_END) && Context==msg.Message)
 	{
@@ -109,7 +109,7 @@ UObject* UFlowNode_SimpleMessage::local_GetInstigator() const
 	return nullptr;
 }
 
-void UFlowNode_SimpleMessage::LocalGEvent(FName Event, UObject* Context,FOmegaCommonMeta meta)
+void UFlowNode_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
 {
 	if(UOmegaGameplayMessage* msg=Cast<UOmegaGameplayMessage>(Context))
 	{

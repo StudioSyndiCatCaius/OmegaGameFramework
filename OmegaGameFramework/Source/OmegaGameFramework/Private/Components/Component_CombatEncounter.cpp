@@ -6,7 +6,7 @@
 #include "LevelSequence.h"
 #include "OmegaSettings.h"
 #include "Components/Component_Combatant.h"
-#include "OmegaGameplayConfig.h"
+#include "OmegaSettings_Gameplay.h"
 #include "Functions/F_Common.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"

@@ -16,16 +16,14 @@
 #include "OmegaEffectFactory.h"
 #include "Actors/Actor_Environment.h"
 #include "Actor_EventVolume.h"
-#include "Customization_ActorRelatives.h"
 #include "Customization_ClassNamedLists.h"
 #include "Customization_CustomNamedList.h"
 #include "Customization_OmegaLinearChoices.h"
 #include "Customization_Bitflags.h"
 #include "OmegaObjectCustomization.h"
-#include "Customization_Object.h"
-#include "OmegaActorDetailsCustomization.h"
+#include "OmegaPropertyHidingCustomization.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Global.h"
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_GameplayEffect.h"
 #include "Actors/Actor_Interactable.h"
@@ -39,7 +37,6 @@
 #include "DataAssets/DA_Common_EquipType.h"
 #include "DataAssets/DA_CommonRace.h"
 #include "DataAssets/DA_Job.h"
-#include "Types/Struct_ActorRelatives.h"
 
 #include "Widget/DataWidget.h"
 #include "Widget/Menu.h"
@@ -224,6 +221,8 @@ void FOmegaEditor::StartupModule()
 		StyleSet->Set(IcoName, IconTemp);
 	}
 	
+	
+	
 	//Reguster the created style
 	FSlateStyleRegistry::RegisterSlateStyle(*StyleSet);
 
@@ -259,31 +258,33 @@ void FOmegaEditor::StartupModule()
 	FName StructName = FOmegaCustomNamedList::StaticStruct()->GetFName();
 	UE_LOG(LogTemp, Warning, TEXT("Registering customization for: %s"), *StructName.ToString());
     
-	
+    
+	// Register FOmegaCustomNamedList
 	PropertyModule.RegisterCustomPropertyTypeLayout(
 		FOmegaCustomNamedList::StaticStruct()->GetFName(),
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_CustomNamedList::MakeInstance)
 	);
-	
+    
+	// Register FOmegaClassNamedLists
 	PropertyModule.RegisterCustomPropertyTypeLayout(
 		FOmegaClassNamedLists::StaticStruct()->GetFName(),
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_ClassNamedLists::MakeInstance)
 	);
 	
-	// Register the ActorRelatives struct customization
-	PropertyModule.RegisterCustomPropertyTypeLayout(
-		FOmegaActorRelatives::StaticStruct()->GetFName(),
-		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_ActorRelatives::MakeInstance)
-	);
-
 	// Register for specific classes or all UObjects
-//	PropertyModule.RegisterCustomClassLayout(UObject::StaticClass()->GetFName(),
-//		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaObjectCustomization::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(
+		UObject::StaticClass()->GetFName(),
+		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaObjectCustomization::MakeInstance)
+	);
 	
-	//PropertyModule.RegisterCustomClassLayout(UObject::StaticClass()->GetFName(),
-	//	FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaPropertyHidingCustomization::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(
+		UObject::StaticClass()->GetFName(),
+		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaPropertyHidingCustomization::MakeInstance)
+	);
 	
+
 	PropertyModule.NotifyCustomizationModuleChanged();
+	
 }
 
 
@@ -298,7 +299,7 @@ void FOmegaEditor::RegisterToolbarExtension()
 		"WorldInit",
 		FExecuteAction::CreateRaw(this, &FOmegaEditor::OnButtonClicked),
 		FText::FromString("WORLD INIT"),
-		FText::FromString("Rerun WORLD INIT function in `Global Settings`"),
+		FText::FromString("Rerun WORL INIT function in `Global Settings`"),
 		FSlateIcon(FAppStyle::GetAppStyleSetName(), "PlayWorld.PlayInViewport")
 	));
 }
@@ -310,7 +311,12 @@ void FOmegaEditor::OnButtonClicked()
 		UWorld* World = GEditor->GetEditorWorldContext().World();
 		if (World)
 		{
-			GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnWorldInit(World);
+			GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnWorldInit(World);
+			//ULuaWorldSubsystem* Subsystem = World->GetSubsystem<ULuaWorldSubsystem>();
+			//if (Subsystem)
+			//{
+			//	Subsystem->RerunLua();
+			//}
 		}
 	}
 }
@@ -335,11 +341,10 @@ void FOmegaEditor::ShutdownModule()
 		
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaCustomNamedList::StaticStruct()->GetFName());
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaClassNamedLists::StaticStruct()->GetFName());
-		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaActorRelatives::StaticStruct()->GetFName());
-		
 		PropertyModule.UnregisterCustomClassLayout(UObject::StaticClass()->GetFName());
-		PropertyModule.UnregisterCustomClassLayout(AActor::StaticClass()->GetFName());
 	}
+	
+
 }
 
 

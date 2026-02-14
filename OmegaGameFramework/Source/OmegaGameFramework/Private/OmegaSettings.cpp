@@ -3,8 +3,8 @@
 
 #include "OmegaSettings.h"
 
-#include "OmegaGameplayConfig.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Gameplay.h"
+#include "OmegaSettings_Global.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Functions/F_File.h"
 #include "PhysicsEngine/PhysicsSettings.h"
@@ -22,7 +22,6 @@ UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
    // System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
     System_Interaction=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
 }
-
 
 TSubclassOf<AOmegaGameplaySystem> UOmegaSettings::CorrectClass_System(TSubclassOf<AOmegaGameplaySystem> Class) const
 {
@@ -105,20 +104,13 @@ UClass* UOmegaSettings::GetOmegaGlobalSaveClass() const
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGlobal::StaticClass();
 }
 
-UOmegaGameCore* UOmegaSettings::GetGameCore() const
+UOmegaGlobalSettings* UOmegaSettings::GetGlobalSettings()
 {
-    if (!GlobalSettingsClass.IsNull())
-    {
-        if (TSubclassOf<UOmegaGameCore> _temp=GlobalSettingsClass.LoadSynchronous())
-        {
-            if (UOmegaGameCore* _core=GetMutableDefault<UOmegaGameCore>(_temp))
-            {
-                return _core;
-            }
-        }
-    }
-    
-	return GetMutableDefault<UOmegaGameCore>();
+	if(TSoftClassPtr<UOmegaGlobalSettings> _cls=GetMutableDefault<UOmegaSettings>()->GlobalSettingsClass)
+	{
+		return Cast<UOmegaGlobalSettings>(_cls.LoadSynchronous()->GetDefaultObject());
+	}
+	return GetMutableDefault<UOmegaGlobalSettings>();
 }
 
 UOmegaFileManagerSettings* UOmegaSettings::GetSettings_File() const
@@ -149,12 +141,12 @@ FOmegaInputConfig UOmegaSettings::GetInputActionConfig(FName input_action) const
     return temp.FindOrAdd(input_action);
 }
 
-TArray<UOmegaGameplayConfig*> UOmegaSettings::GetAllGameplaySettings() const
+TArray<UOmegaSettings_Gameplay*> UOmegaSettings::GetAllGameplaySettings() const
 {
-    TArray<UOmegaGameplayConfig*> out;
+    TArray<UOmegaSettings_Gameplay*> out;
     for (auto set : Imported_GameplaySettings)
     {
-        if (UOmegaGameplayConfig* s=set.LoadSynchronous())
+        if (UOmegaSettings_Gameplay* s=set.LoadSynchronous())
         {
             out.Add(s);
         }
@@ -165,23 +157,14 @@ TArray<UOmegaGameplayConfig*> UOmegaSettings::GetAllGameplaySettings() const
 //BitFlag -------------------------------------------------------
 
 
-void UOmegaSettings::OverrideActorLabel(AActor* actor,const FString& string)
+void UOmegaSettings::OverrideActorLabel(AActor* actor)
 {
     if (actor)
     {
 #if WITH_EDITOR
-        FString new_label="";
-        if (!string.IsEmpty())
+        if (actor->GetActorLabel().Contains(actor->GetClass()->GetName()))
         {
-            new_label=string;
-        }
-        else if (actor->GetActorLabel().Contains(actor->GetClass()->GetName()))
-        {
-            new_label=ActorLabelDefaultOverrides.FindOrAdd(TSoftClassPtr<AActor>(actor->GetClass()));
-        }
-
-        if (!new_label.IsEmpty())
-        {
+            FString new_label=ActorLabelDefaultOverrides.FindOrAdd(TSoftClassPtr<AActor>(actor->GetClass()));
             actor->SetActorLabel(new_label+"_"+FString::FromInt(FMath::RandRange(0,999)));
         }
 #endif
@@ -223,7 +206,7 @@ const FOmegaBitmaskEditorData* UOmegaSettings::GetEditorDataForClass(UClass* Cla
         ParentClass = ParentClass->GetSuperClass();
     }
 
-    const FOmegaBitmaskEditorData output=GetGameCore()->Bitflags_GetByObject(Class);
+    const FOmegaBitmaskEditorData output=GetGlobalSettings()->Bitflags_GetByObject(Class);
     return &output;
 }
 

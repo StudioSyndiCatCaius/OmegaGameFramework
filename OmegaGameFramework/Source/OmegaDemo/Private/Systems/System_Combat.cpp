@@ -75,7 +75,7 @@ ASystemBASE_Combat_TurnBased::ASystemBASE_Combat_TurnBased()
 void ASystemBASE_Combat_TurnBased::N_BattleStart()
 {
 	FString fail_reason;
-	TurnManager_Component->NextTurn(true,fail_reason);
+	TurnManager_Component->NextTurn(true,"",FGameplayTagContainer(),fail_reason);
 }
 
 void ASystemBASE_Combat_TurnBased::N_TurnFail(FString Reason)

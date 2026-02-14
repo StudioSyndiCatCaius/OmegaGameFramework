@@ -4,7 +4,11 @@ public class OmegaDemo : ModuleRules
 {
 	public OmegaDemo(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+        bUseUnity = false;
+
+        PrecompileForTargets = PrecompileTargetsType.Any;
         
 		PublicDependencyModuleNames.AddRange(new string[] { 
 			"Core", 
@@ -28,10 +32,9 @@ public class OmegaDemo : ModuleRules
 			"OmegaMutable",
 			"Flow",
 			"GameplayStateTreeModule",
-			"OmegaCore"
 		});
  
-		PublicIncludePaths.AddRange(new string[] {});
-		PrivateIncludePaths.AddRange(new string[] {});
+		PublicIncludePaths.AddRange(new string[] {"OmegaDemo/Public"});
+		PrivateIncludePaths.AddRange(new string[] {"OmegaDemo/Private"});
 	}
 }

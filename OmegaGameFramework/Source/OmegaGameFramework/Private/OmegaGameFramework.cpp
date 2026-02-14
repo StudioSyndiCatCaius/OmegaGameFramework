@@ -2,8 +2,6 @@
 
 #include "OmegaGameFramework.h"
 
-#include "OmegaSettings.h"
-
 
 DEFINE_LOG_CATEGORY(OmegaGameFramework);
 
@@ -16,7 +14,7 @@ void FOmegaGameFrameworkModule::StartupModule()
     
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
     
-	//UObject* core_loaded=GetMutableDefault<UOmegaSettings>()->GlobalSettingsClass.LoadSynchronous();
+
 }
 
 void FOmegaGameFrameworkModule::ShutdownModule()

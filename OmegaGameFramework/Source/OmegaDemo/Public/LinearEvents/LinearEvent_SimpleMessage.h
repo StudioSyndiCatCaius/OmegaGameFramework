@@ -45,7 +45,7 @@ public:
 	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual void Native_Begin(const FString& Flag) override;
 
-	UFUNCTION() void LocalGEvent(FName Event, UObject* Context,FOmegaCommonMeta _meta);
+	UFUNCTION() void LocalGEvent(FName Event, UObject* Context);
 };
 
 UCLASS(DisplayName="💬 Message")
@@ -58,7 +58,7 @@ class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IDataInte
 	
 	AActor* local_GetInstigatorActor() const;
 	UObject* local_GetInstigator() const;
-	UFUNCTION() void LocalGEvent(FName Event, UObject* Context,FOmegaCommonMeta meta);
+	UFUNCTION() void LocalGEvent(FName Event, UObject* Context);
 public:
 	UFlowNode_SimpleMessage();
 
@@ -72,20 +72,20 @@ public:
 	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override;
 #endif
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="Instigator")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="Instigator")
 	UPrimaryDataAsset* Instigator_Asset;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",meta=(MultiLine))
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",meta=(MultiLine))
 	FText Text;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
 	FGameplayTagContainer Tags;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message")
 	UMaterialInterface* Portrait=nullptr;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
+	FOmegaBitflagsBase Flags;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",AdvancedDisplay)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",AdvancedDisplay)
 	FName MessageKey;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node",AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message",AdvancedDisplay)
 	TMap<FName,FString> ExtraParams;
 	
 	

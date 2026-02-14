@@ -91,7 +91,7 @@ FText UOmegaAttribute::GetAttributeValueDisplayText(float value)
 	{
 		return Script->GetDisplayText(value);
 	}
-	return UKismetTextLibrary::Conv_FloatToText(value,RoundingMode,
+	return UKismetTextLibrary::Conv_DoubleToText(value,RoundingMode,
 		bAlwaysSign,
 		bUseGrouping,
 		MinIntegralDigits,

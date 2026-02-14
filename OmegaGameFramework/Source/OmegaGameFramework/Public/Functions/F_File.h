@@ -49,10 +49,10 @@ class UOmegaFileFunctions : public UBlueprintFunctionLibrary
 
 public:
 
-	UFUNCTION(BlueprintCallable,Category="Omega|File",DisplayName="File - Get External Content Directories")
+	UFUNCTION(BlueprintCallable,Category="Omega|File")
 	static TArray<FString> GetExternalContentDirectories();
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|File",DisplayName="File - Get Subfolders")
+	UFUNCTION(BlueprintCallable,Category="Omega|File")
 	static TArray<FString> GetSubfolders(FString RootPath, bool OnlyNames=false);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|File|Import",meta=(AdvancedDisplay="MipGenSettings"))

@@ -4,8 +4,8 @@
 
 #include "LuaConst.h"
 #include "OmegaSettings.h"
-#include "OmegaGameplayConfig.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Gameplay.h"
+#include "OmegaSettings_Global.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Component_DebugText.h"
 #include "Components/StateTreeComponent.h"

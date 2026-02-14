@@ -89,13 +89,14 @@ UClass* UOmegaFunctions_Asset::GetClassByName(const FString& ClassName, bool& re
     for (const FString& PrefixedName : PrefixesToTry)
     {
         UE_LOG(LogTemp, VeryVerbose, TEXT("GetClassByName: Attempting to find '%s'"), *PrefixedName);
-
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
         if (UClass* FoundClass = FindObject<UClass>(ANY_PACKAGE, *PrefixedName))
         {
             UE_LOG(LogTemp, Log, TEXT("GetClassByName: Successfully found class '%s' using prefix variation '%s'"), 
                    *FoundClass->GetName(), *PrefixedName);
             return FoundClass;
         }
+#endif
     }
     
     UE_LOG(LogTemp, Verbose, TEXT("GetClassByName: Prefix search failed, iterating through all loaded classes..."));

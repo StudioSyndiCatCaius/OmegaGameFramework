@@ -137,6 +137,46 @@ void UOmegaSaveFunctions::GUID_SetJson(const UObject* WorldContextObject, FGuid 
 
 
 
+void UOmegaSaveFunctions::SetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key,
+	FOmegaEntity Entity, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Entities.Entities_Asset.Add(Key,Entity);
+	}
+}
+
+FOmegaEntity UOmegaSaveFunctions::GetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key,
+	bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		return _sav->Entities.Entities_Asset.FindOrAdd(Key);
+	}
+	return FOmegaEntity();
+}
+
+void UOmegaSaveFunctions::SetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, FOmegaEntity Entity,
+	bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Entities.Entities_Guid.Add(Key,Entity);
+	}
+}
+
+FOmegaEntity UOmegaSaveFunctions::GetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		return _sav->Entities.Entities_Guid.FindOrAdd(Key);
+	}
+	return FOmegaEntity();
+}
+
+
+
+
 
 bool UOmegaSaveFunctions::Custom_SaveGame(USaveGame* SaveGameObject, const FString& path, const FString& file)
 {
@@ -148,3 +188,129 @@ USaveGame* UOmegaSaveFunctions::Custom_LoadGame(const FString& path, const FStri
 	return OGF_Save::LoadGame(path,file);
 
 }
+
+bool UOmegaSaveFunctions::GetSaveParam_Bool(const UObject* WorldContextObject, FName Param, bool bGlobal, bool Fallback)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (_sav->Prop_bool.Contains(Param))
+		{
+			return _sav->Prop_bool.FindOrAdd(Param);
+		}
+	}
+	return Fallback;
+}
+
+int32 UOmegaSaveFunctions::GetSaveParam_Int(const UObject* WorldContextObject, FName Param, bool bGlobal, int32 Fallback)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (_sav->Prop_int.Contains(Param))
+		{
+			return _sav->Prop_int.FindOrAdd(Param);
+		}
+	}
+	return Fallback;
+}
+
+float UOmegaSaveFunctions::GetSaveParam_Float(const UObject* WorldContextObject, FName Param, bool bGlobal, float Fallback)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (_sav->Prop_float.Contains(Param))
+		{
+			return _sav->Prop_float.FindOrAdd(Param);
+		}
+	}
+	return Fallback;
+}
+
+FString UOmegaSaveFunctions::GetSaveParam_String(const UObject* WorldContextObject, FName Param, bool bGlobal,
+	const FString& Fallback)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (_sav->Prop_string.Contains(Param))
+		{
+			return _sav->Prop_string.FindOrAdd(Param);
+		}
+	}
+	return Fallback;
+}
+
+FVector UOmegaSaveFunctions::GetSaveParam_Vector(const UObject* WorldContextObject, FName Param, bool bGlobal, FVector Fallback)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (_sav->Prop_Vector.Contains(Param))
+		{
+			return _sav->Prop_Vector.FindOrAdd(Param);
+		}
+	}
+	return Fallback;
+}
+
+UPrimaryDataAsset* UOmegaSaveFunctions::GetSaveParam_DataAsset(const UObject* WorldContextObject, FName Param,
+                                                               bool bGlobal, UPrimaryDataAsset* Fallback)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (_sav->Prop_Asset.Contains(Param))
+		{
+			return _sav->Prop_Asset.FindOrAdd(Param);
+		}
+	}
+	return Fallback;
+}
+
+void UOmegaSaveFunctions::SetSaveParam_Bool(const UObject* WorldContextObject, bool Value, FName Param, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Prop_bool.Add(Param,Value);
+	}
+}
+
+void UOmegaSaveFunctions::SetSaveParam_Int(const UObject* WorldContextObject, int32 Value, FName Param, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Prop_int.Add(Param,Value);
+	}
+}
+
+void UOmegaSaveFunctions::SetSaveParam_Float(const UObject* WorldContextObject, float Value, FName Param, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Prop_float.Add(Param,Value);
+	}
+}
+
+void UOmegaSaveFunctions::SetSaveParam_String(const UObject* WorldContextObject, const FString& Value, FName Param,
+	bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Prop_string.Add(Param,Value);
+	}
+}
+
+void UOmegaSaveFunctions::SetSaveParam_Vector(const UObject* WorldContextObject, FVector Value, FName Param,
+                                              bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Prop_Vector.Add(Param,Value);
+	}
+}
+
+void UOmegaSaveFunctions::SetSaveParam_DataAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Value,
+	FName Param, bool bGlobal)
+{
+	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Prop_Asset.Add(Param,Value);
+	}
+}
+

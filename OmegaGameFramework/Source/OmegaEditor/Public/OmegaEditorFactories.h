@@ -40,7 +40,6 @@
 #include "Misc/OmegaGameplayModule.h"
 #include "Subsystems/Subsystem_BGM.h"
 #include "Widget/Menu.h"
-#include "Widget/UI_Widgets.h"
 #include "OmegaEditorFactories.generated.h"
 
 #define OMACRO_ASSETTYPE_HEADERFIELD(AssetName, DisplayName, AssetDescription, AssetColor, AssetCategory) \
@@ -78,16 +77,6 @@ EAssetTypeCategories::Type OmegaAssetCategory; \
 inline FColor _color_bp=FColor(0,0,200);
 inline FColor _color_debug=FColor(200,200,200);
 const FColor col_common=FColor(255, 30, 30);
-
-
-//Attributes
-UCLASS() class OMEGAEDITOR_API UOmegaSlateStyle_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
-	virtual bool ShouldShowInNewMenu() const override;
-};
-OMACRO_ASSETTYPE_HEADERFIELD(OmegaSlateStyle,"Slate Style", "Asset Desc here", FColor(9,255,212),"Gameplay")
 
 //Attributes
 UCLASS() class OMEGAEDITOR_API UOmegaAttribute_Factory : public UFactory

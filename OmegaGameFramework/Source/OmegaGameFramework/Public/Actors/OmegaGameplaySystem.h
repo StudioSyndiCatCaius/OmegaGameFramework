@@ -21,7 +21,6 @@ class UGamePreferenceBool;
 class UGamePreferenceFloat;
 class AOmegaAbility;
 class UOmegaSaveGame;
-class UOmegaGameCore;
 class UOmegaInputMode;
 
 USTRUCT(BlueprintType)
@@ -206,9 +205,9 @@ public:
 	bool OnActiveGameSaved();
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Gameplay System")
-	void OnGlobalEvent(FName Event, UObject* Context,FOmegaCommonMeta meta);
+	void OnGlobalEvent(FName Event, UObject* Context);
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Gameplay System")
-	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta meta);
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
 };
 
 USTRUCT()

@@ -15,7 +15,7 @@
 #include "Subsystem_Zone.generated.h"
 
 class UOmegaEncounter_Asset;
-class UOmegaGameplayConfig;
+class UOmegaSettings_Gameplay;
 class UOmegaSaveSubsystem;
 class UOmegaGameManager;
 class AOmegaGameplaySystem;
@@ -170,7 +170,7 @@ public:
 UCLASS(DisplayName="Omega Subsystem: Zones")
 class OMEGAGAMEFRAMEWORK_API UOmegaZoneSubsystem : public UWorldSubsystem, public FTickableGameObject
 {
-	UPROPERTY() UOmegaGameplayConfig* settings_gameplay;
+	UPROPERTY() UOmegaSettings_Gameplay* settings_gameplay;
 	
 	GENERATED_BODY()
 

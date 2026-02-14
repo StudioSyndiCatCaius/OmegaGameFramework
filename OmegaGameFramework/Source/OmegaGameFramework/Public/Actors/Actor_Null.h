@@ -3,32 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "GameFramework/Actor.h"
 #include "Actor_Null.generated.h"
-
-UCLASS(Abstract)
-class OMEGAGAMEFRAMEWORK_API AOmegaBASEActor : public AActor
-{
-	GENERATED_BODY()
-
-public:
-	virtual void OnConstruction(const FTransform& Transform) override;
-	virtual void BeginPlay() override;
-
-};
-
-UCLASS(Abstract)
-class OMEGAGAMEFRAMEWORK_API AOmegaBASEPawn : public APawn
-{
-	GENERATED_BODY()
-
-public:
-	virtual void OnConstruction(const FTransform& Transform) override;
-	virtual void BeginPlay() override;
-
-};
-
-
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaNullActor : public AActor

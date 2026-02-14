@@ -147,6 +147,13 @@ void UOmegaPlayerSubsystem::RemoveMenuFromActiveList(UMenu* Menu)
 
 void UOmegaPlayerSubsystem::PlayUiSound(USoundBase* Sound)
 {
+	/*
+	if(Sound)
+	{
+		GetLocalAudioComp()->SetSound(Sound);
+		GetLocalAudioComp()->Play();
+	}
+	*/
 	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(SoundCooldownTimer))
 	{
@@ -389,6 +396,7 @@ UOmegaHoverCursor* UOmegaPlayerSubsystem::GetHoverCursor()
 	{
 		return hover_cursor;
 	}
+	if(!UOmegaSlateFunctions::GetCurrentSlateStyle()) { return nullptr; }
 	if(const TSubclassOf<UOmegaHoverCursor> incoming_class = OGF_CFG_STYLE()->HoverCursorClass.TryLoadClass<UOmegaHoverCursor>())
 	{
 		hover_cursor = Cast<UOmegaHoverCursor>(CreateWidget(GetWorld(), incoming_class));

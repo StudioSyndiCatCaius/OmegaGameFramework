@@ -4,8 +4,8 @@
 #include "Components/Component_Combatant.h"
 
 #include "OmegaSettings.h"
-#include "OmegaGameplayConfig.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Gameplay.h"
+#include "OmegaSettings_Global.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
@@ -40,25 +40,25 @@ float UCombatantComponent::L_ModifyDamage(UOmegaAttribute* Attribute,UCombatantC
 	
 	if (Attribute)
 	{
-		UE_LOG(LogTemp, Log, TEXT("COMBATANT: Modifying damage to '%s' on attribute '%s' with starting value: '%f' "), *GetOwner()->GetName(),*Attribute->GetName(),FinalDamage);
-		UOmegaGameCore* globSet=GetMutableDefault<UOmegaSettings>()->GetGameCore();
+		UE_LOG(LogTemp, Log, TEXT("Modifying damage to '%s' on attribute '%s' with starting value: '%f' "), *GetName(),*Attribute->GetName(),FinalDamage);
+		UOmegaGlobalSettings* globSet=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings();
 	
 	
 		FinalDamage=globSet->Combatant_ModifyDamage_PreMod(Attribute,this,Instigator,BaseDamage,DamageType,Context);
-		UE_LOG(LogTemp, Log, TEXT("COMBATANT: 		---  Applying PRE SOURCE modifiers. Result: '%f' "),FinalDamage);
+		UE_LOG(LogTemp, Log, TEXT("		---  Applying PRE SOURCE modifiers. Result: '%f' "),FinalDamage);
 		
-		UE_LOG(LogTemp, Log, TEXT("COMBATANT: 		---  Applying SOURCE modifiers."));
+		UE_LOG(LogTemp, Log, TEXT("		---  Applying SOURCE modifiers."));
 		for(auto* TempMod : GetDamageModifiers())
 		{
 			if (TempMod)
 			{
-				FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, FinalDamage, DamageType, Context); //Apply Damage Modifier
-				UE_LOG(LogTemp, Log, TEXT("COMBATANT: 				-----  Applying SOURCE modifier from '%s' with result: %f."), *TempMod->GetName(), FinalDamage);
+				FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, DamageType, Context); //Apply Damage Modifier
+				UE_LOG(LogTemp, Log, TEXT("				-----  Applying SOURCE modifier from '%s' with result: %f."), *TempMod->GetName(), FinalDamage);
 			}
 		}
 		
-		FinalDamage=globSet->Combatant_ModifyDamage_PostMod(Attribute,this,Instigator,FinalDamage,DamageType,Context);
-		UE_LOG(LogTemp, Log, TEXT("COMBATANT: 		---  Applying POST SOURCE modifiers. Result: '%f' "),FinalDamage);
+		FinalDamage=globSet->Combatant_ModifyDamage_PostMod(Attribute,this,Instigator,BaseDamage,DamageType,Context);
+		UE_LOG(LogTemp, Log, TEXT("		---  Applying POST SOURCE modifiers. Result: '%f' "),FinalDamage);
 	}
 	
 	return FinalDamage;
@@ -72,13 +72,9 @@ UCombatantComponent::UCombatantComponent()
 void UCombatantComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	if (!AttributeSet)
+	if(UOmegaAttributeSet* NewSet=GetMutableDefault<UOmegaSettings>()->Default_AttributeSet.LoadSynchronous())
 	{
-		if(UOmegaAttributeSet* NewSet=GetMutableDefault<UOmegaSettings>()->Default_AttributeSet.LoadSynchronous())
-		{
-			AttributeSet=NewSet;
-		}	
+		AttributeSet=NewSet;
 	}
     
 	auto* WorldSubsystem = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
@@ -591,7 +587,7 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
 			}
 		}
 	}
-	OutSkills.Append(GetMutableDefault<UOmegaSettings>()->GetGameCore()->Combatant_Append_Skills(this));
+	OutSkills.Append(GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Combatant_Append_Skills(this));
 	return OutSkills;
 }
 
@@ -750,7 +746,7 @@ float UCombatantComponent::GetAttributeBaseValue(UOmegaAttribute* Attribute)
 {
 	int32 attribute_rank=GetAttributeLevel(Attribute);
 	float _baseVal=Attribute->GetAttributeValue(Level, attribute_rank, AttributeValueCategory);
-	_baseVal=OGF_GAME_CORE()->Attribute_GetMaxValue(this,Attribute,attribute_rank,_baseVal);
+	_baseVal=OGF_GLOBAL_SETTINGS()->Attribute_GetMaxValue(this,Attribute,attribute_rank,_baseVal);
 	return _baseVal;
 }
 

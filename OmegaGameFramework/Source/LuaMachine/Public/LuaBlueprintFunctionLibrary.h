@@ -265,11 +265,8 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category = "Lua")
 	static FLuaValue LuaRunNonContentFile(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& Filename, const bool bIgnoreNonExistent);
 
-	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua",DisplayName="Lua - Run Code Asset")
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
 	static FLuaValue LuaRunCodeAsset(UObject* WorldContextObject, TSubclassOf<ULuaState> State, ULuaCode* CodeAsset);
-
-	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject",AutoCreateRefTerm = "Args"), Category="Lua",DisplayName="Lua - Run Code Asset (as Function)")
-	static FLuaValue LuaRunCodeAsset_AsFunction(UObject* WorldContextObject, TSubclassOf<ULuaState> State, ULuaCode* CodeAsset, TArray<FLuaValue> Args);
 	
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
 	static FLuaValue LuaRunByteCode(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const TArray<uint8>& ByteCode, const FString& CodePath);
@@ -454,9 +451,6 @@ public:
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "String -> Lua [Array]", BlueprintAutocast, Keywords="to, convert", WorldContext="WorldContextObject"), Category="Lua")
 	static FLuaValue Conv_StringToLuaValue_Array(UObject* WorldContextObject, TArray<FString> Value);
 
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua [Array] -> String [Array]", BlueprintAutocast, Keywords="to, convert"), Category="Lua")
-	static TArray<FString> Conv_LuaArrayToString_Array(TArray<FLuaValue> Value);
-	
 	// --------------------------------------------------
 	// Array
 	// --------------------------------------------------

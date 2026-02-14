@@ -4,13 +4,13 @@
 #include "Components/Component_DebugText.h"
 
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Global.h"
 #include "Misc/OmegaUtils_Macros.h"
 
 
 void UComponent_DebugText::UpdateText()
 {
-	SetText(OGF_GAME_CORE()->Actor_GetDebugText(GetOwner()));
+	SetText(OGF_GLOBAL_SETTINGS()->Actor_GetDebugText(GetOwner()));
 }
 
 // Sets default values for this component's properties

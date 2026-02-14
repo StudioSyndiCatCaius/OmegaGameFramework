@@ -158,11 +158,11 @@ void AVolumeTrigger_GlobalEvent::NotifyActorBeginOverlap(AActor* OtherActor)
 			UOmegaGameManager* _sys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
 			if(Event_Named.IsValid())
 			{
-				_sys->FireGlobalEvent(Event_Named,this, FOmegaCommonMeta());
+				_sys->FireGlobalEvent(Event_Named,this);
 			}
 			if(Event_Tag.IsValid())
 			{
-				_sys->FireTaggedGlobalEvent(Event_Tag,this, FOmegaCommonMeta());
+				_sys->FireTaggedGlobalEvent(Event_Tag,this);
 			}
 		}
 	}

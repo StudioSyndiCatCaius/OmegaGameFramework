@@ -18,7 +18,6 @@
 #include "TimerManager.h"
 #include "Functions/F_Utility.h"
 #include "OmegaSettings_Slate.h"
-#include "Functions/F_Text.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Widget/DataTooltip.h"
 
@@ -54,7 +53,6 @@ void UDataWidget::NativePreConstruct()
 			t->OnInit(this);
 		}
 	}
-	
 	Refresh();
 
 }
@@ -75,9 +73,9 @@ void UDataWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
 
 FText UDataWidget::L_FormatText(FText t)
 {
-	if (OGF_CFG_STYLE()->bAutoFormatText_onDataWidgets)
+	if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
 	{
-		return UOmegaTextFunctions::ApplyGameplayTextFormating(this,t,OGF_CFG_STYLE()->DefaultTextFormatTag,FOmegaCommonMeta());
+		return set->L_FormatDataWidgetText(this,t);
 	}
 	return t;
 }
@@ -183,48 +181,11 @@ UOmegaPlayerSubsystem* UDataWidget::GetPlayerSubsystem() const
 }
 
 
-TArray<FName> UDataWidget::L_getOvrParamName_Float()
-{
-	TArray<FName>out;
-	GetOverrideFields_Floats().GetKeys(out);
-	return out;
-}
 
-TArray<FName> UDataWidget::L_getOvrParamName_Bool()
-{
-	TArray<FName>out;
-	GetOverrideFields_Bools().GetKeys(out);
-	return out;
-}
 
-float UDataWidget::GetWidgetOverride_Float(FName field)
-{
-	TMap<FName,float> tbl=GetOverrideFields_Floats();
-	if (GetOwningList())
-	{
-		if (GetOwningList()->WidgetOverride_Floats.Contains(field))
-		{
-			return GetOwningList()->WidgetOverride_Floats[field];
-		}
-	}
-	return tbl.FindOrAdd(field);
-}
-
-bool UDataWidget::GetWidgetOverride_Bool(FName field)
-{
-	TMap<FName,bool> tbl=GetOverrideFields_Bools();
-	if (GetOwningList())
-	{
-		if (GetOwningList()->WidgetOverride_Bools.Contains(field))
-		{
-			return GetOwningList()->WidgetOverride_Bools[field];
-		}
-	}
-	return tbl.FindOrAdd(field);
-}
 
 UDataWidgetTraits* UDataWidget::GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Class, bool FallbackToDefault,
-                                               bool& Outcome)
+	bool& Outcome)
 {
 	if(Class)
 	{
@@ -246,33 +207,8 @@ UDataWidgetTraits* UDataWidget::GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Cl
 	return  nullptr;
 }
 
-TMap<FName, UWidget*> UDataWidget::WidgetBinding_Get_Implementation()
-{
-	TMap<FName, UWidget*> out;
-	if (GetNameTextWidget())
-	{
-		out.Add("text_name", GetNameTextWidget());
-	}
-	if (GetDescriptionTextWidget())
-	{
-		out.Add("text_description", GetDescriptionTextWidget());
-	}
-	return  out;
-}
 
-void UDataWidget::WidgetBinding_Apply_Implementation(FName name, UWidget* widget,UOmegaSlateStyle* Asset)
-{
-	ApplyDefaultWidgetBinding(name,widget,Asset);
-}
 
-void UDataWidget::ApplyDefaultWidgetBinding(FName name, UWidget* widget,UOmegaSlateStyle* Asset)
-{
-	if (widget && Asset)
-	{
-		// Safe check and call
-		Asset->ApplyStyleAgnostic(widget);
-	}
-}
 
 void UDataWidget::private_refresh(UDataWidget* widget)
 {
@@ -357,28 +293,15 @@ void UDataWidget::Refresh()
 				}
 			}
 		}
+		
+			
 	}//Finish widget setup
 	
 	SetIsEnabled(GetIsEntitySelectable());
 	UObject* LocalListOwner = nullptr;
-	if(UDataList* _list=GetOwningList())
+	if(GetOwningList() && GetOwningList()->ListOwner)
 	{
-		//Apply style overrides
-		TMap<FName,UWidget*> _wigs=WidgetBinding_Get();
-	
-		TMap<FName,UOmegaSlateStyle*> _binds=_list->WidgetOverride_Styles;
-		TArray<FName> _bindNames;
-		_binds.GetKeys(_bindNames);
-	
-		for (FName Name : _bindNames)
-		{
-			WidgetBinding_Apply(Name,_wigs.FindOrAdd(Name),_binds.FindOrAdd(Name));
-		}
-		
-		if (_list->ListOwner)
-		{
-			LocalListOwner = GetOwningList()->ListOwner;
-		}
+		LocalListOwner = GetOwningList()->ListOwner;
 	}
 
 	//traits
@@ -447,7 +370,10 @@ void UDataWidget::Native_SetHovered(bool bHovered)
 				{
 					GetPlayerSubsystem()->PlayUiSound(HoverSound);
 				}
-				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Hover.LoadSynchronous());
+				else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+				{
+					GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Hover.LoadSynchronous());
+				}
 	
 				if (GetHoverAnimation())
 				{
@@ -575,7 +501,10 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(SelectSound);
 			}
-			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Select.LoadSynchronous());
+			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+			{
+				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Select.LoadSynchronous());
+			}
 		}
 	}
 	else
@@ -586,7 +515,10 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(ErrorSound);
 			}
-			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Error.LoadSynchronous());
+			else if(UOmegaSlateFunctions::GetCurrentSlateStyle())
+			{
+				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Error.LoadSynchronous());
+			}
 		}
 	}
 }

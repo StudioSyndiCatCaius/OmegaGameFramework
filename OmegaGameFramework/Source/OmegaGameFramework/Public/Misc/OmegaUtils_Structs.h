@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "JsonObjectWrapper.h"
-#include "LuaValue.h"
 #include "Dom/JsonObject.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "StructUtils/InstancedStruct.h"
@@ -23,6 +22,14 @@ class UAnimSequence;
 class UPrimitiveComponent;
 class ULevelSequence;
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaSoftParams
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FName, int32> params_int;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FName, FVector> params_vectors;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FName, FVector> params_string;
+};
 
 USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaParsedParams
@@ -38,13 +45,21 @@ struct FOmegaParsedTable
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Table") TMap<FName,FOmegaParsedParams> params;
 };
 
+USTRUCT()
+struct FOmegaGlobalVarsContainer
+{
+	GENERATED_BODY()
+	UPROPERTY() FJsonObjectWrapper main_vars;
+	UPROPERTY() TMap<FGuid, FJsonObjectWrapper> vars_guid;
+	UPROPERTY() TMap<FGameplayTag, FJsonObjectWrapper> vars_tag;
+};
+
 USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaCommonMeta
 {
 	GENERATED_BODY()
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") UObject* Context=nullptr;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FString Flag;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FLuaValue LuaValue;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TArray<FName> Flags;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FString> soft_params;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FInstancedStruct InstancedStruct;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FInstancedStruct> NamedInstStructs;
@@ -132,6 +147,25 @@ struct FOmegaList_DataAsset
 };
 
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaList_DataAsset_Soft
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<TSoftObjectPtr<UPrimaryDataAsset>> List;
+	
+	TArray<UPrimaryDataAsset*> GetAssets() const
+	{
+		TArray<UPrimaryDataAsset*>  out;
+		for (auto i : List)
+		{
+			if (UPrimaryDataAsset* asset=i.LoadSynchronous())
+			{
+				out.Add(asset);
+			}
+		}
+		return out;
+	}
+};
 
 
 
@@ -182,49 +216,6 @@ struct FOmegaList_LevelSequences
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<ULevelSequence*> List;
 	
 };
-
-USTRUCT(Blueprintable,BlueprintType)
-struct FOmegaList_Object_Soft
-{
-	GENERATED_BODY()
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<TSoftObjectPtr<UObject>> List;
-	
-	TArray<UObject*> GetAssets() const
-	{
-		TArray<UObject*>  out;
-		for (auto i : List)
-		{
-			if (UObject* asset=i.LoadSynchronous())
-			{
-				out.Add(asset);
-			}
-		}
-		return out;
-	}
-};
-
-
-USTRUCT(Blueprintable,BlueprintType)
-struct FOmegaList_DataAsset_Soft
-{
-	GENERATED_BODY()
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<TSoftObjectPtr<UPrimaryDataAsset>> List;
-	
-	TArray<UPrimaryDataAsset*> GetAssets() const
-	{
-		TArray<UPrimaryDataAsset*>  out;
-		for (auto i : List)
-		{
-			if (UPrimaryDataAsset* asset=i.LoadSynchronous())
-			{
-				out.Add(asset);
-			}
-		}
-		return out;
-	}
-};
-
-
 
 
 // ==============================================================================================================
@@ -300,6 +291,9 @@ struct FOmegaEntity
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FOmegaList_DataAsset> AssetList_Named;
 	
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FOmegaEntityDataset> datasets_named;
+
+	
 	int8 Flag_Get(int8 flag) { return internal_flags.FindOrAdd(flag); }
 	void Flag_Set(int8 flag,int8 val) { internal_flags.Add(flag,val); }
 	
@@ -311,7 +305,15 @@ struct FOmegaEntity
 		}
 		return Tags.HasAnyExact(InTags);
 	}
-	
+
+	FOmegaEntityDataset Dataset_Get(FName Set)
+	{
+		if(Set.IsValid()) { return datasets_named.FindOrAdd(Set);} return  FOmegaEntityDataset();
+	}
+	void Dataset_Set(FName Set, const FOmegaEntityDataset& dataset)
+	{
+		if(Set.IsValid()) { datasets_named.Add(Set,dataset);} 
+	}
 };
 
 
@@ -328,9 +330,7 @@ struct FOmegaEntitySet
 	TMap<FName,FOmegaEntity> Entities_Named;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data",DisplayName="Entities (Tagged)")
 	TMap<FGameplayTag,FOmegaEntity> Entities_Tagged;
-	
-	
-	
+
 	//Asset
 	bool Asset_HasTags(UPrimaryDataAsset* A, FGameplayTagContainer Tags, bool bExact)
 	{

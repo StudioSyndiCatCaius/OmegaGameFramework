@@ -442,7 +442,7 @@ void AOmegaAbility::Local_TriggerEvents(TArray<FName> Events)
 {
 	for(FName TempEv : Events)
 	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(TempEv, this, FOmegaCommonMeta());
+		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(TempEv, this);
 	}
 }
 	

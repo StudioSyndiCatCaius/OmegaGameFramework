@@ -20,7 +20,7 @@
 #include "OmegaSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "MovieSceneSequencePlayer.h"
-#include "OmegaGameplayConfig.h"
+#include "OmegaSettings_Gameplay.h"
 #include "TimerManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/ArrowComponent.h"

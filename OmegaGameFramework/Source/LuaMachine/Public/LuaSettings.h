@@ -37,9 +37,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Default")
 	TArray<TSoftObjectPtr<ULuaSettings_Preset>> Settings_Presets;
-	UPROPERTY(EditAnywhere, config, Category = "Default", meta = (MetaClass = "LuaState"))
+	UPROPERTY(EditAnywhere, config, Category = "Default")
 	TSoftClassPtr<ULuaState> DefaultState;
-	UPROPERTY(EditAnywhere, config, Category = "Default", meta = (MetaClass = "LuaState"))
+	UPROPERTY(EditAnywhere, config, Category = "Default")
 	TSoftClassPtr<ULuaObject> DefaultObject;
 	UPROPERTY(EditAnywhere, config, Category = "Default")
 	bool bAutorunFiles=false;

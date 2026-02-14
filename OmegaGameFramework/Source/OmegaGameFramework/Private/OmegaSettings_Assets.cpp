@@ -9,4 +9,3 @@ UOmegaAssetSettings::UOmegaAssetSettings(const FObjectInitializer& ObjectInitial
 {
 	
 }
-

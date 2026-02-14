@@ -10,7 +10,7 @@
 #include "LuaInterface.h"
 #include "LuaSettings.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Global.h"
 #include "Functions/F_Common.h"
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/Paths.h"
@@ -105,9 +105,9 @@ void UOmegaSubsystem_AssetHandler::GenerateLuaTableDataAssets()
 					if (_target_object && _target_object->GetClass()->ImplementsInterface(ULuaInterface::StaticClass()))
 					{
 						FLuaValue _inVal=current_table.GetField(gKey.ToString());
-						if (UOmegaGameCore* set=GetMutableDefault<UOmegaSettings>()->GetGameCore())
+						if (UOmegaGlobalSettings* set=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings())
 						{
-							set->Lua_OnObjectGeneration(_target_object,gKey,_inVal);
+							set->OnLuaObjectGeneration(_target_object,gKey,_inVal);
 						}
 						ILuaInterface::Execute_SetKey(_target_object,gKey);
 						ILuaInterface::Execute_SetValue(_target_object,_inVal,"");

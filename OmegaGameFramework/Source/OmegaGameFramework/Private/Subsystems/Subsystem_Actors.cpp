@@ -3,20 +3,11 @@
 
 #include "Subsystems/Subsystem_Actors.h"
 
-#include "EngineUtils.h"
 #include "OmegaSettings.h"
 #include "Components/Component_ActorIdentity.h"
-#include "OmegaGameplayConfig.h"
+#include "OmegaSettings_Gameplay.h"
 #include "Components/Component_ActorConfig.h"
-#include "Kismet/GameplayStatics.h"
 #include "Misc/OmegaUtils_Methods.h"
-
-void UOmegaActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-	WorldManager = nullptr;
-	GetWorldManager();
-}
 
 void UOmegaActorSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
@@ -67,41 +58,6 @@ void UOmegaActorSubsystem::SetAParam_int(AActor* a, FName key, int32 def)
 void UOmegaActorSubsystem::SetAParam_bool(AActor* a, FName key, bool def)
 {
 	if(a) { OGF_SoftParam::set_bool(GetA_PMap(a),key,def); }
-}
-
-AOmegaWorldManager* UOmegaActorSubsystem::GetWorldManager()
-{
-	if (!WorldManager)
-	{
-		// Try to find existing world manager
-		UWorld* World = GetWorld();
-		if (World)
-		{
-			for (TActorIterator<AOmegaWorldManager> It(World); It; ++It)
-			{
-				// Found the actor
-				WorldManager=*It;
-				return WorldManager;
-			}
-			
-			if (AOmegaWorldManager* m=Cast<AOmegaWorldManager>(UGameplayStatics::GetActorOfClass(World,AOmegaWorldManager::StaticClass())))
-			{
-				WorldManager=m;
-				return WorldManager;
-			}
-
-			// If not found, spawn one
-			if (!WorldManager)
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.Name = FName(TEXT("OmegaWorldManager"));
-				SpawnParams.NameMode = FActorSpawnParameters::ESpawnActorNameMode::Required_ReturnNull;
-				WorldManager = World->SpawnActor<AOmegaWorldManager>(SpawnParams);
-			}
-		}
-	}
-
-	return WorldManager;
 }
 
 
@@ -317,54 +273,4 @@ AActor* UOmegaActorSubsystem::GetActorTaggedTarget(AActor* Instigator, FGameplay
 		}
 	}
 	return nullptr;
-}
-
-// ========================================================================================================
-// World Manager
-// ========================================================================================================
-
-AOmegaWorldManager::AOmegaWorldManager()
-{
-	PrimaryActorTick.bCanEverTick = false;
-	bNetLoadOnClient = false;
-}
-
-void AOmegaWorldManager::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-FOmegaActorInstanceMetadata AOmegaWorldManager::GetActorMetadata(AActor* Actor) const
-{
-	if (const FOmegaActorInstanceMetadata* Found = ActorInstanceMetadata.Find(Actor))
-	{
-		return *Found;
-	}
-	return FOmegaActorInstanceMetadata();
-}
-
-void AOmegaWorldManager::SetActorMetadata(AActor* Actor, const FOmegaActorInstanceMetadata& Metadata)
-{
-	if (!Actor)
-	{
-		return;
-	}
-
-	// If metadata is empty, remove it from the map
-	if (Metadata.IsMetadataEmpty())
-	{
-		RemoveActorMetadata(Actor);
-	}
-	else
-	{
-		ActorInstanceMetadata.Add(Actor, Metadata);
-	}
-}
-
-void AOmegaWorldManager::RemoveActorMetadata(AActor* Actor)
-{
-	if (Actor)
-	{
-		ActorInstanceMetadata.Remove(Actor);
-	}
 }

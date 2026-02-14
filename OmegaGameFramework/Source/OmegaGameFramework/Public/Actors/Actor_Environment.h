@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actor_Null.h"
 #include "Landscape.h"
 #include "GameFramework/Actor.h"
 #include "Misc/GeneralDataObject.h"
@@ -23,7 +22,7 @@ class UPostProcessComponent;
 class UPCGGraphInterface;
 
 UCLASS(DisplayName="Ω Environment")
-class OMEGAGAMEFRAMEWORK_API AOmegaActorEnvironment : public AOmegaBASEActor, public IOmegaSaveInterface
+class OMEGAGAMEFRAMEWORK_API AOmegaActorEnvironment : public AActor, public IOmegaSaveInterface
 {
 	GENERATED_BODY()
 

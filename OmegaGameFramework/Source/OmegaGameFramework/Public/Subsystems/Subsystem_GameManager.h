@@ -6,7 +6,6 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "JsonObjectWrapper.h"
 #include "Misc/OmegaUtils_Structs.h"
-#include "Types/Struct_SoftParams.h"
 #include "Subsystem_GameManager.generated.h"
 
 class UOmegaSettings;
@@ -26,8 +25,8 @@ struct FGameplayLogEntry
 	FString LogCategory;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnGlobalEvent, FName, Event, UObject*, Instigator, FOmegaCommonMeta, meta);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTaggedGlobalEvent, FGameplayTag, Event, UObject*, Instigator, FOmegaCommonMeta, meta);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGlobalEvent, FName, Event, UObject*, Instigator);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTaggedGlobalEvent, FGameplayTag, Event, UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewLevel, FString, LevelName, AOmegaGameMode*, GameMode);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFlagStateChange, FString, Flag, bool, NewState);
 
@@ -53,7 +52,7 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Omega") FOmegaEntitySet Entities;
 	
-	UPROPERTY() FOmegaSoftParams GlobalVars;
+	UPROPERTY() FOmegaGlobalVarsContainer GlobalVars;
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
 	
 	UFUNCTION() UOmegaGameplayModule* ActivateModuleFromClass(const UClass* ModuleClass);
@@ -73,13 +72,13 @@ public:
 	// Global Event
 	//################################################################
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"),DisplayName="Fire Global Event (Name)")
-	void FireGlobalEvent(FName Event, UObject* Context, FOmegaCommonMeta meta);
+	void FireGlobalEvent(FName Event, UObject* Context);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnGlobalEvent OnGlobalEvent;
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tag)")
-	void FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
+	void FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnTaggedGlobalEvent OnTaggedGlobalEvent;

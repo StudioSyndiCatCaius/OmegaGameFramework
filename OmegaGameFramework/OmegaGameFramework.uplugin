@@ -15,9 +15,9 @@
 	"Installed": true,
 	"Modules": [
 		{
-			"Name": "OmegaCore",
+			"Name": "_OmegaCore",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "LuaMachine",
@@ -113,7 +113,7 @@
 			"Name": "FlowEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
-		}
+		},
 	],
 	"Plugins": [
 		{

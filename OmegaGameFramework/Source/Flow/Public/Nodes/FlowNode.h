@@ -9,7 +9,6 @@
 #include "Templates/SubclassOf.h"
 
 #include "FlowTypes.h"
-#include "Interfaces/I_BitFlag.h"
 #include "Interfaces/I_Common.h"
 #include "Interfaces/I_NamedLists.h"
 #include "Interfaces/I_ObjectTraits.h"
@@ -17,7 +16,7 @@
 #include "Types/Struct_CustomNamedList.h"
 #include "FlowNode.generated.h"
 
-class UOmegaGameCore;
+class UOmegaGlobalSettings;
 class UFlowAsset;
 class UFlowSubsystem;
 
@@ -50,8 +49,7 @@ public:
  * A Flow Node is UObject-based node designed to handle entire gameplay feature within single node.
  */
 UCLASS(Abstract, Blueprintable, HideCategories = Object)
-class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID, public IDataInterface_Traits, public IDataInterface_NamedLists,
-											public IDataInterface_BitFlag
+class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID, public IDataInterface_Traits, public IDataInterface_NamedLists
 {
 	GENERATED_UCLASS_BODY()
 
@@ -67,8 +65,7 @@ class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInte
 
 private:
 	
-	UOmegaGameCore* L_GetGlobalSettings() const;
-	UFUNCTION() TArray<FName> L_GetLocalMetaList() const;
+	UOmegaGlobalSettings* L_GetGlobalSettings() const;
 	
 	UPROPERTY()
 	UEdGraphNode* GraphNode;
@@ -133,12 +130,13 @@ protected:
 	FString K2_GetNodeDescription() const;
 
 	// Inherits Guid after graph node
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Node") FOmegaBitflagsBase Flags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Node") FOmegaClassNamedLists NamedLists;
-	
-	UPROPERTY(VisibleInstanceOnly, Category="Node",AdvancedDisplay) FGuid NodeGuid;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Node",AdvancedDisplay) TArray<UFlowNodeTrait*> Traits;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Node",AdvancedDisplay) TArray<UFlowNodeTrait_Collection*> Trait_Collections;
+	UPROPERTY(VisibleInstanceOnly, Category="Node")
+	FGuid NodeGuid;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Node")
+	TArray<UFlowNodeTrait*> Traits;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Node")
+	TArray<UFlowNodeTrait_Collection*> Trait_Collections;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override
 	{
 		TArray<UOmegaObjectTrait*> out;
@@ -155,15 +153,12 @@ protected:
 		}
 		return out;
 	};
-	
-	
 
 public:
 	void SetGuid(const FGuid NewGuid) { NodeGuid = NewGuid; }
 	UFUNCTION(BlueprintPure, Category="Flow Node")
 	FGuid GetGuid() const { return NodeGuid; }
 	virtual FGuid GetObjectGuid_Implementation() const  override { return NodeGuid; };
-	virtual FOmegaBitflagsBase Bitflags_Get_Implementation() override { return Flags; };
 	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override { return NamedLists; };
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowAsset* GetFlowAsset() const;

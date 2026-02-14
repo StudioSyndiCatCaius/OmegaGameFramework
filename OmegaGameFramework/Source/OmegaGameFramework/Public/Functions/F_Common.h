@@ -23,7 +23,6 @@ class UOmegaPlayerSubsystem;
 class UOmegaInputMode;
 class ALevelInstance;
 class UCurveFloat;
-class UOmegaAssetSettings;
 
 UENUM(Blueprintable)
 enum EOmegaFlagResult
@@ -47,8 +46,6 @@ public:
 	static UOmegaSettings* GetSettings_Omega();
 	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Stlye")
 	static UOmegaStyleSettings* GetSettings_Style();
-	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Asset")
-	static UOmegaAssetSettings* GetSettings_Asset();
 	
 	//###############################################################################
 	// Gameplay tags
@@ -172,11 +169,11 @@ public:
 	// Actor Binding
 	//###############################################################################
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Global Binding - SET")
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Set Global Binding")
 	static void SetGlobalActorBinding(const UObject* WorldContextObject, FName Binding, AActor* Actor);
-	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Global Binding - CLEAR")
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Clear Global Binding")
 	static void ClearGlobalActorBinding(const UObject* WorldContextObject, FName Binding);
-	UFUNCTION(BlueprintPure, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Global Binding - GET")
+	UFUNCTION(BlueprintPure, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Get Global Binding")
 	static AActor* GetGlobalActorBinding(const UObject* WorldContextObject, FName Binding);
 
 	
@@ -205,10 +202,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="ModuleClass",ExpandBoolAsExecs="Outcome"))
 	static UOmegaGameplayModule* TryGetGameplayModule(const UObject* WorldContextObject, TSubclassOf<UOmegaGameplayModule> ModuleClass, bool& Outcome, bool bFallbackToDefault=false);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"),DisplayName="Fire Global Event (Named)")
-	static void FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context, FOmegaCommonMeta meta);
-	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tagged)")
-	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"))
+	static void FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context);
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"))
+	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event, UObject* Context);
 	
 	//###############################################################################
 	// Flag

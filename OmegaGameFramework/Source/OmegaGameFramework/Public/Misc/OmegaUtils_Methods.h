@@ -67,6 +67,14 @@ public:
 // FILE
 // ================================================================================================================
 
+class OGF_File
+{
+public:
+	static FString PathCorrect(const FString& path);
+	
+	static TArray<FString> ListFilesInDirectory(const FString& path, bool bRecursive);
+	static TArray<FString> ListFilesInDirectoryList(TArray<FString> paths, bool bRecursive);
+};
 
 
 class OGF_Actor

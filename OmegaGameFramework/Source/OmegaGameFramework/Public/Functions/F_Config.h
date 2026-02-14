@@ -13,7 +13,7 @@
  */
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaFunctions_Config : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOmegaConfigFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -24,16 +24,6 @@ public:
 	UFUNCTION()
 	static FJsonObjectWrapper GetOmegaConfigJson();
 
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (bool)", meta=(CompactNodeTitle="⚙️ GET (bool)"))
-	static bool GetCustom_Bool(const FName Param);
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (float)", meta=(CompactNodeTitle="⚙️ GET (float)"))
-	static float GetCustom_float(const FName Param);
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (int32)", meta=(CompactNodeTitle="⚙️ GET (int32)"))
-	static int32 GetCustom_Int32(const FName Param);
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (string)", meta=(CompactNodeTitle="⚙️ GET (string)"))
-	static FString GetCustom_String(const FName Param);
-
-	
 	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Get Ω Config Property (String)", meta=(CompactNodeTitle="Config (String)"))
 	static FString GetOmegaConfigProperty_String(const FString Property);
 

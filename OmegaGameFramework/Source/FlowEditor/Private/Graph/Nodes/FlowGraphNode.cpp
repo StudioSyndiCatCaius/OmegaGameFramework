@@ -20,15 +20,12 @@
 #include "Editor/EditorEngine.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "GraphEditorActions.h"
-#include "OmegaGameCore.h"
-#include "OmegaSettings.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "ScopedTransaction.h"
 #include "SourceCodeNavigation.h"
 #include "Textures/SlateIcon.h"
 #include "ToolMenuSection.h"
 #include "UnrealEd.h"
-#include "Misc/OmegaUtils_Macros.h"
 
 #define LOCTEXT_NAMESPACE "FlowGraphNode"
 
@@ -607,14 +604,6 @@ FLinearColor UFlowGraphNode::GetNodeTitleColor() const
 	if (FlowNode)
 	{
 		FLinearColor DynamicColor;
-		
-		bool bOverride=false;
-		FLinearColor col=OGF_GAME_CORE()->FlowNode_OverrideColor(FlowNode, bOverride);
-		if (bOverride)
-		{
-			return col;
-		}
-		
 		if (FlowNode->GetDynamicTitleColor(DynamicColor))
 		{
 			return DynamicColor;

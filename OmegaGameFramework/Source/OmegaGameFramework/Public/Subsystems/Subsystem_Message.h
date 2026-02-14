@@ -32,7 +32,7 @@ struct FOmegaGameplayMessageMeta
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FName key;
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FGameplayTagContainer Tags;
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FSlateBrush Brush;
-	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere,DisplayName="Bitflags") FOmegaBitflagsBase Flags;
+	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FOmegaBitflagsBase Flags;
 	UPROPERTY(BlueprintReadWrite,Instanced,Category="Message", EditAnywhere) TArray<UOmegaObjectTrait*> Traits;
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FOmegaCommonMeta CommonMeta;
 	

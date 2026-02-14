@@ -104,9 +104,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPlatformSettings : public UDeveloperSettings
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(EditAnywhere, Config, Category="Platforms", meta=(MetaClass="OmegaPlatformAsset"))
+	UPROPERTY(EditAnywhere, Config, Category="Platforms", meta=(MetaClass="/Script/OmegaGameFramework.OmegaPlatformAsset"))
 	FSoftObjectPath DefaultPlatform;
-	UPROPERTY(EditAnywhere, Config, Category="Platforms", meta=(MetaClass="OmegaPlatformAsset"))
+	UPROPERTY(EditAnywhere, Config, Category="Platforms", meta=(MetaClass="/Script/OmegaGameFramework.OmegaPlatformAsset"))
 	TMap<FString,FSoftObjectPath> PlatformAssets;
 
 	UFUNCTION()

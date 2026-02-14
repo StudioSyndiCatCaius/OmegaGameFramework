@@ -17,7 +17,7 @@
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
 	if(Context) { ContextObject=Context;}
-	AddToPlayerScreen(SlateLayerIndex);
+	AddToPlayerScreen(200);
 	
 	if(GetDefaultDataList() && ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_CommonMenu::StaticClass()))
 	{
@@ -27,6 +27,9 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	if (!bIsOpen)
 	{
 		//BIND EVENTS
+		GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UMenu::OnGameplayMessage);
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UMenu::OnInputMethodChanged);
+		Local_BindGlobalEvent();
 
 		Reset();
 		
@@ -240,7 +243,11 @@ bool UMenu::InputBlocked_Implementation()
 	return IsInputBlocked();
 }
 
-
+void UMenu::Local_BindGlobalEvent()
+{
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UMenu::OnGlobalEvent);
+	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UMenu::OnTaggedGlobalEvent);
+}
 
 void UMenu::Native_UpdateState()
 {
@@ -263,4 +270,9 @@ void UMenu::SetMenuState(int32 state)
 		menu_state=state;
 		Native_UpdateState();
 	}
+}
+
+void UMenu::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
+                                             FOmegaGameplayMessageMeta meta)
+{
 }

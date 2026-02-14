@@ -34,40 +34,31 @@ public:
 };
 
 
-UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Omega: Localization"))
-class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Localization : public UDeveloperSettings
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaSettings_Localization : public UPrimaryDataAsset
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
 public:
 	TArray<UOmegaLocalizedVoice_Preset*> L_GetVoicePresets() const;
 	TArray<UOmegaLocalizedVoice_Script*> L_GetVoiceScripts() const;
 	
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Localization")
-	TSoftObjectPtr<UOAsset_Localization> DefaultLocalization;
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Localization")
-	TArray<TSoftObjectPtr<UOAsset_Localization>> LocalizationList;
-	
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice Clip")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization")
+	UOAsset_Localization* DefaultLocalization;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization")
+	TArray<UOAsset_Localization*> LocalizationList;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
+	FString Default_VoiceCue_Path="/Game/0_Main/Assets/audio/voice/";
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Voice")
 	FString VoiceClip_Prefex="vo_{id}_";
 
+	UPROPERTY(EditAnywhere,Category="Voice")
+	TArray<UOmegaLocalizedVoice_Preset*> VoiceScript_Preset;
+	UPROPERTY(EditAnywhere,Instanced,Category="Voice")
+	UOmegaLocalizedVoice_Preset* VoiceScript_custom;
 	
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
-	FString Internal_Voice_Path="/Game/0_Main/Assets/audio/voice/";
-
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
-	FString Subpath_Clip="/voice/{culture}/clip/";
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
-	FString Subpath_Line="/voice/{culture}/line/";
-	
-
-	//sound classes to search for a voice clip or line
-	UPROPERTY(EditAnywhere,Config,Category="Voice")
-	TArray<TSoftClassPtr<USoundBase>> VoiceSoundClasses;
-	
-	UPROPERTY(EditAnywhere,Config,Category="Voice")
-	TArray<TSoftObjectPtr<UOmegaLocalizedVoice_Preset>> VoiceScript_Preset;
-
+	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Localization",meta=(MultiLine))
+	//FString Default_VoiceMessage_Path="/Game/0_Main/Assets/audio/vo_msg/";
 };
 
 
@@ -84,6 +75,22 @@ public:
 };
 
 
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaLocalizationFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Localization")
+	static void PlayVoiceClip(AActor* Instigator, FString VoiceClip);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Localization")
+	static USoundBase* GetVoiceClip_ByID(FName ID, FString VoiceClip);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Settings", DisplayName="Get OMEGA Settings (Localization)")
+	static UOmegaSettings_Localization* GetCurrentSettings_Localization();
+};
 
 
 UCLASS()

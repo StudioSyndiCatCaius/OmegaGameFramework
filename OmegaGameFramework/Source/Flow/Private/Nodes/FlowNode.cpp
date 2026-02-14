@@ -8,7 +8,7 @@
 #include "FlowSubsystem.h"
 #include "FlowTypes.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaSettings_Global.h"
 
 #include "Engine/Engine.h"
 #include "Engine/ViewportStatsSubsystem.h"
@@ -60,19 +60,9 @@ UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
 
 
 
-UOmegaGameCore* UFlowNode::L_GetGlobalSettings() const
+UOmegaGlobalSettings* UFlowNode::L_GetGlobalSettings() const
 {
-	return GetMutableDefault<UOmegaSettings>()->GetGameCore();
-}
-
-TArray<FName> UFlowNode::L_GetLocalMetaList() const
-{
-	TArray<FName> out;
-	if (GetFlowAsset())
-	{
-		GetFlowAsset()->LocalMeta.GetKeys(out);
-	}
-	return out;
+	return GetMutableDefault<UOmegaSettings>()->GetGlobalSettings();
 }
 #if WITH_EDITOR
 void UFlowNode::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)

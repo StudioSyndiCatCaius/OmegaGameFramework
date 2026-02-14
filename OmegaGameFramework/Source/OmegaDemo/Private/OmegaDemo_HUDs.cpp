@@ -46,7 +46,7 @@ void UHudBase_Dialogue::OnGameplayMessage_Implementation(UOmegaGameplayMessage* 
 	Super::OnGameplayMessage_Implementation(Message, MessageCategory, meta);
 }
 
-void UHudBase_Dialogue::OnGlobalEvent_Implementation(FName Event, UObject* Context,FOmegaCommonMeta meta)
+void UHudBase_Dialogue::OnGlobalEvent_Implementation(FName Event, UObject* Context)
 {
 	if(Event==GE_MESSAGE_START)
 	{
@@ -64,7 +64,7 @@ void UHudBase_Dialogue::OnGlobalEvent_Implementation(FName Event, UObject* Conte
 			GetWorld()->GetTimerManager().SetTimer(timer_waitNextmsg,this,&UHudBase_Dialogue::L_WaitNextMsg_Finish,MessageEnd_WaitForNext);
 		}
 	}
-	Super::OnGlobalEvent_Implementation(Event, Context, meta);
+	Super::OnGlobalEvent_Implementation(Event, Context);
 }
 
 void UHudBase_Dialogue::L_WaitNextMsg_Finish()

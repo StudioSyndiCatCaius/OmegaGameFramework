@@ -8,29 +8,21 @@ public class OmegaEditor : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] 
 		{ 
-			"Core",
-			"CoreUObject",
+			"Core", 
+			"CoreUObject", 
 			"Engine",
 			"AssetTools",
 			"UnrealEd",
 			"InputCore",
-			"OmegaCore",
-			"OmegaGameFramework",
-			"OmegaSequence",
+			"OmegaGameFramework", 
+			"OmegaSequence", 
 			"PropertyEditor",
 			"RenderCore",
 			"OmegaData",
 			"LuaMachine",
 			"OmegaDebug",
 			"OmegaDemo",
-			"UMGEditor",
-			"Slate",
-			"SlateCore",
-			"LevelEditor",
-			"EditorStyle",
-			"WorkspaceMenuStructure",
-			"ToolMenus",
-			"Blutility"
+			"UMGEditor"
 		});
 
 		PrivateDependencyModuleNames.AddRange(
@@ -43,9 +35,6 @@ public class OmegaEditor : ModuleRules
 				"SlateCore",
 				"PlacementMode",
 				"Projects",
-				"PropertyEditor",
-				"EditorFramework",
-				"ToolWidgets",
 				"UnrealEd",
 				"BlueprintGraph",
 				"KismetCompiler",

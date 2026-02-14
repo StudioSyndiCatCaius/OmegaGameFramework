@@ -4,7 +4,7 @@ using System.IO;
 public class OmegaWorld : ModuleRules
 {
 	public OmegaWorld(ReadOnlyTargetRules Target) : base(Target)
-	{ 
+	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[]

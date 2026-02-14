@@ -10,7 +10,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/Subsystem_Actors.h"
-#include "Types/Struct_ActorRelatives.h"
 
 // =====================================================================================================================
 // ACTOR
@@ -349,66 +348,6 @@ void UOmegaActorFunctions::PerformInteraction(AActor* Actor, AActor* Instigator,
 	Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->PerformInteraction(Actor,Instigator,Tag,meta);
 }
 
-AActor* UOmegaActorFunctions::GetRelative(AActor* Actor, FName Relative)
-{
-	FOmegaActorRelatives rel;
-	if (Actor && Actor->GetClass()->ImplementsInterface(UActorInterface_Relatives::StaticClass()))
-	{
-		rel=IActorInterface_Relatives::Execute_ActorRelatives_Get(Actor);
-	}
-	if (AActor* a=rel.RelativeActors.FindOrAdd(Relative).LoadSynchronous())
-	{
-		return a;
-	}
-	return nullptr;
-}
-
-TArray<AActor*> UOmegaActorFunctions::GetRelativeList(TArray<AActor*> Actors, FName Relative, bool bIncludeEmpty)
-{
-	TArray<AActor*> _out;
-	
-	for (auto* actor : Actors)
-	{
-		if (AActor* rel=GetRelative(actor,Relative))
-		{
-			_out.Add(rel);
-		}
-		else if (bIncludeEmpty)
-		{
-			_out.Add(nullptr);
-		}
-	}
-	
-	return _out;
-}
-
-FGameplayTag UOmegaActorFunctions::GetFaction_Tag(AActor* Actor)
-{
-	if (Actor)
-	{
-		
-	}
-	return FGameplayTag();
-}
-
-EFactionAffinity UOmegaActorFunctions::GetFaction_Affinity(AActor* Actor, FGameplayTag FactionTag)
-{
-	if (Actor)
-	{
-		
-	}
-	return EFactionAffinity::NeutralAffinity;
-}
-
-EFactionAffinity UOmegaActorFunctions::GetFaction_AffinityToTarget(AActor* Actor, AActor* Target)
-{
-	if (Actor && Target)
-	{
-		return GetFaction_Affinity(Actor,GetFaction_Tag(Target));
-	}
-	return EFactionAffinity::NeutralAffinity;
-}
-
 // =====================================================================================================================
 // PAWN
 // =====================================================================================================================
@@ -507,108 +446,4 @@ void UOmegaComponentFunctions::PointArrowComponentToTarget(UArrowComponent* Comp
 		Component->SetRelativeRotation(rot_arrow);
 		Component->ArrowLength=distance_toArrow/Component->ArrowSize;
 	}
-}
-
-// ===== Helper Function =====
-
-AOmegaWorldManager* UOmegaActorFunctions::GetWorldManager(AActor* Actor)
-{
-    if (!Actor || !Actor->GetWorld())
-    {
-        return nullptr;
-    }
-
-    UOmegaActorSubsystem* Subsystem = Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>();
-    if (!Subsystem)
-    {
-        return nullptr;
-    }
-
-    return Subsystem->GetWorldManager();
-}
-
-// ===== Get Functions =====
-
-bool UOmegaActorFunctions::GetMeta_Bool(AActor* Actor, FName Param, bool Fallback)
-{
-    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
-    {
-        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
-        if (const bool* Value = Metadata.BoolParams.Find(Param))
-        {
-            return *Value;
-        }
-    }
-
-    return Fallback;
-}
-
-int32 UOmegaActorFunctions::GetMeta_Int(AActor* Actor, FName Param, int32 Fallback)
-{
-    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
-    {
-        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
-        if (const int32* Value = Metadata.IntParams.Find(Param))
-        {
-            return *Value;
-        }
-    }
-
-    return Fallback;
-}
-
-float UOmegaActorFunctions::GetMeta_Float(AActor* Actor, FName Param, float Fallback)
-{
-    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
-    {
-        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
-        if (const float* Value = Metadata.FloatParams.Find(Param))
-        {
-            return *Value;
-        }
-    }
-
-    return Fallback;
-}
-
-FString UOmegaActorFunctions::GetMeta_String(AActor* Actor, FName Param, const FString& Fallback)
-{
-    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
-    {
-        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
-        if (const FString* Value = Metadata.StringParams.Find(Param))
-        {
-            return *Value;
-        }
-    }
-
-    return Fallback;
-}
-
-UPrimaryDataAsset* UOmegaActorFunctions::GetMeta_DataAsset(AActor* Actor, FName Param)
-{
-    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
-    {
-        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
-        if (UPrimaryDataAsset* const* Value = Metadata.DataAssetParams.Find(Param))
-        {
-            return *Value;
-        }
-    }
-
-    return nullptr;
-}
-
-AActor* UOmegaActorFunctions::GetMeta_Actor(AActor* Actor, FName Param)
-{
-    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
-    {
-        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
-        if (const TSoftObjectPtr<AActor>* Value = Metadata.ActorParams.Find(Param))
-        {
-            return Value->Get();
-        }
-    }
-
-    return nullptr;
 }

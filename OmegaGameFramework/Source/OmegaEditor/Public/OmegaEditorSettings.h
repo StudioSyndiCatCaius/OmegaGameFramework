@@ -17,7 +17,7 @@ struct FOmegaEditorCommandsList
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCommandEvent, UObject*, int32);
 
-UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="Omega: Editor"))
+UCLASS(Config=Editor, DefaultConfig, meta=(DisplayName="Omega Editor Settings"))
 class OMEGAEDITOR_API UOmegaEditorSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
