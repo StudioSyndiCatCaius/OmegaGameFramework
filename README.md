@@ -7,6 +7,7 @@ Omega Game Framework is a free, open-source high-level plugin for Unreal Engine 
 * [DOCUMENTATION](docs/documentation.md)
 * [Website](https://www.studiosyndicat.com/omegagameframework)
 * [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/product/2ca6202e55f44cfd82659fbca6591603)
+* [Subreddit: Discussion & Support](https://www.reddit.com/r/OmegaGameFramework/)
 
 ### Features:
 ![alt text](docs/images/Screenshots/OGF_0.png)
