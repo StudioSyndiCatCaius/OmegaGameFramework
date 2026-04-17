@@ -3,15 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaComponent.h"
 #include "Components/ActorComponent.h"
 #include "Misc/GeneralDataObject.h"
-#include "Misc/OmegaFaction.h"
+#include "DataAssets/DA_Faction.h"
 #include "Component_CombatEncounter.generated.h"
 
 class UOmegaFaction;
 class UOmegaBGM;
 class ULevelSequence;
 class AOmegaAbility;
+class UBoxComponent;
+class USpringArmComponent;
+class UCameraComponent;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaCombatEncounter_Stage : public AActor
@@ -19,13 +23,14 @@ class OMEGAGAMEFRAMEWORK_API AOmegaCombatEncounter_Stage : public AActor
 	GENERATED_BODY()
 
 public:
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter Stage")
-	FGameplayTag StageID;
+	AOmegaCombatEncounter_Stage();
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter Stage",meta=(Categories="ENCOUNTER.Stage"))
+	FGameplayTag StageID=FGameplayTag::RequestGameplayTag("ENCOUNTER.Stage.Default");
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Encounter|Stage")
-	FTransform GetTransformForBattler(FGameplayTag FactionTag, int32 index);
+	FTransform GetTransformForBattler(UPARAM(meta=(Categories="FACTION")) FGameplayTag FactionTag, int32 index);
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Omega|Encounter|Stage") UBoxComponent* Range;
 };
 
 UCLASS()
@@ -34,11 +39,18 @@ class OMEGAGAMEFRAMEWORK_API AOmegaCombatEncounter_Instance : public AActor
 	GENERATED_BODY()
 
 public:
-	
+	AOmegaCombatEncounter_Instance();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Encounter")
 	ULevelSequence* OverrideSequence_Intro;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Encounter")
 	UOmegaBGM* OverrideBGM;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="Components") USpringArmComponent* comp_spring;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="Components") UCameraComponent* comp_camera;
+	
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Encounter|Stage")
+	FTransform GetTransformByFaction(UPARAM(meta=(Categories="FACTION")) FGameplayTag FactionTag, int32 index);
 	
 };
 
@@ -88,7 +100,7 @@ public:
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEncounterBattlerSpawned, ACharacter*, Battler);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UOmegaCombatEncounter_Component : public UActorComponent
+class OMEGAGAMEFRAMEWORK_API UOmegaCombatEncounter_Component : public UOmegaComponent
 {
 	GENERATED_BODY()
 
@@ -110,7 +122,10 @@ protected:
 public:
 	UPROPERTY(BlueprintAssignable)
 	FOnEncounterBattlerSpawned OnEncounterSpawned;
-		
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
+	TSubclassOf<AOmegaCombatEncounter_Instance> DefaultEncounterClass=AOmegaCombatEncounter_Instance::StaticClass();
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Encounter")
 	UOmegaCombatEncounterScript* EncounterManagerScript;
 	
@@ -120,7 +135,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Encounter")
 	AOmegaCombatEncounter_Stage* GetStageFromID(FGameplayTag ID);
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter",meta=(MustImplement="ActorInterface_EncounterBattler"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter",meta=(MustImplement="/Script/OmegaGameFramework.ActorInterface_EncounterBattler"))
 	TSubclassOf<ACharacter> BattlerCharacterClass;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Encounter")
@@ -146,7 +161,7 @@ public:
 	bool EndEncounter();
 	
 	UFUNCTION(BlueprintCallable,Category="Encounter")
-	ACharacter* SpawnBattler(UPrimaryDataAsset* DataAsset, UOmegaFaction* Faction, FTransform Transform,
+	ACharacter* SpawnBattler(UPrimaryDataAsset* DataAsset, UOmegaFaction* Faction, FTransform Transform, int32 StageTransformIndex=-1,
 		ESpawnActorCollisionHandlingMethod CollisionMethod=ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 
 	UFUNCTION(BlueprintPure,Category="Encounter")
@@ -169,17 +184,19 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_CombatEncounter
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Encounter",DisplayName="Encounter - On Begin")
+	bool OnEncounterBegin(UOmegaCombatEncounter_Component* Component);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Encounter",DisplayName="Encounter - Get Instance Class")
 	TSubclassOf<AOmegaCombatEncounter_Instance> GetCombatEncounter_InstanceClass();
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Encounter",DisplayName="Encounter - Get Stage ID")
 	FGameplayTag GetCombatEncounter_StageID();
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Encounter")
-	bool OnEncounterBegin(UOmegaCombatEncounter_Component* Component);
-
-	UFUNCTION(BlueprintNativeEvent,Category="Encounter") UOmegaBGM* GetCombatEncounter_BGM();
-	UFUNCTION(BlueprintNativeEvent,Category="Encounter") ULevelSequence* GetCombatEncounter_IntroSequence();
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Encounter",DisplayName="Encounter - Get BGM")
+	UOmegaBGM* GetCombatEncounter_BGM();
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Encounter",DisplayName="Encounter - Get Intro Sequence")
+	ULevelSequence* GetCombatEncounter_IntroSequence();
 };
 
 UCLASS(Blueprintable,BlueprintType,Const,Abstract,CollapseCategories,EditInlineNew,meta=(ShowWorldContextPin))

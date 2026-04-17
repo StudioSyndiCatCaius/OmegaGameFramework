@@ -26,6 +26,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorFunctions : public UBlueprintFunctionLib
 	GENERATED_BODY()
 
 public:
+	static bool UsesInterface(UObject* obj);
+	
 	UFUNCTION(BlueprintCallable,Category="Actor Condition")
 	static void SnapActorToSurface(AActor* Actor, FVector Trace_Start,FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType);
 
@@ -40,6 +42,19 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor")
 	static AActor* ConfigureChildActor(UChildActorComponent* ChildActor, TSubclassOf<AActor> NewClass, UPrimaryDataAsset* NewIdentity, AActor* NewOwner);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(AdvancedDisplay="LocationRule,RotationRule,ScaleRule,bWeldSimulateBodies"))
+	static void AttachComponentToActor(USceneComponent* Component, AActor* Actor, FName Socket="",
+		EAttachmentRule LocationRule=EAttachmentRule::SnapToTarget,
+		EAttachmentRule RotationRule=EAttachmentRule::SnapToTarget,
+		EAttachmentRule ScaleRule=EAttachmentRule::SnapToTarget,
+		bool bWeldSimulateBodies=true);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor")
+	static AActor* GetActorNearestToScreenPoint(const TArray<AActor*>& Actors,const FVector2D& ScreenPoint, APlayerController* PlayerController,float& OutDistance);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(WorldContext="WorldContext"),DisplayName="Actors - Set Paused")
+	static void SetPaused(UObject* WorldContext, FGameplayTag PauseGroup, bool bPaused);
 	
 	// =====================================================================================================================
     // Filters
@@ -85,25 +100,36 @@ public:
 	static void SetActorBoundParam_Bool(AActor* Actor, FName Key, bool Value);
 	
 	// =====================================================================================================================
-	// Interact
+	// Groups
 	// =====================================================================================================================
-	UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget",meta=(ExpandBoolAsExecs="Result"))
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(GameplayTagFilter = "ACTOR_GROUP"),DisplayName="Actor Group - Add Actor")
+	static bool Group_Add(AActor* Actor, FGameplayTag Group, bool bInGroup);
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(GameplayTagFilter = "ACTOR_GROUP"),DisplayName="Actor Group - Add Actors")
+	static void Group_AddList(TArray<AActor*> Actors, FGameplayTag Group, bool bInGroup);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Actor",meta=(GameplayTagFilter = "ACTOR_GROUP"),DisplayName="Actor Group - Has Actor?")
+	static bool Group_HasActor(AActor* Actor,FGameplayTag Group);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Actor",meta=(GameplayTagFilter = "ACTOR_GROUP",WorldContext="WorldContext"),DisplayName="Actor Group - Get All In Group")
+	static TArray<AActor*> Group_GetActors(UObject* WorldContext, FGameplayTag Group);
+	
+	// =====================================================================================================================
+	// Tag Target
+	// =====================================================================================================================
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(ExpandBoolAsExecs="Result",GameplayTagFilter = "TARGET"),DisplayName="Tag Target - Get")
 	static AActor* GetActorTagTarget(AActor* Actor, FGameplayTag Tag, bool& Result);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget")
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(GameplayTagFilter = "TARGET"),DisplayName="Tag Target - Set")
 	static void SetActorTagTarget(AActor* Actor, FGameplayTag Tag, AActor* Target);
-	
-	//UFUNCTION(BlueprintCallable,Category="Omega|Actor|TagTarget")
-	//static void LinkComponentOverlapToTagTarget(UPrimitiveComponent* Component, AActor* Actor, FGameplayTag Tag);
-	
+
 	// =====================================================================================================================
 	// Interact
 	// =====================================================================================================================
-	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",meta=(ExpandBoolAsExecs="Result"),DisplayName="Actor - Is Interactable?")
-	static bool CheckIsActorInteractable(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta, bool& Result);
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",meta=(ExpandBoolAsExecs="Result",GameplayTagFilter = "INTERACTION",AdvancedDisplay="bRequireInterface,bExcludeInstigator"),DisplayName="Actor - Is Interactable?")
+	static bool CheckIsActorInteractable(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta, bool& Result, bool bRequireInterface=true,bool bExcludeInstigator=true);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",DisplayName="Actor - Perform Interaction")
-	static void PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintCallable,Category="Omega|Actor|Interaction",DisplayName="Actor - Perform Interaction",meta=(GameplayTagFilter = "INTERACTION"))
+	static bool PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta, bool bForce=false);
 	
 	// =====================================================================================================================
 	// Relative Actors
@@ -123,9 +149,34 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Faction Affinity")
 	static EFactionAffinity GetFaction_Affinity(AActor* Actor, FGameplayTag FactionTag);
 	
-		
 	UFUNCTION(BlueprintPure,Category="Omega|Actor|Relatives",DisplayName="Actor - Get Faction Affinity To Target")
 	static EFactionAffinity GetFaction_AffinityToTarget(AActor* Actor, AActor* Target);
+
+	// =====================================================================================================================
+	// metadata
+	// =====================================================================================================================
+	UFUNCTION()
+	static AOmegaWorldManager* GetWorldManager(AActor* Actor);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Bool")
+	static bool GetMeta_Bool(AActor* Actor, FName Param, bool Fallback = false);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Int")
+	static int32 GetMeta_Int(AActor* Actor, FName Param, int32 Fallback = 0);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Float")
+	static float GetMeta_Float(AActor* Actor, FName Param, float Fallback = 0.0f);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get String")
+	static FString GetMeta_String(AActor* Actor, FName Param, const FString& Fallback = "");
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get DataAsset")
+	static UPrimaryDataAsset* GetMeta_DataAsset(AActor* Actor, FName Param);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Actor|Meta", DisplayName="Actor Meta - Get Actor")
+	static AActor* GetMeta_Actor(AActor* Actor, FName Param);
+	
+	
 };
 
 // =====================================================================================================================

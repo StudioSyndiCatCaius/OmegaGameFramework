@@ -3,7 +3,6 @@
 #include "Customization_Bitflags.h"// OmegaBitflagsCustomization.cpp
 
 #include "DetailLayoutBuilder.h"
-#include "Interfaces/I_BitFlag.h"
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
 #include "Widgets/Input/SCheckBox.h"
@@ -16,7 +15,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Text/STextBlock.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "Types/Struct_CustomNamedList.h"
 
 
@@ -48,9 +47,26 @@ void FOmegaBitflagsCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> Pr
     BitmaskPropertyHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FOmegaBitflagsBase, Bitmask));
     BitEnumsPropertyHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FOmegaBitflagsBase, BitEnums));
     StructPropertyHandle = PropertyHandle;
-
-    // Get the owner class
-    CachedOwnerClass = GetOwnerClass(PropertyHandle);
+    
+// Get raw pointer to the struct data
+    void* StructData = nullptr;
+    StructPropertyHandle->GetValueData(StructData);
+    bool FoundClass=false;
+    if (FOmegaBitflagsBase* _struct=static_cast<FOmegaBitflagsBase*>(StructData))
+    {
+        if (_struct->override_source.Get())
+        {
+            CachedOwnerClass=_struct->override_source->GetClass();
+            FoundClass=true;
+        }
+    }
+    if (!FoundClass)
+    {
+        // Get the owner class
+        CachedOwnerClass = GetOwnerClass(PropertyHandle);    
+    }
+    
+    
 
     HeaderRow
     .NameContent()
@@ -61,7 +77,7 @@ void FOmegaBitflagsCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> Pr
     [
         SNew(STextBlock)
         .Text(this, &FOmegaBitflagsCustomization::GetHeaderValueText)
-        .Font(IPropertyTypeCustomizationUtils::GetRegularFont())
+        .Font(IPropertyTypeCustomizationUtils::GetBoldFont())
     ];
 }
 
@@ -188,6 +204,10 @@ void FOmegaBitflagsCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> 
         // Add each bitenum
         for (int32 i = 0; i < EditorData->BitEnums.Num() && i < 16; ++i)
         {
+            if (!EditorData->BitEnums.IsValidIndex(i))
+            {
+                continue;
+            }
             const FOmegaBitmaskEditorEnumData& EnumData = EditorData->BitEnums[i];
             
             // Skip if the title is empty

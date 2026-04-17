@@ -4,13 +4,16 @@
 #include "OmegaDemo_Widgets.h"
 #include "Components/ActorComponent.h"
 #include "Components/Component_Combatant.h"
+#include "Components/Image.h"
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "DataAssets/DA_Body.h"
+#include "DataAssets/DA_EquipSlot.h"
+#include "DataAssets/DA_Zone.h"
 #include "Functions/F_Common.h"
 #include "Kismet/KismetStringLibrary.h"
-#include "Subsystems/Subsystem_Message.h"
-#include "Subsystems/Subsystem_Zone.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Widget/DataList.h"
 
 
@@ -37,7 +40,7 @@ UActorComponent* local_GetComponentFromObject(UObject* object, TSubclassOf<UActo
 	return nullptr;
 }
 
-void UDataWidgetBase_Combatant::Native_OnSourceAssetChanged(UObject* SourceAsset)
+void UDataWidgetBase_CombatantBASE::Native_OnSourceAssetChanged(UObject* SourceAsset)
 {
 	if(UCombatantComponent* ref_comp = Cast<UCombatantComponent>(local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass())))
 	{
@@ -47,15 +50,40 @@ void UDataWidgetBase_Combatant::Native_OnSourceAssetChanged(UObject* SourceAsset
 	Super::Native_OnSourceAssetChanged(SourceAsset);
 }
 
+void UDataWidgetBase_CombatantBASE::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
+{
+	Super::Native_OnRefreshed(SourceAsset, ListOwner);
+}
+
+UCombatantComponent* UDataWidgetBase_CombatantBASE::GetLinkedCombatant()
+{
+	if (REF_combatant) { return REF_combatant;}
+	if (UCombatantComponent* _c=Cast<UCombatantComponent>(local_GetComponentFromObject(ReferencedAsset,UCombatantComponent::StaticClass())))
+	{
+		REF_combatant=_c;
+		return REF_combatant;
+	}
+	if (GetOwningList())
+	{
+		if (UCombatantComponent* _c=Cast<UCombatantComponent>(local_GetComponentFromObject(GetOwningList()->ListOwner,UCombatantComponent::StaticClass())))
+		{
+			REF_combatant=_c;
+			return REF_combatant;
+		}	
+	}
+	return nullptr;
+}
+
+
 void UDataWidgetBase_Combatant::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
 	if(GetDataList_Attributes())
 	{
 		GetDataList_Attributes()->SetListOwner(SourceAsset);
-		if(REF_combatant)
+		if(GetLinkedCombatant())
 		{
 			GetDataList_Attributes()->ClearList();
-			for (UOmegaAttribute* temp_att : REF_combatant->AttributeSet->GetAllAttributes())
+			for (UOmegaAttribute* temp_att : GetLinkedCombatant()->AttributeSet->GetAllAttributes())
 			{
 				GetDataList_Attributes()->AddAssetToList(temp_att,"");
 			}
@@ -112,14 +140,6 @@ void UDataWidgetBase_Attribute::local_Update()
 				_bar->SetPercent(_att_percent);
 			}
 			_bar->SetFillColorAndOpacity(in_color);
-		}
-		if(UDynamicProgressMeter* _dmeter = GetWidget_DynamicMeter_Attribute())
-		{
-			if(REF_Combatant)
-			{
-				_dmeter->SetPercent_Progress(_att_percent);
-			}
-			_dmeter->SetProgress_Color(in_color);
 		}
 		
 		float val_cur;
@@ -236,6 +256,7 @@ UOmegaAttribute* UDataWidgetBase_Attribute::GetAttribute() const
 	if(REF_attribute) {return REF_attribute;} return nullptr;
 }
 
+
 void UDataWidgetBase_Attribute::SetAttributeComparison_Implementation(bool bComparing, UCombatantComponent* Combatant,
 	UObject* ComparedSource, UObject* UncomparedSource)
 {
@@ -243,80 +264,53 @@ void UDataWidgetBase_Attribute::SetAttributeComparison_Implementation(bool bComp
 	                                                                  UncomparedSource);
 }
 
+
+
 // ==============================================================================================================
 // Leveling
 // ==============================================================================================================
 
-void UDataWidgetBase_Leveling::L_SetLevelComp(ULevelingComponent* comp)
+
+void UDataWidgetBase_Leveling::L_SetTextFromVal(float val, UTextBlock* text) const
 {
-	if(comp)
+	if (text && LevelingAsset)
 	{
-		REF_Comp=comp;
-		OnLevelingComponentChanged(REF_Comp);
+		text->SetText(LevelingAsset->GetTextFromValue(val));
 	}
 }
 
 
-void UDataWidgetBase_Leveling::L_onXP(ULevelingComponent* comp, float xp, float changed,UOmegaLevelingAsset* asset)
-{
-	Refresh();
-}
-
-void UDataWidgetBase_Leveling::OnSourceAssetChanged_Implementation(UObject* Asset)
-{
-	if(UActorComponent* temp_comp = local_GetComponentFromObject(Asset,ULevelingComponent::StaticClass()))
-	{
-		L_SetLevelComp(Cast<ULevelingComponent>(temp_comp));
-		if(REF_Comp && REF_Comp->L_ValidateLevelAsset(GetLevelingAsset()))
-		{
-			if(GetWidget_Text_RankName())
-			{
-				GetWidget_Text_RankName()->SetText(REF_Comp->L_ValidateLevelAsset(GetLevelingAsset())->RankName);
-			}
-			if(GetWidget_Text_XpName())
-			{
-				GetWidget_Text_XpName()->SetText(REF_Comp->L_ValidateLevelAsset(GetLevelingAsset())->XPName);
-			}
-			REF_Comp->OnXPUpdated.AddDynamic(this, &UDataWidgetBase_Leveling::L_onXP);
-		}
-	}
-	else if(UOmegaLevelingAsset* lvl_asset=Cast<UOmegaLevelingAsset>(Asset))
-	{
-		LevelingAsset=lvl_asset;
-	}
-	Super::OnSourceAssetChanged_Implementation(Asset);
-}
-
-void UDataWidgetBase_Leveling::Native_OnListOwnerChanged(UObject* ListOwner)
-{
-	if(UActorComponent* temp_comp = local_GetComponentFromObject(ListOwner,ULevelingComponent::StaticClass()))
-	{
-		L_SetLevelComp(Cast<ULevelingComponent>(temp_comp));
-	}
-	Super::Native_OnListOwnerChanged(ListOwner);
-}
 
 void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
-	if(REF_Comp)
+	if (LevelingAsset)
 	{
-		if(GetWidget_ProgressBar())
+		if (GetWidget_Text_RankName())
 		{
-			GetWidget_ProgressBar()->SetPercent(REF_Comp->GetPercentageToNextLevel(LevelingAsset));
+			GetWidget_Text_RankName()->SetText(LevelingAsset->RankName);
 		}
-		if(GetWidget_Text_RankValue())
+		if (GetWidget_Text_XpName())
 		{
-			GetWidget_Text_RankValue()->SetText(FText::AsNumber(REF_Comp->GetCurrentLevel(LevelingAsset)));
+			GetWidget_Text_XpName()->SetText(LevelingAsset->XPName);
 		}
-		if(GetWidget_Text_CurrentValue())
+		
+		if (GetLinkedCombatant())
 		{
-			GetWidget_Text_CurrentValue()->SetText(FText::AsNumber(REF_Comp->GetXP(LevelingAsset)));
-		}
-		if(GetWidget_Text_MaxValue())
-		{
-			GetWidget_Text_CurrentValue()->SetText(FText::AsNumber(REF_Comp->GetCurrentLevelMaxXP(LevelingAsset)));
+			float _cur=GetLinkedCombatant()->XP_Get(LevelingAsset);
+			
+			float _min, _max, _perc;
+			
+			GetLinkedCombatant()->XP_GetValues(LevelingAsset,_min,_max,_perc);
+			if (GetWidget_ProgressBar())
+			{
+				GetWidget_ProgressBar()->SetPercent(_perc);
+			}
+			L_SetTextFromVal(_cur,GetWidget_Text_CurrentValue());
+			L_SetTextFromVal(_max,GetWidget_Text_MaxValue());
+			L_SetTextFromVal(GetLinkedCombatant()->XP_GetLevel(LevelingAsset),GetWidget_Text_RankValue());
 		}
 	}
+	
 	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 }
 
@@ -326,12 +320,12 @@ void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject*
 
 void UDataWidgetBase_Quest::OnSourceAssetChanged_Implementation(UObject* Asset)
 {
-	if(UActorComponent* temp_comp = local_GetComponentFromObject(Asset,UOmegaQuestComponent::StaticClass()))
+	if(UActorComponent* temp_comp = local_GetComponentFromObject(Asset,AOmegaQuestInstance::StaticClass()))
 	{
-		QuestComponent=Cast<UOmegaQuestComponent>(temp_comp);
+		QuestInstance=Cast<AOmegaQuestInstance>(temp_comp);
 		if(GetDataList_ActiveTasks())
 		{
-			GetDataList_ActiveTasks()->SetListOwner(QuestComponent);
+			GetDataList_ActiveTasks()->SetListOwner(QuestInstance);
 		}
 	}
 	Super::OnSourceAssetChanged_Implementation(Asset);
@@ -339,12 +333,12 @@ void UDataWidgetBase_Quest::OnSourceAssetChanged_Implementation(UObject* Asset)
 
 void UDataWidgetBase_Quest::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
-	if(QuestComponent)
+	if(QuestInstance)
 	{
 		if(GetDataList_ActiveTasks())
 		{
 			GetDataList_ActiveTasks()->ClearList();
-			for(auto* temp_object : QuestComponent->GetActiveQuestTasks())
+			for(auto* temp_object : QuestInstance->GetActiveTasks())
 			{
 				if(temp_object)
 				{
@@ -360,18 +354,6 @@ void UDataWidgetBase_Quest::Native_OnRefreshed(UObject* SourceAsset, UObject* Li
 // Equipment
 // ==============================================================================================================
 
-void UDataWidgetBase_Equipment::OnSourceAssetChanged_Implementation(UObject* Asset)
-{
-	if(UActorComponent* temp_comp = local_GetComponentFromObject(Asset,UEquipmentComponent::StaticClass()))
-	{
-		REF_Comp=Cast<UEquipmentComponent>(temp_comp);
-		if(GetDataList_EquipSlots())
-		{
-			GetDataList_EquipSlots()->SetListOwner(REF_Comp);
-		}
-	}
-	Super::OnSourceAssetChanged_Implementation(Asset);
-}
 
 void UDataWidgetBase_Equipment::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
@@ -393,21 +375,17 @@ void UDataWidgetBase_EquipmentSlot::OnSourceAssetChanged_Implementation(UObject*
 
 void UDataWidgetBase_EquipmentSlot::OnNewListOwner_Implementation(UObject* ListOwner)
 {
-	if(UActorComponent* temp_comp = local_GetComponentFromObject(ListOwner,UEquipmentComponent::StaticClass()))
-	{
-		REF_Comp=Cast<UEquipmentComponent>(temp_comp);
-	}
 	Super::OnNewListOwner_Implementation(ListOwner);
 }
 
 void UDataWidgetBase_EquipmentSlot::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
-	if(REF_Comp && REF_Slot)
+	if (REF_Slot)
 	{
-		if(GetDataWidget_EquippedItem())
+		if (UDataWidget* _wig=GetDataWidget_EquippedItem())
 		{
-			bool bRetunVal;
-			GetDataWidget_EquippedItem()->SetSourceAsset(REF_Comp->GetEquipmentInSlot(REF_Slot,bRetunVal));
+			bool _valid;
+			_wig->SetSourceAsset(GetLinkedCombatant()->Equipment_GetInSlot(REF_Slot,_valid));
 		}
 	}
 	Super::Native_OnRefreshed(SourceAsset, ListOwner);
@@ -576,7 +554,7 @@ void UDataWidgetBase_SaveSlot::OnSourceAssetChanged_Implementation(UObject* Asse
 {
 	if(GetOwningPlayer() && GetGameInstance())
 	{
-		UOmegaZoneSubsystem* l_ZoneSub=GetWorld()->GetSubsystem<UOmegaZoneSubsystem>();
+		UOmegaSubsystem_World* l_ZoneSub=GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 		UWidgetSwitcher* sw=GetWidget_Switcher_Type();
 		if(UOmegaSaveGame* sav=Cast<UOmegaSaveGame>(Asset))
 		{
@@ -597,7 +575,7 @@ void UDataWidgetBase_SaveSlot::OnSourceAssetChanged_Implementation(UObject* Asse
 			}
 			if(UTextBlock* txt=GetWidget_Text_LevelName())
 			{
-				if(UOmegaLevelData* lvl= l_ZoneSub->GetLevelData(nullptr))
+				if(UOmegaLevelData* lvl= l_ZoneSub->GetWorldManager()->Zone_GetLevelData(nullptr))
 				{
 					txt->SetText(lvl->DisplayName);
 				}

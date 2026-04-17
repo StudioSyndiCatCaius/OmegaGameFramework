@@ -17,7 +17,7 @@
 #include "Nodes/Route/FlowNode_Hub.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
-#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_World.h"
 
 class UOmegaActorSubsystem;
 
@@ -360,24 +360,26 @@ void UFlowAsset::InitializeInstance(const TWeakObjectPtr<UObject> InOwner, UFlow
 
 	for (TPair<FGuid, UFlowNode*>& Node : Nodes)
 	{
-		UFlowNode* NewNodeInstance = NewObject<UFlowNode>(this, Node.Value->GetClass(), NAME_None, RF_Transient, Node.Value, false, nullptr);
-		Node.Value = NewNodeInstance;
-
-		// there can be only one, automatically added while creating graph
-		if (UFlowNode_Start* InNode = Cast<UFlowNode_Start>(NewNodeInstance))
+		if(UFlowNode* NewNodeInstance = NewObject<UFlowNode>(this, Node.Value->GetClass(), NAME_None, RF_Transient, Node.Value, false, nullptr))
 		{
-			StartNode = InNode;
-		}
+			Node.Value = NewNodeInstance;
 
-		if (UFlowNode_CustomInput* CustomInput = Cast<UFlowNode_CustomInput>(NewNodeInstance))
-		{
-			if (!CustomInput->EventName.IsNone())
+			// there can be only one, automatically added while creating graph
+			if (UFlowNode_Start* InNode = Cast<UFlowNode_Start>(NewNodeInstance))
 			{
-				CustomInputNodes.Emplace(CustomInput);
+				StartNode = InNode;
 			}
-		}
 
-		NewNodeInstance->InitializeInstance();
+			if (UFlowNode_CustomInput* CustomInput = Cast<UFlowNode_CustomInput>(NewNodeInstance))
+			{
+				if (!CustomInput->EventName.IsNone())
+				{
+					CustomInputNodes.Emplace(CustomInput);
+				}
+			}
+
+			NewNodeInstance->InitializeInstance();
+		}
 	}
 }
 
@@ -707,18 +709,6 @@ bool UFlowAsset::IsBoundToWorld_Implementation()
 // Omega Additions
 //######################################################################################################
 
-void UFlowAsset::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
-{
-	Name = DisplayName;
-	Description = AssetDescription;
-}
-
-void UFlowAsset::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture,
-	UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	Brush = Icon;
-}
 
 void UFlowAsset::GetGeneralAssetLabel_Implementation(FString& Label)
 {
@@ -823,17 +813,20 @@ bool UFlowAsset::ForceActivateHubNode(FName HubName)
 
 AActor* UFlowAsset::GetActorByBinding_Asset(UPrimaryDataAsset* Asset,bool bFallbackToFirstIdentity)
 {
-	if(GetWorld() && ActorBindings_ByAsset.Contains(Asset) && ActorBindings_ByAsset[Asset])
+	if (Asset && GetWorld())
 	{
-		return ActorBindings_ByAsset[Asset]->Private_GetActor(GetWorld());
-	}
-	if(bFallbackToFirstIdentity)
-	{
-		if(UOmegaActorSubsystem* actor_subsystem=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+		if(GetWorld() && ActorBindings_ByAsset.Contains(Asset) && ActorBindings_ByAsset[Asset])
 		{
-			if(AActor* a= actor_subsystem->GetFirstActorIfIdentity(Asset))
+			return ActorBindings_ByAsset[Asset]->Private_GetActor(GetWorld());
+		}
+		if(bFallbackToFirstIdentity)
+		{
+			if(UOmegaSubsystem_World* actor_subsystem=GetWorld()->GetSubsystem<UOmegaSubsystem_World>())
 			{
-				return a;
+				if(AActor* a= actor_subsystem->GetFirstActorIfIdentity(Asset))
+				{
+					return a;
+				}
 			}
 		}
 	}

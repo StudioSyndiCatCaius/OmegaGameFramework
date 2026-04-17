@@ -3,26 +3,26 @@
 
 #include "Components/Component_AssetSquad.h"
 
-#include "Components/Component_ActorIdentity.h"
-#include "Components/Component_Combatant.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Save.h"
 
 
-UAssetSquad_Identity* UAssetSquadComponent::ValidateSquadID(UAssetSquad_Identity* override) const
+UAssetSquad_Identity* UAssetSquadComponent::ValidateSquadID(UAssetSquad_Identity* override)
 {
-	if(override) { return override;} return Default_SquadID;
+	if(override) { return override;} return CurrentSquad_Get();
 }
 
 int32 UAssetSquadComponent::ValidateMember(UPrimaryDataAsset* member)
 {
 	if(member)
 	{
-		if(!SquadData.Assignments.Contains(member))
+		if(!L_GetSquadData()->Assignments.Contains(member))
 		{
-			SquadData.Assignments.Add(member,nullptr);
+			L_GetSquadData()->Assignments.Add(member,nullptr);
 		}
-		if(!SquadData.Order.Contains(member))
+		if(!L_GetSquadData()->Order.Contains(member))
 		{
-			SquadData.Order.Add(member);
+			L_GetSquadData()->Order.Add(member);
 		}
 	}
 	return -1;
@@ -30,30 +30,52 @@ int32 UAssetSquadComponent::ValidateMember(UPrimaryDataAsset* member)
 
 void UAssetSquadComponent::ValidateData()
 {
-	for(auto* i : SquadData.Order)
+	for(auto* i : L_GetSquadData()->Order)
 	{
 		if(i) { ValidateMember(i);}
 	}
-	for(auto& p : SquadData.Assignments)
+	for(auto& p : L_GetSquadData()->Assignments)
 	{
 		if(p.Key) { ValidateMember(p.Key);}
 	}
 }
 
-TArray<UAssetSquad_Identity*> UAssetSquadComponent::L_GetListedSquads() const
+TArray<UAssetSquad_Identity*> UAssetSquadComponent::L_GetListedSquads()
 {
 	TArray<UAssetSquad_Identity*> sq;
-	SquadData.Assignments.GenerateValueArray(sq);
+	L_GetSquadData()->Assignments.GenerateValueArray(sq);
 	return sq;
 }
 
 void UAssetSquadComponent::BeginPlay()
 {
-	if(!Default_SquadID)
+	if(!CurrentSquad_Get())
 	{
-		Default_SquadID=NewObject<UAssetSquad_Identity>(this,UAssetSquad_Identity::StaticClass());
+		CurrentSquad_Set(NewObject<UAssetSquad_Identity>(this,UAssetSquad_Identity::StaticClass()));
 	}
 	Super::BeginPlay();
+}
+
+FOmegaAssetSquad_Data* UAssetSquadComponent::L_GetSquadData()
+{
+	if (UOmegaSaveSubsystem* s=OGF_Subsystems::oSave(this))
+	{
+		return & s->GetSaveObject(false)->SquadData.FindOrAdd(SaveBinding);
+	}
+	return &SquadData;
+}
+
+void UAssetSquadComponent::CurrentSquad_Set(UAssetSquad_Identity* Squad)
+{
+	if (CurrentSquad_Get()!=Squad)
+	{
+		L_GetSquadData()->CurrentSquad=Squad;
+	}
+}
+
+UAssetSquad_Identity* UAssetSquadComponent::CurrentSquad_Get()
+{
+	return L_GetSquadData()->CurrentSquad;
 }
 
 void UAssetSquadComponent::SetSquadData(FOmegaAssetSquad_Data Data)
@@ -64,7 +86,7 @@ void UAssetSquadComponent::SetSquadData(FOmegaAssetSquad_Data Data)
 FOmegaAssetSquad_Data UAssetSquadComponent::GetSquadData()
 {
 	ValidateData();
-	return SquadData;
+	return *L_GetSquadData();
 }
 
 void UAssetSquadComponent::RemoveAllMembersFromSquad(UAssetSquad_Identity* Squad)
@@ -73,7 +95,7 @@ void UAssetSquadComponent::RemoveAllMembersFromSquad(UAssetSquad_Identity* Squad
 	if(Squad)
 	{
 		TArray<UPrimaryDataAsset*> as;
-		SquadData.Assignments.GetKeys(as);
+		L_GetSquadData()->Assignments.GetKeys(as);
 		for(auto* a : as)
 		{
 			if(a)
@@ -90,9 +112,9 @@ void UAssetSquadComponent::RemoveMemberFromAllSquads(UPrimaryDataAsset* Member)
 	if(Member)
 	{
 		TArray<UAssetSquad_Identity*> sq;
-		if(SquadData.Assignments.Contains(Member))
+		if(L_GetSquadData()->Assignments.Contains(Member))
 		{
-			SquadData.Assignments.Remove(Member);
+			L_GetSquadData()->Assignments.Remove(Member);
 		}
 	}
 }
@@ -107,12 +129,12 @@ void UAssetSquadComponent::SetMemberInSquad(UPrimaryDataAsset* Member, UAssetSqu
 			{
 				RemoveMemberFromAllSquads(Member);
 			}
-			SquadData.Assignments.Add(Member,Squad);
+			L_GetSquadData()->Assignments.Add(Member,Squad);
 			OnSquadMembersChanged.Broadcast(this,Squad,Member,true);
 		}
 		else if(!InSquad && IsMemberInSquad(Member,Squad))
 		{
-			SquadData.Assignments.Add(Member,nullptr);
+			L_GetSquadData()->Assignments.Add(Member,nullptr);
 			OnSquadMembersChanged.Broadcast(this,Squad,Member,false);
 		}
 	}
@@ -132,7 +154,7 @@ TArray<UPrimaryDataAsset*> UAssetSquadComponent::GetSquadMembers(UAssetSquad_Ide
 	TArray<UPrimaryDataAsset*> out;
 	if(!Squad) { return out;}
 	ValidateData();
-	for(auto* P : SquadData.Order)
+	for(auto* P : L_GetSquadData()->Order)
 	{
 		if(P && GetMemberSquad(P)==Squad)
 		{
@@ -144,9 +166,9 @@ TArray<UPrimaryDataAsset*> UAssetSquadComponent::GetSquadMembers(UAssetSquad_Ide
 
 UAssetSquad_Identity* UAssetSquadComponent::GetMemberSquad(UPrimaryDataAsset* Member)
 {
-	if(Member && SquadData.Assignments.Contains(Member))
+	if(Member && L_GetSquadData()->Assignments.Contains(Member))
 	{
-		return SquadData.Assignments.FindOrAdd(Member);
+		return L_GetSquadData()->Assignments.FindOrAdd(Member);
 	} 
 	return nullptr;
 }
@@ -189,9 +211,9 @@ void UAssetSquadComponent::SwapSquadMembers(UPrimaryDataAsset* A, UPrimaryDataAs
 	UAssetSquad_Identity* s_a=GetMemberSquad(A);
 	int32 i_b=GetMemberIndex_InFirstSquad(B);
 	UAssetSquad_Identity* s_b=GetMemberSquad(B);
-	if(SquadData.Order.IsValidIndex(i_a) && SquadData.Order.IsValidIndex(i_b))
+	if(L_GetSquadData()->Order.IsValidIndex(i_a) && L_GetSquadData()->Order.IsValidIndex(i_b))
 	{
-		SquadData.Order.Swap(i_a,i_b);
+		L_GetSquadData()->Order.Swap(i_a,i_b);
 		OnAssetSquadMembersSwapped.Broadcast(this,s_a,s_b);
 	}
 	

@@ -13,6 +13,8 @@ UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaFunctions_Entity : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
+public:
+	static FOmegaEntity* getEntityRefById(const UObject* WorldContextObject, FOmegaEntityID ID, bool bGlobal);
 
 	static UOmegaSaveBase* _getEntitySaveObj(const UObject* context,bool bGlobal);
 	

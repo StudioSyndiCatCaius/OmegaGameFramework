@@ -5,7 +5,7 @@
 
 #include "Engine/GameInstance.h"
 #include "Subsystems/Subsystem_GameManager.h"
-#include "Flow/Public/FlowSubsystem.h"
+#include "FlowSubsystem.h"
 
 
 void UAsyncAction_StartFlowAsset::Native_OnFinishFlow(UFlowAsset* FlowAsset, FName Output, const FString& Flag)
@@ -28,7 +28,14 @@ void UAsyncAction_StartFlowAsset::Activate()
 	{
 		SubsystemRef->OnFlowEventFinish.AddDynamic(this, &UAsyncAction_StartFlowAsset::Native_OnFinishFlow);
 		Local_FlowInst=SubsystemRef->StartRootFlow(this, Local_FlowAsset, Local_StartNode, Local_Input, Local_MultiInst);
-		Begin.Broadcast(Local_FlowInst);
+		if (Local_FlowInst)
+		{
+			Begin.Broadcast(Local_FlowInst);	
+		}
+		else
+		{
+			SetReadyToDestroy();
+		}
 	}
 }
 

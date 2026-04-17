@@ -3,12 +3,14 @@
 
 #include "Widget/UI_Background.h"
 
+#include "OmegaSettings_Slate.h"
 #include "Components/BorderSlot.h"
 #include "Components/Image.h"
 #include "Components/NamedSlot.h"
 #include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Misc/OmegaUtils_Macros.h"
 
 
 void L_SetContentToSlot(UWidget* content, UNamedSlot* slot)
@@ -34,7 +36,14 @@ TArray<FOmegaUI_SectionInfo> UOmegaUIStyle_Background::GetBorderSections_Impleme
 
 void UOmegaUI_Background::NativePreConstruct()
 {
-	SetStyle(Style);
+	if (UseDefaultStyle)
+	{
+		SetStyle(OGF_CFG_STYLE()->Background_Default.LoadSynchronous());
+	}
+	else
+	{
+		SetStyle(Style);
+	}
 	Super::NativePreConstruct();
 }
 

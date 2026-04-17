@@ -43,6 +43,7 @@ public class FlowEditor : ModuleRules
             "Projects",
             "PropertyEditor",
             "RenderCore",
+            "SequencerCore",
             "Sequencer",
             "Slate",
             "SlateCore",

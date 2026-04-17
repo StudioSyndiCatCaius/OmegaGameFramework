@@ -10,14 +10,19 @@
 	"DocsURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/764b3140-7bc2-485d-80f7-15d9c4fa71cc/docs",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/2ca6202e55f44cfd82659fbca6591603",
 	"SupportURL": "https://www.guilded.gg/Studio-SyndiCat/groups/rD4Na20z/channels/8f85af8b-d2bb-48cf-97d3-63c8c9993285/forums",
-	"EngineVersion": "5.4",
+	"EngineVersion": "5.5.0",
 	"CanContainContent": true,
-	"Installed": true,
+	"Installed": false,
 	"Modules": [
 		{
-			"Name": "_OmegaCore",
+			"Name": "OmegaCore",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Linux",
+				"Mac",
+				"Win64"
+			]
 		},
 		{
 			"Name": "LuaMachine",
@@ -65,11 +70,6 @@
 			]
 		},
 		{
-			"Name": "OmegaData",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "OmegaDemo",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
@@ -95,29 +95,23 @@
 			"loadingPhase": "Default"
 		},
 		{
-			"Name": "OmegaMutable",
-			"Type": "Runtime",
-			"loadingPhase": "Default"
-		},
-		{
-			"Name": "OmegaWorld",
-			"Type": "Runtime",
-			"loadingPhase": "Default"
-		},
-		{
 			"Name": "Flow",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "FlowEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
-		},
+		}
 	],
 	"Plugins": [
 		{
 			"Name": "EnhancedInput",
+			"Enabled": true
+		},
+		{
+			"Name": "GeometryScripting",
 			"Enabled": true
 		},
 		{

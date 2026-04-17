@@ -14,7 +14,7 @@ void UAsyncAction_Menu::NativeShutdown(FGameplayTagContainer CloseTags, UObject*
 
 void UAsyncAction_Menu::Activate()
 {
-	UOmegaPlayerSubsystem* SubsystemRef = PlayerRef->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+	UOmegaSubsystem_Player* SubsystemRef = PlayerRef->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>();
 	bool IsMenuOpen;
 	SubsystemRef->GetMenu(MenuRef, IsMenuOpen);
 	if(!IsMenuOpen)

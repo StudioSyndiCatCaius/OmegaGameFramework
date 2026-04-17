@@ -28,7 +28,7 @@ public:
 	UObject* ContextRef;
 
 	UFUNCTION()
-	void Native_OnEvent(FName Event, UObject* Context);
+	void Native_OnEvent(FName Event, UObject* Context,FOmegaCommonMeta _meta);
 	
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),DisplayName="Ω🔷 Wait for Global Event (Named)") 
@@ -55,8 +55,7 @@ public:
 	UPROPERTY()
 	UObject* ContextRef;
 
-	UFUNCTION()
-	void Native_OnEvent(FGameplayTag Event, UObject* Context);
+	UFUNCTION() void Native_OnEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta _meta);
 	
 	virtual void Activate() override;
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject"),DisplayName="Ω🔷 Wait for Global Event (Tagged)") 

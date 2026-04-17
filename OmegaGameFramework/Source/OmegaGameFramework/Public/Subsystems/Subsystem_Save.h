@@ -7,21 +7,19 @@
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Interfaces/I_Common.h"
-#include "Components/ActorComponent.h"
-#include "Engine/DataAsset.h"
-#include "Engine/World.h"
 #include "JsonObjectWrapper.h"
 #include "LuaValue.h"
-#include "Misc/Paths.h"
+#include "Components/Component_AssetSquad.h"
 #include "Misc/Timespan.h"
 #include "GameFramework/SaveGame.h"
-#include "Interfaces/I_BitFlag.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Types/Struct_SoftParams.h"
+#include "Misc/OmegaSaveTypes.h"
 #include "Subsystem_Save.generated.h"
 
+class UOmegaPreferencePreset;
 class UOmegaBGM;
 class UOAsset_Campaign;
 class UOmegaQuest;
@@ -32,24 +30,7 @@ class UOmegaSaveCondition;
 class UOmegaZoneData;
 class UGamePreference;
 
-// ====================================================================================================
-// ENUMS
-// ====================================================================================================
 
-USTRUCT(BlueprintType)
-struct FOmegaSaveConditions
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="OmegaSaveConditions")
-	TEnumAsByte<EBoolType> CheckType=BoolType_And;
-	
-	UPROPERTY(BlueprintReadOnly, Category="OmegaSaveConditions", instanced, EditAnywhere)
-	TArray<class UOmegaSaveCondition*> Conditions;
-	
-	UPROPERTY(BlueprintReadOnly, Category="OmegaSaveConditions", EditAnywhere)
-	TArray<class UOmegaSaveConditionCollection*> ConditionCollections;
-};
 
 // ====================================================================================================
 // Subsystem
@@ -322,7 +303,7 @@ struct FOmegaSaveAssetList
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -333,12 +314,12 @@ public:
 	FLuaValue Lua_LoadTable(UObject* context) const;
 	void Lua_SaveTable(UObject* context, FLuaValue LuaValue);
 	
-
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Base")  FGuid SaveGuid;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Base")  int32 SaveSeed;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") FOmegaEntitySet Entities;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Save") FOmegaSoftParams GlobalVars;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<FName,FOmegaAssetSquad_Data> SquadData;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Save") TArray<UPrimaryDataAsset*> CollectedDataAssets;
@@ -420,6 +401,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveGlobal : public UOmegaSaveBase
 	GENERATED_BODY()
 
 public:
+
 };
 
 // ====================================================================================================

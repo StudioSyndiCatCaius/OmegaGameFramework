@@ -8,10 +8,10 @@
 #include "Functions/F_Component.h"
 #include "Selectors/Selector_Object.h"
 #include "Nodes/FlowNode.h"
-#include "Subsystems/Subsystem_Quest.h"
 #include "Widget/Menu.h"
 #include "FlowNode_System.generated.h"
 
+class AOmegaQuestInstance;
 class UOmegaEncounter_Asset;
 class UOmegaQuestComponent;
 
@@ -23,16 +23,18 @@ class OMEGADEMO_API UFlowNode_SystemClassBASE : public UFlowNode
 public:
 	
 	virtual UObject* L_GetContext() const { return nullptr;};
-	virtual FString L_GetFlag() const { return "";};
+	virtual FString L_GetFlag() const;
 	virtual TSubclassOf<UObject> L_GetFlagClass() const { return nullptr;};
 	virtual FOmegaCommonMeta L_GetMeta() const;
 	
 	UFUNCTION() virtual TArray<FString> L_GetFlags();
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",meta=(GetOptions="L_GetLocalMetaList"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",meta=(GetOptions="L_GetLocalMetaList"),DisplayName="🇲Local META to use")
 	FName LocalMetaToUse;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",meta=(GetOptions="L_GetFlags"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",meta=(GetOptions="L_GetFlags"),DisplayName="🚩Flag (Key)")
 	FString Flag;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="🚩Flag (Custom)")
+	FString Flag_Append;
 };
 
 
@@ -76,13 +78,14 @@ public:
 #endif
 	
 	virtual TSubclassOf<AOmegaGameplaySystem> L_GetSystem() const override;
-	virtual FString L_GetFlag() const override;
 	virtual UObject* L_GetContext() const override;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
-	TSubclassOf<AOmegaGameplaySystem> System;
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Game")
-	UOmegaSelector_Object* Context;
+	UFUNCTION() TArray<FName> L_GetConstants() const;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️System (Constant)",meta=(GetOptions="L_GetConstants")) FName Constant;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️System") TSubclassOf<AOmegaGameplaySystem> System;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="🔷Context")
+	UObject* Context;
 };
 
 UCLASS(DisplayName="⚔️System - Combat Encounter",Category="Game")
@@ -111,8 +114,6 @@ class OMEGADEMO_API UFlowNode_System_DlgFlow : public UFlowNode_GameplaySystemBA
 
 	virtual void L_SystemEnd(UObject* context, FString flag) override;
 
-
-
 public:
 	
 #if WITH_EDITOR
@@ -121,7 +122,6 @@ public:
 #endif
 	
 	virtual TSubclassOf<AOmegaGameplaySystem> L_GetSystem() const override;
-	virtual FString L_GetFlag() const override;
 	virtual UObject* L_GetContext() const override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
@@ -142,8 +142,9 @@ class OMEGADEMO_API UFlowNode_Menu : public UFlowNode_SystemClassBASE
 	GENERATED_BODY()
 
 	virtual UObject* L_GetContext() const override;
-	virtual TSubclassOf<UObject> L_GetFlagClass() const override { return Menu;};
-
+	virtual TSubclassOf<UObject> L_GetFlagClass() const override;
+	TSubclassOf<UMenu> L_GetMenuClass() const;
+	
 	UPROPERTY() UMenu* l_menu=nullptr;
 	UFUNCTION() void L_End(FGameplayTagContainer inTags, UObject* context, FString _flag);
 
@@ -157,11 +158,15 @@ public:
 	virtual FString GetNodeCategory() const override { return "Game"; };
 	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override{ OutColor=COLOR_DEMO_FLOW; return true;};
 #endif
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
+	
+	UFUNCTION() TArray<FName> L_GetConstants() const;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️Menu (Constant)",meta=(GetOptions="L_GetConstants"))
+	FName Constant;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️Menu")
 	TSubclassOf<UMenu> Menu;
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Game")
-	UOmegaSelector_Object* Context;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
+	UObject* Context;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	FGameplayTagContainer Tags;
 
@@ -196,32 +201,6 @@ public:
 	FGameplayTag SpawnID;
 };
 
-// ==============================================================================================================
-// -
-// ==============================================================================================================
-
-UCLASS(DisplayName="Quest - Start",Category="Gameplay")
-class OMEGADEMO_API UFlowNode_QuestStart : public UFlowNode
-{
-	GENERATED_BODY()
-
-	UFUNCTION() void L_QuestEnd(UOmegaQuestComponent* comp, UOmegaQuest* q);
-	
-public:
-	UFlowNode_QuestStart();
-
-	virtual void ExecuteInput(const FName& PinName) override;
-	
-#if WITH_EDITOR
-	virtual FString GetNodeDescription() const override;
-	virtual FString GetNodeCategory() const override { return "Gameplay"; };
-	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override{ OutColor=COLOR_DEMO_FLOW; return true;};
-#endif
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flow")
-	TSoftObjectPtr<UOmegaQuest> Quest;
-
-};
 
 
 UCLASS(DisplayName="Global Event - Named",Category="Await")
@@ -230,7 +209,7 @@ class OMEGADEMO_API UFlowNode_GlobalEvent_Named : public UFlowNode
 	GENERATED_BODY()
 
 	bool b_isAwaitingEvent;
-	UFUNCTION() void L_OnGEvent(FName Event, UObject* context);
+	UFUNCTION() void L_OnGEvent(FName Event, UObject* context,FOmegaCommonMeta _meta);
 	
 public:
 	UFlowNode_GlobalEvent_Named();

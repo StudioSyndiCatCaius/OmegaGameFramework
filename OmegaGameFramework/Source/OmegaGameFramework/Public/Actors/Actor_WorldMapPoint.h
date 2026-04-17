@@ -34,7 +34,6 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") USphereComponent* Range;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UDataWidgetComponent* DataWidgetComponent;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* Config;
 
 	UPROPERTY() UBillboardComponent* cmp_icon;
 

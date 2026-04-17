@@ -32,7 +32,8 @@ protected:
 	virtual const FSlateBrush* GetShadowBrush(bool bSelected) const override;
 	virtual void GetOverlayBrushes(bool bSelected, const FVector2D WidgetSize, TArray<FOverlayBrushInfo>& Brushes) const override;
 	// --
-
+	mutable TOptional<FSlateBrush> CachedNodeIcon;
+	const FSlateBrush* GetNodeIcon() const;
 	virtual void GetPinBrush(const bool bLeftSide, const float WidgetWidth, const int32 PinIndex, const FFlowBreakpoint& Breakpoint, TArray<FOverlayBrushInfo>& Brushes) const;
 
 	// SGraphNode

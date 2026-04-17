@@ -2,9 +2,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Materials/MaterialInstanceDynamic.h"
 #include "GameplayTagContainer.h"
 #include "Struct_SoftParams.generated.h"
+
+class UPrimaryDataAsset;
 
 USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaSoftParams

@@ -265,8 +265,11 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category = "Lua")
 	static FLuaValue LuaRunNonContentFile(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& Filename, const bool bIgnoreNonExistent);
 
-	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua",DisplayName="Lua - Run Code Asset")
 	static FLuaValue LuaRunCodeAsset(UObject* WorldContextObject, TSubclassOf<ULuaState> State, ULuaCode* CodeAsset);
+
+	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject",AutoCreateRefTerm = "Args"), Category="Lua",DisplayName="Lua - Run Code Asset (as Function)")
+	static FLuaValue LuaRunCodeAsset_AsFunction(UObject* WorldContextObject, TSubclassOf<ULuaState> State, ULuaCode* CodeAsset, TArray<FLuaValue> Args);
 	
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay="State", WorldContext = "WorldContextObject"), Category="Lua")
 	static FLuaValue LuaRunByteCode(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const TArray<uint8>& ByteCode, const FString& CodePath);
@@ -432,8 +435,10 @@ public:
 	static FLuaValue Conv_IntToLuaValue(const int32 Value);
 	
 	//Vector
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua - -> Vector", BlueprintAutocast), Category = "Lua")
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Lua -> Vector", BlueprintAutocast), Category = "Lua")
 	static FVector Conv_LuaValueToFVector(const FLuaValue& Value,FVector NilFallback);
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Vector -> Lua", BlueprintAutocast,WorldContext="context"), Category = "Lua")
+	static FLuaValue Conv_VectorToLua(UObject* context,const FVector& Value);
 	UFUNCTION()
 	static FVector LuaTableToVector(FLuaValue Value);
 	

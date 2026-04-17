@@ -6,7 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "Actor_Pickup.generated.h"
 
+class UNiagaraComponent;
+class USphereComponent;
 class AOmegaGameplayCue;
+class UAudioComponent;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaPickupActor : public AActor
@@ -45,4 +48,8 @@ public:
 	bool MoveToActorOnPickup;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Pickup")
 	float MoveToActorDuration=0.2;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") USphereComponent* Range;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UNiagaraComponent* NiagaraComponent;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UAudioComponent* AudioComponent;
 };

@@ -155,14 +155,13 @@ void AVolumeTrigger_GlobalEvent::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		if(_pawn->IsPlayerControlled())
 		{
-			UOmegaGameManager* _sys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
 			if(Event_Named.IsValid())
 			{
-				_sys->FireGlobalEvent(Event_Named,this);
+				SS_GI->FireGlobalEvent(Event_Named,this, FOmegaCommonMeta());
 			}
 			if(Event_Tag.IsValid())
 			{
-				_sys->FireTaggedGlobalEvent(Event_Tag,this);
+				SS_GI->FireTaggedGlobalEvent(Event_Tag,this, FOmegaCommonMeta());
 			}
 		}
 	}

@@ -35,7 +35,7 @@ public class LuaMachine : ModuleRules
                 "DeveloperSettings",
                 "GameplayTags",
                 "PakFile",
-                "OmegaCORE",
+                "OmegaCore",
 				// ... add other public dependencies that you statically link with here ...
 			}
             );

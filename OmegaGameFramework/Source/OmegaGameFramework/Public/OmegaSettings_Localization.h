@@ -48,19 +48,21 @@ public:
 	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Localization")
 	TArray<TSoftObjectPtr<UOAsset_Localization>> LocalizationList;
 	
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice Clip")
-	FString VoiceClip_Prefex="vo_{id}_";
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
+	FString VoiceClip_ExternalDirectory="/Locale/";
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice")
+	FString VoiceClip_Extension="wav";
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice")
+	FString VoiceClip_Prefex="vo_";
 
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
+	FString Subpath_Clip="clip";
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
+	FString Subpath_Line="line";
 	
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
-	FString Internal_Voice_Path="/Game/0_Main/Assets/audio/voice/";
-
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
-	FString Subpath_Clip="/voice/{culture}/clip/";
-	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Voice",meta=(MultiLine))
-	FString Subpath_Line="/voice/{culture}/line/";
+	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Internal Voice",meta=(MultiLine))
+	TArray<FString> InternalVoice_LocalePaths;
 	
-
 	//sound classes to search for a voice clip or line
 	UPROPERTY(EditAnywhere,Config,Category="Voice")
 	TArray<TSoftClassPtr<USoundBase>> VoiceSoundClasses;

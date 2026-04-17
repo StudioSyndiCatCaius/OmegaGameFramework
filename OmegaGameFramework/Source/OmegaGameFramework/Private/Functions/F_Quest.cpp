@@ -1,33 +1,41 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #include "Functions/F_Quest.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_World.h"
 
-bool UOmegaFunctions_Quest::Start(UObject* WorldContext, UOmegaQuest* quest)
+TArray<AOmegaQuestInstance*> UOmegaFunctions_Quest::GetAllActiveInstances(UObject* WorldContext)
 {
-	if (quest && WorldContext && WorldContext->GetWorld()->GetGameInstance())
+	TArray<AOmegaQuestInstance*> out;
+	if (UOmegaSubsystem_World* w=OGF_Subsystems::oWorld(WorldContext))
 	{
-		if (UOmegaQuestSubsystem* _subsys=WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>())
+		return w->WorldManager->quest_instances;
+	}
+	return out;
+}
+
+AOmegaQuestInstance* UOmegaFunctions_Quest::Start(UObject* WorldContext, UOmegaQuest* quest)
+{
+	if (UOmegaSubsystem_World* w=OGF_Subsystems::oWorld(WorldContext))
+	{
+		if (AOmegaWorldManager* wm=w->WorldManager.Get())
 		{
-			if (UOmegaQuestComponent* comp=_subsys->GetQuest_FirstWithAsset(quest))
-			{
-				return comp->StartQuest(quest);
-			}
+			return wm->Quest_Start(quest);	
 		}
 	}
-	return false;
+	return nullptr;
 }
 
 
 bool UOmegaFunctions_Quest::End(UObject* WorldContext, UOmegaQuest* quest, bool bComplete)
 {
-	if (quest && WorldContext && WorldContext->GetWorld()->GetGameInstance())
+	if (UOmegaSubsystem_World* w=OGF_Subsystems::oWorld(WorldContext))
 	{
-		if (UOmegaQuestSubsystem* _subsys=WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>())
+		if (AOmegaWorldManager* wm=w->WorldManager.Get())
 		{
-			if (UOmegaQuestComponent* comp=_subsys->GetQuest_FirstWithAsset(quest))
-			{
-				return comp->EndQuest(bComplete);
-			}
+			return wm->Quest_Stop(quest,!bComplete);	
 		}
 	}
 	return false;
@@ -35,23 +43,21 @@ bool UOmegaFunctions_Quest::End(UObject* WorldContext, UOmegaQuest* quest, bool 
 
 bool UOmegaFunctions_Quest::CheckCondition(UObject* WorldContext, UOmegaQuest* in, EOmegaQuestConditionType Condition)
 {
-	if (in && WorldContext && WorldContext->GetWorld()->GetGameInstance())
+	if (UOmegaSubsystem_World* w=OGF_Subsystems::oWorld(WorldContext))
 	{
-		if (UOmegaQuestSubsystem* _subsys=WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>())
+		if (AOmegaWorldManager* wm=w->WorldManager.Get())
 		{
-			if (UOmegaQuestComponent* comp=_subsys->GetQuest_FirstWithAsset(in))
-			{
-				switch (Condition) {
-				case QuestFilter_Startable:
-					return comp->CanQuestStart();
-				case QuestFilter_Active:
-					return comp->IsQuestActive();
-				case QuestFilter_Complete:
-					return comp->IsQuestComplete();
-				}	
+			switch (Condition) {
+			case QuestFilter_Startable:
+				return wm->Quest_CanStart(in);
+			case QuestFilter_Active:
+				return wm->Quest_GetStatus(in)==QuestStatus_Active;
+			case QuestFilter_Complete:
+				return wm->Quest_GetStatus(in)==QuestStatus_Complete;
 			}
 		}
 	}
+	
 	return false;
 }
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaActors.h"
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
 #include "Misc/OmegaUtils_Volume.h"
@@ -13,7 +14,7 @@ class UTextRenderComponent;
 class UBillboardComponent;
 
 UCLASS(Abstract)
-class OMEGAGAMEFRAMEWORK_API AAdvancedVolume : public AActor
+class OMEGAGAMEFRAMEWORK_API AAdvancedVolume : public AOmegaActorBASE
 {
 	GENERATED_BODY()
 

@@ -24,6 +24,6 @@ public:
 	//UFUNCTION(BlueprintPure,Category="Omega|Animation")
 	//static FMovieSceneMarkedFrame SelectFrameByName(ULevelSequence* LevelSequence, FString MarkName);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|LevelSequence",meta=(ExpandBoolAsExecs="result"))
+	UFUNCTION(BlueprintCallable,Category="Omega|LevelSequence",meta=(ExpandBoolAsExecs="result"),DisplayName="Sequence - Has Mark?")
 	static FMovieSceneMarkedFrame DoesSequenceHaveMark(ULevelSequence* Sequence, const FString& Mark, bool& result);
 };

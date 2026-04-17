@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaActors.h"
+#include "OmegaComponent.h"
 #include "Interfaces/I_Common.h"
 #include "Components/ActorComponent.h"
 #include "Component_InstancedActor.generated.h"
@@ -11,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInstanceNotify, AOmegaInstanceAc
 
 // Create several instances of single actor class
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UInstanceActorComponent : public UActorComponent, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UInstanceActorComponent : public UOmegaComponent, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -96,7 +98,7 @@ public:
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaInstanceActor : public AActor, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API AOmegaInstanceActor : public AOmegaActorBASE, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -127,12 +129,12 @@ public:
 
 	// INTERFACES
 	bool Local_SourceHasInterface() const;
-	
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
-	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override;
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
 
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralAssetColor_Implementation(FGameplayTag Tag, FLinearColor& Color) override;
+	
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
 

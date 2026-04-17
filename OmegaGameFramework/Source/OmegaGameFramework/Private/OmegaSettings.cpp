@@ -2,9 +2,16 @@
 
 
 #include "OmegaSettings.h"
+#include "MetasoundSource.h"
+
+UMetaSoundSource* UOmegaSettings::GetMetaSoundSourceFromPath() const
+{
+	return Cast<UMetaSoundSource>(BgmMetasound.LoadSynchronous());
+}
+
 
 #include "OmegaGameplayConfig.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Functions/F_File.h"
 #include "PhysicsEngine/PhysicsSettings.h"
@@ -15,11 +22,11 @@
 UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	RuntimeImport_BaseDirectory.Add("/Override/");
-    Default_InteractTag=FGameplayTag::RequestGameplayTag("Event.Actor.Interact");
+    //Default_InteractTag=FGameplayTag::RequestGameplayTag("Event.Actor.Interact");
+    
+    CombatantConfig_Default.AttributeSet=TSoftObjectPtr<UOmegaAttributeSet>(FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/Attributes/AttSet_OMEGA_Demo.AttSet_OMEGA_Demo")));
     
     System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
-   // System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
     System_Interaction=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
 }
 
@@ -57,11 +64,13 @@ TSubclassOf<UHUDLayer> UOmegaSettings::CorrectClass_HUD(TSubclassOf<UHUDLayer> C
 TArray<TSubclassOf<UOmegaGameplayModule>> UOmegaSettings::GetGameplayModuleClasses() const
 {
 	TArray<TSubclassOf<UOmegaGameplayModule>> ModuleClasses;
+    /*
 	for(FSoftClassPath TempPath : RegisteredGameplayModules)
 	{
 		UClass* const LocalClass = TempPath.IsValid() ? LoadObject<UClass>(nullptr, *TempPath.ToString()) : nullptr;
 		ModuleClasses.Add(LocalClass);
 	}
+	*/
 	return ModuleClasses;
 }
 
@@ -98,6 +107,20 @@ UClass* UOmegaSettings::GetOmegaGameSaveClass() const
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGame::StaticClass();
 }
 
+FOmegaCombatantConfig UOmegaSettings::L_GetCombatantConfigFromActor(AActor* Actor)
+{
+    if (Actor)
+    {
+        TSoftClassPtr<AActor> c=TSoftClassPtr<AActor>(Actor->GetClass());
+        if (CombatantConfig_ByClass.Contains(c))
+        {
+            return CombatantConfig_ByClass[c];
+        }
+        return CombatantConfig_Default;
+    }
+    return FOmegaCombatantConfig();
+}
+
 
 UClass* UOmegaSettings::GetOmegaGlobalSaveClass() const
 {
@@ -105,27 +128,31 @@ UClass* UOmegaSettings::GetOmegaGlobalSaveClass() const
 	return (LocalSaveClass != nullptr) ? LocalSaveClass : UOmegaSaveGlobal::StaticClass();
 }
 
-UOmegaGameCore* UOmegaSettings::GetGameCore() const
+UOmegaGameManager* UOmegaSettings::GetGameCore() const
 {
-	if (UOmegaGameCore* _core=GetMutableDefault<UOmegaGameCore>(GlobalSettingsClass.LoadSynchronous()))
-	{
-	    return _core;
-	}
-	return GetMutableDefault<UOmegaGameCore>();
+    if (!GlobalSettingsClass.IsNull())
+    {
+        if (TSubclassOf<UOmegaGameManager> _temp=GlobalSettingsClass.LoadSynchronous())
+        {
+            if (UOmegaGameManager* _core=GetMutableDefault<UOmegaGameManager>(_temp))
+            {
+                return _core;
+            }
+        }
+    }
+    
+	return GetMutableDefault<UOmegaGameManager>();
 }
 
 UOmegaFileManagerSettings* UOmegaSettings::GetSettings_File() const
 {
-    if (UOmegaFileManagerSettings* set=Cast<UOmegaFileManagerSettings>(DefaultSettings_FileManager.TryLoad()))
-    {
-        return set;
-    }
+    
     return nullptr;
 }
 
-TMap<FName, FOmegaInputConfig> UOmegaSettings::GetAllInputActionConfigs() const
+TMap<FGameplayTag, FOmegaInputConfig> UOmegaSettings::GetAllInputActionConfigs() const
 {
-    TMap<FName, FOmegaInputConfig> out;
+    TMap<FGameplayTag, FOmegaInputConfig> out;
     for (auto* s : GetAllGameplaySettings())
     {
         if (s)
@@ -136,9 +163,9 @@ TMap<FName, FOmegaInputConfig> UOmegaSettings::GetAllInputActionConfigs() const
     return out;
 }
 
-FOmegaInputConfig UOmegaSettings::GetInputActionConfig(FName input_action) const
+FOmegaInputConfig UOmegaSettings::GetInputActionConfig(FGameplayTag input_action) const
 {
-    TMap<FName, FOmegaInputConfig> temp=GetAllInputActionConfigs();
+    TMap<FGameplayTag, FOmegaInputConfig> temp=GetAllInputActionConfigs();
     return temp.FindOrAdd(input_action);
 }
 
@@ -158,14 +185,23 @@ TArray<UOmegaGameplayConfig*> UOmegaSettings::GetAllGameplaySettings() const
 //BitFlag -------------------------------------------------------
 
 
-void UOmegaSettings::OverrideActorLabel(AActor* actor)
+void UOmegaSettings::OverrideActorLabel(AActor* actor,const FString& string)
 {
     if (actor)
     {
 #if WITH_EDITOR
-        if (actor->GetActorLabel().Contains(actor->GetClass()->GetName()))
+        FString new_label="";
+        if (!string.IsEmpty())
         {
-            FString new_label=ActorLabelDefaultOverrides.FindOrAdd(TSoftClassPtr<AActor>(actor->GetClass()));
+            new_label=string;
+        }
+        else if (actor->GetActorLabel().Contains(actor->GetClass()->GetName()))
+        {
+            new_label=ActorLabelDefaultOverrides.FindOrAdd(TSoftClassPtr<AActor>(actor->GetClass()));
+        }
+
+        if (!new_label.IsEmpty())
+        {
             actor->SetActorLabel(new_label+"_"+FString::FromInt(FMath::RandRange(0,999)));
         }
 #endif
@@ -178,6 +214,22 @@ const FOmegaBitmaskEditorData* UOmegaSettings::GetEditorDataForClass(UClass* Cla
     if (!Class)
     {
         return nullptr;
+    }
+    
+    if (Class->ImplementsInterface(UDataInterface_General::StaticClass()))
+    {
+        //if default object
+        if (UObject* tempObj=GetMutableDefault<UObject>(Class))
+        {
+            bool b_override=false;
+
+            static FOmegaBitmaskEditorData ed_dat;
+            ed_dat = IDataInterface_General::Execute_Bitflags_Override(tempObj, b_override);
+            if (b_override)
+            {
+                return &ed_dat;
+            }
+        }
     }
 
     // First, try exact match

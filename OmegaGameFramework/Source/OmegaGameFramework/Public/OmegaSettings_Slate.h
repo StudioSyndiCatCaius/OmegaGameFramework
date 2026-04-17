@@ -10,6 +10,7 @@
 #include "Widget/UI_Widgets.h"
 #include "OmegaSettings_Slate.generated.h"
 
+class UOmegaHoverCursor;
 class UOmegaUIStyle_Background;
 class UOmegaBGM;
 class UOmegaTextFormater_Collection;
@@ -58,8 +59,8 @@ public:
 	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Elements")
 	TSoftObjectPtr<UOmegaSlateStyle_ComboBox> ComboBox_Default;
 
-	UPROPERTY(EditAnywhere, Category = "Misc", meta=(MetaClass="OmegaHoverCursor"))
-	FSoftClassPath HoverCursorClass;
+	UPROPERTY(EditAnywhere, Category = "Misc")
+	TSoftClassPtr<UOmegaHoverCursor> HoverCursorClass;
 	
 	UPROPERTY(EditAnywhere,Config,BlueprintReadOnly,Category="Sound")
 	TSoftObjectPtr<USoundBase> Sound_Hover;

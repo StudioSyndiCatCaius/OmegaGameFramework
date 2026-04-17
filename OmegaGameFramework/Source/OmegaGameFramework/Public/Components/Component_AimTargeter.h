@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "OmegaGameplayComponent.h"
-#include "Components/ActorComponent.h"
+#include "OmegaComponent.h"
 #include "Component_AimTargeter.generated.h"
 
 
@@ -21,7 +20,7 @@ public:
 
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UAimTargetComponent : public UOmegaGameplayComponent
+class OMEGAGAMEFRAMEWORK_API UAimTargetComponent : public UOmegaComponent
 {
 	GENERATED_BODY()
 

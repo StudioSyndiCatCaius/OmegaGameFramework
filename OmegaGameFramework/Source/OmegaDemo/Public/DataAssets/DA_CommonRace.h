@@ -10,7 +10,7 @@
 
 
 
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType,DisplayName="Ω-👽 Race")
 class OMEGADEMO_API UOAsset_CommonRace : public UOAsset_CombatSource
 {
 	GENERATED_BODY()

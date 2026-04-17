@@ -190,3 +190,50 @@ FSlateBrush UOmegaAssetLibrary_SlateBrush::GetBrush_Named(FName Name, bool& Resu
 	}
 	return fall_back;
 }
+
+bool UDataInterface_AssetLibraries::Uses(UObject* object)
+{
+	if (object && object->GetClass()->ImplementsInterface(UDataInterface_AssetLibraries::StaticClass()))
+	{
+		return true;
+	}
+	return false;
+}
+
+#define LOCAL_GETLIBS \
+UOmegaAssetLibrary_Animation* anim = nullptr; \
+UOmegaAssetLibrary_Sound* sound = nullptr; \
+UOmegaAssetLibrary_SlateBrush* _slate = nullptr; \
+IDataInterface_AssetLibraries::Execute_GetAppearanceLibraries(Object,anim,sound,_slate); \
+
+UOmegaAssetLibrary_Animation* UDataInterface_AssetLibraries::getAnim(UObject* Object)
+{
+	if (Uses(Object))
+	{
+		LOCAL_GETLIBS
+		if (anim) { return anim;}
+	}
+	return nullptr;
+}
+
+UOmegaAssetLibrary_SlateBrush* UDataInterface_AssetLibraries::getSlate(UObject* Object)
+{
+	if (Uses(Object))
+	{
+		LOCAL_GETLIBS
+		if (_slate){return _slate;}
+	}
+	return nullptr;
+}
+
+UOmegaAssetLibrary_Sound* UDataInterface_AssetLibraries::getSound(UObject* Object)
+{
+	if (Uses(Object))
+	{
+		LOCAL_GETLIBS
+		if (sound){return sound;}
+	}
+	return nullptr;
+}
+
+#undef LOCAL_GETLIBS

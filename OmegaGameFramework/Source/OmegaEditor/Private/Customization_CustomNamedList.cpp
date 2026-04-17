@@ -11,7 +11,7 @@
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "Types/Struct_CustomNamedList.h"
 
 TSharedRef<IPropertyTypeCustomization> FCustomization_CustomNamedList::MakeInstance()

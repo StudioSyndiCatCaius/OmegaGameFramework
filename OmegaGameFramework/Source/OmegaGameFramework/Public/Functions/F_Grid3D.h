@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "GameFramework/Actor.h"
 #include "Engine/DataAsset.h"
 #include "Misc/GeneralDataObject.h"
 #include "F_Grid3D.generated.h"

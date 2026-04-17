@@ -2,7 +2,7 @@
 
 
 #include "DataAssets/DA_Body.h"
-
+#include "Engine/SkeletalMesh.h"
 #include "SkeletalMergingLibrary.h"
 
 FOmegaBodyOptionValue FOmegaBodyOptionValue::FromBodyData(FOmegaBodyAppearanceData data,FName s)

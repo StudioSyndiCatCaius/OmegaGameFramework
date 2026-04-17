@@ -6,17 +6,24 @@
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
+
+#if ENGINE_MAJOR_VERSION ==5
+
 #include "PCGComponent.h"
+#include "PCGGraph.h"
+
+#endif
+
 #include "Components/ArrowComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Components/VolumetricCloudComponent.h"
 #include "Engine/TextureCube.h"
-#include "PCGGraph.h"
 #include "Async/TaskGraphInterfaces.h"
 #include "Components/AudioComponent.h"
 #include "Engine/World.h"
+#include "Functions/F_BGM.h"
 #include "Functions/F_GlobalParam.h"
-#include "Subsystems/Subsystem_BGM.h"
+#include "Subsystems/Subsystem_World.h"
 
 
 class UOmegaBGMSubsystem;
@@ -53,11 +60,17 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 	{
 		DirectionalLight->SetupAttachment(EnvironmentRoot);
 		DirectionalLight->SetIntensity(5.0);
+		DirectionalLight->SetRelativeLocation(FVector(0,0,50));
+		DirectionalLight->SetRelativeRotation(FRotator(-45,-45,0.0));
 	}
 	DirectionalLight_Arrow = CreateOptionalDefaultSubobject<UArrowComponent>("DirectionalLight_Arrow");
 	if(DirectionalLight_Arrow) { DirectionalLight_Arrow->SetupAttachment(DirectionalLight); }
 	Fog= CreateOptionalDefaultSubobject<UExponentialHeightFogComponent>("Fog");
-	if(Fog) { Fog->SetupAttachment(EnvironmentRoot); }
+	if(Fog)
+	{
+		Fog->SetupAttachment(EnvironmentRoot);
+		Fog->FogInscatteringLuminance=FLinearColor(0.15,0.3,0.6,1);
+	}
 	Atmosphere= CreateOptionalDefaultSubobject<USkyAtmosphereComponent>("Atmosphere");
 	if(Atmosphere) { Atmosphere->SetupAttachment(EnvironmentRoot); }
 	Clouds= CreateOptionalDefaultSubobject<UVolumetricCloudComponent>("Clouds");
@@ -71,26 +84,43 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 	//VirtualTextureComponent= CreateOptionalDefaultSubobject<URuntimeVirtualTextureComponent>("VirtualTexture");
 	//if(VirtualTextureComponent) { VirtualTextureComponent->SetupAttachment(EnvironmentRoot); }
 	
-	PCGComponent= CreateOptionalDefaultSubobject<UPCGComponent>("PCG");
+#if ENGINE_MAJOR_VERSION ==5
+	//PCGComponent= CreateOptionalDefaultSubobject<UPCGComponent>("PCG");
+#endif
+	
 
 	if(SkyBox)
 	{
 		SkyBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 		SkyBox->SetCastShadow(false);
+		if(UStaticMesh* _mesh=LoadObject<UStaticMesh>(this, TEXT("/OmegaGameFramework/Meshes/nature/sm_omega_Skybox_Cube.sm_omega_Skybox_Cube")))
+		{
+			SkyBox->SetStaticMesh(_mesh);
+		}
+		if (UMaterialInstance* _mat=LoadObject<UMaterialInstance>(this, TEXT("/OmegaGameFramework/Materials/Instances/HDRI/mi_Omega_Hdri_day.mi_Omega_Hdri_day")))
+		{
+			SkyBox->SetMaterial(0, _mat);
+		}
+		SkyBox->SetVisibility(false);
+		SkyBox->SetComponentTickEnabled(false);
 	}
 
-	PostProcess->Settings.bOverride_BloomIntensity=true;
-	PostProcess->Settings.BloomIntensity=0.0;
-	PostProcess->Settings.bOverride_AutoExposureMinBrightness=true;
-	PostProcess->Settings.bOverride_AutoExposureMaxBrightness=true;
-	PostProcess->Settings.AutoExposureMinBrightness=0.2;
-	PostProcess->Settings.AutoExposureMaxBrightness=1;
-	PostProcess->Settings.bOverride_AmbientCubemapIntensity=true;
-	PostProcess->Settings.AmbientCubemapIntensity=0.15;
+	if (PostProcess)
+	{
+		PostProcess->Settings.bOverride_BloomIntensity=true;
+		PostProcess->Settings.BloomIntensity=0.0;
+		PostProcess->Settings.bOverride_AutoExposureMinBrightness=true;
+		PostProcess->Settings.bOverride_AutoExposureMaxBrightness=true;
+		PostProcess->Settings.AutoExposureMinBrightness=0.2;
+		PostProcess->Settings.AutoExposureMaxBrightness=1;
+		PostProcess->Settings.bOverride_AmbientCubemapIntensity=true;
+		PostProcess->Settings.AmbientCubemapIntensity=0.15;
+	}
 	if(UTextureCube* c =LoadObject<UTextureCube>(this,TEXT("/Engine/EngineResources/GrayLightTextureCube.GrayLightTextureCube")))
 	{
 		PostProcess->Settings.AmbientCubemap=c;
 	}
+	
 }
 
 void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
@@ -114,19 +144,24 @@ void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
 	{
 		Audio->SetSound(DefaultAmbiantSound);
 	}
+#if ENGINE_MAJOR_VERSION ==5
+	/*
 	if(PCGComponent && PCGAsset)
 	{
 		PCGComponent->SetGraph(PCGAsset);
 		//PCGComponent->Cleanup();
 		//PCGComponent->Generate();
 	}
+	*/
+#endif
+	
 }
 
 void AOmegaActorEnvironment::BeginPlay()
 {
 	if(BGM_to_autoplay)
 	{
-		GetWorld()->GetSubsystem<UOmegaBGMSubsystem>()->PlayBGM(BGM_to_autoplay,BGM_Slot,false,true);
+		UOmegaFunctions_BGM::Play(this,BGM_to_autoplay,BGM_Slot,false);
 	}
 	if(SaveField_Preset.IsValid() && SaveCurrentPreset)
 	{
@@ -148,6 +183,28 @@ void AOmegaActorEnvironment::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void L_SetCompValid(USceneComponent* Comp, bool Val)
+{
+	if(Comp)
+	{
+		Comp->SetVisibility(Val);
+		Comp->SetComponentTickEnabled(Val);
+	}
+}
+
+void AOmegaActorEnvironment::Quickset_Atmosphere()
+{
+	L_SetCompValid(SkyBox,false);
+	L_SetCompValid(Atmosphere,true);
+	L_SetCompValid(Clouds,true);
+}
+
+void AOmegaActorEnvironment::Quickset_Skybox()
+{
+	L_SetCompValid(SkyBox,true);
+	L_SetCompValid(Atmosphere,false);
+	L_SetCompValid(Clouds,false);
+}
 
 void AOmegaActorEnvironment::AutosetVirtualTextureFromLandscape()
 {
@@ -219,6 +276,8 @@ bool AOmegaActorEnvironment::GetReferencedContentObjects(TArray<UObject*>& Objec
 {
 	Super::GetReferencedContentObjects(Objects);
 	
+#if ENGINE_MAJOR_VERSION ==5
+	/*
 	if (PCGComponent)
 	{
 		if (UPCGGraph* PCGGraph = PCGComponent->GetGraph())
@@ -226,6 +285,9 @@ bool AOmegaActorEnvironment::GetReferencedContentObjects(TArray<UObject*>& Objec
 			Objects.Add(PCGGraph);
 		}
 	}
+	*/
+#endif
+	
 	return true;
 }
 #endif // WITH_EDITOR

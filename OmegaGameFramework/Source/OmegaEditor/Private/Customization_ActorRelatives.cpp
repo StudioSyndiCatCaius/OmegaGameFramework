@@ -1,7 +1,7 @@
 // Customization_ActorRelatives.cpp
 
 #include "Customization_ActorRelatives.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
@@ -31,7 +31,7 @@ void FCustomization_ActorRelatives::CustomizeHeader(TSharedRef<IPropertyHandle> 
 		.ValueContent()
 		[
 			SNew(STextBlock)
-			.Text(LOCTEXT("ActorRelativesHeader", "Actor Relatives"))
+			.Text(LOCTEXT("ActorRelativesHeader", "🔵Actor Relatives"))
 			.Font(IDetailLayoutBuilder::GetDetailFont())
 		];
 }

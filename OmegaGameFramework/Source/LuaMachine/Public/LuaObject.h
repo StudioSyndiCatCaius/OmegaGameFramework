@@ -30,21 +30,15 @@ class LUAMACHINE_API ULuaObjectFunctions : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject"))
-	static ULuaObject* CreateLuaObject(UObject* WorldContextObject, FLuaValue key, FLuaValue value);
-
-	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject", AdvancedDisplay="State"))
-	static ULuaObject* CreateLuaObjectFromGlobal(UObject* WorldContextObject,const FString& field,TSubclassOf<ULuaState> State);
+	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject",DeterminesOutputType="Class"))
+	static UObject* CreateLuaObject(UObject* WorldContextObject, FLuaValue key, FLuaValue value,UPARAM(meta=(MustImplement="LuaInterface")) TSubclassOf<UObject> Class);
 	
-	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject", AdvancedDisplay="State"))
-	static TArray<ULuaObject*> CreateLuaObjectsFromGlobal(UObject* WorldContextObject,const TArray<FString>& fields,TSubclassOf<ULuaState> State);
-	
-	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject"))
-	static TArray<ULuaObject*> CreateLuaObjectsFromTable(UObject* WorldContextObject,FLuaValue table);
+	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject",DeterminesOutputType="Class"))
+	static TArray<UObject*> CreateLuaObjectsFromTable(UObject* WorldContextObject,FLuaValue table,UPARAM(meta=(MustImplement="LuaInterface"))TSubclassOf<UObject> Class);
 
 	//Will create a list of objects with the keys from the "key" table, and their values from their corresponding "table" value.
-	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject"))
-	static TArray<ULuaObject*> CreateLuaObjectsFromKeysInTable(UObject* WorldContextObject,FLuaValue keys,FLuaValue table);
+	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject",DeterminesOutputType="Class"))
+	static TArray<UObject*> CreateLuaObjectsFromKeysInTable(UObject* WorldContextObject,FLuaValue keys,FLuaValue table,UPARAM(meta=(MustImplement="LuaInterface"))TSubclassOf<UObject> Class);
 
 	UFUNCTION(BlueprintCallable, Category="Lua|Object", meta=(WorldContext="WorldContextObject"))
 	static FLuaValue ConvertTableKeysToValues(UObject* WorldContextObject, FLuaValue table);

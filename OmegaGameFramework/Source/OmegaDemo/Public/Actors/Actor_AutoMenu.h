@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actors/Actor_DynamicCamera.h"
 #include "GameFramework/Actor.h"
-#include "Subsystems/Subsystem_DynamicCamera.h"
 #include "Actor_AutoMenu.generated.h"
 
 class UMenu;

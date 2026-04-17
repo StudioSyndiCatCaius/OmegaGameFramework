@@ -10,6 +10,8 @@
 #include "Kismet2/KismetEditorUtilities.h"
 #include "OmegaEditorFactories.h"
 #include "UnrealEd.h"
+#include "GameAsset/GameAsset_FlowGraph.h"
+#include "GameAsset/GameAsset_TypeActions.h"
 #include "Styling/SlateStyle.h"
 
 
@@ -24,10 +26,14 @@ public:
 	TArray<FName> _bitflagTypes;
 	
 	TSharedPtr<FSlateStyleSet> StyleSet;
-
+	
 	EAssetTypeCategories::Type AssetCategory_Omega;
 	EAssetTypeCategories::Type AssetCategory_OmegaDemo;
 	FConfigFile ConfigFile;
+	
+	//Omega Game Asset
+	TSharedPtr<FGameplayAssetTypeActions>      TypeActions;
+	TSharedPtr<FGameplayAssetGraphNodeFactory> NodeFactory;
 	
 	FString GetPluginFilePath(const FString& RelativePath);
 	

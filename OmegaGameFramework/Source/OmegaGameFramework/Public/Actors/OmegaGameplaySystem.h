@@ -9,19 +9,21 @@
 #include "Widget/HUDLayer.h"
 #include "GameplayTagContainer.h"
 #include "Actor_Ability.h"
-#include "Subsystems/Subsystem_QueueEvents.h"
+#include "OmegaActors.h"
+#include "Interfaces/I_StandardInput.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Subsystems/Subsystem_Save.h"
 
 #include "OmegaGameplaySystem.generated.h"
 
 class AOmegaPlayer;
-class UActorIdentityComponent;
-class UOmegaGameplaySubsystem;
+class UGameplayActorComponent;
+class UOmegaSubsystem_World;
 class UGamePreferenceBool;
 class UGamePreferenceFloat;
 class AOmegaAbility;
 class UOmegaSaveGame;
-class UOmegaGameCore;
+class UOmegaGameManager;
 class UOmegaInputMode;
 
 USTRUCT(BlueprintType)
@@ -40,20 +42,17 @@ struct FGameplaySystemAbilityRules
 };
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSystemStateChange, UObject*, Context, FString, Flag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSubstateChange, UObject*, Context, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNotify, UObject*, Context, FString, Flag);
 
-UCLASS(config = Game, notplaceable, BlueprintType, Blueprintable, Transient, hideCategories = (Info, Rendering, MovementReplication, Collision, HLOD, WorldPartition), meta = (ShortTooltip = ""))
-class OMEGAGAMEFRAMEWORK_API AOmegaBaseSystem : public AActor, public IOmegaSaveInterface, public IInterface_QueueDelay, public IInterface_QueuedQuery
+UCLASS(config = Game, notplaceable, BlueprintType, Blueprintable, Transient, hideCategories = ("Private", Info, Tick, Actor, Rendering, MovementReplication, Replication, LevelInstance, Cooking, Physics, DataLayers, Collision, HLOD, WorldPartition), meta = (ShortTooltip = ""))
+class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AOmegaActorBASE, public IOmegaSaveInterface, public IDataInterface_InputAction
 {
 	GENERATED_BODY()
 
-	UPROPERTY() UOmegaSaveSubsystem* l_subsys_sav;
-	UPROPERTY() UOmegaSubsystem_QueueEvents* l_subsys_qquery;
-	
 public:	
 	// Sets default values for this actor's properties
-	AOmegaBaseSystem();
+	AOmegaGameplaySystem();
 	
 	void Native_Activate(UObject* Context, const FString& Flag);
 	virtual void L_CleanupStateChange(bool state);
@@ -63,7 +62,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
-	virtual bool GetQueuedQueryValue_Implementation(FGameplayTag Tag, UObject* Context=nullptr) override { return true; };
 public:
 	
 	UPROPERTY() UObject* Shutdown_Context = nullptr;
@@ -73,7 +71,7 @@ public:
 	UPROPERTY() bool bIsInShutdown;
 	
 	UPROPERTY(BlueprintAssignable) FOnNotify OnSystemNotify;
-	UPROPERTY(BlueprintAssignable) FOnSystemStateChange OnSystemShutdown;
+	UPROPERTY(BlueprintAssignable) FOnSubstateChange OnSystemShutdown;
 	UPROPERTY() TArray<class UHUDLayer*> ActivePlayerWidgets;
 	
 	//---------------------------------------------------------------------
@@ -88,35 +86,37 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "GameplaySystem")
 	FOmegaCommonMeta SystemMeta;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Omega - Flags") bool WidgetsOnPlayerScreen=true;
+	UPROPERTY(EditDefaultsOnly, Category="♎Omega|Misc") bool WidgetsOnPlayerScreen=true;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,Category="♎Omega|Misc") TArray<FName> Substates;
+	UPROPERTY() int32 Substate=-1;
 	//Tags for this system
-	UPROPERTY(EditDefaultsOnly, Category="Omega - Tags") FGameplayTagContainer SystemTags;
+	UPROPERTY(EditDefaultsOnly, Category="♎Omega|Tags",meta=(Categories="SYSTEM")) FGameplayTagContainer SystemTags;
 	//Will Shutdown and block any systems from activating that use these tags.
-	UPROPERTY(EditDefaultsOnly, Category="Omega - Tags") FGameplayTagContainer BlockSystemTags;
+	UPROPERTY(EditDefaultsOnly, Category="♎Omega|Tags",meta=(Categories="SYSTEM")) FGameplayTagContainer BlockSystemTags;
 	//Will not activate while any systems with these tags are active.
-	UPROPERTY(EditDefaultsOnly, Category="Omega - Tags") FGameplayTagContainer BlockedOnSystemTags;
+	UPROPERTY(EditDefaultsOnly, Category="♎Omega|Tags",meta=(Categories="SYSTEM")) FGameplayTagContainer BlockedOnSystemTags;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Omega - Tags") FGameplayTagContainer GlobalEvents_OnActivate;
-	UPROPERTY(EditDefaultsOnly, Category="Omega - Tags") FGameplayTagContainer GlobalEvents_OnShutdown;
+	UPROPERTY(EditDefaultsOnly, Category="♎Omega|Tags") FGameplayTagContainer GlobalEvents_OnActivate;
+	UPROPERTY(EditDefaultsOnly, Category="♎Omega|Tags") FGameplayTagContainer GlobalEvents_OnShutdown;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Omega - Player")
+	UPROPERTY(EditDefaultsOnly, Category = "♎Omega|Player")
 	UOmegaInputMode* PlayerInputMode;
-	UPROPERTY(EditDefaultsOnly, Category = "Omega - Player")
+	UPROPERTY(EditDefaultsOnly, Category = "♎Omega|Player")
 	TArray<class TSubclassOf<UHUDLayer>> AddedPlayerWidgets;
-	UPROPERTY(EditDefaultsOnly, Category = "Omega - Player")
+	UPROPERTY(EditDefaultsOnly, Category = "♎Omega|Player")
 	TArray<UInputMappingContext*> AddPlayerInputMapping;
-
-	UPROPERTY(EditAnywhere, Category="Omega - Misc", DisplayName="Flags Active on System")
-	TArray<FString> ActiveFlags;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Omega - Misc")
-	FOmegaEntitySet Entities;
-	
-	UPROPERTY(EditAnywhere, Category="Omega - Misc")
-	TArray<TSubclassOf<AOmegaGameplaySystem>> SystemsActivatedOnShutdown;
 	//---------------------------------------------------------------------
 	// FUNCTIONS
 	//---------------------------------------------------------------------
+	UFUNCTION() TArray<FName> L_Substates() const { return Substates; }
+	
+	UFUNCTION(BlueprintCallable,Category="System State",DisplayName="Set System State (Name)") void SetSubstate_Name(UPARAM(meta=(GetOptions="L_Substates")) FName State);
+	UFUNCTION(BlueprintCallable,Category="System State",DisplayName="Set System State (index)") void SetSubstate_Index(int32 State);
+	UFUNCTION(BlueprintPure,Category="System State",DisplayName="Get System State (index)") int32 GetSubstate_Index() const { return Substate; };
+	UFUNCTION(BlueprintPure,Category="System State",DisplayName="Get System State (Name from index)") FName GetSubstate_NameFromIndex(int32 index) const;
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="System State") void OnSubstateChange(int32 NewState,FName NewState_N,int32 OldState,FName OldState_N);
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -127,7 +127,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Events")
 	void OnActor_RegisteredToGroup(AActor* Actor, FGameplayTag Group, bool Registered);
 	UFUNCTION(BlueprintImplementableEvent,Category="Events")
-	void OnActor_IdentityRegistered(AActor* Actor, UActorIdentityComponent* Component, bool Registered);
+	void OnActor_IdentityRegistered(AActor* Actor, UGameplayActorComponent* Component, bool Registered);
 	UFUNCTION(BlueprintImplementableEvent,Category="Events")
 	void OnActor_TagEvent(AActor* Actor, FGameplayTag Event);
 	UFUNCTION(BlueprintImplementableEvent,Category="Events")
@@ -170,6 +170,15 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Systems")
 	virtual AOmegaPlayer* GetSystemOwningPlayer() const;
 
+	UFUNCTION(BlueprintPure,Category="Omega|Systems")
+	virtual APawn* GetSystemOwningPlayer_Pawn() const;
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Systems")
+	virtual ACharacter* GetSystemOwningPlayer_Character() const;
+
+	UFUNCTION(BlueprintPure,Category="Omega|Systems")
+	virtual UCombatantComponent* GetSystemOwningPlayer_Combatant() const;
+	
 private:
 	void local_globalEventTags(FGameplayTagContainer tags);
 	
@@ -187,11 +196,6 @@ private:
 	}
 public:
 	
-
-
-	UPROPERTY(EditDefaultsOnly, Category = "Player")
-	TArray<FGameplaySystemAbilityRules> GrantedAbilities;
-
 	UFUNCTION()
 	void Local_GrantAbilities(UCombatantComponent* Combatant);
 
@@ -206,9 +210,9 @@ public:
 	bool OnActiveGameSaved();
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Gameplay System")
-	void OnGlobalEvent(FName Event, UObject* Context);
+	void OnGlobalEvent(FName Event, UObject* Context,FOmegaCommonMeta meta);
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Gameplay System")
-	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta meta);
 };
 
 USTRUCT()
@@ -216,12 +220,12 @@ struct FOmegaBaseSystemStats
 {
 	GENERATED_BODY()
 	
-	UPROPERTY() TArray<AOmegaBaseSystem*> active_systems;
+	UPROPERTY() TArray<AOmegaGameplaySystem*> active_systems;
 
-	TArray<AOmegaBaseSystem*> GetActiveSystems(bool bIncludeSystemsInShutdown)
+	TArray<AOmegaGameplaySystem*> GetActiveSystems(bool bIncludeSystemsInShutdown)
 	{
-		TArray<AOmegaBaseSystem*> out;
-		for(AOmegaBaseSystem* a : active_systems)
+		TArray<AOmegaGameplaySystem*> out;
+		for(AOmegaGameplaySystem* a : active_systems)
 		{
 			if(a && !a->IsActorBeingDestroyed() && (!a->bIsInShutdown || bIncludeSystemsInShutdown))
 			{
@@ -231,7 +235,7 @@ struct FOmegaBaseSystemStats
 		return out;
 	}
 
-	bool IsSystemActive(TSubclassOf<AOmegaBaseSystem> system)
+	bool IsSystemActive(TSubclassOf<AOmegaGameplaySystem> system)
 	{
 		if(system)
 		{
@@ -249,7 +253,7 @@ struct FOmegaBaseSystemStats
 	FGameplayTagContainer GetBlockedSystemTags()
 	{
 		FGameplayTagContainer tags;
-		for(AOmegaBaseSystem* a : GetActiveSystems(true))
+		for(AOmegaGameplaySystem* a : GetActiveSystems(true))
 		{
 			if(a)
 			{
@@ -259,11 +263,11 @@ struct FOmegaBaseSystemStats
 		return tags;
 	}
 
-	bool CanActivateSystem(TSubclassOf<AOmegaBaseSystem> sys)
+	bool CanActivateSystem(TSubclassOf<AOmegaGameplaySystem> sys)
 	{
 		if(sys)
 		{
-			FGameplayTagContainer tg=GetMutableDefault<AOmegaBaseSystem>(sys)->SystemTags;
+			FGameplayTagContainer tg=GetMutableDefault<AOmegaGameplaySystem>(sys)->SystemTags;
 			for(FGameplayTag t : tg.GetGameplayTagArray())
 			{
 				if(GetBlockedSystemTags().HasTagExact(t))
@@ -272,7 +276,7 @@ struct FOmegaBaseSystemStats
 					return false;
 				}
 			};
-			for(AOmegaBaseSystem* a : GetActiveSystems(true))
+			for(AOmegaGameplaySystem* a : GetActiveSystems(true))
 			{
 				if(a && a->GetClass()==sys)
 				{
@@ -295,7 +299,7 @@ struct FOmegaBaseSystemStats
 		}
 	}
 
-	AOmegaBaseSystem* GetSystem(TSubclassOf<AOmegaBaseSystem> sys)
+	AOmegaGameplaySystem* GetSystem(TSubclassOf<AOmegaGameplaySystem> sys)
 	{
 		for(auto* a : GetActiveSystems(false))
 		{
@@ -307,47 +311,11 @@ struct FOmegaBaseSystemStats
 		return nullptr;
 	}
 
-	AOmegaBaseSystem* Activate(TSubclassOf<AOmegaBaseSystem> sys, UObject* Context,const FString& Flag, UObject* WorldC,AActor* owner,FOmegaCommonMeta meta)
+	AOmegaGameplaySystem* Activate(TSubclassOf<AOmegaGameplaySystem> sys, UObject* Context,const FString& Flag, UObject* WorldC,AActor* owner,FOmegaCommonMeta meta);
+	TArray<AOmegaGameplaySystem*> GetActiveSystemsWithTags(FGameplayTagContainer Tags)
 	{
-		if(!WorldC || !sys)
-		{
-			//UE_LOG(LogTemp, Log, TEXT("Failed to active system: World or SystemClass invalid"));
-			return nullptr;
-		}
-		if(CanActivateSystem(sys))
-		{
-			FTransform SpawnWorldPoint;
-			if(owner)
-			{
-				SpawnWorldPoint=owner->GetActorTransform();
-			}
-			
-			AOmegaBaseSystem* DummySystem = WorldC->GetWorld()->SpawnActorDeferred<AOmegaBaseSystem>(sys, SpawnWorldPoint, owner);
-			if(!DummySystem)
-			{
-				UE_LOG(LogTemp, Log, TEXT("Failed to Spawn system Actor: %s "), *sys->GetName());
-				return nullptr;
-			}
-			DummySystem->FinishSpawning(SpawnWorldPoint);
-			active_systems.Add(DummySystem);
-			if(Context)
-			{
-				DummySystem->ContextObject = Context;
-			}
-			DummySystem->ActivationFlag=Flag;
-			DummySystem->SystemMeta=meta;
-			Validate();
-			DummySystem->Native_Activate(Context, Flag);
-			UE_LOG(LogTemp, Log, TEXT("System %s - Successfully Activated "), *DummySystem->GetName());
-			return DummySystem;
-		}
-		return nullptr;
-	}
-
-	TArray<AOmegaBaseSystem*> GetActiveSystemsWithTags(FGameplayTagContainer Tags)
-	{
-		TArray<AOmegaBaseSystem*> out;
-		for(AOmegaBaseSystem* a : active_systems)
+		TArray<AOmegaGameplaySystem*> out;
+		for(AOmegaGameplaySystem* a : active_systems)
 		{
 			if(a && a->SystemTags.HasAnyExact(Tags))
 			{
@@ -365,8 +333,8 @@ struct FOmegaBaseSystemStats
 			TempSys->Shutdown(nullptr, "Canceled");
 		}
 		//remove null list entires
-		TArray<AOmegaBaseSystem*> out;
-		for(AOmegaBaseSystem* a : active_systems)
+		TArray<AOmegaGameplaySystem*> out;
+		for(AOmegaGameplaySystem* a : active_systems)
 		{
 			if(a)
 			{
@@ -376,9 +344,9 @@ struct FOmegaBaseSystemStats
 		active_systems=out;
 	}
 	
-	void Shutdown(TSubclassOf<AOmegaBaseSystem> sys, UObject* Context,const FString& Flag)
+	void Shutdown(TSubclassOf<AOmegaGameplaySystem> sys, UObject* Context,const FString& Flag)
 	{
-		if(AOmegaBaseSystem* s =GetSystem(sys))
+		if(AOmegaGameplaySystem* s =GetSystem(sys))
 		{
 			active_systems.Remove(s);
 			s->Shutdown(Context,Flag);
@@ -392,24 +360,3 @@ struct FOmegaBaseSystemStats
 };
 
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaGameplaySystem : public AOmegaBaseSystem
-{
-	GENERATED_BODY()
-	
-	virtual void L_CleanupStateChange(bool state) override;
-};
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaPlayerSystem : public AOmegaBaseSystem
-{
-	GENERATED_BODY()
-
-public:
-	virtual void BeginPlay() override;
-	AOmegaPlayerSystem();
-	virtual TArray<APlayerController*> L_GetPlayers() override;
-	virtual void L_CleanupStateChange(bool state) override;
-
-	virtual AOmegaPlayer* GetSystemOwningPlayer() const override;
-};

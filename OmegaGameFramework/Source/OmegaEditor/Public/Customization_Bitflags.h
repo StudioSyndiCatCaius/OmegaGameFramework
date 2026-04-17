@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "IPropertyTypeCustomization.h"
-#include "Interfaces/I_BitFlag.h"
+#include "Types/Struct_Bitflag.h"
 //#include "OmegaPropertyCustomization.generated.h"
 
 

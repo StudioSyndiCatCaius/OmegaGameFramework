@@ -8,15 +8,15 @@
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
-#include "Components/Component_ActorIdentity.h"
+#include "Components/Component_GameplayActor.h"
 #include "Components/StateTreeComponent.h"
 #include "Functions/F_Component.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Interfaces/I_NamedLists.h"
-#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "Actor_InventoryBox.generated.h"
 
+class UCombatantComponent;
 class UDataAssetCollectionComponent;
 class UActorConfigComponent;
 class UTextRenderComponent;
@@ -24,11 +24,9 @@ class UUtilMeshComponent;
 class UOmegaCondition_Interact;
 
 UCLASS(DisplayName="Ω Inventory Box")
-class OMEGADEMO_API AOmegaInventoryBox : public AOmegaProp, public IActorInterface_Interactable
+class OMEGADEMO_API AOmegaInventoryBox : public AOmegaGameplayActor, public IActorInterface_Interactable
 {
 	GENERATED_BODY()
-
-
 	
 	UFUNCTION() void L_AssetChange(UPrimaryDataAsset* Asset, int32 Amount, bool IsFull);
 
@@ -44,7 +42,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="InventoryBox") int32 Bulk_Amount;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="InventoryBox") TArray<UPrimaryDataAsset*> Bulk_Items;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UDataAssetCollectionComponent* Inventory;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
 	UPROPERTY() UTextRenderComponent* NameText;
 	UPROPERTY() UUtilMeshComponent* UtilMesh;
 

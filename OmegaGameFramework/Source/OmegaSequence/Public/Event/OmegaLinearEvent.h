@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "LuaInterface.h"
+#include "Engine/GameInstance.h"
 #include "OmegaLinearEventSubsystem.h"
 #include "UObject/NoExportTypes.h"
 #include "OmegaLinearEvent.generated.h"
@@ -66,8 +66,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent) void OnEventEnd(const FString& Flag);
 
 	
-	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context);
-	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context);
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Named(FName Event, UObject* Context,FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintImplementableEvent) void OnGlobalEvent_Tagged(FGameplayTag Event, UObject* Context,FOmegaCommonMeta meta);
 	
 	UFUNCTION(BlueprintCallable, Category="LinearEvent", meta=(AdvancedDisplay="JumpToID"))
 	void Finish(const FString& Flag, const FName JumpToID = FName(""));
@@ -80,9 +80,6 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, Category="LinearEvent")
 	FString GetLogString() const;
-	
-	UFUNCTION(BlueprintImplementableEvent, Category="LinearEvent")
-	bool ReadParsedData(UOmegaDataParserReader* ParsedData);
 	
 };
 

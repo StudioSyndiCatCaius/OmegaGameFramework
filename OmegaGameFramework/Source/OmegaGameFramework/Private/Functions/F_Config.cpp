@@ -1,99 +1,161 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
-
 #include "Functions/F_Config.h"
-#include "JsonBlueprintFunctionLibrary.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
-#include "JsonObjectConverter.h"
-#include "OmegaSettings.h"
-#include "Misc/OmegaUtils_Macros.h"
+#include "Misc/ConfigCacheIni.h"
+#include "Interfaces/IPluginManager.h"
 
-FJsonObject UOmegaFunctions_Config::GetOmegaConfigJsonObject()
+static const TCHAR* IniFileName = TEXT("OmegaGameSettings.ini");
+
+// ── Path Helpers ──────────────────────────────────────────────────────────────
+
+bool UOmegaFunctions_Config::IsInOmegaDeveloperMode()
 {
-	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-	const FString FilePath = FPaths::ProjectDir() + TEXT("OmegaConfig.json");
-	FString FileContent;
-	if (!FFileHelper::LoadFileToString(FileContent, *FilePath))
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to load file: %s"), *FilePath);
-	}
+    FString JsonString;
+    if (!FFileHelper::LoadFileToString(JsonString, *FPaths::GetProjectFilePath()))
+        return false;
 
+    TSharedPtr<FJsonObject> JsonObject;
+    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
+    if (!FJsonSerializer::Deserialize(Reader, JsonObject) || !JsonObject.IsValid())
+        return false;
 
-	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileContent);
-    
-	if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to parse JSON file: %s"), *FilePath);
-	}
-
-	return *JsonObject;
+    bool bDeveloperMode = false;
+    JsonObject->TryGetBoolField(TEXT("OmegaDeveloperMode"), bDeveloperMode);
+    return bDeveloperMode;
 }
 
-FJsonObjectWrapper UOmegaFunctions_Config::GetOmegaConfigJson()
+FString UOmegaFunctions_Config::L_GetConfigPath()
 {
-
-	FJsonObjectWrapper JsonObjectWrapper;
-
-	//TSharedPtr<FJsonObject> JsonObjectCopy = MakeShareable(GetOmegaConfigJsonObject());
-
-	// Use the function from JsonUtilities to populate the wrapper
-	//FJsonObjectConverter::JsonObjectToUStruct(JsonObjectCopy.ToSharedRef(), &JsonObjectWrapper, 0, 0);
-
-	return JsonObjectWrapper;
+    FString Path = FPaths::ProjectConfigDir() / IniFileName;
+    FPaths::MakeStandardFilename(Path);
+    return Path;
 }
 
-bool UOmegaFunctions_Config::GetCustom_Bool(const FName Param)
+FString UOmegaFunctions_Config::L_GetPluginConfigPath()
 {
-	return OGF_CFG()->CustomParams_Bool.FindOrAdd(Param);
+    TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(TEXT("OmegaGameFramework"));
+    const FString BaseDir = Plugin.IsValid()
+        ? Plugin->GetBaseDir()
+        : FPaths::ProjectPluginsDir() / TEXT("OmegaGameFramework");
+
+    FString Path = BaseDir / TEXT("Config") / IniFileName;
+    FPaths::MakeStandardFilename(Path);
+    return Path;
 }
 
-float UOmegaFunctions_Config::GetCustom_float(const FName Param)
+void UOmegaFunctions_Config::L_EnsureFileExists(const FString& Path)
 {
-	return OGF_CFG()->CustomParams_Float.FindOrAdd(Param);
+    if (!FPaths::FileExists(Path))
+        FFileHelper::SaveStringToFile(TEXT(""), *Path, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+
+    if (GConfig) GConfig->LoadFile(Path);
 }
 
-int32 UOmegaFunctions_Config::GetCustom_Int32(const FName Param)
+// ── Core Lookup ───────────────────────────────────────────────────────────────
+
+template <typename T>
+static T L_GetValue(
+    const FString& Section,
+    const FString& Param,
+    T DefaultValue,
+    TFunction<bool(const FString&, T&)> GetterFn,
+    TFunction<void(const FString&)>     DefaultFn)
 {
-	return OGF_CFG()->CustomParams_Int32.FindOrAdd(Param);
+    if (!GConfig) return DefaultValue;
+
+    const FString ProjectPath = UOmegaFunctions_Config::L_GetConfigPath();
+    UOmegaFunctions_Config::L_EnsureFileExists(ProjectPath);
+
+    T Out = DefaultValue;
+    if (GetterFn(ProjectPath, Out)) return Out;
+
+    const FString PluginPath = UOmegaFunctions_Config::L_GetPluginConfigPath();
+    UOmegaFunctions_Config::L_EnsureFileExists(PluginPath);
+
+    if (!GetterFn(PluginPath, Out))
+    {
+        DefaultFn(ProjectPath);
+        if (UOmegaFunctions_Config::IsInOmegaDeveloperMode())
+            DefaultFn(PluginPath);
+        Out = DefaultValue;
+    }
+
+    return Out;
 }
 
-FString UOmegaFunctions_Config::GetCustom_String(const FName Param)
+// Collapses the repeated two-lambda pattern for each typed getter
+#define OMEGA_CFG_GET(Type, GetMethod, SetMethod, Default)                                          \
+    return L_GetValue<Type>(Section, Param, Default,                                                \
+        [&](const FString& Path, Type& Out) { return GConfig->GetMethod(*Section, *Param, Out, Path); }, \
+        [&](const FString& Path)            { GConfig->SetMethod(*Section, *Param, Default, Path); GConfig->Flush(false, Path); })
+
+// ── Public Getters ────────────────────────────────────────────────────────────
+
+bool     UOmegaFunctions_Config::GetBool  (const FString& Section, const FString& Param) { OMEGA_CFG_GET(bool,    GetBool,   SetBool,   false);     }
+float    UOmegaFunctions_Config::GetFloat (const FString& Section, const FString& Param) { OMEGA_CFG_GET(float,   GetFloat,  SetFloat,  0.f);       }
+int32    UOmegaFunctions_Config::GetInt   (const FString& Section, const FString& Param) { OMEGA_CFG_GET(int32,   GetInt,    SetInt,    0);         }
+FString  UOmegaFunctions_Config::GetString(const FString& Section, const FString& Param) { OMEGA_CFG_GET(FString, GetString, SetString, TEXT(""));  }
+
+FVector UOmegaFunctions_Config::GetVector(const FString& Section, const FString& Param)
 {
-	return OGF_CFG()->CustomParams_String.FindOrAdd(Param);
+    return FVector(
+        GetFloat(Section, Param + TEXT(".X")),
+        GetFloat(Section, Param + TEXT(".Y")),
+        GetFloat(Section, Param + TEXT(".Z"))
+    );
 }
 
-
-
-FString UOmegaFunctions_Config::GetOmegaConfigProperty_String(const FString Property)
+FVector2D UOmegaFunctions_Config::GetVector2D(const FString& Section, const FString& Param)
 {
-	FString FieldValue;
-	if (GetOmegaConfigJsonObject().TryGetStringField(Property, FieldValue))
-	{
-		return FieldValue;
-	}
-
-	return FString();
+    return FVector2D(
+        GetFloat(Section, Param + TEXT(".X")),
+        GetFloat(Section, Param + TEXT(".Y"))
+    );
 }
 
-bool UOmegaFunctions_Config::GetOmegaConfigProperty_Bool(const FString Property)
-{
-	const FString FieldValue = GetOmegaConfigProperty_String(Property);
-	if (!FieldValue.IsEmpty())
-	{
-		return (FieldValue == TEXT("true") || FieldValue == TEXT("1"));
-	}
+// ── Core Setter ───────────────────────────────────────────────────────────────
 
-	return false;
+static void L_SetValue(
+    const FString& Section,
+    const FString& Param,
+    TFunction<void(const FString&)> SetterFn)
+{
+    if (!GConfig) return;
+
+    const FString ProjectPath = UOmegaFunctions_Config::L_GetConfigPath();
+    UOmegaFunctions_Config::L_EnsureFileExists(ProjectPath);
+    SetterFn(ProjectPath);
+
+    if (UOmegaFunctions_Config::IsInOmegaDeveloperMode())
+    {
+        const FString PluginPath = UOmegaFunctions_Config::L_GetPluginConfigPath();
+        UOmegaFunctions_Config::L_EnsureFileExists(PluginPath);
+        SetterFn(PluginPath);
+    }
 }
 
-int32 UOmegaFunctions_Config::GetOmegaConfigProperty_Int(const FString Property)
-{
-	const FString FieldValue = GetOmegaConfigProperty_String(Property);
-	if (!FieldValue.IsEmpty())
-	{
-		return FCString::Atoi(*FieldValue);
-	}
+#define OMEGA_CFG_SET(SetMethod, Value)                                                         \
+    L_SetValue(Section, Param,                                                                  \
+        [&](const FString& Path) { GConfig->SetMethod(*Section, *Param, Value, Path); GConfig->Flush(false, Path); })
 
-	return 0;
+// ── Public Setters ────────────────────────────────────────────────────────────
+
+void UOmegaFunctions_Config::SetBool  (const FString& Section, const FString& Param, bool Value)          { OMEGA_CFG_SET(SetBool,   Value); }
+void UOmegaFunctions_Config::SetFloat (const FString& Section, const FString& Param, float Value)         { OMEGA_CFG_SET(SetFloat,  Value); }
+void UOmegaFunctions_Config::SetInt   (const FString& Section, const FString& Param, int32 Value)         { OMEGA_CFG_SET(SetInt,    Value); }
+void UOmegaFunctions_Config::SetString(const FString& Section, const FString& Param, const FString& Value){ OMEGA_CFG_SET(SetString, *Value); }
+
+void UOmegaFunctions_Config::SetVector(const FString& Section, const FString& Param, FVector Value)
+{
+    SetFloat(Section, Param + TEXT(".X"), Value.X);
+    SetFloat(Section, Param + TEXT(".Y"), Value.Y);
+    SetFloat(Section, Param + TEXT(".Z"), Value.Z);
+}
+
+void UOmegaFunctions_Config::SetVector2D(const FString& Section, const FString& Param, FVector2D Value)
+{
+    SetFloat(Section, Param + TEXT(".X"), Value.X);
+    SetFloat(Section, Param + TEXT(".Y"), Value.Y);
 }

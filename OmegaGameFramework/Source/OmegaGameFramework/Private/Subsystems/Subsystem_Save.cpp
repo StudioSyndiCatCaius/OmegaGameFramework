@@ -4,8 +4,7 @@
 #include "Subsystems/Subsystem_Save.h"
 
 #include "Subsystems/Subsystem_GameManager.h"
-#include "Subsystems/Subsystem_Zone.h"
-
+#include "Subsystems/Subsystem_World.h"
 #include "UnrealClient.h"
 #include "TimerManager.h"
 #include "Dom/JsonObject.h"
@@ -15,14 +14,15 @@
 #include "Functions/F_Common.h"
 #include "Engine/EngineTypes.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
-#include "DataAssets/DA_Campaign.h"
+#include "OmegaGameManager.h"
+#include "Engine/GameInstance.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Microsoft/AllowMicrosoftPlatformTypes.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
+
 
 // ====================================================================================================
 // Initialize
@@ -172,7 +172,7 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory,
 		SaveObjectJsonData(TempActor,false);
 	}
 	//SaveGameplayModuleData
-	for(UOmegaGameplayModule* TempModule : GetGameInstance()->GetSubsystem<UOmegaGameManager>()->ActiveModules)
+	for(UOmegaGameplayModule* TempModule : GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>()->ActiveModules)
 	{
 		TempModule->GameFileSaved(ActiveSaveData);
 	}
@@ -181,7 +181,7 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory,
 	{
 		ActiveSaveData->SavedPlayerTransform = UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetActorTransform();
 	}
-	ActiveSaveData->ActiveZone = GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->GetTopLoadedZones();
+	ActiveSaveData->ActiveZone = GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_GetFirstLoaded();
 	ActiveSaveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
 	ActiveSaveData->SaveDate = UKismetMathLibrary::Now();
 	ActiveSaveData->SaveCategory=SaveCategory;
@@ -224,6 +224,10 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 {
 	if (!GameData) { return; }
 	
+	UOmegaSubsystem_GameInstance* ss_gi=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>();
+	//force unlock of bgm
+	ss_gi->bgm_isLocked=false;
+	
 	ActiveSaveData = GameData;
 	ActiveSaveData->OnGameStarted(Tags);
 	
@@ -242,7 +246,7 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 		LoadObjectJsonData(TempActor,false);
 	}
 	
-	for(UOmegaGameplayModule* TempModule : GetGameInstance()->GetSubsystem<UOmegaGameManager>()->ActiveModules)
+	for(UOmegaGameplayModule* TempModule : GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>()->ActiveModules)
 	{
 		TempModule->GameFileStarted(ActiveSaveData, Tags);
 	}
@@ -254,8 +258,8 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 	if(LoadSavedLevel)
 	{
 		const FGameplayTag EmptyPoint;
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaZoneGameInstanceSubsystem>()->bIsLoadingGame=true;
-		GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToLevel_Name(*ActiveSaveData->ActiveLevelName,EmptyPoint);
+		ss_gi->Zone_ZoneTransitState=2;
+		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_TransitToLevel_Name(*ActiveSaveData->ActiveLevelName,EmptyPoint);
 	}
 	OnNewGameStarted.Broadcast(GameData,Tags);
 }
@@ -376,7 +380,7 @@ FGameplayTagContainer UOmegaSaveSubsystem::GetStoryTags(bool Global)
 {
 	FGameplayTagContainer FinalTags = GetSaveObject(Global)->SaveTags;
 
-	FinalTags.AppendTags(IGameplayTagsInterface::Execute_GetObjectGameplayTags(ActiveSaveData));
+	FinalTags.AppendTags(IDataInterface_General::Execute_GetObjectGameplayTags(ActiveSaveData));
 
 	return FinalTags;
 	
@@ -464,9 +468,9 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsOfCategory
 
 	for(auto* TempAsset : GetSaveObject(bGlobal)->CollectedDataAssets)
 	{
-		if(TempAsset->Implements<UGameplayTagsInterface>())
+		if(TempAsset->Implements<UDataInterface_General>())
 		{
-			if(IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempAsset) == CategoryTag)
+			if(IDataInterface_General::Execute_GetObjectGameplayCategory(TempAsset) == CategoryTag)
 			{
 				OutAssets.Add(TempAsset);
 			}
@@ -483,9 +487,9 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 	
 	for(auto* TempAsset : GetSaveObject(bGlobal)->CollectedDataAssets)
 	{
-		if(TempAsset->Implements<UGameplayTagsInterface>())
+		if(TempAsset->Implements<UDataInterface_General>())
 		{
-			FGameplayTagContainer TempTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempAsset);
+			FGameplayTagContainer TempTags = IDataInterface_General::Execute_GetObjectGameplayTags(TempAsset);
 			if(((TempTags.HasAnyExact(Tags) && bExact) || (TempTags.HasAny(Tags) && !bExact)) == !bExclude) 
 			{
 				OutAssets.Add(TempAsset);

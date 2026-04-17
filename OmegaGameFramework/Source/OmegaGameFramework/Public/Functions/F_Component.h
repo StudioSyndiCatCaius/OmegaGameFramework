@@ -103,7 +103,7 @@ class OMEGAGAMEFRAMEWORK_API UComponentModScript_SkeletalMesh : public UObject
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent,Category="Script")
+	UFUNCTION(BlueprintNativeEvent,Category="Script")
 	bool OnAppliedToComponent(USkeletalMeshComponent* Component) const;
 	
 };
@@ -115,7 +115,7 @@ struct FComponentMod_SkeletalMesh
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
-	UComponentModScript_SkeletalMesh* Script=nullptr;
+	TArray<UComponentModScript_SkeletalMesh*> Scripts;
 };
 
 // --------------------------------------------------------------------
@@ -129,7 +129,7 @@ class OMEGAGAMEFRAMEWORK_API UComponentModScript_StaticMesh : public UObject
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent,Category="Script")
+	UFUNCTION(BlueprintNativeEvent,Category="Script")
 	bool OnAppliedToComponent(UStaticMeshComponent* Component) const;
 	
 };
@@ -141,7 +141,7 @@ struct FComponentMod_StaticMesh
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
-	UComponentModScript_StaticMesh* Script=nullptr;
+	TArray<UComponentModScript_StaticMesh*> Scripts;
 };
 
 // --------------------------------------------------------------------
@@ -155,7 +155,7 @@ class OMEGAGAMEFRAMEWORK_API UComponentModScript_InstancedStaticMesh : public UO
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent,Category="Script")
+	UFUNCTION(BlueprintNativeEvent,Category="Script")
 	bool OnAppliedToComponent(UInstancedStaticMeshComponent* Component) const;
 	
 };
@@ -167,7 +167,7 @@ struct FComponentMod_InstancedStaticMesh
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Script")
-	UComponentModScript_InstancedStaticMesh* Script=nullptr;
+	TArray<UComponentModScript_InstancedStaticMesh*> Scripts;
 };
 
 

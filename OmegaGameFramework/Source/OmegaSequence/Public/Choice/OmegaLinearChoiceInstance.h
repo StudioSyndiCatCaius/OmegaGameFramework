@@ -6,8 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "OmegaLinearChoice.h"
 #include "Actors/Actor_ChoiceBase.h"
-#include "Interfaces/I_BitFlag.h"
-#include "Interfaces/I_NamedLists.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "OmegaLinearChoiceInstance.generated.h"
 
@@ -26,7 +24,7 @@ struct FOmegaLinearChoices
 };
 
 UCLASS()
-class OMEGASEQUENCE_API AOmegaLinearChoiceInstance : public AOmegaActor_ChoiceBASE, public IDataInterface_BitFlag, public IDataInterface_NamedLists
+class OMEGASEQUENCE_API AOmegaLinearChoiceInstance : public AOmegaActor_ChoiceBASE, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -43,6 +41,5 @@ public:
 	UFUNCTION(BlueprintPure, Category="LinearChoice")
 	TArray<UOmegaLinearChoice*> GetChoices();
 	
-	virtual FOmegaBitflagsBase Bitflags_Get_Implementation() override { return ChoiceData.flags; };
-	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override { return ChoiceData.NamedLists; };
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
 };

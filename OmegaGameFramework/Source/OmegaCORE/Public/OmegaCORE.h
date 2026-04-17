@@ -3,9 +3,9 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(OmegaCORE, All, All);
+DECLARE_LOG_CATEGORY_EXTERN(OmegaCore, All, All);
 
-class FOmegaCORE : public IModuleInterface
+class FOmegaCore : public IModuleInterface
 {
 public:
     virtual void StartupModule() override;

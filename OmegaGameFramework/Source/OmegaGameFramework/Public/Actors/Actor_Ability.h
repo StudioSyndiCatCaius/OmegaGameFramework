@@ -25,7 +25,7 @@ class UPawnMovementComponent;
 class UEnhancedInputComponent;
 class UHUDLayer;
 class UTimelineComponent;
-class UOmegaGameManager;
+class UOmegaSubsystem_GameInstance;
 
 UENUM()
 enum class EAbilityActivateInput
@@ -161,8 +161,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Ω|Ability|Owner")
 	class USkeletalMeshComponent* GetAbilityOwnerMesh();
-
-
+	
 
 	UFUNCTION(BlueprintPure, Category="Cooldown")
 	void GetRemainingCooldownValues(float& Normalized, float& Seconds);
@@ -221,49 +220,29 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnAbilityEnd OnAbilityFinished;
-
-	//Only one instance of this ability is allowed to run on this Owner at a time.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability")
-	bool Singleton;
 	
 	// ------------------------------------------------------
 	// Tags
 	// ------------------------------------------------------
 	
 	//Tags assosiated with this ability.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags", meta = (Categories = "ABILITY"))
 	struct FGameplayTagContainer AbilityTags;
 
 	//Cancel any of the owner's active abilities with any of these tags.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags", meta = (Categories = "ABILITY"))
 	struct FGameplayTagContainer CancelAbilities;
 
 	//Cancels and Prevent any abilites with any of these tags from being activated by the owner until this ability finishes.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags", meta = (Categories = "ABILITY"))
 	struct FGameplayTagContainer BlockAbilities;
 
 	//The Owner Must have these gameplay tags for this ability to activate.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags", meta = (Categories = "ABILITY"))
 	struct FGameplayTagContainer RequiredOwnerTags;
 
 	//The Owner must NOT have ANY of these gameplay tags in order for this ability to activate.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags", meta = (Categories = "ABILITY"))
 	struct FGameplayTagContainer RestrictedOwnerTags;
-
-	//Fires these Actor Tag Events on the owner when the ability is ACTIVATED
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability - Tags")
-	FGameplayTagContainer OwnerEventsOnActivate;
-
-	//Fires these Actor Tag Events on the owner when the ability is FINISHED
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability - Tags")
-	FGameplayTagContainer OwnerEventsOnFinish;
 	
-	//NAME Tags given to the owning actor upon ability GRANTED and removed upon Ability UNGRANTED
-	UPROPERTY(EditDefaultsOnly, Category="Ability - Actor Tags")
-	TArray<FName> GrantedActorOwnerTags;
-	//NAME Tags given to the owning actor upon ability Activation and removed upon Ability Finish
-	UPROPERTY(EditDefaultsOnly, Category="Ability - Actor Tags")
-	TArray<FName> ActiveActorOwnerTags;
-	
-
 };

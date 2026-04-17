@@ -45,6 +45,19 @@ public:UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menu")
 	virtual TArray<UObject*> GetDataListEntries_Implementation(UMenu* Menu) override;
 };
 
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API AOmegaMenuWrapperActor : public AActor
+{
+	GENERATED_BODY()
+
+public:
+	AOmegaMenuWrapperActor();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu") UCombatantComponent* Combatant;
+	
+};
+
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
@@ -73,6 +86,8 @@ public:
 	FText DisplayName;
 	UPROPERTY(EditAnywhere, Category = "Menu")
 	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
+	UPROPERTY(EditAnywhere, Category = "Menu",meta=(Categories="SYSTEM"))
+	FGameplayTagContainer BlockedSystemTags;
 	
 	UFUNCTION()
 		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag);
@@ -97,6 +112,13 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Widget|Menu")
 		void MenuClosed(FGameplayTagContainer Tags, const FString& Flag);
 
+	//----------------------------------------------------------------------
+	// Wrapper Actor
+	//----------------------------------------------------------------------
+	UPROPERTY() AOmegaMenuWrapperActor* WrapperActor;
+	UFUNCTION(BlueprintPure,Category="Menu|ActorWrapper") AOmegaMenuWrapperActor* GetMenuWrapperActor() const;
+	
+	
 	//----------------------------------------------------------------------
 	// Reset
 	//----------------------------------------------------------------------
@@ -163,25 +185,12 @@ public:
 	
 	///PROPERTIES//
 
-	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu")
-	bool bIsOpen;
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu") bool bIsOpen;
 
 	///DELGATES//
-	UPROPERTY(BlueprintAssignable)
-		FOpened OnOpened;
-	UPROPERTY(BlueprintAssignable)
-		FClosed OnClosed;
+	UPROPERTY(BlueprintAssignable) FOpened OnOpened;
+	UPROPERTY(BlueprintAssignable) FClosed OnClosed;
 
-	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Name)")
-	void OnGlobalEvent(FName Event, UObject* Context);
-	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Tag)")
-	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
-	UFUNCTION() void Local_BindGlobalEvent();
-
-	UFUNCTION(BlueprintNativeEvent)
-	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnInputMethodChanged(bool bIsGamepad);
 
 	//----------------------------------------------------------------------
 	// State

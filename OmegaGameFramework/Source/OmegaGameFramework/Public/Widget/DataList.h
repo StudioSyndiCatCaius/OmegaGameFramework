@@ -3,19 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 #include "GameplayTagContainer.h"
 #include "Interfaces/I_Widget.h"
 #include "Types/SlateEnums.h"
 #include "Components/SlateWrapperTypes.h"
 #include "Blueprint/UserWidget.h"
+#include "Curves/CurveVector.h"
 #include "Widget/DataWidget.h"
-#include "Math/Vector2D.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Delegates.h"
-#include "Subsystems/Subsystem_Save.h"
+#include "Misc/OmegaSaveTypes.h"
 #include "DataList.generated.h"
 
+class UMenu;
 class UOmegaSlateStyle_Text;
 class UOverlay;
 class UOmegaSlateStyle_Border;
@@ -48,16 +48,40 @@ class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry : public UPrimaryDataAsset, pu
 {
 	GENERATED_BODY()
 public:
+	
+	UFUNCTION(BlueprintNativeEvent,BlueprintPure,Category="Entry")
+	TSubclassOf<UMenu> GetSubmenuClass() const;
 
 };
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UDataListCustomEntry_Common : public UDataListCustomEntry
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") FText name;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") FSlateBrush Icon;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") FText description;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") FString label;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") TSubclassOf<UMenu> Submenu;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") FGameplayTagContainer Tags;
+	virtual TSubclassOf<UMenu> GetSubmenuClass_Implementation() const override { return Submenu; };
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
+	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return Tags; };
+};
+
+
 
 UCLASS(Abstract)
 class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInterface_Input
 {
 	GENERATED_BODY()
 
-
 public:
+    UDataList(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY() UDataTooltip* override_tooltip;
 	
@@ -107,44 +131,42 @@ public:
 	bool bAutoSizeList;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "List")
 	int32 UniformGridMaxValue = 1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List",DisplayName="List Gameplay Tags")
-	FGameplayTagContainer ListTags;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "List")
-	UWidgetSwitcher* LinkedWidgetSwitcher;
-
+	void L_ApplyCurveToEntries();
+	
 	// ---------------------------------------------------------------
 	// Entry
 	// ---------------------------------------------------------------
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
-	TSubclassOf<UDataWidget> EntryClass;
+#if WITH_EDITOR
+	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
+#endif
+	void ValidateTemplates();
 	
-	UPROPERTY(EditAnywhere, Instanced, Category="Entry")
-	TArray<UOmegaObjectTrait*> EntryTraits;
-	UPROPERTY(EditAnywhere, Instanced, Category = "Entry")
-	TArray<UDataWidgetTraits*> EntryMetadata;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",DisplayName="💜Entry Class")
+	TSubclassOf<UDataWidget> EntryClass;
+	UPROPERTY()
+	UDataWidget* EntryTemplate;
+	
+	UPROPERTY(EditAnywhere, Instanced,BlueprintReadOnly, Category = "Entry",DisplayName="Entry Traits")
+	TArray<UDataWidgetTraits*> Traits;
+	
 	UFUNCTION(BlueprintCallable, Category="Entry", meta=(AdvancedDisplay="KeepEntires"))
 	void SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries=true);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",DisplayName="Entries (Data Assets)")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",DisplayName="🔷Entries (Data Assets)")
 	TArray<UPrimaryDataAsset*> DefaultAssets;
 	
 	UPROPERTY(meta=(DeprecatedProperty))
 	bool bUseCustomEntries;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Entry",DisplayName="Entries (Custom)")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Entry",DisplayName="🔷Entries (Custom)")
 	TArray<UDataListCustomEntry*> CustomEntryObjects;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",AdvancedDisplay)
 	TArray<FCustomAssetData> CustomEntries;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
-	FString EntryLabel;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry")
-    TArray<FName> EntryAutoTags;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entry",meta=(Categories="WIDGET"))
+	FGameplayTagContainer ListTags;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry")
 	FString DefaultListFlag;
@@ -167,6 +189,17 @@ public:
 	// ---------------------------------------------------------------
 	// Overrides
 	// ---------------------------------------------------------------
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="StyleOverrides")
+	void AddAllOverrides();
+	
+	UFUNCTION() TArray<FName> L_getOverrideNames_Asset();
+	UFUNCTION() TArray<FName> L_getOverrideNames_float();
+	UFUNCTION() TArray<FName> L_getOverrideNames_Bool();
+	
+	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_Asset"))
+	TMap<FName,UOmegaSlateStyle*> WidgetOverride_Styles;
+	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_float")) TMap<FName,float> WidgetOverride_Floats;
+	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_Bool")) TMap<FName,bool> WidgetOverride_Bools;
 	
 	UPROPERTY(EditAnywhere,Category="EntryOverrides")
 	bool bCanOverrideSize;
@@ -182,13 +215,10 @@ public:
 	UCurveVector* OverrideHoverOffset_Curve;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	FVector OverrideHoverOffset_Scale=FVector::One();
-	UPROPERTY(EditAnywhere, Category="EntryOverrides")
-	UOmegaSlateStyle_Text* OverrideTextStyle_Name;
-	UPROPERTY(EditAnywhere, Category="EntryOverrides")
-	UOmegaSlateStyle_Text* OverrideTextStyle_Description;
 
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	TSubclassOf<UDataTooltip> Override_TooltipClass;
+
 	
 private:
 	UFUNCTION()
@@ -248,6 +278,7 @@ private:
 	UPROPERTY()
 	int32 remembered_hover_index;
 public:
+	
 	
     UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Ω|Widget|DataList")
     UDataWidget* GetHoveredEntry();
@@ -311,9 +342,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="DataList")
 	UObject* ListOwner;
 
-	//DESCRIPTION
-	UPROPERTY(EditInstanceOnly, Category="DataList")
-	UTextBlock* DescriptionTextBlock;
 	
 protected:
 

@@ -6,17 +6,11 @@
 #include "Factories/Factory.h"
 #include "AssetTypeActions_Base.h"
 
-#include "Misc/OmegaAttribute.h"
-#include "Misc/OmegaFaction.h"
-#include "OmegaDataItem.h"
-#include "OmegaDebug_Functions.h"
-
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_Character.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Subsystems/Subsystem_Save.h"
-#include "Subsystems/Subsystem_Quest.h"
-#include "Subsystems/Subsystem_Zone.h"
+
 
 #include "DataAssets/DA_CommonCharacter.h"
 #include "DataAssets/DA_CommonItem.h"
@@ -26,19 +20,23 @@
 #include "DataAssets/DA_CommonEquipment.h"
 #include "DataAssets/DA_Common_EquipType.h"
 #include "DataAssets/DA_CommonRace.h"
-#include "DataAssets/DA_Job.h"
 
-#include "Misc/OmegaDamageType.h"
+#include "DataAssets/DA_Attribute.h"
+#include "DataAssets/DA_Faction.h"
+#include "DataAssets/DA_DamageType.h"
+#include "DataAssets/DA_BGM.h"
 
 #include "AssetTypeActions/AssetTypeActions_Blueprint.h"
 #include "Components/Component_Leveling.h"
-#include "Components/Component_Subscript.h"
+//#include "Components/Component_Subscript.h"
+#include "Actors/Actor_Quest.h"
+#include "DataAssets/DA_Zone.h"
 #include "Factories/BlueprintFactory.h"
 #include "Functions/F_Actor.h"
 #include "Functions/F_Animation.h"
 #include "Functions/F_Combatant.h"
 #include "Misc/OmegaGameplayModule.h"
-#include "Subsystems/Subsystem_BGM.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Widget/Menu.h"
 #include "OmegaEditorFactories.generated.h"
 
@@ -76,7 +74,6 @@ EAssetTypeCategories::Type OmegaAssetCategory; \
 // COLORS
 inline FColor _color_bp=FColor(0,0,200);
 inline FColor _color_debug=FColor(200,200,200);
-const FColor col_common=FColor(255, 30, 30);
 
 //Attributes
 UCLASS() class OMEGAEDITOR_API UOmegaAttribute_Factory : public UFactory
@@ -223,34 +220,6 @@ UCLASS() class OMEGAEDITOR_API UOmegaCharacterConfig_Factory : public UFactory
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaCharacterConfig,"Character Config", "Asset Desc here", FColor(50, 50, 50),"Util")
 
 
-
-
-
-
-//DataItems
-UCLASS()
-class OMEGAEDITOR_API UOmegaDataItems_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-public:
-
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
-};
-
-class FAssetTypeActions_OmegaDataItems : public FAssetTypeActions_Base
-{
-public:
-	FAssetTypeActions_OmegaDataItems(EAssetTypeCategories::Type InAssetCategory) : OmegaAssetCategory(InAssetCategory){};
-	
-	virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegDataItem", "Data Item"); }
-	virtual uint32 GetCategories() override { return OmegaAssetCategory; }
-	virtual FColor GetTypeColor() const override { return FColor(50, 255, 180); }
-	virtual FText GetAssetDescription(const FAssetData& AssetData) const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_OmegDataItemDesc", "An Item type."); }
-	virtual UClass* GetSupportedClass() const override { return UOmegaDataItem::StaticClass(); }
-
-private:
-	EAssetTypeCategories::Type OmegaAssetCategory;
-};
 
 
 
@@ -424,7 +393,15 @@ private:
 // COMMON TYPES
 // =====================================================================================================================
 
-
+const FColor col_common=FColor(255, 99, 20);
+//Common
+UCLASS() class OMEGAEDITOR_API UOmegaDemoDataAsset_Factory : public UFactory
+{
+	GENERATED_UCLASS_BODY()
+	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
+	virtual bool ShouldShowInNewMenu() const override;
+};
+OMACRO_ASSETTYPE_HEADERFIELD(OmegaDemoDataAsset,"Demo Asset", "Asset Desc here",col_common,"Common")
 
 //Skill
 UCLASS() class OMEGAEDITOR_API UOAsset_CommonSkill_Factory : public UFactory
@@ -513,5 +490,4 @@ UCLASS() class OMEGAEDITOR_API UOmegaAssetLibrary_Sound_Factory : public UFactor
 	virtual bool ShouldShowInNewMenu() const override;
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaAssetLibrary_Sound,"Sound Library", "Asset Desc here",col_asLib,"Asset Library")
-
 

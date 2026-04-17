@@ -17,14 +17,9 @@ class UActorTagEventInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class OMEGAGAMEFRAMEWORK_API IActorTagEventInterface
 {
 	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
 	UFUNCTION(BlueprintNativeEvent, Category="Event")
@@ -38,19 +33,19 @@ class OMEGAGAMEFRAMEWORK_API UActorTagEventFunctions : public UBlueprintFunction
 
 public: 
 	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
-	static void FireActorTagEvents(TMap<AActor*, FGameplayTag> Events);
+	static void FireActorTagEvents(UPARAM(meta=(Categories="EVENT")) TMap<AActor*, FGameplayTag> Events);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
-	static void FireTagEventOnActors(TArray<AActor*> Actors, FGameplayTag Event);
+	static void FireTagEventOnActors(TArray<AActor*> Actors,UPARAM(meta=(Categories="EVENT")) FGameplayTag Event);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
-	static void FireTagEventOnActor(AActor* Actor, FGameplayTag Event);
+	static void FireTagEventOnActor(AActor* Actor,UPARAM(meta=(Categories="EVENT")) FGameplayTag Event);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
-	static void FireTagEventsOnActors(TArray<AActor*> Actors, FGameplayTagContainer Events);
+	static void FireTagEventsOnActors(TArray<AActor*> Actors,UPARAM(meta=(Categories="EVENT")) FGameplayTagContainer Events);
 
 	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
-	static void FireTagEventsOnActor(AActor* Actor, FGameplayTagContainer Events);
+	static void FireTagEventsOnActor(AActor* Actor,UPARAM(meta=(Categories="EVENT")) FGameplayTagContainer Events);
 	
 };
 

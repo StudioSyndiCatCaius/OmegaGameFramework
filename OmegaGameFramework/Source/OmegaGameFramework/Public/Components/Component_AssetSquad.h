@@ -18,17 +18,14 @@ public:
 	
 };
 
-
-
-
 USTRUCT(BlueprintType)
 struct FOmegaAssetSquad_Data
 {
 	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,Category="AssetSquad") UAssetSquad_Identity* CurrentSquad=nullptr;
 	UPROPERTY(EditAnywhere,Category="AssetSquad") TMap<UPrimaryDataAsset*,UAssetSquad_Identity*> Assignments;
 	UPROPERTY(EditAnywhere,Category="AssetSquad") TArray<UPrimaryDataAsset*> Order;
 };
-
 
 class UCombatantComponent;
 
@@ -40,10 +37,10 @@ class OMEGAGAMEFRAMEWORK_API UAssetSquadComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	UAssetSquad_Identity* ValidateSquadID(UAssetSquad_Identity* override) const;
+	UAssetSquad_Identity* ValidateSquadID(UAssetSquad_Identity* override);
 	int32 ValidateMember(UPrimaryDataAsset* member);
 	void ValidateData();
-	TArray<UAssetSquad_Identity*> L_GetListedSquads() const;
+	TArray<UAssetSquad_Identity*> L_GetListedSquads();
 	
 public:
 	virtual void BeginPlay() override;
@@ -51,15 +48,24 @@ public:
 	UPROPERTY(BlueprintAssignable) FOnAssetSquadMembersSwapped OnAssetSquadMembersSwapped;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Squad")
-	UAssetSquad_Identity* Default_SquadID;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Squad")
 	bool OneSquadPerAsset=true;
 	
+	FOmegaAssetSquad_Data* L_GetSquadData();
+	
 	UPROPERTY(EditAnywhere,Category="Squad")
+	bool bBindToSave;
+	UPROPERTY(EditAnywhere,Category="Squad",meta=(EditCondition="bBindToSave"))
+	FName SaveBinding;
+	UPROPERTY(EditAnywhere,Category="Squad",meta=(EditCondition="!bBindToSave"))
 	FOmegaAssetSquad_Data SquadData;
 	
 	UPROPERTY(EditAnywhere,Category="Squad")
 	TMap<UPrimaryDataAsset*,UAssetSquad_Identity*> SquadMembers;
+	
+	UFUNCTION(BlueprintCallable,Category="Squad")
+	void CurrentSquad_Set(UAssetSquad_Identity* Squad);
+	UFUNCTION(BlueprintPure,Category="Squad")
+	UAssetSquad_Identity* CurrentSquad_Get();
 	
 	UFUNCTION(BlueprintCallable,Category="Squad")
 	void SetSquadData(FOmegaAssetSquad_Data Data);

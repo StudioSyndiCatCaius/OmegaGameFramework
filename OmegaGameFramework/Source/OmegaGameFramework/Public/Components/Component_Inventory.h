@@ -4,13 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "OmegaGameplayComponent.h"
 #include "Components/ActorComponent.h"
 #include "Misc/GeneralDataObject.h"
 #include "Component_Inventory.generated.h"
 
+class UCombatantComponent;
+
+/*
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetAdded, UPrimaryDataAsset*, Asset, int32, Amount, bool, IsFull);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAssetRemoved, UDataAsset*, Asset, int32, Amount, bool, IsEmpty);
+
 
 
 UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Inventory (Data Asset Collection)", meta=(BlueprintSpawnableComponent),HideCategories="Navigation, Cooking, Activation, AssetUserData, Asset User Data")
@@ -80,7 +84,7 @@ public:
 	bool HasMinimumAssets(TMap<UPrimaryDataAsset*, int32> Assets);
 };
 
-
+*/
 
 UINTERFACE(MinimalAPI)class UDataAssetCollectionInterface : public UInterface { GENERATED_BODY()};
 class OMEGAGAMEFRAMEWORK_API IDataAssetCollectionInterface
@@ -107,39 +111,6 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Inventory",DisplayName="Inventory Source - Get Items")
 	TMap<UPrimaryDataAsset*,int32> GetInventory();
-};
-
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionFunctions : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-	
-public:
-	
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Cost (Total List)")
-	static TMap<UPrimaryDataAsset*, int32> GetListTradeCost_Total(TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Cost (One)")
-	static int32 GetListTradeCost_One(TMap<UPrimaryDataAsset*, int32> Assets, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag);
-	
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Value (One)")
-    static int32 GetDataAssetTradeValue_One(UPrimaryDataAsset* Asset, int32 AssetAmount, UPrimaryDataAsset* TradeAsset, FGameplayTag TradeTag);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Get Trade Value (All)")
-	static TMap<UPrimaryDataAsset*, int32> GetDataAssetTradeValue_All(UPrimaryDataAsset* Asset, int32 AssetAmount, FGameplayTag TradeTag);
-
-	UFUNCTION(BlueprintPure, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Can Perform Trade (One)?")
-	static bool CanInventoryPerformTrade_ForAsset(UDataAssetCollectionComponent* Component, UPrimaryDataAsset* Asset, int32 Amount, FGameplayTag TradeTag);
-
-	UFUNCTION(BlueprintPure, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Can Perform Trade (All)?")
-	static bool CanInventoryPerformTrade_ForList(UDataAssetCollectionComponent* Component, TMap<UPrimaryDataAsset*, int32> Assets, bool bInvert, FGameplayTag TradeTag);
-	
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Perform Trade (One)",meta=(AdvancedDisplay="bForce,bWithholdAsset,bInvert",ExpandBoolAsExecs="Outcome"))
-	static FString PerformTrade_Single(UDataAssetCollectionComponent* Component, UPrimaryDataAsset* Asset, int32 Amount, FGameplayTag TradeTag, bool& Outcome, bool bInvert=false, bool bForce=false,bool bWithholdAsset=false);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|DataAsset|Trading", DisplayName="Ω Inventory - Perform Trade (List)",meta=(AdvancedDisplay="bForce,bWithholdAsset",ExpandBoolAsExecs="Outcome"))
-	static FString PerformTrade_List(UDataAssetCollectionComponent* Component, TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag, bool& Outcome, bool bInvert=false,bool bForce=false,bool bWithholdAsset=false);
 };
 
 

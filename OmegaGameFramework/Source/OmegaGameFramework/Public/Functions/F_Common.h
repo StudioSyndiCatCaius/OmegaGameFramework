@@ -10,16 +10,24 @@
 #include "Misc/OmegaUtils_Enums.h"
 #include "JsonObjectWrapper.h"
 #include "Math/Vector2D.h"
+#include "Engine/EngineTypes.h"
 #include "Engine/AssetUserData.h"
 #include "LuaValue.h"
+#include "Misc/GeneralDataObject.h"
 #include "F_Common.generated.h"
 
+class UAssetSquadComponent;
+class UOmegaDataAsset;
+class UAssetSquad_Identity;
+class AOmegaInstancedEntity;
+class UCombatantComponent;
+class AOmegaWorldManager;
 class UOmegaStyleSettings;
 class UOmegaSettings;
 class UEquipmentSlot;
 class APlayerController;
 class UEnhancedInputLocalPlayerSubsystem;
-class UOmegaPlayerSubsystem;
+class UOmegaSubsystem_Player;
 class UOmegaInputMode;
 class ALevelInstance;
 class UCurveFloat;
@@ -33,9 +41,22 @@ enum EOmegaFlagResult
 };
 
 
+USTRUCT(BlueprintType)
+struct FOmegaAssetSearchConfig
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Asset Search") bool bLoadExternal=false;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Asset Search") bool bSortedAssets=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Asset Search") bool bQuickAccess=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Asset Search") bool bClassGameplayConfig=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Asset Search") bool bGameCoreOverride=true;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Asset Search") bool bLogProcess=false;
+};
+
 
 UCLASS()
-class UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOmegaGameFrameworkBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -45,45 +66,59 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Omega")
 	static UOmegaSettings* GetSettings_Omega();
-	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Stlye")
+	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Style")
 	static UOmegaStyleSettings* GetSettings_Style();
 	UFUNCTION(BlueprintPure, Category="Omega|Settings", meta=(Keywords="has"),DisplayName="Ω Get Settings - Asset")
 	static UOmegaAssetSettings* GetSettings_Asset();
 	
 	//###############################################################################
+	// WORLD GLOBALS
+	//###############################################################################
+	UFUNCTION(BlueprintPure, Category="Omega|World",meta=(WorldContext="WorldContextObject"))
+	static AOmegaWorldManager* GetOmegaWorldManager(UObject* WorldContextObject);
+	UFUNCTION(BlueprintPure, Category="Omega|World",meta=(WorldContext="WorldContextObject"),DisplayName="World Manager - Get Combatant")
+	static UCombatantComponent* GetGlobalCombatant(UObject* WorldContextObject);
+	UFUNCTION(BlueprintPure, Category="Omega|World",meta=(WorldContext="WorldContextObject"),DisplayName="World Manager - Get Entity Instance")
+	static AOmegaInstancedEntity* GetGlobalEntityInstance(UObject* WorldContextObject,UObject* ID);
+	
+	
+	UFUNCTION(BlueprintPure, Category="Omega|World",meta=(WorldContext="WorldContextObject"),DisplayName="World Manager - Get Squad")
+	static void GetGlobalSquad_CurrentIdentity(UObject* WorldContextObject, UAssetSquadComponent*& Component, UAssetSquad_Identity*& CurrentSquad);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|World",meta=(WorldContext="WorldContextObject"),DisplayName="World Manager - Get Entity Instance (from Identities)")
+	static TArray<AOmegaInstancedEntity*> GetGlobalEntityInstances_FromIDs(UObject* WorldContextObject,TArray<UPrimaryDataAsset*> IDs);
+	UFUNCTION(BlueprintPure, Category="Omega|World",meta=(WorldContext="WorldContextObject"),DisplayName="World Manager - Get Entity Instance (from Squad)")
+	static TArray<AOmegaInstancedEntity*> GetGlobalEntityInstances_FromSquad(UObject* WorldContextObject,UAssetSquad_Identity* Squad);
+	
+	//###############################################################################
 	// Gameplay tags
 	//###############################################################################
 
+	UFUNCTION(BlueprintCallable, Category="Omega|GameplayTags",DisplayName="Object - Fire Tag Event")
+	static void Object_TagEvent(UObject* Object, UPARAM(meta=(Categories="EVENT")) FGameplayTag Event, FOmegaCommonMeta meta);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags",DisplayName="Object - Check Tag Query")
+	static bool Object_TagQuery(UObject* Object, UPARAM(meta=(Categories="QUERY")) FGameplayTag Event, FOmegaCommonMeta meta);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Ω Has Gameplay Tags (Adv.)")
 	static bool HasTags_Advance(FGameplayTagContainer Tags, FGameplayTagContainer Has, bool bAll, bool bExact);
 	
-	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Ω Get Object's Gameplay Tags")
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Object - Get Gameplay Tags")
 	static FGameplayTagContainer GetObjectGameplayTags(UObject* Object);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Object - Get Gameplay Category")
+	static FGameplayTag GetObjectGameplayCategory(UObject* Object);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags",DisplayName="Ω Is Object of Gameplay Category")
 	static bool IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact);
 
-	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Ω Does Object have Gameplay Tag")
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Object - Gameplay Tags - Has Tag")
 	static bool DoesObjectHaveGameplayTag(UObject* Object, FGameplayTag GameplayTag, bool bExact);
-	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Ω Does Object have Gameplay Tags")
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags", meta=(Keywords="has"),DisplayName="Object - Gameplay Tags - Has Tags")
 	static bool DoesObjectHaveGameplayTags(UObject* Object, const FGameplayTagContainer& GameplayTags, bool bExact, bool bValidIfEmpty=true);
 	
-	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags",DisplayName="Ω Query Object Gameplay Tag")
+	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags",DisplayName="Object - Gameplay Tags - Query")
 	static bool QueryObjectGameplayTags(UObject* Object, FGameplayTagQuery Query, bool bEmptyReturnsTrue=true);
-	
-	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
-	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class,bIncludeOnEmptyTag", DeterminesOutputType="Class"))
-	static TArray<UObject*> FilterObjectsByCategoryTag(TArray<UObject*> Assets, FGameplayTag CategoryTag,
-		bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag);
-
-	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
-	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class,bIncludeOnEmptyTag", DeterminesOutputType="Class"))
-	static TArray<UObject*> FilterObjectsByGameplayTags(TArray<UObject*> Assets, FGameplayTagContainer GameplayTags,
-		bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag);
-
-
-	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExclude, Class", DeterminesOutputType="Class"))
-	static TArray<UObject*> FilterObjectsWithInterface(TArray<UObject*> Objects, TSubclassOf<UInterface> Interface, bool bExclude, TSubclassOf<UObject> Class);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static FGameplayTagContainer FilterTagsByType(FGameplayTag TypeTag, FGameplayTagContainer TagsIn);
@@ -104,6 +139,9 @@ public:
 	// System
 	//###############################################################################
 	
+	UFUNCTION(BlueprintPure, Category="Omega|Gameplay", meta = (WorldContext = "WorldContextObject")) 
+	static bool IsSystemTagActive(const UObject* WorldContextObject,UPARAM(meta=(Categories="SYSTEM")) FGameplayTag Tag);
+	
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context")) 
 	static void SetGameplaySystemActive(const UObject* WorldContextObject, TSubclassOf<AOmegaGameplaySystem> SystemClass, bool bActive, const FString Flag, UObject* Context);
 
@@ -113,30 +151,53 @@ public:
 	//###############################################################################
 	// Object
 	//###############################################################################
-	UFUNCTION(BlueprintCallable, Category="Omega|Object",meta=(DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Object",meta=(DeterminesOutputType="Class"),DisplayName="Objects - Resolve Soft Array")
 	static TArray<UObject*> ResolveSoftArray_Object(TArray<TSoftObjectPtr<UObject>> List, TSubclassOf<UObject> Class);
 	UFUNCTION(BlueprintCallable, Category="Omega|Object",meta=(DeterminesOutputType="Class"))
 	static TArray<TSubclassOf<UObject>> ResolveSoftArray_Class(TArray<TSoftClassPtr<UObject>> List);
 	
-	UFUNCTION(BlueprintPure, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"))
+	UFUNCTION(BlueprintPure, Category="Omega|Assets", meta=(DeterminesOutputType="Class", AdvancedDisplay="bExclude"),DisplayName="Object - Filter (by Class)")
 	static TArray<UObject*> FilterObjectsByClass(TArray<UObject*> Objects, TSubclassOf<UObject> Class, bool bExclude);
 	
-	UFUNCTION(BlueprintPure, Category="Omega|Object")
+	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
+	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class,bIncludeOnEmptyTag", 
+		DeterminesOutputType="Class"),DisplayName="Object - Filter (by Category Tag)")
+	static TArray<UObject*> FilterObjectsByCategoryTag(TArray<UObject*> Assets, FGameplayTag CategoryTag,
+		bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag);
+
+	//Exact: Exact tag? | Exclude: if true, will exclude matching objects instead of including them.
+	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExact, bExclude, bInvertCheck, Class,bIncludeOnEmptyTag", 
+		DeterminesOutputType="Class"),DisplayName="Object - Filter (by Gameplay Tags)")
+	static TArray<UObject*> FilterObjectsByGameplayTags(TArray<UObject*> Assets, FGameplayTagContainer GameplayTags,
+		bool bExact, bool bExclude, TSubclassOf<UObject> Class, bool bIncludeOnEmptyTag);
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Assets", meta=(AdvancedDisplay="bExclude, Class",
+		DeterminesOutputType="Class"),DisplayName="Object - Filter (by Interface)")
+	static TArray<UObject*> FilterObjectsWithInterface(TArray<UObject*> Objects, TSubclassOf<UInterface> Interface, bool bExclude, TSubclassOf<UObject> Class);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Object",DisplayName="Object - Select (by Name)")
 	static UObject* SelectObjectByName(TArray<UObject*> Objects, const FString& Name);
 
-	UFUNCTION(BlueprintPure, Category="Omega|Object")
+	UFUNCTION(BlueprintPure, Category="Omega|Object",DisplayName="Objects - Get Display Names")
 	static const TArray<FString> GetDisplayNamesFromObjects(TArray<UObject*> Objects);
+
+	UFUNCTION(BlueprintPure,Category="Omega|Object") static FGuid GetObjectGUID(UObject* Object);
+	UFUNCTION(BlueprintPure,Category="Omega|Object") static int32 GetObjectSeed(UObject* Object);
 	
-	UFUNCTION(BlueprintCallable, Category = "Utilities", meta = (DeterminesOutputType = "ClassType"))
-	static TArray<UObject*> ConvertSoftToHardReferences(const TArray<TSoftObjectPtr<UObject>>& SoftRefs, const TSubclassOf<UObject> ClassType);
 	//###############################################################################
 	// Asset Getter
 	//###############################################################################
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Ω Get All Assets of Class")
-	static TArray<UObject*> GetAllAssetsOfClass(TSubclassOf<UObject> Class, bool bIncludeSubclasses);
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Assets - Get All of Class")
+	static TArray<UObject*> GetAllAssetsOfClass(TSubclassOf<UObject> Class, bool bIncludeSubclasses=false, FGameplayTag FilterCategory=FGameplayTag());
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="Ω🔴 Get Asset (from Path)")
-	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, bool& Outcome);
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome")
+	,DisplayName="Ω🔴 Get Asset (Adjacent to Reference)")
+	static UObject* GetAsset_AdjacentToReference(TSoftObjectPtr<UObject> Reference, const FString& Prefix,const FString& Suffix, const FString& Subdir,TSubclassOf<UObject> Class,bool& Outcome);
+
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome",AdvancedDisplay="Directory, Prefix, Sufix, config")
+		,DisplayName="Ω🔴 Get Asset (from Path)")
+	static UObject* GetAsset_FromPath(const FString& AssetPath, TSubclassOf<UObject> Class, bool& Outcome,const FString& Directory="", FOmegaAssetSearchConfig config=FOmegaAssetSearchConfig());
 
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class"),DisplayName="Ω🔴 Get Assets List (from Path)")
 	static TArray<UObject*> GetAssets_FromPath(const FString& path, bool bRecursive, TSubclassOf<UObject> Class);
@@ -172,11 +233,11 @@ public:
 	// Actor Binding
 	//###############################################################################
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Set Global Binding")
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Global Binding - SET")
 	static void SetGlobalActorBinding(const UObject* WorldContextObject, FName Binding, AActor* Actor);
-	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Clear Global Binding")
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Global Binding - CLEAR")
 	static void ClearGlobalActorBinding(const UObject* WorldContextObject, FName Binding);
-	UFUNCTION(BlueprintPure, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Get Global Binding")
+	UFUNCTION(BlueprintPure, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Global Binding - GET")
 	static AActor* GetGlobalActorBinding(const UObject* WorldContextObject, FName Binding);
 
 	
@@ -205,10 +266,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="ModuleClass",ExpandBoolAsExecs="Outcome"))
 	static UOmegaGameplayModule* TryGetGameplayModule(const UObject* WorldContextObject, TSubclassOf<UOmegaGameplayModule> ModuleClass, bool& Outcome, bool bFallbackToDefault=false);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"))
-	static void FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context);
-	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"))
-	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event, UObject* Context);
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"),DisplayName="Fire Global Event (Named)")
+	static void FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context, FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tagged)")
+	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
 	
 	//###############################################################################
 	// Flag
@@ -291,21 +352,19 @@ public:
 	// -- ROTATE ACTOR
 
 	//Rotates an Actor to aim at a Location
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta=(AdvancedDisplay="X,Y,Z"),DisplayName="Actor - Rotate (To Look Location)")
 	static void RotateActorToLookLocation(AActor* Actor, FVector Location, bool X=false, bool Y=false, bool Z=true);
 	
 	//Rotates an Actor to aim at an actor
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta=(AdvancedDisplay="X,Y,Z"),DisplayName="Actor - Rotate (To Look Target)")
 	static void RotateActorToLookTarget(AActor* Actor, AActor* LookTarget, bool X=false, bool Y=false, bool Z=true);
 
 	//Rotates an Actor to aim at the average location of an actor list
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta=(AdvancedDisplay="X,Y,Z"),DisplayName="Actor - Rotate (To Look Multi-Target Midpoint)")
 	static void RotateActorToLookTargetsMidpoint(AActor* Actor, TArray<AActor*> LookTargets, bool X=false, bool Y=false, bool Z=true);
-
-	// -- Vector Math
-
+	
 	//Gets the locations of every actor in the list
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(AdvancedDisplay="X,Y,Z"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta=(AdvancedDisplay="X,Y,Z"),DisplayName="Actors - Get Location List from")
 	static TArray<FVector> GetLocationArrayFromActorList(TArray<AActor*> Actors);
 	
 	
@@ -341,14 +400,19 @@ public:
 	//###############################################################################
 	// Generals
 	//###############################################################################
-	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Ω Get Object's Display Name",meta=(AdvancedDisplay="FormatText"))
-	static FText GetObjectDisplayName(UObject* Object,bool FormatText=true);
-	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Ω Get Object's Display Description",meta=(AdvancedDisplay="FormatText"))
-	static FText GetObjectDisplayDescription(UObject* Object,bool FormatText=true);
-	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Ω Get Object's Label")
+	static bool Object_UsesCommonInterface(UObject* Object);
+	
+	
+	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Object - Get Name",meta=(AdvancedDisplay="FormatText"))
+	static FText GetObjectDisplayName(UObject* Object,FGameplayTag Tag,bool FormatText=true);
+	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Object - Get Description",meta=(AdvancedDisplay="FormatText"))
+	static FText GetObjectDisplayDescription(UObject* Object,FGameplayTag Tag,bool FormatText=true);
+	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Object - Get Label")
 	static FString GetObjectLabel(UObject* Object);
-	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Ω Get Object's Icon")
-	static FSlateBrush GetObjectIcon(UObject* Object);
+	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Object - Get Icon")
+	static FSlateBrush GetObjectIcon(UObject* Object,FGameplayTag Tag);
+	UFUNCTION(BlueprintPure, Category="Omega|General",DisplayName="Object - Get Color")
+	static FLinearColor GetObjectColor(UObject* Object,FGameplayTag Tag);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|General",DisplayName="Ω Get Labels (From Object List)")
 	static TArray<FString> GetLabelsFromObjects(TArray<UObject*> Objects);
@@ -356,23 +420,8 @@ public:
 	static UObject* SelectObjectFromLabel(TArray<UObject*> ObjectsIn, const FString& Label, TSubclassOf<UObject> Class,bool& Outcome);
 	UFUNCTION(BlueprintCallable,Category="Omega|General", DisplayName="Ω Filter Objects (By Labels)") 
 	static TArray<UObject*> FilterObjectsFromLabels(TArray<UObject*> ObjectsIn, TArray<FString> Labels);
-	
-	//###############################################################################
-	// MetaTags
-	//###############################################################################
-	UFUNCTION(BlueprintPure,Category="Omega|General", DisplayName="Ω Get Object Metatags",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bAppendActorTags, bAppendComponentTags")) 
-	static TArray<FName> GetObjectMetatags(UObject* WorldContextObject, UObject* Object, bool bAppendActorTags=true, bool bAppendComponentTags=true);
-	
-	UFUNCTION(BlueprintCallable,Category="Omega|General", DisplayName="Ω Filter Object With Metatags",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bAppendActorTags, bAppendComponentTags")) 
-	static TArray<UObject*> FilterObjectsWithMetatag(UObject* WorldContextObject, TArray<UObject*> Objects, FName tag, bool bAppendActorTags=true, bool bAppendComponentTags=true);
-	
-	
-	//###############################################################################
-	// GUID
-	//###############################################################################
-	UFUNCTION(BlueprintPure,Category="Omega|GUID")
-	static FGuid GetObjectGUID(UObject* Object);
-	
+
+
 	//###############################################################################
 	// Math
 	//###############################################################################
@@ -395,23 +444,6 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Lua",meta=(WorldContext="WorldContextObject", DeterminesOutputType="Class"), DisplayName="Lua To Omega Attributes (Int)")
 	static TMap<UOmegaAttribute*, int32> LuaToOmegaAttributes_int(UObject* WorldContextObject, TSubclassOf<UDataAsset> Class, FLuaValue Value);
 
-	//###############################################################################
-	// State Tag
-	//###############################################################################
-
-	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (World)")
-	static void SetStateTagsActive_World(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bActive);
-	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (World)")
-	static FGameplayTagContainer GetStateTagsActive_World(UObject* WorldContextObject);
-	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (World)")
-	static bool AreStateTagsActive_World(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bAll, bool bExact);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (Game Instance)")
-	static void SetStateTagsActive_GameInstance(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bActive);
-	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (Game Instance)")
-	static FGameplayTagContainer GetStateTagsActive_GameInstance(UObject* WorldContextObject);
-	UFUNCTION(BlueprintCallable,Category="Omega|State",meta=(WorldContext="WorldContextObject"),DisplayName="Set State Tags Active (Game Instance)")
-	static bool AreStateTagsActive_GameInstance(UObject* WorldContextObject, FGameplayTagContainer Tags, bool bAll, bool bExact);
 	
 };
 

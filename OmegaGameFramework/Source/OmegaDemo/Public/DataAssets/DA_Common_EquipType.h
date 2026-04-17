@@ -10,7 +10,7 @@
 #include "DA_Common_EquipType.generated.h"
 
 
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType,DisplayName="Ω-🪖 Equip Type")
 class OMEGADEMO_API UOAsset_Common_EquipType : public UOAsset_CombatSource, public IDataInterface_AppearanceSource
 {
 	GENERATED_BODY()

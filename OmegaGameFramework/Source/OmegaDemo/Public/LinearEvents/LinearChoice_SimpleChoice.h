@@ -9,11 +9,9 @@
 #include "UObject/Object.h"
 #include "LinearChoice_SimpleChoice.generated.h"
 
-/**
- * 
- */
-UCLASS(DisplayName="Choice | Simple")
-class OMEGADEMO_API ULinearChoice_SimpleChoice : public UOmegaLinearChoice, public IGameplayTagsInterface
+
+UCLASS(DisplayName="(🔀Choice) Common")
+class OMEGADEMO_API ULinearChoice_SimpleChoice : public UOmegaLinearChoice
 {
 	GENERATED_BODY()
 	
@@ -26,7 +24,10 @@ public:
 	FGameplayTagContainer Tags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
 	FOmegaBitflagsBase Flags;
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	{
+		Name=ChoiceText;
+	};
 	virtual bool IsChoiceAvailable_Implementation() const override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override {return Tags;};
 };

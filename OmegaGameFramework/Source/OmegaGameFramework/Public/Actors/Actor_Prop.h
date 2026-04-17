@@ -19,6 +19,7 @@ class UStateTreeComponent;
 class UOmegaSaveableComponent;
 class UNiagaraComponent;
 class UBoxComponent;
+class UAudioComponent;
 
 UCLASS(DisplayName="Ω Prop")
 class OMEGAGAMEFRAMEWORK_API UOmegaProp_Preset : public UOmegaDataAsset, public IDataInterface_AppearanceSource
@@ -71,7 +72,7 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaProp : public AOmegaGameplayActor, public IActorTagEventInterface, public IDataInterface_General, public IDataInterface_AppearanceSource
+class OMEGAGAMEFRAMEWORK_API AOmegaProp : public AOmegaGameplayActor, public IActorTagEventInterface, public IDataInterface_AppearanceSource
 {
 	GENERATED_BODY()
 
@@ -92,14 +93,13 @@ public:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UAudioComponent* Audio;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UNiagaraComponent* Niagara;
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UOmegaSaveableComponent* Saveable;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UStateTreeComponent* StateTree;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* ActorConfig;
-
 	//properties
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Prop") UOmegaProp_Preset* Preset=nullptr;
 	
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Gameplay") FOmegaBitflagsBase Flags;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Gameplay") FOmegaClassNamedLists Lists;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Gameplay") FOmegaActorRelatives ActorRelatives;
+	virtual FOmegaActorRelatives ActorRelatives_Get_Implementation() override { return ActorRelatives; }
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
 };
 

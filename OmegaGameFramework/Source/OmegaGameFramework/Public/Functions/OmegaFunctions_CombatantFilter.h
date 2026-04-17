@@ -15,13 +15,13 @@ class UCombatantComponent;
 // COMBATANT FILTER
 // ================================================================================================================
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,meta=(ShowWorldContextPin))
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,meta=(ShowWorldContextPin),CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UCombatantFilterScript : public UObject
 {
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="CombatantFilter")
+	UFUNCTION(BlueprintNativeEvent, Category="CombatantFilter")
 	const TArray<UCombatantComponent*> FilterCombatants(UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& CombatantsIn) const;
 };
 
@@ -30,6 +30,9 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFilterCollection : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 public:
+	
+	UFUNCTION(BlueprintCallable,Category="Combatant|Filter") 
+	TArray<UCombatantComponent*> FilterCombatants(UCombatantComponent* Instigator, TArray<UCombatantComponent*> In);
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced, Category="Filter")
 	TArray<UCombatantFilterScript*> FilterScripts;
@@ -41,9 +44,9 @@ struct FCombatantFilterData
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Filter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Filter",DisplayName="🎯Filter (Presets)")
 	TArray<UCombatantFilterCollection*> FilterCollections;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced, Category="Filter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced, Category="Filter",DisplayName="🎯Filter (Inline)")
 	TArray<UCombatantFilterScript*> FilterScripts;
 };
 

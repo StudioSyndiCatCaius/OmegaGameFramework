@@ -1,0 +1,263 @@
+// Copyright Studio Syndicat 2021. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Engine/DataAsset.h"
+#include "Styling/SlateBrush.h"
+#include "Interfaces/I_Common.h"
+#include "GameplayTagContainer.h"
+#include "Functions/F_AVContext.h"
+#include "Misc/GeneralDataObject.h"
+#include "DA_Attribute.generated.h"
+
+class UCombatantComponent;
+class UCurveFloat;
+
+USTRUCT(BlueprintType)
+struct FOmegaAttributeModifier
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
+	UOmegaAttribute* Attribute = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
+	float Incrementer = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attributes")
+	float Multiplier = 0;
+
+	static TArray<FOmegaAttributeModifier> Simplify(TArray<FOmegaAttributeModifier> in)
+	{
+		TArray<FOmegaAttributeModifier> out;
+		TArray<UOmegaAttribute*> att_list;
+		TMap<UOmegaAttribute*,float> att_inc;
+		TMap<UOmegaAttribute*,float> att_mult;
+		for(auto a : in)
+		{
+			if(a.Attribute)
+			{
+				att_list.AddUnique(a.Attribute);
+				att_inc.Add(a.Attribute,att_inc.FindOrAdd(a.Attribute)+a.Incrementer);
+				att_mult.Add(a.Attribute,att_mult.FindOrAdd(a.Attribute)+a.Multiplier);
+			}
+		}
+		for(auto* a : att_list)
+		{
+			FOmegaAttributeModifier mod;
+			mod.Attribute=a;
+			mod.Incrementer=att_inc.FindOrAdd(a);
+			mod.Multiplier=att_mult.FindOrAdd(a);
+			out.Add(mod);
+		}
+		return out;
+	}
+
+	static TArray<FOmegaAttributeModifier> FromFlat(TMap<UOmegaAttribute*, float> vals, bool bMultiplier=false)
+	{
+		TArray<FOmegaAttributeModifier> out;
+		for(auto& p :vals)
+		{
+			if(p.Key)
+			{
+				FOmegaAttributeModifier mod;
+				mod.Attribute=p.Key;
+				if(bMultiplier)
+				{
+					mod.Multiplier=p.Value;
+				}
+				else
+				{
+					mod.Incrementer=p.Value;
+				}
+				out.Add(mod);
+			}
+		}
+		return out;
+	}
+};
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaAttribute : public UOmegaDataAsset, public IDataInterface_ContextString
+{
+	GENERATED_BODY()
+
+public:
+
+	//-----------------------------------------------------------------------------------
+	// Attribute
+	//-----------------------------------------------------------------------------------
+
+	UFUNCTION(BlueprintPure, Category = "Ω|Attributes")
+	float GetAttributeValue(int32 Level, int32 AttributeRank, FGameplayTag ValueCategory);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "Attribute") FLinearColor AttributeColor;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attribute") FLinearColor DamageColor;
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Attribute") UOmegaAttributeScript* Script;
+	
+	//-----------------------------------------------------------------------------------
+	// Values
+	//-----------------------------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
+	float StartValuePercentage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
+	float MaxValue;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
+	bool bIsValueStatic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
+	TArray<FRuntimeFloatCurve> RankValueCurves;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
+	TMap<FGameplayTag, float> ValueCategoryAdjustments;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
+	bool bAllowModifiers = true;
+
+	int32 LocalFloor(float Number, int32 Decimals);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value", AdvancedDisplay)
+	int32 MaxDecimals = 2;
+	
+	//-----------------------------------------------------------------------------------
+	// Widget
+	//-----------------------------------------------------------------------------------
+	
+	UFUNCTION(BlueprintPure, Category="Attribute")
+	FText GetAttributeValueDisplayText(float value);
+	
+	UPROPERTY(EditAnywhere, Category="Widget") TEnumAsByte<ERoundingMode> RoundingMode = ERoundingMode::HalfToEven;
+	UPROPERTY(EditAnywhere, Category="Widget") bool bAlwaysSign;
+	UPROPERTY(EditAnywhere, Category="Widget") bool bUseGrouping = true;
+	UPROPERTY(EditAnywhere, Category="Widget") int32 MinIntegralDigits = 1;
+	UPROPERTY(EditAnywhere, Category="Widget") int32 MaxIntegralDigits = 324;
+	UPROPERTY(EditAnywhere, Category="Widget") int32 MinFractionalDigits;
+	UPROPERTY(EditAnywhere, Category="Widget") int32 MaxFractionalDigits = 0;
+	
+};
+
+UCLASS(EditInlineNew, Blueprintable, BlueprintType, Abstract, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UOmegaAttributeScript : public UObject
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Attribute")
+	float GetAttributeValue(int32 level,FGameplayTag ValueCategory);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Attribute")
+	FText GetDisplayText(float value);
+	
+};
+
+// ==================================================================================================================
+// Attribute Set
+// ==================================================================================================================
+
+USTRUCT(BlueprintType)
+struct FOmegaAttributeSetOverride
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute") bool bOverrideMax;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute",meta=(EditCondition="bOverrideMax")) float MaxOverride;
+	
+};
+
+
+UCLASS(BlueprintType, Blueprintable)
+class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	TArray<UOmegaAttributeSet*> InheritedSets;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> Attributes;
+
+	UPROPERTY()
+	FGameplayTag ValueCategory;
+
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetAllAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetMetricAttributes();
+	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetStaticAttributes();
+	
+	UFUNCTION() float GetAttributeMax(UOmegaAttribute* Attribute);
+	UFUNCTION() TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> GetAttributeConfigs();
+	UFUNCTION() TArray<UOmegaAttribute*> Local_GetAtt(bool bStatic);
+};
+
+// This class does not need to be modified.
+UINTERFACE(MinimalAPI)
+class UDataInterface_AttributeModifier : public UInterface
+{
+	GENERATED_BODY()
+};
+
+class OMEGAGAMEFRAMEWORK_API IDataInterface_AttributeModifier
+{
+	GENERATED_BODY()
+public:
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Attributes|Modifiers")
+	TArray<FOmegaAttributeModifier> GetModifierValues(UCombatantComponent* CombatantComponent);
+};
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const,Abstract)
+class UOmegaScripted_AttributeModifier : public UObject, public IDataInterface_AttributeModifier
+{
+	GENERATED_BODY()
+
+public:
+
+	
+};
+
+
+USTRUCT(BlueprintType)
+struct FOmegaScripted_AttributeModifiers
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="AttributeModifiers")
+	TArray<UOmegaScripted_AttributeModifier*> Modifiers;
+
+	TArray<FOmegaAttributeModifier> GatherModifiers(UCombatantComponent* CombatantComponent) const
+	{
+		TArray<FOmegaAttributeModifier> out;
+		for(auto* i : Modifiers)
+		{
+			if(i)
+			{
+				out.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(i,CombatantComponent));
+			}
+		}
+		return out;
+	};
+};
+
+
+
+// ==================================================================================================================
+// Modifier Container
+// ==================================================================================================================
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UAttributeModifierContainer : public UObject, public IDataInterface_AttributeModifier
+{
+	GENERATED_BODY()
+
+public:
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
+
+	UPROPERTY() UOmegaAttribute* Attribute;
+	UPROPERTY() float IncValue;
+	UPROPERTY() float MultiValue;
+	UPROPERTY() FGameplayTag Category;
+	UPROPERTY() FGameplayTagContainer Tags;
+	
+};

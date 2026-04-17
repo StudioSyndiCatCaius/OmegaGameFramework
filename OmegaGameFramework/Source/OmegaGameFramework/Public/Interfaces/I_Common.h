@@ -6,7 +6,9 @@
 #include "UObject/Interface.h"
 #include "Styling/SlateBrush.h"
 #include "GameplayTagContainer.h"
-#include "Engine/DataAsset.h"
+#include "Misc/OmegaUtils_Structs.h"
+#include "Types/Struct_Bitflag.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "I_Common.generated.h"
 
 UINTERFACE(MinimalAPI)
@@ -29,6 +31,7 @@ public:
 // General Info
 // ===================================================================================================================
 
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UDataInterface_General : public UInterface
@@ -36,9 +39,12 @@ class UDataInterface_General : public UInterface
 	GENERATED_BODY()
 
 public:
-	static FText GetObjectName(UObject* obj);
-	static FText GetObjectDesc(UObject* obj);
+	static FText GetObjectName(UObject* obj,FGameplayTag Tag=FGameplayTag());
+	static FText GetObjectDesc(UObject* obj,FGameplayTag Tag=FGameplayTag());
+	static FSlateBrush GetObjectIcon(UObject* obj,FGameplayTag Tag=FGameplayTag());
 	static FString GetObjectLabel(UObject* obj);
+	static FGameplayTag GetGCategory(UObject* o);
+	static FGameplayTagContainer GetGTags(UObject* o);
 };
 
 
@@ -47,115 +53,29 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_General
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Texts"), DisplayName="General - Get Text")
-	void GetGeneralDataText (const FString& Label, const class UObject* Context, FText& Name, FText& Description);
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context"),DisplayName="General - Get Texts")
+	void GetGeneralDataText (FGameplayTag Tag, FText& Name, FText& Description);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context", CompactNodeTitle="General Images"), DisplayName="General - Get Images")
-	void GetGeneralDataImages (const FString& Label, const class UObject* Context,class UTexture2D*& Texture,class UMaterialInterface*& Material,FSlateBrush& Brush);
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(AdvancedDisplay="Context"),DisplayName="General - Get Imaged")
+	void GetGeneralDataImages (FGameplayTag Tag,class UTexture2D*& Texture,class UMaterialInterface*& Material,FSlateBrush& Brush);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Color"), DisplayName="General - Get Color")
-	void GetGeneralAssetColor(FLinearColor& Color);
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Color"),DisplayName="General - Get Color")
+	void GetGeneralAssetColor(FGameplayTag Tag,FLinearColor& Color);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="General Label"), DisplayName="General - Get Label")
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="General Label"),DisplayName="General - Get Label")
 	void GetGeneralAssetLabel(FString& Label);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", meta=(CompactNodeTitle="Metatags"))
-	TArray<FName> GetMetatags();
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tags - Get Category") FGameplayTag GetObjectGameplayCategory();
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tags - Get Tags") FGameplayTagContainer GetObjectGameplayTags();
 	
-};
-
-
-inline FText UDataInterface_General::GetObjectName(UObject* obj)
-{
-	FText out_name;
-	if(obj && obj->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		FText out_desc;
-		IDataInterface_General::Execute_GetGeneralDataText(obj,"",nullptr,out_name,out_desc);
-	}
-	return out_name;
-}
-
-inline FText UDataInterface_General::GetObjectDesc(UObject* obj)
-{
-	FText out;
-	if(obj && obj->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		FText out_desc;
-		IDataInterface_General::Execute_GetGeneralDataText(obj,"",nullptr,out_desc,out);
-	}
-	return out;
-}
-
-inline FString UDataInterface_General::GetObjectLabel(UObject* obj)
-{
-	FString out;
-	if(obj)
-	{
-		if(obj->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-		{
-			IDataInterface_General::Execute_GetGeneralAssetLabel(obj,out);
-		}
-		else
-		{
-			out=obj->GetName();
-		}
-	}
-	return out;
-}
-
-
-UINTERFACE(MinimalAPI)
-class UDataInterface_GUID : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_GUID
-{
-	GENERATED_BODY()
-public:
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tag - Event") void Tag_Event(FGameplayTag Event, FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tag - Query") bool Tag_Query(FGameplayTag Query, FOmegaCommonMeta meta);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="ΩI|GUID",DisplayName="GUID - Get")
-	FGuid GetObjectGuid() const;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|General") void GetMetaConfig(FOmegaBitflagsBase& bitflags,FGuid& guid, int32& seed,FOmegaClassNamedLists& named_lists);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|General") FOmegaBitmaskEditorData Bitflags_Override(bool& bOverride);
 };
 
 
-// ===================================================================================================================
-// Tags Interface
-// ===================================================================================================================
-UINTERFACE(MinimalAPI)
-class UGameplayTagsInterface : public UInterface
-{
-	GENERATED_BODY()
-public:
-	static FGameplayTag GetGCategory(UObject* o);
-	static FGameplayTagContainer GetGTags(UObject* o);
-	
-};
 
-class OMEGAGAMEFRAMEWORK_API IGameplayTagsInterface
-{
-	GENERATED_BODY()
-public:
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tags - Get Category")
-	FGameplayTag GetObjectGameplayCategory();
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "ΩI|General", DisplayName="Tags - Get Tags")
-	FGameplayTagContainer GetObjectGameplayTags();
 
-};
-
-inline FGameplayTag UGameplayTagsInterface::GetGCategory(UObject* o)
-{
-	if(o && o->GetClass()->ImplementsInterface(StaticClass()))
-	{
-		return IGameplayTagsInterface::Execute_GetObjectGameplayCategory(o);
-	}
-	return FGameplayTag();
-}
-
-inline FGameplayTagContainer UGameplayTagsInterface::GetGTags(UObject* o)
-{
-	if(o && o->GetClass()->ImplementsInterface(StaticClass()))
-	{
-		return IGameplayTagsInterface::Execute_GetObjectGameplayTags(o);
-	}
-	return FGameplayTagContainer();
-}

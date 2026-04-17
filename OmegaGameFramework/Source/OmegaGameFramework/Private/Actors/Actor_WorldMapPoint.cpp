@@ -5,7 +5,6 @@
 
 #include "OmegaGameplayConfig.h"
 #include "Components/BillboardComponent.h"
-#include "Components/Component_ActorConfig.h"
 #include "Components/Component_DataWidget.h"
 #include "Components/SphereComponent.h"
 #include "Widget/DataWidget.h"
@@ -22,7 +21,6 @@ AOmegaWorldMapPoint::AOmegaWorldMapPoint()
 	DataWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	cmp_icon=CreateOptionalDefaultSubobject<UBillboardComponent>("cmp_Icon");
 	cmp_icon->SetupAttachment(RootComponent);
-	Config=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
 
 	AActor::SetActorHiddenInGame(true);
 }

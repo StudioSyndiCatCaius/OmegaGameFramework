@@ -17,10 +17,10 @@ struct FOmegaCustomScriptedEffects
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect",DisplayName="💫Effects (Preset)")
 	TArray<UOmegaScriptedEffectAsset*> EffectAssets;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect",DisplayName="💫Effects (Inline)")
 	TArray<UOmegaScriptedEffect*> CustomEffects;
 
 	TArray<UOmegaScriptedEffect*> GetAllEffects() const;
@@ -58,10 +58,9 @@ public:
 	FText EffectDescription;
 	UPROPERTY(EditAnywhere, Category="General", DisplayName="Icon")
 	FSlateBrush EffectIcon;
+
 	
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Effect",meta=(ExposeOnSpawn))
 	TArray<UOmegaScriptedEffect*> ScriptedEffects;
 	

@@ -3,7 +3,7 @@
 
 #include "Functions/F_Combatant.h"
 #include "Kismet/GameplayStatics.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 #include "OmegaSettings.h"
 #include "Actors/Actor_GameplayEffect.h"
 #include "Components/Component_Combatant.h"
@@ -171,7 +171,7 @@ void UCombatantFunctions::ApplyEffectFromContainer(UCombatantComponent* Combatan
 		{
 			LocalContext = Instigator;
 		}
-		Instigator->CreateEffect(Effect.EffectClass, Effect.Power, Combatant, Effect.AddedTags, LocalContext);
+		Combatant->CreateEffect(Effect.EffectClass, Instigator, LocalContext,FOmegaCommonMeta());
 	}
 }
 
@@ -190,7 +190,7 @@ UCombatantComponent* UCombatantFunctions::GetPlayerCombatant(const UObject* Worl
 
 void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObject, FGameplayTag Faction, FName Notify)
 {
-	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants();
+	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants();
 
 	for(auto* TempComb : LocalList)
 	{
@@ -204,7 +204,7 @@ void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObje
 void UCombatantFunctions::NotifyCombatant_FactionOfTag(const UObject* WorldContextObject, FGameplayTag Tag,
 	FName Notify)
 {
-	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants();
+	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants();
 
 	for(auto* TempComb : LocalList)
 	{
@@ -251,6 +251,68 @@ TArray<FOmegaAttributeModifier> UCombatantFunctions::MakeAttributeMods_FromFlatI
 		in.Add(p.Key,p.Value);
 	}
 	return MakeAttributeMods_FromFlatValues(in,AsMultiplier);
+}
+
+TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_Scale(TArray<FOmegaAttributeModifier> In,
+	float Scale, bool bIncrements, bool bMultipliers)
+{
+	TArray<FOmegaAttributeModifier> out;
+	
+	for (FOmegaAttributeModifier mod : In)
+	{
+		FOmegaAttributeModifier new_mod;
+		new_mod.Attribute=mod.Attribute;
+		if (bIncrements)
+		{
+			new_mod.Multiplier=mod.Multiplier*Scale;	
+		}
+		if (bMultipliers)
+		{
+			new_mod.Incrementer=mod.Incrementer*Scale;	
+		}
+		out.Add(new_mod);
+	}
+	
+	return out;
+}
+
+TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_Flatten(TArray<FOmegaAttributeModifier> In)
+{
+	TMap<UOmegaAttribute*, float> att_inc;
+	TMap<UOmegaAttribute*, float> att_scal;
+	TArray<UOmegaAttribute*> local_attributes;
+	
+	for (FOmegaAttributeModifier mod : In)
+	{
+		if (mod.Attribute)
+		{
+			att_inc.Add(mod.Attribute,att_inc.FindOrAdd(mod.Attribute)+mod.Incrementer);
+			att_scal.Add(mod.Attribute,att_scal.FindOrAdd(mod.Attribute)+mod.Multiplier);
+		}
+	}
+	
+	TArray<FOmegaAttributeModifier> out;
+	for (auto* at :local_attributes)
+	{
+		FOmegaAttributeModifier new_mod;
+		new_mod.Attribute=at;
+		new_mod.Incrementer=att_inc.FindOrAdd(at);
+		new_mod.Multiplier=att_scal.FindOrAdd(at);
+		out.Add(new_mod);
+	}
+	return out;
+}
+
+TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_Combine(TArray<FOmegaAttributeModifier> A,
+	TArray<FOmegaAttributeModifier> B, bool Flatten)
+{
+	TArray<FOmegaAttributeModifier> out=A;
+	out.Append(B);
+	if (Flatten)
+	{
+		out=AttributeMods_Flatten(out);
+	}
+	return out;
 }
 
 void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
@@ -429,7 +491,7 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatantsWithDataAsset(
 	TArray<UCombatantComponent*> out;
 	if (WorldContextObject && Asset)
 	{
-		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants())
 		{
 			if(c && c->CombatantDataAsset==Asset)
 			{
@@ -472,7 +534,7 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatants_OfFaction(UOb
 	TArray<UCombatantComponent*> out;
 	if (WorldContextObject && Faction)
 	{
-		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants())
 		{
 			if(c && c->FactionDataAsset==Faction)
 			{

@@ -17,7 +17,7 @@
 #include "Engine/GameInstance.h"
 #include "Functions/F_Component.h"
 #include "Misc/OmegaUtils_Methods.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Widget/HUDLayer.h"
 
 bool UOmegaAbilityConfig::L_CanActivate(AOmegaAbility* ability, UObject* Context) const
@@ -31,7 +31,7 @@ bool UOmegaAbilityConfig::L_CanActivate(AOmegaAbility* ability, UObject* Context
 			return false;
 		}
 		
-		UOmegaGameplaySubsystem* sys=ability->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+		UOmegaSubsystem_World* sys=ability->GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 		if(!sys->IsSystemTagActive(Required_SystemTags) && !Required_SystemTags.IsEmpty())
 		{
 			return false;
@@ -80,7 +80,7 @@ void AOmegaAbility::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OGF_Actor::SetTagsActive(GetOwner(),GrantedActorOwnerTags,false);
+
 
 	DefaultInputReceiver->OverrideInputOwner(CombatantOwner->GetOwner());
 	//Bind Default Inputs
@@ -105,7 +105,7 @@ void AOmegaAbility::BeginPlay()
 	
 	if(CombatantOwner->GetOwnerPlayerController() && HudClass)
 	{
-		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->AddHUDLayer(HudClass, this);
+		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->AddHUDLayer(HudClass, this);
 	}
 
 	//COOLDOWN
@@ -134,11 +134,10 @@ void AOmegaAbility::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if(EndPlayReason == EEndPlayReason::Destroyed && !GetWorld()->bIsTearingDown)
 	{
-		OGF_Actor::SetTagsActive(GetOwner(),GrantedActorOwnerTags,false);
 	
 		if(CombatantOwner->GetOwnerPlayerController() && HudClass)
 		{
-			CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->RemoveHUDLayer(HudClass, "AbilityUngranted");
+			CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->RemoveHUDLayer(HudClass, "AbilityUngranted");
 		}
 	
 		RecieveFinish(true);
@@ -182,7 +181,7 @@ void AOmegaAbility::Native_AbilityActivated(UObject* Context)
 	{
 		GetAbilityActivationTimeline()->Play();
 	}
-	OGF_Actor::SetTagsActive(GetOwner(),ActiveActorOwnerTags,true);
+
 	
 	if(bEnableInputOnActivation && GetAbilityOwnerPlayer())
 	{
@@ -202,8 +201,7 @@ void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
 	{
 		GetAbilityActivationTimeline()->Reverse();
 	}
-
-	OGF_Actor::SetTagsActive(GetOwner(),ActiveActorOwnerTags,false);
+	
 	
 	if(bEnableInputOnActivation && GetAbilityOwnerPlayer())
 	{
@@ -285,7 +283,6 @@ bool AOmegaAbility::Execute(UObject* Context)
 			ContextObject = nullptr;
 		}
 		bIsActive = true;
-		UActorTagEventFunctions::FireTagEventsOnActor(CombatantOwner->GetOwner(),OwnerEventsOnActivate);
 		
 		// TIMLEINE
 		if(GetAbilityActivationTimeline())
@@ -427,8 +424,7 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 		bIsActive = false;
 		Native_AbilityFinished(bCancel);
 		OnAbilityFinished.Broadcast(bCancel);
-
-		UActorTagEventFunctions::FireTagEventsOnActor(CombatantOwner->GetOwner(),OwnerEventsOnFinish);
+		
 		// TIMLEINE
 		if(GetAbilityActivationTimeline())
 		{
@@ -442,7 +438,7 @@ void AOmegaAbility::Local_TriggerEvents(TArray<FName> Events)
 {
 	for(FName TempEv : Events)
 	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(TempEv, this);
+		OGF_Subsystems::oGameInstance(this)->FireGlobalEvent(TempEv, this, FOmegaCommonMeta());
 	}
 }
 	

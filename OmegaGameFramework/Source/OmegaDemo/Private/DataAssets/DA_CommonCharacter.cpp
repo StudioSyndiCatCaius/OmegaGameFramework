@@ -6,9 +6,6 @@
 #include "OmegaSettings_Assets.h"
 #include "Functions/F_Assets.h"
 #include "Actors/Actor_Character.h"
-#include "Components/Component_Equipment.h"
-#include "Components/Component_Inventory.h"
-#include "Components/Component_Leveling.h"
 #include "Components/Component_Combatant.h"
 #include "GameFramework/Character.h"
 #include "Misc/OmegaUtils_Macros.h"
@@ -21,20 +18,7 @@ void UOAsset_CommonCharacter::L_Init(AActor* a, bool init)
 {
 	if(a)
 	{
-		
-		if(ULevelingComponent* c=Cast<ULevelingComponent>(a->GetComponentByClass(ULevelingComponent::StaticClass())))
-		{
-			
-		}
 		if(UCombatantComponent* c=Cast<UCombatantComponent>(a->GetComponentByClass(UCombatantComponent::StaticClass())))
-		{
-			
-		}
-		if(UEquipmentComponent* c=Cast<UEquipmentComponent>(a->GetComponentByClass(UEquipmentComponent::StaticClass())))
-		{
-			
-		}
-		if(UDataAssetCollectionComponent* c=Cast<UDataAssetCollectionComponent>(a->GetComponentByClass(UDataAssetCollectionComponent::StaticClass())))
 		{
 			
 		}
@@ -52,7 +36,7 @@ TArray<FName> UOAsset_CommonCharacter::opts_equipSlot() const
 }
 
 
-bool UOAsset_CommonCharacter::OnIdentityInit_Implementation(AActor* Actor, UActorIdentityComponent* Component)
+bool UOAsset_CommonCharacter::OnIdentityInit_Implementation(AActor* Actor, UGameplayActorComponent* Component)
 {
 	if(ACharacter* c=Cast<ACharacter>(Actor))
 	{
@@ -61,16 +45,16 @@ bool UOAsset_CommonCharacter::OnIdentityInit_Implementation(AActor* Actor, UActo
 	}
 	if(AOmegaBaseCharacter* c=Cast<AOmegaBaseCharacter>(Actor))
 	{
-		if(AssetSeed>-1)
-		{
-			c->Seed=AssetSeed;
-		}
+		//if(AssetSeed>-1)
+		//{
+		//	c->Seed=AssetSeed;
+		//}
 	}
 	L_Init(Actor,true);
 	return false;
 }
 
-bool UOAsset_CommonCharacter::OnIdentityUninit_Implementation(AActor* Actor, UActorIdentityComponent* Component)
+bool UOAsset_CommonCharacter::OnIdentityUninit_Implementation(AActor* Actor, UGameplayActorComponent* Component)
 {
 	L_Init(Actor,false);
 	return true;

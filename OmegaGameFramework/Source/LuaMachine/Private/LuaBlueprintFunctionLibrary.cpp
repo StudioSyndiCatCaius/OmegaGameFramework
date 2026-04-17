@@ -171,6 +171,19 @@ FVector ULuaBlueprintFunctionLibrary::Conv_LuaValueToFVector(const FLuaValue& Va
 	return LuaTableToVector(Value);
 }
 
+FLuaValue ULuaBlueprintFunctionLibrary::Conv_VectorToLua(UObject* context, const FVector& Value)
+{
+	if (context)
+	{
+		FLuaValue LuaValue=LuaCreateTable(context,nullptr);
+		LuaValue.SetField("x",Value.X);
+		LuaValue.SetField("y",Value.Y);
+		LuaValue.SetField("z",Value.Z);
+		return LuaValue;
+	}
+	return FLuaValue();
+}
+
 FName ULuaBlueprintFunctionLibrary::Conv_LuaValueToName(const FLuaValue& Value, FName NilFallback)
 {
 	if(Value.IsNil()) { return NilFallback; }
@@ -574,6 +587,13 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaRunCodeAsset(UObject* WorldContextObj
 	}
 	L->Pop();
 	return ReturnValue;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::LuaRunCodeAsset_AsFunction(UObject* WorldContextObject,
+	TSubclassOf<ULuaState> State, ULuaCode* CodeAsset, TArray<FLuaValue> Args)
+{
+	FLuaValue tbl=LuaRunCodeAsset(WorldContextObject, State, CodeAsset);
+	return LuaValueCall(tbl, Args);
 }
 
 FLuaValue ULuaBlueprintFunctionLibrary::LuaRunByteCode(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const TArray<uint8>& ByteCode, const FString& CodePath)

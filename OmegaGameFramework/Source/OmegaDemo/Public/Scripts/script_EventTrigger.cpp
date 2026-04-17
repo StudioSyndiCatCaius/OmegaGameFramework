@@ -6,7 +6,7 @@
 #include "FlowSubsystem.h"
 #include "OmegaSettings.h"
 #include "Misc/OmegaUtils_Macros.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 
 
 void UEventTrigger_ActorOverlap::Local_OnOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -50,7 +50,7 @@ void UEventScript_PlayFlow::OnEventTriggered_Implementation(AActor* Owner) const
 {
 	if (UseFlowSystem)
 	{
-		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(OGF_CFG()->GetSystem_FlowAsset(),FlowAsset);
+		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->ActivateGameplaySystem(OGF_CFG()->GetSystem_FlowAsset(),FlowAsset);
 	}
 	else
 	{

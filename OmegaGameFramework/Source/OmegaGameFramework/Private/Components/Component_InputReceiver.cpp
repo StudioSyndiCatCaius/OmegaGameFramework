@@ -10,12 +10,12 @@
 #include "Kismet/GameplayStatics.h"
 
 
-void UOmegaInputAction::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-                                                          FText& Description)
+
+void UOmegaInputAction::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
 {
 	Name=ActionDescription;
 	Description=DisplayDescription;
-	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
+	IDataInterface_General::GetGeneralDataText_Implementation(Tag, Name, Description);
 }
 
 APlayerController* UInputReceiverComponent::GetContextPlayer()
@@ -87,7 +87,7 @@ bool UInputReceiverComponent::CheckPrerequisiteKeys() const
 
 TMap<FKey, FVector> UInputReceiverComponent::GetKeyValues() const
 {
-	TMap<FKey, FVector> out=GetMutableDefault<UOmegaSettings>()->GetInputActionConfig(InputPresetToUse).KeyInputs;
+	TMap<FKey, FVector> out;//=GetMutableDefault<UOmegaSettings>()->GetInputActionConfig(InputPresetToUse).KeyInputs;
 	out.Append(Keys);
 	return out;
 }
@@ -105,12 +105,7 @@ FVector UInputReceiverComponent::GetKey_InputValue(FKey Key)
 	return FVector();
 }
 
-TArray<FName> UInputReceiverComponent::L_GetInputNames() const
-{
-	TArray<FName> out;
-	GetMutableDefault<UOmegaSettings>()->GetAllInputActionConfigs().GetKeys(out);
-	return out;
-}
+
 
 UInputReceiverComponent::UInputReceiverComponent()
 {
@@ -145,7 +140,7 @@ void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	cached_InputValue=FVector(0,0,0);
+
 	
 	if (!IsInputInCooldown())
 	{
@@ -160,7 +155,8 @@ void UInputReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickType
 			}
 			return;
 		}
-	
+		
+		cached_InputValue=FVector(0,0,0);
 		//calculate input value from keys down
 		for (FKey Key : GetKeys())
 		{

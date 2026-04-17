@@ -17,7 +17,7 @@ class APlayerController;
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaInputAction : public UInputAction, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOmegaInputAction : public UInputAction, public IDataInterface_General
 {
 	GENERATED_BODY()
 public:
@@ -26,7 +26,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTagContainer GameplayTags;
 
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; };
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return GameplayTags; };
 	
@@ -56,8 +56,7 @@ class OMEGAGAMEFRAMEWORK_API UInputReceiverComponent : public UActorComponent
 	TArray<FKey> GetKeys() const;
 	FVector GetKey_InputValue(FKey Key);
 	
-	UFUNCTION()
-	TArray<FName> L_GetInputNames() const;
+
 	
 public:	
 	UInputReceiverComponent();
@@ -70,8 +69,8 @@ public:
 	UPROPERTY(BlueprintAssignable, DisplayName="Input End") FOnInputReceiverDelegate OnInputCompleted;
 	
 	// At least ONE of these keys must be pressed to trigger input
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input",meta=(GetOptions="L_GetInputNames"))
-	FName InputPresetToUse;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")
+	FGameplayTag InputPresetToUse;
 	
 	// At least ONE of these keys must be pressed to trigger input
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Input")

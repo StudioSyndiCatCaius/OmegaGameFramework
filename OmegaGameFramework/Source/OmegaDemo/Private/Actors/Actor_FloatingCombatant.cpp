@@ -9,7 +9,7 @@ void AFloatingCombatant::OnConstruction(const FTransform& Transform)
 {
 	if(Combatant)
 	{
-		NameText->SetText(UDataInterface_General::GetObjectName(Combatant));
+		NameText->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(Combatant,FGameplayTag()));
 	}
 
 	FVector forcedscale=FVector(1,1,1);

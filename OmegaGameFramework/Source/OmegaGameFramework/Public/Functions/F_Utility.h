@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Slate/WidgetTransform.h"
 #include "Math/Vector2D.h"
+#include "Misc/OmegaUtils_Enums.h"
 #include "GameplayTagContainer.h"
 #include "F_Utility.generated.h"
 
@@ -17,6 +18,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Load", meta=(Keywords="if, is",WorldContext="WorldContextObject"))
 	static bool AreStreamedLevelsLoading(UObject* WorldContextObject);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Utilities|Shader", meta=(Keywords="if, is"))
+	static bool IsGameAsyncLoading(int32& PackagesLeft);
 	
 	//###############################################################################
 	// Shader
@@ -81,8 +85,10 @@ public:
 	static TArray<FString> GetCommandLineArgs();
 };
 
+
+
 UCLASS()
-class UOmegaStringFunctions : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOmegaStringFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
@@ -96,19 +102,11 @@ public:
 };
 
 
-UCLASS()
-class UOmegaAssetFunctions : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-	UFUNCTION(BlueprintPure,Category="Omega|Asset")
-	UClass* GetBlueprintClassFromPath(const FString Path);
-};
 
 class USoundClass;
 
 UCLASS()
-class UOmegaAudioFunctions : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOmegaAudioFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
@@ -139,70 +137,3 @@ class UOmegaAudioFunctions : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintPure, Category = "Low Entry|Extended Standard Library|Utilities|Sound Class", Meta = (DisplayName = "Get Pitch"))
 	static double SoundClass_GetPitch(USoundClass* SoundClass);
 };
-
-UCLASS()
-class UOmegaMathFunctions : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-public:
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FTransform AddTransforms(const FTransform A, const FTransform B);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Widget")
-	static FWidgetTransform LerpWidgetTransform(FWidgetTransform a, FWidgetTransform b, float alpha);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Widget")
-	static FVector2D LerpVector2D(FVector2D a, FVector2D b, float alpha);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static float GetAngle_FromVectors(FVector A, FVector B);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static float GetAngle_FromRotators(FRotator A, FRotator B);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FRotator Conv_VectorToRot_Flat(FVector Vector);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FWidgetTransform Conv_Transform3DToTransformWidget(const FTransform Transform);
-	
-	UFUNCTION(BlueprintPure,Category="Omega|Math", DisplayName="Normalize to Range (Int32)")
-	static float NormalizeToRange_int32(int32 value, int32 min, int32 max);
-
-	// Seed Randomization
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static int32 GetSeedFromGuid(FGuid Guid);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math|Curve")
-	static float GetCurve_Value(FFloatCurve Curve, float time)
-	{
-		return  Curve.Evaluate(time);
-	}
-	UFUNCTION(BlueprintCallable,Category="Omega|Math",meta=(ExpandBoolAsExecs="Outcome"))
-	static bool RNG_RollFromFloat(float chance, bool& Outcome);
-	
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static float Variate_Float(float in, float amount, bool bAmountIsScale);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FVector Offset_Vector(FVector Vector, const FRotator& Rotation, FVector Offset);
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FVector Offset_ActorLocation(const AActor* Actor, FVector Offset);
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FVector Offset_PawnLocationFromControl(const APawn* Pawn, FVector Offset);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FVector Random_VectorInRange(FVector Min, FVector Max);
-
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static FRotator Random_RotatorInRange(const FRotator& Min, const FRotator& Max);
-
-	//
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static TMap<UPrimaryDataAsset*,int32> InvertMapValues_AssetInt(TMap<UPrimaryDataAsset*,int32> in);
-	UFUNCTION(BlueprintPure,Category="Omega|Math")
-	static TMap<UPrimaryDataAsset*,float> InvertMapValues_Assetfloat(TMap<UPrimaryDataAsset*,float> in);
-};
-

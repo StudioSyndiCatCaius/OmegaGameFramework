@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Functions/F_AVContext.h"
+#include "Functions/F_Localization.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "DA_AssetLib.generated.h"
@@ -103,10 +104,15 @@ public:
 
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_Sound : public UOmegaDataAsset, public IDataInterface_ContextAV
+class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_Sound : public UOmegaDataAsset, public IDataInterface_ContextAV, public IDataInterface_VoiceSource
 {
 	GENERATED_BODY()
 public:
+	//the voice id used to get a voice clip from the "Locale" paths. If blank, will use the source object's label.
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Defaults")
+	FString VoiceID;
+	virtual FString VoiceSource_GetID_Implementation() override { return VoiceID; };
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Defaults")
 	UOmegaAssetLibrary_Sound* Fallback=nullptr;
 	
@@ -166,7 +172,15 @@ public:
 };
 
 
-UINTERFACE(MinimalAPI) class UDataInterface_AssetLibraries : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI) class UDataInterface_AssetLibraries : public UInterface
+{
+	GENERATED_BODY()
+public:
+	static bool Uses(UObject* object);
+	static UOmegaAssetLibrary_Animation* getAnim(UObject* Object);
+	static UOmegaAssetLibrary_SlateBrush* getSlate(UObject* Object);
+	static UOmegaAssetLibrary_Sound* getSound(UObject* Object);
+};
 class OMEGAGAMEFRAMEWORK_API IDataInterface_AssetLibraries
 {
 	GENERATED_BODY()

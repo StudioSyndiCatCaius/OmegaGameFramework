@@ -4,21 +4,24 @@
 
 #include "LuaConst.h"
 #include "LuaSubsystem.h"
+#include "NiagaraComponent.h"
 #include "OmegaSettings.h"
 #include "OmegaGameplayConfig.h"
-#include "OmegaGameCore.h"
-#include "Components/Component_ActorConfig.h"
-#include "Components/Component_Interactable.h"
+#include "OmegaGameManager.h"
+#include "Subsystems/Subsystem_World.h"
+#include "Components/BillboardComponent.h"
 #include "Components/Component_Saveable.h"
 #include "Components/Component_UtilMesh.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Components/TextRenderComponent.h"
 #include "Condition/Condition_Interact.h"
 #include "DataAssets/DA_ActorModifierCollection.h"
+#include "Functions/F_Actor.h"
+#include "Functions/F_Common.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 
 
 
@@ -34,27 +37,39 @@ void AOmegaInteractable::OnConstruction(const FTransform& Transform)
 #endif
 	SetPreviewColor(PreviewColor);
 	Super::OnConstruction(Transform);
-}
-
-UOmegaProp_Preset* AOmegaInteractable::L_GetPreset()
-{
-	if(Interactable_Preset)
+	
+	//corrective flow set. remove long term
+	if (DialogueFlow && !GameplayComponent->DefaultFlow)
 	{
-		return Interactable_Preset;
+		GameplayComponent->DefaultFlow=DialogueFlow;
+		DialogueFlow=nullptr;
 	}
-	return nullptr;
+	if (!DisplayName.IsEmpty())
+	{
+		GameplayComponent->OverrideName=DisplayName;
+		DisplayName=FText();
+	}
 }
 
 AOmegaInteractable::AOmegaInteractable()
 {
+	RangeBox=CreateOptionalDefaultSubobject<UBoxComponent>("Range");
+	RangeBox->SetupAttachment(RootComponent);
 	if(RangeBox)
 	{
 		RangeBox->SetBoxExtent(FVector(50,50,50));
-		RangeBox->SetLineThickness(1.5);
+		RangeBox->SetLineThickness(1.0);
 		RangeBox->ShapeColor=FColor(0,100,255);
-		ActorID=CreateOptionalDefaultSubobject<UActorIdentityComponent>("ActorID");
+		MeshComponent=CreateOptionalDefaultSubobject<UStaticMeshComponent>("Mesh");
+		MeshComponent->SetupAttachment(RootComponent);
+		NiagaraComponent=CreateOptionalDefaultSubobject<UNiagaraComponent>("Niagara");
+		NiagaraComponent->SetupAttachment(RootComponent);
+		
 		NameText=CreateOptionalDefaultSubobject<UTextRenderComponent>("Text");
-		NameText->SetMaterial(0,LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")));
+		if (UMaterialInterface* _mat=LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")))
+		{
+			NameText->SetMaterial(0,_mat);	
+		}
 		NameText->SetTextRenderColor(FColor::Blue);
 		NameText->bHiddenInGame=true;
 		NameText->HorizontalAlignment=EHTA_Center;
@@ -73,8 +88,7 @@ AOmegaInteractable::AOmegaInteractable()
 			Camera->SetupAttachment(SpringArm);
 			SpringArm->TargetArmLength=300;
 		}
-
-		Interactable=CreateOptionalDefaultSubobject<UOmegaComponent_Interactable>("Interactable");
+		
 		UtilMesh=CreateOptionalDefaultSubobject<UUtilMeshComponent>("UtilMesh");
 		UtilMesh->SetupAttachment(RootComponent);
 #if WITH_EDITOR
@@ -88,19 +102,49 @@ AOmegaInteractable::AOmegaInteractable()
 bool AOmegaInteractable::IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag,
 	FOmegaCommonMeta Context)
 {
-	if(Interactable_Preset)
+	if (L_IdentityUsesInteractInterface())
 	{
-		FOmegaConditions_Interact con;
-		con.Conditions=Interactable_Preset->InteractConditions;
-		return !con.CheckConditions(InteractInstigator,this,Tag,Context);
+		return IActorInterface_Interactable::Execute_IsInteractionBlocked(L_GetIdentity(),InteractInstigator,Tag,Context);
 	}
 	return false;
+}
+
+void AOmegaInteractable::OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag,
+													  FOmegaCommonMeta Context)
+{
+	if(APawn* pawn=Cast<APawn>(InteractInstigator))
+	{
+		if(pawn->IsPlayerControlled())
+		{
+			FGameplayTag _targetType=OGF_CFG()->Default_InteractTag;
+			if (RequiredInteractType.IsValid())
+			{
+				_targetType=RequiredInteractType;
+			}
+			if (Tag==_targetType)
+			{
+				if (L_IdentityUsesInteractInterface())
+				{
+					IActorInterface_Interactable::Execute_OnInteraction(L_GetIdentity(),InteractInstigator,Tag,Context);
+				}
+			}
+		}
+	}
+}
+
+
+void AOmegaInteractable::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
+{
+	Super::GetMetaConfig_Implementation(bitflags, guid, seed, named_lists);
+	bitflags=Flags;
+	named_lists=Lists;
 }
 
 TArray<UOmegaObjectTrait*> AOmegaInteractable::GetTraits_Implementation()
 {
 	TArray<UOmegaObjectTrait*> out;
-	if(UPrimaryDataAsset* _asset = ActorID->GetIdentitySourceAsset())
+	if(UPrimaryDataAsset* _asset = GameplayComponent->GetIdentitySourceAsset())
     {
 		TArray<UOmegaObjectTrait*> _in = UDataInterface_Traits::GetObjectTraits(_asset);
 		out.Append(_in);
@@ -114,59 +158,28 @@ UFlowAsset* AOmegaInteractable::GetFlowAsset_Implementation(FGameplayTag Tag)
 	{
 		return DialogueFlow;
 	}
-	if(Interactable_Preset && Interactable_Preset->FlowAsset)
-	{
-		return Interactable_Preset->FlowAsset;
-	}
 	return nullptr;
 }
 
-void AOmegaInteractable::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-                                                           FText& Description)
+void AOmegaInteractable::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
 {
-	if(Interactable_Preset)
+	if(GameplayComponent)
 	{
-		Name=UDataInterface_General::GetObjectName(Interactable_Preset);
-		Description=UDataInterface_General::GetObjectDesc(Interactable_Preset);
+		IDataInterface_General::Execute_GetGeneralDataText(GameplayComponent,Tag,Name,Description);
 	}
 	else
 	{
 		Name=DisplayName;
 	}
-	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
 }
 
-void AOmegaInteractable::OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag,
-	FOmegaCommonMeta Context)
-{
-	if(APawn* pawn=Cast<APawn>(InteractInstigator))
-	{
-		if(pawn->IsPlayerControlled())
-		{
-			FGameplayTag _targetType=OGF_CFG()->Default_InteractTag;
-			if (RequiredInteractType.IsValid())
-			{
-				_targetType=RequiredInteractType;
-			}
-			if (Tag==_targetType)
-			{
-				if (Oneshot && !Saveable->GetSaveParam_Bool("dead"))
-				{
-					Saveable->SetSaveParam_Bool("dead",true);
-					SetActorEnableCollision(false);
-					SetActorHiddenInGame(true);
-				}
-			}
-			
-		}
-	}
-}
+
 
 void AOmegaInteractable::Update()
 {
 	if(NameText)
 	{
-		NameText->SetText(UDataInterface_General::GetObjectName(this));
+		NameText->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(this,FGameplayTag()));
 	}
 	if(SpringArm)
 	{
@@ -177,8 +190,9 @@ void AOmegaInteractable::Update()
 	}
 
 #if WITH_EDITOR
-	if(Interactable_Preset && GetActorLabel()=="OmegaInteractable")
+	if(GameplayComponent && GameplayComponent->GetIdentitySourceAsset() && GetActorLabel()=="OmegaInteractable")
 	{
+		UPrimaryDataAsset* _id=GameplayComponent->GetIdentitySourceAsset();
 		AutosetName();
 	}
 	if(RangeBox && NameText && UtilMesh)
@@ -194,9 +208,10 @@ void AOmegaInteractable::Update()
 void AOmegaInteractable::AutosetName()
 {
 #if WITH_EDITOR
-	if(Interactable_Preset)
+	if(GameplayComponent && GameplayComponent->GetIdentitySourceAsset())
 	{
-		SetActorLabel(Interactable_Preset->GetName());
+		UPrimaryDataAsset* _id=GameplayComponent->GetIdentitySourceAsset();
+		SetActorLabel(_id->GetName());
 	}
 #endif
 	
@@ -232,6 +247,33 @@ UOmegaInteractable_Preset::UOmegaInteractable_Preset()
 }
 
 
+UPrimaryDataAsset* AOmegaInteractable::L_GetIdentity() const
+{
+	if (GameplayComponent)
+	{
+		if (UPrimaryDataAsset* _id=GameplayComponent->GetIdentitySourceAsset())
+		{
+			return _id;
+		}
+	}
+	return nullptr;
+}
+
+bool AOmegaInteractable::L_IdentityUsesInteractInterface() const
+{
+	if (GameplayComponent && GameplayComponent->GetIdentitySourceAsset())
+	{
+		if (UPrimaryDataAsset* _id=GameplayComponent->GetIdentitySourceAsset())
+		{
+			if (UOmegaActorFunctions::UsesInterface(_id))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void AOmegaInteractable::L_InteractionSystemEnd(UObject* Context, FString Flag)
 {
 	
@@ -240,10 +282,7 @@ void AOmegaInteractable::L_InteractionSystemEnd(UObject* Context, FString Flag)
 void AOmegaInteractable::BeginPlay()
 {
 	Super::BeginPlay();
-	if(Saveable->GetSaveParam_Bool("dead"))
-	{
-		K2_DestroyActor();
-	}
+
 }
 
 

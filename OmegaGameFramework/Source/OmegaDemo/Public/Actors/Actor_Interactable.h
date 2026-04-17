@@ -7,24 +7,20 @@
 #include "Actors/Actor_Prop.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/Component_ActorConfig.h"
 #include "GameFramework/Actor.h"
-#include "Components/Component_ActorIdentity.h"
-#include "Components/StateTreeComponent.h"
-#include "Condition/Condition_Actor.h"
-#include "Interfaces/I_BitFlag.h"
+#include "Components/Component_GameplayActor.h"
 #include "Functions/F_Component.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Interfaces/I_NamedLists.h"
-#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "Actor_Interactable.generated.h"
 
 class UActorConfigComponent;
 class UTextRenderComponent;
 class UUtilMeshComponent;
+class UStaticMeshComponent;
+class UNiagaraComponent;
 class UOmegaCondition_Interact;
-class UOmegaComponent_Interactable;
 
 
 UCLASS(DisplayName="Ω Interactable",HideCategories=("Prop"))
@@ -37,13 +33,15 @@ public:
 
 
 UCLASS(DisplayName="Ω Interactable",HideCategories=("Prop"))
-class OMEGADEMO_API AOmegaInteractable : public AOmegaProp, public IDataInterface_FlowAsset, public IDataInterface_Traits,
+class OMEGADEMO_API AOmegaInteractable : public AOmegaGameplayActor, public IDataInterface_FlowAsset, public IDataInterface_Traits,
 											public IActorInterface_Interactable
 {
 	GENERATED_BODY()
 
 	UPROPERTY() UMaterialInstanceDynamic* dynaMat_PointerMesh;
 	
+	UPrimaryDataAsset* L_GetIdentity() const;
+	bool L_IdentityUsesInteractInterface() const;
 	
 	UFUNCTION()
 	void L_InteractionSystemEnd(UObject* Context, FString Flag);
@@ -51,15 +49,19 @@ class OMEGADEMO_API AOmegaInteractable : public AOmegaProp, public IDataInterfac
 public:
 	virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
-	virtual UOmegaProp_Preset* L_GetPreset() override;
 	AOmegaInteractable();
 
 	virtual bool IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override;
+	virtual void OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override;
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Gameplay") FOmegaBitflagsBase Flags;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere,Category="Gameplay") FOmegaClassNamedLists Lists;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Gameplay") FOmegaActorRelatives ActorRelatives;
+	virtual FOmegaActorRelatives ActorRelatives_Get_Implementation() override { return ActorRelatives; }
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override;
 	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override;
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
 	
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Interactable")
 	void Update();
@@ -73,20 +75,14 @@ public:
 	bool Oneshot;
 	//Custom Bitmask Flags
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable",DisplayName="Preset")
-	UOmegaInteractable_Preset* Interactable_Preset=nullptr;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable",DisplayName="Name")
+	UPROPERTY()
 	FText DisplayName;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable")
+	UPROPERTY()
 	UFlowAsset* DialogueFlow=nullptr;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable")
 	FColor PreviewColor=FColor::Blue;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay,Instanced,Category="Interactable")
-	TArray<UOmegaObjectTrait*> Traits;
-	
+
 	//If none listed, defaults to the interact type found in Omega Gameplay Settings.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,AdvancedDisplay,Category="Interactable")
 	FGameplayTag RequiredInteractType;
@@ -97,10 +93,11 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,AdvancedDisplay,meta=(MakeEditWidget),Category="Interactable")
 	FVector CameraDirection=FVector(100,0,0);
 	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UBoxComponent* RangeBox;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") USpringArmComponent* SpringArm;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCameraComponent* Camera;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorIdentityComponent* ActorID;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components",AdvancedDisplay) UOmegaComponent_Interactable* Interactable;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UStaticMeshComponent* MeshComponent;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UNiagaraComponent* NiagaraComponent;
 	UPROPERTY() UTextRenderComponent* NameText;
 	UPROPERTY() UUtilMeshComponent* UtilMesh;
 

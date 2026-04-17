@@ -1,12 +1,10 @@
 ﻿using UnrealBuildTool;
 
-public class OmegaCORE : ModuleRules
+public class OmegaCore : ModuleRules
 {
-    public OmegaCORE(ReadOnlyTargetRules Target) : base(Target)
+    public OmegaCore(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        bUseUnity = false;
-        PrecompileForTargets = PrecompileTargetsType.Any;
 
         PublicDependencyModuleNames.AddRange(
             new string[]

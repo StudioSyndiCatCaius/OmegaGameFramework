@@ -1,19 +1,19 @@
-﻿#include "OmegaCORE.h"
+﻿#include "OmegaCore.h"
 
-DEFINE_LOG_CATEGORY(OmegaCORE);
+DEFINE_LOG_CATEGORY(OmegaCore);
 
-#define LOCTEXT_NAMESPACE "FOmegaCORE"
+#define LOCTEXT_NAMESPACE "FOmegaCore"
 
-void FOmegaCORE::StartupModule()
+void FOmegaCore::StartupModule()
 {
     
 }
 
-void FOmegaCORE::ShutdownModule()
+void FOmegaCore::ShutdownModule()
 {
     
 }
 
 #undef LOCTEXT_NAMESPACE
     
-IMPLEMENT_MODULE(FOmegaCORE, OmegaCORE)
+IMPLEMENT_MODULE(FOmegaCore, OmegaCore)

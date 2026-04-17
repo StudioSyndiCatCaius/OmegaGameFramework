@@ -24,3 +24,11 @@ TArray<UOmegaLinearChoice*> AOmegaLinearChoiceInstance::GetChoices()
 	return ChoiceData.Choices;
 }
 
+void AOmegaLinearChoiceInstance::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
+{
+	IDataInterface_General::GetMetaConfig_Implementation(bitflags, guid, seed, named_lists);
+	bitflags=ChoiceData.flags;
+	named_lists=ChoiceData.NamedLists;
+}
+

@@ -8,7 +8,7 @@
 #include "Widgets/Layout/SWrapBox.h"
 #include "OmegaEditorSettings.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 
 TSharedRef<IDetailCustomization> FOmegaObjectCustomization::MakeInstance()
 {

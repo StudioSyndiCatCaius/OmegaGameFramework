@@ -11,10 +11,18 @@
 #include "Internationalization/Culture.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/FileHelper.h"
+
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "Subsystems/Subsystem_Engine.h"
+#include "Subsystems/Subsystem_World.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Player.h"
+
 // Define static color constants
 const FColor OGF_Log::ErrorColor = FColor::Red;
 const FColor OGF_Log::WarningColor = FColor::Yellow;
-const FColor OGF_Log::InfoColor = FColor::Cyan;
+const FColor OGF_Log::InfoColor = FColor::White;
 const FColor OGF_Log::SuccessColor = FColor::Green;
 
 void OGF_Log::Error(const FString& Message, float Duration)
@@ -104,7 +112,7 @@ void OGF_Log::PrintToScreen(const FString& Message, FColor Color, float Duration
 // ================================================================================================================
 // LOAD
 // ================================================================================================================
-bool OGF_Load::LevelStream_IsLoading(UWorld* World)
+bool OGF_Load::LevelStream_IsLoading(const UWorld* World)
 {
     if(World)
     {
@@ -119,7 +127,46 @@ bool OGF_Load::LevelStream_IsLoading(UWorld* World)
     return false;
 }
 
+UOmegaSubsystem_World* OGF_Subsystems::oWorld(const UObject* WorldContext)
+{
+    if (WorldContext && WorldContext->GetWorld())
+    {
+        return WorldContext->GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
+    }
+    return nullptr;
+}
 
+UOmegaSubsystem_Engine* OGF_Subsystems::oEngine()
+{
+    return GEngine->GetEngineSubsystem<UOmegaSubsystem_Engine>();
+}
+
+UOmegaSubsystem_GameInstance* OGF_Subsystems::oGameInstance(const UObject* WorldContext)
+{
+    if (WorldContext && WorldContext->GetWorld()->GetGameInstance())
+    {
+        return WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>();
+    }
+    return nullptr;
+}
+
+UOmegaSaveSubsystem* OGF_Subsystems::oSave(const UObject* WorldContext)
+{
+    if (WorldContext && WorldContext->GetWorld()->GetGameInstance())
+    {
+        return WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+    }
+    return nullptr;
+}
+
+UOmegaSubsystem_Player* OGF_Subsystems::oPlayer(const APlayerController* Player)
+{
+    if (Player)
+    {
+        return Player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>();
+    }
+    return nullptr;
+}
 
 
 // ================================================================================================================

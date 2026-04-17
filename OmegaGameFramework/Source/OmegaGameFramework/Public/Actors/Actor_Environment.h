@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Landscape.h"
+#include "OmegaActors.h"
 #include "GameFramework/Actor.h"
 #include "Misc/GeneralDataObject.h"
 #include "Subsystems/Subsystem_Save.h"
@@ -16,13 +16,18 @@ class UExponentialHeightFogComponent;
 class USkyAtmosphereComponent;
 class USkyLightComponent;
 class UVolumetricCloudComponent;
-class UPCGComponent;
 class UOmegaBGM;
 class UPostProcessComponent;
 class UPCGGraphInterface;
+class UAudioComponent;
+
+#if ENGINE_MAJOR_VERSION==5
+class UPCGComponent;
+#endif
+
 
 UCLASS(DisplayName="Ω Environment")
-class OMEGAGAMEFRAMEWORK_API AOmegaActorEnvironment : public AActor, public IOmegaSaveInterface
+class OMEGAGAMEFRAMEWORK_API AOmegaActorEnvironment : public AOmegaActorBASE, public IOmegaSaveInterface
 {
 	GENERATED_BODY()
 
@@ -30,40 +35,29 @@ class OMEGAGAMEFRAMEWORK_API AOmegaActorEnvironment : public AActor, public IOme
 	void L_PresetLoad();
 	
 public:
-	// Sets default values for this actor's properties
+
 	AOmegaActorEnvironment();
 
 protected:
-	// Called when the game starts or when spawned
-	//virtual void BeginPlay() override;
+
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
+
 public:
-	//~ Begin AActor Interface
+
 #if WITH_EDITOR
 	virtual bool GetReferencedContentObjects(TArray<UObject*>& Objects) const override;
-#endif // WITH_EDITOR
-	//~ End AActor Interface
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USceneComponent* EnvironmentRoot;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USkyLightComponent* SkyLight;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UDirectionalLightComponent* DirectionalLight;
-	UPROPERTY() UArrowComponent* DirectionalLight_Arrow;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UExponentialHeightFogComponent* Fog;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UStaticMeshComponent* SkyBox;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USkyAtmosphereComponent* Atmosphere;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UVolumetricCloudComponent* Clouds;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UPostProcessComponent* PostProcess;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UAudioComponent* Audio;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UPCGComponent* PCGComponent;
+#endif 
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Environment")
 	URuntimeVirtualTextureComponent* GetVirtualTextureComponent();
 
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="Environment",DisplayName="Quickset = Atmosphere") void Quickset_Atmosphere();
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="Environment",DisplayName="Quickset = SKYBOX") void Quickset_Skybox();
+	
 	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Omega|Environment") TArray<ALandscape*> Landscapes;
-	UFUNCTION(BlueprintCallable,CallInEditor,Category="Environment")
+	UFUNCTION()
 	void AutosetVirtualTextureFromLandscape();
 	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Omega|Environment") TArray<ALandscape*> Landscapes;
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Environment")
@@ -72,8 +66,9 @@ public:
 	UPROPERTY(EditAnywhere,Category="Environment")
 	bool SaveCurrentPreset;
 	
-	UPROPERTY(EditAnywhere,Category="Environment")
-	UPCGGraphInterface* PCGAsset;
+//	UPROPERTY(EditAnywhere,Category="Environment")
+	//UPCGGraphInterface* PCGAsset;
+	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UPCGComponent* PCGComponent;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Environment") FOmegaClassNamedLists NamedLists;
 	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset")
@@ -96,6 +91,18 @@ public:
 	UOmegaBGM* BGM_to_autoplay;
 	UPROPERTY(EditAnywhere,Category="Environment|BGM")
 	FGameplayTag BGM_Slot;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USceneComponent* EnvironmentRoot;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USkyLightComponent* SkyLight;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UDirectionalLightComponent* DirectionalLight;
+	UPROPERTY() UArrowComponent* DirectionalLight_Arrow;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment") UExponentialHeightFogComponent* Fog;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UStaticMeshComponent* SkyBox;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USkyAtmosphereComponent* Atmosphere;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UVolumetricCloudComponent* Clouds;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UPostProcessComponent* PostProcess;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) UAudioComponent* Audio;
+
 };
 
 

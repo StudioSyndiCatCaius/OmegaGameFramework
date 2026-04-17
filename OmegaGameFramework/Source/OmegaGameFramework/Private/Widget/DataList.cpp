@@ -18,18 +18,102 @@
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
+#include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "Engine/DataAsset.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "Widget/DataTooltip.h"
+#include "Widget/Menu.h"
 #include "Widget/UI_Widgets.h"
 
+TSubclassOf<UMenu> UDataListCustomEntry::GetSubmenuClass_Implementation() const
+{
+	return nullptr;
+}
 
-class UOmegaSaveSubsystem;
+void UDataListCustomEntry_Common::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
+{
+	if (Submenu && name.IsEmpty())
+	{
+		Name=Submenu.GetDefaultObject()->DisplayName;
+	}
+	else
+	{
+		Name=name;
+	}
+	Description=description;
+}
+
+void UDataListCustomEntry_Common::GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture,
+	class UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	Brush=Icon;
+}
+
+void UDataListCustomEntry_Common::GetGeneralAssetLabel_Implementation(FString& Label)
+{
+	Label=label;
+}
+
+UDataList::UDataList(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	if(EntryTemplate && !EntryClass)
+	{
+		ValidateTemplates();	
+	}
+}
+
+void UDataList::L_ApplyCurveToEntries()
+{
+	
+}
+
+#if WITH_EDITOR
+
+void UDataList::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeChainProperty(PropertyChangedEvent);
+
+	// Get the root property name
+	const FName PropertyName = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UDataList, EntryClass))
+	{
+		ValidateTemplates();
+	}
+}
+#endif
+
+
+void UDataList::ValidateTemplates()
+{
+	// Template exists but class changed or cleared
+	if (EntryTemplate)
+	{
+		if (!EntryClass || EntryTemplate->GetClass() != EntryClass)
+		{
+			EntryTemplate->MarkAsGarbage();
+			EntryTemplate = nullptr;
+		}
+	}
+
+	// Need new template
+	if (EntryClass && !EntryTemplate)
+	{
+		EntryTemplate = NewObject<UDataWidget>(
+			this,
+			EntryClass,
+			NAME_None,
+			  RF_Transactional 
+		);
+	}
+}
 
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
@@ -55,12 +139,60 @@ void UDataList::Native_WidgetNotify(UDataWidget* Widget, FName Notify)
 }
 
 
+void UDataList::AddAllOverrides()
+{
+	if (EntryClass)
+	{
+		UDataWidget* _default=GetMutableDefault<UDataWidget>(EntryClass);
+		TMap<FName,UWidget*> _binds=_default->WidgetBinding_Get();
+		TArray<FName> _bindNames;
+		_binds.GetKeys(_bindNames);
+		
+		for (FName n : _bindNames)
+		{
+			if (!WidgetOverride_Styles.Contains(n))
+			{
+				WidgetOverride_Styles.Add(n,nullptr);
+			}
+		}
+	}
+}
+
+TArray<FName> UDataList::L_getOverrideNames_Asset()
+{
+	TArray<FName> out;
+	if (EntryClass)
+	{
+		GetMutableDefault<UDataWidget>(EntryClass)->WidgetBinding_Get().GetKeys(out);
+	}
+	return out;
+}
+
+TArray<FName> UDataList::L_getOverrideNames_float()
+{
+	TArray<FName> out;
+	if (EntryClass)
+	{
+		GetMutableDefault<UDataWidget>(EntryClass)->GetOverrideFields_Floats().GetKeys(out);
+	}
+	return out;
+}
+
+TArray<FName> UDataList::L_getOverrideNames_Bool()
+{
+	TArray<FName> out;
+	if (EntryClass)
+	{
+		GetMutableDefault<UDataWidget>(EntryClass)->GetOverrideFields_Bools().GetKeys(out);
+	}
+	return out;
+}
 
 void UDataList::SetNewControl(UUserWidget* NewWidget)
 {
 	if(NewWidget)
 	{
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetControlWidget(NewWidget);
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(NewWidget);
 	}
 }
 
@@ -131,20 +263,16 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 			}
 		}
 	}
-	//check metadata
-	for(auto* TempMeta : EntryMetadata)
-	{
-		if(TempMeta && !TempMeta->CanAddObjectToList(Asset))
-		{
-			return nullptr;
-		}
-	}
+
 
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
-	TempEntry->WidgetTags=EntryAutoTags;
-	TempEntry->WidgetTraits=EntryMetadata;
-	TempEntry->Traits=EntryTraits;
+	if (EntryTemplate)
+	{
+		UEngine::CopyPropertiesForUnrelatedObjects(EntryTemplate, TempEntry);
+	}
+	TempEntry->WidgetTraits=Traits;
+	
 	if(OverrideHoverOffset_Curve)
 	{
 		TempEntry->HoverOffset_Curve=OverrideHoverOffset_Curve;
@@ -167,20 +295,9 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		{
 			img->SetDesiredSizeOverride(OverrideIconSize);
 		}
-	}if(OverrideTextStyle_Name)
-	{
-		if (UOmegaTextBlock* txt_nam=Cast<UOmegaTextBlock>(TempEntry->GetNameTextWidget()))
-		{
-			txt_nam->SetStyleAsset(OverrideTextStyle_Name);
-		}
 	}
-	if(OverrideTextStyle_Description)
-	{
-		if (UOmegaTextBlock* txt_nam=Cast<UOmegaTextBlock>(TempEntry->GetDescriptionTextWidget()))
-		{
-			txt_nam->SetStyleAsset(OverrideTextStyle_Description);
-		}
-	}
+	
+
 	
 	// Do not add if hidden
 	if(TempEntry->IsEntityHidden(Asset))
@@ -189,7 +306,6 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	}
 	
 	Entries.Add(TempEntry);
-	TempEntry->AssetLabel = EntryLabel;
 	TempEntry->ParentList = this;
 	if (Asset)
 	{
@@ -275,7 +391,15 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		}
 	}
 	
-	TempEntry->AddedToDataList(this, Entries.Find(TempEntry), Asset, ListTags, Flag);
+	int32 index=Entries.Find(TempEntry);
+	TempEntry->AddedToDataList(this, index, Asset, ListTags, Flag);
+	for (auto* trait : TempEntry->GetWidgetTraits())
+	{
+		if (trait)
+		{
+			trait->OnAddedToList(TempEntry,this,index);
+		}
+	}
 	
 	return TempEntry;
 }
@@ -352,7 +476,7 @@ void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 	}
 	else
 	{
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetControlWidget(this);
+		GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
 	}
 	
 	
@@ -383,12 +507,7 @@ void UDataList::SelectHoveredEntry()
 	if(HoveredEntry)
 	{
 		HoveredEntry->Select();
-		if(LinkedWidgetSwitcher && Entries.Contains(HoveredEntry))
-		{
-			LinkedWidgetSwitcher->SetActiveWidgetIndex(Entries.Find(HoveredEntry));
-		}
 	}
-	
 }
 
 void UDataList::SelectEntry(int32 Index)
@@ -439,7 +558,6 @@ bool UDataList::CycleEntry(int32 Amount,int32& NewEntry)
 		NewEntry = Tempindex;
 		return true;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("Failed to Cycle DataList: Invalid Entry at index %d"), Tempindex);
 	return false;
 }
 
@@ -665,10 +783,10 @@ void UDataList::NativePreConstruct()
 	{
 		if (UDataWidget* mut=GetMutableDefault<UDataWidget>(EntryClass))
 		{
-
+			AddAllOverrides();
 		}
 	}
-	
+
 	if (UBorder* _border=GetWidgetBorder())
 	{
 		if (UOmegaBorder* _oborder=Cast<UOmegaBorder>(_border))
@@ -681,6 +799,7 @@ void UDataList::NativePreConstruct()
 	}
 	RebuildList();
 	ListOwner=GetParent();
+	L_ApplyCurveToEntries();
 }
 
 void UDataList::NativeConstruct()
@@ -775,6 +894,7 @@ void UDataList::RebuildList()
 	{
 		AddedCustomEntryToList(TempData, DefaultListFlag);
 	}
+	L_ApplyCurveToEntries();
 }
 
 //UClass* UDataList::GetSlotClass() const
@@ -850,19 +970,10 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 		{
 			Cast<UScrollBox>(ListPanel)->ScrollWidgetIntoView(DataWidget);
 		}
-
-		//Update linked description box
-		if(DescriptionTextBlock)
-		{
-			FText DumText;
-			FText DumDesc;
-			IDataInterface_General::Execute_GetGeneralDataText(DataWidget->ReferencedAsset, "DumLabel", this, DumText, DumDesc);
-			DescriptionTextBlock->SetText(DumDesc);
-		}
 		
 		if(bAutoSetControlOnHover)
 		{
-			GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetControlWidget(this);
+			GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
 		}
 		RememberedHoverIndex = Entries.Find(DataWidget);
 		OnEntryHovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, RememberedHoverIndex);
@@ -883,10 +994,7 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 		}
 		
 		OnEntryUnhovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, Entries.Find(DataWidget));
-		if(DescriptionTextBlock)
-		{
-			DescriptionTextBlock->SetText(FText::FromString(""));
-		}
+		
 	}
 }
 

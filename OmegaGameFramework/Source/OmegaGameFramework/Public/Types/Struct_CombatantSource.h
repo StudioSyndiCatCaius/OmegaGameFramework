@@ -4,13 +4,12 @@
 #include "CoreMinimal.h"
 #include "Interfaces/I_Combatant.h"
 #include "Interfaces/I_Skill.h"
-#include "Misc/OmegaAttribute.h"
+#include "DataAssets/DA_Attribute.h"
 #include "Struct_CombatantSource.generated.h"
 
 class UOmegaScripted_DamageModifier;
 class UOmegaScripted_DamageModifier;
 class UOmegaScripted_SkillSource;
-
 
 
 USTRUCT(BlueprintType)

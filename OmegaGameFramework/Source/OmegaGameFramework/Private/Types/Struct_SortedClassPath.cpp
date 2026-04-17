@@ -9,6 +9,7 @@ UObject* FOmegaSortedClassPathData::getAssetFromPath(const FString& AssetPath, T
 	{
 		if (a)
 		{
+			// try get via script
 			if (UObject* out=a->OnGetAssetByPath(AssetPath,Class))
 			{
 				return out;

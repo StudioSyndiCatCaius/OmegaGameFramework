@@ -4,13 +4,13 @@
 #include "Actors/Actor_GameplayRegion.h"
 
 #include "Components/BoxComponent.h"
-#include "Components/Component_ActorIdentity.h"
+#include "Components/Component_GameplayActor.h"
 #include "Functions/F_Component.h"
 
 
 AGameplay_Region::AGameplay_Region()
 {
-	ID=CreateOptionalDefaultSubobject<UActorIdentityComponent>("ID");
+	ID=CreateOptionalDefaultSubobject<UGameplayActorComponent>("ID");
 }
 void AGameplay_Region::OnConstruction(const FTransform& Transform)
 {

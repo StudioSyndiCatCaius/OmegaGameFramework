@@ -3,7 +3,7 @@
 #include "Components/Component_GameplaySystems.h"
 
 #include "Functions/F_Common.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 
 // Sets default values for this component's properties
 UGameplaySystemsComponent::UGameplaySystemsComponent()
@@ -32,7 +32,7 @@ void UGameplaySystemsComponent::Local_ActivateSystems()
 {
 	for(const auto& TempSys : GameplaySystems)
 	{
-		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSys, this, ActivationFlag);
+		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->ActivateGameplaySystem(TempSys, this, ActivationFlag);
 	}
 }
 
@@ -42,7 +42,7 @@ void UGameplaySystemsComponent::Local_ShutdownSystems()
 	{
 		if(TempSys)
 		{
-			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(TempSys, GetOwner(), ActivationFlag);
+			GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->ShutdownGameplaySystem(TempSys, GetOwner(), ActivationFlag);
 		}
 	}
 	UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(this,PersistentSystems,false,"",this);

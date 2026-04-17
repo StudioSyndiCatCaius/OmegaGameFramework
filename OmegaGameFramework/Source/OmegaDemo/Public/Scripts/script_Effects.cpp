@@ -51,7 +51,7 @@ bool UEffectScript_EffectActorAdd::OnEffectApplied_Implementation(UCombatantComp
 {
 	if(Instigator && Target && Class)
 	{
-		Instigator->CreateEffect(Class,Power,Target,Tags,Context);
+		Target->CreateEffect(Class,Instigator,Context);
 	}
 	return true;
 }
@@ -95,14 +95,14 @@ bool UEffectScript_DamageFlat::OnEffectApplied_Implementation(UCombatantComponen
 	return true;
 }
 
-void UEffectScript_DamageFlat::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
-	FText& Name, FText& Description)
+void UEffectScript_DamageFlat::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
 {
-	Super::GetGeneralDataText_Implementation(Label, Context, Name, Description);
+	
 }
 
+
 bool UEffectScriptBASE_DamagePercent::OnEffectApplied_Implementation(UCombatantComponent* Target,
-                                                                 UCombatantComponent* Instigator)
+                                                                     UCombatantComponent* Instigator)
 {
 	if(Target)
 	{
@@ -132,11 +132,6 @@ bool UEffectScriptBASE_DamagePercent::OnEffectApplied_Implementation(UCombatantC
 	return true;
 }
 
-void UEffectScriptBASE_DamagePercent::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
-	FText& Name, FText& Description)
-{
-	Super::GetGeneralDataText_Implementation(Label, Context, Name, Description);
-}
 
 void UEffectScript_DamagePercent::GetEffectParameters_Implementation(UOmegaAttribute*& _DamagedAttribute,
 	UOmegaDamageType*& _DamageType, float& _Variance, float& _MinDamage, float& _MaxDamage,
@@ -152,6 +147,47 @@ void UEffectScript_DamagePercent::GetEffectParameters_Implementation(UOmegaAttri
 	_Instigator_Power=Instigator_Power;
 	_Target_Attribute=Target_Attribute;
 	_Target_Power=Target_Power;
+}
+
+bool UEffectScript_Inv_Edit::OnEffectApplied_Implementation(UCombatantComponent* Target,
+	UCombatantComponent* Instigator)
+{
+	if (Instigator && bTransferFromInstigator)
+	{
+		Instigator->Inventory_AddList(ItemsGiven,true);
+	}
+	if (Target)
+	{
+		Target->Inventory_AddList(ItemsGiven,false);	
+	}
+	return true;
+}
+
+bool UEffectScript_Equip_Edit::OnEffectApplied_Implementation(UCombatantComponent* Target,
+	UCombatantComponent* Instigator)
+{
+	if (Target)
+	{
+		for (auto* s : SlotsCleared)
+		{
+			if (s)
+			{
+				Target->Equipment_ClearSlot(s);
+			}
+		}
+		
+		TArray<UEquipmentSlot*> _slot;
+		EquipmentAdded.GetKeys(_slot);
+		for (auto* s : _slot)
+		{
+			if (s)
+			{
+				Target->Equipment_SetInSlot(EquipmentAdded.FindOrAdd(s),s);
+			}
+		}
+	}
+	
+	return true;
 }
 
 void UEffectScriptBASE_DamagePercent::GetEffectParameters_Implementation(UOmegaAttribute*& _DamagedAttribute,

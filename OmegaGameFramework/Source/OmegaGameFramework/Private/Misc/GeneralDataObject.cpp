@@ -9,22 +9,6 @@
 
 #define LUACFG() GetMutableDefault<ULuaSettings>()
 
-void UGeneralDataObject::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description)
-{
-	Name = CustomData.DisplayName;
-	Description = CustomData.Description;
-}
-
-void UGeneralDataObject::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	Texture = CustomData.Texture;
-}
-
-void UGeneralDataObject::GetGeneralAssetColor_Implementation(FLinearColor& Color)
-{
-	Color = CustomData.Color;
-}
-
 void UGeneralDataObject::GetGeneralAssetLabel_Implementation(FString& Label)
 {
 	Label = CustomData.Label;
@@ -35,7 +19,7 @@ UOmegaDataAsset::UOmegaDataAsset()
 {
 	if(!Guid.IsValid()) { Guid= FGuid::NewGuid();}
 }
-
+/*
 FString UOmegaDataAsset::GetSoftProperty_Implementation(FName Property)
 {
 	FLuaValue val=LuaData.GetField(Property.ToString());
@@ -53,19 +37,14 @@ TArray<FName> UOmegaDataAsset::GetMetatags_Implementation()
 		LUACFG()->FieldKey_Metatags)));
 	return out;
 }
+*/
 
-FOmegaClassNamedLists UOmegaDataAsset::GetClassNamedLists_Implementation()
+
+void UOmegaDataAsset::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& NamedLists)
 {
-	FOmegaClassNamedLists out=NamedLists;
-	FLuaValue fieldtemp=LuaData.GetField(LUACFG()->FieldKey_CustomLists);
-	for (FLuaValue v : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(fieldtemp))
-	{
-		FOmegaCustomNamedList l;
-		l.ListID=v.ToName();
-		l.Option=fieldtemp.GetField(v.ToString()).ToName();
-		out.CustomNamedList.Add(v.ToName(),l);
-	}
-	return out;
+	IDataInterface_General::GetMetaConfig_Implementation(bitflags, guid, seed, NamedLists);
+	guid=Guid;
 }
 
 void UOmegaDataAsset::SetValue_Implementation(FLuaValue Value, const FString& Field)
@@ -74,22 +53,24 @@ void UOmegaDataAsset::SetValue_Implementation(FLuaValue Value, const FString& Fi
 	{
 		DisplayName=FText::FromString(Value.GetField("name").ToString());
 	}
-	if(DisplayName.IsEmpty() && !Value.GetField("description").ToString().IsEmpty())
+	if(DisplayDescription.IsEmpty() && !Value.GetField("description").ToString().IsEmpty())
 	{
-		DisplayName=FText::FromString(Value.GetField("description").ToString());
+		DisplayDescription=FText::FromString(Value.GetField("description").ToString());
 	}
-	if(GameplayTags.IsEmpty())
+	bool found_icon=false;
+	if(UTexture2D* _ico=Cast<UTexture2D>(UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(Value.GetField("icon").ToString(),UTexture2D::StaticClass(),found_icon)))
 	{
-		
+		Icon.SetResourceObject(_ico);
 	}
 	if(!CategoryTag.IsValid() && !Value.GetField("category").ToString().IsEmpty())
 	{
 		FString _TargetTag=Value.GetField("category").ToString();
 		if (FGameplayTag::IsValidGameplayTagString(_TargetTag))
 		{
-			CategoryTag=FGameplayTag::RequestGameplayTag(*_TargetTag);	
+			CategoryTag=FGameplayTag::RequestGameplayTag(*_TargetTag,false);	
 		}
 	}
+	GameplayTags=UOmegaGameFrameworkBPLibrary::MakeGameplayTagContainerFromStrings(ULuaBlueprintFunctionLibrary::Conv_LuaValueToString_Array(Value.GetField("tags")));
 	LuaData=Value;
 }
 
@@ -103,6 +84,14 @@ UPrimaryDataAsset* UOmegaDataAsset::GetDataAsset_Named_Implementation(FName name
 {
 
 	return nullptr;
+}
+
+void UOmegaDemoDataAsset::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
+{
+	Super::GetMetaConfig_Implementation(bitflags, guid, seed, NamedLists);
+	bitflags=Flags;
+	named_lists=NamedLists;
 }
 
 

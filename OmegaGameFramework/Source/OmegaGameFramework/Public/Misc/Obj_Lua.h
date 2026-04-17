@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "LuaObject.h"
-#include "OmegaAttribute.h"
+#include "DataAssets/DA_Attribute.h"
 #include "Obj_Lua.generated.h"
 
 

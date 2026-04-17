@@ -82,6 +82,7 @@ TArray<FString> UOmegaPakFunctions::GetPakContent(const FString& PakFilePath, bo
 		FString MountPoint = GetPakMountPoint(PakFilePath);
 		MountPoint.Split("/Content/", &ContentPath, &PakAppendPath);
 		
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
 		TArray<FPakFile::FFilenameIterator> Records;
 		for (FPakFile::FFilenameIterator It(*Pak, false); It; ++It)
 		{
@@ -102,6 +103,9 @@ TArray<FString> UOmegaPakFunctions::GetPakContent(const FString& PakFilePath, bo
 				PakContent.Add(FString::Printf(TEXT("%s%s"), *PakAppendPath, *It.Filename()));
 			}
 		}
+		
+#endif
+		
 	}
 	return PakContent;
 }

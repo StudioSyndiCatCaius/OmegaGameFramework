@@ -35,22 +35,24 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_Skill
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent,Category="Skill",	DisplayName="Skill - On Added to Combatant")
+	
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="ΩI|Skill",	DisplayName="Skill - On Added to Combatant")
 	void OnSkillAddedToCombatant(UCombatantComponent* Combatant, bool Added);
 	
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Skill", DisplayName="Skill - Can Be Used?")
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Skill", DisplayName="Skill - Can Be Used?")
 	bool CanUseSkill(UCombatantComponent* Combatant);
 	
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Skill",	DisplayName="Skill - Get Attribute Costs")
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Skill",	DisplayName="Skill - Get Attribute Costs")
 	TMap<UOmegaAttribute*, float> GetSkillAttributeCosts(UCombatantComponent* Combatant,UObject* Context);
 	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Skill")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Skill")
 	TSubclassOf<UCombatantFilter> GetSkillTargetFilter();
 	
 	// Skills are given two sequences slots: Charge is typically played first on the instigator. Execution is played second on the Target.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Skill", DisplayName="Skill - Get Sequences")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Skill", DisplayName="Skill - Get Sequences")
 	ULevelSequence* GetSkill_Sequences(UCombatantComponent* Combatant, FName Name);
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Skill", DisplayName="Skill - Get Montages")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Skill", DisplayName="Skill - Get Montages")
 	UAnimMontage* GetSkill_Montage(UCombatantComponent* Combatant, FName Name);
 };
 

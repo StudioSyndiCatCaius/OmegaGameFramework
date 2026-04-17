@@ -5,7 +5,6 @@
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/Component_ActorConfig.h"
 #include "Components/Component_Saveable.h"
 #include "Components/StateTreeComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -48,7 +47,7 @@ UOAsset_Appearance* UOmegaProp_Preset::GetAppearanceAsset_Implementation()
 
 void UOmegaProp_Preset::Apply(AOmegaProp* prop)
 {
-	if(prop)
+	if(prop && prop->RangeBox)
 	{
 		USceneComponent* socket_target=nullptr;
 		prop->RangeBox->SetCollisionEnabled(CollisionType);
@@ -166,8 +165,6 @@ AOmegaProp::AOmegaProp()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	
 	RangeBox=CreateOptionalDefaultSubobject<UBoxComponent>("Range");
-	RangeBox->SetupAttachment(RootComponent);
-	
 	MeshStatic=CreateOptionalDefaultSubobject<UStaticMeshComponent>("Mesh - Static");
 	MeshStatic->SetupAttachment(RootComponent);
 	MeshStatic->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
@@ -182,9 +179,8 @@ AOmegaProp::AOmegaProp()
 	Niagara=CreateOptionalDefaultSubobject<UNiagaraComponent>("Niagara");
 	Niagara->SetupAttachment(RootComponent);
 	
-	Saveable=CreateOptionalDefaultSubobject<UOmegaSaveableComponent>("Savable");
-	StateTree=CreateOptionalDefaultSubobject<UStateTreeComponent>("StateTree");
-	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
+	//Saveable=CreateOptionalDefaultSubobject<UOmegaSaveableComponent>("Savable");
+	//StateTree=CreateOptionalDefaultSubobject<UStateTreeComponent>("StateTree");
 
 	RootComponent->SetMobility(EComponentMobility::Type::Static);
 	TArray<USceneComponent*> childComps;
@@ -200,12 +196,11 @@ AOmegaProp::AOmegaProp()
 	
 }
 
-void AOmegaProp::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
+void AOmegaProp::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
 {
-	if(Preset)
-	{
-		Name=UDataInterface_General::GetObjectName(Preset);
-		Description=UDataInterface_General::GetObjectDesc(Preset);
-	}
+	bitflags=Flags;
+	named_lists=Lists;
+	//seed=Seed;
 }
+

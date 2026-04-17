@@ -59,7 +59,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaUI_Background : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere,Category="UI") UOmegaUIStyle_Background* Style;
+	UPROPERTY(EditAnywhere,Category="UI") bool UseDefaultStyle;
+	UPROPERTY(EditAnywhere,Category="UI",meta=(EditCondition="!UseDefaultStyle")) UOmegaUIStyle_Background* Style;
 	
 	virtual void NativePreConstruct() override;
 

@@ -18,31 +18,48 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFunctions_Config : public UBlueprintFunctionL
 	GENERATED_BODY()
 
 public:
-
-	static FJsonObject GetOmegaConfigJsonObject();
+	static bool IsInOmegaDeveloperMode();
 	
-	UFUNCTION()
-	static FJsonObjectWrapper GetOmegaConfigJson();
+	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="⚙️Config - Get (Bool)")
+	static bool GetBool(const FString& Section, const FString& Param);
 
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (bool)", meta=(CompactNodeTitle="⚙️ GET (bool)"))
-	static bool GetCustom_Bool(const FName Param);
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (float)", meta=(CompactNodeTitle="⚙️ GET (float)"))
-	static float GetCustom_float(const FName Param);
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (int32)", meta=(CompactNodeTitle="⚙️ GET (int32)"))
-	static int32 GetCustom_Int32(const FName Param);
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Config - Get CUSTOM Param (string)", meta=(CompactNodeTitle="⚙️ GET (string)"))
-	static FString GetCustom_String(const FName Param);
+	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="⚙️Config - Get (Float)")
+	static float GetFloat(const FString& Section, const FString& Param);
 
+	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="⚙️Config - Get (Int32)")
+	static int32 GetInt(const FString& Section, const FString& Param);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="⚙️Config - Get (String)")
+	static FString GetString(const FString& Section, const FString& Param);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="⚙️Config - Get (Vector)")
+	static FVector GetVector(const FString& Section, const FString& Param);
 	
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Get Ω Config Property (String)", meta=(CompactNodeTitle="Config (String)"))
-	static FString GetOmegaConfigProperty_String(const FString Property);
+	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="⚙️Config - Get (Vector2D)")
+	static FVector2D GetVector2D(const FString& Section, const FString& Param);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Config", DisplayName="⚙️Config - Set (Bool)")
+	static void SetBool(const FString& Section, const FString& Param, bool Value);
 
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Get Ω Config Property (Bool)", meta=(CompactNodeTitle="Config (bool)"))
-	static bool GetOmegaConfigProperty_Bool(const FString Property);
+	UFUNCTION(BlueprintCallable, Category="Omega|Config", DisplayName="⚙️Config - Set (Float)")
+	static void SetFloat(const FString& Section, const FString& Param, float Value);
 
-	UFUNCTION(BlueprintPure, Category="Omega|Config", DisplayName="Get Ω Config Property (Int32)", meta=(CompactNodeTitle="Config (Int32)"))
-	static int32 GetOmegaConfigProperty_Int(const FString Property);
+	UFUNCTION(BlueprintCallable, Category="Omega|Config", DisplayName="⚙️Config - Set (Int32)")
+	static void SetInt(const FString& Section, const FString& Param, int32 Value);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Config", DisplayName="⚙️Config - Set (String)")
+	static void SetString(const FString& Section, const FString& Param, const FString& Value);
 
+	UFUNCTION(BlueprintCallable, Category="Omega|Config", DisplayName="⚙️Config - Set (Vector)")
+	static void SetVector(const FString& Section, const FString& Param, FVector Value);
+
+	UFUNCTION(BlueprintCallable, Category="Omega|Config", DisplayName="⚙️Config - Set (Vector2D)")
+	static void SetVector2D(const FString& Section, const FString& Param, FVector2D Value);
+	
+	
+	static FString L_GetConfigPath();
+	static FString L_GetPluginConfigPath();
+	static void L_EnsureFileExists(const FString& Path);
+private:
 	
 };

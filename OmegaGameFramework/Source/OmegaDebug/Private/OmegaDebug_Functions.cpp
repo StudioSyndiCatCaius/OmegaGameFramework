@@ -2,8 +2,10 @@
 
 #include "OmegaDebug_Functions.h"
 
+#include "Functions/F_Quest.h"
+#include "Actors/Actor_Quest.h"
 #include "Modifiers/Modifier_Save.h"
-#include "Subsystems/Subsystem_Quest.h"
+#include "Subsystems/Subsystem_Save.h"
 
 UOmegaDebugDevSettings::UOmegaDebugDevSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -33,12 +35,14 @@ UOmegaDebugProfile* UOmegaDebugSubsystem::L_GetProfileDefault() const
 void UOmegaDebugSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+#if !UE_BUILD_SHIPPING
+	// don't do on shipping
 	if(L_GetSettingsAsset()->bRunDebugProfile)
 	{
 		GetWorld()->GetTimerManager().SetTimer(timer_starProf,this,&UOmegaDebugSubsystem::StartDebugProfile_Default,
 			GetMutableDefault<UOmegaDebugDevSettings>()->Delay_AutostartProfile);
 	}
-	
+#endif
 }
 
 void UOmegaDebugSubsystem::StartDebugProfile(UOmegaDebugProfile* Profile)
@@ -73,7 +77,7 @@ void UOmegaDebugSubsystem::StartDebugProfile(UOmegaDebugProfile* Profile)
 			{
 				if(UOmegaQuest* _quest = q.LoadSynchronous())
 				{
-					GetWorld()->GetGameInstance()->GetSubsystem<UOmegaQuestSubsystem>()->StartQuest_FirstWithAsst(_quest);
+					UOmegaFunctions_Quest::Start(GetGameInstance(),_quest);
 				}
 			}
 		}

@@ -8,7 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Actor.h"
-#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Actor_InteractTransit.generated.h"
 
 class UBillboardComponent;
@@ -20,7 +20,7 @@ class OMEGAGAMEFRAMEWORK_API AInteractTransit : public AActor, public IActorInte
 
 	UPROPERTY() UTextRenderComponent* comp_text;
 
-	UFUNCTION() FText L_GetName() const;
+	UFUNCTION() FText L_GetName();
 
 public:
 	// Sets default values for this actor's properties
@@ -30,7 +30,7 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
 	virtual bool IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override;
 	virtual void OnInteraction_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override;
 

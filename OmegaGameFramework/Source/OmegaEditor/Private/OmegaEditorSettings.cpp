@@ -3,7 +3,7 @@
 #include "OmegaEditorSettings.h"
 
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 

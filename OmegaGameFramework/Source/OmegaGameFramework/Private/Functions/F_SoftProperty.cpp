@@ -4,13 +4,13 @@
 #include "Functions/F_SoftProperty.h"
 
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "Functions/F_GlobalParam.h"
 
 //#####################################################################################################
 // Soft PROPERTY FUNCTIONS
 //#####################################################################################################
-FString UOmegaSoftPropertyFunctions::GetSoftProperty_String(UObject* Object, FName PropertyName)
+FString UOmegaFunctions_SoftProperty::GetSoftProperty_String(UObject* Object, FName PropertyName)
 {
 	FString temp_val=GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_OverrideSoftProperty(Object, PropertyName);
 	if (!temp_val.IsEmpty())
@@ -37,25 +37,25 @@ FString UOmegaSoftPropertyFunctions::GetSoftProperty_String(UObject* Object, FNa
 	return OutVal;
 }
 
-bool UOmegaSoftPropertyFunctions::GetSoftProperty_bool(UObject* Object, FName PropertyName)
+bool UOmegaFunctions_SoftProperty::GetSoftProperty_bool(UObject* Object, FName PropertyName)
 {
 	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
 	return LocalVal.ToBool();
 }
 
-float UOmegaSoftPropertyFunctions::GetSoftProperty_float(UObject* Object, FName PropertyName)
+float UOmegaFunctions_SoftProperty::GetSoftProperty_float(UObject* Object, FName PropertyName)
 {
 	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
 	return FCString::Atof(*LocalVal);
 }
 
-int32 UOmegaSoftPropertyFunctions::GetSoftProperty_int32(UObject* Object, FName PropertyName)
+int32 UOmegaFunctions_SoftProperty::GetSoftProperty_int32(UObject* Object, FName PropertyName)
 {
 	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
 	return FCString::Atoi(*LocalVal);
 }
 
-FVector UOmegaSoftPropertyFunctions::GetSoftProperty_Vector(UObject* Object, FName PropertyName)
+FVector UOmegaFunctions_SoftProperty::GetSoftProperty_Vector(UObject* Object, FName PropertyName)
 {
 	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
 	FVector VectorValue;
@@ -63,7 +63,7 @@ FVector UOmegaSoftPropertyFunctions::GetSoftProperty_Vector(UObject* Object, FNa
 	return VectorValue;
 }
 
-FRotator UOmegaSoftPropertyFunctions::GetSoftProperty_Rotator(UObject* Object, FName PropertyName)
+FRotator UOmegaFunctions_SoftProperty::GetSoftProperty_Rotator(UObject* Object, FName PropertyName)
 {
 	const FString LocalVal = GetSoftProperty_String(Object, PropertyName);
 	FRotator  VectorValue;

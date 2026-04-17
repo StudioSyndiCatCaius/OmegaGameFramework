@@ -3,6 +3,12 @@
 
 #include "Actors/Actor_Player.h"
 
+#include "Components/AudioComponent.h"
+#include "Components/Component_GameplayActor.h"
+#include "Components/Component_AssetSquad.h"
+#include "Components/Component_Combatant.h"
+#include "Components/Component_InstancedActor.h"
+
 void AOmegaPlayer::L_Print(const FString& str)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, str);
@@ -36,10 +42,14 @@ void AOmegaPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 AOmegaPlayer::AOmegaPlayer()
 {
+	Combatant=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
+	ActorID=CreateOptionalDefaultSubobject<UGameplayActorComponent>("ActorID");
+	AssetSquad=CreateOptionalDefaultSubobject<UAssetSquadComponent>("AssetSquad");
+	EntityInstances=CreateOptionalDefaultSubobject<UInstanceActorComponent>("Entity Instances");
 }
 
 
-void AOmegaPlayer::SetSystemsActive(TArray<TSubclassOf<AOmegaPlayerSystem>> Systems, UObject* Context,
+void AOmegaPlayer::SetSystemsActive(TArray<TSubclassOf<AOmegaGameplaySystem>> Systems, UObject* Context,
 	const FString& Flag, bool active,FOmegaCommonMeta meta)
 {
 	for(auto c : Systems)
@@ -51,7 +61,7 @@ void AOmegaPlayer::SetSystemsActive(TArray<TSubclassOf<AOmegaPlayerSystem>> Syst
 	}
 }
 
-AOmegaPlayerSystem* AOmegaPlayer::SetSystemActive(TSubclassOf<AOmegaPlayerSystem> System, UObject* Context,
+AOmegaGameplaySystem* AOmegaPlayer::SetSystemActive(TSubclassOf<AOmegaGameplaySystem> System, UObject* Context,
 	const FString& Flag, bool active,FOmegaCommonMeta meta)
 {
 	if(System)
@@ -59,7 +69,7 @@ AOmegaPlayerSystem* AOmegaPlayer::SetSystemActive(TSubclassOf<AOmegaPlayerSystem
 		if(active)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Player System %s - Attmeping activate "), *System->GetName());
-			if(AOmegaPlayerSystem* s=Cast<AOmegaPlayerSystem>(SystemStats.Activate(System,Context,Flag,this,this,meta)))
+			if(AOmegaGameplaySystem* s=Cast<AOmegaGameplaySystem>(SystemStats.Activate(System,Context,Flag,this,this,meta)))
 			{
 				return s;
 			}
@@ -71,11 +81,11 @@ AOmegaPlayerSystem* AOmegaPlayer::SetSystemActive(TSubclassOf<AOmegaPlayerSystem
 			return nullptr;
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Failed to Start/Stop: %s -- system calss is null "), *System->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("Failed to Start/Stop: system calss is null "));
 	return nullptr;
 }
 
-bool AOmegaPlayer::IsSystemActive(TSubclassOf<AOmegaPlayerSystem> System)
+bool AOmegaPlayer::IsSystemActive(TSubclassOf<AOmegaGameplaySystem> System)
 {
 	return SystemStats.IsSystemActive(System);
 }

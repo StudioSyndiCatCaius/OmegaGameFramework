@@ -5,11 +5,12 @@
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Actors/Actor_DynamicCamera.h"
 #include "Actors/Actor_Player.h"
 #include "Functions/F_Widget.h"
-#include "Subsystems/Subsystem_DynamicCamera.h"
 #include "Subsystems/Subsystem_GameManager.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_World.h"
 
 void AOmegaGameMode::Native_DragSelectEnd(const TArray<AActor*>& actors)
 {
@@ -19,7 +20,7 @@ void AOmegaGameMode::Native_DragSelectEnd(const TArray<AActor*>& actors)
 
 void AOmegaGameMode::Local_LoadSystemShutdown(UObject* Context, FString Flag)
 {
-	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	UOmegaSubsystem_World* SystemRef = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	
 	//Activate Game Systems
 	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : PostLoadGameplaySystems)
@@ -37,9 +38,32 @@ AOmegaGameMode::AOmegaGameMode()
 	DragSelectColor=FLinearColor(1,1,1,0.4);
 }
 
+#if WITH_EDITOR
+void AOmegaGameMode::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeChainProperty(PropertyChangedEvent);
+
+	// Get the root property name
+	const FName PropertyName = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UOmegaGameManager, System_Config))
+	{
+		ValidateTemplates();
+	}
+}
+#endif
+
+void AOmegaGameMode::ValidateTemplates()
+{
+	for (FOmegaGameplaySystemConfig& Config : System_Config)
+	{
+		Config.ValidateTemplates(this);
+	}
+}
+
 void AOmegaGameMode::Local_ActivatePersistentSystems()
 {
-	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	UOmegaSubsystem_World* SystemRef = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	
 	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : PersistentGameplaySystems)
 	{
@@ -51,8 +75,8 @@ void AOmegaGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	//Fire OnLevelOpened Delegate
-	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnNewLevel.Broadcast(UGameplayStatics::GetCurrentLevelName(this), this);
-	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaSubsystem_GameInstance>()->OnNewLevel.Broadcast(UGameplayStatics::GetCurrentLevelName(this), this);
+	UOmegaSubsystem_World* SystemRef = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	//Activate Game Systems
 	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : AutoGameplaySystems)
 	{
@@ -84,16 +108,16 @@ void AOmegaGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 	if(AOmegaPlayer* p=Cast<AOmegaPlayer>(NewPlayer))
 	{
-		p->Systems_Auto.Append(PlayerSystems_Auto);
-		p->SetSystemsActive(PlayerSystems_Auto,this,"Auto",true);
-		p->Systems_Persistent.Append(PlayerSystems_Auto);
+		//p->Systems_Auto.Append(PlayerSystems_Auto);
+		//p->SetSystemsActive(PlayerSystems_Auto,this,"Auto",true);
+		//p->Systems_Persistent.Append(PlayerSystems_Auto);
 	}
 	
 	if (bAutoActivateDynamicCamera)
 	{
-		if (UOmegaDynamicCameraSubsystem* _subsys=NewPlayer->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>())
+		if (UOmegaSubsystem_Player* _subsys=NewPlayer->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>())
 		{
-			_subsys->SetDynamicCameraActive(bAutoActivateDynamicCamera);
+			_subsys->DynaCam_SetActive(bAutoActivateDynamicCamera);
 			if (DefaultDynamicCamera)
 			{
 				AOmegaDynamicCamera* _NewCam=GetWorld()->SpawnActorDeferred<AOmegaDynamicCamera>(DefaultDynamicCamera,NewPlayer->GetLevelTransform());

@@ -42,9 +42,9 @@ public:
 };
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnTurnDelegate, UTurnBasedManagerComponent*, Component, UCombatantComponent*, Combatant, FString, Flag, FGameplayTagContainer, Tags);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTurnDelegate, UTurnBasedManagerComponent*, Component, UCombatantComponent*, Combatant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnFail, FString, Reason);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAddedToTurnOrder, UCombatantComponent*, Combatant, int32, Index, FString, Flag, FGameplayTagContainer, Tags);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAddedToTurnOrder, UCombatantComponent*, Combatant, int32, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnComponentDelegate, UTurnBasedManagerComponent*, Component);
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
@@ -104,13 +104,13 @@ public:
 	UCombatantComponent* GetTurnMemberAtIndex(int32 Index);
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	void AddToTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void AddToTurnOrder(UCombatantComponent* Combatant);
 
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"), DisplayName="Remove From Turn Order (Combatant)")
-	void RemoveFromTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void RemoveFromTurnOrder(UCombatantComponent* Combatant);
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"), DisplayName="Remove From Turn Order (Faction)")
-	void RemoveFactionFromTurnOrder(FGameplayTag Faction, FString Flag, FGameplayTagContainer Tags);
+	void RemoveFactionFromTurnOrder(FGameplayTag Faction);
 
 	
 	UPROPERTY(EditDefaultsOnly, Category="Turn")
@@ -133,13 +133,13 @@ public:
 	FOnTurnFail OnTurnFail;
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	bool NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags, FString& FailReason);
+	bool NextTurn(bool bGenerateIfEmpty, FString& FailReason);
 
 	UFUNCTION()
-	void BeginTurn(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void BeginTurn(UCombatantComponent* Combatant);
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	void ClearTurnOrder(FString Flag, FGameplayTagContainer Tags);
+	void ClearTurnOrder();
 
 	//###########################################
 	// Tag Events
@@ -202,11 +202,11 @@ public:
 
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	void RegisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void RegisterCombatant(UCombatantComponent* Combatant);
 
 	//Removes from list of combatants. Also remove form turn order if in.
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	void UnregisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	void UnregisterCombatant(UCombatantComponent* Combatant);
 
 	//Empties all registered combatants from the list
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
@@ -260,10 +260,10 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_TurnOrderCombatant
 	void OnTurnEnd(UTurnBasedManagerComponent* TurnManager);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	void OnAddedToTurnOrder(UTurnBasedManagerComponent* TurnManager, FString& Flag, FGameplayTagContainer Tags);
+	void OnAddedToTurnOrder(UTurnBasedManagerComponent* TurnManager);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"))
-	void OnRemovedFromTurnOrder(UTurnBasedManagerComponent* TurnManager, FString& Flag, FGameplayTagContainer Tags);
+	void OnRemovedFromTurnOrder(UTurnBasedManagerComponent* TurnManager);
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTurnTrackerDelegate,UTurnTrackerComponent*, Component, int32, TurnsElapsed);
@@ -277,10 +277,8 @@ class OMEGAGAMEFRAMEWORK_API UTurnTrackerComponent : public UActorComponent
 	
 	bool L_usesInterface(const UObject* obj) const;
 
-	UFUNCTION()
-	void L_OnTurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
-	UFUNCTION()
-	void L_OnTurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags);
+	UFUNCTION() void L_OnTurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant);
+	UFUNCTION() void L_OnTurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant);
 
 	UPROPERTY() UObject* tracker_source;
 	UPROPERTY() int32 TurnsElapsed;

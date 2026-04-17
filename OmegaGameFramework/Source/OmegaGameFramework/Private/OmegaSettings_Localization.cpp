@@ -15,7 +15,8 @@
 UOmegaSettings_Localization::UOmegaSettings_Localization(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	
+	InternalVoice_LocalePaths.Add("/Game/0_Main/Locale/");
+	InternalVoice_LocalePaths.Add("/OmegaGameFramework/Locale/");
 }
 
 

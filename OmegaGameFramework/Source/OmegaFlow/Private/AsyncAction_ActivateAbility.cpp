@@ -34,7 +34,7 @@ void UAsyncAction_ActivateAbility::Activate()
 			if(LocalAbility->CanActivate(LocalContext))
 			{
 				CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);
-				LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::UAsyncAction_ActivateAbility::NativeShutdown);
+				LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::NativeShutdown);
 				return;
 			}
 			Failed.Broadcast();

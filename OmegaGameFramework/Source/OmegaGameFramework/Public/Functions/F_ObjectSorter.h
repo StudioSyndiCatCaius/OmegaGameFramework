@@ -58,23 +58,19 @@ public:
 	UPROPERTY(EditDefaultsOnly, Instanced, Category="Sorter", DisplayName="Name")
 	UOmegaObjectSorterClass* SorterScript;
 
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	                                               FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
 	{
-		Name = SorterName;
-		Description = SorterDescription;
-	}
-
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture,
-	                                                 UMaterialInterface*& Material, FSlateBrush& Brush) override
+		Name=SorterName;
+		Description=SorterDescription;
+	};
+	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override
 	{
-		Brush = SorterIcon;
-	}
-
+		Brush=SorterIcon;
+	};
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override
 	{
-		Label = SorterLabel;
-	}
+		Label=SorterLabel;
+	};
 };
 
 //------------------------------------------------------------------------------------------------

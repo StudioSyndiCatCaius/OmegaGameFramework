@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaComponent.h"
 #include "Components/ActorComponent.h"
 #include "Component_Calendar.generated.h"
 
@@ -28,7 +29,7 @@ public:
 class UOAsset_Calendar;
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UOmegaCalendarComponent : public UActorComponent
+class OMEGAGAMEFRAMEWORK_API UOmegaCalendarComponent : public UOmegaComponent
 {
 	GENERATED_BODY()
 

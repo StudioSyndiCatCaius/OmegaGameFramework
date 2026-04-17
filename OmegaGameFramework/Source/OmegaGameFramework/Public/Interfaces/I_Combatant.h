@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Misc/OmegaAttribute.h"
+#include "DataAssets/DA_Attribute.h"
 #include "I_Combatant.generated.h"
 
 class UCombatantComponent;
@@ -20,7 +20,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_DamageModifier
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Combatant",DisplayName="Damage Modifier - Apply")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Combatant",DisplayName="Damage Modifier - Apply")
 	float ModifyDamage(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context);
 };
 

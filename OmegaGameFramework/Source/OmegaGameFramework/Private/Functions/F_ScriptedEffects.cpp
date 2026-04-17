@@ -44,24 +44,11 @@ FText FOmegaCustomScriptedEffects::GetEffectsDescription(const FString& delimite
 	{
 		if(a)
 		{
-			FString str=out.ToString()+delimiter+UDataInterface_General::GetObjectDesc(a).ToString();
+			FString str=out.ToString()+delimiter+UDataInterface_General::GetObjectDesc(a,FGameplayTag()).ToString();
 			out=FText::FromString(str);
 		}
 	}
 	return out;
-}
-
-void UOmegaScriptedEffectAsset::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
-                                                                  FText& Name, FText& Description)
-{
-	Name = EffectName;
-	Description = EffectDescription;
-}
-
-void UOmegaScriptedEffectAsset::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	Brush = EffectIcon;
 }
 
 FText UOmegaScriptedEffectFunctions::GetEffects_Description(FOmegaCustomScriptedEffects effects,
@@ -72,7 +59,7 @@ FText UOmegaScriptedEffectFunctions::GetEffects_Description(FOmegaCustomScripted
 	{
 		if(a)
 		{
-			FString str=out.ToString()+delimiter+UDataInterface_General::GetObjectDesc(a).ToString();
+			FString str=out.ToString()+delimiter+UDataInterface_General::GetObjectDesc(a,FGameplayTag()).ToString();
 			out=FText::FromString(str);
 		}
 	}

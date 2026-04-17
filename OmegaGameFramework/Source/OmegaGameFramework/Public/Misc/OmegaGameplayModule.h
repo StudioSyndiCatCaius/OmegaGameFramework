@@ -6,7 +6,6 @@
 #include "UObject/NoExportTypes.h"
 #include "GameplayTagContainer.h"
 #include "OmegaGameMode.h"
-#include "Subsystems/Subsystem_QueueEvents.h"
 
 #include "OmegaGameplayModule.generated.h"
 
@@ -18,13 +17,15 @@ class UOmegaAttribute;
 class UOmegaDamageType;
 
 UCLASS(BlueprintType, Blueprintable, EditInlineNew,HideCategories=("Private"))
-class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject, public IInterface_QueuedQuery, public IInterface_QueuedSelector
+class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject
 {
 	GENERATED_BODY()
 
 
 	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
-	UPROPERTY() UOmegaGameManager* REF_OwningManager;
+	UPROPERTY() UOmegaSubsystem_GameInstance* REF_OwningManager;
+	UPROPERTY() UGameInstance* Ref_GamInst=nullptr;
+	UPROPERTY() TArray<UGameplayActorComponent*> registered_GameplayActors;
 
 	UFUNCTION() void L_OnGameSystemChange(AOmegaGameplaySystem* system, UObject* context, const FString& flag, bool bActive);
 
@@ -33,7 +34,7 @@ protected:
 	
 	UFUNCTION()
 	void Native_OnLevelOpened(FString LevelName, AOmegaGameMode* GameMode);
-	UFUNCTION() void L_ActorIdentityRegistered(AActor* Actor, UActorIdentityComponent* Component, bool Registered);
+	UFUNCTION() void L_ActorIdentityRegistered(AActor* Actor, UGameplayActorComponent* Component, bool Registered);
 	UFUNCTION() void L_CombatantInit(UCombatantComponent* combatant);
 	UFUNCTION() void L_CombatantUninit(UCombatantComponent* combatant);
 	
@@ -43,7 +44,7 @@ public:
 	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
 	
 	UFUNCTION()
-	void Native_Initialize();
+	void Native_Initialize(UOmegaSubsystem_GameInstance* Subsystem);
 
 	//Properties
 	//True = This module will automatically be registered and activated on game start.
@@ -74,9 +75,9 @@ public:
 	bool GameFileSaved(UOmegaSaveGame* SaveFile);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
-	void OnGlobalEvent(FName Event, UObject* Instigator);
+	void OnGlobalEvent(FName Event, UObject* Instigator,FOmegaCommonMeta meta);
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
-	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Instigator);
+	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Instigator,FOmegaCommonMeta meta);
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnLevelOpened(const FString& LevelName, AOmegaGameMode* GameMode);
@@ -84,10 +85,14 @@ public:
 	//---------------------------------------------------------------------
 	// Actors
 	//---------------------------------------------------------------------
+	UFUNCTION(BlueprintNativeEvent,Category="Actor")
+	TArray<AActor*> ActorGroup_Filter(FGameplayTag Tag,const TArray<AActor*>& In) const;
+	
+	
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor")
 	void OnActor_RegisteredToGroup(AActor* Actor, FGameplayTag Group, bool Registered);
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor")
-	void OnActor_IdentityRegistered(AActor* Actor, UActorIdentityComponent* Component, bool Registered);
+	void OnActor_IdentityRegistered(AActor* Actor, UGameplayActorComponent* Component, bool Registered);
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor")
 	void OnActor_TagEvent(AActor* Actor, FGameplayTag Event);
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor")

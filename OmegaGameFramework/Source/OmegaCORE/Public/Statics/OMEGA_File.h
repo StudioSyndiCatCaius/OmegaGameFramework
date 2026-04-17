@@ -9,6 +9,6 @@ public:
 	
 	static TArray<FString> ListFilesInDirectory(const FString& path, bool bRecursive);
 	static TArray<FString> ListFilesInDirectoryList(TArray<FString> paths, bool bRecursive);
-
-	static void DoDaTing();
+	static TArray<FString> GetAllSubfolders(const FString& BasePath, bool bRecursive);
+	
 };

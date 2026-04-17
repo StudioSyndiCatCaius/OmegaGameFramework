@@ -4,11 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "DA_CommonItem.h"
-#include "Components/Component_Equipment.h"
-#include "Misc/OmegaAttribute.h"
+#include "Functions/F_Equipment.h"
 #include "Condition/Condition_Actor.h"
+#include "DataAssets/DA_Attribute.h"
 #include "DataAssets/DA_Appearance.h"
-#include "Interfaces/I_BitFlag.h"
 #include "Types/Struct_CombatantSource.h"
 #include "Interfaces/I_Combatant.h"
 #include "Interfaces/I_Skill.h"
@@ -18,7 +17,7 @@
 class UOAsset_Appearance;
 class UOAsset_Common_EquipType;
 
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType,DisplayName="Ω-🗡️ Equipment")
 class OMEGADEMO_API UOAsset_CommonEquipment : public UOAsset_CommonItem, public IDataInterface_Equipable, public IDataInterface_SkillSource,
 												public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier, public IDataInterface_AppearanceSource
 {
@@ -48,7 +47,7 @@ public:
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Appearance")
 	UOAsset_Appearance* Appearance;
 	
-	virtual bool CanEquipItem_Implementation(UEquipmentComponent* Component,UEquipmentSlot* Slot) override;
+	virtual bool CanEquipItem_Implementation(UCombatantComponent* Component,UEquipmentSlot* Slot) override;
 	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;

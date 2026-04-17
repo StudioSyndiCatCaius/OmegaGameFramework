@@ -9,27 +9,17 @@
 #include "Condition/Condition_Combatant.h"
 
 
-void UOAsset_CommonSkill::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
-{
-	Super::GetGeneralDataText_Implementation(Label, Context, Name, Description);
-	if(bAppendEffectsDescription)
-	{
-		FString str=Description.ToString();
-
-		//FOmegaCustomScriptedEffects ef=GetScriptedEffects("");
-		//Description=ef.GetEffectsDescription();
-
-		
-		//Description=FText::FromString(str);
-	}
-}
 
 bool UOAsset_CommonSkill::CanUseSkill_Implementation(UCombatantComponent* Combatant)
 {
 	FOmegaConditions_Actor con;
 	con.Conditions=Conditions_CanUse;
 	return con.CheckConditions(Combatant->GetOwner());
+}
+
+void UOAsset_CommonSkill::SetValue_Implementation(FLuaValue Value, const FString& Flag)
+{
+	Super::SetValue_Implementation(Value, Flag);
 }
 
 TMap<UOmegaAttribute*, float> UOAsset_CommonSkill::GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,

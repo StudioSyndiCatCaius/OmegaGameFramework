@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Actors/Actor_AutoMenu.h"
-#include "Components/Component_ActorConfig.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Components/TextRenderComponent.h"
 #include "Misc/OmegaGameMode.h"
 #include "Subsystems/Subsystem_Player.h"
-#include "Subsystems/Subsystem_Zone.h"
+#include "Subsystems/Subsystem_World.h"
+#include "Widget/Menu.h"
 
 void AOmegaAutoMenu::Native_OnMenuClosed(FGameplayTagContainer GameplayTags, UObject* Context, FString Flag)
 {
@@ -17,13 +17,13 @@ void AOmegaAutoMenu::Native_OnMenuClosed(FGameplayTagContainer GameplayTags, UOb
 	}
 	if(_inlevel.IsValid())
 	{
-		GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToLevel(_inlevel,LevelTransitSpawnID);
+		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_TransitToLevel(_inlevel,LevelTransitSpawnID);
 	}
 }
 
 void AOmegaAutoMenu::L_OpenMenu()
 {
-	UOmegaPlayerSubsystem* _sys = GetWorld()->GetFirstPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+	UOmegaSubsystem_Player* _sys = GetWorld()->GetFirstPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>();
 	REF_Menu=_sys->OpenMenu(Menu,MenuContext,MenuTags,MenuFlag);
 	REF_Menu->OnClosed.AddDynamic(this, &AOmegaAutoMenu::Native_OnMenuClosed);
 }

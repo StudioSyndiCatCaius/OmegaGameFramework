@@ -3,8 +3,27 @@
 
 #include "Functions/OmegaFunctions_CombatantFilter.h"
 
+const TArray<UCombatantComponent*> UCombatantFilterScript::FilterCombatants_Implementation(
+	UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& CombatantsIn) const
+{
+	return TArray<UCombatantComponent*>();
+}
+
+TArray<UCombatantComponent*> UCombatantFilterCollection::FilterCombatants(UCombatantComponent* Instigator, TArray<UCombatantComponent*> In)
+{
+	TArray<UCombatantComponent*> out=In;
+	for (auto* i : FilterScripts)
+	{
+		if (i)
+		{
+			out=i->FilterCombatants(Instigator,out);
+		}
+	}
+	return out;
+}
+
 TArray<UCombatantComponent*> UCombatantFilterFunctions::FilterCombatants_ByScript(UCombatantComponent* Instigator,
-	TArray<UCombatantComponent*> CombatantsIn, FCombatantFilterData Filter)
+                                                                                  TArray<UCombatantComponent*> CombatantsIn, FCombatantFilterData Filter)
 {
 	TArray<UCombatantFilterScript*> filter_scripts=Filter.FilterScripts;
 	TArray<UCombatantComponent*> out=CombatantsIn;

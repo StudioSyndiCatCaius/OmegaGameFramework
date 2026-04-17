@@ -19,6 +19,4 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mesh") FOmegaDynamicMaterialParams MaterialParams_Default;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mesh") TArray<FOmegaDynamicMaterialParams> MaterialParams_Slot;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mesh") TArray<UMaterialInterface*> MaterialOverrides;
-
-
 };

@@ -3,6 +3,7 @@
 
 #include "Functions/F_Grid3D.h"
 #include "Engine/World.h"
+#include "Functions/F_Math.h"
 #include "Functions/F_Utility.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"

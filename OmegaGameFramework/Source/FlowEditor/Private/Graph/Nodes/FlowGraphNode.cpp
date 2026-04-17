@@ -20,7 +20,7 @@
 #include "Editor/EditorEngine.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "GraphEditorActions.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "ScopedTransaction.h"

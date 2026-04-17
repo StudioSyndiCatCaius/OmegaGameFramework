@@ -9,6 +9,7 @@
 #include "UObject/SoftObjectPath.h"
 #include "Engine/DataAsset.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Misc/GeneralDataObject.h"
 #include "F_Platforms.generated.h"
 
 USTRUCT(BlueprintType)
@@ -42,24 +43,17 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaAchievement : public UPrimaryDataAsset, public IDataInterface_General
+class OMEGAGAMEFRAMEWORK_API UOmegaAchievement : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement",DisplayName="Name")
-	FText Achievement_Name;
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement",DisplayName="Icon")
-	FSlateBrush Achievement_Icon;
-	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement",DisplayName="Description",meta=(MultiLine))
-	FText Achievement_Description;
+
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Achievement")
 	int32 Score;
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Instanced,Category="Achievement")
 	TArray<UOmegaAchievementListener*> Listeners;
 
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
 };
 
 
@@ -104,19 +98,19 @@ class OMEGAGAMEFRAMEWORK_API UOmegaPlatformSettings : public UDeveloperSettings
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(EditAnywhere, Config, Category="Platforms", meta=(MetaClass="OmegaPlatformAsset"))
-	FSoftObjectPath DefaultPlatform;
-	UPROPERTY(EditAnywhere, Config, Category="Platforms", meta=(MetaClass="OmegaPlatformAsset"))
-	TMap<FString,FSoftObjectPath> PlatformAssets;
+	UPROPERTY(EditAnywhere, Config, Category="Platforms")
+	TSoftObjectPtr<UOmegaPlatformAsset> DefaultPlatform;
+	UPROPERTY(EditAnywhere, Config, Category="Platforms")
+	TMap<FString,TSoftObjectPtr<UOmegaPlatformAsset>> PlatformAssets;
 
 	UFUNCTION()
 	UOmegaPlatformAsset* GetPlatformAsset() const;
 	
 private:
 	UFUNCTION()
-	UOmegaPlatformAsset* SoftRefToPlatformAsset(FSoftObjectPath Path) const
+	UOmegaPlatformAsset* SoftRefToPlatformAsset(TSoftObjectPtr<UOmegaPlatformAsset> Path) const
 	{
-		if (UOmegaPlatformAsset* OmegaPlatformAsset = Cast<UOmegaPlatformAsset>(Path.TryLoad()))
+		if (UOmegaPlatformAsset* OmegaPlatformAsset = Cast<UOmegaPlatformAsset>(Path.LoadSynchronous()))
 		{
 			return OmegaPlatformAsset;
 		}

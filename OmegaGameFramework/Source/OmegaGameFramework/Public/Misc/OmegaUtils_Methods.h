@@ -5,11 +5,17 @@
 #include "CoreMinimal.h"
 //#include "OmegaUtils_Methods.generated.h"
 
+class UOmegaSaveSubsystem;
+class UOmegaSubsystem_Player;
+class UOmegaSubsystem_GameInstance;
+class UOmegaSubsystem_World;
+class APlayerController;
+class UOmegaSubsystem_Engine;
 class UOmegaAttribute;
 class USaveGame;
 class AActor;
 
-class OGF_Log
+class OMEGAGAMEFRAMEWORK_API OGF_Log
 {
 public:
 	// Screen logging functions with color
@@ -44,10 +50,11 @@ public:
 	{
 		Info(FString::Printf(*Format, Arguments...));
 	}
-
-private:
+	
 	// Helper function to handle the actual screen printing
 	static void PrintToScreen(const FString& Message, FColor Color, float Duration);
+private:
+
     
 	// Static colors for consistency
 	static const FColor ErrorColor;
@@ -60,8 +67,21 @@ class OGF_Load
 {
 public:
 
-	static bool LevelStream_IsLoading(UWorld* World);
+	static bool LevelStream_IsLoading(const UWorld* World);
 };
+
+class OMEGAGAMEFRAMEWORK_API OGF_Subsystems
+{
+public:
+
+	static UOmegaSubsystem_World* oWorld(const UObject* WorldContext);
+	static UOmegaSubsystem_Engine* oEngine();
+	static UOmegaSubsystem_GameInstance* oGameInstance(const UObject* WorldContext);
+	static UOmegaSaveSubsystem* oSave(const UObject* WorldContext);
+	static UOmegaSubsystem_Player* oPlayer(const APlayerController* Player);
+};
+
+
 
 // ================================================================================================================
 // FILE

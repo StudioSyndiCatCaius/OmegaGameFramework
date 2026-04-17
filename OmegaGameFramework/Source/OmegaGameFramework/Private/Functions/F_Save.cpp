@@ -4,6 +4,7 @@
 #include "Functions/F_Save.h"
 
 #include "Misc/OmegaUtils_Methods.h"
+#include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_Save.h"
 
 UOmegaSaveBase* _getEntitySaveObj(const UObject* context,bool bGlobal)
@@ -134,8 +135,25 @@ void UOmegaSaveFunctions::GUID_SetJson(const UObject* WorldContextObject, FGuid 
  	}
 }
 
+UOmegaSaveGame* UOmegaSaveFunctions::CreateGame(const UObject* WorldContextObject)
+{
+	if (UOmegaSaveSubsystem* ss=OGF_Subsystems::oSave(WorldContextObject))
+	{
+		return ss->CreateNewGame();
+	}
+	return nullptr;
+}
 
-
+bool UOmegaSaveFunctions::StartGame(const UObject* WorldContextObject, UOmegaSaveGame* Game, bool bLoadSaveLevel)
+{
+	if (!Game) { return false;}
+	if (UOmegaSaveSubsystem* ss=OGF_Subsystems::oSave(WorldContextObject))
+	{
+		ss->StartGame(Game,bLoadSaveLevel,FGameplayTagContainer());
+		return true;
+	}
+	return false;
+}
 
 
 bool UOmegaSaveFunctions::Custom_SaveGame(USaveGame* SaveGameObject, const FString& path, const FString& file)
@@ -147,4 +165,20 @@ USaveGame* UOmegaSaveFunctions::Custom_LoadGame(const FString& path, const FStri
 {
 	return OGF_Save::LoadGame(path,file);
 
+}
+
+TArray<USaveGame*> UOmegaSaveFunctions::Custom_LoadGame_AllInPath(const FString& path)
+{
+	TArray<USaveGame*> out;
+	for (FString _file : OMEGA_File::ListFilesInDirectory(path,false))
+	{
+		if (FPaths::GetExtension(_file)=="sav")
+		{
+			if (USaveGame* s=OGF_Save::LoadGame(path,FPaths::GetBaseFilename(_file)))
+			{
+				out.Add(s);
+			}
+		}
+	}
+	return out;
 }

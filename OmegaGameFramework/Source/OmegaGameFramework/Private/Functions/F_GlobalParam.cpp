@@ -3,13 +3,29 @@
 
 #include "Functions/F_GlobalParam.h"
 
-#include "Dom/JsonObject.h"
+#include "OmegaSettings.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Functions/F_Conv.h"
+#include "Functions/F_Level.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_GameManager.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 
+
+void UOmegaFunctions_GlobalVars::L_CallParamUpdateDel(UObject* WorldContextObject, FName param,
+	EOmegaGlobalParamTarget target, int32 valueInt,int32 OldValue)
+{
+	if (UOmegaSubsystem_GameInstance* ss_gi=OGF_Subsystems::oGameInstance(WorldContextObject))
+	{
+		ss_gi->OnGlobalParamEdit.Broadcast(param,valueInt,OldValue,target);
+		
+		if(target==EOmegaGlobalParamTarget::SAVE_GAME && OGF_CFG()->SublevelSave_Autoload)
+		{
+			UOmegaLevelFunctions::LoadSublevelFromStateParam(WorldContextObject,param,valueInt,OldValue);
+		}
+	}
+}
 
 FOmegaSoftParams* UOmegaFunctions_GlobalVars::GetParamStruct(UObject* WorldContextObject,
                                                              EOmegaGlobalParamTarget Target)
@@ -28,11 +44,11 @@ FOmegaSoftParams* UOmegaFunctions_GlobalVars::GetParamStruct(UObject* WorldConte
 		
 		switch (Target) {
 		case WORLD:
-			return &WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GlobalVars;
+			return &WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GlobalVars;
 		case GAME_INSTANCE:
 			if (GI)
 			{
-				return &GI->GetSubsystem<UOmegaGameManager>()->GlobalVars;	
+				return &GI->GetSubsystem<UOmegaSubsystem_GameInstance>()->GlobalVars;	
 			}
 		case SAVE_GAME:
 			if (GI)
@@ -54,7 +70,12 @@ FOmegaSoftParams* UOmegaFunctions_GlobalVars::GetParamStruct(UObject* WorldConte
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_Bool(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
                                                         FName Variable, bool Value)
 {
-	GetParamStruct(WorldContextObject,Target)->params_bool.Add(Variable, Value);
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		int32 _oldVal=p->params_int.FindOrAdd(Variable);
+		p->params_int.Add(Variable, Value);
+		L_CallParamUpdateDel(WorldContextObject,Variable,Target,Value,_oldVal);
+	}
 }
 
 bool UOmegaFunctions_GlobalVars::GetGlobalVariable_Bool(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
@@ -70,7 +91,12 @@ bool UOmegaFunctions_GlobalVars::GetGlobalVariable_Bool(UObject* WorldContextObj
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_Int32(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
 	FName Variable, int32 Value)
 {
-	GetParamStruct(WorldContextObject,Target)->params_int.Add(Variable, Value);
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		int32 _oldVal=p->params_int.FindOrAdd(Variable);
+		p->params_int.Add(Variable, Value);
+		L_CallParamUpdateDel(WorldContextObject,Variable,Target,0,_oldVal);
+	}
 }
 
 int32 UOmegaFunctions_GlobalVars::GetGlobalVariable_Int32(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
@@ -78,6 +104,7 @@ int32 UOmegaFunctions_GlobalVars::GetGlobalVariable_Int32(UObject* WorldContextO
 {
 	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
 	{
+		int32 _oldVal=p->params_int.FindOrAdd(Variable);
 		return p->params_int.FindOrAdd(Variable);
 	}
 	return 0; 
@@ -86,7 +113,12 @@ int32 UOmegaFunctions_GlobalVars::GetGlobalVariable_Int32(UObject* WorldContextO
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_Float(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
 	FName Variable, float Value)
 {
-	GetParamStruct(WorldContextObject,Target)->params_float.Add(Variable, Value);
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		int32 _oldVal=p->params_float.FindOrAdd(Variable);
+		p->params_float.Add(Variable, Value);
+		L_CallParamUpdateDel(WorldContextObject,Variable,Target,FMath::RoundToInt(Value),_oldVal);
+	}
 }
 
 float UOmegaFunctions_GlobalVars::GetGlobalVariable_Float(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
@@ -102,7 +134,11 @@ float UOmegaFunctions_GlobalVars::GetGlobalVariable_Float(UObject* WorldContextO
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_String(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
 	FName Variable, FString Value)
 {
-	GetParamStruct(WorldContextObject,Target)->params_string.Add(Variable, Value);
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		p->params_string.Add(Variable, Value);
+		L_CallParamUpdateDel(WorldContextObject,Variable,Target,0,0);
+	}
 }
 
 FString UOmegaFunctions_GlobalVars::GetGlobalVariable_String(UObject* WorldContextObject,
@@ -118,7 +154,11 @@ FString UOmegaFunctions_GlobalVars::GetGlobalVariable_String(UObject* WorldConte
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_Vector(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
 	FName Variable, FVector Value)
 {
-	GetParamStruct(WorldContextObject,Target)->params_float.Append(UOmegaFunctions_Conv::Vector_2_FloatMap(Variable,Value));
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		p->params_float.Append(UOmegaFunctions_Conv::Vector_2_FloatMap(Variable,Value));
+		L_CallParamUpdateDel(WorldContextObject,Variable,Target,0,0);
+	}
 }
 
 FVector UOmegaFunctions_GlobalVars::GetGlobalVariable_Vector(UObject* WorldContextObject,
@@ -134,7 +174,11 @@ FVector UOmegaFunctions_GlobalVars::GetGlobalVariable_Vector(UObject* WorldConte
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_Rotator(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
 	FName Variable, FRotator Value)
 {
-	GetParamStruct(WorldContextObject,Target)->params_float.Append(UOmegaFunctions_Conv::Rotator_2_FloatMap(Variable,Value));
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		p->params_float.Append(UOmegaFunctions_Conv::Rotator_2_FloatMap(Variable,Value));
+		L_CallParamUpdateDel(WorldContextObject,Variable,Target,0,0);
+	}
 }
 
 FRotator UOmegaFunctions_GlobalVars::GetGlobalVariable_Rotator(UObject* WorldContextObject,
@@ -156,7 +200,10 @@ void UOmegaFunctions_GlobalVars::SetGlobalVariable_DataAsset(UObject* WorldConte
 UPrimaryDataAsset* UOmegaFunctions_GlobalVars::GetGlobalVariable_DataAsset(UObject* WorldContextObject,
 	EOmegaGlobalParamTarget Target, FName Variable)
 {
-	
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		return p->params_DataAsset.FindOrAdd(Variable);
+	}
 	return nullptr;
 }
 

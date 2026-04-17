@@ -5,22 +5,62 @@
 #include "LuaConst.h"
 #include "OmegaSettings.h"
 #include "OmegaGameplayConfig.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Component_DebugText.h"
 #include "Components/StateTreeComponent.h"
 #include "DataAssets/DA_ActorModifierCollection.h"
+#include "Functions/F_Common.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 
+AOmegaMinimalCharacter::AOmegaMinimalCharacter()
+{
+	// BoundsComponent=CreateOptionalDefaultSubobject<UBoxComponent>("Bounds");
+	// BoundsComponent->SetupAttachment(RootComponent);
+	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
+	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
+	
+	StateTree=CreateDefaultSubobject<UStateTreeComponent>(TEXT("State Tree"));
+	DebugText=CreateOptionalDefaultSubobject<UComponent_DebugText>("DebugText");
+	ActorIdentity=CreateDefaultSubobject<UActorIdentityComponent>("Actor Identity");
+	DebugText->SetupAttachment(RootComponent);
 
-void AOmegaBaseCharacter::N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPrimaryDataAsset* new_asset)
+	if(GetMesh() && GetCapsuleComponent())
+	{
+		GetMesh()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+		GetMesh()->ComponentTags.Add("ToolHolder");
+	}
+	if(UCharacterMovementComponent* _move=GetCharacterMovement())
+	{
+		bUseControllerRotationYaw=false;
+		_move->bOrientRotationToMovement=true;
+		_move->RotationRate=FRotator(0,500,0);
+		
+		_move->GravityScale=2.0f;
+		_move->AirControl=1.0f;
+		_move->JumpZVelocity=700;
+		_move->MaxWalkSpeed=600;
+		_move->MaxAcceleration=3000;
+		_move->BrakingDecelerationWalking=2000;
+	}
+	if(Seed<0)
+	{
+		//RandomizeSeed();
+	}
+	
+}
+
+
+void AOmegaMinimalCharacter::N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPrimaryDataAsset* new_asset)
 {
 }
 
-void AOmegaBaseCharacter::RebuildAppearance()
+void AOmegaMinimalCharacter::RebuildAppearance()
 {
 	if(UOAsset_Appearance* ap=IDataInterface_AppearanceSource::Execute_GetAppearanceAsset(this))
 	{
@@ -28,18 +68,14 @@ void AOmegaBaseCharacter::RebuildAppearance()
 	}
 }
 
-TSubclassOf<UAnimInstance> AOmegaBaseCharacter::GetContext_AnimClass()
+TSubclassOf<UAnimInstance> AOmegaMinimalCharacter::GetContext_AnimClass()
 {
 	return GetMutableDefault<UOmegaSettings>()->DefaultCharacter_AnimClass.LoadSynchronous();
 }
 
 
-void AOmegaBaseCharacter::OnConstruction(const FTransform& Transform)
+void AOmegaMinimalCharacter::OnConstruction(const FTransform& Transform)
 {
-	if(Config && ActorConfig)
-	{
-		ActorConfig->SetConfig(Config);
-	}
 	Super::OnConstruction(Transform);
 	FVector bound_origin;
 	FVector bound_ext;
@@ -51,7 +87,7 @@ void AOmegaBaseCharacter::OnConstruction(const FTransform& Transform)
 	OGF_CFG()->OverrideActorLabel(this);
 }
 
-void AOmegaBaseCharacter::BeginPlay()
+void AOmegaMinimalCharacter::BeginPlay()
 {
 	if (TSubclassOf<UAnimInstance> _inAnim=GetContext_AnimClass())
 	{
@@ -63,75 +99,51 @@ void AOmegaBaseCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
-AOmegaBaseCharacter::AOmegaBaseCharacter()
-{
-	// BoundsComponent=CreateOptionalDefaultSubobject<UBoxComponent>("Bounds");
-	// BoundsComponent->SetupAttachment(RootComponent);
-	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
-	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
-	
-	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
-	StateTree=CreateDefaultSubobject<UStateTreeComponent>(TEXT("State Tree"));
-	DebugText=CreateOptionalDefaultSubobject<UComponent_DebugText>("DebugText");
-	DebugText->SetupAttachment(RootComponent);
 
-	if(GetMesh() && GetCapsuleComponent())
-	{
-		GetMesh()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
-		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
-	}
-	if(GetCharacterMovement())
-	{
-		bUseControllerRotationYaw=false;
-		GetCharacterMovement()->bOrientRotationToMovement=true;
-		GetCharacterMovement()->RotationRate=FRotator(0,500,0);
-	}
-	if(Seed<0)
-	{
-		//RandomizeSeed();
-	}
-	
 
-}
-
-void AOmegaBaseCharacter::RandomizeSeed()
+void AOmegaMinimalCharacter::RandomizeSeed()
 {
 	Seed=UKismetMathLibrary::RandomIntegerInRange(0,999999999);
 	RebuildAppearance();
 }
 
-void AOmegaBaseCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)
+void AOmegaMinimalCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)
 {
 	UPrimaryDataAsset* old_asset=nullptr;
-	if(CharacterAsset) { old_asset=CharacterAsset; }
-	if(Asset)
+	ActorIdentity->SetIdentitySourceAsset(Asset);
+	N_OnCharAssetChange(old_asset,ActorIdentity->GetIdentitySourceAsset());
+}
+
+void AOmegaMinimalCharacter::SetCharacterAppearance(UOAsset_Appearance* Appearance)
+{
+	if (Appearance)
 	{
-		CharacterAsset=Asset;
+		AppearanceOverride=Appearance;
+		Appearance->Apply(this);
 	}
 	else
 	{
-		CharacterAsset=nullptr;
-	}
-	N_OnCharAssetChange(old_asset,CharacterAsset);
-}
-
-void AOmegaBaseCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	if(CharacterAsset)
-	{
-		Label=UDataInterface_General::GetObjectLabel(CharacterAsset);
+		AppearanceOverride=nullptr;	
 	}
 }
 
-UOAsset_Appearance* AOmegaBaseCharacter::GetAppearanceAsset_Implementation()
+void AOmegaMinimalCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
 {
-	if(AppearanceOverride.IsValid())
+	if(ActorIdentity)
 	{
-		return AppearanceOverride.LoadSynchronous();
+		Label=UDataInterface_General::GetObjectLabel(ActorIdentity);
 	}
-	if(CharacterAsset && CharacterAsset->GetClass()->ImplementsInterface(UDataInterface_AppearanceSource::StaticClass()))
+}
+
+UOAsset_Appearance* AOmegaMinimalCharacter::GetAppearanceAsset_Implementation()
+{
+	if(UOAsset_Appearance* ap=AppearanceOverride.LoadSynchronous())
 	{
-		if(UOAsset_Appearance* appr=Execute_GetAppearanceAsset(CharacterAsset))
+		return ap;
+	}
+	if(ActorIdentity->IdentitySource && ActorIdentity->IdentitySource->GetClass()->ImplementsInterface(UDataInterface_AppearanceSource::StaticClass()))
+	{
+		if(UOAsset_Appearance* appr=Execute_GetAppearanceAsset(ActorIdentity->IdentitySource))
 		{
 			return appr;	
 		}
@@ -139,11 +151,65 @@ UOAsset_Appearance* AOmegaBaseCharacter::GetAppearanceAsset_Implementation()
 	return nullptr;
 }
 
-void AOmegaBaseCharacter::GetAppearanceLibraries_Implementation(UOmegaAssetLibrary_Animation*& Anim,
+void AOmegaMinimalCharacter::GetAppearanceLibraries_Implementation(UOmegaAssetLibrary_Animation*& Anim,
 	UOmegaAssetLibrary_Sound*& Sound, UOmegaAssetLibrary_SlateBrush*& Slate)
 {
 	Anim=Library_Animation;
-	
 }
 
+FString AOmegaMinimalCharacter::VoiceSource_GetID_Implementation()
+{
+	if (UPrimaryDataAsset* da=ActorIdentity->GetIdentitySourceAsset())
+	{
+		if (UDataInterface_VoiceSource::Uses(da))
+		{
+			FString _id=IDataInterface_VoiceSource::Execute_VoiceSource_GetID(da);
+			if (!_id.IsEmpty()) { return _id; }
+		}
+	}
+	//if no override id in sound library, get grom source object label 
+	return UOmegaGameFrameworkBPLibrary::GetObjectLabel(ActorIdentity->GetIdentitySourceAsset());
+}
+
+void AOmegaMinimalCharacter::GetGeneralDataImages_Implementation(FGameplayTag Tag,
+                                                                 UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	Execute_GetGeneralDataImages(ActorIdentity,Tag,Texture,Material,Brush);
+	IDataInterface_General::GetGeneralDataImages_Implementation(Tag, Texture, Material, Brush);
+}
+
+FGameplayTagContainer AOmegaMinimalCharacter::GetObjectGameplayTags_Implementation()
+{
+	if (ActorIdentity)
+	{
+		return Execute_GetObjectGameplayTags(ActorIdentity);
+	}
+	return FGameplayTagContainer();
+}
+
+FGameplayTag AOmegaMinimalCharacter::GetObjectGameplayCategory_Implementation()
+{
+	if (ActorIdentity)
+	{
+		return Execute_GetObjectGameplayCategory(ActorIdentity);
+	}
+	return FGameplayTag();
+}
+
+void AOmegaMinimalCharacter::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
+{
+	bitflags=Flags;
+	named_lists=NamedLists;
+	seed=Seed;
+}
+
+void AOmegaMinimalCharacter::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name,
+                                                               FText& Description)
+{
+	if (ActorIdentity)
+	{
+		Execute_GetGeneralDataText(ActorIdentity,Tag,Name,Description);
+	}
+}
 

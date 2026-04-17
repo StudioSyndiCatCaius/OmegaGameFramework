@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "DA_CommonBattleAction.h"
 #include "Functions/OmegaFunctions_CombatantFilter.h"
-#include "Interfaces/I_BitFlag.h"
 #include "Interfaces/I_Skill.h"
 
 #include "Misc/GeneralDataObject.h"
@@ -19,13 +18,13 @@ class ULevelSequence;
 class UAnimMontage;
 class UOmegaCondition_Combatant;
 
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType,DisplayName="Ω-🤛 Skill")
 class OMEGADEMO_API UOAsset_CommonSkill : public UOAsset_CommonBattleAction
 {
 	GENERATED_BODY()
 public:
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
 	virtual bool CanUseSkill_Implementation(UCombatantComponent* Combatant) override;
+	virtual void SetValue_Implementation(FLuaValue Value, const FString& Flag = "") override;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags")
 	bool bAppendEffectsDescription;
@@ -39,6 +38,4 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill")
 	TMap<UOmegaAttribute*, float> AttributeUseCost;
 	virtual TMap<UOmegaAttribute*, float> GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,UObject* Context) override;
-
-
 };

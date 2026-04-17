@@ -16,6 +16,8 @@ UCLASS()
 class LUAMACHINE_API ULuaSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
+	
+	
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
@@ -64,16 +66,3 @@ public:
 	void RerunLua();
 };
 
-UCLASS()
-class LUAMACHINE_API ULuaGlobalObjectFunctions : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-public:
-
-	UFUNCTION(BlueprintCallable,Category="Lua|Object",DisplayName="Get Global Lua Asset (From Tag)",meta=(WorldContext="WorldContextObject",AdvancedDisplay="State"))
-	static ULuaObject* GetGlobalLuaObject_FromTag(UObject* WorldContextObject, FGameplayTag name, TSubclassOf<ULuaState> State);
-
-	UFUNCTION(BlueprintCallable,Category="Lua|Object",DisplayName="Get Global Lua Asset (From String)",meta=(WorldContext="WorldContextObject",AdvancedDisplay="State"))
-	static ULuaObject* GetGlobalLuaObject_FromString(UObject* WorldContextObject, const FString& name, TSubclassOf<ULuaState> State);
-};

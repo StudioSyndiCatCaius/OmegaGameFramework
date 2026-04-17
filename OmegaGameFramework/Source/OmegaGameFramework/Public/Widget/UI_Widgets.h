@@ -38,8 +38,25 @@ enum EOmegaSlateBorderType
 	Background,
 };
 
+// IStyleApplicator.h
+#pragma once
 
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Button : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+class UWidget;
+
+UCLASS(Abstract) class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+{
+	GENERATED_BODY() public:
+	
+	virtual void ApplyStyleAgnostic(UWidget* Widget)
+	{
+		
+	}
+	
+	virtual FSlateBrush GetMainSlateBrush() const { return FSlateBrush(); }
+	
+};
+
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Button: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FButtonStyle ButtonStyle;
@@ -48,26 +65,59 @@ UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Button : public UPrimaryD
 
 	UFUNCTION() void Apply(UButton* button);
 	
-	
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (UButton* _wg=Cast<UButton>(Widget))
+		{
+			Apply(_wg);
+		}
+	}
 };
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Slider : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Slider: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FSliderStyle Brush_Slider;
+	
+	virtual FSlateBrush GetMainSlateBrush() const override { return Brush_Slider.NormalBarImage; };
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (USlider* _wg=Cast<USlider>(Widget))
+		{
+			_wg->SetWidgetStyle(Brush_Slider);
+		}
+	}
 };
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ProgressBar : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ProgressBar: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FProgressBarStyle Brush_ProgressBar;
+	
+	virtual FSlateBrush GetMainSlateBrush() const override { return Brush_ProgressBar.FillImage; };
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (UProgressBar* _wg=Cast<UProgressBar>(Widget))
+		{
+			_wg->SetWidgetStyle(Brush_ProgressBar);
+		}
+	}
 };
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_CheckBox : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_CheckBox: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FCheckBoxStyle CheckBox;
 	
+	virtual FSlateBrush GetMainSlateBrush() const override { return CheckBox.CheckedImage; };
 	UFUNCTION() void Apply(UCheckBox* widget);
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (UCheckBox* _wg=Cast<UCheckBox>(Widget))
+		{
+			Apply(_wg);
+		}
+	}
 };
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ComboBox : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ComboBox: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FComboBoxStyle ComboBox;
@@ -77,18 +127,33 @@ UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ComboBox : public UPrimar
 	UPROPERTY(EditAnywhere,Category="Style") FMargin ContentPadding;
 
 	UFUNCTION() void Apply(UComboBoxString* box);
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (UComboBoxString* _wg=Cast<UComboBoxString>(Widget))
+		{
+			Apply(_wg);
+		}
+	}
 };
 
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Border : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Border: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FSlateBrush Brush;
 	UPROPERTY(EditAnywhere,Category="Style") FMargin Padding;
 	
+	virtual FSlateBrush GetMainSlateBrush() const override { return Brush; };
 	UFUNCTION() void Apply(UBorder* widget);
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (UBorder* _wg=Cast<UBorder>(Widget))
+		{
+			Apply(_wg);
+		}
+	}
 };
 
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Text : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail {
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Text: public UOmegaSlateStyle {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FSlateFontInfo Font;
 	UPROPERTY(EditAnywhere,Category="Style") FSlateColor Color;
@@ -99,17 +164,36 @@ UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_Text : public UPrimaryDat
 	UPROPERTY(EditAnywhere,Category="Style") float LineHeightPercentage;
 
 	UFUNCTION() void Apply(UTextBlock* widget);
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (UTextBlock* _wg=Cast<UTextBlock>(Widget))
+		{
+			Apply(_wg);
+		}
+	}
 };
 
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_RichText : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_RichText: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		
+	}
 };
 
-UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ExpandableArea : public UPrimaryDataAsset, public IDataInterface_AssetThumbnail
+UCLASS() class OMEGAGAMEFRAMEWORK_API UOmegaSlateStyle_ExpandableArea: public UOmegaSlateStyle
 {
 	GENERATED_BODY() public:
 	UPROPERTY(EditAnywhere,Category="Style") FExpandableAreaStyle Style;
+	
+	virtual void ApplyStyleAgnostic(UWidget* Widget) override
+	{
+		if (UExpandableArea* _wg=Cast<UExpandableArea>(Widget))
+		{
+			_wg->SetStyle(Style);
+		}
+	}
 };
 
 

@@ -28,6 +28,7 @@ class UOmegaTextFormater_Collection;
 class AOmegaActor_ChoiceBASE;
 class UOmegaGameplayModule;
 class AOmegaGameplaySystem;
+class UOmegaFileImportScript;
 
 
 UCLASS()
@@ -45,11 +46,18 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Modules")
 	TArray<UOmegaGameplayModule*> ScriptedModules;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Input")
-	TMap<FName,FOmegaInputConfig> InputActionConfigs;
+	//Keys that will constantly on tick try to me updated with theri axis value
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Input")
+	TArray<FKey> PesistentAxisKeys;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,meta=(ForceInlineRow,Categories="INPUT"), Category="Input")
+	TMap<FGameplayTag,FOmegaInputConfig> InputActionConfigs;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Assets")
 	TMap<TSubclassOf<UObject>, FOmegaSortedClassPathData> ClassPaths;
+	
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Assets")
+	TArray<UOmegaFileImportScript*> FileImportScripts;
 	
 	UFUNCTION(BlueprintPure,Category="Omega|Paths")
 	TArray<FString> GetPathsFromAssetName(const FString& AssetName, TSubclassOf<UObject> Class) const;

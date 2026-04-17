@@ -3,9 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonTextBlock.h"
 #include "GameplayTagContainer.h"
-#include "Math/Vector2D.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Misc/OmegaUtils_Delegates.h"
@@ -13,19 +11,22 @@
 #include "Widget/OmegaUserWidget.h"
 #include "DataWidget.generated.h"
 
-class UOmegaPlayerSubsystem;
+class UCommonTextBlock;
+class UCommonTextStyle;
+class UOmegaSlateStyle;
+class UOmegaSubsystem_Player;
 class UOmegaObjectTrait;
 class UOmegaSettings_Slate;
 class UDataList;
 class UTextBlock;
 class UButton;
 class UImage;
-class UDataList;
 class UWidgetAnimation;
 class UBorder;
 class USizeBox;
 class UCurveVector;
 class UDataTooltip;
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelected, UDataWidget*, DataWidget);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHovered, UDataWidget*, DataWidget, bool, bIsHovered);
@@ -33,17 +34,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlight, UDataWidget*, DataWid
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWidgetRefreshed, UDataWidget*, DataWidget);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWidgetNotify, UDataWidget*, DataWidget, FName, Notify);
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew,Const,meta=(ShowWorldContextPin))
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const,meta=(ShowWorldContextPin),hideCategories = ("Private",Input,Interaction,Designer))
 class OMEGAGAMEFRAMEWORK_API UDataWidgetTraits : public UObject
 {
 	GENERATED_BODY()
 	
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnInit(UDataWidget* Widget) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnSourceChanged(UDataWidget* Widget, UObject* Source) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnListOwnerChanged(UDataWidget* Widget, UDataList* List, UObject* Owner) const;
-	UFUNCTION(BlueprintImplementableEvent, Category="Meta") void OnRefreshed(UDataWidget* Widget, UObject* Source, UObject* ListOwner) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Meta") void OnInit(UDataWidget* Widget) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Meta") void OnSourceChanged(UDataWidget* Widget, UObject* Source) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Meta") void OnAddedToList(UDataWidget* Widget, UDataList* List, int32 index) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Meta") void OnListOwnerChanged(UDataWidget* Widget, UDataList* List, UObject* Owner) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Meta") void OnRefreshed(UDataWidget* Widget, UObject* Source, UObject* ListOwner) const;
 	UFUNCTION(BlueprintNativeEvent, Category="Meta") bool CanAddObjectToList(UObject* SourceObject) const;
 };
 
@@ -58,7 +60,7 @@ public:
 
 
 
-UCLASS()
+UCLASS(EditInlineNew,BlueprintType, Blueprintable,DefaultToInstanced)
 class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUserObjectListEntry, public IDataInterface_Traits
 {
 	GENERATED_BODY()
@@ -79,13 +81,7 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUser
 		}
 	}
 
-	void L_overrideTextStyle(UTextBlock* text, TSubclassOf<UCommonTextStyle> style)
-	{
-		if(text && text->GetClass()->IsChildOf(UCommonTextBlock::StaticClass()) && style)
-		{
-			Cast<UCommonTextBlock>(text)->SetStyle(style);
-		}
-	}
+	void L_overrideTextStyle(UTextBlock* text, TSubclassOf<UCommonTextStyle> style);
 
 	void LC_UpdateBlendStateVal(bool& bBlending, bool bTarget,float& val, float DT, float max_time, UCurveFloat* curve, FName MatParamName, int type);
 	void LC_CallBlendUpdate(int val, float input);
@@ -117,9 +113,6 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUser
 	UPROPERTY() float refresh_val;
 	UPROPERTY() FTimerHandle refresh_timer;
 
-	UPROPERTY() UCurveFloat* _u_curveHover;
-	UPROPERTY() UCurveFloat* _u_curveHighlight;
-
 protected:
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
@@ -127,9 +120,11 @@ protected:
 	virtual void NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent) override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void SetVisibility(ESlateVisibility InVisibility) override;
-	UOmegaPlayerSubsystem* GetPlayerSubsystem() const;
+	UOmegaSubsystem_Player* GetPlayerSubsystem() const;
 public:
 
+	UDataWidget();
+	
 	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override
 	{
 		return Traits;
@@ -162,22 +157,33 @@ public:
 	//---------------------------------------------------------------------------------------------//
 	//	Meta
 	//---------------------------------------------------------------------------------------------//
-	UPROPERTY(EditAnywhere, Instanced, Category="Meta")
+	UPROPERTY()
 	TArray<UOmegaObjectTrait*> Traits;
 	UPROPERTY(EditAnywhere, Instanced, Category="Meta")
 	TArray<UDataWidgetTraits*> WidgetTraits;
 	
 	UFUNCTION(BlueprintPure,Category="Meta")
-	TArray<UDataWidgetTraits*> GetWidgetTraits() const
-	{
-		return WidgetTraits;
-	}
-
-	UFUNCTION(BlueprintPure,Category="Meta",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Outcome"))
+	TArray<UDataWidgetTraits*> GetWidgetTraits() const;
+	UFUNCTION() TArray<FName> L_getOvrParamName_Float();
+	UFUNCTION() TArray<FName> L_getOvrParamName_Bool();
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="Override") TMap<FName,float> GetOverrideFields_Floats();
+	UFUNCTION(BlueprintImplementableEvent,Category="Override") TMap<FName,bool> GetOverrideFields_Bools();
+	
+	UFUNCTION(BlueprintPure,Category="Override") float GetWidgetOverride_Float(UPARAM(meta = (GetOptions = "L_getOvrParamName_Float")) FName Name);
+	UFUNCTION(BlueprintPure,Category="Override") bool GetWidgetOverride_Bool(UPARAM(meta = (GetOptions = "L_getOvrParamName_Bool")) FName Name);
+	
+	UFUNCTION(BlueprintPure,Category="Override",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Outcome"))
 	UDataWidgetTraits* GetWidgetTrait(TSubclassOf<UDataWidgetTraits> Class, bool FallbackToDefault, bool& Outcome);
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Meta")
-	FOmegaWidgetOverride_Bindings GetWidgetBindings();
+	UFUNCTION(BlueprintNativeEvent,Category="Override")
+	TMap<FName,UWidget*> WidgetBinding_Get();
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Override")
+	void WidgetBinding_Apply(FName name, UWidget* widget,UOmegaSlateStyle* Asset);
+	
+	UFUNCTION(BlueprintCallable,Category="Override")
+	void ApplyDefaultWidgetBinding(FName name, UWidget* widget,UOmegaSlateStyle* Asset);
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
@@ -220,8 +226,8 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="DataWidget")
 	bool IsHighlighted() const {return b_IsHighlighted;}
-	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="CurveFloat"))
-	FSoftObjectPath HighlightBlendCurve{"/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"};
+	UPROPERTY(EditDefaultsOnly, Category="Display")
+	UCurveFloat* HighlightBlendCurve;
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Highlight Widget Duration")
 	float HighlightWidgetSpeed = 0.1;
 	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)
@@ -233,8 +239,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	void OnHoverStateChange(bool bHovered);
 	
-	UPROPERTY(EditDefaultsOnly, Category="Display", meta=(MetaClass="CurveFloat"))
-	FSoftObjectPath HoverBlendCurve{"/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"};
+	UPROPERTY(EditDefaultsOnly, Category="Display")
+	UCurveFloat* HoverBlendCurve;
 	UPROPERTY(EditDefaultsOnly, Category="Display", DisplayName="Hover Widget Duration")
 	float HoverWidgetSpeed = 0.1;
 	UPROPERTY(EditDefaultsOnly, Category="Display", AdvancedDisplay)

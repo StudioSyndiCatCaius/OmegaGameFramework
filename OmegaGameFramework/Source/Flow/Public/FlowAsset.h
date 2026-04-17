@@ -5,9 +5,8 @@
 #include "Interfaces/I_Common.h"
 #include "FlowSave.h"
 #include "FlowTypes.h"
-#include "Interfaces/I_NamedLists.h"
+#include "Misc/OmegaFlowAssetBase.h"
 #include "Misc/OmegaUtils_Structs.h"
-#include "Templates/SubclassOf.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "FlowAsset.generated.h"
 
@@ -41,11 +40,8 @@ public:
 DECLARE_DELEGATE(FFlowAssetEvent);
 #endif
 
-/**
- * Single asset containing flow nodes.
- */
 UCLASS(BlueprintType, hideCategories = Object)
-class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, public IDataInterface_General, public IDataInterface_GUID, public IDataInterface_NamedLists
+class FLOW_API UFlowAsset : public UOmegaFlowAssetBase, public IDataInterface_General
 {
 	GENERATED_UCLASS_BODY()
 
@@ -59,12 +55,9 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Flow Asset")
 	FOmegaClassNamedLists NamedLists;
-	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override { return NamedLists; };
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	FGuid AssetGuid;
-	
-
 	
 	UPROPERTY() FOmegaCommonMeta FlowMeta;
 	UFUNCTION(BlueprintPure,Category="FlowAsset") FOmegaCommonMeta GetFlowMeta() const { return FlowMeta; }
@@ -74,10 +67,6 @@ class FLOW_API UFlowAsset : public UObject, public IGameplayTagsInterface, publi
 	UFUNCTION(BlueprintCallable,Category="Flow Asset | Params") void SetLocalParam_Int(FName Param, int32 val, bool Add=false);
 	UFUNCTION(BlueprintPure,Category="Flow Asset | Params") bool GetLocalParam_Bool(FName Param);
 	UFUNCTION(BlueprintPure,Category="Flow Asset | Params") int32 GetLocalParam_Int(FName Param);
-
-	
-	virtual FGuid GetObjectGuid_Implementation() const  override { return AssetGuid; };
-
 	
 	// Set it to False, if this asset is instantiated as Root Flow for owner that doesn't live in the world
 	// This allow to SaveGame support works properly, if owner of Root Flow would be Game Instance or its subsystem
@@ -355,28 +344,31 @@ public:
 	//--------------------------------------------------------//
 	// General
 	//--------------------------------------------------------//
-	UPROPERTY(EditAnywhere, Category="General", DisplayName="Name")
-	FText DisplayName;
-	UPROPERTY(EditAnywhere, Category="General", DisplayName="Description")
-	FText AssetDescription;
-	UPROPERTY(EditAnywhere, Category="General")
-	FSlateBrush Icon;
-	UPROPERTY(EditAnywhere, Category="General", AdvancedDisplay)
-	FString CustomLabel;
+	UPROPERTY(EditAnywhere, Category="General", DisplayName="Name") FText DisplayName;
+	UPROPERTY(EditAnywhere, Category="General", DisplayName="Description") FText AssetDescription;
+	UPROPERTY(EditAnywhere, Category="General") FSlateBrush Icon;
+	UPROPERTY(EditAnywhere, Category="General", AdvancedDisplay) FString CustomLabel;
 
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
-	virtual void GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	{
+		Name=DisplayName;
+		Description=AssetDescription;
+	};
+	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override
+	{
+		Brush=Icon;
+	};
 	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
 	
 	//--------------------------------------------------------//
 	// Gameplay Tags
 	//--------------------------------------------------------//
 
-	UPROPERTY(EditAnywhere, Category="GameplayTags")
+	UPROPERTY(EditAnywhere, Category="GameplayTags",DisplayName="🏷️Category")
 	FGameplayTag GameplayCategory;
-	UPROPERTY(EditAnywhere, Category="GameplayTags")
+	UPROPERTY(EditAnywhere, Category="GameplayTags",DisplayName="🏷️Tags")
 	FGameplayTagContainer GameplayTags;
-	UPROPERTY(EditAnywhere, Category="GameplayTags")
+	UPROPERTY(EditAnywhere, Category="GameplayTags",DisplayName="🏷️Message Category",AdvancedDisplay)
 	FGameplayTag MessageCategory;
 	
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
@@ -385,24 +377,24 @@ public:
 	//--------------------------------------------------------//
 	// TRAITS
 	//--------------------------------------------------------//
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Misc")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Bindings",AdvancedDisplay)
 	TArray<UFlowAssetTrait*> Traits;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Misc")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Bindings",AdvancedDisplay)
 	TArray<UFlowAssetTrait_Collection*> Trait_Collections;
 	TArray<UFlowAssetTrait*> L_GetTraits() const;
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Bindings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Bindings",DisplayName="🪢Actor Bindings")
 	TMap<UPrimaryDataAsset*,UOmegaActorSelector*> ActorBindings_ByAsset;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Bindings")
+	UPROPERTY()
 	TMap<FName,UOmegaActorSelector*> ActorBindings_ByName;
 
 	UFUNCTION(BlueprintPure,Category="FlowAsset") AActor* GetActorByBinding_Asset(UPrimaryDataAsset* Asset,bool bFallbackToFirstIdentity);
 	UFUNCTION(BlueprintPure,Category="FlowAsset") AActor* GetActorByBinding_Name(FName Name);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Bindings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Bindings",DisplayName="🏠Local Params")
 	TArray<FName> LocalParams;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Bindings")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Bindings",DisplayName="🇲Local META")
 	TMap<FName,FOmegaCommonMeta> LocalMeta;
 	//--------------------------------------------------------//
 	// NOTIFY

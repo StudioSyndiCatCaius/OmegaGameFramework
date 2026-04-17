@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/Component_ActorConfig.h"
 #include "Functions/F_Component.h"
 #include "GameFramework/Actor.h"
 #include "Actor_Openable.generated.h"
@@ -14,6 +13,7 @@ class UActorStateComponent;
 class UArrowComponent;
 class UOmegaSaveStateComponent;
 class UCurveFloat;
+class UAnimSequence;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaOpenableStyle : public UPrimaryDataAsset
@@ -27,24 +27,6 @@ public:
 	//UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable") UAnimSequence* Anim_Close;
 
 	void Apply(AOmegaOpenableActor* Actor);
-};
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaOpenable_Config : public UOmegaActorConfig
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable")
-	TArray<TSubclassOf<AActor>> AutoOpenFor_Actors;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable")
-	TArray<TSubclassOf<AController>> AutoOpenFor_Controllers;
-	
-	void Apply(AOmegaOpenableActor* Actor);
-	bool CanOpen(AOmegaOpenableActor* Openable,AActor* TargetActor);
-	bool CanAutoOpen(AOmegaOpenableActor* Openable,AActor* TargetActor);
-	
 };
 
 
@@ -70,7 +52,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaOpenableActor : public AActor
 		return 1.0f;
 	}
 
-	UOmegaOpenable_Config* GetConfig() const;
+
 
 public:
 	AOmegaOpenableActor();
@@ -83,7 +65,6 @@ public:
 	virtual void BeginPlay() override;
 	UPROPERTY(EditAnywhere,Category="Openable") bool bStartOpen;
 	UPROPERTY(EditAnywhere,Category="Openable") bool bLocked;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Openable") UOmegaOpenable_Config* Config;
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Openable") UOmegaOpenableStyle* GetOpenableStyle();
 	UFUNCTION(BlueprintNativeEvent,Category="Openable") void OnOpenBegin(bool bForward);
@@ -104,56 +85,3 @@ public:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Openable") UBoxComponent* Range;
 };
 
-// ====================================================================================================================
-// DOOR
-// ====================================================================================================================
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaOpenable_Door_Style : public UOmegaOpenableStyle
-{
-	GENERATED_BODY()
-
-public:
-	
-	
-};
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOmegaOpenable_Door : public AOmegaOpenableActor
-{
-	GENERATED_BODY()
-
-	virtual UOmegaOpenableStyle* GetOpenableStyle_Implementation() override { return Style;};
-public:
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Openable")
-	UOmegaOpenable_Door_Style* Style;
-};
-
-// ====================================================================================================================
-// Chest
-// ====================================================================================================================
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaOpenable_Chest_Style : public UOmegaOpenableStyle
-{
-	GENERATED_BODY()
-
-public:
-	
-	
-};
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API AOActor_Chest : public AOmegaOpenableActor
-{
-	GENERATED_BODY()
-
-	virtual UOmegaOpenableStyle* GetOpenableStyle_Implementation() override { return Style;};
-public:
-	AOActor_Chest();
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Openable",AdvancedDisplay) UDataAssetCollectionComponent* Inventory;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Openable")
-	UOmegaOpenable_Chest_Style* Style;
-};

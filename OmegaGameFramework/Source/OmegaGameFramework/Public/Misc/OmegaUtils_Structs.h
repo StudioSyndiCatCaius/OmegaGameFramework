@@ -5,11 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "JsonObjectWrapper.h"
-#include "Dom/JsonObject.h"
+#include "LuaValue.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "StructUtils/InstancedStruct.h"
+#include "Types/Struct_Bitflag.h"
 #include "OmegaUtils_Structs.generated.h"
 
+class UPrimaryDataAsset;
 class UOmegaLevelingAsset;
 class UActorModifierScript;
 class UOmegaCondition_Actor;
@@ -22,6 +24,15 @@ class UAnimSequence;
 class UPrimitiveComponent;
 class ULevelSequence;
 
+USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaCombatantModifierToggles
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") bool bModify_Attributes=true;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") bool bModify_Skill=true;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") bool bModify_Damage=true;
+};
 
 USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaParsedParams
@@ -42,10 +53,12 @@ struct FOmegaCommonMeta
 {
 	GENERATED_BODY()
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") UObject* Context=nullptr;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TArray<FName> Flags;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FString Flag;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FLuaValue LuaValue;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FString> soft_params;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FInstancedStruct InstancedStruct;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FInstancedStruct> NamedInstStructs;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,TObjectPtr<UObject>> objects;
+	//UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FInstancedStruct InstancedStruct;
+	//UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FInstancedStruct> NamedInstStructs;
 };
 
 USTRUCT(Blueprintable,BlueprintType)
@@ -80,7 +93,7 @@ struct FOmegaQuestData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TEnumAsByte<EOmegaQuestStatus> Status=Unstarted;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TEnumAsByte<EOmegaQuestStatus> Status=QuestStatus_Unstarted;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") int32 state=0;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TMap<FGameplayTag,int32> params_int;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") FGameplayTagContainer Tags;
@@ -276,6 +289,16 @@ struct FOmegaEntityID
 };
 
 USTRUCT(Blueprintable,BlueprintType)
+struct FOmegaEntity_AssetData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") FOmegaBitflagsBase bitflags;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") FGameplayTagContainer GameplayTags;
+};
+
+
+USTRUCT(Blueprintable,BlueprintType)
 struct FOmegaEntity
 {
 	GENERATED_BODY()
@@ -287,19 +310,16 @@ struct FOmegaEntity
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TArray<FName> Tags_Named;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FJsonObjectWrapper JsonData;
 	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UOmegaAttribute*,float> Attributes;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UEquipmentSlot*, UPrimaryDataAsset*> Equipment;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UPrimaryDataAsset*,float> Attributes;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UPrimaryDataAsset*,int32> Inventory;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UOmegaLevelingAsset*,float> xp;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TArray<UPrimaryDataAsset*> Skills;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UEquipmentSlot*, UPrimaryDataAsset*> Equipment;
+	
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UPrimaryDataAsset*,FOmegaEntity_AssetData> AssetData;
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,int32> params_int32;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,float> params_float;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FString> params_string;
-	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FOmegaList_DataAsset> AssetList_Named;
-	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FOmegaEntityDataset> datasets_named;
-
 	
 	int8 Flag_Get(int8 flag) { return internal_flags.FindOrAdd(flag); }
 	void Flag_Set(int8 flag,int8 val) { internal_flags.Add(flag,val); }
@@ -312,15 +332,22 @@ struct FOmegaEntity
 		}
 		return Tags.HasAnyExact(InTags);
 	}
+	
+	TArray<UPrimaryDataAsset*> GetAssetDataList() const
+	{
+		TArray<UPrimaryDataAsset*> _tempList;
+		AssetData.GetKeys(_tempList);
+		return _tempList;
+	}
+	
+	TArray<UPrimaryDataAsset*> GetSkills() const
+	{
+		TArray<UPrimaryDataAsset*> out;
+				
 
-	FOmegaEntityDataset Dataset_Get(FName Set)
-	{
-		if(Set.IsValid()) { return datasets_named.FindOrAdd(Set);} return  FOmegaEntityDataset();
+		return Skills;
 	}
-	void Dataset_Set(FName Set, const FOmegaEntityDataset& dataset)
-	{
-		if(Set.IsValid()) { datasets_named.Add(Set,dataset);} 
-	}
+	
 };
 
 
@@ -337,7 +364,9 @@ struct FOmegaEntitySet
 	TMap<FName,FOmegaEntity> Entities_Named;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data",DisplayName="Entities (Tagged)")
 	TMap<FGameplayTag,FOmegaEntity> Entities_Tagged;
-
+	
+	
+	
 	//Asset
 	bool Asset_HasTags(UPrimaryDataAsset* A, FGameplayTagContainer Tags, bool bExact)
 	{

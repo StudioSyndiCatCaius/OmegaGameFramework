@@ -7,7 +7,6 @@
 #include "AssetTypeCategories.h"
 #include "CanvasItem.h"
 #include "ThumbnailRendering/ThumbnailManager.h"
-#include "OmegaDataItem.h"
 #include "CanvasTypes.h"
 #include "TextureResource.h"
 #include "GlobalRenderResources.h"
@@ -15,6 +14,7 @@
 #include "UnrealClient.h"
 #include "Interfaces/I_AssetThumbnail.h"
 #include "Misc/GeneralDataObject.h"
+#include "Widget/UI_Widgets.h"
 
 UDataItemThumbnailRender::UDataItemThumbnailRender(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -144,7 +144,7 @@ void UDataItemThumbnailRender::Draw(UObject* Object, int32 X, int32 Y, uint32 Wi
 					bUseTranslucentBlend);
 					
 				Canvas->DrawShadowedText(5,5,local_GetText(Object),GEngine->GetMediumFont(),FLinearColor::White);
-				
+			
 				return;
 			// Draw a label overlay
 			//@TODO: Looks very ugly: DrawShadowedStringZ(Canvas, X, Y + Height * 0.8f, 1.0f, TEXT("Tile\nSet"), GEngine->GetSmallFont(), FLinearColor::White);
@@ -162,4 +162,59 @@ bool UDataItemThumbnailRender::CanVisualizeAsset(UObject* Object)
 	}
 	return false;
 	return Super::CanVisualizeAsset(Object);
+}
+
+USlateStyleThumbnailRender::USlateStyleThumbnailRender(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+void USlateStyleThumbnailRender::Draw(UObject* Object, int32 X, int32 Y, uint32 Width, uint32 Height,
+	FRenderTarget* Viewport, FCanvas* Canvas, bool bAdditionalViewFamily)
+{
+	if (Object)
+	{
+		if (UOmegaSlateStyle* style=Cast<UOmegaSlateStyle>(Object))
+		{
+			DrawBrushToCanvas(style->GetMainSlateBrush(), X, Y, Width, Height, Canvas);
+		}
+	}
+}
+
+void USlateStyleThumbnailRender::DrawBrushToCanvas(const FSlateBrush& Brush, int32 X, int32 Y, uint32 Width,
+	uint32 Height, FCanvas* Canvas)
+{
+	UObject* Resource = Brush.GetResourceObject();
+	if (!Resource) return;
+
+	const FLinearColor TintColor = Brush.TintColor.GetSpecifiedColor();
+	const FVector2D DrawPosition(X, Y);
+	const FVector2D DrawSize(Width, Height);
+
+	// --- Case 1: Texture2D ---
+	if (UTexture2D* Texture = Cast<UTexture2D>(Resource))
+	{
+		FTextureResource* TextureResource = Texture->GetResource();
+		if (!TextureResource) return;
+
+		// Just use full UVs — GetUVRegion() is inaccessible in UE5.5
+		FCanvasTileItem TileItem(
+			DrawPosition,
+			TextureResource,
+			DrawSize,
+			FVector2D(0.f, 0.f),
+			FVector2D(1.f, 1.f),
+			TintColor
+		);
+		TileItem.BlendMode = SE_BLEND_Translucent;
+		Canvas->DrawItem(TileItem);
+	}
+	// --- Case 2: Material ---
+	else if (UMaterialInterface* Material = Cast<UMaterialInterface>(Resource))
+	{
+		FCanvasTileItem TileItem(DrawPosition, Material->GetRenderProxy(), DrawSize);
+		//TileItem.SetColor(TintColor);
+		TileItem.BlendMode = SE_BLEND_Translucent;
+		Canvas->DrawItem(TileItem);
+	}
 }

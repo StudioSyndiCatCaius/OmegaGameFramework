@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
+#include "Tickable.h"
 #include "AsyncAction_LerpCurve.generated.h"
 
 

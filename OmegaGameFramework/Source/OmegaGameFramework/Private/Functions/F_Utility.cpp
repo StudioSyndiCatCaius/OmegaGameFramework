@@ -2,7 +2,6 @@
 
 
 #include "Functions/F_Utility.h"
-#include "ShaderCompiler.h"
 #include "Internationalization/Internationalization.h"
 #include "CoreGlobals.h"
 
@@ -12,6 +11,7 @@
 #include "Sound/SoundClass.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
+
 #include "Misc/OmegaUtils_Methods.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -23,6 +23,12 @@ bool UOmegaUtilityFunctions::AreStreamedLevelsLoading(UObject* WorldContextObjec
 		return OGF_Load::LevelStream_IsLoading(WorldContextObject->GetWorld());
 	}
 	return true;
+}
+
+bool UOmegaUtilityFunctions::IsGameAsyncLoading(int32& PackagesLeft)
+{
+	PackagesLeft=GetNumAsyncPackages();
+	return IsAsyncLoading();
 }
 
 bool UOmegaUtilityFunctions::AreShadersCompiling()
@@ -264,159 +270,13 @@ bool UOmegaUtilityFunctions::CompareFloatValues(float Value1, float Value2, ECom
 	}
 }
 */
-UClass* UOmegaAssetFunctions::GetBlueprintClassFromPath(const FString Path)
-{
-	FSoftClassPath LocalPath;
-	LocalPath.SetSubPathString(Path);
-	return LocalPath.ResolveClass();
-}
+
 
 // ================================================================================
 // ================================================================================
 // MATH
 // ================================================================================
 // ================================================================================
-
-
-FWidgetTransform UOmegaMathFunctions::LerpWidgetTransform(FWidgetTransform a, FWidgetTransform b, float alpha)
-{
-	FWidgetTransform out;
-	out.Angle=UKismetMathLibrary::Lerp(a.Angle,b.Angle,alpha);
-	
-	out.Scale=LerpVector2D(a.Scale,b.Scale,alpha);
-	out.Shear=LerpVector2D(a.Shear,b.Shear,alpha);
-	out.Translation=LerpVector2D(a.Translation,b.Translation,alpha);
-
-	return out;
-}
-
-FVector2D UOmegaMathFunctions::LerpVector2D(FVector2D a, FVector2D b, float alpha)
-{
-	FVector2D out;
-	out.X=UKismetMathLibrary::Lerp(a.X,b.X,alpha);
-	out.Y=UKismetMathLibrary::Lerp(a.Y,b.Y,alpha);
-	return out;
-}
-
-float UOmegaMathFunctions::GetAngle_FromVectors(FVector A, FVector B)
-{
-	return UKismetMathLibrary::DegAcos(UKismetMathLibrary::Dot_VectorVector(UKismetMathLibrary::Normal(A),UKismetMathLibrary::Normal(B)));
-}
-
-float UOmegaMathFunctions::GetAngle_FromRotators(FRotator A, FRotator B)
-{
-	return GetAngle_FromVectors(UKismetMathLibrary::Conv_RotatorToVector(A),UKismetMathLibrary::Conv_RotatorToVector(B));
-}
-
-FRotator UOmegaMathFunctions::Conv_VectorToRot_Flat(FVector Vector)
-{
-	FRotator _out;
-	_out.Pitch=Vector.Y;
-	_out.Roll=Vector.X;
-	_out.Yaw=Vector.Z;
-	return _out;
-}
-
-FWidgetTransform UOmegaMathFunctions::Conv_Transform3DToTransformWidget(const FTransform Transform)
-{
-	FWidgetTransform _ts;
-	_ts.Translation=UKismetMathLibrary::Conv_VectorToVector2D(Transform.GetLocation());
-	_ts.Angle=Transform.GetRotation().Rotator().Roll;
-	_ts.Scale=UKismetMathLibrary::Conv_VectorToVector2D(Transform.GetScale3D());
-	return _ts;
-}
-
-float UOmegaMathFunctions::NormalizeToRange_int32(int32 value, int32 min, int32 max)
-{
-	return UKismetMathLibrary::NormalizeToRange(value,min,max);
-}
-
-int32 UOmegaMathFunctions::GetSeedFromGuid(FGuid Guid)
-{
-	return Guid.A+Guid.B+Guid.C+Guid.D;
-}
-
-bool UOmegaMathFunctions::RNG_RollFromFloat(float chance, bool& Outcome)
-{
-	float _rand = UKismetMathLibrary::RandomFloat();
-	if(_rand==0.0 || _rand>chance)
-	{
-		Outcome=true;
-		return true;
-	}
-	Outcome=false;
-	return false;
-}
-
-float UOmegaMathFunctions::Variate_Float(float in, float amount, bool bAmountIsScale)
-{
-	float _offset = UKismetMathLibrary::RandomFloatInRange(amount*-1,amount);
-	if(bAmountIsScale) { return in+(_offset*in);} return in+_offset;
-}
-
-FVector UOmegaMathFunctions::Offset_Vector(FVector Vector, const FRotator& Rotation, FVector Offset)
-{
-	return Vector+
-		(UKismetMathLibrary::GetForwardVector(Rotation)*Offset.X)+
-		(UKismetMathLibrary::GetRightVector(Rotation)*Offset.Y)+
-		(UKismetMathLibrary::GetUpVector(Rotation)*Offset.Z);
-}
-
-FVector UOmegaMathFunctions::Offset_ActorLocation(const AActor* Actor, FVector Offset)
-{
-	if(Actor)
-	{
-		return Offset_Vector(Actor->GetActorLocation(),Actor->GetActorRotation(),Offset);
-	}
-	return FVector();
-}
-
-FVector UOmegaMathFunctions::Offset_PawnLocationFromControl(const APawn* Pawn, FVector Offset)
-{
-	if(Pawn)
-	{
-		return Offset_Vector(Pawn->GetActorLocation(),Pawn->GetControlRotation(),Offset);
-	}
-	return FVector();
-}
-
-FVector UOmegaMathFunctions::Random_VectorInRange(FVector Min, FVector Max)
-{
-	FVector _out;
-	_out.X=UKismetMathLibrary::RandomFloatInRange(Min.X,Max.X);
-	_out.Y=UKismetMathLibrary::RandomFloatInRange(Min.Y,Max.Y);
-	_out.Z=UKismetMathLibrary::RandomFloatInRange(Min.Z,Max.Z);
-	return _out;
-}
-
-FRotator UOmegaMathFunctions::Random_RotatorInRange(const FRotator& Min, const FRotator& Max)
-{
-	FRotator _out;
-	_out.Yaw=UKismetMathLibrary::RandomFloatInRange(Min.Yaw,Max.Yaw);
-	_out.Pitch=UKismetMathLibrary::RandomFloatInRange(Min.Pitch,Max.Pitch);
-	_out.Roll=UKismetMathLibrary::RandomFloatInRange(Min.Roll,Max.Roll);
-	return _out;
-}
-
-TMap<UPrimaryDataAsset*, int32> UOmegaMathFunctions::InvertMapValues_AssetInt(TMap<UPrimaryDataAsset*, int32> in)
-{
-	TMap<UPrimaryDataAsset*, int32> out;
-	for(const auto& p : in)
-	{
-		out.Add(p.Key,p.Value*-1);
-	}
-	return out;
-}
-
-TMap<UPrimaryDataAsset*, float> UOmegaMathFunctions::InvertMapValues_Assetfloat(TMap<UPrimaryDataAsset*, float> in)
-{
-	TMap<UPrimaryDataAsset*, float> out;
-	for(const auto& p : in)
-	{
-		out.Add(p.Key,p.Value*-1);
-	}
-	return out;
-}
 
 
 TArray<FString> UOmegaUtilityFunctions::GetBlueprintCallableAndPureFunctions(UObject* Object)
@@ -574,11 +434,3 @@ double UOmegaAudioFunctions::SoundClass_GetPitch(USoundClass* SoundClass)
 	return SoundClass->Properties.Pitch;
 }
 
-FTransform UOmegaMathFunctions::AddTransforms(const FTransform A, const FTransform B)
-{
-	FTransform out;
-	out.SetLocation(A.GetLocation()+B.GetLocation());
-	out.SetScale3D(A.GetScale3D()+B.GetScale3D());
-	out.SetRotation(UKismetMathLibrary::ComposeRotators(A.GetRotation().Rotator(),B.GetRotation().Rotator()).Quaternion());
-	return out;
-}

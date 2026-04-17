@@ -3,7 +3,11 @@
 
 #include "Actors/Actor_Pickup.h"
 
+#include "NiagaraComponent.h"
+#include "Engine/HitResult.h"
 #include "Actors/Actor_GameplayCue.h"
+#include "Components/AudioComponent.h"
+#include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -12,6 +16,12 @@ AOmegaPickupActor::AOmegaPickupActor()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	Range=CreateDefaultSubobject<USphereComponent>("Sphere");
+	RootComponent=Range;
+	NiagaraComponent=CreateOptionalDefaultSubobject<UNiagaraComponent>("Niagara");
+	AudioComponent=CreateOptionalDefaultSubobject<UAudioComponent>("Audio");
+	NiagaraComponent->SetupAttachment(Range);
+	AudioComponent->SetupAttachment(Range);
 }
 
 void AOmegaPickupActor::pickup_finish()

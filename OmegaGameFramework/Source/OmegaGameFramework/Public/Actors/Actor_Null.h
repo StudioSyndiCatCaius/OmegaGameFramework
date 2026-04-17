@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "Actor_Null.generated.h"
+
+
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaNullActor : public AActor

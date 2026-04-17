@@ -12,6 +12,8 @@
 #include "Editor.h"
 #include "GraphEditorSettings.h"
 #include "IDocumentation.h"
+#include "OmegaGameManager.h"
+#include "OmegaSettings.h"
 #include "Input/Reply.h"
 #include "Layout/Margin.h"
 #include "Misc/Attribute.h"
@@ -23,6 +25,7 @@
 #include "SNodePanel.h"
 #include "Styling/SlateColor.h"
 #include "TutorialMetaData.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
@@ -137,6 +140,27 @@ void SFlowGraphNode::GetOverlayBrushes(bool bSelected, const FVector2D WidgetSiz
 	}
 }
 
+const FSlateBrush* SFlowGraphNode::GetNodeIcon() const
+{
+	if (FlowGraphNode && FlowGraphNode->GetFlowNode())
+	{
+		bool _coreIconValid=false;
+		FSlateBrush _coreIconBrush=OGF_GAME_CORE()->FlowNode_OverrideIcon(FlowGraphNode->GetFlowNode(),_coreIconValid);
+	
+		if (_coreIconValid)
+		{
+			CachedNodeIcon=_coreIconBrush;
+		}
+		else
+		{
+			CachedNodeIcon = FlowGraphNode->GetFlowNode()->K2_GetNodeIcon();	
+		}
+		
+		return &CachedNodeIcon.GetValue();
+	}
+	return FAppStyle::GetBrush("Icons.Help"); // Default fallback
+}
+
 void SFlowGraphNode::GetPinBrush(const bool bLeftSide, const float WidgetWidth, const int32 PinIndex, const FFlowBreakpoint& Breakpoint, TArray<FOverlayBrushInfo>& Brushes) const
 {
 	if (Breakpoint.bHasBreakpoint)
@@ -194,6 +218,7 @@ void SFlowGraphNode::UpdateGraphNode()
 	{
 		IconBrush = GraphNode->GetIconAndTint(IconColor).GetOptionalIcon();
 	}
+	
 
 	const TSharedRef<SOverlay> DefaultTitleAreaWidget = SNew(SOverlay)
 		+ SOverlay::Slot()
@@ -389,24 +414,40 @@ TSharedRef<SWidget> SFlowGraphNode::CreateTitleWidget(TSharedPtr<SNodeTitle> Nod
 
 TSharedRef<SWidget> SFlowGraphNode::CreateNodeContentArea()
 {
-	return SNew(SBorder)
-		.BorderImage(FAppStyle::GetBrush("NoBorder"))
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
+	const FSlateBrush* ico = GetNodeIcon();
+	return SNew(SOverlay)
+		// Base content with pins
+		+ SOverlay::Slot()
 		[
-			SNew(SHorizontalBox)
-			+SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
-			.FillWidth(1.0f)
+			SNew(SBorder)
+			.BorderImage(FAppStyle::GetBrush("NoBorder"))
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)
 			[
-				SAssignNew(LeftNodeBox, SVerticalBox)
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				.FillWidth(1.0f)
+				[
+					SAssignNew(LeftNodeBox, SVerticalBox)
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Right)
+				[
+					SAssignNew(RightNodeBox, SVerticalBox)
+				]
 			]
-			+SHorizontalBox::Slot()
-			.AutoWidth()
-			.HAlign(HAlign_Right)
-			[
-				SAssignNew(RightNodeBox, SVerticalBox)
-			]
+		]
+		// Centered icon overlay
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SImage)
+			.Image(this, &SFlowGraphNode::GetNodeIcon) // Use a member function
+			.ColorAndOpacity(FLinearColor::White)
+			.DesiredSizeOverride(FVector2D(ico->GetImageSize().X,ico->GetImageSize().Y)) // Adjust size as needed
 		];
 }
 

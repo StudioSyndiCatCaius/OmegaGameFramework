@@ -8,7 +8,7 @@
 #include "FlowSubsystem.h"
 #include "FlowTypes.h"
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 
 #include "Engine/Engine.h"
 #include "Engine/ViewportStatsSubsystem.h"
@@ -26,13 +26,6 @@ FString UFlowNode::MissingNotifyTag = TEXT("Missing Notify Tag");
 FString UFlowNode::MissingClass = TEXT("Missing class");
 FString UFlowNode::NoActorsFound = TEXT("No actors found");
 
-void UFlowNodeTrait::OnNodeInput_Implementation(UFlowNode* Node, FName Pin) const
-{
-}
-
-void UFlowNodeTrait::OnNodeOutput_Implementation(UFlowNode* Node, FName Pin) const
-{
-}
 
 
 UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
@@ -60,7 +53,7 @@ UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
 
 
 
-UOmegaGameCore* UFlowNode::L_GetGlobalSettings() const
+UOmegaGameManager* UFlowNode::L_GetGlobalSettings() const
 {
 	return GetMutableDefault<UOmegaSettings>()->GetGameCore();
 }
@@ -170,7 +163,24 @@ FString UFlowNode::GetNodeDescription() const
 {
 	return K2_GetNodeDescription();
 }
+
+
 #endif
+
+FSlateBrush UFlowNode::K2_GetNodeIcon_Implementation() const
+{
+	FSlateBrush out;
+	out.TintColor = FSlateColor(FLinearColor::Transparent);
+	return out;
+}
+
+void UFlowNode::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
+{
+	guid=NodeGuid;
+	named_lists=NamedLists;
+	bitflags=Flags;
+}
 
 UFlowAsset* UFlowNode::GetFlowAsset() const
 {
@@ -488,13 +498,6 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 				t->NodeInput(this,PinName);
 			}
 		}
-		for(auto* t : Traits)
-		{
-			if(t)
-			{
-				t->OnNodeInput(this,PinName);
-			}
-		}
 	}
 	else if (SignalMode == EFlowSignalMode::PassThrough)
 	{
@@ -560,13 +563,6 @@ void UFlowNode::TriggerOutput(FName PinName, const bool bFinish /*= false*/, con
 		if(t)
 		{
 			t->NodeOutput(this,PinName);
-		}
-	}
-	for(auto* t : Traits)
-	{
-		if(t)
-		{
-			t->OnNodeOutput(this,PinName);
 		}
 	}
 	

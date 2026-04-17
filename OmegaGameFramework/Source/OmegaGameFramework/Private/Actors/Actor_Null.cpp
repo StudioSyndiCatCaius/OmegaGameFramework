@@ -3,6 +3,11 @@
 
 #include "Actors/Actor_Null.h"
 
+#include "OmegaGameManager.h"
+#include "OmegaSettings.h"
+#include "Misc/OmegaUtils_Macros.h"
+
+
 AOmegaNullActor::AOmegaNullActor()
 {
 	RootComponent=CreateDefaultSubobject<USceneComponent>("root");

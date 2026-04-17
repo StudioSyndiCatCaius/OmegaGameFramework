@@ -6,11 +6,7 @@ public class OmegaGameFramework : ModuleRules
 {
 	public OmegaGameFramework(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		bUseUnity = false;
-
-		PrecompileForTargets = PrecompileTargetsType.Any;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -32,7 +28,7 @@ public class OmegaGameFramework : ModuleRules
 			{
 				"Core",
 				"CoreUObject",
-				"OmegaCORE",
+				"OmegaCore",
 				"CommonUI",
 				"CommonInput",
 				"EnhancedInput",
@@ -44,6 +40,12 @@ public class OmegaGameFramework : ModuleRules
 				"ApplicationCore",
 				"LevelSequence",
 				"MovieScene",
+				"GeometryScriptingCore",
+				"PhysicsCore",
+				"RenderCore",
+				"GeometryCore",
+				"GeometryFramework",
+				"DynamicMesh",
 				"ImageWrapper",
 				"MetasoundEngine",
 				"UMG",
@@ -52,11 +54,12 @@ public class OmegaGameFramework : ModuleRules
 				"Niagara",
 				"Json",
 				"JsonUtilities",
+				"AudioMixer",
 				"JsonBlueprintUtilities",
 				"PCG",
 				"BinkMediaPlayer",
 				"StateTreeModule",
-				"GameplayStateTreeModule",
+				"GameplayStateTreeModule", "GameplayDebugger",
 			}
 			);
 		

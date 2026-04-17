@@ -8,22 +8,34 @@ public class OmegaEditor : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] 
 		{ 
-			"Core", 
-			"CoreUObject", 
+			"Core",
+			"CoreUObject",
 			"Engine",
 			"AssetTools",
 			"UnrealEd",
 			"InputCore",
-			"OmegaCORE",
-			"OmegaGameFramework", 
-			"OmegaSequence", 
+			"OmegaCore",
+			"OmegaGameFramework",
+			"OmegaSequence",
 			"PropertyEditor",
 			"RenderCore",
-			"OmegaData",
 			"LuaMachine",
 			"OmegaDebug",
 			"OmegaDemo",
-			"UMGEditor"
+			"UMGEditor",
+			"Slate",
+			"SlateCore",
+			"LevelEditor",
+			"EditorStyle",
+			"WorkspaceMenuStructure",
+			"ToolMenus",
+			"Blutility",
+			"EditorFramework",
+			"ApplicationCore",
+			"ClassViewer",
+			"GraphEditor",
+			"AdvancedPreviewScene",
+			"EditorInteractiveToolsFramework",
 		});
 
 		PrivateDependencyModuleNames.AddRange(
@@ -31,19 +43,19 @@ public class OmegaEditor : ModuleRules
 	{
 				"CoreUObject",
 				"Engine",
-				"EditorStyle",
 				"Slate",
 				"SlateCore",
 				"PlacementMode",
 				"Projects",
+				"PropertyEditor",
+				"ToolWidgets",
 				"UnrealEd",
 				"BlueprintGraph",
 				"KismetCompiler",
 				"PropertyPath",
 				"ContentBrowser",
-				"AssetTools",
 				"DeveloperSettings",
-                "ToolMenus",
+				"AssetDefinition"
 		// ... add private dependencies that you statically link with here ...	
 	}
 	);

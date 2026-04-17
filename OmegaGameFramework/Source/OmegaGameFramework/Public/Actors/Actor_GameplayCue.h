@@ -6,6 +6,8 @@
 #include "NiagaraSystem.h"
 #include "Engine/HitResult.h"
 #include "GameFramework/Actor.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
 #include "Interfaces/I_Common.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Subsystems/WorldSubsystem.h"
@@ -17,7 +19,7 @@ class UAudioComponent;
 class UCameraShakeSourceComponent;
 
 UCLASS(DisplayName="Ω Cue")
-class OMEGAGAMEFRAMEWORK_API AOmegaGameplayCue : public AActor, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API AOmegaGameplayCue : public AActor
 {
 	GENERATED_BODY()
 

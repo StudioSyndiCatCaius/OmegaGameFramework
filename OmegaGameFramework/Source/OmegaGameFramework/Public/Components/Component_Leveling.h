@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "OmegaGameplayComponent.h"
 #include "Engine/DataAsset.h"
 #include "UObject/Interface.h"
 #include "Components/ActorComponent.h"
 #include "Component_Leveling.generated.h"
 
 class UCurveFloat;
-
+/*
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnXpUpdated, ULevelingComponent*, Component, float, XP, float, AmountChanged,UOmegaLevelingAsset*, Asset);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnLevelChange, ULevelingComponent*, Component, int32, NewLevel,int32,PreviousLevel,UOmegaLevelingAsset*, Asset);
 
@@ -81,7 +80,7 @@ protected:
 	void Native_Update();
 	
 };
-
+*/
 
 // This class does not need to be modified.
 UINTERFACE()
@@ -131,6 +130,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Leveling")
 	void GetXPFromLevel(int32 Level, float& MinLevelXP, float& MaxLevelXP);
 
+	FText GetTextFromValue(float Value) const;
+	
 	///Widget
 	UPROPERTY(EditAnywhere, Category="Widget")
 	TEnumAsByte<ERoundingMode> RoundingMode = ERoundingMode::HalfToEven;
@@ -167,10 +168,7 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_LevelingComponent
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 	public:
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Leveling")
-	ULevelingComponent* GetLevelingComponent();
-
+	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Leveling")
 	void GetLevelingTexts(UTextBlock*& CurrentValue, class UTextBlock*& MaxValue, UTextBlock*& CurrentLevel);
 

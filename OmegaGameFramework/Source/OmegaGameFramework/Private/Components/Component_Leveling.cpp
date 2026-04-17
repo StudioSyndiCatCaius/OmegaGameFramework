@@ -10,7 +10,7 @@
 #include "Components/TextBlock.h"
 #include "Kismet/KismetTextLibrary.h"
 
-
+/*
 // Sets default values for this component's properties
 ULevelingComponent::ULevelingComponent()
 {
@@ -224,7 +224,7 @@ void ULevelingComponent::Native_Update()
 /*
  * Leveling Interface
  */
-
+/*
 float ULevelingComponent::GetXPRate()
 {
 	if(GetOwner()->Implements<UActorInterface_Leveling>())
@@ -236,7 +236,7 @@ float ULevelingComponent::GetXPRate()
 		return XPGainRate;
 	}
 }
-
+*/
 /*
  * Leveling Asset
  */
@@ -270,3 +270,16 @@ void UOmegaLevelingAsset::GetXPFromLevel(int32 Level, float& MinLevelXP, float& 
 	MaxLevelXP = ValueCurve.GetRichCurve()->Eval(LevelFloat+1.0);
 }
 
+FText UOmegaLevelingAsset::GetTextFromValue(float Value) const
+{
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
+	return UKismetTextLibrary::Conv_FloatToText(Value,RoundingMode,false,true,MinIntegralDigits);
+#else
+	return UKismetTextLibrary::Conv_DoubleToText(Value,RoundingMode,false,true,MinIntegralDigits);
+#endif
+	
+}
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
+#else
+#endif

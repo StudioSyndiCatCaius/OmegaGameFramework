@@ -15,12 +15,12 @@
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Components/Component_AimTargeter.h"
 #include "Functions/F_Component.h"
+#include "Functions/F_Message.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Selectors/Selector_LevelSequence.h"
 #include "Selectors/Selector_Montage.h"
-#include "Subsystems/Subsystem_Actors.h"
-#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_World.h"
 
 UObject* ULinearEvent_SimpleMessage::local_GetInstigator() const
 {
@@ -48,27 +48,20 @@ FString ULinearEvent_SimpleMessage::GetLogString_Implementation() const
 	return OutText.ToString();
 }
 
-void ULinearEvent_SimpleMessage::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
-                                                                   FText& Name, FText& Description)
-{
-	Description = Text;
-}
-
-
 void ULinearEvent_SimpleMessage::Native_Begin(const FString& Flag)
 {
 	Super::Native_Begin();
 	
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
-	msg=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->FireCustomGameplayMessage(local_GetInstigator(),Text,MessageCategory,meta);
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(FName(GE_MESSAGE_START), msg.Message);
+	GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->OnGameplayMessage_End.AddDynamic(this,&ULinearEvent_SimpleMessage::Native_MessageEnd);
+	msg=UOmegaFunctions_Message::Send(this,Instigator_Asset,Text,Message_Category,meta);
 }
 
-void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
+void ULinearEvent_SimpleMessage::Native_MessageEnd(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
+	FOmegaGameplayMessageMeta Meta)
 {
-	if(Event==FName(GE_MESSAGE_END) && Context==msg.Message)
+	if (Message==msg)
 	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.RemoveDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
+		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->OnGameplayMessage_End.RemoveDynamic(this, &ULinearEvent_SimpleMessage::Native_MessageEnd);
 		Finish("");
 	}
 }
@@ -109,17 +102,7 @@ UObject* UFlowNode_SimpleMessage::local_GetInstigator() const
 	return nullptr;
 }
 
-void UFlowNode_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
-{
-	if(UOmegaGameplayMessage* msg=Cast<UOmegaGameplayMessage>(Context))
-	{
-		if(Event==FName(GE_MESSAGE_END) && MessageKey==msg->meta.key)
-		{
-			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.RemoveDynamic(this, &UFlowNode_SimpleMessage::LocalGEvent);
-			TriggerFirstOutput(true);
-		}
-	}
-}
+
 
 //####################################################
 // FLOW NODE
@@ -146,11 +129,10 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	
 	ULinearEvent_SimpleMessage* LocalMessage = NewObject<ULinearEvent_SimpleMessage>(GetWorld()->GetGameInstance(), ULinearEvent_SimpleMessage::StaticClass());
 	LocalMessage->EventEnded.AddDynamic(this, &UFlowNode_SimpleMessage::LocalFinish);
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UFlowNode_SimpleMessage::LocalGEvent);
 	
 	if(Instigator_Asset) { LocalMessage->Instigator_Asset= Instigator_Asset; }
 	LocalMessage->Text = Text;
-	LocalMessage->MessageCategory=GetFlowAsset()->GetMessageCategoryTag();
+	LocalMessage->Message_Category=GetFlowAsset()->GetMessageCategoryTag();
 	FOmegaGameplayMessageMeta msg_meta;
 	msg_meta.CommonMeta.Context=this;
 	msg_meta.Brush.SetResourceObject(Portrait);
@@ -240,7 +222,13 @@ bool UFlowNode_SimpleMessage::GetDynamicTitleColor(FLinearColor& OutColor) const
 	}
 	OutColor=FLinearColor(1,0.2,0,1); return true;
 }
+
 #endif
+
+FSlateBrush UFlowNode_SimpleMessage::K2_GetNodeIcon_Implementation() const
+{
+	return Super::K2_GetNodeIcon_Implementation();
+}
 
 void UFlowNode_SimpleMessage::GetGeneralAssetLabel_Implementation(FString& Label)
 {
@@ -288,10 +276,9 @@ void UFlowNode_SimpleMessage::Autokey_ByPosition()
 	}
 }
 
-
 void UFlowNode_SimpleMessage::LocalFinish(UOmegaLinearEvent* Event, const FString& Flag)
 {
-	//TriggerFirstOutput(true);
+	TriggerFirstOutput(true);
 }
 
 UOAsset_TransformPreset* UFlowNode_SimpleMessage::GetMessage_TransformPreset_Implementation()

@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "DA_CommonRace.h"
 #include "FlowAsset.h"
-#include "Components/Component_ActorIdentity.h"
-#include "Components/Component_Equipment.h"
+#include "Components/Component_GameplayActor.h"
+#include "Functions/F_Equipment.h"
 #include "Components/Component_Inventory.h"
 #include "DataAssets/DA_ActorIdentity.h"
 #include "DataAssets/DA_Appearance.h"
@@ -14,7 +14,6 @@
 #include "DataAssets/DA_CombatSource.h"
 #include "Functions/F_Assets.h"
 #include "Functions/F_Component.h"
-#include "Interfaces/I_BitFlag.h"
 #include "Interfaces/I_Combatant.h"
 #include "DA_CommonCharacter.generated.h"
 
@@ -25,8 +24,8 @@ class UCombatantGambitAsset;
 class UOmegaDamageType;
 class UOmegaDamageTypeReactionAsset;
 
-UCLASS(DisplayName="Ω Common - Character")
-class OMEGADEMO_API UOAsset_CommonCharacter : public UOmegaDataAsset, public IDataInterface_FlowAsset, public IDataInterface_ContextSlate,
+UCLASS(DisplayName="Ω-🙂 Character")
+class OMEGADEMO_API UOAsset_CommonCharacter : public UOmegaDemoDataAsset, public IDataInterface_FlowAsset, public IDataInterface_ContextSlate,
 												public IDataInterface_InventorySource, public IDataInterface_EquipmentSource, public IDataInterface_AppearanceSource,
 												public IDataInterface_SkillSource, public IDataInterface_ActorIdentitySource
 																		
@@ -41,8 +40,8 @@ class OMEGADEMO_API UOAsset_CommonCharacter : public UOmegaDataAsset, public IDa
 public:
 	// Function
 	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override {return FlowAsset;};
-	virtual bool OnIdentityInit_Implementation(AActor* Actor, UActorIdentityComponent* Component) override;
-	virtual bool OnIdentityUninit_Implementation(AActor* Actor, UActorIdentityComponent* Component) override;
+	virtual bool OnIdentityInit_Implementation(AActor* Actor, UGameplayActorComponent* Component) override;
+	virtual bool OnIdentityUninit_Implementation(AActor* Actor, UGameplayActorComponent* Component) override;
 
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	
@@ -70,9 +69,6 @@ public:
 	TArray<UPrimaryDataAsset*> Skills;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat")
 	UCombatantGambitAsset* Gambit;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat")
-	TMap<UOmegaDamageType*,UOmegaDamageTypeReactionAsset*> DamageReactions;
-	
 	
 	UFUNCTION(BlueprintPure,Category="CommonCharacter") UOAsset_Appearance* GetAppearance() const
 	{

@@ -3,11 +3,12 @@
 #pragma once
 
 #include "Engine/StreamableManager.h"
-#include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "FlowComponent.h"
 #include "FlowSubsystem.generated.h"
+
+class UWorld;
 
 
 class UFlowAsset;

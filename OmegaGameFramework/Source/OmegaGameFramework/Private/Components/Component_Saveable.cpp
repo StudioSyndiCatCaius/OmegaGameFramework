@@ -24,12 +24,11 @@ UOmegaSaveableComponent::UOmegaSaveableComponent()
 	{
 		EntityGuid=FGuid::NewGuid();
 	}
-
 }
 
 UOmegaSaveSubsystem* UOmegaSaveableComponent::GetSaveSys() const
 {
-	if(GetWorld()->GetGameInstance())
+	if(GetWorld() && GetWorld()->GetGameInstance())
 	{
 		return GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
 	}

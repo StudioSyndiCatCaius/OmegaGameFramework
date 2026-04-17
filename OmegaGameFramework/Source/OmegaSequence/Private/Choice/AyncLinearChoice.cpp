@@ -3,6 +3,7 @@
 
 #include "Choice/AyncLinearChoice.h"
 #include "Engine/GameInstance.h"
+#include "Engine/World.h"
 #include "OmegaLinearEventSubsystem.h"
 
 UOmegaLinearChoice::UOmegaLinearChoice(const FObjectInitializer& ObjectInitializer)
@@ -25,8 +26,6 @@ UWorld* UOmegaLinearChoice::GetWorld() const
 	}
 	return nullptr;
 }
-
-
 
 UGameInstance* UOmegaLinearChoice::GetGameInstance() const
 {

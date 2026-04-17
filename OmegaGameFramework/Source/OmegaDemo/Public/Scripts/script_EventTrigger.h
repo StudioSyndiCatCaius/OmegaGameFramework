@@ -1,7 +1,7 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #pragma once
-#include "Actor_EventVolume.h"
+#include "Actors/Actor_Volumes.h"
 #include "Functions/F_Component.h"
 
 #include "script_EventTrigger.generated.h"

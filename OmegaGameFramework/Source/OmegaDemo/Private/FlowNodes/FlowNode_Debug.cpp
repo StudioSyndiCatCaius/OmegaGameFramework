@@ -14,9 +14,14 @@ UFlowNode_DebugModeCheck::UFlowNode_DebugModeCheck()
 
 void UFlowNode_DebugModeCheck::ExecuteInput(const FName& PinName)
 {
+	bool b_isDebug = false;
+	
+#if !UE_BUILD_SHIPPING
+	b_isDebug=InDebugMode;
+#endif
 	
 	//if(!InDebugMode || OGF_Build::IsBuild_Shipping())
-	if(!InDebugMode)
+	if(!b_isDebug)
 	{
 		TriggerOutput(TEXT("Release"),true);
 	}

@@ -4,7 +4,7 @@
 #include "Components/Component_DebugText.h"
 
 #include "OmegaSettings.h"
-#include "OmegaGameCore.h"
+#include "OmegaGameManager.h"
 #include "Misc/OmegaUtils_Macros.h"
 
 

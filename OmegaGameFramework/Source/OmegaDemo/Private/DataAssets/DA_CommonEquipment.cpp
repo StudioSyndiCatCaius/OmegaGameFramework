@@ -16,7 +16,7 @@ FOmegaCombatantSources UOAsset_CommonEquipment::L_GetCombatMods() const
 	return base;
 }
 
-bool UOAsset_CommonEquipment::CanEquipItem_Implementation(UEquipmentComponent* Component,UEquipmentSlot* Slot)
+bool UOAsset_CommonEquipment::CanEquipItem_Implementation(UCombatantComponent* Component,UEquipmentSlot* Slot)
 {
 	
 	if(Component)

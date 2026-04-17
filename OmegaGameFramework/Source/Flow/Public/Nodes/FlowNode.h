@@ -2,56 +2,33 @@
 
 #pragma once
 
-#include "EdGraph/EdGraphNode.h"
 #include "Engine/StreamableManager.h"
 #include "GameplayTagContainer.h"
 #include "VisualLogger/VisualLoggerDebugSnapshotInterface.h"
 #include "Templates/SubclassOf.h"
-
 #include "FlowTypes.h"
-#include "Interfaces/I_BitFlag.h"
 #include "Interfaces/I_Common.h"
-#include "Interfaces/I_NamedLists.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Nodes/FlowPin.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "FlowNode.generated.h"
 
-class UOmegaGameCore;
+class UEdGraphNode;
+class UOmegaGameManager;
 class UFlowAsset;
 class UFlowSubsystem;
+struct FSlateIcon;
 
 #if WITH_EDITOR
 DECLARE_DELEGATE(FFlowNodeEvent);
 #endif
-
-UCLASS()
-class FLOW_API UFlowNodeTrait : public UOmegaObjectTrait
-{
-	GENERATED_BODY()
-public:
-
-	UFUNCTION(BlueprintNativeEvent,Category="Flow") void OnNodeInput(UFlowNode* Node, FName Pin) const;
-	UFUNCTION(BlueprintNativeEvent,Category="Flow") void OnNodeOutput(UFlowNode* Node, FName Pin) const;
-};
-
-UCLASS()
-class FLOW_API UFlowNodeTrait_Collection : public UPrimaryDataAsset
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Node")
-	TArray<UFlowNodeTrait*> Traits;
-
-};
 
 
 /**
  * A Flow Node is UObject-based node designed to handle entire gameplay feature within single node.
  */
 UCLASS(Abstract, Blueprintable, HideCategories = Object)
-class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_GUID, public IDataInterface_Traits, public IDataInterface_NamedLists,
-											public IDataInterface_BitFlag
+class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInterface, public IDataInterface_General
 {
 	GENERATED_UCLASS_BODY()
 
@@ -67,7 +44,7 @@ class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInte
 
 private:
 	
-	UOmegaGameCore* L_GetGlobalSettings() const;
+	UOmegaGameManager* L_GetGlobalSettings() const;
 	UFUNCTION() TArray<FName> L_GetLocalMetaList() const;
 	
 	UPROPERTY()
@@ -129,42 +106,24 @@ public:
 
 protected:
 	// Short summary of node's content - displayed over node as NodeInfoPopup
-	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Node Description"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "NODE - Get Description"))
 	FString K2_GetNodeDescription() const;
-
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "FlowNode", meta = (DisplayName = "NODE - Get Icon"))
+	FSlateBrush K2_GetNodeIcon() const;
+	
 	// Inherits Guid after graph node
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Node") FOmegaBitflagsBase Flags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Node") FOmegaClassNamedLists NamedLists;
 	
 	UPROPERTY(VisibleInstanceOnly, Category="Node",AdvancedDisplay) FGuid NodeGuid;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Node",AdvancedDisplay) TArray<UFlowNodeTrait*> Traits;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Node",AdvancedDisplay) TArray<UFlowNodeTrait_Collection*> Trait_Collections;
-	virtual TArray<UOmegaObjectTrait*> GetTraits_Implementation() override
-	{
-		TArray<UOmegaObjectTrait*> out;
-		for(auto* i: Trait_Collections)
-		{
-			if(i)
-			{
-				out.Append(i->Traits);
-			}
-		}
-		for(auto* i : Traits)
-		{
-			if(i) { out.Add(i);}
-		}
-		return out;
-	};
-	
-	
+
 
 public:
 	void SetGuid(const FGuid NewGuid) { NodeGuid = NewGuid; }
 	UFUNCTION(BlueprintPure, Category="Flow Node")
 	FGuid GetGuid() const { return NodeGuid; }
-	virtual FGuid GetObjectGuid_Implementation() const  override { return NodeGuid; };
-	virtual FOmegaBitflagsBase Bitflags_Get_Implementation() override { return Flags; };
-	virtual FOmegaClassNamedLists GetClassNamedLists_Implementation() override { return NamedLists; };
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowAsset* GetFlowAsset() const;
 
@@ -329,6 +288,10 @@ protected:
 public:
 	// Trigger execution of input pin
 	void TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
+	
+	// Simply trigger the first Output Pin, convenient to use if node has only one output
+	UFUNCTION(BlueprintCallable, Category = "FlowNode")
+	void TriggerFirstOutput(const bool bFinish);
 protected:
 	// Method reacting on triggering Input pin
 	virtual void ExecuteInput(const FName& PinName);
@@ -337,9 +300,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "On Input"))
 	void K2_ExecuteInput(const FName& PinName);
 
-	// Simply trigger the first Output Pin, convenient to use if node has only one output
-	UFUNCTION(BlueprintCallable, Category = "FlowNode")
-	void TriggerFirstOutput(const bool bFinish);
+
 
 	UFUNCTION(BlueprintCallable, Category = "FlowNode", meta = (HidePin = "bForcedActivation"))
 	void TriggerOutput(FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);

@@ -4,17 +4,28 @@
 #include "Functions/F_Actor.h"
 
 #include "Components/ArrowComponent.h"
-#include "Components/Component_ActorIdentity.h"
-#include "Components/Component_ActorConfig.h"
+#include "Components/Component_GameplayActor.h"
+#include "Functions/F_Math.h"
 #include "Functions/F_Utility.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/Subsystem_Actors.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_World.h"
+#include "Types/OmegaActorInstanceMetadata.h"
 #include "Types/Struct_ActorRelatives.h"
 
 // =====================================================================================================================
 // ACTOR
 // =====================================================================================================================
+
+bool UOmegaActorFunctions::UsesInterface(UObject* obj)
+{
+	if (obj)
+	{
+		return obj->GetClass()->ImplementsInterface(UActorInterface_Interactable::StaticClass());
+	}
+	return false;
+}
 
 void UOmegaActorFunctions::SnapActorToSurface(AActor* Actor, FVector Trace_Start, FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType)
 {
@@ -85,7 +96,6 @@ void UOmegaActorFunctions::ApplyActorConfigAsset(AActor* Actor, UOmegaActorConfi
 AActor* UOmegaActorFunctions::ConfigureChildActor(UChildActorComponent* ChildActor, TSubclassOf<AActor> NewClass,
 	UPrimaryDataAsset* NewIdentity, AActor* NewOwner)
 {
-	
 	if(ChildActor)
 	{
 		if(NewClass)
@@ -100,7 +110,7 @@ AActor* UOmegaActorFunctions::ConfigureChildActor(UChildActorComponent* ChildAct
 			}
 			if(NewIdentity)
 			{
-				if(UActorIdentityComponent* _actorIdComp =  Cast<UActorIdentityComponent>(_actor->GetComponentByClass(UActorIdentityComponent::StaticClass())))
+				if(UGameplayActorComponent* _actorIdComp =  Cast<UGameplayActorComponent>(_actor->GetComponentByClass(UGameplayActorComponent::StaticClass())))
 				{
 					_actorIdComp->SetIdentitySourceAsset(NewIdentity);
 				}
@@ -109,6 +119,90 @@ AActor* UOmegaActorFunctions::ConfigureChildActor(UChildActorComponent* ChildAct
 		}
 	}
 	return nullptr;
+}
+
+void UOmegaActorFunctions::AttachComponentToActor(USceneComponent* Component, AActor* Actor, FName Socket,
+	EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulateBodies)
+{
+	if (Actor && Component)
+	{
+		FAttachmentTransformRules _rules = FAttachmentTransformRules::SnapToTargetIncludingScale;
+		_rules.LocationRule=LocationRule;
+		_rules.RotationRule=RotationRule;
+		_rules.ScaleRule=ScaleRule;
+		_rules.bWeldSimulatedBodies=true;
+		Component->AttachToComponent(Actor->GetRootComponent(),_rules,Socket);
+	}
+}
+
+AActor* UOmegaActorFunctions::GetActorNearestToScreenPoint(const TArray<AActor*>& Actors, const FVector2D& ScreenPoint,
+	APlayerController* PlayerController, float& OutDistance)
+{
+	OutDistance = FLT_MAX;
+
+	if (!PlayerController || Actors.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	AActor* NearestActor = nullptr;
+	float NearestDistSq = FLT_MAX;
+
+	for (AActor* Actor : Actors)
+	{
+		if (!IsValid(Actor))
+		{
+			continue;
+		}
+
+		FVector2D ActorScreenPos;
+		const bool bProjected = PlayerController->ProjectWorldLocationToScreen(
+			Actor->GetActorLocation(),
+			ActorScreenPos,
+			true
+		);
+
+		if (!bProjected)
+		{
+			continue;
+		}
+
+		const float DistSq = FVector2D::DistSquared(ActorScreenPos, ScreenPoint);
+
+		if (DistSq < NearestDistSq)
+		{
+			NearestDistSq = DistSq;
+			NearestActor = Actor;
+		}
+	}
+
+	if (NearestActor)
+	{
+		OutDistance = FMath::Sqrt(NearestDistSq);
+	}
+
+	return NearestActor;
+}
+
+void UOmegaActorFunctions::SetPaused(UObject* WorldContext, FGameplayTag PauseGroup, bool bPaused)
+{
+	if (UOmegaSubsystem_World* sub=OGF_Subsystems::oWorld(WorldContext))
+	{
+		for (auto* a : sub->GetAllActorIdentityComponents())
+		{
+			if (a && a->PauseCategory.MatchesTag(PauseGroup))
+			{
+				if (bPaused)
+				{
+					a->GetOwner()->CustomTimeDilation=0;
+				}
+				else
+				{
+					a->GetOwner()->CustomTimeDilation=1;
+				}
+			}
+		}
+	}
 }
 
 // =====================================================================================================================
@@ -247,7 +341,7 @@ FString UOmegaActorFunctions::GetActorBoundParam_String(AActor* Actor, FName Key
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_string(Actor,Key,Fallback);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAParam_string(Actor,Key,Fallback);
 	}
 	return Fallback;
 }
@@ -256,7 +350,7 @@ float UOmegaActorFunctions::GetActorBoundParam_Float(AActor* Actor, FName Key, f
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_float(Actor,Key,Fallback);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAParam_float(Actor,Key,Fallback);
 	}
 	return Fallback;
 }
@@ -265,7 +359,7 @@ int32 UOmegaActorFunctions::GetActorBoundParam_Int32(AActor* Actor, FName Key, i
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_int(Actor,Key,Fallback);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAParam_int(Actor,Key,Fallback);
 	}
 	return Fallback;
 }
@@ -274,7 +368,7 @@ bool UOmegaActorFunctions::GetActorBoundParam_Bool(AActor* Actor, FName Key, boo
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetAParam_bool(Actor,Key,Fallback);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAParam_bool(Actor,Key,Fallback);
 	}
 	return Fallback;
 }
@@ -283,7 +377,7 @@ void UOmegaActorFunctions::SetActorBoundParam_String(AActor* Actor, FName Key, c
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_string(Actor,Key,Value);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->SetAParam_string(Actor,Key,Value);
 	}
 }
 
@@ -291,7 +385,7 @@ void UOmegaActorFunctions::SetActorBoundParam_Float(AActor* Actor, FName Key, fl
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_float(Actor,Key,Value);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->SetAParam_float(Actor,Key,Value);
 	}
 }
 
@@ -299,7 +393,7 @@ void UOmegaActorFunctions::SetActorBoundParam_Int32(AActor* Actor, FName Key, in
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_int(Actor,Key,Value);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->SetAParam_int(Actor,Key,Value);
 	}
 }
 
@@ -307,15 +401,51 @@ void UOmegaActorFunctions::SetActorBoundParam_Bool(AActor* Actor, FName Key, boo
 {
 	if(Actor)
 	{
-		return Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetAParam_bool(Actor,Key,Value);
+		return Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->SetAParam_bool(Actor,Key,Value);
 	}
+}
+
+bool UOmegaActorFunctions::Group_Add(AActor* Actor, FGameplayTag Group, bool bInGroup)
+{
+	if (Actor)
+	{
+		Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->SetActorRegisteredToGroup(Group,Actor,bInGroup);
+		return true;
+	}
+	return false;
+}
+
+void UOmegaActorFunctions::Group_AddList(TArray<AActor*> Actors, FGameplayTag Group, bool bInGroup)
+{
+	for (auto* a: Actors)
+	{
+		Group_Add(a,Group,bInGroup);	
+	}
+}
+
+bool UOmegaActorFunctions::Group_HasActor(AActor* Actor, FGameplayTag Group)
+{
+	if (Actor)
+	{
+		Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->IsActorInGroup(Group,Actor);
+	}
+	return false;
+}
+
+TArray<AActor*> UOmegaActorFunctions::Group_GetActors(UObject* WorldContext, FGameplayTag Group)
+{
+	if (UOmegaSubsystem_World* s=OGF_Subsystems::oWorld(WorldContext))
+	{
+		return s->GetActorsInGroup(Group);
+	}
+	return TArray<AActor*>();
 }
 
 AActor* UOmegaActorFunctions::GetActorTagTarget(AActor* Actor, FGameplayTag Tag, bool& Result)
 {
 	if (Actor)
 	{
-		if (AActor* out_target=Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->GetActorTaggedTarget(Actor,Tag))
+		if (AActor* out_target=Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetActorTaggedTarget(Actor,Tag))
 		{
 			Result=true;
 			return out_target;
@@ -328,25 +458,36 @@ AActor* UOmegaActorFunctions::GetActorTagTarget(AActor* Actor, FGameplayTag Tag,
 
 void UOmegaActorFunctions::SetActorTagTarget(AActor* Actor, FGameplayTag Tag, AActor* Target)
 {
-	Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->SetActorTaggedTarget(Actor,Tag,Target);
+	Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->SetActorTaggedTarget(Actor,Tag,Target);
 }
 
 
-bool UOmegaActorFunctions::CheckIsActorInteractable(AActor* Actor, AActor* Instigator,FGameplayTag Tag,FOmegaCommonMeta meta, bool& Result)
+bool UOmegaActorFunctions::CheckIsActorInteractable(AActor* Actor, AActor* Instigator, FGameplayTag Tag, FOmegaCommonMeta meta, bool& Result, bool bRequireInterface, bool
+                                                    bExcludeInstigator)
 {
 	Result=false;
 	if(Actor)
 	{
-		Result=Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->CanInteract(Instigator,Actor,Tag,meta);
+		if (bRequireInterface && !Actor->GetClass()->ImplementsInterface(UActorInterface_Interactable::StaticClass())) { return Result; }
+		if (bExcludeInstigator && Actor==Instigator) { return Result; }
+		Result=Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->CanInteract(Instigator,Actor,Tag,meta);
 	}
 	return Result;
 }
 
 
-void UOmegaActorFunctions::PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag,
-	FOmegaCommonMeta meta)
+bool UOmegaActorFunctions::PerformInteraction(AActor* Actor, AActor* Instigator, FGameplayTag Tag,
+	FOmegaCommonMeta meta, bool bForce)
 {
-	Actor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->PerformInteraction(Actor,Instigator,Tag,meta);
+	if (UOmegaSubsystem_World* sub=OGF_Subsystems::oWorld(Actor))
+	{
+		if (bForce || sub->CanInteract(Instigator,Actor,Tag,meta))
+		{
+			Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->PerformInteraction(Instigator,Actor,Tag,meta);
+			return true;
+		}
+	}
+	return false;
 }
 
 AActor* UOmegaActorFunctions::GetRelative(AActor* Actor, FName Relative)
@@ -408,6 +549,8 @@ EFactionAffinity UOmegaActorFunctions::GetFaction_AffinityToTarget(AActor* Actor
 	}
 	return EFactionAffinity::NeutralAffinity;
 }
+
+
 
 // =====================================================================================================================
 // PAWN
@@ -507,4 +650,108 @@ void UOmegaComponentFunctions::PointArrowComponentToTarget(UArrowComponent* Comp
 		Component->SetRelativeRotation(rot_arrow);
 		Component->ArrowLength=distance_toArrow/Component->ArrowSize;
 	}
+}
+
+// ===== Helper Function =====
+
+AOmegaWorldManager* UOmegaActorFunctions::GetWorldManager(AActor* Actor)
+{
+    if (!Actor || !Actor->GetWorld())
+    {
+        return nullptr;
+    }
+
+    UOmegaSubsystem_World* Subsystem = Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
+    if (!Subsystem)
+    {
+        return nullptr;
+    }
+
+    return Subsystem->GetWorldManager();
+}
+
+// ===== Get Functions =====
+
+bool UOmegaActorFunctions::GetMeta_Bool(AActor* Actor, FName Param, bool Fallback)
+{
+    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
+    {
+        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
+        if (const bool* Value = Metadata.BoolParams.Find(Param))
+        {
+            return *Value;
+        }
+    }
+
+    return Fallback;
+}
+
+int32 UOmegaActorFunctions::GetMeta_Int(AActor* Actor, FName Param, int32 Fallback)
+{
+    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
+    {
+        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
+        if (const int32* Value = Metadata.IntParams.Find(Param))
+        {
+            return *Value;
+        }
+    }
+
+    return Fallback;
+}
+
+float UOmegaActorFunctions::GetMeta_Float(AActor* Actor, FName Param, float Fallback)
+{
+    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
+    {
+        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
+        if (const float* Value = Metadata.FloatParams.Find(Param))
+        {
+            return *Value;
+        }
+    }
+
+    return Fallback;
+}
+
+FString UOmegaActorFunctions::GetMeta_String(AActor* Actor, FName Param, const FString& Fallback)
+{
+    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
+    {
+        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
+        if (const FString* Value = Metadata.StringParams.Find(Param))
+        {
+            return *Value;
+        }
+    }
+
+    return Fallback;
+}
+
+UPrimaryDataAsset* UOmegaActorFunctions::GetMeta_DataAsset(AActor* Actor, FName Param)
+{
+    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
+    {
+        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
+        if (UPrimaryDataAsset* const* Value = Metadata.DataAssetParams.Find(Param))
+        {
+            return *Value;
+        }
+    }
+
+    return nullptr;
+}
+
+AActor* UOmegaActorFunctions::GetMeta_Actor(AActor* Actor, FName Param)
+{
+    if (AOmegaWorldManager* WorldManager = GetWorldManager(Actor))
+    {
+        FOmegaActorInstanceMetadata Metadata = WorldManager->GetActorMetadata(Actor);
+        if (const TSoftObjectPtr<AActor>* Value = Metadata.ActorParams.Find(Param))
+        {
+            return Value->Get();
+        }
+    }
+
+    return nullptr;
 }

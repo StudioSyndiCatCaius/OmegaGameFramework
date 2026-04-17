@@ -11,7 +11,7 @@
 // Name
 // ==============================================
 
-void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Context)
+void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Context,FOmegaCommonMeta _meta)
 {
 	if(Event == EventRef)
 	{
@@ -22,7 +22,7 @@ void UAsyncAction_WaitForGlobalEvent::Native_OnEvent(FName Event, UObject* Conte
 
 void UAsyncAction_WaitForGlobalEvent::Activate()
 {
-	UOmegaGameManager* SubsystemRef = LocalWorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
+	UOmegaSubsystem_GameInstance* SubsystemRef = LocalWorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>();
 	SubsystemRef->OnGlobalEvent.AddDynamic(this, &UAsyncAction_WaitForGlobalEvent::Native_OnEvent);
 }
 
@@ -39,7 +39,7 @@ UAsyncAction_WaitForGlobalEvent* UAsyncAction_WaitForGlobalEvent::WaitForGlobalE
 // Tagged
 // ==============================================
 
-void UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent(FGameplayTag Event, UObject* Context)
+void UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta _meta)
 {
 	if(Event == EventRef)
 	{
@@ -50,7 +50,7 @@ void UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent(FGameplayTag Event, U
 
 void UAsyncAction_WaitForTaggedGlobalEvent::Activate()
 {
-	UOmegaGameManager* SubsystemRef = LocalWorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
+	UOmegaSubsystem_GameInstance* SubsystemRef = LocalWorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>();
 	SubsystemRef->OnTaggedGlobalEvent.AddDynamic(this, &UAsyncAction_WaitForTaggedGlobalEvent::Native_OnEvent);
 }
 

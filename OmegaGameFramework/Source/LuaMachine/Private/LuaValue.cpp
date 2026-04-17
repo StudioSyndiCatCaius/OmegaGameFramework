@@ -30,6 +30,11 @@ FString FLuaValue::ToString() const
 	return FString(TEXT("nil"));
 }
 
+FText FLuaValue::ToText() const
+{
+	return FText::FromString(ToString());
+}
+
 FName FLuaValue::ToName() const
 {
 	return FName(*ToString());

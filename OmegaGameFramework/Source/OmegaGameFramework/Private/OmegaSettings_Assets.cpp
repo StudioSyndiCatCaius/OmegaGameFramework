@@ -7,6 +7,14 @@
 UOmegaAssetSettings::UOmegaAssetSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	Quickload_ContentDirectories.Add("/Game/0_Main/");
+	Quickload_ContentDirectories.Add("/OmegaGameFramework/");
+	Quickload_ContentDirectories.Add("/OmegaGameAssets/");
 	
+	Quickload_ClassDirectories.Add("/Assets/");
+	Quickload_ClassDirectories.Add("/Data/");
+	
+	Quickload_ClassNameRemap.Add(TSoftClassPtr<UTexture2D>(),"Textures");
+	Quickload_ClassNameRemap.Add(TSoftClassPtr<UMaterialInterface>(),"Materials");
 }
 

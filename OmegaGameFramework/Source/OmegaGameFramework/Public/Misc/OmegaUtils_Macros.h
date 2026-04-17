@@ -28,4 +28,8 @@ return out;
 
 #define OGF_UASSET_SOUND_UI(name) LoadObject<USoundWave>(this, TEXT("/OmegaGameFramework/audio/ui/" #name "." #name))
 
-#define OGF_UASSET_MAT_TEXT_OUTLINE() LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")) 
+#define OGF_UASSET_MAT_TEXT_OUTLINE() LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"))
+#define OGF_UASSET_MAT_TEXT_CAMFACE() LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextCamera.m_UTIL_TextCamera"))
+
+
+#define UFUNC_C 	UFUNCTION(BlueprintCallable, Category="Equipment",DisplayName="")

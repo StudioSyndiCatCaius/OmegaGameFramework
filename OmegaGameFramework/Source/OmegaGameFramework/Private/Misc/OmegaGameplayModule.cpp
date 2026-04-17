@@ -4,15 +4,13 @@
 #include "Misc/OmegaGameplayModule.h"
 
 #include "Components/Component_Combatant.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "UObject/Object.h"
 #include "UObject/UObjectGlobals.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/GeneralDataObject.h"
-#include "Subsystems/Subsystem_Actors.h"
-#include "Subsystems/Subsystem_QueueEvents.h"
 
 UOmegaGameplayModule::UOmegaGameplayModule(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -23,9 +21,15 @@ UWorld* UOmegaGameplayModule::GetWorld() const
 	if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
 }
 
-void UOmegaGameplayModule::Native_Initialize()
+void UOmegaGameplayModule::Native_Initialize(UOmegaSubsystem_GameInstance* Subsystem)
 {
-	if((REF_OwningManager = GetGameInstance()->GetSubsystem<UOmegaGameManager>()) != nullptr)
+	if (Subsystem)
+	{
+		Ref_GamInst=Subsystem->GetGameInstance();
+		REF_OwningManager=Subsystem;
+		WorldPrivate=Subsystem->GetWorld();
+	}
+	if((REF_OwningManager = GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>()) != nullptr)
 	{
 		REF_OwningManager->OnGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnGlobalEvent);
 		REF_OwningManager->OnTaggedGlobalEvent.AddDynamic(this, &UOmegaGameplayModule::OnTaggedGlobalEvent);
@@ -36,17 +40,20 @@ void UOmegaGameplayModule::Native_Initialize()
 		_sys->OnNewGameStarted.AddDynamic(this, &UOmegaGameplayModule::GameFileStarted);
 		GameFileStarted(_sys->ActiveSaveData,FGameplayTagContainer());
 	}
-	if(UOmegaSubsystem_QueueEvents* _sys = GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>())
-	{
-		_sys->SetQueuedSelectorSourceRegistered(this,true);
-	}
+
 	
 	Initialized();
 }
 
+TArray<AActor*> UOmegaGameplayModule::ActorGroup_Filter_Implementation(FGameplayTag Tag,
+	const TArray<AActor*>& In) const
+{
+	return In;
+}
+
 
 void UOmegaGameplayModule::L_OnGameSystemChange(AOmegaGameplaySystem* system, UObject* context, const FString& flag,
-	bool bActive)
+                                                bool bActive)
 {
 	if(bActive)
 	{
@@ -63,42 +70,43 @@ void UOmegaGameplayModule::Native_OnLevelOpened(FString LevelName, AOmegaGameMod
 	//Activate Game Systems
 	for (TSubclassOf<AOmegaGameplaySystem> TempSystem : GetAutoGameplaySystems())
 	{
-		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(TempSystem, this, "None");
+		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->ActivateGameplaySystem(TempSystem, this, "None");
 	}
-	if(UOmegaSubsystem_QueueEvents* REF_QuerySubsystem = GetGameInstance()->GetSubsystem<UOmegaSubsystem_QueueEvents>()) 
-	{
-		REF_QuerySubsystem->SetQueuedQuerySourceRegistered(this,true); 
-	} 
+
 	OnLevelOpened(LevelName, GameMode);
 
 	
-	if(UOmegaActorSubsystem* sub_a=GetWorld()->GetSubsystem<UOmegaActorSubsystem>())
+	if(UOmegaSubsystem_World* sub_a=GetWorld()->GetSubsystem<UOmegaSubsystem_World>())
 	{
 		sub_a->OnActorTagEvent.AddDynamic(this,&UOmegaGameplayModule::OnActor_TagEvent);
 		sub_a->OnActorInteraction.AddDynamic(this,&UOmegaGameplayModule::OnActor_Interaction);
 		sub_a->OnActorGroupChange.AddDynamic(this,&UOmegaGameplayModule::OnActor_RegisteredToGroup);
 		sub_a->OnActorIdentityRegistered.AddDynamic(this,&UOmegaGameplayModule::L_ActorIdentityRegistered);
+		
+		sub_a->OnGameplaySystemActiveStateChange.AddDynamic(this,&UOmegaGameplayModule::L_OnGameSystemChange);
+		sub_a->OnCombatantRegistered.AddDynamic(this,&UOmegaGameplayModule::L_CombatantInit);
+		sub_a->OnCombatantUnegistered.AddDynamic(this,&UOmegaGameplayModule::L_CombatantUninit);
 	}
-	if(UOmegaGameplaySubsystem* sub=GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>())
-	{
-		sub->OnGameplaySystemActiveStateChange.AddDynamic(this,&UOmegaGameplayModule::L_OnGameSystemChange);
-		sub->OnCombatantRegistered.AddDynamic(this,&UOmegaGameplayModule::L_CombatantInit);
-		sub->OnCombatantUnegistered.AddDynamic(this,&UOmegaGameplayModule::L_CombatantUninit);
-	}
+
 }
 
-void UOmegaGameplayModule::L_ActorIdentityRegistered(AActor* Actor, UActorIdentityComponent* Component, bool Registered)
+void UOmegaGameplayModule::L_ActorIdentityRegistered(AActor* Actor, UGameplayActorComponent* Component, bool Registered)
 {
 	if(Actor)
 	{
-		if(Registered)
+		if(Registered && !registered_GameplayActors.Contains(Component))
 		{
+			registered_GameplayActors.AddUnique(Component);
 			Actor->OnActorBeginOverlap.AddDynamic(this,&UOmegaGameplayModule::OnActor_BeginOverlap);
-			Actor->OnActorEndOverlap.AddDynamic(this,&UOmegaGameplayModule::OnActor_BeginOverlap);
+			Actor->OnActorEndOverlap.AddDynamic(this,&UOmegaGameplayModule::OnActor_EndOverlap);
 			Actor->OnActorHit.AddDynamic(this, &UOmegaGameplayModule::OnActor_Hit);
 			Actor->OnBeginCursorOver.AddDynamic(this, &UOmegaGameplayModule::OnActor_BeginCursorOver);
 			Actor->OnEndCursorOver.AddDynamic(this, &UOmegaGameplayModule::OnActor_EndCursorOver);
 			Actor->OnClicked.AddDynamic(this, &UOmegaGameplayModule::OnActor_Clicked);
+		}
+		else if (!Registered && registered_GameplayActors.Contains(Component))
+		{
+			registered_GameplayActors.Remove(Component);
 		}
 	}
 	OnActor_IdentityRegistered(Actor,Component,Registered);
@@ -122,7 +130,7 @@ void UOmegaGameplayModule::L_CombatantUninit(UCombatantComponent* combatant)
 
 UGameInstance* UOmegaGameplayModule::GetGameInstance() const
 {
-	return Cast<UGameInstance>(GetOuter());
+	if (Ref_GamInst) { return Ref_GamInst; } return Cast<UGameInstance>(GetOuter());
 }
 
 bool UOmegaGameplayModule::GameFileSaved_Implementation(UOmegaSaveGame* SaveFile)

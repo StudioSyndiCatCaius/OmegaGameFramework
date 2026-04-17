@@ -9,7 +9,7 @@
 #include "DA_CommonInteractable.generated.h"
 
 
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType,DisplayName="Ω-👆 Interactable")
 class OMEGADEMO_API UOAsset_CommonInteractable : public UOmegaDataAsset, public IDataInterface_FlowAsset
 {
 	GENERATED_BODY()

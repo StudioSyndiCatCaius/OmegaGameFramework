@@ -141,6 +141,7 @@ struct LUAMACHINE_API FLuaValue
 	}
 
 	FString ToString() const;
+	FText ToText() const;
 	FName ToName() const;
 	int32 ToInteger() const;
 	double ToFloat() const;
@@ -196,4 +197,6 @@ struct LUAMACHINE_API FLuaValue
 	void Unref();
 
 	FMulticastScriptDelegate* MulticastScriptDelegate = nullptr;
+	
+	
 };

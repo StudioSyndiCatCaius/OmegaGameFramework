@@ -6,12 +6,13 @@
 #include "script_Effects.generated.h"
 
 
+class UEquipmentSlot;
 class AOmegaGameplayEffect;
 class UOmegaDamageType;
 class UOmegaAttribute;
 
 // Applies effects to the intial instigator with the initial target as the new instigator
-UCLASS(DisplayName="(Effect) Flip Targets")
+UCLASS(DisplayName="(🤜+) Flip Targets")
 class OMEGADEMO_API UEffectScript_FlipTargets : public UOmegaScriptedEffect
 {
 	GENERATED_BODY()
@@ -22,7 +23,7 @@ public:
 	TArray<UOmegaScriptedEffect*> Effects;
 };
 
-UCLASS(DisplayName="(Effect) Effect Actor - Add")
+UCLASS(DisplayName="(🤜+) Effect Actor - Add")
 class OMEGADEMO_API UEffectScript_EffectActorAdd : public UOmegaScriptedEffect
 {
 	GENERATED_BODY()
@@ -40,7 +41,7 @@ public:
 	
 };
 
-UCLASS(DisplayName="(Effect) Effect Actor - Remove")
+UCLASS(DisplayName="(🤜+) Effect Actor - Remove")
 class OMEGADEMO_API UEffectScript_EffectActorRemove : public UOmegaScriptedEffect
 {
 	GENERATED_BODY()
@@ -56,13 +57,13 @@ public:
 
 
 
-UCLASS(DisplayName="(Effect) Damage - Flat")
+UCLASS(DisplayName="(🤜+) Damage - Flat")
 class OMEGADEMO_API UEffectScript_DamageFlat : public UOmegaScriptedEffect
 {
 	GENERATED_BODY()
 public:
 	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
 	UOmegaAttribute* DamagedAttribute;
@@ -81,7 +82,7 @@ class OMEGADEMO_API UEffectScriptBASE_DamagePercent : public UOmegaScriptedEffec
 	GENERATED_BODY()
 
 	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+
 	
 public:
 
@@ -90,7 +91,7 @@ public:
 		UOmegaAttribute*& _Instigator_Attribute, float& _Instigator_Power, UOmegaAttribute*& _Target_Attribute, float& _Target_Power);
 };
 	
-UCLASS(DisplayName="(Effect) Damage - Attribute Subtraction")
+UCLASS(DisplayName="(🤜+) Damage - Attribute Subtraction")
 class OMEGADEMO_API UEffectScript_DamagePercent : public UEffectScriptBASE_DamagePercent
 {
 	GENERATED_BODY()
@@ -120,3 +121,26 @@ public:
 	float Target_Power=0.5;
 };
 
+
+UCLASS(DisplayName="(🤜+) Inventory - Edit")
+class OMEGADEMO_API UEffectScript_Inv_Edit : public UOmegaScriptedEffect
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect") TMap<UPrimaryDataAsset*, int32> ItemsGiven;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect") bool bTransferFromInstigator;
+	
+	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
+};
+
+UCLASS(DisplayName="(🤜+) Equipment - Edit")
+class OMEGADEMO_API UEffectScript_Equip_Edit : public UOmegaScriptedEffect
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect") TArray<UEquipmentSlot*> SlotsCleared;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect") TMap<UEquipmentSlot*, UPrimaryDataAsset*> EquipmentAdded;
+	
+	
+	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
+};

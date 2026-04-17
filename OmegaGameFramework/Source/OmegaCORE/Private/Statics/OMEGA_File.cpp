@@ -49,7 +49,41 @@ TArray<FString> OMEGA_File::ListFilesInDirectoryList(TArray<FString> paths, bool
 	return out;
 }
 
-void OMEGA_File::DoDaTing()
+TArray<FString> OMEGA_File::GetAllSubfolders(const FString& BasePath, bool bRecursive)
 {
-	return ;
+	
+	TArray<FString> Subfolders;
+    
+	IFileManager& FileManager = IFileManager::Get();
+    
+	if (!FileManager.DirectoryExists(*BasePath))
+	{
+		return Subfolders;
+	}
+
+	if (bRecursive)
+	{
+		FileManager.IterateDirectoryRecursively(*BasePath, [&Subfolders, &BasePath](const TCHAR* FilenameOrDirectory, bool bIsDirectory) -> bool
+		{
+			if (bIsDirectory)
+			{
+				Subfolders.Add(FilenameOrDirectory);
+			}
+			return true; // Continue iteration
+		});
+	}
+	else
+	{
+		FileManager.IterateDirectory(*BasePath, [&Subfolders](const TCHAR* FilenameOrDirectory, bool bIsDirectory) -> bool
+		{
+			if (bIsDirectory)
+			{
+				Subfolders.Add(FilenameOrDirectory);
+			}
+			return true; // Continue iteration
+		});
+	}
+
+	return Subfolders;
 }
+

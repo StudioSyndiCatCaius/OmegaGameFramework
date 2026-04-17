@@ -5,21 +5,24 @@
 #include "CoreMinimal.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "GameplayTagContainer.h"
-#include "Engine/DataAsset.h"
-#include "Math/Vector2D.h"
-#include "Blueprint/UserWidget.h"
-#include "Components/AudioComponent.h"
-#include "Widget/Menu.h"
 #include "InputMappingContext.h"
-#include "InputCoreTypes.h" // For FKey
+#include "InputCoreTypes.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/SlateWrapperTypes.h"
+#include "Components/InputComponent.h"
 #include "Misc/OmegaUtils_Structs.h"
 
 #include "Subsystem_Player.generated.h"
 
+class UOmegaSubsystem_GameInstance;
+class UCameraComponent;
+class USpringArmComponent;
 class UUserWidget;
 class UHUDLayer;
 class UDataWidget;
+class AOmegaDynamicCamera;
+class UAudioComponent;
+class UMenu;
 
 // ================================================================================================================
 // Input Mode
@@ -66,26 +69,50 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMenuClosed, UMenu*, Menu, FGamep
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FClearHoveredWidgets);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputModeChanged, UOmegaInputMode*, NewMode);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInputDeviceChangedDelegate, bool, bIsUsingGamepad);
-// DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInputKeyEvent, FKey, FKey, EInputEvent, Event);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDataWidgetSubsystemEvent,UDataWidget*, Widget, uint8, Event);
 
 UCLASS(DisplayName="Omega Subsystem: Player")
-class OMEGAGAMEFRAMEWORK_API UOmegaPlayerSubsystem : public ULocalPlayerSubsystem
+class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_Player : public ULocalPlayerSubsystem, public FTickableGameObject
 {
 	GENERATED_BODY()
+	
+	UPROPERTY() UOmegaSubsystem_GameInstance* SS_GI;
 
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
-
-	
+	virtual void Deinitialize() override;
 	UPROPERTY() UDataWidget* HoveredWidget = nullptr;
 	UPROPERTY() UOmegaHoverCursor* hover_cursor;
 	
-
+	float f_UiNavCooldown;
+	TArray<FKey> KeysActive;
+	void Input_OnKeyStart(FKey Key);
+	void Input_OnKeyEnd(FKey Key);
+	// 0=press , 1=release , 2=tick
+	void Input_OnKeyEvent(uint8 event,FKey key, float dt, bool bAxisKey);
 	
 public:
+	FInputKeyBinding KeyBind_Start;
+	FInputKeyBinding KeyBind_Stop;
+	
 	UPROPERTY() TMap<FGameplayTag, UDataWidget*> SlottedDataWidgets;
-	// UPROPERTY() FOnInputKeyEvent OnInputKeyEvent;
-
-	// -- Menus -- //
+	UPROPERTY() TArray<TWeakObjectPtr<UObject>> InputTargets;
+	
+	virtual void L_TryRegisterInputTarget(UObject* target);
+	
+	virtual void Tick(float DeltaTime) override;
+	virtual ETickableTickType GetTickableTickType() const override { return ETickableTickType::Always; }
+	virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT( FMyTickableThing, STATGROUP_Tickables ); }
+	virtual bool IsTickableWhenPaused() const { return true; }
+	virtual bool IsTickableInEditor() const { return false; }
+	
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
+	
+	UPROPERTY() APlayerController* REF_Controller;
+	
+	//0=select | 1=hover | 2=unhover
+	UPROPERTY() FDataWidgetSubsystemEvent DataWidgetSubsystemEvent; 
+	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta = (DeterminesOutputType = "MenuClass", AdvancedDisplay = "Context, Flag, AutoFocus, Flag"))
 	class UMenu* OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus=true,FOmegaCommonMeta meta=FOmegaCommonMeta());
 
@@ -128,14 +155,7 @@ public:
 protected:
 	UPROPERTY()
 	UAudioComponent* UiAudioComp;
-	UAudioComponent* GetLocalAudioComp()
-	{
-		if(!UiAudioComp)
-		{
-			UiAudioComp = Cast<UAudioComponent>(Local_GetPlayerController()->AddComponentByClass(UAudioComponent::StaticClass(), false, FTransform(), false));
-		}
-		return UiAudioComp;
-	}
+	UAudioComponent* GetLocalAudioComp();
 	
 public:
 	//Menu Input
@@ -188,11 +208,6 @@ public:
 
 	void CleanHUDLayers();
 
-	UFUNCTION()
-	APlayerController* Local_GetPlayerController();
-	
-	UPROPERTY()
-	class APlayerController* ParentPlayerController;
 
 	UPROPERTY()
 	FClearHoveredWidgets ClearHoveredWidgets;
@@ -229,7 +244,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Omega|Input")
 	FInputDeviceChangedDelegate OnInputDeviceChanged;
 
-	void OnAnyKeyPressed();
+
 
 	UFUNCTION(BlueprintPure, Category="Omega|Input")
 	bool IsUsingGamepad() const
@@ -239,6 +254,34 @@ public:
 private:
 	UPROPERTY()
 	bool bUsingGamepad;
+	
+	void Tick_Input(float DeltaTime);
+	
+	// ================================================================================================================
+	// Dynamic Camera
+	// ================================================================================================================
+public:
+	float last_delta;
+	float time_SinceLastCheck;
+	bool is_DynamicCamerActive;
+	
+	UPROPERTY() AOmegaDynamicCamera* override_camera;
+	UPROPERTY() TArray<AOmegaDynamicCamera*> source_cameras;
+	UPROPERTY() AOmegaDynamicCamera* master_camera;
+	UPROPERTY() AOmegaDynamicCamera* l_PreviousCam=nullptr;
+	
+	void Tick_DynamicCamera(float DeltaTime);
+	TSubclassOf<AOmegaDynamicCamera> DynaCam_GetDefaultClass();
+	AOmegaDynamicCamera* DynaCam_GetMaster();
+	AOmegaDynamicCamera* DynaCam_GetSource();
+	bool DynaCam_IsValidSource(AActor* Actor);
+	void DynaCam_SetActive(bool IsActive);
+	void DynaCam_Register(AOmegaDynamicCamera* Camera, bool IsActive);
+	bool DynaCam_IsActive() const { return is_DynamicCamerActive;}
+	void DynaCam_Interp(AOmegaDynamicCamera* cam_source, AOmegaDynamicCamera* cam_master, float speed);
+	void DynaCam_SetOverride(AOmegaDynamicCamera* Camera, bool bSnapTo);
+	void DynaCam_ClearOverride();
+	void DynaCam_SnapToCurrent();
 };
 
 UCLASS()
@@ -249,7 +292,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaHoverCursor : public UUserWidget
 public:
 	
 	UPROPERTY()
-	UOmegaPlayerSubsystem* subsystem_ref;
+	UOmegaSubsystem_Player* subsystem_ref;
 	UPROPERTY()
 	FVector2D last_pos;
 
@@ -258,3 +301,7 @@ public:
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 };
+
+
+
+

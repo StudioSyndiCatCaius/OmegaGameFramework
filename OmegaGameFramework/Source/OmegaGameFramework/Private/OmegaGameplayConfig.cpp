@@ -4,8 +4,8 @@
 #include "OmegaGameplayConfig.h"
 
 #include "MaterialKeyGeneratorContext.h"
-#include "OmegaGameCore.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "OmegaGameManager.h"
+#include "Subsystems/Subsystem_World.h"
 #include "OmegaSettings.h"
 
 
@@ -38,7 +38,7 @@ FOmegaSortedClassPathData UOmegaGameplayConfig::GetAssetDataFromClass(TSubclassO
 
 TArray<FString> UOmegaGameplayConfig::GetPathsFromAssetName(const FString& AssetName, TSubclassOf<UObject> Class) const
 {
-	return UOmegaGameCore::GetPathsFromAssetName(ClassPaths,AssetName,Class);
+	return UOmegaGameManager::GetPathsFromAssetName(ClassPaths,AssetName,Class);
 }
 
 

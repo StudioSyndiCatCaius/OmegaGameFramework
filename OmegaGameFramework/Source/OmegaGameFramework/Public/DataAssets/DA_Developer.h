@@ -9,7 +9,7 @@
 
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOAsset_Developer : public UPrimaryDataAsset, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API UOAsset_Developer : public UPrimaryDataAsset, public IDataInterface_General
 {
 	GENERATED_BODY()
 public:
@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Developer")
 	FGameplayTagContainer Tags;
 
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
 	{
 		Name=DisplayName;
 	};
@@ -29,7 +29,7 @@ public:
 	{
 		Label=GetName();
 	};
-	virtual void GetGeneralAssetColor_Implementation(FLinearColor& Color) override
+	virtual void GetGeneralAssetColor_Implementation(FGameplayTag Tag,FLinearColor& Color) override
 	{
 		Color=DevColor;
 	};

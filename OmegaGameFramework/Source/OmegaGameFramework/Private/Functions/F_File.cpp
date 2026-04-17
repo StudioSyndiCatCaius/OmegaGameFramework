@@ -5,8 +5,11 @@
 
 #include "ImageUtils.h"
 #include "OmegaSettings.h"
+#include "Interfaces/IPluginManager.h"
 #include "Kismet/BlueprintPathsLibrary.h"
-
+#include "Misc/OmegaUtils_Macros.h"
+#include "Sound/SoundWaveProcedural.h"
+#include "Statics/OMEGA_File.h"
 
 
 UObject* UOmegaFileManagerSettings::ImportFile(const FString& path) const
@@ -29,8 +32,19 @@ UObject* UOmegaFileManagerSettings::ImportFile(const FString& path) const
 }
 
 
+FString UOmegaFileFunctions::GetPluginBaseDir(const FString& PluginName)
+{
+	TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(PluginName);
+	if (!Plugin.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Plugin '%s' not found!"), *PluginName);
+		return FString();
+	}
 
-TArray<FString> UOmegaFileFunctions::GetExternalContentDirectories()
+	return Plugin->GetBaseDir();
+}
+
+TArray<FString> UOmegaFileFunctions::GameData_GetDirectories(FString OverrideFolder)
 {
 	TArray<FString> Subfolders;
 	TArray<FString> out;
@@ -38,14 +52,36 @@ TArray<FString> UOmegaFileFunctions::GetExternalContentDirectories()
 	Subfolders.Add(FPaths::ProjectDir());
 	Subfolders.Append(GetSubfolders(FPaths::ProjectModsDir()));
     
-	for (const FString& Subfolder : Subfolders)
+	for(FString _basePath : Subfolders)
 	{
-		for (const FString& FolderName : GetMutableDefault<UOmegaSettings>()->RuntimeImport_BaseDirectory)
+		FString _subFolder;
+		if (OverrideFolder.IsEmpty())
 		{
-			out.Add(Subfolder+FolderName);
+			_subFolder=OGF_CFG()->GameData_Base_Directory;
 		}
+		else
+		{
+			_subFolder=OverrideFolder;
+		}
+		out.Add(_basePath+_subFolder);
 	}
     
+	return out;
+}
+
+TArray<FString> UOmegaFileFunctions::GameData_GetFiles(const FString& subdirectory, const FString& extension, bool bRecursive)
+{
+	TArray<FString> out;
+	for (FString base_dir : GameData_GetDirectories())
+	{
+		for (FString _file : OMEGA_File::ListFilesInDirectory(base_dir+subdirectory,bRecursive))
+		{
+			if (extension.IsEmpty() || FPaths::GetExtension(_file)==extension)
+			{
+				out.Add(_file);
+			}
+		}
+	}
 	return out;
 }
 
@@ -58,7 +94,6 @@ TArray<FString> UOmegaFileFunctions::GetSubfolders(FString RootPath, bool OnlyNa
 		// Ensure the path exists
 		if (!FPaths::DirectoryExists(RootPath))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Directory does not exist: %s"), *RootPath);
 			return Subfolders;
 		}
     
@@ -112,7 +147,6 @@ UTexture2D* UOmegaFileFunctions::OmegaImport_Texture2D(const FString& FilePath,T
 	if(Texture)
 	{
 		//Texture->MipGenSettings=MipGenSettings;
-		Texture->MipGenSettings = MipGenSettings;
 		Texture->RefreshSamplerStates();
 		Texture->UpdateResource();
 		return Texture;

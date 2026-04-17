@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Actor_AdvancedVolume.h"
-#include "Components/Component_ActorIdentity.h"
+#include "Components/Component_GameplayActor.h"
 #include "DataAssets/DA_ActorIdentity.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/I_Common.h"
@@ -13,7 +13,7 @@
 #include "Actor_GameplayRegion.generated.h"
 
 class UActorModifierScript;
-class UActorIdentityComponent;
+class UGameplayActorComponent;
 class UZoneEntityComponent;
 class UBoxComponent;
 
@@ -30,7 +30,7 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API AGameplay_Region : public AAdvancedVolume, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGAGAMEFRAMEWORK_API AGameplay_Region : public AAdvancedVolume, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -38,7 +38,7 @@ public:
 	AGameplay_Region();
 	virtual void OnConstruction(const FTransform& Transform) override;
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Component") UActorIdentityComponent* ID;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Component") UGameplayActorComponent* ID;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Region")
 	UGameplay_RegionAsset* RegionIdentity=nullptr;

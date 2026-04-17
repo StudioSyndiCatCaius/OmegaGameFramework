@@ -12,7 +12,7 @@
 
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOAsset_CombatSource : public UOmegaDataAsset, public IDataInterface_SkillSource, public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier
+class OMEGAGAMEFRAMEWORK_API UOAsset_CombatSource : public UOmegaDemoDataAsset, public IDataInterface_SkillSource, public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier
 {
 	GENERATED_BODY()
 public:

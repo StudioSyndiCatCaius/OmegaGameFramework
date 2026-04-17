@@ -3,15 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actors/Actor_Quest.h"
 #include "Components/CheckBox.h"
-#include "Components/Component_Equipment.h"
+#include "Functions/F_Equipment.h"
 #include "Components/Component_Leveling.h"
 #include "Components/Component_Skin.h"
 #include "Components/Slider.h"
 #include "Interfaces/I_Widget.h"
-#include "Subsystems/Subsystem_Quest.h"
 #include "Widget/DataWidget.h"
-#include "Widget/Widget_DynamicMeter.h"
 #include "Widget/ColorWheel/ColorWidget.h"
 #include "OmegaDemo_Widgets.generated.h"
 
@@ -26,16 +25,24 @@ class UOmegaAttribute;
 // ==============================================================================================================
 
 UCLASS(Abstract)
-class OMEGADEMO_API UDataWidgetBase_Combatant : public UDataWidget, public IWidgetInterface_Combatant
+class OMEGADEMO_API UDataWidgetBase_CombatantBASE : public UDataWidget, public IWidgetInterface_Combatant
+{
+	
+	GENERATED_BODY()
+public:
+	UPROPERTY() UCombatantComponent* REF_combatant;
+	virtual void Native_OnSourceAssetChanged(UObject* SourceAsset) override;
+	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
+	UFUNCTION(BlueprintPure,Category="Combatant") UCombatantComponent* GetLinkedCombatant();
+};
+
+UCLASS(Abstract)
+class OMEGADEMO_API UDataWidgetBase_Combatant : public UDataWidgetBase_CombatantBASE
 {
 	GENERATED_BODY()
 
-	UPROPERTY() UCombatantComponent* REF_combatant;
-
-	virtual void Native_OnSourceAssetChanged(UObject* SourceAsset) override;
-	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 public:
-
+	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	void OnCombatantNotify(UCombatantComponent* Combatant, FName Notify, const FString& Flag);
 
@@ -90,8 +97,7 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UProgressBar* GetWidget_ProgressBar_Attribute();
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UDynamicProgressMeter* GetWidget_DynamicMeter_Attribute();
+
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UTextBlock* GetWidget_Text_CurrentValue();
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
@@ -112,25 +118,21 @@ public:
 // ==============================================================================================================
 
 UCLASS(Abstract)
-class OMEGADEMO_API UDataWidgetBase_Leveling : public UDataWidget
+class OMEGADEMO_API UDataWidgetBase_Leveling : public UDataWidgetBase_CombatantBASE
 {
 	GENERATED_BODY()
 
-	void L_SetLevelComp(ULevelingComponent* comp);
-	UPROPERTY() ULevelingComponent* REF_Comp;
-	UFUNCTION() void L_onXP(ULevelingComponent* comp,float xp,float changed,UOmegaLevelingAsset* asset);
-
+	void L_SetTextFromVal(float val,UTextBlock* text) const;
+	
 public:
-	virtual void OnSourceAssetChanged_Implementation(UObject* Asset) override;
-	virtual void Native_OnListOwnerChanged(UObject* ListOwner) override;
-	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 
+	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Leveling")
 	UOmegaLevelingAsset* LevelingAsset=nullptr;
 
-	UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
-	void OnLevelingComponentChanged(ULevelingComponent* Component);
+	//UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
+	//void OnLevelingComponentChanged(ULevelingComponent* Component);
 	
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	UOmegaLevelingAsset* GetLevelingAsset();
@@ -164,7 +166,7 @@ class OMEGADEMO_API UDataWidgetBase_Quest : public UDataWidget
 {
 	GENERATED_BODY()
 
-	UPROPERTY() UOmegaQuestComponent* QuestComponent;
+	UPROPERTY() AOmegaQuestInstance* QuestInstance;
 
 public:
 
@@ -184,15 +186,13 @@ public:
 // ==============================================================================================================
 
 UCLASS(Abstract)
-class OMEGADEMO_API UDataWidgetBase_Equipment : public UDataWidget
+class OMEGADEMO_API UDataWidgetBase_Equipment : public UDataWidgetBase_CombatantBASE
 {
 	GENERATED_BODY()
 
-	UPROPERTY() UEquipmentComponent* REF_Comp;
 
 public:
 	
-	virtual void OnSourceAssetChanged_Implementation(UObject* Asset) override;
 	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
@@ -200,11 +200,11 @@ public:
 };
 
 UCLASS(Abstract)
-class OMEGADEMO_API UDataWidgetBase_EquipmentSlot : public UDataWidget
+class OMEGADEMO_API UDataWidgetBase_EquipmentSlot : public UDataWidgetBase_CombatantBASE
 {
 	GENERATED_BODY()
 
-	UPROPERTY() UEquipmentComponent* REF_Comp;
+//	UPROPERTY() UEquipmentComponent* REF_Comp;
 	UPROPERTY() UEquipmentSlot* REF_Slot;
 
 public:

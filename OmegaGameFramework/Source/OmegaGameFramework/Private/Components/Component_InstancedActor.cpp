@@ -179,11 +179,11 @@ TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstancesOfCategory(FGa
 		bool LocalIsValid = false;
 		if(bExact)
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempInst).MatchesTagExact(CategoryTag); 
+			LocalIsValid = Execute_GetObjectGameplayCategory(TempInst).MatchesTagExact(CategoryTag); 
 		}
 		else
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempInst).MatchesTag(CategoryTag);
+			LocalIsValid = Execute_GetObjectGameplayCategory(TempInst).MatchesTag(CategoryTag);
 		}
 
 		if(LocalIsValid != bExclude)
@@ -203,11 +203,11 @@ TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstancesWithGameplayTa
 		bool LocalIsValid = false;
 		if(bExact)
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempInst).HasAnyExact(Tags); 
+			LocalIsValid = Execute_GetObjectGameplayTags(TempInst).HasAnyExact(Tags); 
 		}
 		else
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempInst).HasAny(Tags);
+			LocalIsValid = Execute_GetObjectGameplayTags(TempInst).HasAny(Tags);
 		}
 
 		if(LocalIsValid != bExclude)
@@ -318,9 +318,9 @@ void AOmegaInstanceActor::BeginPlay()
 	if(ContextObject)
 	{
 		ContextLabel = UOmegaGameFrameworkBPLibrary::GetObjectLabel(ContextObject);
-		Context_Name = UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(ContextObject);
-		Context_Description = UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(ContextObject);
-		Context_Icon = UOmegaGameFrameworkBPLibrary::GetObjectIcon(ContextObject);
+		Context_Name = UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(ContextObject,FGameplayTag());
+		Context_Description = UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(ContextObject,FGameplayTag());
+		Context_Icon = UOmegaGameFrameworkBPLibrary::GetObjectIcon(ContextObject,FGameplayTag());
 	}
 	
 }
@@ -338,14 +338,31 @@ bool AOmegaInstanceActor::Local_SourceHasInterface() const
 	return ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass());	
 }
 
-void AOmegaInstanceActor::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-                                                            FText& Description)
+void AOmegaInstanceActor::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
 {
 	if(Local_SourceHasInterface())
 	{
-		IDataInterface_General::Execute_GetGeneralDataText(ContextObject, Label, Context, Name, Description);
+		IDataInterface_General::Execute_GetGeneralDataText(ContextObject, Tag, Name, Description);
 	}
 }
+
+void AOmegaInstanceActor::GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture,
+	class UMaterialInterface*& Material, FSlateBrush& Brush)
+{
+	if(Local_SourceHasInterface())
+	{
+		IDataInterface_General::Execute_GetGeneralDataImages(ContextObject, Tag, Texture, Material, Brush);
+	}
+}
+
+void AOmegaInstanceActor::GetGeneralAssetColor_Implementation(FGameplayTag Tag, FLinearColor& Color)
+{
+	if(Local_SourceHasInterface())
+	{
+		IDataInterface_General::Execute_GetGeneralAssetColor(ContextObject,Tag, Color);
+	}
+}
+
 
 void AOmegaInstanceActor::GetGeneralAssetLabel_Implementation(FString& Label)
 {
@@ -355,29 +372,13 @@ void AOmegaInstanceActor::GetGeneralAssetLabel_Implementation(FString& Label)
 	}
 }
 
-void AOmegaInstanceActor::GetGeneralAssetColor_Implementation(FLinearColor& Color)
-{
-	if(Local_SourceHasInterface())
-	{
-		IDataInterface_General::Execute_GetGeneralAssetColor(ContextObject, Color);
-	}
-}
-
-void AOmegaInstanceActor::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	if(Local_SourceHasInterface())
-	{
-		IDataInterface_General::Execute_GetGeneralDataImages(ContextObject, Label, Context, Texture, Material, Brush);
-	}
-}
 
 FGameplayTag AOmegaInstanceActor::GetObjectGameplayCategory_Implementation()
 {
 	FGameplayTag LocalCategory;
 	if(Local_SourceHasInterface())
 	{
-		LocalCategory = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(ContextObject);
+		LocalCategory = IDataInterface_General::Execute_GetObjectGameplayCategory(ContextObject);
 	}
 	return LocalCategory;
 }
@@ -387,7 +388,7 @@ FGameplayTagContainer AOmegaInstanceActor::GetObjectGameplayTags_Implementation(
 	FGameplayTagContainer LocalTags;
 	if(Local_SourceHasInterface())
 	{
-		LocalTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(ContextObject);
+		LocalTags = IDataInterface_General::Execute_GetObjectGameplayTags(ContextObject);
 	}
 	return LocalTags;
 }

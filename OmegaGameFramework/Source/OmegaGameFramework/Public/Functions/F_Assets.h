@@ -7,6 +7,8 @@
 #include "F_Assets.generated.h"
 
 
+struct FGameplayTag;
+class UPrimaryAssetLabel;
 class UOmegaAttribute;
 class UEquipmentSlot;
 class UOmegaFaction;
@@ -26,10 +28,6 @@ public:
 	UFUNCTION() static TArray<FName> nameOptions_EquipSlot();
 	UFUNCTION() static TArray<FName> nameOptions_Faction();
 	
-	UFUNCTION() static TArray<FName> nameOptions_System();
-	UFUNCTION() static TArray<FName> nameOptions_Menu();
-	UFUNCTION() static TArray<FName> nameOptions_HUD();
-	
 	UFUNCTION() static TArray<FName> nameOptions_List_Asset();
 	
 	/**
@@ -43,13 +41,30 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Omega|Class", meta = (Keywords = "class name string"))
 	static TArray<UClass*> GetAllClassesInPath(const FString& Path, TSubclassOf<UObject> ParentFilter, bool bRecursiveSearch);
 
-	
+	UFUNCTION(BlueprintPure,Category="Omega|Asset")
+	static UClass* GetBlueprintClassFromPath(const FString Path);
 	
 	UFUNCTION(BlueprintCallable, Category = "Omega|Asset", meta = (DeterminesOutputType="Class",ExpandBoolAsExecs = "result"))
 	static UObject* CreateObject_FromFile(TSubclassOf<UObject> Class, UObject* Outer, const FString& File, bool& result);
 
 	UFUNCTION(BlueprintCallable, Category = "Omega|Asset")
 	static UObject* LoadUassetWithMount(const FString& UAssetFilepath);
+		
+	//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// Global Taggged
+	//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	UFUNCTION(BlueprintPure, Category = "Omega|Asset",DisplayName="Get GlobalTagged - Data Asset",meta=(DeterminesOutputType="Class",AdvancedDisplay="Fallback"))
+	static UPrimaryDataAsset* GetGlobalTagged_Asset(UPARAM(meta=(Categories="UASSET") )FGameplayTag Tag, TSubclassOf<UPrimaryDataAsset> Class,UPrimaryDataAsset* Fallback=nullptr);
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Asset",DisplayName="Get GlobalTagged - Data Asset List",meta=(DeterminesOutputType="Class",AdvancedDisplay="Fallback"))
+	static TArray<UPrimaryDataAsset*> GetNamedList_DataAssetList(UPARAM(meta=(Categories="UASSET_LIST") )FGameplayTag Tag, TSubclassOf<UPrimaryDataAsset> Class);
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Asset",DisplayName="Get GlobalTagged - Class",meta=(DeterminesOutputType="Class",AdvancedDisplay="Fallback"))
+	static TSubclassOf<UObject> GetGlobalTagged_Class(UPARAM(meta=(Categories="UCLASS") )FGameplayTag Tag, TSubclassOf<UObject> Class,TSubclassOf<UObject> Fallback=nullptr);
+	
+	//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// Named
+	//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|Asset")
 	static UPrimaryDataAsset* GetNamed_DataAsset(UPARAM(meta = (GetOptions = "nameOptions_DataAsset")) FName Name);
@@ -63,23 +78,27 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Omega|Asset")
 	static UOmegaFaction* GetNamed_Faction(UPARAM(meta = (GetOptions = "nameOptions_Faction")) FName Name);
 	
-	UFUNCTION(BlueprintPure, Category = "Omega|Asset",meta=(AdvancedDisplay="Fallback"))
-	static TSubclassOf<UPrimaryDataAsset> GetNamed_DataAssetClass(FName Name, TSubclassOf<UPrimaryDataAsset> Fallback=nullptr);
-	
-	UFUNCTION(BlueprintPure, Category = "Omega|Asset",meta=(AdvancedDisplay="Fallback"))
-	static TSubclassOf<AOmegaGameplaySystem> GetNamed_System(UPARAM(meta = (GetOptions = "nameOptions_System")) FName Name, TSubclassOf<AOmegaGameplaySystem> Fallback=nullptr);
-	
-	UFUNCTION(BlueprintPure, Category = "Omega|Asset",meta=(AdvancedDisplay="Fallback"))
-	static TSubclassOf<UMenu> GetNamed_Menu(UPARAM(meta = (GetOptions = "nameOptions_Menu")) FName Name, TSubclassOf<UMenu> Fallback=nullptr);
-	
-	UFUNCTION(BlueprintPure, Category = "Omega|Asset",meta=(AdvancedDisplay="Fallback"))
-	static TSubclassOf<UHUDLayer> GetNamed_HUD(UPARAM(meta = (GetOptions = "nameOptions_HUD")) FName Name, TSubclassOf<UHUDLayer> Fallback=nullptr);
 		
 	UFUNCTION(BlueprintPure, Category = "Omega|Asset")
 	static TMap<UEquipmentSlot*, UPrimaryDataAsset*> ConvNamed_Equipment(TMap<FName, UPrimaryDataAsset*> In);
 	
-		
 	UFUNCTION(BlueprintPure, Category = "Omega|Asset")
 	static TArray<UPrimaryDataAsset*> GetNamedList_DataAsset(UPARAM(meta = (GetOptions = "nameOptions_List_Asset")) FName Name);
+	
+	//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// Primary Asset
+	//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	static TArray<UPrimaryAssetLabel*> GetAllLoadedLabels();
+	
+	static void AppendManagedAssets(UPrimaryAssetLabel* Label, TSubclassOf<UObject> FilterClass,TSet<UObject*>& OutSet);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Asset",meta=(DeterminesOuputType="FilterClass"),DisplayName="Primary Asset Label - Get of (ALL)")
+	static TArray<UObject*> GetPAL_AllAssets(UPrimaryAssetLabel* Label);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Asset",meta=(DeterminesOuputType="FilterClass"),DisplayName="Primary Assets - Get (ALL)")
+	static TArray<UObject*> GetPALObjects_All(TSubclassOf<UObject> FilterClass=nullptr);
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Asset",meta=(DeterminesOuputType="FilterClass"),DisplayName="Primary Assets - Get (Chunk Range)")
+	static TArray<UObject*> GetPALObjects_OfIDRange(int32 minChunkID,int32 maxChunkID, TSubclassOf<UObject> FilterClass=nullptr);
 	
 };

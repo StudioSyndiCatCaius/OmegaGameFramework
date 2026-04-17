@@ -19,5 +19,7 @@ class OMEGAGAMEFRAMEWORK_API IDataInterface_AssetThumbnail
 	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") FLinearColor GetThumbnailBack_Tint();
 	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") FSlateBrush GetThumbnail_Brush();
 	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") FText GetThumbnail_Text();
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Editor|Thumbnail") FColor GetThumbnail_Color();
 };
 

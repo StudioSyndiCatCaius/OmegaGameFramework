@@ -12,7 +12,7 @@
 
 	
 UCLASS(DisplayName="➡️Linear Events")
-class OMEGADEMO_API UFlowNode_LinearEvents : public UFlowNode, public IDataInterface_General, public IGameplayTagsInterface
+class OMEGADEMO_API UFlowNode_LinearEvents : public UFlowNode
 {
 	GENERATED_BODY()
 
@@ -31,7 +31,11 @@ public:
 	UPROPERTY(EditAnywhere,Category="General") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,Category="General") FGameplayTagContainer GameplayTags;
 
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	{
+		Name=NodeName;
+		Description=NodeDescription;
+	};
 	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override {return CategoryTag;};
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override {return GameplayTags;};
 	
