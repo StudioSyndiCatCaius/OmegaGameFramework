@@ -30,6 +30,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAssetSettings : public UDeveloperSettings
 	GENERATED_UCLASS_BODY()
 public:
 	
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor") void LoadDevConfig();
+	
 	// ---------------------------------------------------------------------------
 	// Named Assets
 	// ---------------------------------------------------------------------------

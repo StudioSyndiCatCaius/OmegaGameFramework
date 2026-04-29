@@ -3,6 +3,7 @@
 
 #include "OmegaSettings.h"
 #include "MetasoundSource.h"
+#include "Functions/F_Physics.h"
 
 UMetaSoundSource* UOmegaSettings::GetMetaSoundSourceFromPath() const
 {
@@ -28,6 +29,7 @@ UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
     
     System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
     System_Interaction=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
+    
 }
 
 
@@ -167,6 +169,30 @@ FOmegaInputConfig UOmegaSettings::GetInputActionConfig(FGameplayTag input_action
 {
     TMap<FGameplayTag, FOmegaInputConfig> temp=GetAllInputActionConfigs();
     return temp.FindOrAdd(input_action);
+}
+
+UOmegaPhysicsSurfaceType* UOmegaSettings::GetSurfaceTypeFromMaterial(UPhysicalMaterial* mat)
+{
+    for (auto * g : GetAllGameplaySettings())
+    {
+        if (g)
+        {
+            TArray<UPhysicalMaterial*> materialP;
+            g->PhysicsSurfaceTypes.GetKeys(materialP);
+            for (auto* phys : materialP)
+            {
+                if (phys)
+                {
+                    return g->PhysicsSurfaceTypes[phys];
+                }
+            }
+        }
+    }
+    if (UOmegaPhysicsSurfaceType* t=DefaultSurfaceTypeData.LoadSynchronous())
+    {
+        return t;
+    }
+    return nullptr;
 }
 
 TArray<UOmegaGameplayConfig*> UOmegaSettings::GetAllGameplaySettings() const

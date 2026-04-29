@@ -20,9 +20,9 @@ struct FOmegaLevelSequenceConfig
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") bool bOverrideInstance;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") AActor* OriginActor;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") bool bOverrideInstance = false;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") AActor* OriginActor = nullptr;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") FTransform OriginTransform;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Sequence") TMap<FName,AActor*> ActorBindings;

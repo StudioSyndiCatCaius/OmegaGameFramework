@@ -3,6 +3,10 @@
 
 #include "OmegaSettings_Assets.h"
 
+#include "LuaBlueprintFunctionLibrary.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Engine.h"
+
 
 UOmegaAssetSettings::UOmegaAssetSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -18,3 +22,7 @@ UOmegaAssetSettings::UOmegaAssetSettings(const FObjectInitializer& ObjectInitial
 	Quickload_ClassNameRemap.Add(TSoftClassPtr<UMaterialInterface>(),"Materials");
 }
 
+void UOmegaAssetSettings::LoadDevConfig()
+{
+	GEngine->GetEngineSubsystem<UOmegaSubsystem_Engine>()->LoadDevConfig();
+}

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interfaces/I_Common.h"
 #include "Choice/OmegaLinearChoice.h"
+#include "Functions/F_GlobalScripting.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "UObject/Object.h"
 #include "LinearChoice_SimpleChoice.generated.h"
@@ -19,11 +20,11 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice", meta=(MultiLine))
 	FText ChoiceText;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
-	FOmegaSaveConditions Conditions;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
 	FGameplayTagContainer Tags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
 	FOmegaBitflagsBase Flags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice",meta=(ShowOnlyInnerProperties))
+	FOmegaGlobalConditions Conditions;
 	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
 	{
 		Name=ChoiceText;

@@ -4,6 +4,29 @@
 #include "Widget/DataWidget.h"
 #include "CommonTextBlock.h"
 
+UActorComponent* UDataWidget::local_GetComponentFromObject(UObject* object, TSubclassOf<UActorComponent> Class)
+{
+	if(!Class || !object) { return nullptr; }
+	UActorComponent* local_comp=nullptr;
+	
+	if(object->GetClass()->IsChildOf(UActorComponent::StaticClass()))
+	{
+		local_comp=Cast<UActorComponent>(object);
+	}
+	else if(AActor* temp_actor = Cast<AActor>(object))
+	{
+		if(UActorComponent* temp_comp = temp_actor->GetComponentByClass(Class))
+		{
+			local_comp=temp_comp;
+		}
+	}
+	if(local_comp && local_comp->GetClass()->IsChildOf(Class))
+	{
+		return local_comp;
+	}
+	return nullptr;
+}
+
 void UDataWidget::L_overrideTextStyle(UTextBlock* text, TSubclassOf<UCommonTextStyle> style)
 {
 	if (text && text->GetClass()->IsChildOf(UCommonTextBlock::StaticClass()) && style)
@@ -370,13 +393,14 @@ void UDataWidget::Refresh()
 		}
 		bool Local_OverrideSize;
 		FVector2D Local_NewSize;
-		if(GetBrushImage(Local_OverrideSize, Local_NewSize) && LocalBrush.GetResourceObject())
+		UImage* BrushImg = GetBrushImage(Local_OverrideSize, Local_NewSize);
+		if(BrushImg && LocalBrush.GetResourceObject())
 		{
 			if(Local_OverrideSize)
 			{
 				LocalBrush.ImageSize = Local_NewSize;
 			}
-			GetBrushImage(Local_OverrideSize, Local_NewSize)->SetBrush(LocalBrush);
+			BrushImg->SetBrush(LocalBrush);
 		}
 
 		//try set material image.
@@ -554,11 +578,11 @@ void UDataWidget::NativeConstruct()
 	}
 	Local_UpdateTooltip(ReferencedAsset);
 
-	if(IsDesignTime())
+	if(bAutoRefreshOnTimer)
 	{
 		const double moddedval = FMath::RandRange(RefreshVariance*-1.0f,RefreshVariance);
 		refresh_val= moddedval+RefreshFrequency;
-		
+
 		GetWorld()->GetTimerManager().SetTimer(refresh_timer, this, &UDataWidget::Refresh, refresh_val, true);
 	}
 

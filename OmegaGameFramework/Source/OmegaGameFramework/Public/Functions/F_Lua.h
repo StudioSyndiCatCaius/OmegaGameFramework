@@ -48,9 +48,11 @@ public:
 	static FLuaValue ParseStringToLuaTable(UObject* WorldContextObject, const FString& String, TSubclassOf<UOmegaLuaParser> Parser);
 	
 	// -------- meta
+	UFUNCTION(BlueprintPure,Category="Omega|Lua",DisplayName="Lua - Get Object Metakey",meta=(WorldContext="WorldContextObject"))
+	static FString Object_GetMetakey( UObject* object);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Lua",DisplayName="Lua - Get Meta (UObject)",meta=(WorldContext="WorldContextObject"))
-	FLuaValue GetMeta_UObject(UObject* WorldContextObject, UObject* object);
+	UFUNCTION(BlueprintPure,Category="Omega|Lua",DisplayName="Lua - Get Object Metadata",meta=(WorldContext="WorldContextObject"))
+	static FLuaValue Object_GetMetadata(UObject* WorldContextObject, UObject* object);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Lua",DisplayName="Lua - Filter Objects By Param Value",meta=(WorldContext="WorldContextObject",DeterminesOutputType="Class"))
 	static TArray<UObject*> FilterObjects_ByParamValue(UObject* WorldContextObject, TArray<UObject*> objects, TSubclassOf<UObject> Class, const FString& param, FLuaValue Value);

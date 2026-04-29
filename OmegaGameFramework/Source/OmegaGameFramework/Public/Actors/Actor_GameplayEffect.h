@@ -58,7 +58,7 @@ public:
 	void TriggerEffect();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Gameplay|Effects")
-	bool EffectCanApply(UCombatantComponent* EffectInstigator, UObject* Context, FOmegaCommonMeta Meta) const;
+	bool EffectCanApply(UCombatantComponent* EffectInstigator, UObject* Context, FOmegaCommonMeta Meta);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
 	void EffectBeginPlay(UObject* Context, FOmegaCommonMeta Meta);
@@ -102,7 +102,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags",meta=(Categories="EFFECT"))
 	FGameplayTagContainer RemoveEffectsOnApplied;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags",meta=(Categories="EFFECT"))
-	FGameplayTagContainer RemoveEffectsOnTrigger;
+	FGameplayTagContainer BlockEffects;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tags",meta=(Categories="EFFECT"))
+	//FGameplayTagContainer RemoveEffectsOnTrigger;
 
 	void Local_RemoveEffects(FGameplayTagContainer Effects);
 	

@@ -18,7 +18,10 @@
 #include "Engine/GameInstance.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetRenderingLibrary.h"
+#include "ImageUtils.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
+#include "Misc/FileHelper.h"
 #include "Microsoft/AllowMicrosoftPlatformTypes.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -30,17 +33,22 @@
 
 void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
+	Setup();
+}
+
+void UOmegaSaveSubsystem::Setup()
+{
 	Local_InitializeSaveObjects();
 
 	//Setup play timer
 	FTimerHandle GameTimeHandle;
-	GetWorld()->GetTimerManager().SetTimer(GameTimeHandle, this, &UOmegaSaveSubsystem::OnPlaytimeUpdate, 0.001f, true);
+	GetWorld()->GetTimerManager().SetTimer(GameTimeHandle, this, &UOmegaSaveSubsystem::OnPlaytimeUpdate, 1.0f, true);
 }
 
 void UOmegaSaveSubsystem::OnPlaytimeUpdate()
 {
-	ActiveSaveData->Playtime += FTimespan::FromMilliseconds(1);
-	GlobalSaveData->Playtime += FTimespan::FromMilliseconds(1);
+	ActiveSaveData->Playtime += FTimespan::FromSeconds(1);
+	GlobalSaveData->Playtime += FTimespan::FromSeconds(1);
 }
 
 FTimespan UOmegaSaveSubsystem::GetSavePlaytime(bool bGlobal)
@@ -98,7 +106,11 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame_Named(FString Slot, bool& Success,
 		if (ValidSave)
 		{
 			UOmegaSaveGame* LocalGameSave = Cast<UOmegaSaveGame>(UGameplayStatics::LoadGameFromSlot(Slot, 0));
-			LocalGameSave->SaveScreenshot = UKismetRenderingLibrary::ImportFileAsTexture2D(this, Local_GetScreenshotPath(Slot));
+			const FString ScreenshotPath = Local_GetScreenshotPath(Slot);
+			if (FPaths::FileExists(ScreenshotPath))
+			{
+				LocalGameSave->SaveScreenshot = FImageUtils::ImportFileAsTexture2D(ScreenshotPath);
+			}
 			return LocalGameSave;
 		}
 	}
@@ -191,8 +203,28 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory,
 		ULuaBlueprintFunctionLibrary::LuaGetGlobal(this,nullptr,GetMutableDefault<ULuaSettings>()->GameSave_Table));
 	
 	
+	// Capture screenshot synchronously from the current viewport so the file is guaranteed
+	// to exist on disk before the .sav is written (FScreenshotRequest is async and unreliable
+	// in packaged builds).
 	const FString fileName = Local_GetScreenshotPath(SlotName);
-	FScreenshotRequest::RequestScreenshot(fileName, false, false);
+	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+	{
+		FViewport* Viewport = GEngine->GameViewport->Viewport;
+		TArray<FColor> Bitmap;
+		const FIntPoint Size = Viewport->GetSizeXY();
+		if (Viewport->ReadPixels(Bitmap) && Bitmap.Num() == Size.X * Size.Y)
+		{
+			IImageWrapperModule& ImageWrapperModule = FModuleManager::GetModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+			TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+			if (ImageWrapper.IsValid() && ImageWrapper->SetRaw(Bitmap.GetData(), Bitmap.GetAllocatedSize(), Size.X, Size.Y, ERGBFormat::BGRA, 8))
+			{
+				const TArray64<uint8>& CompressedData = ImageWrapper->GetCompressed();
+				FFileHelper::SaveArrayToFile(
+					TArrayView<const uint8>(CompressedData.GetData(), (int32)CompressedData.Num()),
+					*fileName);
+			}
+		}
+	}
 
 	// WRITE TO DISK
 	if(alt_path.IsEmpty())
@@ -217,6 +249,7 @@ UOmegaSaveGame* UOmegaSaveSubsystem::CreateNewGame()
 	CreatedGame->SaveSeed=UKismetMathLibrary::RandomIntegerInRange(0,999999999);
 	CreatedGame->OnSaveCreated(GetWorld()->GetGameInstance());
 	OGF_GAME_CORE()->OnSave_Created(CreatedGame,GetGameInstance());
+	OGF_Subsystems::oGameInstance(this)->Patch_Event(4,CreatedGame);
 	return CreatedGame;
 }
 
@@ -253,7 +286,8 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 	
 	//Load saved lua table
 	ULuaBlueprintFunctionLibrary::LuaSetGlobal(this,nullptr,GetMutableDefault<ULuaSettings>()->GameSave_Table,ActiveSaveData->Lua_LoadTable(this));
-	OGF_GAME_CORE()->OnSave_Started(ActiveSaveData,GetGameInstance());
+	OGF_GAME_CORE()->OnSave_Started(GameData,GetGameInstance());
+	OGF_Subsystems::oGameInstance(this)->Patch_Event(5,GameData);
 	//LASTLY, Try and load saved level if chosen
 	if(LoadSavedLevel)
 	{
@@ -288,6 +322,7 @@ void UOmegaSaveSubsystem::Local_InitializeSaveObjects()
 	if(!ActiveSaveData)
 	{
 		ActiveSaveData = CreateNewGame();
+		StartGame(ActiveSaveData,false,FGameplayTagContainer());
 	}
 	//Load saved lua table
 	ULuaBlueprintFunctionLibrary::LuaSetGlobal(this,nullptr,GetMutableDefault<ULuaSettings>()->GlobalSave_Table,
@@ -325,10 +360,7 @@ UOmegaSaveBase* UOmegaSaveSubsystem::GetSaveObject(bool Global) const
 	{
 		return GlobalSaveData;
 	}
-	else
-	{
-		return ActiveSaveData;
-	}
+	return ActiveSaveData;
 }
 
 void UOmegaSaveSubsystem::SaveGlobalGame()
@@ -395,109 +427,6 @@ bool UOmegaSaveSubsystem::SaveTagsMatchQuery(FGameplayTagQuery Query, bool Globa
 	return Query.Matches(GetStoryTags(Global));
 }
 
-void UOmegaSaveSubsystem::SetSavedActorState(AActor* Actor, FGameplayTag StateTag)
-{
-	
-}
-
-void UOmegaSaveSubsystem::AddSavedActorTags(AActor* Actor, FGameplayTagContainer Tags)
-{
-	
-}
-
-void UOmegaSaveSubsystem::RemoveSavedActorTags(AActor* Actor, FGameplayTagContainer Tags)
-{
-	
-}
-
-void UOmegaSaveSubsystem::ClearSavedStateFromActors(FGameplayTag SavedState)
-{
-	TArray<TSoftObjectPtr<AActor>> ActorList;
-
-	ActiveSaveData->ActorStates.GetKeys(ActorList);
-	
-	for(TSoftObjectPtr<AActor> TempActor : ActorList)
-	{
-		if(ActiveSaveData->ActorStates.FindOrAdd(TempActor).MatchesTag(SavedState))
-		{
-			ActiveSaveData->ActorStates.Add(TempActor, FGameplayTag());
-		}
-	}
-}
-
-void UOmegaSaveSubsystem::SetDataAssetCollected(UPrimaryDataAsset* Asset, bool bGlobal, bool Collected)
-{
-	if(Collected)
-	{
-		GetSaveObject(bGlobal)->CollectedDataAssets.AddUnique(Asset);
-	}
-	else
-	{
-		UOmegaSaveBase* _sav=GetSaveObject(bGlobal);
-		if(_sav->CollectedDataAssets.Contains(Asset))
-		{
-			_sav->CollectedDataAssets.Remove(Asset);
-		}
-	}
-}
-
-void UOmegaSaveSubsystem::SetDataAssetsCollected(TArray<UPrimaryDataAsset*> Assets, bool bGlobal, bool Collected)
-{
-	for (auto* TempAsset: Assets)
-	{
-		if(TempAsset)
-		{
-			SetDataAssetCollected(TempAsset, bGlobal, Collected);
-		}
-	}
-}
-
-bool UOmegaSaveSubsystem::IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal) const
-{
-	return GetSaveObject(bGlobal)->CollectedDataAssets.Contains(Asset);
-}
-
-TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssets(bool bGlobal) const
-{
-	return GetSaveObject(bGlobal)->CollectedDataAssets;
-}
-
-TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsOfCategory(FGameplayTag CategoryTag, bool bGlobal) const
-{
-	TArray<UPrimaryDataAsset*> OutAssets;
-
-	for(auto* TempAsset : GetSaveObject(bGlobal)->CollectedDataAssets)
-	{
-		if(TempAsset->Implements<UDataInterface_General>())
-		{
-			if(IDataInterface_General::Execute_GetObjectGameplayCategory(TempAsset) == CategoryTag)
-			{
-				OutAssets.Add(TempAsset);
-			}
-		}
-	}
-
-	return OutAssets;
-}
-
-TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(FGameplayTagContainer Tags, bool bGlobal,
-	bool bExclude, bool bExact) const
-{
-	TArray<UPrimaryDataAsset*> OutAssets;
-	
-	for(auto* TempAsset : GetSaveObject(bGlobal)->CollectedDataAssets)
-	{
-		if(TempAsset->Implements<UDataInterface_General>())
-		{
-			FGameplayTagContainer TempTags = IDataInterface_General::Execute_GetObjectGameplayTags(TempAsset);
-			if(((TempTags.HasAnyExact(Tags) && bExact) || (TempTags.HasAny(Tags) && !bExact)) == !bExclude) 
-			{
-				OutAssets.Add(TempAsset);
-			}
-		}
-	}
-	return OutAssets;
-}
 
 // ------------------------------------------------------------------------------------------------------------
 // Data Assets
@@ -506,7 +435,10 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetCollectedDataAssetsWithTags(F
 void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags,
 	bool bGlobal)
 {
-	GetSaveObject(bGlobal)->Entities.Asset_SetTags(Asset,Tags,bHasTags);
+	if (UOmegaSaveBase* s=GetSaveObject(bGlobal))
+	{
+		s->Entities.Asset_SetTags(Asset,Tags,bHasTags);	
+	}
 }
 
 void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset_List(TArray<UPrimaryDataAsset*> Assets, FGameplayTagContainer Tags,
@@ -529,92 +461,7 @@ TArray<UPrimaryDataAsset*> UOmegaSaveSubsystem::GetSaveAssets_WithTags(FGameplay
 	return GetSaveObject(bGlobal)->Entities.Asset_GetWithTags(Tags,bExact);
 }
 
-void UOmegaSaveSubsystem::SetGuidCollected(FGuid Guid, bool Collected, bool bGlobal)
-{
-	if(Collected)
-	{
-		GetSaveObject(bGlobal)->CollectedGuids.AddUnique(Guid);
-	}
-	else
-	{
-		GetSaveObject(bGlobal)->CollectedGuids.Remove(Guid);
-	}
-}
 
-bool UOmegaSaveSubsystem::GetIsGuidCollected(FGuid Guid, bool bGlobal) const
-{
-	return GetSaveObject(bGlobal)->CollectedGuids.Contains(Guid);
-}
-
-void UOmegaSaveSubsystem::SetGuidHasTags(FGuid Guid, FGameplayTagContainer Tags, bool HasTags, bool bGlobal)
-{
-	GetSaveObject(bGlobal)->Entities.Guid_SetTags(Guid,Tags,HasTags);
-}
-
-void UOmegaSaveSubsystem::SetGuidHasTags_List(TArray<FGuid> Guids, FGameplayTagContainer Tags, bool HasTags,
-	bool bGlobal)
-{
-	for(FGuid i : Guids)
-	{
-		SetGuidHasTags(i,Tags,HasTags,bGlobal);
-	}
-}
-
-
-bool UOmegaSaveSubsystem::GetDoesGuidHaveTags(FGuid Guid, FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
-{
-	return  GetSaveObject(bGlobal)->Entities.Guid_HasTags(Guid,Tags,bExact);
-}
-
-TArray<FGuid> UOmegaSaveSubsystem::GetSaveGuids_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const
-{
-	
-	return GetSaveObject(bGlobal)->Entities.Guid_GetWithTags(Tags,bExact);
-}
-
-
-bool UOmegaSaveSubsystem::CustomSaveConditionsMet(FOmegaSaveConditions Conditions)
-{
-	TArray<UOmegaSaveCondition*> LocalConditionList = Conditions.Conditions;
-	if(LocalConditionList.IsEmpty()) { return true; }
-	for(const auto* TempCol : Conditions.ConditionCollections)
-	{
-		LocalConditionList.Append(TempCol->Conditions);
-	}
-
-	switch (Conditions.CheckType) {
-	case BoolType_And:
-		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
-		{
-			if(!TempCondition || !TempCondition->CheckSaveCondition(this))
-			{
-				return false;
-			}
-		}
-		break;
-	case BoolType_Or:
-		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
-		{
-			if(TempCondition && TempCondition->CheckSaveCondition(this))
-			{
-				return true;
-			}
-			return false;
-		}
-		break;
-	case BoolType_NONE:
-		for(const UOmegaSaveCondition* TempCondition : LocalConditionList)
-		{
-			if(TempCondition && TempCondition->CheckSaveCondition(this))
-			{
-				return false;
-			}
-		}
-		break;
-	}
-	
-	return true;
-}
 
 void UOmegaSaveSubsystem::SaveObjectJsonData(UObject* Object, bool Global)
 {
@@ -650,7 +497,14 @@ void UOmegaSaveSubsystem::SetSaveSourceRegistered(UObject* Source, bool Register
 {
 	if(Source && Source->GetClass()->ImplementsInterface(UOmegaSaveInterface::StaticClass()))
 	{
-		JsonSaveSources.Add(Source);
+		if(Registered)
+		{
+			JsonSaveSources.AddUnique(Source);
+		}
+		else
+		{
+			JsonSaveSources.Remove(Source);
+		}
 	}
 }
 
@@ -721,7 +575,8 @@ void UOmegaSaveSubsystem::ClearAllStoryStates(bool bGlobal)
 
 bool UOmegaSaveSubsystem::IsStoryStateActive(UOmegaStoryStateAsset* State)
 {
-	return GetActiveStoryStates().Contains(State);
+	return ActiveSaveData->ActiveStoryStates.Contains(State)
+		|| GlobalSaveData->ActiveStoryStates.Contains(State);
 }
 
 
@@ -790,15 +645,6 @@ void UOmegaSaveBase::Lua_SaveTable(UObject* context, FLuaValue LuaValue)
 {
 	FString l=ULuaBlueprintFunctionLibrary::LuaValueToJson(LuaValue);
 	LuaSavedTable.JsonObjectFromString(l);
-}
-
-// ====================================================================================================
-// Save Condition
-// ====================================================================================================
-
-bool UOmegaSaveCondition::CheckSaveCondition_Implementation(UOmegaSaveSubsystem* SaveSubsystem) const
-{
-	return true;
 }
 
 

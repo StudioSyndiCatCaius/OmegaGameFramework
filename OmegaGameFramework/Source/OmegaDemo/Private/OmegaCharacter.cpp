@@ -92,9 +92,8 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	Saveable = CreateDefaultSubobject<UOmegaSaveableComponent>(TEXT("Saveable"));
 	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
-	ActorIdentity->PauseCategory=FGameplayTag::RequestGameplayTag(TEXT("Character.Type.Field"));
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
-	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
+	//LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
 	
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("Camera Boom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -261,15 +260,7 @@ void AOmegaCharacter::Camera_Front()
 
 
 
-UOAsset_Appearance* AOmegaCharacter::GetAppearanceAsset_Implementation()
-{
-	if(ActorIdentity && ActorIdentity->GetIdentitySourceAsset() &&
-		ActorIdentity->GetIdentitySourceAsset()->GetClass()->ImplementsInterface(UDataInterface_AppearanceSource::StaticClass()))
-	{
-		return IDataInterface_AppearanceSource::Execute_GetAppearanceAsset(ActorIdentity->GetIdentitySourceAsset());
-	}
-	return Super::GetAppearanceAsset_Implementation();
-}
+
 
 // ========================================================================================================
 // Encounter Character

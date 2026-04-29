@@ -12,14 +12,16 @@ struct FOmegaSpawnableConfig
 {
 	GENERATED_BODY()
 	
-	TArray<FName> L_getSpawnables() const;
-	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable",meta=(GetOptions="L_getSpawnables"))
 	FName NamedSpawnable;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable",meta=(MustImplement="/Script/OmegaGameFramework.ActorInterface_Spawnable"))
 	TSubclassOf<AActor> SpawnableClass;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
 	TObjectPtr<UPrimaryDataAsset> Identity;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaBitflagsBase Bitflags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaClassNamedLists Lists;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaActorRelatives Relatives;
 	
 };
 
@@ -54,8 +56,10 @@ class OMEGAGAMEFRAMEWORK_API AOmegaActorSpawnable : public AActor
 
 	UPROPERTY() AActor* REF_linkedActor=nullptr;
 	UPROPERTY() AActor* REF_Default=nullptr;
-	
+	TSubclassOf<AActor> GetSpawnableClass();
+	bool L_ClassUsesInterface();
 public:
+	UFUNCTION() TArray<FName> L_getSpawnables() const;
 	AOmegaActorSpawnable();
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;

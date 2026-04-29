@@ -29,15 +29,7 @@ UTurnBasedManagerComponent::UTurnBasedManagerComponent()
 void UTurnBasedManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if(!TurnManager)
-	{
-		TurnManager=NewObject<UTurnManagerBase>(this,UTurnManagerBase::StaticClass());
-	}
-	if(TurnManager)
-	{
-		TurnManager->TurnManagerRef=this;
-	}
+	
 }
 
 
@@ -48,15 +40,6 @@ void UTurnBasedManagerComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
-}
-
-void UTurnBasedManagerComponent::SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass)
-{
-	if(NewClass)
-	{
-		TurnManager = NewObject<UTurnManagerBase>(this, NewClass);
-		TurnManager->TurnManagerRef = this;
-	}
 }
 
 void UTurnBasedManagerComponent::SetTurnAbilityClass(TSubclassOf<AOmegaAbility> AbilityClass)
@@ -102,14 +85,23 @@ UCombatantComponent* UTurnBasedManagerComponent::GetTurnMemberAtIndex(int32 Inde
 //Add to Turn Order
 void UTurnBasedManagerComponent::AddToTurnOrder(UCombatantComponent* Combatant)
 {
-	if(!TurnManager->BlockFromTurnOrder(Combatant))
+	//if(!TurnManager->BlockFromTurnOrder(Combatant))
+	if (true)
 	{
-		TurnOrder.Add(Combatant);	// NEEDS TO BE FINISHED!! Must add to appropriate Index
-		OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant));
-	
-		if(DoesCombatantUseInterface(Combatant))
+		bool bIsBlocked=false;
+		if (Query_BlockFromTurnOrder.IsBound())
 		{
-			IActorInterface_TurnOrderCombatant::Execute_OnAddedToTurnOrder(GetActiveTurnMember()->GetOwner(), this);
+			bIsBlocked=Query_BlockFromTurnOrder.Execute(Combatant);
+		}
+		if (!bIsBlocked)
+		{
+			TurnOrder.Add(Combatant);	// NEEDS TO BE FINISHED!! Must add to appropriate Index
+			OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant));
+	
+			if(DoesCombatantUseInterface(Combatant))
+			{
+				IActorInterface_TurnOrderCombatant::Execute_OnAddedToTurnOrder(GetActiveTurnMember()->GetOwner(), this);
+			}
 		}
 	}
 }
@@ -151,20 +143,21 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 		AddToTurnOrder(TempComb);
 	}
 	//TurnOrder = GetRegisteredCombatants();
-	
-	if(TurnManager)
-	{
-		// Create a copy of the input array to keep the original intact
-		TArray<UCombatantComponent*> TempOrder = TurnOrder;
+	// Create a copy of the input array to keep the original intact
+    TArray<UCombatantComponent*> TempOrder = TurnOrder;
 
-		// Sort the array using the ShouldCheckedObjectSortFirst function as a comparison
-		TempOrder.Sort([&](UCombatantComponent& A, UCombatantComponent& B)
-		{
-			return TurnManager->ShouldTargetActFirst(&A,&B);
-		});
+    // Sort the array using the ShouldCheckedObjectSortFirst function as a comparison
+    TempOrder.Sort([&](UCombatantComponent& A, UCombatantComponent& B)
+    {
+    	if (Query_CombatantActFirst.IsBound())
+    	{
+    		return Query_CombatantActFirst.Execute(&A,&B);
+    	}
+    	return false;
+    });
 
-		TurnOrder = TempOrder;
-	}
+    TurnOrder = TempOrder;
+
 
 	OnTurnOrderGenerated.Broadcast(this);
 	return TurnOrder;
@@ -196,7 +189,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString& FailRe
 	if(GetTurnMemberAtIndex(0))
 	{
 		FString LocalFailReason;
-		if(TurnManager->FailBeingTurn(FailReason))	//When Failed to Start Turn
+		if(false)	//When Failed to Start Turn
 		{
 			OnTurnFail.Broadcast(FailReason);
 			OGF_GAME_CORE()->TurnManager_TurnFail(this,FailReason);
@@ -323,7 +316,7 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetRegisteredCombatants
 // REGISTER
 void UTurnBasedManagerComponent::RegisterCombatant(UCombatantComponent* Combatant)
 {
-	if(Combatant && !BlockCombatantTagsFromRegister.HasAny(Combatant->GetCombatantTags()))
+	if(Combatant)
 	{
 		RegisteredCombatants.AddUnique(Combatant);
 	}

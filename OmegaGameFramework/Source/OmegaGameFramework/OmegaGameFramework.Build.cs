@@ -53,6 +53,7 @@ public class OmegaGameFramework : ModuleRules
 				"PakFile",
 				"Niagara",
 				"Json",
+				//"CustomizableSequencerTracks",
 				"JsonUtilities",
 				"AudioMixer",
 				"JsonBlueprintUtilities",

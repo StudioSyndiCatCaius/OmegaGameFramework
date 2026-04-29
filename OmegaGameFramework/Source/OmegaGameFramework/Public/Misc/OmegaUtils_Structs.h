@@ -54,7 +54,8 @@ struct FOmegaCommonMeta
 	GENERATED_BODY()
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") UObject* Context=nullptr;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FString Flag;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FLuaValue LuaValue;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FGameplayTagContainer Tags;
+	UPROPERTY(BlueprintReadWrite,Category="Meta") FLuaValue LuaValue;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,FString> soft_params;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") TMap<FName,TObjectPtr<UObject>> objects;
 	//UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Meta") FInstancedStruct InstancedStruct;

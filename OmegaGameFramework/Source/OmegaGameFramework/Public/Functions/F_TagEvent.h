@@ -10,6 +10,18 @@
 #include "Animation/AnimNotifies/AnimNotify.h"
 #include "F_TagEvent.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FOmegaActorTagEventContainer
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, Category="Events") TMap<TSoftObjectPtr<AActor>, FGameplayTag> Events;
+	
+	TMap<AActor*, FGameplayTag> GetHardEvents();
+};
+
+
 // This class does not need to be modified.
 UINTERFACE()
 class UActorTagEventInterface : public UInterface
@@ -31,7 +43,9 @@ class OMEGAGAMEFRAMEWORK_API UActorTagEventFunctions : public UBlueprintFunction
 {
 	GENERATED_BODY()
 
-public: 
+public:
+	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
+	static void FireActorTagEvents_Container(FOmegaActorTagEventContainer Container);
 	UFUNCTION(BlueprintCallable, Category="Omega|ActorTagEvent")
 	static void FireActorTagEvents(UPARAM(meta=(Categories="EVENT")) TMap<AActor*, FGameplayTag> Events);
 

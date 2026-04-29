@@ -10,6 +10,19 @@
 #include "Subsystems/Subsystem_World.h"
 
 
+UOmegaBGM* UOmegaFunctions_BGM::GetCurrent(UObject* WorldContextObject, FGameplayTag& Slot)
+{
+	if (UOmegaSubsystem_GameInstance* m=OGF_Subsystems::oGameInstance(WorldContextObject))
+	{
+		if (m->BgmPlaying)
+		{
+			Slot=m->BgmPlayingSlot;
+			return m->BgmPlaying;
+		}
+	}
+	return nullptr;
+}
+
 void UOmegaFunctions_BGM::Play(UObject* WorldContextObject, UOmegaBGM* BGM, FGameplayTag Slot, bool bFadePrevious)
 {
 	if (UOmegaSubsystem_GameInstance* m=OGF_Subsystems::oGameInstance(WorldContextObject))

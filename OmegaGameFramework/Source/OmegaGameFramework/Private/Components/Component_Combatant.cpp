@@ -23,6 +23,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Misc/OmegaUtils_Methods.h"
 
 
 float UCombatantComponent::L_ModifyDamage(UOmegaAttribute* Attribute,UCombatantComponent* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context)
@@ -207,13 +208,26 @@ bool UCombatantComponent::CombatantHasAllTag(FGameplayTagContainer Tags, bool Ex
 }
 
 
+void UCombatantComponent::SetOverrideAbilitySkelMesh(USkeletalMeshComponent* mesh)
+{
+	if (mesh)
+	{
+		Override_AbilitySkelMesh=mesh;
+	}
+	else
+	{
+		mesh=nullptr;
+	}
+}
 
 ////////////////////////////////////
 ////////// -- UPDATE DATA -- //////////
 ///////////////////////////////////
 void UCombatantComponent::Update()
 {
+	if (blockUpdateCall.Num()>0) { return; }
 	L_CacheAttributeMods();
+	OnUpdated.Broadcast(this);
 }
 
 APawn* UCombatantComponent::GetOwnerPawn() const
@@ -348,12 +362,21 @@ AOmegaAbility* UCombatantComponent::ExecuteAbility(TSubclassOf<AOmegaAbility> Ab
 {
 	bSuccess = false;
 	bool bValidAbility=false;
-	if(AOmegaAbility* _ability = GetAbility(AbilityClass, bValidAbility))
+	if (AbilityClass)
 	{
-		_ability->ContextObject=Context;
-		bSuccess=_ability->Native_Execute();
-		return _ability;
+		if(AOmegaAbility* _ability = GetAbility(AbilityClass, bValidAbility))
+		{
+			_ability->ContextObject=Context;
+			bSuccess=_ability->Native_Execute();
+			return _ability;
+		}
+		OGF_Log::LogError("ABILITY - failed to execute :: could not get ability. possible not granted");
 	}
+	else
+	{
+		OGF_Log::LogError("ABILITY - failed to execute :: invalid class");
+	}
+	
 	return nullptr;
 }
 
@@ -707,6 +730,29 @@ TArray<UObject*> UCombatantComponent::GetDamageModifiers()
 	return OutMods;
 }
 
+bool UCombatantComponent::CanApplyEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, UObject* Context,
+	FOmegaCommonMeta _meta)
+{
+	if (EffectClass)
+	{
+		AOmegaGameplayEffect* def=EffectClass.GetDefaultObject();
+		for (AOmegaGameplayEffect* ef : GetAllEffects())
+		{
+			if (ef && ef->BlockEffects.HasAnyExact(def->EffectTags))
+			{
+				return false;
+			}
+		}
+		
+		if (EffectClass->GetDefaultObject<AOmegaGameplayEffect>()->EffectCanApply(this,Context,_meta))
+		{
+			return true;
+		}
+		
+	}
+	return false;
+}
+
 //// Get Attribute Values + Attribute Modifiers
 void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& CurrentValue, float& MaxValue)
 {
@@ -772,13 +818,29 @@ bool UCombatantComponent::IsAbilityTagBlocked(FGameplayTagContainer Tags)
 
 void UCombatantComponent::SetOverrideMaxAttribute(UOmegaAttribute* Attribute, float Value)
 {
-	OverrideMaxAttributes.Add(Attribute,Value);
-	Update();
+	if (Attribute)
+	{
+		OverrideMaxAttributes.Add(Attribute,Value);
+		float _val=L_GetEntityData()->Attributes.FindOrAdd(Attribute);
+		L_GetEntityData()->Attributes.Add(Attribute,UKismetMathLibrary::FClamp(_val,0,Value	));
+		Update();	
+	}
 }
 
 void UCombatantComponent::SetOverrideMaxAttributes(TMap<UOmegaAttribute*, float> Value)
 {
+	blockUpdateCall.Add(496);
 	OverrideMaxAttributes=Value;
+	TArray<UOmegaAttribute*> TempAttributes;
+	Value.GetKeys(TempAttributes);
+	for (UOmegaAttribute* TempAttribute : TempAttributes)
+	{
+		if (TempAttribute)
+		{
+			SetOverrideMaxAttribute(TempAttribute, Value[TempAttribute]);
+		}
+	}
+	blockUpdateCall.Remove(496);
 	Update();
 }
 
@@ -1046,30 +1108,31 @@ AOmegaGameplayEffect* UCombatantComponent::GetEffectOfContext(UObject* Context,
 }
 
 
-
-
 class AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass,
 	UCombatantComponent* Instigator, UObject* Context, FOmegaCommonMeta meta)
 {
 	if (EffectClass)
 	{
-		if (EffectClass->GetDefaultObject<AOmegaGameplayEffect>()->EffectCanApply(Instigator,Context,meta))
+		if (CanApplyEffect(EffectClass,Context,meta))
 		{
 			const FTransform SpawnWorldPoint = GetOwner()->GetActorTransform();
 		
-			class AOmegaGameplayEffect* LocalEffect = GetWorld()->SpawnActorDeferred<AOmegaGameplayEffect>(EffectClass, SpawnWorldPoint, nullptr);
-			LocalEffect->SetOwner(GetOwner());
-			LocalEffect->TargetedCombatant = this;
-			LocalEffect->EffectContext = Context;
-			LocalEffect->CombatantInstigator = Instigator;
-			
-			UGameplayStatics::FinishSpawningActor(LocalEffect, SpawnWorldPoint);
-
-			LocalEffect->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-		
-			Update();
-			return LocalEffect;
+			if (AOmegaGameplayEffect* LocalEffect = GetWorld()->SpawnActorDeferred<AOmegaGameplayEffect>(EffectClass, SpawnWorldPoint, nullptr))
+			{
+				LocalEffect->SetOwner(GetOwner());
+				LocalEffect->TargetedCombatant = this;
+				LocalEffect->EffectContext = Context;
+				LocalEffect->CombatantInstigator = Instigator;
+				
+				UGameplayStatics::FinishSpawningActor(LocalEffect, SpawnWorldPoint);
+	
+				LocalEffect->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+				LocalEffect->EffectBeginPlay(Context,meta);
+				Update();
+				return LocalEffect;
+			}
 		}
+		
 	}
 	Update();
 	return nullptr;
@@ -1393,6 +1456,41 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation(UCombat
 	return GetAllSkills();
 }
 
+void UCombatantComponent::OnInputAction_Begin_Implementation(APlayerController* Player, FGameplayTag Action,
+	FVector axis)
+{
+	for (auto* a : GetGrantedAbilities())
+	{
+		if (Action==a->LinkedInputAction)
+		{
+			//OGF_Log::LogInfo("ABILITY - executing via input ::"+a->GetName());
+			a->Execute(this);	
+		}
+		IDataInterface_InputAction::Execute_OnInputAction_Begin(a,Player,Action,axis);
+	}
+}
+
+void UCombatantComponent::OnInputAction_Update_Implementation(APlayerController* Player, FGameplayTag Action,
+	float DeltaTime, FVector axis)
+{
+	for (auto* a : GetGrantedAbilities())
+	{
+		IDataInterface_InputAction::Execute_OnInputAction_Update(a,Player,Action,DeltaTime,axis);
+	}
+}
+
+void UCombatantComponent::OnInputAction_End_Implementation(APlayerController* Player, FGameplayTag Action, FVector axis)
+{
+	for (auto* a : GetGrantedAbilities())
+	{
+		if (Action==a->LinkedInputAction && a->bStopAbilityOnInputActionEnd)
+		{
+			a->CancelAbility();	
+		}
+		IDataInterface_InputAction::Execute_OnInputAction_End(a,Player,Action,axis);
+	}
+}
+
 FOmegaEntity* UCombatantComponent::L_GetEntityData()
 {
 	if (use_entity_id)
@@ -1543,6 +1641,7 @@ UPrimaryDataAsset* UCombatantComponent::Equipment_GetInSlot(UEquipmentSlot* Slot
 
 void UCombatantComponent::Equipment_SetInSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot)
 {
+	blockUpdateCall.Add(2001);
 	if (Slot)
 	{
 		Equipment_ClearSlot(Slot);
@@ -1552,11 +1651,14 @@ void UCombatantComponent::Equipment_SetInSlot(UPrimaryDataAsset* Item, UEquipmen
 			OnSlot_Equip.Broadcast(this,Slot,Item);
 		}
 	}
+	blockUpdateCall.Remove(2001);
+	Update();
 }
 
 void UCombatantComponent::Equipment_SetAll(TMap<UEquipmentSlot*, UPrimaryDataAsset*> equipment)
 {
 	L_GetEntityData()->Equipment=equipment;
+	Update();
 }
 
 void UCombatantComponent::Equipment_ClearSlot(UEquipmentSlot* Slot)
@@ -1569,6 +1671,8 @@ void UCombatantComponent::Equipment_ClearSlot(UEquipmentSlot* Slot)
 			OnSlot_Unequip.Broadcast(this,Slot,_item);
 		}
 		L_GetEntityData()->Equipment.Add(Slot,nullptr);
+		
+		Update();
 	}
 }
 
@@ -1588,6 +1692,7 @@ bool UCombatantComponent::Inventory_Add(UPrimaryDataAsset* Item, int32 amount)
 		int32 _newAmount=amount+Inventory_GetAmount(Item);
 		L_GetEntityData()->Inventory.Add(Item,_newAmount);
 		OnInventoryEdit.Broadcast(this,Item,amount);
+		Update();
 		return true;
 	}
 	return false;
@@ -1595,6 +1700,7 @@ bool UCombatantComponent::Inventory_Add(UPrimaryDataAsset* Item, int32 amount)
 
 void UCombatantComponent::Inventory_AddList(TMap<UPrimaryDataAsset*, int32> Assets, bool bInvertAmount)
 {
+	blockUpdateCall.Add(3001);
 	TArray<UPrimaryDataAsset*> asset_keys;
 	Assets.GetKeys(asset_keys);
 	for(auto* i : asset_keys)
@@ -1603,6 +1709,8 @@ void UCombatantComponent::Inventory_AddList(TMap<UPrimaryDataAsset*, int32> Asse
 		if(bInvertAmount) {multiplier=-1;}
 		Inventory_Add(i,Assets[i]*multiplier);
 	}
+	blockUpdateCall.Remove(3001);
+	Update();
 }
 
 void UCombatantComponent::Inventory_Transfer(UCombatantComponent* To, UPrimaryDataAsset* Asset, int32 Amount,
@@ -1623,8 +1731,11 @@ void UCombatantComponent::Inventory_Transfer(UCombatantComponent* To, UPrimaryDa
 	}
 
 	//Transfer
+	blockUpdateCall.Add(3002);
 	Inventory_Add(Asset, AmountToRemove*-1);
 	To->Inventory_Add(Asset, AmountToRemove);
+	blockUpdateCall.Remove(3002);
+	Update();
 }
 
 void UCombatantComponent::Inventory_TransferAll(UCombatantComponent* To)
@@ -1632,14 +1743,19 @@ void UCombatantComponent::Inventory_TransferAll(UCombatantComponent* To)
 	TArray<UPrimaryDataAsset*> AssetListLocal;
 	Inventory_Get().GetKeys(AssetListLocal);
 
+	blockUpdateCall.Add(3003);
 	for(auto* TempAsset : AssetListLocal)
 	{
 		Inventory_Transfer(To, TempAsset, 0, true);
 	}
+	
+	blockUpdateCall.Remove(3003);
+	Update();
 }
 
 void UCombatantComponent::Inventory_Set(TMap<UPrimaryDataAsset*, int32> map,bool bClearFirst)
 {
+	blockUpdateCall.Add(3004);
 	if (bClearFirst)
 	{
 		Inventory_Clear();	
@@ -1653,12 +1769,15 @@ void UCombatantComponent::Inventory_Set(TMap<UPrimaryDataAsset*, int32> map,bool
 			L_GetEntityData()->Inventory.Append(map);		
 		}
 	}
+	blockUpdateCall.Remove(3004);
+	Update();
 }
 
 void UCombatantComponent::Inventory_Clear()
 {
 	L_GetEntityData()->Inventory.Empty();
 	OnInventoryEdit.Broadcast(this,nullptr,0);
+	Update();
 }
 
 TMap<UPrimaryDataAsset*, int32> UCombatantComponent::Inventory_Get(int32 Minimum)
@@ -1725,6 +1844,60 @@ bool UCombatantComponent::Inventory_HasMinimum(TMap<UPrimaryDataAsset*, int32> A
 // LEVELING
 // ------------------------------------------------------------------------------------------
 
+void UCombatantComponent::XP_Set(UOmegaLevelingAsset* Type, float amount, bool bAdded)
+{
+	if (Type)
+	{
+		blockUpdateCall.Add(4001);
+		int32 cur_level=XP_GetLevel(Type);
+		float _cur=XP_Get(Type);
+		float base=amount;
+		if (bAdded)
+		{
+			base+=_cur;
+		}
+		L_GetEntityData()->Attributes.Add(Type,base);
+		OnXpChanged.Broadcast(this,Type,_cur,base);
+		
+		int32 new_lvl=XP_GetLevel(Type);
+		if (cur_level!=new_lvl)
+		{
+			OnLevelChanged.Broadcast(this,Type,cur_level,new_lvl);
+		}
+		blockUpdateCall.Remove(4001);
+		Update();
+	}
+}
+
+void UCombatantComponent::XP_SetAll(TMap<UOmegaLevelingAsset*, float> XP, bool bAdded)
+{
+	TArray<UOmegaLevelingAsset*> temps;
+	blockUpdateCall.Add(4020);
+	for (auto a : temps)
+	{
+		if (a)
+		{
+			XP_Set(a,XP[a],bAdded);
+		}
+	}
+	blockUpdateCall.Remove(4020);
+	Update();
+}
+
+void UCombatantComponent::XP_SetLevel(UOmegaLevelingAsset* Type, int32 NewLevel)
+{
+	if (Type)
+	{
+		blockUpdateCall.Add(4002);
+		float _min , _max; 
+		Type->GetXPFromLevel(NewLevel,_min,_max);
+		XP_Set(Type,_min,false);
+		blockUpdateCall.Remove(4002);
+		Update();
+	}
+}
+
+
 TMap<UOmegaLevelingAsset*, float> UCombatantComponent::XP_GetAll()
 {
 	TMap<UOmegaLevelingAsset*, float> out;
@@ -1749,9 +1922,8 @@ void UCombatantComponent::XP_GetValues(UOmegaLevelingAsset* Type, float& LevelMi
 {
 	if (Type)
 	{
-		LevelMin=XP_GetLevel(Type);
-		LevelMax=XP_GetLevel(Type)+1;
-		
+		int32 _lvl=XP_GetLevel(Type);
+		Type->GetXPFromLevel(_lvl,LevelMin,LevelMax);
 		float _cur=XP_Get(Type);
 		Percent=(_cur-LevelMin)/(LevelMax-LevelMin);
 	}
@@ -1832,34 +2004,3 @@ int32 UCombatantComponent::EntityParam_Int_Get(FName Param)
 	return L_GetEntityData()->params_int32.FindOrAdd(Param);
 }
 
-void UCombatantComponent::XP_Set(UOmegaLevelingAsset* Type, float amount, bool bAdded)
-{
-	if (Type)
-	{
-		int32 cur_level=XP_GetLevel(Type);
-		float _cur=XP_Get(Type);
-		float base=amount;
-		if (bAdded)
-		{
-			base+=_cur;
-		}
-		L_GetEntityData()->Attributes.Add(Type,amount);
-		OnXpChanged.Broadcast(this,Type,_cur,base);
-		
-		int32 new_lvl=XP_GetLevel(Type);
-		if (cur_level!=new_lvl)
-		{
-			OnLevelChanged.Broadcast(this,Type,cur_level,new_lvl);
-		}
-	}
-}
-
-void UCombatantComponent::XP_SetLevel(UOmegaLevelingAsset* Type, int32 NewLevel)
-{
-	if (Type)
-	{
-		float _min , _max; 
-		Type->GetXPFromLevel(NewLevel,_min,_max);
-		XP_Set(Type,_min,false);
-	}
-}

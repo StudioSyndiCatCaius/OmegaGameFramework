@@ -30,9 +30,12 @@ class OMEGAGAMEFRAMEWORK_API AOmegaMinimalCharacter : public AOmegaBaseCharacter
 																	public IDataInterface_VoiceSource
 {
 	GENERATED_BODY()
-	
+	UPROPERTY() UOAsset_Appearance* cached_appearance;
 	virtual void N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPrimaryDataAsset* new_asset);
 	void RebuildAppearance();
+	
+	void L_Log(FString logString);
+	
 public:
 	virtual TSubclassOf<UAnimInstance> GetContext_AnimClass();
 	

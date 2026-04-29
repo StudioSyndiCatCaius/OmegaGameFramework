@@ -19,13 +19,13 @@ public:
 	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Input",DisplayName="Input - Disabled?")
 	bool InputAction_Disabled(APlayerController* Player, FGameplayTag Action);
 	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable,Category="ΩI|Input",DisplayName="Input - Action Begin")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable,Category="ΩI|Input",DisplayName="Input - Action Begin")
 	void OnInputAction_Begin(APlayerController* Player, FGameplayTag Action, FVector axis);
 	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="ΩI|Input",DisplayName="Input - Action Tick")
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Input",DisplayName="Input - Action Tick")
 	void OnInputAction_Update(APlayerController* Player, FGameplayTag Action, float DeltaTime, FVector axis);
 	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable,Category="ΩI|Input",DisplayName="Input - Action End")
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Input",DisplayName="Input - Action End")
 	void OnInputAction_End(APlayerController* Player, FGameplayTag Action, FVector axis);
 	
 };

@@ -57,8 +57,9 @@ void AOmegaGameplayEffect::BeginPlay()
 	if(TargetedCombatant)
 	{
 		TargetedCombatant->OnDamaged.AddDynamic(this, &AOmegaGameplayEffect::OnAttributeDamaged);
-		
 	}
+	
+	
 }
 
 void AOmegaGameplayEffect::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -127,7 +128,7 @@ void AOmegaGameplayEffect::Tick(float DeltaTime)
 void AOmegaGameplayEffect::TriggerEffect()
 {
 	//Remove Effects
-	Local_RemoveEffects(RemoveEffectsOnTrigger);
+	//Local_RemoveEffects(RemoveEffectsOnTrigger);
 	
 	UE_LOG(LogTemp, Display, TEXT("Applied Effect"));
 	
@@ -138,7 +139,7 @@ void AOmegaGameplayEffect::TriggerEffect()
 	
 }
 
-bool AOmegaGameplayEffect::EffectCanApply_Implementation(UCombatantComponent* EffectInstigator, UObject* Context, FOmegaCommonMeta Meta) const
+bool AOmegaGameplayEffect::EffectCanApply_Implementation(UCombatantComponent* EffectInstigator, UObject* Context, FOmegaCommonMeta Meta)
 {
 	return true;
 }

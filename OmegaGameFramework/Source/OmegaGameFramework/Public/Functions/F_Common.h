@@ -192,8 +192,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome")
 	,DisplayName="Ω🔴 Get Asset (Adjacent to Reference)")
-	static UObject* GetAsset_AdjacentToReference(TSoftObjectPtr<UObject> Reference, const FString& Prefix,const FString& Suffix, const FString& Subdir,TSubclassOf<UObject> Class,bool& Outcome);
-
+	static UObject* GetAsset_AdjacentToReference(TSoftObjectPtr<UObject> Reference, const FString& Prefix,const FString& Suffix, const FString& Subdir,const FString& RemovedString,TSubclassOf<UObject> Class,bool& Outcome);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Assets", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome",AdvancedDisplay="Directory, Prefix, Sufix, config")
 		,DisplayName="Ω🔴 Get Asset (from Path)")
@@ -271,14 +270,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tagged)")
 	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
 	
-	//###############################################################################
-	// Flag
-	//###############################################################################
-
-	//Reutrns "Inactive" until game flag is Active, then sets the flag back to "Inactive"
-	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", DisplayName="Ω🔴 Switch on Flag Active", meta=(WorldContext = "WorldContextObject", ExpandBoolAsExecs = "Outcome"))
-	static void OnFlagActiveReset(const UObject* WorldContextObject, const FString& Flag, bool bDeactivateFlagOnActive, TEnumAsByte<EOmegaFlagResult>& Outcome);
-
 	//###############################################################################
 	// Actor
 	//###############################################################################

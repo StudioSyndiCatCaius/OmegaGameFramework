@@ -21,6 +21,9 @@ USTRUCT(BlueprintType)
 struct FOmegaClassNamedLists
 {
 	GENERATED_BODY()
+	
+	UPROPERTY(Transient) bool override_keys;
+	UPROPERTY(Transient) TArray<FName> override_keyList;
     
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Data")
 	TMap<FName, FOmegaCustomNamedList> CustomNamedList;

@@ -18,15 +18,18 @@ class OMEGAGAMEFRAMEWORK_API AOmegaBulletActor : public AActor
 {
 	GENERATED_BODY()
 
-public:    
+public:
+	
 	AOmegaBulletActor();
 
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult);
-
+	UFUNCTION() void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult);
+	UFUNCTION() void OnSphereHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	 
+	void Native_Impact(AActor* ImpactedActor);
+	
 	UFUNCTION(BlueprintCallable, Category="Bullet", DisplayName="Trigget Impact")
 	void TriggerImpact(AActor* ImpactedActor);
 

@@ -52,6 +52,10 @@ AOmegaMinimalCharacter::AOmegaMinimalCharacter()
 	{
 		//RandomizeSeed();
 	}
+	if (ActorIdentity)
+	{
+		ActorIdentity->PauseCategory=FGameplayTag::RequestGameplayTag("PAUSE.Gameplay");
+	}
 	
 }
 
@@ -62,10 +66,19 @@ void AOmegaMinimalCharacter::N_OnCharAssetChange(UPrimaryDataAsset* old_asset, U
 
 void AOmegaMinimalCharacter::RebuildAppearance()
 {
+	cached_appearance=AppearanceOverride.LoadSynchronous();
 	if(UOAsset_Appearance* ap=IDataInterface_AppearanceSource::Execute_GetAppearanceAsset(this))
 	{
 		ap->Apply(this);
 	}
+}
+
+void AOmegaMinimalCharacter::L_Log(FString logString)
+{
+	if (false)
+		{
+		OGF_Log::LogInfo("Ω CHARACTER : "+GetName()+": -- "+logString);
+		};
 }
 
 TSubclassOf<UAnimInstance> AOmegaMinimalCharacter::GetContext_AnimClass()
@@ -118,12 +131,14 @@ void AOmegaMinimalCharacter::SetCharacterAppearance(UOAsset_Appearance* Appearan
 {
 	if (Appearance)
 	{
-		AppearanceOverride=Appearance;
-		Appearance->Apply(this);
+		AppearanceOverride=TSoftObjectPtr<UOAsset_Appearance>(Appearance);
+		cached_appearance=Appearance;
+		RebuildAppearance();
 	}
 	else
 	{
-		AppearanceOverride=nullptr;	
+		AppearanceOverride=nullptr;
+		cached_appearance=nullptr;
 	}
 }
 
@@ -137,25 +152,32 @@ void AOmegaMinimalCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
 
 UOAsset_Appearance* AOmegaMinimalCharacter::GetAppearanceAsset_Implementation()
 {
-	if(UOAsset_Appearance* ap=AppearanceOverride.LoadSynchronous())
+	if(UOAsset_Appearance* ap=cached_appearance)
 	{
+		L_Log("got appearance from CACHE: "+cached_appearance->GetName());
 		return ap;
 	}
 	if(ActorIdentity->IdentitySource && ActorIdentity->IdentitySource->GetClass()->ImplementsInterface(UDataInterface_AppearanceSource::StaticClass()))
 	{
 		if(UOAsset_Appearance* appr=Execute_GetAppearanceAsset(ActorIdentity->IdentitySource))
 		{
+			L_Log("got appearance from IDENTITY: "+appr->GetName());
 			return appr;	
 		}
 	}
+	L_Log("no appearance found: ");
 	return nullptr;
 }
 
 void AOmegaMinimalCharacter::GetAppearanceLibraries_Implementation(UOmegaAssetLibrary_Animation*& Anim,
 	UOmegaAssetLibrary_Sound*& Sound, UOmegaAssetLibrary_SlateBrush*& Slate)
 {
-	Anim=Library_Animation;
+	
+	if (Library_Animation) { Anim=Library_Animation; }
+	if (Library_Sound) { Sound=Library_Sound; }
+	if (Library_Slate) { Slate=Library_Slate; }
 }
+
 
 FString AOmegaMinimalCharacter::VoiceSource_GetID_Implementation()
 {

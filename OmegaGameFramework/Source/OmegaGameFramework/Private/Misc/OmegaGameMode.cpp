@@ -8,6 +8,7 @@
 #include "Actors/Actor_DynamicCamera.h"
 #include "Actors/Actor_Player.h"
 #include "Functions/F_Widget.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_World.h"
@@ -150,6 +151,8 @@ bool AOmegaHUD::isDragInputDown() const
 void AOmegaHUD::BeginPlay()
 {
 	Super::BeginPlay();
+	ss_world=OGF_Subsystems::oWorld(this);
+	
 	if(AOmegaGameMode* _gm=Cast<AOmegaGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
 		ref_gameMode=_gm;
@@ -207,6 +210,11 @@ void AOmegaHUD::DrawHUD()
 				ref_gameMode->Native_DragSelectEnd(actors_out);
 			}
 		}
+	}
+	
+	for (auto* sys : ss_world->GetActiveGameplaySystems())
+	{
+		sys->OnHUDDraw(this);
 	}
 }
 

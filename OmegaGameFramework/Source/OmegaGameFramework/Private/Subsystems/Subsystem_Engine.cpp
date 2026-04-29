@@ -12,12 +12,83 @@
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
 #include "OmegaGameplayConfig.h"
+#include "OmegaSettings_Assets.h"
 #include "Functions/F_Common.h"
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Misc/Paths.h"
 #include "Misc/PackageName.h"
+#include "PhysicsEngine/PhysicsSettings.h"
 
+
+void UOmegaSubsystem_Engine::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	
+	LoadDevConfig();
+	
+	
+	
+	TArray<FName> default_surfaces;
+	default_surfaces.Add("Grass");
+	default_surfaces.Add("Sand");
+	default_surfaces.Add("Snow");
+	default_surfaces.Add("Ice");
+	default_surfaces.Add("Dirt");
+	default_surfaces.Add("Mud");
+	default_surfaces.Add("Water");
+	default_surfaces.Add("Metal");
+	default_surfaces.Add("MetalGrate");
+	
+	
+	uint8 i_surfaceIndex=1;
+	for (FName default_surface : default_surfaces)
+	{
+		
+		i_surfaceIndex+=1;
+		if (GetMutableDefault<UPhysicsSettings>()->PhysicalSurfaces.IsValidIndex(i_surfaceIndex))
+		{
+			FPhysicalSurfaceName _nam;
+			_nam.Name=default_surface;
+			//_nam.Type=i_surfaceIndex;
+			GetMutableDefault<UPhysicsSettings>()->PhysicalSurfaces[i_surfaceIndex]=_nam;
+		}
+	}
+	
+}
+
+void UOmegaSubsystem_Engine::LoadDevConfig()
+{
+	FString _path=FPaths::ProjectDir()+"/devconfig.lua";
+	if (FPaths::FileExists(_path))
+	{
+		FLuaValue loadedVal=ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(this,nullptr,_path,true);
+		if (!loadedVal.IsNil())
+		{
+			devconfig_table=loadedVal;
+			OGF_Log::LogInfo("DEV CONFIG: Sucessfully loaded");
+			keys_spawnables.Empty();
+			TArray<FLuaValue> spawnKeys= ULuaBlueprintFunctionLibrary::LuaTableGetKeys(devconfig_table.GetField("spawnables"));
+			for (FLuaValue key : spawnKeys)
+			{
+				keys_spawnables.Add(*key.ToString());
+			}
+		}
+		else
+		{
+			OGF_Log::Warning("DEV CONFIG: File found, but failed to load table");
+		}
+	}
+	else
+	{
+		OGF_Log::Warning("DEV CONFIG: File does not exist: "+_path);
+	}
+}
+
+FLuaValue UOmegaSubsystem_Engine::Spawnable_GetData(FName key)
+{
+	return devconfig_table.GetField("spawnables").GetField(key.ToString());
+}
 
 void UOmegaSubsystem_Engine::OnGameInitialized()
 {

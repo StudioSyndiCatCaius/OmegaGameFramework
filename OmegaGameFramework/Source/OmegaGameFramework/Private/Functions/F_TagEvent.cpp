@@ -5,12 +5,33 @@
 
 #include "Functions/F_TagEvent.h"
 
+#include "InterchangeTranslatorBase.h"
 #include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "Components/SkeletalMeshComponent.h"
 
 #include "Components/BillboardComponent.h"
 #include "Subsystems/Subsystem_World.h"
+
+TMap<AActor*, FGameplayTag> FOmegaActorTagEventContainer::GetHardEvents()
+{
+	TMap<AActor*, FGameplayTag> out;
+	TArray<TSoftObjectPtr<AActor>> TempActorList;
+	Events.GetKeys(TempActorList);
+	for(auto softActor : TempActorList)
+	{
+		if(AActor* tempActor=softActor.LoadSynchronous())
+		{
+			out.Add(tempActor,Events[softActor]);
+		}
+	}
+	return out;
+}
+
+void UActorTagEventFunctions::FireActorTagEvents_Container(FOmegaActorTagEventContainer Container)
+{
+	FireActorTagEvents(Container.GetHardEvents());
+}
 
 void UActorTagEventFunctions::FireActorTagEvents(TMap<AActor*, FGameplayTag> Events)
 {

@@ -54,7 +54,7 @@ public:
 	static AActor* GetActorNearestToScreenPoint(const TArray<AActor*>& Actors,const FVector2D& ScreenPoint, APlayerController* PlayerController,float& OutDistance);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Actor",meta=(WorldContext="WorldContext"),DisplayName="Actors - Set Paused")
-	static void SetPaused(UObject* WorldContext, FGameplayTag PauseGroup, bool bPaused);
+	static void SetPaused(UObject* WorldContext, UPARAM(meta=(Categories="PAUSE")) FGameplayTag PauseGroup, bool bPaused);
 	
 	// =====================================================================================================================
     // Filters

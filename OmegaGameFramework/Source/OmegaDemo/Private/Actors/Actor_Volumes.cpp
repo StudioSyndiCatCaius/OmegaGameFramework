@@ -51,12 +51,9 @@ AOmega_EventVolume::AOmega_EventVolume()
 
 void AOmega_EventVolume::Local_TryPlay()
 {
-	if(GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(Conditions))
+	for(auto* a : Events)
 	{
-		for(auto* a : Events)
-		{
-			if(a) { a->OnEventTriggered(this);}
-		}
+		if(a) { a->OnEventTriggered(this);}
 	}
 }
 

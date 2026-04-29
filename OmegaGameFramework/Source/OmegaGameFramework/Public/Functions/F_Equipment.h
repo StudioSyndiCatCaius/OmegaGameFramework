@@ -44,9 +44,6 @@ public:
 
 	UFUNCTION(BlueprintPure,Category="Omega|Equipment",DisplayName="🗡️Equipment - Filter Equippables")
 	static TArray<UPrimaryDataAsset*> FilterEquippableItems(TArray<UPrimaryDataAsset*> items, UCombatantComponent* component, UEquipmentSlot* Slot);
-	
-	UFUNCTION(BlueprintCallable,Category="Omega|Equipment", meta=(ExpandBoolAsExecs = "Outcome"))
-	static UPrimaryDataAsset* TryGetEquipmentInSlot(UObject* Target,UEquipmentSlot* Slot, bool& Outcome);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Equipment",meta=(AdvancedDisplay="bIncludedSources"))
 	static TArray<UPrimaryDataAsset*> GetEquippableItems_FromInventory(UCombatantComponent* Equipment,UCombatantComponent* Inventory,UEquipmentSlot* Slot,bool bIncludedSources=true);

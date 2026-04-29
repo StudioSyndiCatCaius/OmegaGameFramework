@@ -58,6 +58,31 @@ TArray<FName> UOmegaFunctions_Asset::nameOptions_List_Asset()
     return out;
 }
 
+TArray<TSubclassOf<UObject>> UOmegaFunctions_Asset::GetAllChildClasses(TSubclassOf<UObject> ParentClass,
+    bool bIncludeDescendants, bool bIncludeParent)
+{TArray<TSubclassOf<UObject>> Result;
+
+    if (!ParentClass) return Result;
+
+    if (bIncludeParent)
+        Result.Add(ParentClass);
+
+    for (TObjectIterator<UClass> It; It; ++It)
+    {
+        UClass* Class = *It;
+        if (!Class || Class == ParentClass.Get()) continue;
+
+        bool bMatches = bIncludeDescendants
+            ? Class->IsChildOf(ParentClass)
+            : Class->GetSuperClass() == ParentClass.Get();
+
+        if (bMatches)
+            Result.Add(Class);
+    }
+
+    return Result;
+}
+
 UClass* UOmegaFunctions_Asset::GetClassByName(const FString& ClassName, bool& result)
 {
     result=true;

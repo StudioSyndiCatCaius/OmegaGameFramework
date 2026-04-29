@@ -16,7 +16,6 @@
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Types/Struct_SoftParams.h"
-#include "Misc/OmegaSaveTypes.h"
 #include "Subsystem_Save.generated.h"
 
 class UOmegaPreferencePreset;
@@ -26,7 +25,6 @@ class UOmegaQuest;
 class UOmegaSaveBase;
 class UOmegaSaveGame;
 class UOmegaSaveGlobal;
-class UOmegaSaveCondition;
 class UOmegaZoneData;
 class UGamePreference;
 
@@ -49,6 +47,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveSubsystem : public UGameInstanceSubsystem
 	
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
+	virtual void Setup();
 	virtual void Deinitialize() override;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Omega|SaveSubsystem") UOmegaSaveGame* ActiveSaveData;
@@ -136,38 +135,8 @@ public:
 	bool SaveTagsMatchQuery(FGameplayTagQuery Query, bool Global);
 	
 	//###############################################################################################
-	// Actor
-	//###############################################################################################
-
-	UFUNCTION() void SetSavedActorState(AActor* Actor, FGameplayTag StateTag);
-	UFUNCTION() void AddSavedActorTags(AActor* Actor, FGameplayTagContainer Tags);
-	UFUNCTION() void RemoveSavedActorTags(AActor* Actor, FGameplayTagContainer Tags);
-
-	//Clears the state tag from any actors with the given state.
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Actor", meta=(Keywords="remove"))
-	void ClearSavedStateFromActors(FGameplayTag SavedState);
-
-	//###############################################################################################
 	// Data Assets
 	//###############################################################################################
-
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"),DisplayName="DataAsset - Set Collected")
-	void SetDataAssetCollected(UPrimaryDataAsset* Asset, bool bGlobal, bool Collected);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"),DisplayName="DataAsset - Set Collected (List)")
-	void SetDataAssetsCollected(TArray<UPrimaryDataAsset*> Assets, bool bGlobal, bool Collected);
-
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"),DisplayName="DataAsset - Is Collected?")
-	bool IsDataAssetInSaveCollection(UPrimaryDataAsset* Asset, bool bGlobal) const;
-
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets",DisplayName="DataAsset - Get Collected")
-	TArray<UPrimaryDataAsset*> GetCollectedDataAssets(bool bGlobal) const;
-
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets",DisplayName="DataAsset - Get Collected (of Category Tag)")
-	TArray<UPrimaryDataAsset*> GetCollectedDataAssetsOfCategory(FGameplayTag CategoryTag, bool bGlobal) const;
-
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bExclude, bExact"),DisplayName="DataAsset - Get Collected (w/ Tags)")
-	TArray<UPrimaryDataAsset*> GetCollectedDataAssetsWithTags(FGameplayTagContainer Tags, bool bGlobal, bool bExclude, bool bExact = true) const;
 
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Assets",DisplayName="DataAsset - Edit SaveTags")
 	void SetSaveTagsOnDataAsset(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags, bool bHasTags, bool bGlobal);
@@ -180,31 +149,6 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|Assets", meta=(AdvancedDisplay="bGlobal"),DisplayName="DataAsset - Get w/ SaveTags")
 	TArray<UPrimaryDataAsset*> GetSaveAssets_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const;
 	
-	//###############################################################################################
-	// Guids
-	//###############################################################################################
-
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"),DisplayName="Guid - Set Collected")
-	void SetGuidCollected(FGuid Guid, bool Collected, bool bGlobal);
-
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"),DisplayName="Guid - Is Collected?")
-	bool GetIsGuidCollected(FGuid Guid, bool bGlobal) const;
-
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"),DisplayName="Guid - Edit SaveTags")
-	void SetGuidHasTags(FGuid Guid, FGameplayTagContainer Tags, bool HasTags, bool bGlobal);
-	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"),DisplayName="Guid - Edit SaveTags (List)")
-	void SetGuidHasTags_List(TArray<FGuid> Guids, FGameplayTagContainer Tags, bool HasTags, bool bGlobal);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"),DisplayName="Guid - Has Tag?")
-	bool GetDoesGuidHaveTags(FGuid Guid, FGameplayTagContainer Tags, bool bExact, bool bGlobal) const;
-	
-	UFUNCTION(BlueprintPure, Category="Omega|SaveSubsystem|GUID", meta=(AdvancedDisplay="bGlobal"),DisplayName="Guid - Get w/ Tags")
-	TArray<FGuid> GetSaveGuids_WithTags(FGameplayTagContainer Tags, bool bExact, bool bGlobal) const;
-	
-	///MESSAGE LOGGING
-	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem")
-	bool CustomSaveConditionsMet(FOmegaSaveConditions Conditions);
-
 	//###############################################################################################
 	// SAVING Json
 	//###############################################################################################
@@ -250,7 +194,6 @@ public:
 	UFUNCTION(BlueprintPure, Category="OmegaSaveSubsystem|StoryState")
 	bool IsStoryStateActive(UOmegaStoryStateAsset* State);
 
-
 };
 
 
@@ -294,14 +237,6 @@ public:
 // ====================================================================================================
 // Save Object
 // ====================================================================================================
-USTRUCT()
-struct FOmegaSaveAssetList
-{
-	GENERATED_BODY()
-	UPROPERTY()
-	TArray<UPrimaryDataAsset*> AssetList;
-};
-
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveBase : public USaveGame, public IDataInterface_General
 {
@@ -322,9 +257,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<FName,FOmegaAssetSquad_Data> SquadData;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Save") TArray<UPrimaryDataAsset*> CollectedDataAssets;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Save") TArray<FGuid> CollectedGuids;
-	
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<UOmegaQuest*,FOmegaQuestData> quest_data;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<FGameplayTag,FOmegaList_DataAsset> Lists_Assets;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<FGameplayTag,FOmegaList_Guids> Lists_Guids;
@@ -343,7 +276,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") FTimespan Playtime;
 	
-
+	UPROPERTY(SaveGame) TArray<FGuid> applied_patches;
 	
 	UFUNCTION(BlueprintPure, Category="Playtime")
 	FString GetPlaytimeString(bool bIncludeMilliseconds);
@@ -403,34 +336,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveGlobal : public UOmegaSaveBase
 public:
 
 };
-
-// ====================================================================================================
-// Save Conditions
-// ====================================================================================================
-
-UCLASS(BlueprintType, Blueprintable, Const, abstract, editinlinenew, hidecategories=Object, CollapseCategories,meta=(ShowWorldContextPin))
-class OMEGAGAMEFRAMEWORK_API UOmegaSaveCondition : public UObject
-{
-	GENERATED_BODY()
-
-public:
-	
-	UFUNCTION(BlueprintNativeEvent, Category="OmegaSaveCondition")
-	bool CheckSaveCondition(UOmegaSaveSubsystem* SaveSubsystem) const;
-};
-
-
-UCLASS(BlueprintType, Blueprintable)
-class OMEGAGAMEFRAMEWORK_API UOmegaSaveConditionCollection : public UPrimaryDataAsset
-{
-	GENERATED_BODY()
-	
-public:
-	
-	UPROPERTY(BlueprintReadOnly, Category="OmegaSaveConditions", instanced, EditAnywhere)
-	TArray<UOmegaSaveCondition*> Conditions;
-};
-
 
 // ====================================================================================================
 // Interface

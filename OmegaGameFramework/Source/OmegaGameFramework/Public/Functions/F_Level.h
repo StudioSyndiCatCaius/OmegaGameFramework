@@ -26,6 +26,11 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Level", meta=(WorldContext="WorldContextObject"))
 	static bool SetWorldPaused(UObject* WorldContextObject, bool bPaused);
+
+	// Soft reference - doesn't force load
+	UFUNCTION(BlueprintPure, Category="Omega|World", meta=(WorldContext="WorldContextObject"),DisplayName="🌎Level - World Asset From Name")
+	static TSoftObjectPtr<UWorld> GetLevelSoftRefFromName(FName LevelName);
+	
 	
 	// Hard reference - loads and keeps in memory
 	UFUNCTION(BlueprintCallable, Category="Omega|World", meta=(WorldContext="WorldContextObject"),DisplayName="🌎Level - Get Current World Asset (Hard)")

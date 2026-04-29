@@ -3,49 +3,9 @@
 
 #include "FlowNodes/FlowNode_Save.h"
 
-#include "Modifiers/Modifier_Save.h"
 #include "Subsystems/Subsystem_Save.h"
 
 
-void UFlowNode_SaveEdit::ExecuteInput(const FName& PinName)
-{
-	UOmegaSaveSubsystem* sub=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
-	if(sub)
-	{
-		FOmegaModifiers_Save mods;
-		mods.Modifiers=Modifiers;
-		mods.Modify(sub->GetSaveObject(bGlobal),sub,bGlobal);
-	}
-	TriggerFirstOutput(true);
-}
-
-UFlowNode_SaveCondition::UFlowNode_SaveCondition()
-{
-	InputPins.Empty();
-	InputPins.Add(FFlowPin(TEXT("In")));
-	OutputPins.Empty();
-	OutputPins.Add(FFlowPin(TEXT("True")));
-	OutputPins.Add(FFlowPin(TEXT("False")));
-	
-	//NodeStyle = EFlowNodeStyle::Condition;
-#if WITH_EDITOR
-	Category = TEXT("Save");
-#endif
-}
-
-void UFlowNode_SaveCondition::ExecuteInput(const FName& PinName)
-{
-	FOmegaSaveConditions con;
-	con.Conditions=Conditions;
-	if(bool LocalSuccess = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(con))
-	{
-		TriggerOutput(FName("True"),true);
-	}
-	else
-	{
-		TriggerOutput(FName("False"),true);
-	}
-}
 
 UFlowNode_SaveOnce::UFlowNode_SaveOnce()
 {

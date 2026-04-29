@@ -47,6 +47,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnFail, FString, Reason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAddedToTurnOrder, UCombatantComponent*, Combatant, int32, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTurnComponentDelegate, UTurnBasedManagerComponent*, Component);
 
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FQuery_CombatantCompare, UCombatantComponent*, Check,UCombatantComponent*, Against);
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FQuery_CombatantCheck, UCombatantComponent*, Combatant);
+
+//DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FQuery_CombatantCompare, UCombatantComponent*, Check,UCombatantComponent*, Against);
+
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UTurnBasedManagerComponent : public UActorComponent
 {
@@ -62,28 +67,15 @@ public:
 	UPROPERTY(BlueprintAssignable) FOnAddedToTurnOrder OnAddedToTurnOrder;
 	UPROPERTY(BlueprintAssignable) FOnTurnDelegate OnRemovedFromTurnOrder;
 	
-	///////////////
+	///////////////FQuery_CombatantCheck
 	///// Turn ////
 	//////////////
-
-	//###########################################
-	// Turn Manager
-	//###########################################
-
-	UFUNCTION()
-	void SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass);
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "Turn")
+    FQuery_CombatantCompare Query_CombatantActFirst;
 	
-	UPROPERTY(EditAnywhere,Instanced, Category="Turn Manager")
-	UTurnManagerBase* TurnManager;
-	
-	//Prevents Combatants with these tags from being allowed to have a turn.
-	UPROPERTY(EditDefaultsOnly, Category="Turn Manager")
-	FGameplayTagContainer BlockCombatantTagsFromTurnOrder;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "Turn")
+	FQuery_CombatantCheck Query_BlockFromTurnOrder;
 
-	//Prevents Combatants with these tags from being registered into the turn order.
-	UPROPERTY(EditDefaultsOnly, Category="Turn Manager")
-	FGameplayTagContainer BlockCombatantTagsFromRegister;
-	
 	//###########################################
 	// Turn 
 	//###########################################
@@ -111,13 +103,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="TurnBased", meta=(AdvancedDisplay="Flag, Tags"), DisplayName="Remove From Turn Order (Faction)")
 	void RemoveFactionFromTurnOrder(FGameplayTag Faction);
-
-	
-	UPROPERTY(EditDefaultsOnly, Category="Turn")
-	FGameplayTagContainer TriggeredEffectsOnTurnStart;
-	UPROPERTY(EditDefaultsOnly, Category="Turn")
-	FGameplayTagContainer TriggeredEffectsOnTurnEnd;
-	
 	
 	//###########################################
 	// Turn Order
@@ -328,3 +313,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|TurnBased",DisplayName="Turn Entity - Get Turns Init")
 	int32 GetTurns_Max();
 };
+// --------------------------------------------------------------------------------------------------------------------
+// LISTEN
+// --------------------------------------------------------------------------------------------------------------------

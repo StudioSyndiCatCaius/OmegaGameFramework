@@ -13,7 +13,7 @@
 AOmegaBulletActor::AOmegaBulletActor()
 {
 	// Set this actor to call Tick() every frame.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	// Initialize components
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -29,6 +29,7 @@ AOmegaBulletActor::AOmegaBulletActor()
 	ProjectileComponent->ProjectileGravityScale=0;
 
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AOmegaBulletActor::OnSphereOverlap);
+	SphereComponent->OnComponentHit.AddDynamic(this,&AOmegaBulletActor::OnSphereHit);	
 }
 
 void AOmegaBulletActor::BeginPlay()
@@ -40,7 +41,21 @@ void AOmegaBulletActor::BeginPlay()
 
 void AOmegaBulletActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	TriggerImpact(OtherActor);
+	Native_Impact(OtherActor);
+}
+
+void AOmegaBulletActor::OnSphereHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	Native_Impact(OtherActor);
+}
+
+void AOmegaBulletActor::Native_Impact(AActor* ImpactedActor)
+{
+	if (ImpactedActor && (!InstigatorCombatant || ImpactedActor!=InstigatorCombatant->GetOwner()))
+	{
+		TriggerImpact(ImpactedActor);
+	}
 }
 
 void AOmegaBulletActor::TriggerImpact(AActor* ImpactedActor)

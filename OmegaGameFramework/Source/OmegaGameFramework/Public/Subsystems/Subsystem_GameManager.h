@@ -17,6 +17,8 @@
 #include "Subsystem_GameManager.generated.h"
 
 
+class UOmegaSaveGame;
+class UOmegaGamePatch;
 class UOmegaSaveBase;
 class UGamePreference;
 class UOmegaSettings;
@@ -27,6 +29,8 @@ class UAudioComponent;
 class UOmegaBGM;
 class UOmegaMod;
 class UOmegaSubsystem_Engine;
+class UOmegaGlobalScript;
+class UOmegaGlobalCondition;
 
 // ===================================================================================================================
 // STRUCTS
@@ -36,6 +40,9 @@ const uint8 OGF_BGM_STATE_NONE=0;
 const uint8 OGF_BGM_STATE_PLAYING=1;
 const uint8 OGF_BGM_STATE_PAUSED=2;
 
+const uint8 OGF_ZONE_TANSITSTATE_NONE=0;
+const uint8 OGF_ZONE_TANSITSTATE_FROMLEVEL=1;
+const uint8 OGF_ZONE_TANSITSTATE_FROMSAVE=2;
 
 USTRUCT()
 struct FGameplayLogEntry
@@ -85,6 +92,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_GameInstance : public UGameInstance
 	
 	UPROPERTY() UOmegaSubsystem_Engine* Subsys_Engine;
 	
+	UPROPERTY() TArray<UOmegaGlobalScript*> luaBound_GScripts;
+	UPROPERTY() TArray<UOmegaGlobalCondition*> luaBound_GConditions;
+	
+	UPROPERTY() TArray<UOmegaGamePatch*> patches;
+	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void Deinitialize() override;
@@ -101,6 +113,16 @@ public:
 	TArray<FKey> cachedAxisKeys;
 	TMap<FKey,FOmegaInputKeyCacheData> InputKeyCacheData;
 
+	// ------------------------------
+	// patches
+	
+	// In your header
+	static TArray<TSubclassOf<UOmegaGamePatch>> GetAllGamePatches(const FString& PatchRootPath);
+	
+	// 0=game start | 1=game end | 2=level start | 3=level end | 4=save create | 5=save start | 6=first apply
+	void Patch_Event(uint8 event,UOmegaSaveGame* _save);
+	
+	
 	//################################################################
 	// GameData
 	//################################################################
@@ -144,7 +166,6 @@ public:
 	UPROPERTY(BlueprintReadOnly,Category="Omega") FString LoadStateString;
 	
 	float f_loadStringCooldown=0.0;
-	
 	
 	// ────────────────────────────────────────────────────────────────────
 	// BGM
@@ -196,52 +217,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tag)")
 	void FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
-	
-	//################################################################
-	// FLAGS
-	//################################################################
-	UPROPERTY(BlueprintReadOnly, Category="Omega|Game Manager")
-	TArray<FString> Flags;
-	
-	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager")
-	void SetFlagActive(FString Flag, bool bActive);
-
-	UFUNCTION(BlueprintPure, Category="Omega|Game Manager")
-	bool IsFlagActive(FString Flag);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager")
-	void ClearAllFlags();
-
-	UPROPERTY(BlueprintAssignable)
-	FOnFlagStateChange OnFlagStateChange;
-	
-	//################################################################
-	// GlobalJson
-	//################################################################
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|GlobalJson")
-	FJsonObjectWrapper GlobalJsonObject;
-	
-	//##################################################################################################################
-	// LOG
-	//##################################################################################################################
-
-	UPROPERTY()
-	int32 MaxLogEntry;
-	
-	UFUNCTION(BlueprintCallable, Category="OmegaGameManager")
-	void AddGameplayLog(const FString& String, const FString& LogCategory);
-	
-	UFUNCTION(BlueprintCallable, Category="OmegaGameManager")
-	void ClearLog();
-	
-	UPROPERTY()
-	TArray<FGameplayLogEntry> LocalLog;
-	
-	UFUNCTION(BlueprintPure, Category="OmegaGameManager")
-	TArray<FString> GetGameplayLog();
-	UFUNCTION(BlueprintPure, Category="OmegaGameManager")
-	TArray<FString> GetGameplayLogOfCategory(const FString& LogCategory);
 	
 	// ------------------------------------------------------
 	// Machina

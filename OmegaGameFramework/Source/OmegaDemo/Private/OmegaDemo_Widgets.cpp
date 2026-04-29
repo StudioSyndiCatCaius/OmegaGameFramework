@@ -17,27 +17,9 @@
 #include "Widget/DataList.h"
 
 
-UActorComponent* local_GetComponentFromObject(UObject* object, TSubclassOf<UActorComponent> Class)
+void UDataWidgetBase_CombatantBASE::L_Refresh(UCombatantComponent* Combatant)
 {
-	if(!Class || !object) { return nullptr; }
-	UActorComponent* local_comp=nullptr;
-	
-	if(object->GetClass()->IsChildOf(UActorComponent::StaticClass()))
-	{
-		local_comp=Cast<UActorComponent>(object);
-	}
-	else if(AActor* temp_actor = Cast<AActor>(object))
-	{
-		if(UActorComponent* temp_comp = temp_actor->GetComponentByClass(Class))
-		{
-			local_comp=temp_comp;
-		}
-	}
-	if(local_comp && local_comp->GetClass()->IsChildOf(Class))
-	{
-		return local_comp;
-	}
-	return nullptr;
+	Refresh();
 }
 
 void UDataWidgetBase_CombatantBASE::Native_OnSourceAssetChanged(UObject* SourceAsset)
@@ -45,6 +27,7 @@ void UDataWidgetBase_CombatantBASE::Native_OnSourceAssetChanged(UObject* SourceA
 	if(UCombatantComponent* ref_comp = Cast<UCombatantComponent>(local_GetComponentFromObject(SourceAsset,UCombatantComponent::StaticClass())))
 	{
 		REF_combatant=ref_comp;
+		ref_comp->OnUpdated.AddUniqueDynamic(this,&UDataWidgetBase_CombatantBASE::L_Refresh);
 		//REF_combatant->OnCombatantNotify.AddDynamic(this, &UDataWidgetBase_Combatant::OnCombatantNotify);
 	}
 	Super::Native_OnSourceAssetChanged(SourceAsset);
@@ -285,13 +268,21 @@ void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject*
 {
 	if (LevelingAsset)
 	{
-		if (GetWidget_Text_RankName())
+		UTextBlock* text_RankName=nullptr;
+		UTextBlock* text_RankValue=nullptr;
+		UTextBlock* text_xpName=nullptr;
+		UTextBlock* text_xpCurrent=nullptr;
+		UTextBlock* text_xpMax=nullptr;
+		UProgressBar* ProgressBar_xpPercent=nullptr;
+		GetLevelingWidgets(text_RankName,text_RankValue,text_xpName,text_xpCurrent,
+		                   text_xpMax,ProgressBar_xpPercent);
+		if (text_RankName)
 		{
-			GetWidget_Text_RankName()->SetText(LevelingAsset->RankName);
+			text_RankName->SetText(LevelingAsset->DisplayName);
 		}
-		if (GetWidget_Text_XpName())
+		if (text_xpName)
 		{
-			GetWidget_Text_XpName()->SetText(LevelingAsset->XPName);
+			text_xpName->SetText(LevelingAsset->XPName);
 		}
 		
 		if (GetLinkedCombatant())
@@ -301,13 +292,13 @@ void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject*
 			float _min, _max, _perc;
 			
 			GetLinkedCombatant()->XP_GetValues(LevelingAsset,_min,_max,_perc);
-			if (GetWidget_ProgressBar())
+			if (ProgressBar_xpPercent)
 			{
-				GetWidget_ProgressBar()->SetPercent(_perc);
+				ProgressBar_xpPercent->SetPercent(_perc);
 			}
-			L_SetTextFromVal(_cur,GetWidget_Text_CurrentValue());
-			L_SetTextFromVal(_max,GetWidget_Text_MaxValue());
-			L_SetTextFromVal(GetLinkedCombatant()->XP_GetLevel(LevelingAsset),GetWidget_Text_RankValue());
+			L_SetTextFromVal(_cur,text_xpCurrent);
+			L_SetTextFromVal(_max,text_xpMax);
+			L_SetTextFromVal(GetLinkedCombatant()->XP_GetLevel(LevelingAsset),text_RankValue);
 		}
 	}
 	

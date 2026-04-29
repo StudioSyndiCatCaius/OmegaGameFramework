@@ -38,7 +38,7 @@ public:
 	AOmegaInstanceActor* CreateInstance(UObject* Context, const FString& Flag, FTransform LocalTransform);
 	
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component", meta=(AdvancedDisplay="LocalTransform"))
-	void CreateInstances(TArray<UObject*> Contexts, const FString& Flag, FTransform LocalTransform);
+	TArray<AOmegaInstanceActor*> CreateInstances(TArray<UObject*> Contexts, const FString& Flag, FTransform LocalTransform);
 	
 	UFUNCTION(BlueprintCallable, Category="Instanced Actor Component",DisplayName="Try Get Instance",meta=(DeterminesOutputType="Class",ExpandBoolAsExecs="Result"))
     AOmegaInstanceActor* TryGetInstanceByContext(UObject* Context, bool CreateIfInvalid, TSubclassOf<AOmegaInstanceActor> Class, bool& Result);

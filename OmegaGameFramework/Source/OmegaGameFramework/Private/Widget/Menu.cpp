@@ -40,7 +40,6 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		
 		OnOpened.Broadcast(Tags, Flag);
 		MenuOpened(Tags, Context, Flag);
-		Native_UpdateState();
 		
 		if (SS_Player)
 		{
@@ -275,27 +274,3 @@ bool UMenu::InputBlocked_Implementation()
 	return IsInputBlocked();
 }
 
-
-
-void UMenu::Native_UpdateState()
-{
-	if(UWidgetSwitcher* _switch=GetWidget_WidgetSwitcher_State())
-	{
-		_switch->SetActiveWidgetIndex(menu_state);
-	}
-	OnMenuStateChanged(menu_state);
-}
-
-UWidgetSwitcher* UMenu::GetWidget_WidgetSwitcher_State_Implementation()
-{
-	return nullptr;
-}
-
-void UMenu::SetMenuState(int32 state)
-{
-	if(state!=menu_state)
-	{
-		menu_state=state;
-		Native_UpdateState();
-	}
-}

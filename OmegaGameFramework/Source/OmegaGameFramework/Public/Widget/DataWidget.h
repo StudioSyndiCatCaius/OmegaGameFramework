@@ -80,7 +80,7 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUser
 			}
 		}
 	}
-
+	
 	void L_overrideTextStyle(UTextBlock* text, TSubclassOf<UCommonTextStyle> style);
 
 	void LC_UpdateBlendStateVal(bool& bBlending, bool bTarget,float& val, float DT, float max_time, UCurveFloat* curve, FName MatParamName, int type);
@@ -114,6 +114,7 @@ class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUser
 	UPROPERTY() FTimerHandle refresh_timer;
 
 protected:
+	UActorComponent* local_GetComponentFromObject(UObject* object, TSubclassOf<UActorComponent> Class);
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
 	virtual void NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent) override;

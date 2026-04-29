@@ -16,6 +16,7 @@
 
 #include "OmegaGameplaySystem.generated.h"
 
+class AOmegaHUD;
 class AOmegaPlayer;
 class UGameplayActorComponent;
 class UOmegaSubsystem_World;
@@ -141,6 +142,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Save")
 	void OnNewGameStarted(UOmegaSaveGame* NewSave, FGameplayTagContainer GameplayTags);
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="Save")
+	int32 OnHUDDraw(AOmegaHUD* HUDActor);
 	
 	
 	UFUNCTION(BlueprintNativeEvent, DisplayName="On Activated")

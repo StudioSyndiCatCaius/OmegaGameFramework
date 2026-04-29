@@ -12,6 +12,7 @@
 #include "Types/Struct_SortedClassPath.h"
 #include "OmegaGameplayConfig.generated.h"
 
+class UOmegaPhysicsSurfaceType;
 class UOmegaFaction;
 class UMenu;
 class UOAsset_Appearance;
@@ -48,10 +49,13 @@ public:
 	
 	//Keys that will constantly on tick try to me updated with theri axis value
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Input")
-	TArray<FKey> PesistentAxisKeys;
+	TArray<FKey> PersistentAxisKeys;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,meta=(ForceInlineRow,Categories="INPUT"), Category="Input")
 	TMap<FGameplayTag,FOmegaInputConfig> InputActionConfigs;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Physics")
+	TMap<UPhysicalMaterial*, UOmegaPhysicsSurfaceType*> PhysicsSurfaceTypes;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Assets")
 	TMap<TSubclassOf<UObject>, FOmegaSortedClassPathData> ClassPaths;

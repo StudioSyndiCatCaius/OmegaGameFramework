@@ -121,13 +121,7 @@ void UOmegaGameManager::ValidateTemplates()
 	}
 }
 
-void UOmegaGameManager::ActorID_OnConstruct(AActor* Actor, UGameplayActorComponent* Component) const
-{
-}
 
-void UOmegaGameManager::ActorID_OnBeginPlay(AActor* Actor, UGameplayActorComponent* Component) const
-{
-}
 
 void UOmegaGameManager::OnGlobalEvent_Tagged_Implementation(UGameInstance* GameInstance, FGameplayTag Event,
                                                             UObject* context, FOmegaCommonMeta meta) const

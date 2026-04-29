@@ -63,6 +63,17 @@ void FCustomization_ActorRelatives::CustomizeChildren(TSharedRef<IPropertyHandle
 	// Get all available keys from OmegaGameCore
 	TArray<FName> AvailableKeys = GetAvailableKeys(OwnerActor);
 
+	
+	void* StructData = nullptr;
+	StructPropertyHandle->GetValueData(StructData);
+	if (FOmegaActorRelatives* _struct=static_cast<FOmegaActorRelatives*>(StructData))
+	{
+		if (_struct->override_keys)
+		{
+			AvailableKeys=_struct->override_keyList;   
+		}
+	}
+	
 	if (AvailableKeys.Num() == 0)
 	{
 		ChildBuilder.AddCustomRow(LOCTEXT("NoKeys", "No Keys"))

@@ -64,13 +64,21 @@ AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, c
 	return LocalActor;
 }
 
-void UInstanceActorComponent::CreateInstances(TArray<UObject*> Contexts, const FString& Flag,
+TArray<AOmegaInstanceActor*>  UInstanceActorComponent::CreateInstances(TArray<UObject*> Contexts, const FString& Flag,
 	FTransform LocalTransform)
 {
+	TArray<AOmegaInstanceActor*> out;
 	for(auto* i : Contexts)
 	{
-		if(i) { CreateInstance(i,Flag,LocalTransform);}
+		if(i)
+		{
+			if (AOmegaInstanceActor* a=CreateInstance(i,Flag,LocalTransform))
+			{
+				out.Add(a);	
+			}
+		}
 	}
+	return out;
 }
 
 AOmegaInstanceActor* UInstanceActorComponent::TryGetInstanceByContext(UObject* Context, bool CreateIfInvalid,

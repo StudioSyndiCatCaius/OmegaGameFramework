@@ -4,11 +4,66 @@
 #include "CoreMinimal.h"
 #include "Struct_Bitflag.generated.h"
 
+
+//// Single entry for a bitflag
+USTRUCT(BlueprintType)
+struct FOmegaBitmaskEditorEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	FText Title;
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega",meta=(MultiLine))
+	FText Description;
+	
+	FOmegaBitmaskEditorEntry() : Title(FText::GetEmpty()) {}
+};
+
+// Data for a single BitEnum entry (has its own title and list of options)
+USTRUCT(BlueprintType)
+struct FOmegaBitmaskEditorEnumData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	FText Title;
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega",meta=(MultiLine))
+	FText Description;
+
+	// Options for this enum (max 16 options, values 0-15)
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	TArray<FOmegaBitmaskEditorEntry> Options;
+
+	FOmegaBitmaskEditorEnumData() : Title(FText::GetEmpty()) {}
+};
+
+// Complete editor data for a bitflag type
+USTRUCT(BlueprintType)
+struct FOmegaBitmaskEditorData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	TSoftClassPtr<UObject> CopyFrom;
+	
+	// Bitflags section (up to 32 entries)
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	TArray<FOmegaBitmaskEditorEntry> Bitflags;
+
+	// BitEnums section (up to 16 entries, each with up to 16 options)
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	TArray<FOmegaBitmaskEditorEnumData> BitEnums;
+};
+
 USTRUCT(BlueprintType)
 struct FOmegaBitflagsBase
 {
 	GENERATED_BODY()
 	
+	FOmegaBitmaskEditorData GetConfig(UClass* OuterObject);
+	
+	UPROPERTY(Transient) bool override_config;
+	UPROPERTY(Transient) FOmegaBitmaskEditorData override_configData;
 	UPROPERTY(Transient) TWeakObjectPtr<UObject> override_source;
 	
 	virtual ~FOmegaBitflagsBase() = default;
@@ -75,53 +130,3 @@ struct FOmegaBitflagsBase
 
 };
 
-
-//// Single entry for a bitflag
-USTRUCT(BlueprintType)
-struct FOmegaBitmaskEditorEntry
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
-	FText Title;
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega",meta=(MultiLine))
-	FText Description;
-	
-	FOmegaBitmaskEditorEntry() : Title(FText::GetEmpty()) {}
-};
-
-// Data for a single BitEnum entry (has its own title and list of options)
-USTRUCT(BlueprintType)
-struct FOmegaBitmaskEditorEnumData
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
-	FText Title;
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega",meta=(MultiLine))
-	FText Description;
-
-	// Options for this enum (max 16 options, values 0-15)
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
-	TArray<FOmegaBitmaskEditorEntry> Options;
-
-	FOmegaBitmaskEditorEnumData() : Title(FText::GetEmpty()) {}
-};
-
-// Complete editor data for a bitflag type
-USTRUCT(BlueprintType)
-struct FOmegaBitmaskEditorData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
-	TSoftClassPtr<UObject> CopyFrom;
-	
-	// Bitflags section (up to 32 entries)
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
-	TArray<FOmegaBitmaskEditorEntry> Bitflags;
-
-	// BitEnums section (up to 16 entries, each with up to 16 options)
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
-	TArray<FOmegaBitmaskEditorEnumData> BitEnums;
-};

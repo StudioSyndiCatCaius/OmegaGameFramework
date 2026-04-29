@@ -192,25 +192,8 @@ public:
 	UPROPERTY(BlueprintAssignable) FClosed OnClosed;
 
 
-	//----------------------------------------------------------------------
-	// State
-	//----------------------------------------------------------------------
 
-public:
-	UPROPERTY() int32 menu_state;
-	virtual void Native_UpdateState();
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Menu|State")
-	void OnMenuStateChanged(int32 new_state);
 
-	UFUNCTION(BlueprintNativeEvent,Category="Menu|State")
-	UWidgetSwitcher* GetWidget_WidgetSwitcher_State();
-	
-	UFUNCTION(BlueprintCallable,Category="Menu|State")
-	void SetMenuState(int32 state);
-
-	UFUNCTION(BlueprintCallable,Category="Menu|State")
-	int32 GetMenuState() const { return menu_state;};
 };
 
 UINTERFACE(MinimalAPI) class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };

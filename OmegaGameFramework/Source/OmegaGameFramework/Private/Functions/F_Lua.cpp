@@ -10,6 +10,7 @@
 #include "OmegaGameManager.h"
 #include "Functions/F_File.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Statics/OMEGA_File.h"
 
 FString UOmegaLuaParser::TrimQuotes(const FString& Str)
@@ -115,20 +116,32 @@ FLuaValue UOmegaLuaFunctions::ParseStringToLuaTable(UObject* WorldContextObject,
 	return FLuaValue();
 }
 
-FLuaValue UOmegaLuaFunctions::GetMeta_UObject(UObject* WorldContextObject, UObject* object)
+FString UOmegaLuaFunctions::Object_GetMetakey(UObject* object)
 {
 	if (object)
 	{
-		FString in_name=object->GetName();
-		return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,nullptr,"UOBJECT."+in_name);
+		FString ClassName = object->GetClass()->GetName();
+		if (ClassName.EndsWith(TEXT("_C")))
+		{
+			ClassName.LeftChopInline(2);
+		}
+		return OGF_CFG_LUA()->Object_MetakeyPrefex+ClassName+"."+object->GetName();
 	}
-	return FLuaValue();
+	return FString();
 }
 
 
+FLuaValue UOmegaLuaFunctions::Object_GetMetadata(UObject* WorldContextObject, UObject* object)
+{
+	if (OGF_CFG_LUA()->bUseLuaObjectMetadata)
+	{
+		return ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,nullptr,Object_GetMetakey(object));	
+	}
+	return FLuaValue();	
+}
 
 TArray<UObject*> UOmegaLuaFunctions::FilterObjects_ByParamValue(UObject* WorldContextObject, TArray<UObject*> objects,
-	TSubclassOf<UObject> Class, const FString& param, FLuaValue Value)
+                                                                TSubclassOf<UObject> Class, const FString& param, FLuaValue Value)
 {
 	TArray<UObject*> out;
 	for (UObject* obj : objects)

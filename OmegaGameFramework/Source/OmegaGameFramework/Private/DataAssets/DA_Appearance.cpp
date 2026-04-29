@@ -3,6 +3,8 @@
 
 #include "DataAssets/DA_Appearance.h"
 
+#include "Misc/OmegaUtils_Methods.h"
+
 void UOAsset_Appearance::Apply(ACharacter* c) const
 {
 	if (c)
@@ -27,13 +29,19 @@ void UOmegaAppearanceFunctions::GetAppearanceLibraries(UObject* Source,
 	UOmegaAssetLibrary_Animation*& Anim, UOmegaAssetLibrary_Sound*& Sound, UOmegaAssetLibrary_SlateBrush*& Slate)
 {
 	if (!Source) { return; }
-	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_AssetLibraries::StaticClass()))
+	Anim=nullptr;
+	Slate=nullptr;
+	Sound=nullptr;
+	if(Source->GetClass()->ImplementsInterface(UDataInterface_AssetLibraries::StaticClass()))
 	{
 		UOmegaAssetLibrary_Animation* _anim = nullptr;
 		UOmegaAssetLibrary_Sound* _sound = nullptr;
 		UOmegaAssetLibrary_SlateBrush* _slate = nullptr;
 		IDataInterface_AssetLibraries::Execute_GetAppearanceLibraries(Source,_anim,_sound,_slate);
-		if (_anim) { Anim=_anim; }
+		if (_anim)
+		{
+			Anim=_anim;
+		}
 		if(_sound) { Sound=_sound; }
 		if(_slate) { Slate=_slate; }
 	}
@@ -41,8 +49,12 @@ void UOmegaAppearanceFunctions::GetAppearanceLibraries(UObject* Source,
 	{
 		if(!Anim)
 		{
-			Anim=apr->Library_Anim;
+			if (apr->Library_Anim)
+			{
+				Anim=apr->Library_Anim;	
+			}
 		}
+
 		if(!Sound)
 		{
 			Sound=apr->Library_Voice;
@@ -52,4 +64,5 @@ void UOmegaAppearanceFunctions::GetAppearanceLibraries(UObject* Source,
 			Slate=apr->Library_Slate;
 		}
 	}
+	
 }

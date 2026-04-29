@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "LuaValue.h"
 #include "UObject/Object.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "Types/Struct_SortedClassPath.h"
@@ -15,6 +16,18 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_Engine : public UEngineSubsystem
 	GENERATED_BODY()
 
 public:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	
+	// ---------------------------------------------------------------
+	// spawnables
+	// ---------------------------------------------------------------
+	UFUNCTION(BlueprintCallable,Category="Engine")
+	void LoadDevConfig();
+	
+	FLuaValue Spawnable_GetData(FName key);
+	
+	TArray<FName> keys_spawnables;
+	UPROPERTY(BlueprintReadWrite,Category="Engine") FLuaValue devconfig_table;
 	UPROPERTY() TMap<TSubclassOf<UObject>, FOmegaSortedClassPathData> cached_ClassPaths;
 	
 	UPROPERTY() TMap<FString, UObject*> SortedAssets;
@@ -32,6 +45,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFunctions_Engine : public UBlueprintFunctionL
 {
 	GENERATED_BODY()
 public:
+	
+	
 	UFUNCTION(BlueprintPure,Category="Omega|SortedAssets",DisplayName="Sorted Asset - Get All")
 	static TArray<UObject*> SortedAsset_GetAll();
 	

@@ -18,7 +18,6 @@ class UWidgetSwitcher;
 class UCombatantComponent;
 class UOmegaAttribute;
 
- UActorComponent* local_GetComponentFromObject(UObject* object, TSubclassOf<UActorComponent> Class);
 
 // ==============================================================================================================
 // Combatant
@@ -31,6 +30,8 @@ class OMEGADEMO_API UDataWidgetBase_CombatantBASE : public UDataWidget, public I
 	GENERATED_BODY()
 public:
 	UPROPERTY() UCombatantComponent* REF_combatant;
+	UFUNCTION()
+	void L_Refresh(UCombatantComponent* Combatant);
 	virtual void Native_OnSourceAssetChanged(UObject* SourceAsset) override;
 	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 	UFUNCTION(BlueprintPure,Category="Combatant") UCombatantComponent* GetLinkedCombatant();
@@ -133,27 +134,10 @@ public:
 
 	//UFUNCTION(BlueprintImplementableEvent,Category="DataWidget")
 	//void OnLevelingComponentChanged(ULevelingComponent* Component);
-	
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UOmegaLevelingAsset* GetLevelingAsset();
+	void GetLevelingWidgets(UTextBlock*& text_RankName,UTextBlock*& text_RankValue,UTextBlock*& text_xpName,UTextBlock*& text_xpCurrent,
+		UTextBlock*& text_xpMax,UProgressBar*& ProgressBar_xpPercent);
 	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UProgressBar* GetWidget_ProgressBar();
-	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UTextBlock* GetWidget_Text_RankName();
-	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UTextBlock* GetWidget_Text_XpName();
-	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UTextBlock* GetWidget_Text_RankValue();
-	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UTextBlock* GetWidget_Text_CurrentValue();
-	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
-	UTextBlock* GetWidget_Text_MaxValue();
 };
 
 

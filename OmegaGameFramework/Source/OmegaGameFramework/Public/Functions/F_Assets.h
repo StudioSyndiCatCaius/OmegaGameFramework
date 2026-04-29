@@ -35,6 +35,10 @@ public:
 	 * @param ClassName The name of the class (without prefix like 'A' or 'U')
 	 * @return The UClass if found, nullptr otherwise
 	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Utilities|Class")
+	static TArray<TSubclassOf<UObject>> GetAllChildClasses(TSubclassOf<UObject> ParentClass,bool bIncludeDescendants = false,bool bIncludeParent = false);
+	
+	
 	UFUNCTION(BlueprintCallable, Category = "Omega|Class", meta = (Keywords = "class name string",ExpandBoolAsExecs = "result"))
 	static UClass* GetClassByName(const FString& ClassName, bool& result);
     

@@ -4,7 +4,6 @@
 
 #include "Functions/F_Quest.h"
 #include "Actors/Actor_Quest.h"
-#include "Modifiers/Modifier_Save.h"
 #include "Subsystems/Subsystem_Save.h"
 
 UOmegaDebugDevSettings::UOmegaDebugDevSettings(const FObjectInitializer& ObjectInitializer)
@@ -61,9 +60,6 @@ void UOmegaDebugSubsystem::StartDebugProfile(UOmegaDebugProfile* Profile)
 		}
 		UOmegaSaveGame* _sav=GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData;
 		
-		FOmegaModifiers_Save smods;
-		smods.Modifiers=Profile->SaveMods;
-		smods.Modify(_sav,GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>(),false);
 		for(auto* i : Profile->Scripts)
 		{
 			if(i)

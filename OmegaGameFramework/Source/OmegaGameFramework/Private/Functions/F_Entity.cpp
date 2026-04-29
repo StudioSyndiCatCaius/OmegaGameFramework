@@ -151,46 +151,58 @@ void UOmegaFunctions_Entity::SetSaveEntity_ParamString(UObject* WorldContextObje
 	SetEntity_ByID(WorldContextObject,ID,E,bGlobalSave);
 }
 
-void UOmegaFunctions_Entity::SetSaveEntity_Tag(UObject* WorldContextObject, FOmegaEntityID ID, FName tag, bool bActive,
-	bool bGlobalSave)
+void UOmegaFunctions_Entity::SetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID,
+	FGameplayTagContainer tags, bool bActive, bool bGlobalSave)
 {
 	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
 	
-	if (bActive && !E.Tags_Named.Contains(tag))
+	if (bActive)
 	{
-		E.Tags_Named.Add(tag);
+		E.Tags.AppendTags(tags);
 	}
 	else
 	{
-		E.Tags_Named.Remove(tag);
+		E.Tags.RemoveTags(tags);
 	}
 	
 	SetEntity_ByID(WorldContextObject,ID,E,bGlobalSave);
 }
 
-void UOmegaFunctions_Entity::SetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID, TArray<FName> tags,
-	bool bActive, bool bGlobalSave)
+
+
+
+FGameplayTagContainer UOmegaFunctions_Entity::GetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID,
+	bool bGlobalSave)
 {
-	for (FName n : tags)
+	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
+	
+	return E.Tags;
+}
+
+bool UOmegaFunctions_Entity::SaveEntity_HasTags(UObject* WorldContextObject, FOmegaEntityID ID,
+	FGameplayTagContainer tag, bool bGlobalSave)
+{
+	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
+	return E.Tags.HasAll(tag);
+}
+
+bool UOmegaFunctions_Entity::SaveEntity_CheckTag(UObject* WorldContextObject, FOmegaEntityID ID,
+	FGameplayTagContainer tag, bool bGlobalSave, bool& Result, bool AddIfFalse)
+{
+	if (SaveEntity_HasTags(WorldContextObject,ID,tag,bGlobalSave))
 	{
-		SetSaveEntity_Tag(WorldContextObject,ID,n,bActive,bGlobalSave);
+		Result=true;
+		return true;
 	}
+	if (AddIfFalse)
+	{
+		SetSaveEntity_Tags(WorldContextObject,ID,tag,true,bGlobalSave);
+	}
+	Result=false;
+	return false;
 }
 
-TArray<FName> UOmegaFunctions_Entity::GetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID,
-	bool bGlobalSave)
-{
-	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
-	
-	return E.Tags_Named;
-}
 
-bool UOmegaFunctions_Entity::SaveEntity_HasTag(UObject* WorldContextObject, FOmegaEntityID ID, FName tag,
-	bool bGlobalSave)
-{
-	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
-	
-	return E.Tags_Named.Contains(tag);
-}
+
 
 

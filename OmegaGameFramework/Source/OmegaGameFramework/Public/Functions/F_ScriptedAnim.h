@@ -11,12 +11,12 @@
 #include "F_ScriptedAnim.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnScriptedAnimDelegate);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScriptedAnimDelegate_Notify,FName,notify);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScriptedAnimDelegate_Notify,const FString&,notify);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScriptedAnimDelegate_Script,UOmegaScriptedAnimation*,Script);
 
 
-UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories, Abstract,meta=(ShowWorldContextPin))
+UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories, Abstract,meta=(ShowWorldContextPin),HideCategories="Private")
 class OMEGAGAMEFRAMEWORK_API UOmegaScriptedAnimation : public UObject
 {
 	GENERATED_BODY()
@@ -32,7 +32,7 @@ public:
 	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Notify OnAnimNotify;
 	
 	UFUNCTION(BlueprintPure, Category="Omega|ScriptedAnim") AActor* GetAnimationInstigator() const;
-	UFUNCTION(BlueprintCallable,Category="Omega|ScriptedAnim") void Notify(FName notify);
+	UFUNCTION(BlueprintCallable,Category="Omega|ScriptedAnim") void Notify(const FString& notify);
 	UFUNCTION(BlueprintCallable,Category="Omega|ScriptedAnim") void FinishAnimation();
 	
 	UFUNCTION(BlueprintNativeEvent, Category="Scripted Effect") void OnBegin();
@@ -54,10 +54,12 @@ struct FOmegaScriptedAnimationData
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect",DisplayName="Anim (Presets)")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect",DisplayName="1️⃣Anim (Presets)")
 	TArray<UOmegaScriptedAnimation_Preset*> anim_preset;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect",DisplayName="Anim (Inline)")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect",DisplayName="2️⃣Anim (Inline)")
 	TArray<UOmegaScriptedAnimation*> anim_inline;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect",DisplayName="3️⃣Anim (Presets End)")
+	TArray<UOmegaScriptedAnimation_Preset*> anim_presetEnd;
 	
 	TArray<UOmegaScriptedAnimation*> GetAllAnimations() const;
 };
@@ -90,14 +92,14 @@ class OMEGAGAMEFRAMEWORK_API UAsyncAction_ScriptedAnimation : public UBlueprintA
 public:
 	int32 anim_index=-1;
 	
-	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate Finished;
+	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Notify Finished;
 	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Notify OnNotify;
 
 	UPROPERTY() AActor* local_Instigator=nullptr;
 	UPROPERTY() FOmegaScriptedAnimationData local_animData;
 	UPROPERTY() UOmegaScriptedAnimation* current_anim=nullptr;
 	
-	UFUNCTION() void L_Notify(FName Notify);
+	UFUNCTION() void L_Notify(const FString& Notify);
 	UFUNCTION() void Next_Anim(UOmegaScriptedAnimation* anim);
 	
 	virtual void Activate() override;

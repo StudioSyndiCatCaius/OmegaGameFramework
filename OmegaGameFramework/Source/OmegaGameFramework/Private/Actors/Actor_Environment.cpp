@@ -161,7 +161,11 @@ void AOmegaActorEnvironment::BeginPlay()
 {
 	if(BGM_to_autoplay)
 	{
-		UOmegaFunctions_BGM::Play(this,BGM_to_autoplay,BGM_Slot,false);
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle,FTimerDelegate::CreateLambda([this]()
+		{
+			UOmegaFunctions_BGM::Play(this,BGM_to_autoplay,BGM_Slot,true);
+		}),0.1,false);
 	}
 	if(SaveField_Preset.IsValid() && SaveCurrentPreset)
 	{

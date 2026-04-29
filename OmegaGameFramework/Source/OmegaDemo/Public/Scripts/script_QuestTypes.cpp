@@ -67,16 +67,12 @@ TArray<UObject*> UOmegaQuestType_FlowAsset::GetActiveTasks_Implementation(AOmega
 	return out;
 }
 
-
-
-bool L_FlowMatched(UOmegaQuestTypeScript* script, UFlowAsset* flow)
+bool L_FlowMatched(UOmegaQuestType_FlowAsset* script, UFlowAsset* flow)
 {
-	if (UFlowAsset* flow_inst=Cast<UFlowAsset>(script->GetQuestInstance()->questContext))
+	if (!script || !script->Flow_Asset) { return false; }
+	if (flow->AssetGuid==script->Flow_Asset->AssetGuid)
 	{
-		if (flow->AssetGuid==flow_inst->AssetGuid)
-		{
-			return true;
-		}
+		return true;
 	}
 	return false;
 }
@@ -85,7 +81,7 @@ void UOmegaQuestType_FlowAsset::L_OnFlowNodeEnter(UFlowAsset* FlowAsset, UFlowNo
 {
 	if (L_FlowMatched(this,FlowAsset))
 	{
-		GetQuestInstance()->WM->Quest_GetData(GetQuestInstance()->QuestAsset)->active_guids=FlowAsset->GetActiveNodeGuids();
+		L_GetQuestData()->active_guids=FlowAsset->GetActiveNodeGuids();
 	}
 }
 

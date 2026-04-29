@@ -112,8 +112,6 @@ public:
 	UOmegaEventVolumeTriggerScript* TriggerScript;
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="EventVolume")
 	TArray<UOmegaEventVolumeSequenceScript*> Events;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="EventVolume")
-	FOmegaSaveConditions Conditions;
 	
 };
 

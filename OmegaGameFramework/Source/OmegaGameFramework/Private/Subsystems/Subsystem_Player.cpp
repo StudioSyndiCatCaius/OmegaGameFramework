@@ -59,12 +59,23 @@ void UOmegaSubsystem_Player::Deinitialize()
 	Super::Deinitialize();
 }
 
+void UOmegaSubsystem_Player::L_PlayerPawnChanged(APawn* Pawn, APawn* Pawn1)
+{
+	if (InputTargets.Contains(Pawn1)) { InputTargets.Remove(Pawn1); }
+	if (InputTargets.Contains(Pawn)) { InputTargets.Remove(Pawn); }
+	if (OGF_CFG()->Input_ReplicateToPlayerPawn)
+	{
+		L_TryRegisterInputTarget(REF_Controller->K2_GetPawn());
+	}
+}
+
 void UOmegaSubsystem_Player::PlayerControllerChanged(APlayerController* NewPlayerController)
 {
 	Super::PlayerControllerChanged(NewPlayerController);
 	if(NewPlayerController)
 	{
 		REF_Controller=NewPlayerController;
+		REF_Controller->OnPossessedPawnChanged.AddDynamic(this,&UOmegaSubsystem_Player::L_PlayerPawnChanged);
 		REF_Controller->SetTickableWhenPaused(true);
 		REF_Controller->InputComponent->SetTickableWhenPaused(true);
 		//REF_Controller->InputComponent->KeyBindings.Remove(KeyBind_Start);
@@ -332,7 +343,7 @@ void UOmegaSubsystem_Player::ClearControlWidget()
 
 void UOmegaSubsystem_Player::RemoveMenuFromActiveList(UMenu* Menu)
 {
-	if(!Menu->IsValidLowLevel())
+	if(!IsValid(Menu))
 	{
 		return;
 	}
@@ -382,12 +393,8 @@ void UOmegaSubsystem_Player::InputTag(FGameplayTag Tag)
 bool UOmegaSubsystem_Player::CanInterfaceInput() const
 {
 	if(!FocusMenu) { return false; }
-	if (!FocusMenu->IsRendered()) { return false; }
-	if(IWidgetInterface_Input::Execute_InputBlocked(FocusMenu) ||	//Block if Input Blocked
-		!FocusMenu->IsRendered())	//Block on Collapsed OR Hidden
-	{
-		return false;
-	}
+	if(!FocusMenu->IsRendered()) { return false; }
+	if(IWidgetInterface_Input::Execute_InputBlocked(FocusMenu)) { return false; }
 	return true;
 }
 
@@ -444,49 +451,17 @@ bool UOmegaSubsystem_Player::RemoveHUDLayer(class TSubclassOf<UHUDLayer> LayerCl
 
 TArray<class UHUDLayer*> UOmegaSubsystem_Player::GetHUDLayers()
 {
-	CleanHUDLayers();
 	TArray<UHUDLayer*> TempLayers;
-	for (UHUDLayer*  TempLayer: ActiveHUDLayers)
+	for (UHUDLayer* TempLayer : ActiveHUDLayers)
 	{
 		if(TempLayer)
 		{
 			TempLayers.Add(TempLayer);
 		}
 	}
-
 	return TempLayers;
 }
 
-TArray<UHUDLayer*> UOmegaSubsystem_Player::GetHUDLayersWithTags(FGameplayTagContainer Tags)
-{
-	TArray<UHUDLayer*> LocalLayers = GetHUDLayers();
-	TArray<UHUDLayer*> OutLayers;
-	for (UHUDLayer* TempLayer : LocalLayers)
-	{
-		if(TempLayer)
-		{
-			FGameplayTagContainer TempTags = TempLayer->HUDTags;
-			if (TempTags.HasAnyExact(Tags))
-			{
-				OutLayers.Add(TempLayer);
-			}	
-		}
-	}
-	
-	return OutLayers;
-}
-
-void UOmegaSubsystem_Player::RemoveHUDLayersWithTags(FGameplayTagContainer Tags)
-{
-	CleanHUDLayers();
-	for (UHUDLayer* TempLayer : GetHUDLayersWithTags(Tags))
-	{
-		if(TempLayer)
-		{
-			TempLayer->RemoveHUDLayer();
-		}
-	}
-}
 
 void UOmegaSubsystem_Player::RemoveAllHudLayers()
 {
@@ -513,17 +488,6 @@ UHUDLayer* UOmegaSubsystem_Player::GetHUDLayerByClass(TSubclassOf<UHUDLayer> Lay
 	return nullptr;
 }
 
-void UOmegaSubsystem_Player::SetHUDVisibilityWithTags(FGameplayTagContainer Tags, ESlateVisibility Visibility)
-{
-	CleanHUDLayers();
-	for(UHUDLayer* Layer : GetHUDLayersWithTags(Tags))
-	{
-		if(Layer != nullptr)
-		{
-			Layer->SetVisibility(Visibility);
-		}
-	}
-}
 
 void UOmegaSubsystem_Player::CleanHUDLayers()
 {
@@ -536,7 +500,6 @@ void UOmegaSubsystem_Player::CleanHUDLayers()
 		}
 	}
 	ActiveHUDLayers = LocalLayers;
-	return;
 }
 
 
@@ -751,25 +714,26 @@ AOmegaDynamicCamera* UOmegaSubsystem_Player::DynaCam_GetSource()
 	{
 		return override_camera;
 	}
-	AOmegaDynamicCamera* out=nullptr;
-	TArray<AOmegaDynamicCamera*> _camList=source_cameras;
+	AOmegaDynamicCamera* out = nullptr;
+	AOmegaDynamicCamera* master = DynaCam_GetMaster();
+	TArray<AOmegaDynamicCamera*> _camList = source_cameras;
 	for(AOmegaDynamicCamera* temp_cam : _camList)
 	{
 		if(temp_cam &&
-			temp_cam!=DynaCam_GetMaster() &&
-			!temp_cam->IsActorBeingDestroyed()
-			&& temp_cam->CameraActive) //If camera is valid & is NOT the Master Camera.
+			temp_cam != master &&
+			!temp_cam->IsActorBeingDestroyed() &&
+			temp_cam->CameraActive)
 		{
-			if(out) //if a valid check camera has been set
+			if(out)
 			{
-				if(temp_cam->CameraActive && temp_cam->Priority >= out->Priority)
+				if(temp_cam->Priority >= out->Priority)
 				{
-					out=temp_cam;
+					out = temp_cam;
 				}
 			}
-			else// if not set this as the check camera
+			else
 			{
-				out=temp_cam;
+				out = temp_cam;
 			}
 		}
 	}

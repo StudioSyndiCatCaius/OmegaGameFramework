@@ -14,7 +14,6 @@ class OMEGADEMO_API UMenuBase_Title : public UMenu
 {
 	GENERATED_BODY()
 
-	virtual UWidgetSwitcher* GetWidget_WidgetSwitcher_State_Implementation() override;
 
 public:
 	virtual void NativePreConstruct() override;

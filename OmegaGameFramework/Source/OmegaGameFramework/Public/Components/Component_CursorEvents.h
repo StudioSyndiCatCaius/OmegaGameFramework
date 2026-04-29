@@ -14,6 +14,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCursorEventActor, UOmegaCursorEv
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCursorEventComponent, UOmegaCursorEventComponent*, Component, USceneComponent*, TargetComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCursorEventTrigger, UOmegaCursorEventComponent*, Component, AActor*, TargetActor, FOmegaCommonMeta, meta);
 
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FQuery_CursorActorCheck, AActor*, Actor);
+
 UINTERFACE(MinimalAPI) class UActorInterface_CursorEventTarget : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IActorInterface_CursorEventTarget
 {
@@ -50,8 +52,8 @@ public:
 	UPROPERTY(BlueprintReadWrite,EditAnywhere, Category="Cursor Events") TEnumAsByte<ETraceTypeQuery> TraceType;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere, Category="Cursor Events") float TraceDistance = 10000.0f;
 	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere, Category="Cursor Events",DisplayName="❓️Filter Conditons") 
-	FOmegaConditions_Actor Filter_Conditions;
+	UPROPERTY(BlueprintReadWrite, Category = "Cursor Events") FQuery_CursorActorCheck Query_CanHover;
+	
 	
 	//Actors that can register cursor events. If none, allow all actors
 	UPROPERTY(BlueprintReadWrite, Category="Cursor Events") TArray<AActor*> AcceptedActors;

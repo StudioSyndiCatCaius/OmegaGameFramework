@@ -105,6 +105,7 @@ protected:
 	float f_zoneTransitAnimTime=0.0;
 	FTimerHandle TimerHandle_transit;
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction) override;
 public:
@@ -112,7 +113,6 @@ public:
 	
 	UPROPERTY() AOmegaNullActor* NullActor_Entities;
 	UPROPERTY() AOmegaNullActor* NullActor_Quests;
-
 	UPROPERTY() TMap<AActor*, FOmegaActorInstanceMetadata> ActorInstanceMetadata;
 	UPROPERTY() UOmegaLevelData* LevelData;
 	UPROPERTY() TArray<UOmegaZoneData*> LoadedZones;
@@ -121,9 +121,10 @@ public:
 	void SetActorMetadata(AActor* Actor, const FOmegaActorInstanceMetadata& Metadata);
 	void RemoveActorMetadata(AActor* Actor);
 
+	//In world manager start, creates and starts a new save game. (This is useful for things like a title screen level, to ensure no extra save data is carried over.)
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="🗺️World Manager") bool bStartWithNewGame;
+	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
-	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant_B;
-	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant_C;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UGameplayActorComponent* ActorID;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UAssetSquadComponent* AssetSquad;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UInstanceActorComponent* EntityInstances;
@@ -149,7 +150,6 @@ public:
 	AOmegaQuestInstance* Quest_GetInstance(UOmegaQuest* q);
 	TArray<UOmegaQuest*> Quest_GetActive();
 	TArray<AOmegaQuestInstance*> Quest_GetInstancesFromQuests(TArray<UOmegaQuest*> q);
-	
 	
 	
 	// ------------------------------------------------------------
@@ -300,7 +300,7 @@ public:
 	TArray<UCombatantComponent*> RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass, UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);
 	
 	// ────────────────────────────────────────────────────────────────────
-	// ZONE
+	// Quest
 	// ────────────────────────────────────────────────────────────────────
 	
 	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuest_Start;

@@ -18,6 +18,7 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_UASSETLIST,"UASSET_LIST");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_INTERACTION_Default,"INTERACTION.Default");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_PAUSE_GAMEPLAY,"PAUSE.Gameplay");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_QUERY,"QUERY");
 
@@ -316,6 +317,12 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Actor_Type_Speaker,"Actor.Type.Speaker");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Actor_Type_Interactable,"Actor.Type.Interactable");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Actor_Type_Destructable,"Actor.Type.Destructable");
 
+// --------------------------------------------------------------------------------------------------------
+// Event
+// --------------------------------------------------------------------------------------------------------
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Physics_Event_Footstep,"Physics.Event.Footstep");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Physics_Event_Hit,"Physics.Event.Hit");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Physics_Event_Break,"Physics.Event.Break");
 
 // --------------------------------------------------------------------------------------------------------
 // Event

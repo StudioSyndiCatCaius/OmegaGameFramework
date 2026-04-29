@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataAsset.h"
+#include "Misc/GeneralDataObject.h"
 #include "UObject/Interface.h"
 #include "Components/ActorComponent.h"
 #include "Component_Leveling.generated.h"
@@ -106,14 +106,11 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Leveling
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaLevelingAsset : public UPrimaryDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaLevelingAsset : public UOmegaDataAsset
 {
 	GENERATED_BODY()
-	
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Leveling", DisplayName="Level Name")
-	FText RankName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Leveling")
 	FText XPName;

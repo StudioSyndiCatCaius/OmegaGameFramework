@@ -5,5 +5,5 @@
 
 bool ULinearChoice_SimpleChoice::IsChoiceAvailable_Implementation() const
 {
-	return GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(Conditions);
+	return UOmegaFunctions_GlobalScripting::RunGlobalConditions(this,Conditions);
 }

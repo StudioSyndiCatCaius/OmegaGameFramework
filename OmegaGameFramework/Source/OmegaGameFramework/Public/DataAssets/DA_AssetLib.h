@@ -20,13 +20,6 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Defaults")
 	UOmegaAssetLibrary_Animation* Fallback=nullptr;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Defaults")
-	UAnimSequence* Default_AnimSequence=nullptr;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Defaults")
-	UAnimMontage* Default_Montage=nullptr;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Defaults")
-	ULevelSequence* Default_LevelSequence=nullptr;
-	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Animations")
 	TMap<FName,UAnimSequence*> Anims_Named;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Animations")
@@ -89,15 +82,15 @@ public:
 	
 	virtual UAnimSequence* GetContextAVAnimations_Implementation(FGameplayTag ID) override
 	{
-		if(AnimSequences.Contains(ID)) { return AnimSequences[ID];} return Default_AnimSequence;
+		if(AnimSequences.Contains(ID)) { return AnimSequences[ID];} return nullptr;
 	}
 	virtual UAnimMontage* GetContextAVMontages_Implementation(FGameplayTag ID) override
 	{
-		if(Montages.Contains(ID)) { return Montages[ID];} return Default_Montage;
+		if(Montages.Contains(ID)) { return Montages[ID];} return nullptr;
 	}
 	virtual ULevelSequence* GetContextAVSequences_Implementation(FGameplayTag ID) override
 	{
-		if(LevelSequences.Contains(ID)) { return LevelSequences[ID];} return Default_LevelSequence;
+		if(LevelSequences.Contains(ID)) { return LevelSequences[ID];} return nullptr;
 	}
 };
 

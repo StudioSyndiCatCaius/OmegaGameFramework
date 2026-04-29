@@ -85,6 +85,15 @@ void FCustomization_ClassNamedLists::CustomizeChildren(
         IDataInterface_General::Execute_GetMetaConfig(OuterObject,b,g,s,Lists); 
         Lists=IDataInterface_General::Execute_Override_ObjectLists(OuterObject);
     }*/
+    void* StructData = nullptr;
+    StructPropertyHandle->GetValueData(StructData);
+    if (FOmegaClassNamedLists* _struct=static_cast<FOmegaClassNamedLists*>(StructData))
+    {
+        if (_struct->override_keys)
+        {
+            Lists=_struct->override_keyList;   
+        }
+    }
     if (Lists.Num() == 0)
     {
         Lists=GetMutableDefault<UOmegaSettings>()->GetGameCore()->CustomList_GetListFromObject(OuterObject);

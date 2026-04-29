@@ -30,6 +30,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/I_Common.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Misc/FileHelper.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -584,7 +585,7 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetAllAssetsOfClass(TSubclassOf<U
 }
 
 UObject* UOmegaGameFrameworkBPLibrary::GetAsset_AdjacentToReference(TSoftObjectPtr<UObject> Reference, const FString& Prefix,
-	const FString& Suffix, const FString& Subdir, TSubclassOf<UObject> Class, bool& Outcome)
+	const FString& Suffix, const FString& Subdir, const FString& RemovedString,TSubclassOf<UObject> Class, bool& Outcome)
 {
 	Outcome = false;
 
@@ -598,7 +599,8 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_AdjacentToReference(TSoftObjectP
 	ReferencePath = UWorld::RemovePIEPrefix(ReferencePath);
 	FString Directory = FPaths::GetPath(ReferencePath);
 	FString AssetName = FPaths::GetBaseFilename(ReferencePath);
-
+	AssetName=UKismetStringLibrary::Replace(AssetName,RemovedString,"");
+	
 	// Apply subdir if specified
 	if (!Subdir.IsEmpty())
 	{
@@ -1101,21 +1103,7 @@ void UOmegaGameFrameworkBPLibrary::FireTaggedGlobalEvent(const UObject* WorldCon
 	}
 }
 
-void UOmegaGameFrameworkBPLibrary::OnFlagActiveReset(const UObject* WorldContextObject, const FString& Flag, bool bDeactivateFlagOnActive, TEnumAsByte<EOmegaFlagResult>& Outcome)
-{
-	if(OGF_Subsystems::oGameInstance(WorldContextObject)->IsFlagActive(Flag))
-	{
-		Outcome = EOmegaFlagResult::Flag_Active;
-		if(bDeactivateFlagOnActive)
-		{
-			OGF_Subsystems::oGameInstance(WorldContextObject)->SetFlagActive(Flag, false);
-		}
-	}
-	else
-	{
-		Outcome = EOmegaFlagResult::Flag_Inactive;
-	}
-}
+
 
 void UOmegaGameFrameworkBPLibrary::SetActorTagActive(AActor* Actor, FName Tag, bool bIsActive)
 {

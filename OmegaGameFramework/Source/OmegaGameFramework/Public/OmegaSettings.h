@@ -16,6 +16,7 @@
 #include "Types/Struct_InputConfig.h"
 #include "OmegaSettings.generated.h"
 
+class UOmegaPhysicsSurfaceType;
 class AOmegaWorldManager;
 class UMetaSoundSource;
 
@@ -89,7 +90,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "_CORE", AdvancedDisplay)
 	TSoftObjectPtr<UOmegaSettings_Localization> DefaultSettings_Localization;
-
+	
+	//These paths will automatically scanned on Init. 
+	UPROPERTY(EditAnywhere, config, Category = "_CORE",AdvancedDisplay)
+	TArray<FString> AutoscanPaths;
+	
+	
 	UPROPERTY()
 	TSoftObjectPtr<UOmegaTextFormater_Collection> DefaultSettings_Text;
 	
@@ -111,10 +117,12 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Player",AdvancedDisplay) float InputAction_UI_Navigate_Cooldown=0.4;
 	UPROPERTY(EditAnywhere, config, Category = "Player",AdvancedDisplay) bool Input_ReplicateToPlayerController=true;
 	UPROPERTY(EditAnywhere, config, Category = "Player",AdvancedDisplay) bool Input_ReplicateToPlayerPawn=true;
+//	UPROPERTY(EditAnywhere, config, Category = "Player",AdvancedDisplay) bool Input_ReplicateToPlayerComponents=true;
 	UPROPERTY(EditAnywhere, config, Category = "Player",AdvancedDisplay) bool Input_ReplicateToGameMode=true;
 	// ---------------------------------------------------------------------------
 	// Gameplay
 	// ---------------------------------------------------------------------------
+	UOmegaPhysicsSurfaceType* GetSurfaceTypeFromMaterial(UPhysicalMaterial* mat);
 	
 	UPROPERTY(EditAnywhere, config, Category = "Gameplay")
 	TArray<TSoftObjectPtr<UOmegaGameplayConfig>> Imported_GameplaySettings;
@@ -122,10 +130,18 @@ public:
 	TArray<UOmegaGameplayConfig*> GetAllGameplaySettings() const;
 	
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Gameplay")
+	TSoftObjectPtr<UOmegaPhysicsSurfaceType> DefaultSurfaceTypeData;
+	
+	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Gameplay",meta=(ForceInlineRow))
 	TMap<FGameplayTag,FOmegaInputConfig> InputActionConfigs;
+	
+	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="Gameplay")
+	TArray<FKey> PersistentAxisKeys;
 	
 	TMap<FGameplayTag,FOmegaInputConfig> GetAllInputActionConfigs() const;
 	FOmegaInputConfig GetInputActionConfig(FGameplayTag input_action) const;
+	
+	
 	
 	
 	UPROPERTY()
@@ -188,13 +204,6 @@ public:
     TMap<TSubclassOf<UObject>, FDirectoryPath> SortedAssetsRootPathByClass;
 	
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	//Preferences
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	//These paths will automatically scanned on Init. And game preferences found in them will be automatically loaded into the Game Preferences Subsystem.
-	UPROPERTY(EditAnywhere, config, Category = "Game Preferences")
-	TArray<FDirectoryPath> Preferences_ScanPaths;
-	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// Combatant
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="✊Combatant")
@@ -239,10 +248,12 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Asset - Per Class")
 	TMap<TSoftClassPtr<AOmegaBaseCharacter>, TSoftClassPtr<UAnimInstance>> AnimBlueprint_PerClass;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Asset - Per Class")
+	//UPROPERTY(EditAnywhere, config, Category = "Asset - Per Class")
+	UPROPERTY()
 	TMap<TSoftClassPtr<AActor>, TSoftClassPtr<UDataWidget>> DataWidgets_PerClass;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Asset - Per Class")
+	//UPROPERTY(EditAnywhere, config, Category = "Asset - Per Class")
+	UPROPERTY()
 	TMap<TSoftClassPtr<AActor>, TSoftObjectPtr<UOmegaActorConfig>> ActorConfig_PerClass;
 	
 	// ---------------------------------------------------------------------------
@@ -279,6 +290,12 @@ public:
 	TSoftObjectPtr<UMetaSoundSource> BgmMetasound{FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/MetaSound/DemoMS_BGM.DemoMS_BGM"))};
 
 	UMetaSoundSource* GetMetaSoundSourceFromPath() const;
+	
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// Patches
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	UPROPERTY(EditAnywhere, config, Category = "Patches") FString PatchRootPath="/Game/5_Patches/";
+	UPROPERTY(EditAnywhere, config, Category = "Patches") FString PatchAssetName="GamePatch";
 	
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	//Mods

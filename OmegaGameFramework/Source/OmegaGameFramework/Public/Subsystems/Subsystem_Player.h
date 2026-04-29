@@ -105,7 +105,8 @@ public:
 	virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT( FMyTickableThing, STATGROUP_Tickables ); }
 	virtual bool IsTickableWhenPaused() const { return true; }
 	virtual bool IsTickableInEditor() const { return false; }
-	
+
+	UFUNCTION() void L_PlayerPawnChanged(APawn* Pawn, APawn* Pawn1);
 	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	
 	UPROPERTY() APlayerController* REF_Controller;
@@ -194,20 +195,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Ω|Widget|HUD")
 	UHUDLayer* GetHUDLayerByClass(TSubclassOf<UHUDLayer> LayerClass);
 	
-	UFUNCTION(BlueprintPure, Category = "Ω|Widget|HUD")
-	TArray <UHUDLayer*> GetHUDLayersWithTags(FGameplayTagContainer Tags);
-
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD")
-	void RemoveHUDLayersWithTags(FGameplayTagContainer Tags);
-	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD")
 	void RemoveAllHudLayers();
 
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|HUD")
-	void SetHUDVisibilityWithTags(FGameplayTagContainer Tags, ESlateVisibility Visibility);
-
 	void CleanHUDLayers();
-
 
 	UPROPERTY()
 	FClearHoveredWidgets ClearHoveredWidgets;

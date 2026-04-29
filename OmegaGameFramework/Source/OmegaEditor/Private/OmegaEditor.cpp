@@ -39,6 +39,8 @@
 #include "AssetActions/OmegaAA_PAL.h"
 #include "GameAsset/GameAsset_ThumbnailRenderer.h"
 #include "GameAsset/OmegaSpawnableConfigCustomization.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Engine.h"
 #include "Types/Struct_ActorRelatives.h"
 
 #include "Widget/DataWidget.h"
@@ -364,6 +366,9 @@ void FOmegaEditor::OnButtonClicked()
 			GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnWorldInit(World);
 		}
 	}
+	OGF_Log::LogInfo("Rerunning LoadDevConfig");
+	GEngine->GetEngineSubsystem<UOmegaSubsystem_Engine>()->LoadDevConfig();
+	
 }
 
 void FOmegaEditor::ShutdownModule()

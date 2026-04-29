@@ -41,19 +41,17 @@ public:
 	EVolumeShape Shape;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Volume")
 	FLinearColor Color;
+	
+	UFUNCTION(BlueprintCallable, Category="Volume") void SetColor(FLinearColor NewColor);
+	
 	UPROPERTY()
 	TEnumAsByte<ECollisionChannel> CollisionType;
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="Volume")
-	UTexture2D* GetVolumeIcon();
-	UFUNCTION(BlueprintImplementableEvent, Category="Volume")
-	FText GetVolumeText();
-	
-	UPROPERTY() UStaticMeshComponent* Volume;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UStaticMeshComponent* Volume;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UTextRenderComponent* TextDisplay;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UBillboardComponent* IconDisplay;
 	UPROPERTY() UBoxComponent* Bounds_box;
 	UPROPERTY() USphereComponent* Bounds_sphere;
-	UPROPERTY() UTextRenderComponent* TextDisplay;
-	UPROPERTY() UBillboardComponent* IconDisplay;
 };
 
 // ====================================================================================================

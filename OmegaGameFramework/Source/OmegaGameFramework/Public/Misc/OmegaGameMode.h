@@ -108,6 +108,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaHUD : public AHUD
 	FVector2D dragSelect_start;
 	FVector2D dragSelect_end;
 	UPROPERTY() AOmegaGameMode* ref_gameMode;
+	UPROPERTY() UOmegaSubsystem_World* ss_world;
 	bool isDragInputDown() const;
 public:
 	virtual void BeginPlay() override;

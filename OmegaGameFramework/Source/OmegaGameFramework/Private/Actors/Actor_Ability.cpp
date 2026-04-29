@@ -64,14 +64,17 @@ void UOmegaAbilityConfig::L_OnFinish(AOmegaAbility* ability, UObject* Context, b
 	}
 }
 
+void AOmegaAbility::L_Log(const FString& str)
+{
+	OGF_Log::LogWarning("ABILITY"+GetName()+" On actor "+CombatantOwner->GetOwner()->GetName()+" -- "+str);
+}
+
 // Sets default values
 AOmegaAbility::AOmegaAbility()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorHiddenInGame(true);
-	DefaultInputReceiver = CreateDefaultSubobject<UInputReceiverComponent>(TEXT("Default Input Reciever"));
-	bActivateOnStarted = true;
 	
 }
 
@@ -79,27 +82,7 @@ AOmegaAbility::AOmegaAbility()
 void AOmegaAbility::BeginPlay()
 {
 	Super::BeginPlay();
-
-
-
-	DefaultInputReceiver->OverrideInputOwner(CombatantOwner->GetOwner());
-	//Bind Default Inputs
-	if(bActivateOnStarted)
-	{
-		DefaultInputReceiver->OnInputStarted.AddDynamic(this, &AOmegaAbility::L_OnInput_Start);
-	}
-	if(bActivateOnTriggered)
-	{
-		//DefaultInputReceiver->OnInputTriggered.AddDynamic(this, &AOmegaAbility::Native_InputTrigger);
-	}
-	if(bFinishOnInputComplete)
-	{
-		DefaultInputReceiver->OnInputCompleted.AddDynamic(this, &AOmegaAbility::L_OnInput_End);
-	}
-	if(bFinishOnInputCancel)
-	{
-	//	DefaultInputReceiver->OnInputCompleted.AddDynamic(this, &AOmegaAbility::L_OnInput_End);
-	}
+	
 	
 	GetGameInstance()->GetOnPawnControllerChanged().AddDynamic(this, &AOmegaAbility::TryAssignControlInput);
 	
@@ -107,25 +90,17 @@ void AOmegaAbility::BeginPlay()
 	{
 		CombatantOwner->GetOwnerPlayerController()->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->AddHUDLayer(HudClass, this);
 	}
-
-	//COOLDOWN
-	if(BeginInCooldown)
-	{
-		f_cooldownTime = 1;
-	}
-	else
-	{
-		f_cooldownTime = 0;
-	}
+	
 	
 	SetInputEnabledForOwner(true);
-
-	DefaultInputReceiver->BindToPawn(GetAbilityOwnerCharacter());
+	
 	
 	CombatantOwner->OnCombatantNotify.AddDynamic(this, &AOmegaAbility::OnCombatantNotify);
 	CombatantOwner->OnTargetAdded.AddDynamic(this, &AOmegaAbility::OnRegisteredTarget);
 	//CombatantOwner->OnDamaged.AddDynamic(this, &AOmegaAbility::OnDamaged);
 	CombatantOwner->OnActiveTargetChanged.AddDynamic(this, &AOmegaAbility::OnActiveTargetChanged);
+	
+	SetSubstate_Index(0);
 }
 
 
@@ -208,7 +183,7 @@ void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
 		UE_LOG(LogTemp, Warning, TEXT("Some warning message") );
 		DisableInput(GetAbilityOwnerPlayer());
 	}
-	
+	f_cooldownTime=CooldownTime;
 	AbilityFinished(Cancelled);
 }
 
@@ -220,25 +195,48 @@ void AOmegaAbility::Native_ActivatedTick(float DeltaTime)
 bool AOmegaAbility::Native_CanActivate(UObject* Context)
 {
 	if(bIsActive) { return false; }
+	/*
 	if(Config && !Config->L_CanActivate(this,Context))
 	{
 		return false;
 	}
+	*/
 	if(CombatantOwner)
 	{
 		// is in cooldown
-		if(IsAbilityInCooldown()) { return false; }
+		if(IsAbilityInCooldown())
+		{
+			L_Log(" Failed to activate :: In cooldown");
+			return false;
+		}
 
 		// ability tags are blocked
-		if(!AbilityTags.IsEmpty() && CombatantOwner->IsAbilityTagBlocked(AbilityTags)) { return false; }
+		if(!AbilityTags.IsEmpty() && CombatantOwner->IsAbilityTagBlocked(AbilityTags))
+		{
+			L_Log(" Failed to activate :: Ability Tag Blocked");
+			return false;
+		}
 		
 		// Doesn't have required tags
-		if(!RequiredOwnerTags.IsEmpty() && !CombatantOwner->CombatantHasAllTag(RequiredOwnerTags)) { return false; }
+		if(!RequiredOwnerTags.IsEmpty() && !CombatantOwner->CombatantHasAllTag(RequiredOwnerTags))
+		{
+			L_Log(" Failed to activate :: Combatant Does not have required tag");
+			return false;
+		}
 		
 		// Has restricted owner tags
-		if(!RestrictedOwnerTags.IsEmpty() && CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags)) { return false; }
+		if(!RestrictedOwnerTags.IsEmpty() && CombatantOwner->CombatantHasAnyTag(RestrictedOwnerTags))
+		{
+			L_Log(" Failed to activate :: Combatant has restricted tag");
+			return false;
+		}
 
-		return CanActivate(Context);
+		if (CanActivate(Context))
+		{
+			return true;
+		}
+		L_Log(" Failed to activate :: Blocked from blueprint function 'CanActivate'");
+		return false;
 	}
 	return false;
 }
@@ -251,7 +249,7 @@ void AOmegaAbility::Tick(float DeltaTime)
 	{
 		Native_ActivatedTick(DeltaTime);
 	}
-
+	
 	//COOLDOWN TICk
 	if(!bIsActive && IsAbilityInCooldown())
 	{
@@ -386,8 +384,12 @@ UCharacterMovementComponent* AOmegaAbility::GetAbilityOwnerCharacterMoveComponen
 	
 }
 
-USkeletalMeshComponent* AOmegaAbility::GetAbilityOwnerMesh()
+USkeletalMeshComponent* AOmegaAbility::GetAbilityOwnerMesh() const
 {
+	if (CombatantOwner->Override_AbilitySkelMesh)
+	{
+		return CombatantOwner->Override_AbilitySkelMesh;
+	}
 	if (ref_character)
 	{
 		return ref_character->GetMesh();
@@ -409,7 +411,7 @@ bool AOmegaAbility::IsAbilityInCooldown() const
 void AOmegaAbility::GetRemainingCooldownValues(float& Normalized, float& Seconds)
 {
 	Normalized = f_cooldownTime;
-	Seconds = GetCooldownTime()/f_cooldownTime;
+	Seconds = f_cooldownTime/f_cooldownTime;
 }
 
 /////////////////////
@@ -430,9 +432,37 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 		{
 			GetAbilityActivationTimeline()->Reverse();
 		}
-		f_cooldownTime=GetCooldownTime();
 	}
 }
+
+void AOmegaAbility::SetSubstate_Name(FName State)
+{
+	if (Substates.Contains(State))
+	{
+		SetSubstate_Index(Substates.Find(State));
+	}
+}
+
+void AOmegaAbility::SetSubstate_Index(int32 State)
+{
+	if (State!=Substate)
+	{
+		int32 OldState=Substate;
+		Substate=State;
+		
+		OnSubstateChange(State,GetSubstate_NameFromIndex(State),OldState,GetSubstate_NameFromIndex(OldState));
+	}
+}
+
+FName AOmegaAbility::GetSubstate_NameFromIndex(int32 index) const
+{
+	if (Substates.IsValidIndex(index))
+	{
+		return Substates[index];
+	}
+	return FName();
+}
+
 
 void AOmegaAbility::Local_TriggerEvents(TArray<FName> Events)
 {

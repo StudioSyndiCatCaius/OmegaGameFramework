@@ -5,7 +5,25 @@
 #include "Components/Component_Combatant.h"
 #include "GameplayTagContainer.h"
 #include "Components/Component_Inventory.h"
+#include "Kismet/KismetMathLibrary.h"
 
+
+TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::ScaleItemMap(TMap<UPrimaryDataAsset*, int32> items,
+                                                                            float scale)
+{
+	TMap<UPrimaryDataAsset*, int32> out;
+	TArray<UPrimaryDataAsset*> item_list;
+	items.GetKeys(item_list);
+	for (auto* item : item_list)
+	{
+		if(item)
+		{
+			out.Add(item,UKismetMathLibrary::FTrunc(scale*items[item]));		
+		}
+	}
+	
+	return out;
+}
 
 TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetListTradeCost_Total(
 	TMap<UPrimaryDataAsset*, int32> Assets, FGameplayTag TradeTag)

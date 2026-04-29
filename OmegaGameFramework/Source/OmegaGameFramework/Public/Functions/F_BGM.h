@@ -15,6 +15,9 @@ class UOmegaFunctions_BGM : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	
+	UFUNCTION(BlueprintPure,Category="Omega|BGM",meta=(WorldContext="WorldContextObject"),DisplayName="🎵BGM - Get Current")
+	static UOmegaBGM* GetCurrent(UObject* WorldContextObject, FGameplayTag& Slot);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|BGM",meta=(WorldContext="WorldContextObject"),DisplayName="🎵BGM - Play")
     static void Play(UObject* WorldContextObject, UOmegaBGM* BGM,UPARAM(meta=(Categories="BGM")) FGameplayTag Slot, bool bFadePrevious);

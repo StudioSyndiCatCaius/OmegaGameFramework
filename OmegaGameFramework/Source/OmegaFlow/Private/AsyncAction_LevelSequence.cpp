@@ -11,18 +11,29 @@ void UAsyncAction_LevelSequence::Tick(float DeltaTime)
 	if (!b_tickActive) { return; }
 	if(LocalPlayer)
 	{
-		FQualifiedFrameTime time_frame= LocalPlayer->GetCurrentTime();
-		int32 frame=time_frame.Time.FrameNumber.Value;
-		
-		//UE_LOG(LogTemp, Warning, TEXT("Ticked frame at %s"), *FString::FromInt(frame));
-		if(!seen_frames.Contains(frame) && mapped_frames.Contains(frame))
+		if (LocalPlayer->IsPlaying())
 		{
-			seen_frames.Add(frame);
-			if (LocalSeqActor)
+			FQualifiedFrameTime time_frame= LocalPlayer->GetCurrentTime();
+			int32 frame=time_frame.Time.FrameNumber.Value;
+		
+			//UE_LOG(LogTemp, Warning, TEXT("Ticked frame at %s"), *FString::FromInt(frame));
+			if(!seen_frames.Contains(frame) && mapped_frames.Contains(frame))
 			{
-				OnMark.Broadcast(LocalSeqActor,mapped_frames[frame]);	
+				seen_frames.Add(frame);
+				if (LocalSeqActor)
+				{
+					OnMark.Broadcast(LocalSeqActor,mapped_frames[frame]);	
+				}
 			}
 		}
+		else
+		{
+			b_tickActive=false;
+		}
+	}
+	else
+	{
+		b_tickActive=false;
 	}
 }
 
@@ -49,66 +60,79 @@ void UAsyncAction_LevelSequence::L_Kill()
 {
 	if (!b_killing)
 	{
-		b_tickActive=false;
-		b_killing=true;
-		if (L_config.bAutoDestroy && LocalSeqActor)
+		b_tickActive = false;
+		b_killing = true;
+		if (L_config.bAutoDestroy && IsValid(LocalSeqActor))
 		{
-			LocalSeqActor->K2_DestroyActor();
+			// Defer destruction by one tick. Destroying the actor synchronously inside
+			// OnFinished/OnStop crashes because StopInternal() is still on the callstack
+			// holding a reference to the SequenceTickManager, which the actor owns.
+			// Destroying it immediately nulls the TickManager, causing an ensure failure.
+			ALevelSequenceActor* ActorToDestroy = LocalSeqActor;
+			if (UWorld* World = ActorToDestroy->GetWorld())
+			{
+				World->GetTimerManager().SetTimerForNextTick([ActorToDestroy]()
+				{
+					if (IsValid(ActorToDestroy))
+					{
+						ActorToDestroy->K2_DestroyActor();
+					}
+				});
+			}
 		}
-		L_Kill();
 	}
 }
 
 void UAsyncAction_LevelSequence::Activate()
 {
-	if(!LocalContext->GetWorld() || !LocalLevelSequence) //Fail of invalid world
+	if(!LocalContext->GetWorld() || !LocalLevelSequence)
 	{
 		OnFailed.Broadcast();
 		L_Kill();
+		return;
 	}
 
 	LocalPlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(LocalContext, LocalLevelSequence, LocalSettings, LocalSeqActor);
-	
+
 	if(!LocalPlayer)
 	{
 		OnFailed.Broadcast();
 		L_Kill();
+		return;
 	}
-	if(LocalSeqActor)
-	{
-		if(L_config.bOverrideInstance)
-		{
-			LocalSeqActor->bOverrideInstanceData = L_config.bOverrideInstance;
-			UDefaultLevelSequenceInstanceData* TempSeqData = Cast<UDefaultLevelSequenceInstanceData>(LocalSeqActor->DefaultInstanceData);
 
-			if(LocalSeqActor)
-			{
-				TempSeqData->TransformOriginActor = L_config.OriginActor;
-			}
-			TempSeqData->TransformOrigin = L_config.OriginTransform;
-		}
-	
-		LocalPlayer->OnFinished.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Finish);
-		LocalPlayer->OnStop.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Stop);
-		
-		//setup bindings
-		TArray<FName> Bind_list;
-		L_config.ActorBindings.GetKeys(Bind_list);
-		for (FName name : Bind_list)
-		{
-			if (AActor* a=L_config.ActorBindings[name])
-			{
-				LocalSeqActor->AddBindingByTag(name,a);
-			}
-		}
-		b_tickActive=true;
-		Local_Play();
-	}
-	else
+	if(!LocalSeqActor)
 	{
 		OnFailed.Broadcast();
 		L_Kill();
+		return;
 	}
+
+	if(L_config.bOverrideInstance)
+	{
+		LocalSeqActor->bOverrideInstanceData = true;
+		UDefaultLevelSequenceInstanceData* TempSeqData = Cast<UDefaultLevelSequenceInstanceData>(LocalSeqActor->DefaultInstanceData);
+		if(TempSeqData)
+		{
+			TempSeqData->TransformOriginActor = L_config.OriginActor;
+			TempSeqData->TransformOrigin = L_config.OriginTransform;
+		}
+	}
+
+	LocalPlayer->OnFinished.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Finish);
+	LocalPlayer->OnStop.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Stop);
+
+	TArray<FName> Bind_list;
+	L_config.ActorBindings.GetKeys(Bind_list);
+	for (FName name : Bind_list)
+	{
+		if (AActor* a = L_config.ActorBindings[name])
+		{
+			LocalSeqActor->AddBindingByTag(name, a);
+		}
+	}
+	b_tickActive = true;
+	Local_Play();
 }
 
 

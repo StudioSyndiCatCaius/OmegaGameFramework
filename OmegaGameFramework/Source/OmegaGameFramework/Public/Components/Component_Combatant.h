@@ -12,6 +12,7 @@
 #include "Components/ActorComponent.h"
 #include "Interfaces/I_Combatant.h"
 #include "DataAssets/DA_Attribute.h"
+#include "Interfaces/I_StandardInput.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Component_Combatant.generated.h"
@@ -36,6 +37,7 @@ class UEnhancedInputComponent;
 class UInputAction;
 
 /// DELEGATES
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCombatantDelegate, UCombatantComponent*, Combatant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatantDataAssetChanged, UCombatantComponent*, Combatant, UPrimaryDataAsset*, NewAsset,UPrimaryDataAsset*, OldAsset);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnFactionChanged, UCombatantComponent*, component, UOmegaFaction*, NewFaction, UOmegaFaction*, OldFaction);
@@ -62,7 +64,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCombatant_LevelChange, UCombata
 UCLASS( ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent), CollapseCategories="Sockets,Component Tick,Component Replication,Activation,Cooking" )
 class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UOmegaComponent, public IDataInterface_SkillSource,
 																			public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier,
-																			public IDataInterface_General
+																			public IDataInterface_General, public IDataInterface_InputAction
 {
 	GENERATED_BODY()
 
@@ -99,6 +101,9 @@ public:
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return CombatantTags; };
 	
+	virtual void OnInputAction_Begin_Implementation(APlayerController* Player, FGameplayTag Action, FVector axis) override;
+	virtual void OnInputAction_Update_Implementation(APlayerController* Player, FGameplayTag Action, float DeltaTime, FVector axis) override;
+	virtual	void OnInputAction_End_Implementation(APlayerController* Player, FGameplayTag Action, FVector axis) override;
 	//----------------------------------------------------------------------------------------------------------------------------------------------//
 	// -- Delegates -- 
 	//----------------------------------------------------------------------------------------------------------------------------------------------//
@@ -128,7 +133,7 @@ public:
 	FOmegaEntity* L_GetEntityData();
 	FOmegaEntity_AssetData* L_GetEntity_AssetData(UPrimaryDataAsset* asset);
 	TArray<UPrimaryDataAsset*> L_GetEntity_AssetsSaved();
-	
+
 	// ------------------------------------------------------------------------------------------
 	// Sources
 	// ------------------------------------------------------------------------------------------
@@ -182,15 +187,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", AdvancedDisplay)
 	TMap<UOmegaAttribute*, int32> AttributeLevels;
 	
+	// ------------------------------------------------------------------------------------------
+	// Ability Skel Mesh
+	// ------------------------------------------------------------------------------------------
+	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
+	USkeletalMeshComponent* Override_AbilitySkelMesh;
+	
+	//Overrides the SkeletalMeshComponent that Abilities will try to use. (Input can be left blank to remove override.)
+	UFUNCTION(BlueprintCallable, Category="Abilities")
+	void SetOverrideAbilitySkelMesh(USkeletalMeshComponent* mesh);
+	
 	//----------------------------------------------------------------------------------------------------------------------------------------------//
 	// -- UFUNCTION -- 
 	//----------------------------------------------------------------------------------------------------------------------------------------------//
 
 	/// ------ COMBATANT ----------
 
+	// should only be used MOMENTARILY for things like preventing a looped Update() call, then index should be removed
+	TArray<int32> blockUpdateCall;
+	
 	//Refreshes all visible combatnat related values, primarily in widgets.
 	UFUNCTION(BlueprintCallable, Category = "Combatant", DisplayName="Refresh") void Update();
-
+	// Generic Update delgate fired on Attribute Modificaton, effect change, or modifer source change
+	UPROPERTY(BlueprintAssignable) FCombatantDelegate OnUpdated;
+	
 	//Tries to get the owning actor as a Pawn.
 	UFUNCTION(BlueprintPure, Category="Combatant") APawn* GetOwnerPawn() const;
 	UFUNCTION(BlueprintPure, Category="Combatant") APlayerController* GetOwnerPlayerController() const;
@@ -317,6 +337,9 @@ public:
 	// EFFECTS
 	// ------------------------------------------------------------------------------------------
 	
+	UFUNCTION()
+	bool CanApplyEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass,UObject* Context,FOmegaCommonMeta _meta);
+	
 	UFUNCTION(BlueprintPure, Category="Effects", meta=(DeterminesOutputType="EffectClass"))
 	AOmegaGameplayEffect* GetEffectOfContext(UObject* Context, TSubclassOf<AOmegaGameplayEffect> EffectClass);
 
@@ -428,6 +451,7 @@ public:
 	UPROPERTY(BlueprintAssignable) FOnCombatant_LevelChange OnLevelChanged;
 	
 	UFUNCTION(BlueprintCallable, Category="Combatant|XP",DisplayName="XP - Set") void XP_Set(UOmegaLevelingAsset* Type, float amount, bool bAdded=true);
+	UFUNCTION(BlueprintCallable, Category="Combatant|XP",DisplayName="XP - Set All") void XP_SetAll(TMap<UOmegaLevelingAsset*, float> XP, bool bAdded=true);
 	
 	UFUNCTION(BlueprintPure, Category="Combatant|XP",DisplayName="XP - Get All") TMap<UOmegaLevelingAsset*,float> XP_GetAll();
 	UFUNCTION(BlueprintPure, Category="Combatant|XP",DisplayName="XP - Get") float XP_Get(UOmegaLevelingAsset* Type);
@@ -458,3 +482,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Entity|Param",DisplayName="Param (Int32) - Set") void EntityParam_Int_Set(FName Param, int32 Value, bool bAdded);
 	UFUNCTION(BlueprintPure, Category="Entity|Param",DisplayName="Param (Int32) - Get") int32 EntityParam_Int_Get(FName Param);
 };
+
+// --------------------------------------------------------------------------------------------------------------------
+// LISTEN
+// --------------------------------------------------------------------------------------------------------------------

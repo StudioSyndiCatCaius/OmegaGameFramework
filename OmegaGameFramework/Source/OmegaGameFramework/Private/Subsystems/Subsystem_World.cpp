@@ -61,16 +61,9 @@ void UOmegaSubsystem_World::OnWorldBeginPlay(UWorld& InWorld)
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		for (TActorIterator<AOmegaWorldManager> It(World); It; ++It)
+		if (AOmegaWorldManager* m = Cast<AOmegaWorldManager>(UGameplayStatics::GetActorOfClass(World, AOmegaWorldManager::StaticClass())))
 		{
-			// Found the actor
-			WorldManager=*It;
-			
-		}
-		if (AOmegaWorldManager* m=Cast<AOmegaWorldManager>(UGameplayStatics::GetActorOfClass(World,AOmegaWorldManager::StaticClass())))
-		{
-			WorldManager=m;
-			
+			WorldManager = m;
 		}
 		// If not found, spawn one
 		if (!WorldManager.IsValid())
@@ -219,13 +212,17 @@ void UOmegaSubsystem_World::SetSystemTagsBlocked(FGameplayTagContainer Tags, boo
 {
 	if(bBlocked)
 	{
-		FGameplayTagContainer _t=FGameplayTagContainer::CreateFromArray(ExtraBlockedSystemTags);
-		_t.AppendTags(Tags);
-		
+		for(const FGameplayTag& Tag : Tags)
+		{
+			ExtraBlockedSystemTags.AddUnique(Tag);
+		}
 	}
 	else
 	{
-		//ExtraBlockedSystemTags.RemoveTags(Tags);
+		for(const FGameplayTag& Tag : Tags)
+		{
+			ExtraBlockedSystemTags.Remove(Tag);
+		}
 	}
 }
 
@@ -266,7 +263,7 @@ TArray<UCombatantComponent*> UOmegaSubsystem_World::GetAllCombatants()
 	TArray<UCombatantComponent*> OutCombatants;
 	for(UCombatantComponent* TempCombatant : ActiveCombatants)
 	{
-		if(TempCombatant->IsValidLowLevel())
+		if(IsValid(TempCombatant))
 		{
 			OutCombatants.Add(TempCombatant);
 		}
@@ -720,15 +717,20 @@ void AOmegaWorldManager::BeginPlay()
 	NullActor_Quests->SetActorLabel("_Quests_");
 #endif
 	
-	//Setup Quests
+	if (bStartWithNewGame)
+	{
+		SS_Save->StartGame(SS_Save->CreateNewGame(),false,FGameplayTagContainer());
+	}
+	
+	//Resume saved quests
 	for (auto* q : Quest_GetActive())
 	{
-		if (Quest_CanStart(q))
+		if (q)
 		{
+			OGF_Log::LogInfo("Attempting to resume: "+q->GetName());
 			Quest_Start(q,true);
 		}
 	}
-	
 	
 	//lua autoload
 	if (OGF_CFG_LUA()->Level_AutoloadLuaTable)
@@ -741,44 +743,44 @@ void AOmegaWorldManager::BeginPlay()
 	//Do initial Load
 	FTimerHandle timer_handle;
 	GetWorld()->GetTimerManager().SetTimer(timer_handle, FTimerDelegate::CreateLambda([this, _zoneTransitState]()
-	{
-		AOmegaZonePoint* dummy_point=nullptr;
-		
-		if (SS_GI->Zone_LevelTransitingFrom.IsValid())
 		{
-			OGF_Log::Info("WORLD MANAGER: - Finishing Level Load: FROM: "+SS_GI->Zone_LevelTransitingFrom.ToString());
-		switch (_zoneTransitState)
-		{
-		case 1: // LEVEL TRANSIT
-			if (AOmegaZonePoint* p=Zone_GetPointFromlevel(SS_GI->Zone_LevelTransitingFrom,SS_GI->Zone_LevelTransitingTag))
-			{
-				Zone_Transit(p,UGameplayStatics::GetPlayerController(this,0));
-			}
-			else
-			{
-				OGF_Log::Warning("WORLD MANAGER: -		FAILED to find target spawn point for level transit");
-			}
-			break;
-		case 2: // game load
+			AOmegaZonePoint* dummy_point=nullptr;
 			
-			dummy_point=GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(),FTransform());
-			if (dummy_point)
+			switch (_zoneTransitState)
 			{
-				dummy_point->SetLifeSpan(0.5);
-				dummy_point->FinishSpawning(UOmegaSaveFunctions::GetSave_Game(this)->SavedPlayerTransform);
-				Zone_Transit(dummy_point,UGameplayStatics::GetPlayerController(this,0));
-			}
-			else
-			{
-				OGF_Log::Warning("WORLD MANAGER: -		Could not spawn dummy_point for game load");
-			}
-			
-			break;
-		default: ;
+			case OGF_ZONE_TANSITSTATE_FROMLEVEL: // LEVEL TRANSIT
+				
+				if (SS_GI->Zone_LevelTransitingFrom.IsValid())
+				{
+					if (AOmegaZonePoint* p=Zone_GetPointFromlevel(SS_GI->Zone_LevelTransitingFrom,SS_GI->Zone_LevelTransitingTag))
+					{
+						OGF_Log::Info("WORLD MANAGER: - Finishing Level Load: FROM: "+SS_GI->Zone_LevelTransitingFrom.ToString());
+						Zone_Transit(p,UGameplayStatics::GetPlayerController(this,0));
+					}
+					else
+					{
+						OGF_Log::Warning("WORLD MANAGER: -		FAILED to find target spawn point for level transit");
+					}
+				}
+				
+				break;
+			case OGF_ZONE_TANSITSTATE_FROMSAVE: // game load
+					
+				dummy_point=GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(),FTransform());
+				if (dummy_point)
+				{
+					dummy_point->SetLifeSpan(0.5);
+					dummy_point->FinishSpawning(UOmegaSaveFunctions::GetSave_Game(this)->SavedPlayerTransform);
+					Zone_Transit(dummy_point,UGameplayStatics::GetPlayerController(this,0));
+				}
+				else
+				{
+					OGF_Log::Warning("WORLD MANAGER: -		Could not spawn dummy_point for game load");
+				}
+					
+				break;
+			default: ;
 		}
-			
-		}
-	
 	}), OGF_CFG()->SpawnAtFirstPointDelay, false);
 	
 	//preload SaveState sublevels
@@ -803,8 +805,14 @@ void AOmegaWorldManager::BeginPlay()
 			}
 		}
 	}
-	
 	OGF_GAME_CORE()->OnGame_LevelStart(GetWorld()->GetGameInstance(),UGameplayStatics::GetCurrentLevelName(this));
+	SS_GI->Patch_Event(2,nullptr);
+}
+
+void AOmegaWorldManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	SS_GI->Patch_Event(3,nullptr);
+	Super::EndPlay(EndPlayReason);
 }
 
 // ------------------------------------------------------------
@@ -812,7 +820,7 @@ void AOmegaWorldManager::BeginPlay()
 // ------------------------------------------------------------
 AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bResumeFormSave)
 {
-	if (Quest_CanStart(q))
+	if (Quest_CanStart(q) || bResumeFormSave)
 	{
 		if (AOmegaQuestInstance* new_inst=GetWorld()->SpawnActorDeferred<AOmegaQuestInstance>(AOmegaQuestInstance::StaticClass(),FTransform()))
 		{
@@ -872,12 +880,15 @@ FOmegaQuestData* AOmegaWorldManager::Quest_GetData(UOmegaQuest* q)
 {
 	if (q)
 	{
-		UOmegaSaveGame* g=OGF_Subsystems::oSave(this)->ActiveSaveData;
-		if (!g->quest_data.Contains(q))
+		UOmegaSaveGame* g=SS_Save->ActiveSaveData;
+		if (g)
 		{
-			g->quest_data.Add(q,FOmegaQuestData());
+			if (!g->quest_data.Contains(q))
+			{
+				g->quest_data.Add(q,FOmegaQuestData());
+			}
+			return &g->quest_data[q];
 		}
-		return &g->quest_data[q];
 	}
 	return &dummy_questData;
 }

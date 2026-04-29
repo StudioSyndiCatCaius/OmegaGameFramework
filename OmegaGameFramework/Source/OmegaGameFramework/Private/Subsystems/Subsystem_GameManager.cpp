@@ -11,13 +11,18 @@
 #include "Misc/OmegaGameplayModule.h"
 #include "OmegaGameplayConfig.h"
 #include "OmegaGameManager.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/IAssetRegistry.h"
 #include "Components/AudioComponent.h"
 #include "DataAssets/DA_BGM.h"
 #include "DataAssets/DA_GamePreference.h"
 #include "Engine/GameInstance.h"
+#include "Functions/F_Assets.h"
 #include "Functions/F_Common.h"
 #include "Functions/F_File.h"
+#include "Functions/F_GlobalScripting.h"
 #include "Functions/F_Machina.h"
+#include "Functions/F_Patches.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
@@ -71,9 +76,10 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 		if (UOmegaGameplayConfig* _c=c.LoadSynchronous())
 		{
 			_HandleInputConfig(_c->InputActionConfigs);
-			cachedAxisKeys.Append(c->PesistentAxisKeys);
+			cachedAxisKeys.Append(c->PersistentAxisKeys);
 		}
 	}
+	cachedAxisKeys.Append(OGF_CFG()->PersistentAxisKeys);
 	_HandleInputConfig(OGF_CFG()->InputActionConfigs);
 	
 	UOmegaSettings* settings_omega=GetMutableDefault<UOmegaSettings>();
@@ -83,6 +89,8 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 #endif
 	
 	OGF_GAME_CORE()->OnGame_PreBegin(GetGameInstance());
+	
+	IAssetRegistry::Get()->ScanPathsSynchronous(OGF_CFG()->AutoscanPaths);
 	
 	OGF_LUA_DOCODE(OGF_CFG_LUA()->Code_Init)
 	// -----------------------------------------------------------------------------------------------------------------
@@ -110,6 +118,54 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 
 		}
 	}
+	
+	// -----------------------------------------------------------------------------------------------------------------
+	// Autobind lua functions to global scripts/conditions
+	// -----------------------------------------------------------------------------------------------------------------
+	if (OGF_CFG_LUA()->bAutobindGlobalScriptsAsFunctions)
+	{
+		//load assets in paths
+		IAssetRegistry::Get()->ScanPathsSynchronous(OGF_CFG_LUA()->GlobalScriptBindPaths);
+		for (FString st : OGF_CFG_LUA()->GlobalScriptBindPaths)
+		{
+			UOmegaFunctions_Asset::GetAllClassesInPath(st,UOmegaGlobalScript::StaticClass(),true);
+			UOmegaFunctions_Asset::GetAllClassesInPath(st,UOmegaGlobalCondition::StaticClass(),true);
+		}
+		
+		TArray<TSubclassOf<UObject>> script_classes=UOmegaFunctions_Asset::GetAllChildClasses(UOmegaGlobalScript::StaticClass(),true);
+		TArray<TSubclassOf<UObject>> condition_classes=UOmegaFunctions_Asset::GetAllChildClasses(UOmegaGlobalCondition::StaticClass(),true);
+		
+		for (auto c : script_classes)
+		{
+			if (TSubclassOf<UOmegaGlobalScript> s=TSubclassOf<UOmegaGlobalScript>(c))
+			{
+				// Use the CDO — it's already in memory after GetAllChildClasses loaded the class.
+				// NewObject triggers InitPropertiesFromCustomList for every Blueprint property on
+				// every registered class, causing a hitch proportional to the number of scripts.
+				// These are stateless Lua binders so the CDO is safe to reuse.
+				UOmegaGlobalScript* new_script=s->GetDefaultObject<UOmegaGlobalScript>();
+				luaBound_GScripts.Add(new_script);
+				FString func_name=s->GetName();
+				func_name=UKismetStringLibrary::Replace(func_name,"_C","");
+				FLuaValue func=ULuaBlueprintFunctionLibrary::LuaCreateUFunction(new_script,"LuaCall");
+				ULuaBlueprintFunctionLibrary::LuaSetGlobal(this,nullptr,func_name,func);
+			}
+		}
+
+		for (auto c : condition_classes)
+		{
+			if (TSubclassOf<UOmegaGlobalCondition> s=TSubclassOf<UOmegaGlobalCondition>(c))
+			{
+				UOmegaGlobalCondition* new_script=s->GetDefaultObject<UOmegaGlobalCondition>();
+				luaBound_GConditions.Add(new_script);
+				FString func_name=s->GetName();
+				func_name=UKismetStringLibrary::Replace(func_name,"_C","");
+				FLuaValue func=ULuaBlueprintFunctionLibrary::LuaCreateUFunction(new_script,"LuaCall");
+				ULuaBlueprintFunctionLibrary::LuaSetGlobal(this,nullptr,func_name,func);
+			}
+		}
+	}
+	
 	
 	// -----------------------------------------------------------------------------------------------------------------
 	// Run auto lua files
@@ -303,14 +359,35 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 		}
 	}
 	
+	// -----------------------------------------------------------------------------------------------------------------
+	// Finally, Load and apply patches
+	// -----------------------------------------------------------------------------------------------------------------
+	TArray<TSubclassOf<UOmegaGamePatch>> patch_classes=GetAllGamePatches(OGF_CFG()->PatchRootPath);
+	for (auto pc : patch_classes)
+	{
+		if (pc)
+		{
+			UOmegaGamePatch* new_patch=NewObject<UOmegaGamePatch>(this,pc);
+			if (new_patch)
+			{
+				OGF_Log::LogInfo("Game Patch Applied: "+new_patch->GUID.ToString());
+				patches.Add(new_patch);
+			}
+		}
+	}
+	
+	//OGF_Subsystems::oSave(this)->Setup();
+	
 	//OGF_GAME_CORE()->OnGame_InitStateChange(GetWorld()->GetGameInstance(),EOmegaGameInitState::GameInitState_PostModuleInit);
 	settings_omega->GetGameCore()->OnGame_Begin(GetWorld()->GetGameInstance());
 	
-	
+	Patch_Event(0,nullptr);
 }
 
 void UOmegaSubsystem_GameInstance::Deinitialize()
 {
+	Patch_Event(1,nullptr);
+	
 	UOmegaSettings* _set=GetMutableDefault<UOmegaSettings>();
 	_set->GetGameCore()->OnGame_Begin(GetWorld()->GetGameInstance());
 	
@@ -324,19 +401,90 @@ void UOmegaSubsystem_GameInstance::Deinitialize()
 
 void UOmegaSubsystem_GameInstance::Tick(float DeltaTime)
 {
-	TArray<UObject*> machina_objects;
-	machina_states.GetKeys(machina_objects);
-	
-	for (auto* l : machina_objects)
+	TArray<UObject*> to_remove;
+	for (auto& pair : machina_states)
 	{
-		if (l && !machina_states[l].current_state.IsNone())
+		UObject* l = pair.Key;
+		if (l && !pair.Value.current_state.IsNone())
 		{
-			FOmegaMachinaState _stateData=machina_states[l];
-			IObjectInterface_Machina::Execute_Machina_StateTick(l,_stateData.current_state,DeltaTime);
+			IObjectInterface_Machina::Execute_Machina_StateTick(l, pair.Value.current_state, DeltaTime);
 		}
 		else
 		{
-			machina_states.Remove(l);
+			to_remove.Add(l);
+		}
+	}
+	for (auto* l : to_remove)
+	{
+		machina_states.Remove(l);
+	}
+}
+
+TArray<TSubclassOf<UOmegaGamePatch>> UOmegaSubsystem_GameInstance::GetAllGamePatches(const FString& PatchRootPath)
+{
+	TArray<TSubclassOf<UOmegaGamePatch>> Result;
+
+	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+
+	// Get all subdirectories one level down from the patch root
+	TArray<FString> SubDirectories;
+	AssetRegistry.GetSubPaths(PatchRootPath, SubDirectories, false); // false = one level only
+
+	for (const FString& SubDir : SubDirectories)
+	{
+		// Extract folder name from path e.g. "/Game/5_Patches/NewSkins" -> "NewSkins"
+		FString FolderName = FPaths::GetBaseFilename(SubDir);
+
+		// Build the expected asset path
+		FString pNam=OGF_CFG()->PatchAssetName;
+		FString AssetPath = FString::Printf(TEXT("%s%s/%s.%s_C"), *PatchRootPath, *FolderName,*pNam,*pNam);
+
+		// Try to load the class directly
+		UClass* LoadedClass = LoadObject<UClass>(nullptr, *AssetPath);
+
+		if (LoadedClass && LoadedClass->IsChildOf(UOmegaGamePatch::StaticClass()))
+		{
+			Result.Add(LoadedClass);
+		}
+	}
+
+	return Result;
+}
+
+void UOmegaSubsystem_GameInstance::Patch_Event(uint8 event, UOmegaSaveGame* _save)
+{
+	OGF_Log::LogInfo("Doing Game Patch Event: "+FString::FromInt(event));
+	for (auto pc : patches)
+	{
+		if (pc)
+		{
+			UGameInstance* gi=GetGameInstance();
+			switch (event)
+			{
+			case 0:
+				pc->OnGame_Start(gi);
+				break;
+			case 1:
+				pc->OnGame_End(gi);
+				break;
+			case 2:
+				pc->OnLevel_Start(gi);
+				break;
+			case 3:
+				pc->OnLevel_End(gi);
+				break;
+			case 4:
+				pc->OnSave_Created(gi,_save);
+				break;
+			case 5:
+				if (!_save->applied_patches.Contains(pc->GUID))
+				{
+					_save->applied_patches.Add(pc->GUID);
+					pc->OnFirstApplied(gi,_save);
+				}
+				pc->OnSave_Started(gi,_save);
+				break;
+			}
 		}
 	}
 }
@@ -482,78 +630,6 @@ void UOmegaSubsystem_GameInstance::FireTaggedGlobalEvent(FGameplayTag Event, UOb
 	OGF_GAME_CORE()->OnGlobalEvent_Tagged(GetGameInstance(),Event,Context,meta);
 	OnTaggedGlobalEvent.Broadcast(Event,Context,meta);
 }
-
-void UOmegaSubsystem_GameInstance::SetFlagActive(FString Flag, bool bActive)
-{
-	if(IsFlagActive(Flag) != bActive)
-	{
-		if(bActive)
-		{
-			Flags.AddUnique(Flag);
-		}
-		else
-		{
-			Flags.Remove(Flag);
-		}
-		OnFlagStateChange.Broadcast(Flag, bActive);
-	}
-}
-
-bool UOmegaSubsystem_GameInstance::IsFlagActive(FString Flag)
-{
-	return Flags.Contains(Flag);
-}
-
-void UOmegaSubsystem_GameInstance::ClearAllFlags()
-{
-	TArray<FString> LocalFlags = Flags;
-	for(FString TempFlag : LocalFlags)
-	{
-		SetFlagActive(TempFlag, false);	
-	}
-	Flags.Empty();
-}
-
-
-
-void UOmegaSubsystem_GameInstance::AddGameplayLog(const FString& String, const FString& LogCategory)
-{
-	FGameplayLogEntry TempEntry;
-	TempEntry.Log = String;
-	TempEntry.LogCategory = LogCategory;
-	LocalLog.Add(TempEntry);
-}
-
-void UOmegaSubsystem_GameInstance::ClearLog()
-{
-	LocalLog.Empty();
-}
-
-TArray<FString> UOmegaSubsystem_GameInstance::GetGameplayLog()
-{
-	TArray<FString> LocalStrings;
-	for(FGameplayLogEntry TempEntry : LocalLog)
-	{
-		LocalStrings.Add(TempEntry.Log);
-	}
-	LocalStrings.SetNum(MaxLogEntry);
-	return LocalStrings;
-}
-
-TArray<FString> UOmegaSubsystem_GameInstance::GetGameplayLogOfCategory(const FString& LogCategory)
-{TArray<FString> LocalStrings;
-	for(FGameplayLogEntry TempEntry : LocalLog)
-	{
-		if(TempEntry.LogCategory == LogCategory)
-		{
-			LocalStrings.Add(TempEntry.Log);
-		}
-	}
-	LocalStrings.SetNum(MaxLogEntry);
-	return LocalStrings;
-	
-}
-
 
 // ----------------------------------------------------------------------------------------------------
 // BGM

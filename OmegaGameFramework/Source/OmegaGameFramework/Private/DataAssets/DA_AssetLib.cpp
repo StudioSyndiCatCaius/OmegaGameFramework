@@ -3,6 +3,8 @@
 
 #include "DataAssets/DA_AssetLib.h"
 
+#include "LevelSequence.h"
+
 template<typename T>
 const T& GetRandomElement(const TArray<T>& Array)
 {
@@ -32,7 +34,10 @@ UAnimSequence* UOmegaAssetLibrary_Animation::GetAnimation_Named(FName Name, bool
 	}
 	if(Fallback)
 	{
-		return Fallback->GetAnimation_Named(Name,RandomFromList,Result);
+		if (UAnimSequence* over=Fallback->GetAnimation_Named(Name,RandomFromList,Result))
+		{
+			return over; 
+		}
 	}
 	return fall_back;
 }
@@ -59,7 +64,10 @@ UAnimMontage* UOmegaAssetLibrary_Animation::GetMontage_Named(FName Name, bool Ra
 	}
 	if(Fallback)
 	{
-		return Fallback->GetMontage_Named(Name,RandomFromList,Result);
+		if (UAnimMontage* over=Fallback->GetMontage_Named(Name,RandomFromList,Result))
+		{
+			return over; 
+		}
 	}
 	return fall_back;
 }
@@ -81,11 +89,13 @@ ULevelSequence* UOmegaAssetLibrary_Animation::GetLevelSequence_Named(FName Name,
 			Result=true;
 			return LevelSequences_Named[Name];
 		}
-		
 	}
 	if(Fallback)
 	{
-		return Fallback->GetLevelSequence_Named(Name,RandomFromList,Result);
+		if (ULevelSequence* over=Fallback->GetLevelSequence_Named(Name,RandomFromList,Result))
+		{
+			return over; 
+		}
 	}
 	return fall_back;
 }

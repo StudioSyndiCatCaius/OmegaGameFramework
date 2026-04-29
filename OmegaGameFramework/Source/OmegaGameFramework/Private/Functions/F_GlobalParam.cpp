@@ -72,8 +72,8 @@ void UOmegaFunctions_GlobalVars::SetGlobalVariable_Bool(UObject* WorldContextObj
 {
 	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
 	{
-		int32 _oldVal=p->params_int.FindOrAdd(Variable);
-		p->params_int.Add(Variable, Value);
+		int32 _oldVal=p->params_bool.FindOrAdd(Variable);
+		p->params_bool.Add(Variable, Value);
 		L_CallParamUpdateDel(WorldContextObject,Variable,Target,Value,_oldVal);
 	}
 }

@@ -16,6 +16,7 @@
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "OmegaGameManager.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Types/Struct_CustomNamedList.h"
 
 
@@ -51,21 +52,36 @@ void FOmegaBitflagsCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> Pr
 // Get raw pointer to the struct data
     void* StructData = nullptr;
     StructPropertyHandle->GetValueData(StructData);
-    bool FoundClass=false;
+    //bool FoundClass=false;
     if (FOmegaBitflagsBase* _struct=static_cast<FOmegaBitflagsBase*>(StructData))
     {
+        if (UObject* o= _struct->override_source.Get())
+        {
+            cachedEditorData = *OGF_CFG()->GetEditorDataForClass(o->GetClass());
+        }
+        else if (_struct->override_config)
+        {
+            cachedEditorData= _struct->override_configData;
+        }
+        else if (const FOmegaBitmaskEditorData* d= OGF_CFG()->GetEditorDataForClass(GetOwnerClass(PropertyHandle)))
+        {
+            cachedEditorData= *d;
+        }
+        //cachedEditorData=_struct->GetConfig(GetOwnerClass(PropertyHandle));
+        /*
         if (_struct->override_source.Get())
         {
             CachedOwnerClass=_struct->override_source->GetClass();
             FoundClass=true;
-        }
+        }*/
     }
+    /*
     if (!FoundClass)
     {
         // Get the owner class
         CachedOwnerClass = GetOwnerClass(PropertyHandle);    
     }
-    
+    */
     
 
     HeaderRow
@@ -87,8 +103,8 @@ void FOmegaBitflagsCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> 
     {
         return;
     }
-
-    if (!CachedOwnerClass)
+    const FOmegaBitmaskEditorData* EditorData = &cachedEditorData;
+    if (!CachedOwnerClass && !EditorData)
     {
         ChildBuilder.AddCustomRow(FText::FromString("Error"))
         .WholeRowContent()
@@ -107,7 +123,7 @@ void FOmegaBitflagsCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> 
     }
 
     // Get the editor data for this class
-    const FOmegaBitmaskEditorData* EditorData = Settings->GetEditorDataForClass(CachedOwnerClass);
+    //const FOmegaBitmaskEditorData* EditorData = Settings->GetEditorDataForClass(CachedOwnerClass);
     
     if (!EditorData)
     {

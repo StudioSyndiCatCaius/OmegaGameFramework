@@ -33,9 +33,12 @@ bool UOmegaCursorEventComponent::Actor_IsAcceptable(AActor* actor) const
         {
             return false;
         }
-        if (!Filter_Conditions.CheckConditions(actor))
+        if (Query_CanHover.IsBound())
         {
-            return false;
+            if (!Query_CanHover.Execute(actor))
+            {
+                return false;
+            }
         }
         return true;
     }
@@ -170,8 +173,8 @@ void UOmegaCursorEventComponent::TickComponent(float DeltaTime, enum ELevelTick 
         }
     }
     
-    // Store current hit for next frame
-    PreviousHitResult = CurrentHitResult;
+    // Store current hit for next frame (only if actor passed acceptance check)
+    PreviousHitResult = CurrentActor ? CurrentHitResult : FHitResult();
 }
 
 bool UOmegaCursorEventComponent::TriggerOverlappedActor(FOmegaCommonMeta meta)

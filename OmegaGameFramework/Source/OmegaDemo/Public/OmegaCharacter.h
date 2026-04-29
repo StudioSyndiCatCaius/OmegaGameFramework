@@ -36,7 +36,7 @@ class OMEGADEMO_API AOmegaCharacter : public AOmegaMinimalCharacter, public IAct
 
 	UFUNCTION()
 	void OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, UGameplayActorComponent* Component);
-
+	
 	void _ActivateSubscriptCol(TArray<USubscriptCollection*> ss) const
 	{
 		for(auto * s : ss)
@@ -95,7 +95,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaSaveStateComponent* SaveVisibility;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAudioComponent* AudioComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UZoneEntityComponent* ZoneEntity;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAimTargetComponent* LookAim;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAimTargetComponent* LookAim;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UChildActorComponent* ChildSlot;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UDataWidgetComponent* DataWidget;
@@ -106,9 +106,8 @@ public:
 	UPROPERTY() UTextRenderComponent* Text_Name;
 	
 	
-
 	virtual bool IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context) override { return !CanInteract; };
-	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
+
 };
 
 // ========================================================================================================

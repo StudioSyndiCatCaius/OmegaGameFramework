@@ -47,12 +47,13 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Entities",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bGlobalSave"),DisplayName="Entity - Set Param (String)")
 	static void SetSaveEntity_ParamString(UObject* WorldContextObject, FOmegaEntityID ID, FName param, FString Value, bool bGlobalSave);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Entities",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bGlobalSave"),DisplayName="Entity - Set Tag")
-	static void SetSaveEntity_Tag(UObject* WorldContextObject, FOmegaEntityID ID, FName tag, bool bActive, bool bGlobalSave);
 	UFUNCTION(BlueprintCallable,Category="Omega|Entities",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bGlobalSave"),DisplayName="Entity - Set Tags")
-	static void SetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID, TArray<FName> tags, bool bActive, bool bGlobalSave);
+	static void SetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID, FGameplayTagContainer tags, bool bActive, bool bGlobalSave);
 	UFUNCTION(BlueprintPure,Category="Omega|Entities",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bGlobalSave"),DisplayName="Entity - Get Tags")
-	static TArray<FName> GetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID, bool bGlobalSave);
+	static FGameplayTagContainer GetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID, bool bGlobalSave);
 	UFUNCTION(BlueprintPure,Category="Omega|Entities",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bGlobalSave"),DisplayName="Entity - Has Tag?")
-	static bool SaveEntity_HasTag(UObject* WorldContextObject, FOmegaEntityID ID, FName tag, bool bGlobalSave);
+	static bool SaveEntity_HasTags(UObject* WorldContextObject, FOmegaEntityID ID, FGameplayTagContainer tag, bool bGlobalSave);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|Entities",meta=(WorldContext="WorldContextObject",AdvancedDisplay="bGlobalSave",ExpandBoolAsExecs="Result"),DisplayName="Entity - Check Tag")
+	static bool SaveEntity_CheckTag(UObject* WorldContextObject, FOmegaEntityID ID, FGameplayTagContainer tag, bool bGlobalSave, bool& Result, bool AddIfFalse=false);
 };

@@ -28,6 +28,13 @@ TArray<UOmegaScriptedAnimation*> FOmegaScriptedAnimationData::GetAllAnimations()
 		}
 	}
 	out.Append(anim_inline);
+	for (auto* a : anim_presetEnd)
+	{
+		if (a)
+		{
+			out.Append(a->Animations);
+		}
+	}
 	return out;
 }
 
@@ -36,12 +43,12 @@ AActor* UOmegaScriptedAnimation::GetAnimationInstigator() const
 	return REF_Instigator;
 }
 
-void UOmegaScriptedAnimation::Notify(FName notify)
+void UOmegaScriptedAnimation::Notify(const FString& notify)
 {
 	OnAnimNotify.Broadcast(notify);
 }
 
-void UAsyncAction_ScriptedAnimation::L_Notify(FName Notify)
+void UAsyncAction_ScriptedAnimation::L_Notify(const FString& Notify)
 {
 	OnNotify.Broadcast(Notify);
 }
@@ -65,7 +72,7 @@ void UAsyncAction_ScriptedAnimation::Next_Anim(UOmegaScriptedAnimation* anim)
 	}
 	else
 	{
-		Finished.Broadcast();
+		Finished.Broadcast("");
 		SetReadyToDestroy();
 	}
 }

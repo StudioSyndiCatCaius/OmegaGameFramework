@@ -7,7 +7,6 @@
 #include "GameFramework/Actor.h"
 #include "Interfaces/I_Common.h"
 #include "Misc/GeneralDataObject.h"
-#include "Misc/OmegaSaveTypes.h"
 #include "Actor_Quest.generated.h"
 
 class AOmegaWorldManager;
@@ -26,9 +25,7 @@ public:
 	//TRUE = a quest with a COMPLET or FAILED stat can still be started again
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Quest")
 	bool Replayable;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Quest")
-	FOmegaSaveConditions Condition_ToStart;
+
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Quest",meta=(ExposeOnSpawn))
 	UOmegaQuestTypeScript* QuestScript;
 	
@@ -40,6 +37,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaQuestTypeScript : public UObject
 	GENERATED_BODY()
 	
 public:
+	UPROPERTY() AOmegaQuestInstance* qInst;
+	FOmegaQuestData local_data;
+	
+	FOmegaQuestData* L_GetQuestData();
 	
 	UFUNCTION(BlueprintCallable,Category="Quest") AOmegaQuestInstance* GetQuestInstance() const;
 	UFUNCTION(BlueprintCallable,Category="Quest") UOmegaQuest* GetQuestAsset() const;

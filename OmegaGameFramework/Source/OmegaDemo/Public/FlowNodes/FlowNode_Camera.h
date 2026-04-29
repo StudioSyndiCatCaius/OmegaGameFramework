@@ -24,7 +24,6 @@ public:
 	virtual FString GetNodeCategory() const override { return "Camera"; };
 #endif
 	
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
 	float BeginAlpha = 1.0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
@@ -53,9 +52,12 @@ public:
 #if WITH_EDITOR
 	virtual FString GetNodeCategory() const override { return "Camera"; };
 #endif
-	
-	UPROPERTY(EditAnywhere,Instanced, BlueprintReadWrite, Category="Fade")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade",DisplayName="BlendTarget", meta=(EditCondition="!bUseSelector", EditConditionHides))
+	TSoftObjectPtr<AActor> BlendTargetCamera;
+	UPROPERTY(EditAnywhere,Instanced, BlueprintReadWrite, Category="Fade", meta=(EditCondition="bUseSelector", EditConditionHides))
 	UOmegaActorSelector* BlendTarget;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
+	bool bUseSelector;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")
 	float Duration = 0.0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fade")

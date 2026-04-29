@@ -11,4 +11,6 @@ public:
 	static TArray<FString> ListFilesInDirectoryList(TArray<FString> paths, bool bRecursive);
 	static TArray<FString> GetAllSubfolders(const FString& BasePath, bool bRecursive);
 	
+	static UObject* HotloadUasset_FromFile(const FString& filepath);
+	static UObject* HotloadUasset_FromBytes(TArray<uint8> byte);
 };

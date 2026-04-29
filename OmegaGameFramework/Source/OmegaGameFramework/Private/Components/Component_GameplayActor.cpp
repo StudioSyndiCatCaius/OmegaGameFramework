@@ -68,6 +68,7 @@ void UGameplayActorComponent::L_Init()
 	{
 		if(Local_IsSourceAssetValid())
 		{
+			OGF_GAME_CORE()->ActorID_IdentityInit(GetOwner(),this,IdentitySource);
 			IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner(),this);
 		}
 	}
@@ -141,7 +142,7 @@ void UGameplayActorComponent::Local_RunConstruct()
 		Guid=FGuid::NewGuid();
 	}
 	SetIdentitySourceAsset(IdentitySource);
-	OGF_GAME_CORE()->ActorID_OnConstruct(GetOwner(),this);
+	//OGF_GAME_CORE()->ActorID_OnConstruct(GetOwner(),this);
 	if(Local_IsSourceAssetValid())
 	{
 		IdentityFlags.override_source=IdentitySource;
@@ -194,6 +195,7 @@ void UGameplayActorComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 	{
 		if(Local_IsSourceAssetValid())
 		{
+			OGF_GAME_CORE()->ActorID_IdentityUninit(GetOwner(),this,IdentitySource);
 			IDataInterface_ActorIdentitySource::Execute_OnIdentityUninit(IdentitySource,GetOwner(),this);
 		}
 	}
@@ -295,6 +297,7 @@ void UGameplayActorComponent::BeginPlay()
 	OGF_GAME_CORE()->ActorID_OnBeginPlay(GetOwner(),this);
 	if(Local_IsSourceAssetValid())
 	{
+		L_Init();
 		IDataInterface_ActorIdentitySource::Execute_OnActorBeginPlay(IdentitySource,GetOwner(),this);
 		for(auto* i : Local_GetScripts())
 		{

@@ -120,15 +120,18 @@ void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntrie
 	if(NewClass)
 	{
 		EntryClass = NewClass;
-		TArray<UDataWidget*> SavedEntryWidgets;
-
-		ClearList();
+		TArray<UObject*> SavedAssets;
 		if(KeepEntries)
 		{
-			for(const auto* OldEntry : SavedEntryWidgets)
+			for(const auto* OldEntry : Entries)
 			{
-				AddAssetToList(OldEntry->ReferencedAsset, "NewEntryClass");
+				if(OldEntry) { SavedAssets.Add(OldEntry->ReferencedAsset); }
 			}
+		}
+		ClearList();
+		for(auto* Asset : SavedAssets)
+		{
+			AddAssetToList(Asset, "NewEntryClass");
 		}
 	}
 }
@@ -248,23 +251,7 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		UE_LOG(LogTemp, Warning, TEXT("Failed to Add Asset. Invalid Widget Class."));
 		return nullptr;
 	}
-	if(Asset->GetClass()->ImplementsInterface(UDataInterface_DataWidget::StaticClass()))
-	{
-		if(IDataInterface_DataWidget::Execute_ShouldBlockFromDataList(Asset,this))
-		{
-			return nullptr;
-		}
-		FOmegaSaveConditions cond=IDataInterface_DataWidget::Execute_GetRequiredSaveConditions(Asset);
-		if(GetWorld() && GetWorld()->GetGameInstance())
-		{
-			if(!GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->CustomSaveConditionsMet(cond))
-			{
-				return nullptr;
-			}
-		}
-	}
-
-
+	
 	//Create Entry Widget
 	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
 	if (EntryTemplate)
@@ -565,10 +552,11 @@ int32 UDataList::GetEntryIndex(UDataWidget* Entry)
 {
 	if(Entry)
 	{
-		if(GetEntries().Contains(Entry))
+		TArray<UDataWidget*> LocalEntries = GetEntries();
+		int32 Index = LocalEntries.Find(Entry);
+		if(Index != INDEX_NONE)
 		{
-			return GetEntries().Find(Entry);
-			//return Entries.IndexOfByKey(Entry);
+			return Index;
 		}
 	}
 	return -1;
@@ -576,9 +564,10 @@ int32 UDataList::GetEntryIndex(UDataWidget* Entry)
 
 UDataWidget* UDataList::GetEntry(int32 Index)
 {
-	if(GetEntries().IsValidIndex(Index))
+	TArray<UDataWidget*> LocalEntries = GetEntries();
+	if(LocalEntries.IsValidIndex(Index))
 	{
-		return GetEntries()[Index];
+		return LocalEntries[Index];
 	}
 	return nullptr;
 }
@@ -739,7 +728,7 @@ void UDataList::InputPage_Implementation(float Axis)
 
 void UDataList::InputConfirm_Implementation()
 {
-	if(HoveredEntry->IsValidLowLevel())
+	if(IsValid(HoveredEntry))
 	{
 		HoveredEntry->Select();
 	}
@@ -980,16 +969,18 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 	}
 	else
 	{
-		FCustomAssetData LocalTempData;
-		LocalTempData.Texture = nullptr;
-		UGeneralDataObject* TempObject = Native_CreateCustomDataObject(LocalTempData);
-		
-		// Clear Linked Hover Widgets
-		for(auto* TempWig : LinkedHoverWidgets)
+		// Clear Linked Hover Widgets (only allocate if needed)
+		if (LinkedHoverWidgets.Num() > 0)
 		{
-			if(TempWig)
+			FCustomAssetData LocalTempData;
+			LocalTempData.Texture = nullptr;
+			UGeneralDataObject* TempObject = Native_CreateCustomDataObject(LocalTempData);
+			for(auto* TempWig : LinkedHoverWidgets)
 			{
-				TempWig->SetSourceAsset(TempObject);
+				if(TempWig)
+				{
+					TempWig->SetSourceAsset(TempObject);
+				}
 			}
 		}
 		

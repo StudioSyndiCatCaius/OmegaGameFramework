@@ -134,8 +134,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void Actor_OnTagEvent(AActor* Actor, FGameplayTag Event) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor") FText Actor_GetDebugText(AActor* Actor) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Actor") bool Actor_CanSetTagTarget(AActor* Instigator,AActor* Target,FGameplayTag Tag) const;
-	UFUNCTION() void ActorID_OnConstruct(AActor* Actor,UGameplayActorComponent* Component) const;
-	UFUNCTION() void ActorID_OnBeginPlay(AActor* Actor,UGameplayActorComponent* Component) const;
+	
+	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_OnConstruct(AActor* Actor,UGameplayActorComponent* Component) const;
+	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_OnBeginPlay(AActor* Actor,UGameplayActorComponent* Component) const;
+	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_IdentityInit(AActor* Actor,UGameplayActorComponent* Component,UPrimaryDataAsset* Identity) const;
+	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_IdentityUninit(AActor* Actor,UGameplayActorComponent* Component,UPrimaryDataAsset* Identity) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor") TMap<FName,TSubclassOf<AActor>> Spawnable_GetNamed() const;
 	
 	
@@ -249,7 +252,13 @@ public:
 	UFUNCTION(BlueprintNativeEvent,Category="Actor") USoundBase* Localization_GetClipFromPath(UObject* WorldContext, const FString& subpath, const FString& file) const;
 };
 
-
+/*
+UCLASS(Const,Blueprintable,BlueprintType,meta=(ShowWorldContextPin),Abstract)
+class OMEGAGAMEFRAMEWORK_API UOmegaGameManager : public UOmega_GameManager
+{
+	GENERATED_BODY()
+};
+*/
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaGameCore : public UOmegaGameManager
 {

@@ -198,7 +198,7 @@ UObject* UFlowNode_Menu::L_GetContext() const
 
 TSubclassOf<UObject> UFlowNode_Menu::L_GetFlagClass() const
 {
-	return L_GetFlagClass();
+	return L_GetMenuClass();
 }
 
 TSubclassOf<UMenu> UFlowNode_Menu::L_GetMenuClass() const

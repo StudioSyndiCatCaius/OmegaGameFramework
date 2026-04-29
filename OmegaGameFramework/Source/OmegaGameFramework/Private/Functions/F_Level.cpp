@@ -4,6 +4,7 @@
 #include "Functions/F_Level.h"
 
 #include "OmegaSettings.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "LevelInstance/LevelInstanceActor.h"
@@ -55,6 +56,27 @@ bool UOmegaLevelFunctions::SetWorldPaused(UObject* WorldContextObject, bool bPau
 		}
 	}
 	return false;
+}
+
+TSoftObjectPtr<UWorld> UOmegaLevelFunctions::GetLevelSoftRefFromName(FName LevelName)
+{
+	const FAssetRegistryModule& AssetRegistryModule = 
+		FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+    
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+	TArray<FAssetData> AssetDataList;
+	AssetRegistry.GetAssetsByClass(UWorld::StaticClass()->GetClassPathName(), AssetDataList);
+
+	for (const FAssetData& AssetData : AssetDataList)
+	{
+		if (AssetData.AssetName == LevelName)
+		{
+			return TSoftObjectPtr<UWorld>(AssetData.ToSoftObjectPath());
+		}
+	}
+
+	return TSoftObjectPtr<UWorld>();
 }
 
 UWorld* UOmegaLevelFunctions::GetPersistentWorldAsset(const UObject* WorldContextObject)

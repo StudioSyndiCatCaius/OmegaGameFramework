@@ -52,8 +52,6 @@ public:
 	UPROPERTY(EditAnywhere,Category="Save")
 	FGameplayTagContainer AutoSaveTags;
 	UPROPERTY(EditAnywhere,Instanced,Category="DebugProfile")
-	TArray<UOmegaModifier_Save*> SaveMods;
-	UPROPERTY(EditAnywhere,Instanced,Category="DebugProfile")
 	TArray<UOmegaDebugProfileScript*> Scripts;
 
 };

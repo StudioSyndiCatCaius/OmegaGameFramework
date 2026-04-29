@@ -4,7 +4,6 @@
 #include "Functions/F_Equipment.h"
 
 #include "OmegaSettings.h"
-#include "OmegaGameManager.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_Inventory.h"
 #include "Condition/Condition_DataAsset.h"
@@ -87,26 +86,6 @@ TArray<UPrimaryDataAsset*> UOmegaEquipmentFunctions::FilterEquippableItems(TArra
 		}
 	}
 	return out;
-}
-
-UPrimaryDataAsset* UOmegaEquipmentFunctions::TryGetEquipmentInSlot(UObject* Target, UEquipmentSlot* Slot,
-                                                                   bool& Outcome)
-{
-	if(Slot)
-	{
-		if(UActorComponent* _equipComp = UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(Target,UCombatantComponent::StaticClass(),Outcome))
-		{
-			bool _boolReturn;
-			
-			if(UPrimaryDataAsset* _out = Cast<UCombatantComponent>(_equipComp)->Equipment_GetInSlot(Slot,_boolReturn))
-			{
-				Outcome=true;
-				return _out;
-			}
-		}
-	}
-	Outcome=false;
-	return nullptr;
 }
 
 TArray<UPrimaryDataAsset*> UOmegaEquipmentFunctions::GetEquippableItems_FromInventory(UCombatantComponent* Equipment,

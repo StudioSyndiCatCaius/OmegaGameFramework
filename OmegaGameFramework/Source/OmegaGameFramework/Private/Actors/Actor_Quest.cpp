@@ -19,11 +19,20 @@ UOmegaQuest::UOmegaQuest()
 {
 }
 
+FOmegaQuestData* UOmegaQuestTypeScript::L_GetQuestData()
+{
+	if (GetQuestAsset())
+	{
+		return &GetQuestInstance()->SS_Save->ActiveSaveData->quest_data.FindOrAdd(GetQuestAsset());
+	}
+	return &local_data;
+}
+
 AOmegaQuestInstance* UOmegaQuestTypeScript::GetQuestInstance() const
 {
-	if (AOmegaQuestInstance* q=Cast<AOmegaQuestInstance>(GetOuter()))
+	if (qInst)
 	{
-		return q;
+		return qInst;
 	}
 	return nullptr;
 }
@@ -85,31 +94,41 @@ void AOmegaQuestInstance::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AOmegaQuestInstance::StartQuest(bool bResumeFormSave)
 {
-	script_copy=DuplicateObject(QuestAsset->QuestScript,this);
-	if (QuestAsset)
+	if(QuestAsset)
 	{
-		OGF_Subsystems::oSave(this)->ActiveSaveData->quest_data.FindOrAdd(QuestAsset).Status=QuestStatus_Active;
+		if (QuestAsset->QuestScript)
+		{
+			script_copy=DuplicateObject(QuestAsset->QuestScript,this);
+	        script_copy->qInst=this;
+	        OGF_Subsystems::oSave(this)->ActiveSaveData->quest_data.FindOrAdd(QuestAsset).Status=QuestStatus_Active;
+	        
+	        if (bResumeFormSave)
+	        {
+        		script_copy->OnLoad(this,SS_Save->ActiveSaveData->quest_data.FindOrAdd(QuestAsset));
+        		if (SS_World)
+        		{
+        			SS_World->OnQuest_Updated.Broadcast(this,QuestAsset);
+        		}
+	        }
+	        else
+	        {
+        		script_copy->OnQuestStart(this);
+        		if (SS_World)
+        		{
+        			SS_World->OnQuest_Start.Broadcast(this,QuestAsset);
+        		}
+	        }
+		}
+		else
+		{
+			OGF_Log::Error("Quest Instance '"+GetName()+" has no valid script.");
+		}
 	}
 	else
 	{
 		OGF_Log::Error("Quest Instance '"+GetName()+" has no valid asset. Could not set state to ACTIVE");
 	}
-	if (bResumeFormSave)
-	{
-		script_copy->OnLoad(this,*WM->Quest_GetData(QuestAsset));
-		if (SS_World)
-		{
-			SS_World->OnQuest_Updated.Broadcast(this,QuestAsset);
-		}
-	}
-	else
-	{
-		script_copy->OnQuestStart(this);
-		if (SS_World)
-		{
-			SS_World->OnQuest_Start.Broadcast(this,QuestAsset);
-		}
-	}
+	
 }
 
 void AOmegaQuestInstance::TriggerQuestUpdate()
