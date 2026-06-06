@@ -4,38 +4,19 @@
 #include "Misc/GeneralDataObject.h"
 #include "LuaBlueprintFunctionLibrary.h"
 //#include "Misc/OmegaUtils_Enums.h"
+#include "GroomVisualizationData.h"
+#include "PCGPoint.h"
 #include "Functions/F_Common.h"
 
 
 #define LUACFG() GetMutableDefault<ULuaSettings>()
-
-void UGeneralDataObject::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description)
-{
-	Name = CustomData.DisplayName;
-	Description = CustomData.Description;
-}
-
-void UGeneralDataObject::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	Texture = CustomData.Texture;
-}
-
-void UGeneralDataObject::GetGeneralAssetColor_Implementation(FLinearColor& Color)
-{
-	Color = CustomData.Color;
-}
-
-void UGeneralDataObject::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	Label = CustomData.Label;
-}
 
 
 UOmegaDataAsset::UOmegaDataAsset()
 {
 	if(!Guid.IsValid()) { Guid= FGuid::NewGuid();}
 }
-
+/*
 FString UOmegaDataAsset::GetSoftProperty_Implementation(FName Property)
 {
 	FLuaValue val=LuaData.GetField(Property.ToString());
@@ -53,19 +34,33 @@ TArray<FName> UOmegaDataAsset::GetMetatags_Implementation()
 		LUACFG()->FieldKey_Metatags)));
 	return out;
 }
+*/
 
-FOmegaClassNamedLists UOmegaDataAsset::GetClassNamedLists_Implementation()
+
+void UOmegaDataAsset::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
+	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
-	FOmegaClassNamedLists out=NamedLists;
-	FLuaValue fieldtemp=LuaData.GetField(LUACFG()->FieldKey_CustomLists);
-	for (FLuaValue v : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(fieldtemp))
+	Name=DisplayName;
+	Description=DisplayDescription;
+	iconBrush=Icon;
+	Color=color;
+	if (CustomLabel.IsEmpty())
 	{
-		FOmegaCustomNamedList l;
-		l.ListID=v.ToName();
-		l.Option=fieldtemp.GetField(v.ToString()).ToName();
-		out.CustomNamedList.Add(v.ToName(),l);
+		Label=GetName();
 	}
-	return out;
+	else
+	{
+		Label=CustomLabel;
+	}
+	MetaConfig.guid=Guid;
+	MetaConfig.seed=Guid.A;
+}
+
+void UOmegaDataAsset::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag,
+                                                           FGameplayTagContainer& OutGameplayTags)
+{
+	OutCategoryTag=CategoryTag;
+	OutGameplayTags=GameplayTags;
 }
 
 void UOmegaDataAsset::SetValue_Implementation(FLuaValue Value, const FString& Field)
@@ -74,22 +69,24 @@ void UOmegaDataAsset::SetValue_Implementation(FLuaValue Value, const FString& Fi
 	{
 		DisplayName=FText::FromString(Value.GetField("name").ToString());
 	}
-	if(DisplayName.IsEmpty() && !Value.GetField("description").ToString().IsEmpty())
+	if(DisplayDescription.IsEmpty() && !Value.GetField("description").ToString().IsEmpty())
 	{
-		DisplayName=FText::FromString(Value.GetField("description").ToString());
+		DisplayDescription=FText::FromString(Value.GetField("description").ToString());
 	}
-	if(GameplayTags.IsEmpty())
+	bool found_icon=false;
+	if(UTexture2D* _ico=Cast<UTexture2D>(UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(Value.GetField("icon").ToString(),UTexture2D::StaticClass(),found_icon)))
 	{
-		
+		Icon.SetResourceObject(_ico);
 	}
 	if(!CategoryTag.IsValid() && !Value.GetField("category").ToString().IsEmpty())
 	{
 		FString _TargetTag=Value.GetField("category").ToString();
 		if (FGameplayTag::IsValidGameplayTagString(_TargetTag))
 		{
-			CategoryTag=FGameplayTag::RequestGameplayTag(*_TargetTag);	
+			CategoryTag=FGameplayTag::RequestGameplayTag(*_TargetTag,false);	
 		}
 	}
+	GameplayTags=UOmegaGameFrameworkBPLibrary::MakeGameplayTagContainerFromStrings(ULuaBlueprintFunctionLibrary::Conv_LuaValueToString_Array(Value.GetField("tags")));
 	LuaData=Value;
 }
 
@@ -99,11 +96,18 @@ void UOmegaDataAsset::SetKey_Implementation(FLuaValue Key)
 	CustomLabel=LuaKey.ToString();
 }
 
-UPrimaryDataAsset* UOmegaDataAsset::GetDataAsset_Named_Implementation(FName name)
+void UOmegaDemoDataAsset::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
+	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
-
-	return nullptr;
+	FOmegaObjectGeneralMetaconfig _cfg;
+	Super::GetGeneralDataText_Implementation(Tag, Name, Description, iconBrush, Color, Label, _cfg);
+	_cfg.bitflags=Flags;
+	_cfg.named_lists=NamedLists;
+	_cfg.relative_assets=RelativeAssets;
+	
+	MetaConfig=_cfg;
 }
+
 
 
 bool UOmegaDataAsset::UseIconAsThumbnail_Implementation()

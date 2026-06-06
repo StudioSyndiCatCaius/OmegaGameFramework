@@ -20,11 +20,11 @@ class OMEGAFLOW_API UAsyncAction_ActivateAbility : public UBlueprintAsyncActionB
 
 public:
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FAbilityCompleted Completed;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FAbilityCancled Canceled;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FAbilityFailed Failed;
 
 	UPROPERTY() TSubclassOf<AOmegaAbility> LocalAbilityClass;
@@ -36,7 +36,8 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Activate Ability")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Activate Ability")
 	static UAsyncAction_ActivateAbility* ActivateAbility(UCombatantComponent* Combatant, const TSubclassOf<AOmegaAbility> Ability, UObject* Context, bool bForceGrant);
 
 };
+ 

@@ -4,37 +4,41 @@ public class OmegaDemo : ModuleRules
 {
 	public OmegaDemo(ReadOnlyTargetRules Target) : base(Target)
 	{
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
-        bUseUnity = false;
-
-        PrecompileForTargets = PrecompileTargetsType.Any;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         
-		PublicDependencyModuleNames.AddRange(new string[] { 
-			"Core", 
-			"CoreUObject", 
+		PublicDependencyModuleNames.AddRange(new string[] {
+			"Core",
+			"CoreUObject",
 			"LuaMachine",
-			"Engine", 
-			"GameplayTags", 
+			"Engine",
+			"GameplayTags",
 			"UMG",
+			"Slate",
 			"SlateCore",
 			"CustomizableObject",
 			"Json",
 			"JsonUtilities",
+			"Niagara",
+			"JsonBlueprintUtilities",
 			"LevelSequence",
 			"AssetRegistry",
 			"AnimGraphRuntime",
+			"OmegaCore",
+			"DeveloperSettings",
 			"OmegaGameFramework",
 			"SequencerScripting",
 			"MovieScene",
 			"OmegaSequence",
-			"OmegaData",
-			"OmegaMutable",
 			"Flow",
 			"GameplayStateTreeModule",
 		});
+
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.Add("UnrealEd");
+		}
  
-		PublicIncludePaths.AddRange(new string[] {"OmegaDemo/Public"});
-		PrivateIncludePaths.AddRange(new string[] {"OmegaDemo/Private"});
+		PublicIncludePaths.AddRange(new string[] {});
+		PrivateIncludePaths.AddRange(new string[] {});
 	}
 }

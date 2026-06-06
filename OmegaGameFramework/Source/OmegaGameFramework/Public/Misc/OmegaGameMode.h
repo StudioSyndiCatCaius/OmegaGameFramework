@@ -3,13 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OmegaGameManager.h"
 #include "GameFramework/GameModeBase.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "GameFramework/HUD.h"
 
 #include "OmegaGameMode.generated.h"
 
+class UInstanceActorComponent;
 class AOmegaDynamicCamera;
+class UAssetSquadComponent;
+class UCombatantComponent;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOmegaGameModeDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOmegaGameModeActorListDelegate, const TArray<AActor*>&, Actors);
 
@@ -30,8 +35,14 @@ public:
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	
-	UPROPERTY(BlueprintAssignable) FOmegaGameModeDelegate OnLoadEventFinish;
-	UPROPERTY(BlueprintAssignable) FOmegaGameModeActorListDelegate OnDragSelectedEnded;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOmegaGameModeDelegate OnLoadEventFinish;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOmegaGameModeActorListDelegate OnDragSelectedEnded;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
+	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UGameplayActorComponent* ActorID;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UAssetSquadComponent* AssetSquad;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UInstanceActorComponent* EntityInstances;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UOmegaCalendarComponent* Calendar;
 	
 	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems", DisplayName="⚙️ Systems (Pre-Load)")
 	TArray<TSubclassOf <AOmegaGameplaySystem>> AutoGameplaySystems;
@@ -51,6 +62,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems")
 	FGameplayTagContainer AutoBlockSystemTags;
 	
+	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems")
+	TArray<FOmegaGameplaySystemConfig> System_Config;
+	
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
 	bool bAutoActivateDynamicCamera;
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
@@ -59,10 +73,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player",DisplayName="HUD Layers (Persistent)")
 	TArray<TSubclassOf <UHUDLayer>> HUDLayers_Persistent;
 	
-	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
-	TArray<TSubclassOf <AOmegaPlayerSystem>> PlayerSystems_Auto;
-	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
-	TArray<TSubclassOf <AOmegaPlayerSystem>> PlayerSystems_Persistent;
+	//UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
+	//TArray<TSubclassOf <AOmegaPlayerSystem>> PlayerSystems_Auto;
+	//UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
+	//TArray<TSubclassOf <AOmegaPlayerSystem>> PlayerSystems_Persistent;
 
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category="🖱️OMEGA - Drag Select")
@@ -79,6 +93,12 @@ public:
 	void OnLoadEventFinished();
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Game Mode")
 	void OnDragSelectEnd(const TArray<AActor*>& actors);
+	
+#if WITH_EDITOR
+	
+	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
+#endif
+	void ValidateTemplates();
 	
 private:
 	UFUNCTION()
@@ -98,9 +118,10 @@ class OMEGAGAMEFRAMEWORK_API AOmegaHUD : public AHUD
 	FVector2D dragSelect_start;
 	FVector2D dragSelect_end;
 	UPROPERTY() AOmegaGameMode* ref_gameMode;
+	UPROPERTY() UOmegaSubsystem_World* ss_world;
 	bool isDragInputDown() const;
 public:
 	virtual void BeginPlay() override;
 	virtual void DrawHUD() override;
-	
+	UCanvas* GetCanvas() { return Canvas;};
 };

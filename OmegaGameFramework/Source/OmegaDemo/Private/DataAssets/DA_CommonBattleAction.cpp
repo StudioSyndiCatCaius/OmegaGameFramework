@@ -4,54 +4,28 @@
 
 #include "Components/Component_Combatant.h"
 
-ULevelSequence* UOAsset_CommonBattleAction::GetSkill_Sequences_Implementation(UCombatantComponent* Combatant,
-                                                                              FName Name)
-{
-	if(!Name.IsNone())
-	{
-		if (Sequence_Named.Contains(Name))
-		{
-			if( Sequence_Named[Name])
-			{
-				return Sequence_Named[Name]->GetLevelSequence(Combatant);
-			}
-		}
-		return nullptr;
-	}
-	if(Sequence)
-	{
-		return Sequence->GetLevelSequence(Combatant);
-	}
-	return nullptr;
-};
 
-UAnimMontage* UOAsset_CommonBattleAction::GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FName Name)
+
+FOmegaScriptedAnimationData UOAsset_CommonBattleAction::GetScriptedAnimation_Implementation(FGameplayTag Tag)
 {
-	if(!Name.IsNone())
+	if (Tag.IsValid())
 	{
-		if (Montage_Named.Contains(Name))
+		if (Animation_Named.Contains(Tag))
 		{
-			if( Montage_Named[Name])
-			{
-				return Montage_Named[Name]->GetMontage(Combatant);
-			}
+			return Animation_Named[Tag];
 		}
-		return nullptr;
+		return FOmegaScriptedAnimationData();
 	}
-	if(Montage)
-	{
-		return Montage->GetMontage(Combatant);
-	}
-	return nullptr;
+	return Animation;
 }
 
-FOmegaCustomScriptedEffects UOAsset_CommonBattleAction::GetScriptedEffects_Implementation(FName Name)
+FOmegaCustomScriptedEffects UOAsset_CommonBattleAction::GetScriptedEffects_Implementation(FGameplayTag Tag)
 {
-	if(!Name.IsNone())
+	if(Tag.IsValid())
 	{
-		if(Effects_Named.Contains(Name))
+		if(Effects_Named.Contains(Tag))
 		{
-			return Effects_Named[Name];
+			return Effects_Named[Tag];
 		}
 		return FOmegaCustomScriptedEffects();
 	}
@@ -59,3 +33,4 @@ FOmegaCustomScriptedEffects UOAsset_CommonBattleAction::GetScriptedEffects_Imple
 	ef.CustomEffects=Effects;
 	return ef;
 }
+

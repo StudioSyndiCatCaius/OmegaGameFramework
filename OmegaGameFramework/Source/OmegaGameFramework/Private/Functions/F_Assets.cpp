@@ -8,9 +8,14 @@
 #include "OmegaSettings.h"
 #include "OmegaSettings_Assets.h"
 #include "Actors/OmegaGameplaySystem.h"
-#include "Components/Component_Equipment.h"
-#include "Misc/OmegaAttribute.h"
-#include "Misc/OmegaFaction.h"
+#include "Functions/F_Equipment.h"
+#include "DataAssets/DA_EquipSlot.h"
+#include "Engine/AssetManager.h"
+#include "Engine/PrimaryAssetLabel.h"
+#include "DataAssets/DA_Attribute.h"
+#include "DataAssets/DA_Faction.h"
+#include "Functions/F_Constants.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "UObject/LinkerLoad.h"
 #include "UObject/Package.h"
 #include "UObject/UObjectGlobals.h"
@@ -45,32 +50,38 @@ TArray<FName> UOmegaFunctions_Asset::nameOptions_Faction()
     return out;
 }
 
-TArray<FName> UOmegaFunctions_Asset::nameOptions_System()
-{
-    TArray<FName> out;
-    GetMutableDefault<UOmegaAssetSettings>()->Named_Systems.GetKeys(out);
-    return out;
-}
 
-TArray<FName> UOmegaFunctions_Asset::nameOptions_Menu()
-{
-    TArray<FName> out;
-    GetMutableDefault<UOmegaAssetSettings>()->Named_Menus.GetKeys(out);
-    return out;
-}
-
-TArray<FName> UOmegaFunctions_Asset::nameOptions_HUD()
-{
-    TArray<FName> out;
-    GetMutableDefault<UOmegaAssetSettings>()->Named_HUDLayers.GetKeys(out);
-    return out;
-}
 
 TArray<FName> UOmegaFunctions_Asset::nameOptions_List_Asset()
 {
     TArray<FName> out;
     GetMutableDefault<UOmegaAssetSettings>()->NamedList_DataAssets.GetKeys(out);
     return out;
+}
+
+TArray<TSubclassOf<UObject>> UOmegaFunctions_Asset::GetAllChildClasses(TSubclassOf<UObject> ParentClass,
+    bool bIncludeDescendants, bool bIncludeParent)
+{TArray<TSubclassOf<UObject>> Result;
+
+    if (!ParentClass) return Result;
+
+    if (bIncludeParent)
+        Result.Add(ParentClass);
+
+    for (TObjectIterator<UClass> It; It; ++It)
+    {
+        UClass* Class = *It;
+        if (!Class || Class == ParentClass.Get()) continue;
+
+        bool bMatches = bIncludeDescendants
+            ? Class->IsChildOf(ParentClass)
+            : Class->GetSuperClass() == ParentClass.Get();
+
+        if (bMatches)
+            Result.Add(Class);
+    }
+
+    return Result;
 }
 
 UClass* UOmegaFunctions_Asset::GetClassByName(const FString& ClassName, bool& result)
@@ -96,7 +107,15 @@ UClass* UOmegaFunctions_Asset::GetClassByName(const FString& ClassName, bool& re
                    *FoundClass->GetName(), *PrefixedName);
             return FoundClass;
         }
-#endif
+#else
+        if (UClass* FoundClass = FindFirstObject<UClass>(*PrefixedName, EFindFirstObjectOptions::NativeFirst))
+        {
+            UE_LOG(LogTemp, Log, TEXT("GetClassByName: Successfully found class '%s' using prefix variation '%s'"), 
+                   *FoundClass->GetName(), *PrefixedName);
+            return FoundClass;
+        }
+#endif   
+        //fix in later versions
     }
     
     UE_LOG(LogTemp, Verbose, TEXT("GetClassByName: Prefix search failed, iterating through all loaded classes..."));
@@ -177,6 +196,13 @@ TArray<UClass*> UOmegaFunctions_Asset::GetAllClassesInPath(const FString& Path, 
     return FoundClasses;
 }
 
+UClass* UOmegaFunctions_Asset::GetBlueprintClassFromPath(const FString Path)
+{
+	FSoftClassPath LocalPath;
+	LocalPath.SetSubPathString(Path);
+	return LocalPath.ResolveClass();
+}
+
 UObject* UOmegaFunctions_Asset::CreateObject_FromFile(TSubclassOf<UObject> Class,UObject* Outer, const FString& File, bool& result)
 {
     if (Class)
@@ -197,77 +223,63 @@ UObject* UOmegaFunctions_Asset::LoadUassetWithMount(const FString& UAssetFilepat
 
 }
 
-UPrimaryDataAsset* UOmegaFunctions_Asset::GetNamed_DataAsset(FName Name)
+UPrimaryDataAsset* UOmegaFunctions_Asset::GetGlobalTagged_Asset(FGameplayTag Tag, TSubclassOf<UPrimaryDataAsset> Class,
+    UPrimaryDataAsset* Fallback)
 {
-    if (UPrimaryDataAsset* out=GetMutableDefault<UOmegaAssetSettings>()->Named_DataAssets.FindOrAdd(Name).LoadSynchronous())
+    UPrimaryDataAsset* out=Fallback;
+    
+    if (UPrimaryDataAsset* a=GetMutableDefault<UOmegaAssetSettings>()->GlobalTagged_DataAssets.FindOrAdd(Tag).LoadSynchronous())
+    {
+        out=a;
+    }
+    
+    if (out && (!Class || out->GetClass()->IsChildOf(Class)))
     {
         return out;
     }
     return nullptr;
 }
 
-UOmegaAttribute* UOmegaFunctions_Asset::GetNamed_Attribute(FName Name)
+TArray<UPrimaryDataAsset*> UOmegaFunctions_Asset::GetNamedList_DataAssetList(FGameplayTag Tag,
+    TSubclassOf<UPrimaryDataAsset> Class)
 {
-    if (UOmegaAttribute* out=GetMutableDefault<UOmegaAssetSettings>()->Named_Attributes.FindOrAdd(Name).LoadSynchronous())
+    TArray<UPrimaryDataAsset*> out;
+    
+    for (TSoftObjectPtr<UPrimaryDataAsset> p : GetMutableDefault<UOmegaAssetSettings>()->GlobalTagged_AssetList.FindOrAdd(Tag).List)
+    {
+        if (UPrimaryDataAsset* da=p.LoadSynchronous())
+        {
+            if (!Class || da->GetClass()->IsChildOf(Class))
+            {
+                out.Add(da);
+            }
+        }
+    }
+    
+    return out;
+}
+
+TSubclassOf<UObject> UOmegaFunctions_Asset::GetGlobalTagged_Class(FGameplayTag Tag, TSubclassOf<UObject> Class,
+    TSubclassOf<UObject> Fallback)
+{
+    TSubclassOf<UObject> out=Fallback;
+    
+    if (TSubclassOf<UObject> a=GetMutableDefault<UOmegaAssetSettings>()->GlobalTagged_Classes.FindOrAdd(Tag).LoadSynchronous())
+    {
+        out=a;
+    }
+    
+    if (out && (!Class || out->GetClass()->IsChildOf(Class)))
     {
         return out;
+    }
+    if (Fallback)
+    {
+        return Fallback;    
     }
     return nullptr;
 }
 
-UEquipmentSlot* UOmegaFunctions_Asset::GetNamed_EquipSlot(FName Name)
-{
-    if (UEquipmentSlot* out=GetMutableDefault<UOmegaAssetSettings>()->Named_EquipSlots.FindOrAdd(Name).LoadSynchronous())
-    {
-        return out;
-    }
-    return nullptr;
-}
-
-UOmegaFaction* UOmegaFunctions_Asset::GetNamed_Faction(FName Name)
-{
-    if (UOmegaFaction* out=GetMutableDefault<UOmegaAssetSettings>()->Named_Faction.FindOrAdd(Name).LoadSynchronous())
-    {
-        return out;
-    }
-    return nullptr;
-}
-
-TSubclassOf<UPrimaryDataAsset> UOmegaFunctions_Asset::GetNamed_DataAssetClass(FName Name, TSubclassOf<UPrimaryDataAsset> Fallback)
-{
-    if (TSubclassOf<UPrimaryDataAsset> out=GetMutableDefault<UOmegaAssetSettings>()->Named_DataAssetClasses.FindOrAdd(Name).LoadSynchronous())
-    {
-        return out;
-    }
-    return Fallback;
-}
-
-TSubclassOf<AOmegaGameplaySystem> UOmegaFunctions_Asset::GetNamed_System(FName Name, TSubclassOf<AOmegaGameplaySystem> Fallback)
-{
-    if (TSubclassOf<AOmegaGameplaySystem> out=GetMutableDefault<UOmegaAssetSettings>()->Named_Systems.FindOrAdd(Name).LoadSynchronous())
-    {
-        return out;
-    }
-    return Fallback;
-}
-
-TSubclassOf<UMenu> UOmegaFunctions_Asset::GetNamed_Menu(FName Name, TSubclassOf<UMenu> Fallback)
-{
-    if (TSubclassOf<UMenu> out=GetMutableDefault<UOmegaAssetSettings>()->Named_Menus.FindOrAdd(Name).LoadSynchronous())
-    {
-        return out;
-    }
-    return Fallback;
-}
-
-TSubclassOf<UHUDLayer> UOmegaFunctions_Asset::GetNamed_HUD(FName Name, TSubclassOf<UHUDLayer> Fallback)
-{
-    if (TSubclassOf<UHUDLayer> out=GetMutableDefault<UOmegaAssetSettings>()->Named_HUDLayers.FindOrAdd(Name).LoadSynchronous())
-    {
-        return out;
-    }
-    return Fallback;
-}
 
 TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOmegaFunctions_Asset::ConvNamed_Equipment(TMap<FName, UPrimaryDataAsset*> In)
 {
@@ -276,13 +288,130 @@ TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOmegaFunctions_Asset::ConvNamed_Equip
     In.GetKeys(nams);
     for (FName Name : nams)
     {
-        out.Add(GetNamed_EquipSlot(Name),In[Name]);
+        out.Add(UOmegaFunctions_Constants::EquipSlot(Name),In[Name]);
     }
     return out;
 }
 
-TArray<UPrimaryDataAsset*> UOmegaFunctions_Asset::GetNamedList_DataAsset(FName Name)
+TArray<UPrimaryAssetLabel*> UOmegaFunctions_Asset::GetAllLoadedLabels()
 {
-    return GetMutableDefault<UOmegaAssetSettings>()->NamedList_DataAssets.FindOrAdd(Name).GetAssets();
+    TArray<UPrimaryAssetLabel*> Labels;
+
+    if (!UAssetManager::IsInitialized()) return Labels;
+    UAssetManager& AM = UAssetManager::Get();
+
+    TArray<FPrimaryAssetId> AssetIds;
+    AM.GetPrimaryAssetIdList(FPrimaryAssetType(TEXT("PrimaryAssetLabel")), AssetIds);
+
+    for (const FPrimaryAssetId& Id : AssetIds)
+    {
+        FSoftObjectPath Path = AM.GetPrimaryAssetPath(Id);
+        if (UPrimaryAssetLabel* Label = Cast<UPrimaryAssetLabel>(Path.ResolveObject()))
+        {
+            Labels.Add(Label);
+        }
+    }
+
+    return Labels;
 }
 
+
+void UOmegaFunctions_Asset::AppendManagedAssets(UPrimaryAssetLabel* Label, TSubclassOf<UObject> FilterClass,
+                                TSet<UObject*>& OutSet)
+{
+    if (!IsValid(Label)) return;
+
+    IAssetRegistry& AR =
+        FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+
+    const FAssetIdentifier LabelId(Label->GetOutermost()->GetFName(), Label->GetFName());
+
+    TArray<FAssetIdentifier> Managed;
+    AR.GetDependencies(LabelId, Managed, UE::AssetRegistry::EDependencyCategory::Manage);
+
+    for (const FAssetIdentifier& Id : Managed)
+    {
+        const FString PkgStr  = Id.PackageName.ToString();
+        const FString NameStr = Id.ObjectName.IsNone()
+            ? FPackageName::GetLongPackageAssetName(PkgStr)
+            : Id.ObjectName.ToString();
+
+        UObject* Obj = FSoftObjectPath(PkgStr + TEXT(".") + NameStr).ResolveObject();
+        if (!Obj) continue;
+        if (FilterClass && !Obj->IsA(FilterClass)) continue;
+
+        OutSet.Add(Obj);
+    }
+}
+
+
+TArray<UObject*> UOmegaFunctions_Asset::GetPAL_AllAssets(UPrimaryAssetLabel* Label)
+{
+    TArray<UObject*> Result;
+    if (!IsValid(Label)) return Result;
+
+    IAssetRegistry& AssetRegistry =
+        FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+
+    // Build the FAssetIdentifier for this label (package + asset name)
+    const FName PackageName  = Label->GetOutermost()->GetFName();
+    const FName AssetName    = Label->GetFName();
+    const FAssetIdentifier LabelIdentifier(PackageName, AssetName);
+
+    // Collect all assets that this label manages via the Manage dependency edge
+    TArray<FAssetIdentifier> ManagedIdentifiers;
+    AssetRegistry.GetDependencies(
+        LabelIdentifier,
+        ManagedIdentifiers,
+        UE::AssetRegistry::EDependencyCategory::Manage
+    );
+
+    Result.Reserve(ManagedIdentifiers.Num());
+
+    for (const FAssetIdentifier& Id : ManagedIdentifiers)
+    {
+        // Build a full object path: /Game/Path/Package.AssetName
+        const FString PkgStr  = Id.PackageName.ToString();
+        const FString NameStr = Id.ObjectName.IsNone()
+            ? FPackageName::GetLongPackageAssetName(PkgStr)   // derive name from package tail
+            : Id.ObjectName.ToString();
+
+        const FSoftObjectPath SoftPath(PkgStr + TEXT(".") + NameStr);
+
+        // ResolveObject() returns nullptr if not currently loaded — no forced load
+        if (UObject* LoadedObj = SoftPath.ResolveObject())
+        {
+            Result.Add(LoadedObj);
+        }
+    }
+
+    return Result;
+}
+
+TArray<UObject*> UOmegaFunctions_Asset::GetPALObjects_All(TSubclassOf<UObject> FilterClass)
+{
+    TSet<UObject*> Unique;
+
+    for (UPrimaryAssetLabel* Label : GetAllLoadedLabels())
+    {
+        AppendManagedAssets(Label, FilterClass, Unique);
+    }
+
+    return Unique.Array();
+}
+
+TArray<UObject*> UOmegaFunctions_Asset::GetPALObjects_OfIDRange(int32 minChunkID, int32 maxChunkID,
+    TSubclassOf<UObject> FilterClass)
+{
+    TSet<UObject*> Unique;
+
+    for (UPrimaryAssetLabel* Label : GetAllLoadedLabels())
+    {
+        if (Label->Rules.ChunkId >= minChunkID && Label->Rules.ChunkId <= maxChunkID)
+        {
+            AppendManagedAssets(Label, FilterClass, Unique);
+        }
+    }
+
+    return Unique.Array();
+}

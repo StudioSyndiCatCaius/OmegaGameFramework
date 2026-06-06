@@ -3,7 +3,6 @@
 #include "Actors/Actor_Openable.h"
 
 #include "Components/BoxComponent.h"
-#include "Components/Component_ActorState.h"
 #include "Components/Component_Inventory.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/Subsystem_Save.h"
@@ -24,46 +23,13 @@ void UOmegaOpenableStyle::Apply(AOmegaOpenableActor* Actor)
 	}
 }
 
-void UOmegaOpenable_Config::Apply(AOmegaOpenableActor* Actor)
-{
-}
-
-bool UOmegaOpenable_Config::CanOpen(AOmegaOpenableActor* Openable, AActor* TargetActor)
-{
-	return true;
-}
-
-bool UOmegaOpenable_Config::CanAutoOpen(AOmegaOpenableActor* Openable, AActor* TargetActor)
-{
-	if(Openable && TargetActor)
-	{
-		for(auto c : AutoOpenFor_Actors)
-		{
-			if(c && TargetActor->GetClass()->IsChildOf(c)) { return true;}
-		}
-		if(APawn* p=Cast<APawn>(TargetActor))
-		{
-			if(!AutoOpenFor_Controllers.IsEmpty())
-			{
-				for(auto c : AutoOpenFor_Controllers)
-				{
-					if(c && p->GetController()->GetClass()->IsChildOf(c)) { return true;}
-				}
-			}
-		}
-	}
-	return false;
-}
 
 void AOmegaOpenableActor::N_ActorOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if(APawn* p=Cast<APawn>(OtherActor))
 	{
-		if(GetConfig() && GetConfig()->CanAutoOpen(this,p))
-		{
-			StartOpening(true);
-		}
+		
 	}
 }
 
@@ -74,10 +40,7 @@ void AOmegaOpenableActor::N_ActorOverlapEnd(UPrimitiveComponent* OverlappedCompo
 	{
 		if(p->IsPlayerControlled())
 		{
-			if(GetConfig() && GetConfig()->CanAutoOpen(this,p))
-			{
-				StartOpening(false);
-			}
+			
 		}
 	}
 }
@@ -87,10 +50,6 @@ void AOmegaOpenableActor::L_Init()
 	if(bStartOpen) { SetAnimPosition(1.0);} else { SetAnimPosition(0.0);}
 }
 
-UOmegaOpenable_Config* AOmegaOpenableActor::GetConfig() const
-{
-	if(Config) { return Config; } return GetMutableDefault<UOmegaOpenable_Config>();
-}
 
 AOmegaOpenableActor::AOmegaOpenableActor()
 {
@@ -209,10 +168,6 @@ void AOmegaOpenableActor::SetAnimPosition(float position)
 	}
 }
 
-AOActor_Chest::AOActor_Chest()
-{
-	Inventory=CreateOptionalDefaultSubobject<UDataAssetCollectionComponent>("Inventory");
-}
 
 void AOmegaOpenableActor::OnOpenEnd_Implementation(bool bForward)
 {

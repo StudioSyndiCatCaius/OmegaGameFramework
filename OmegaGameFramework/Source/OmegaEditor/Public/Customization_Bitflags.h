@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "IPropertyTypeCustomization.h"
-#include "Interfaces/I_BitFlag.h"
+#include "Types/Struct_Bitflag.h"
 //#include "OmegaPropertyCustomization.generated.h"
 
 
@@ -26,7 +26,7 @@ private:
 	TSharedPtr<IPropertyHandle> BitEnumsPropertyHandle;
 	TSharedPtr<IPropertyHandle> StructPropertyHandle;
 	UClass* CachedOwnerClass;
-
+	FOmegaBitmaskEditorData cachedEditorData;
 	FText GetHeaderValueText() const;
 	ECheckBoxState IsChecked(int32 BitIndex) const;
 	void OnCheckStateChanged(ECheckBoxState NewState, int32 BitIndex);

@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 
-
+class UStaticMesh;
+class UMaterialInterface;
+class UObject;
 
 /// BLUEPRINT
 

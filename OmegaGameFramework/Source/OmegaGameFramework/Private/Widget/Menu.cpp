@@ -4,20 +4,21 @@
 #include "Widget/Menu.h"
 
 #include "OmegaSettings_Slate.h"
+#include "Components/Component_Combatant.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_GameManager.h"
-#include "Subsystems/Subsystem_Gameplay.h"
-#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Widget/DataList.h"
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
 {
 	if(Context) { ContextObject=Context;}
-	AddToPlayerScreen(200);
+	AddToPlayerScreen(SlateLayerIndex);
 	
 	if(GetDefaultDataList() && ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_CommonMenu::StaticClass()))
 	{
@@ -27,42 +28,51 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	if (!bIsOpen)
 	{
 		//BIND EVENTS
-		GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->OnGameplayMessage.AddDynamic(this, &UMenu::OnGameplayMessage);
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->OnInputDeviceChanged.AddDynamic(this, &UMenu::OnInputMethodChanged);
-		Local_BindGlobalEvent();
 
 		Reset();
+		
+		WrapperActor=Cast<AOmegaMenuWrapperActor>(GetWorld()->SpawnActor(AOmegaMenuWrapperActor::StaticClass()));
+		if (WrapperChildActor)
+		{
+			WrapperActor->ChildActor->SetChildActorClass(WrapperChildActor);
+		}
 		
 		TempTags = Tags;
 		PrivateInputBlocked = true;
 		InputBlock_Remaining=InputBlockDelay;
 		SetIsEnabled(true);
 		SetVisibility(VisibilityOnOpen);
-		
+		SetSubstate_Index(0);
 		OnOpened.Broadcast(Tags, Flag);
 		MenuOpened(Tags, Context, Flag);
-		Native_UpdateState();
 		
-		//ANIMATION
-
-		if(CustomInputMode)
+		if (SS_Player)
 		{
-			GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->SetCustomInputMode(CustomInputMode);
-		}
-		
-		if(ParallelGameplaySystem)
-		{
-			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ActivateGameplaySystem(ParallelGameplaySystem, this);
+			if(CustomInputMode)
+			{
+				SS_Player->SetCustomInputMode(CustomInputMode);
+			}	
 		}
 
+		if (SS_World)
+		{
+			if(ParallelGameplaySystem)
+			{
+				SS_World->ActivateGameplaySystem(ParallelGameplaySystem, this);
+				
+				TArray<FGameplayTag> _tags;
+				BlockedSystemTags.GetGameplayTagArray(_tags);
+				SS_World->ExtraBlockedSystemTags.Append(_tags);
+			}	
+		}
 		
 		if(OpenSound)
 		{
 			PlaySound(OpenSound);
 		}
-		else if(DefaultToStyleSounds && !OGF_CFG_STYLE()->Sound_Menu_Open.IsNull())
+		else if (UOmegaSlateTheme* _theme=UOmegaWidgetInterface::GetTheme(this))
 		{
-			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Open.LoadSynchronous());
+			PlaySound(_theme->Sound_Menu_Open);
 		}
 		
 		if(GetOpenAnimation())
@@ -82,6 +92,7 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 			Native_CompleteOpen();
 		}
 	}
+	OGF_GLOBALREFRESH();
 }
 
 void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
@@ -91,12 +102,17 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		bIsOpen = false;
 		PrivateInputBlocked = true;
 		
+		if (WrapperActor)
+		{
+			WrapperActor->K2_DestroyActor();
+		}
+		
 		TempTags = Tags;
 		MenuClosed(TempTags, Flag);
 		OnClosed.Broadcast(TempTags, Context, Flag);
 
 		//Handle Subsystem
-		UOmegaPlayerSubsystem* SubsystemRef = GetOwningLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>();
+		UOmegaSubsystem_Player* SubsystemRef = GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>();
 		SubsystemRef->RemoveMenuFromActiveList(this);
 		const bool LastMenu = !SubsystemRef->OpenMenus.IsValidIndex(0);
 		SubsystemRef->OnMenuClosed.Broadcast(this, TempTags, LastMenu);
@@ -105,6 +121,16 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			SubsystemRef->ClearControlWidget();
 		}
+		
+		TArray<FGameplayTag> _tags;
+		BlockedSystemTags.GetGameplayTagArray(_tags);
+		for (FGameplayTag Tag : _tags)
+		{
+			if (SS_World->ExtraBlockedSystemTags.Contains(Tag))
+			{
+				SS_World->ExtraBlockedSystemTags.RemoveSingle(Tag);	
+			}
+		}
 
 		SetVisibility(ESlateVisibility::HitTestInvisible);
 
@@ -112,9 +138,9 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			PlaySound(CloseSound);
 		}
-		else if(DefaultToStyleSounds && OGF_CFG_STYLE()->Sound_Menu_Close)
+		else if (UOmegaSlateTheme* _theme=UOmegaWidgetInterface::GetTheme(this))
 		{
-			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Close.LoadSynchronous());
+			PlaySound(_theme->Sound_Menu_Close);
 		}
 		
 		//ANIMATION
@@ -137,6 +163,7 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		
 		bIsClosing = true;
 	}
+	OGF_GLOBALREFRESH();
 }
 
 TArray<UObject*> UOmegaCommonMenuDefinition::GetDataListEntries_Implementation(UMenu* Menu)
@@ -145,6 +172,13 @@ TArray<UObject*> UOmegaCommonMenuDefinition::GetDataListEntries_Implementation(U
 	for(auto* i : CustomEntry_Assets) { if(i){ out.Add(i);} }
 	for(auto* i : CustomEntry_Objects) { if(i){ out.Add(i);} }
 	return out;
+}
+
+AOmegaMenuWrapperActor::AOmegaMenuWrapperActor()
+{
+	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
+	Combatant=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
+	ChildActor=CreateOptionalDefaultSubobject<UChildActorComponent>("ChildActor");
 }
 
 void UMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* MovieSceneBlends)
@@ -223,11 +257,31 @@ void UMenu::Native_CompleteClose()
 	
 		if(ParallelGameplaySystem)
 		{
-			GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->ShutdownGameplaySystem(ParallelGameplaySystem, this);
+			GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->ShutdownGameplaySystem(ParallelGameplaySystem, this);
 		}
 	
 		RemoveFromParent();
 	}
+}
+
+AOmegaMenuWrapperActor* UMenu::GetMenuWrapperActor() const
+{
+	if (WrapperActor) { return WrapperActor; } return nullptr;
+}
+
+AActor* UMenu::GetMenuWrapperChildActor(TSubclassOf<AActor> Class)
+{
+	if (WrapperActor)
+	{
+		if (AActor* out=WrapperActor->ChildActor->GetChildActor())
+		{
+			if (!Class || out->GetClass()->IsChildOf(Class))
+			{
+				return out;
+			}
+		}
+	}
+	return nullptr;
 }
 
 void UMenu::MenuClosed_Implementation(FGameplayTagContainer Tags, const FString& Flag)
@@ -243,36 +297,3 @@ bool UMenu::InputBlocked_Implementation()
 	return IsInputBlocked();
 }
 
-void UMenu::Local_BindGlobalEvent()
-{
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UMenu::OnGlobalEvent);
-	GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &UMenu::OnTaggedGlobalEvent);
-}
-
-void UMenu::Native_UpdateState()
-{
-	if(UWidgetSwitcher* _switch=GetWidget_WidgetSwitcher_State())
-	{
-		_switch->SetActiveWidgetIndex(menu_state);
-	}
-	OnMenuStateChanged(menu_state);
-}
-
-UWidgetSwitcher* UMenu::GetWidget_WidgetSwitcher_State_Implementation()
-{
-	return nullptr;
-}
-
-void UMenu::SetMenuState(int32 state)
-{
-	if(state!=menu_state)
-	{
-		menu_state=state;
-		Native_UpdateState();
-	}
-}
-
-void UMenu::OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
-                                             FOmegaGameplayMessageMeta meta)
-{
-}

@@ -8,6 +8,7 @@
 #include "HAL/FileManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Algo/Sort.h"
+#include "Statics/OMEGA_File.h"
 
 void ULuaSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -45,11 +46,10 @@ void ULuaSubsystem::RunLocalFilesInPath(const FString& path, bool bRecursive,boo
 		target_path=path;	
 	}
 	
-	UE_LOG(LogTemp, Log, TEXT("Getting lua files from path: %s"), *target_path);
 	if(bRecursive)
 	{
 		FileManager.FindFilesRecursive(FileNames,*target_path,TEXT("*"),true,false);
-		//*TEXT("*")+TEXT(".lua")
+
 	}
 	else
 	{
@@ -59,7 +59,6 @@ void ULuaSubsystem::RunLocalFilesInPath(const FString& path, bool bRecursive,boo
 	
 	for(FString i : FileNames)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Tried to autorun Luafile from path: %s"), *i);
 		ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(GetWorld(),ULuaBlueprintFunctionLibrary::GetDefaultLuaState(),i,true);
 	}
 }
@@ -137,36 +136,16 @@ TArray<FName> ULuaWorldSubsystem::GetGlobalKeys(FString global)
 void ULuaWorldSubsystem::RerunLua()
 {
 	FString _path=FPaths::ProjectDir()+"/Override/autorun/";
-	TArray<FString> _outFiles;
-	GetAllLuaFiles(_path,_outFiles);
-	for(FString i : _outFiles)
+	for (FString pt : GetMutableDefault<ULuaSettings>()->Autorun_FilePaths)
 	{
-		ULuaBlueprintFunctionLibrary::LuaRunFile(this,nullptr,i,true);
+		FString final_path=OMEGA_File::PathCorrect(pt);
+		TArray<FString> _foundFiles;
+		GetAllLuaFiles(final_path,_foundFiles);
+		
+		for(FString i : _foundFiles)
+		{
+			ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(this,nullptr,i,true);
+		}
 	}
 }
-
-
-ULuaObject* ULuaGlobalObjectFunctions::GetGlobalLuaObject_FromTag(UObject* WorldContextObject, FGameplayTag name,
-                                                                  TSubclassOf<ULuaState> State)
-{
-	return  GetGlobalLuaObject_FromString(WorldContextObject,name.ToString(),State);
-}
-
-ULuaObject* ULuaGlobalObjectFunctions::GetGlobalLuaObject_FromString(UObject* WorldContextObject, const FString& name,
-	TSubclassOf<ULuaState> State)
-{
-	ULuaSubsystem* subsys_ref = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<ULuaSubsystem>();
-	if(subsys_ref->globalLuaObjects.Contains(name) && subsys_ref->globalLuaObjects[name])
-	{
-		return subsys_ref->globalLuaObjects[name];
-	}
-	FLuaValue lua_key = ULuaBlueprintFunctionLibrary::Conv_StringToLuaValue(name);
-	FLuaValue val = ULuaBlueprintFunctionLibrary::LuaGetGlobal(WorldContextObject,State,name);
-	ULuaObject* newobjectlua = ULuaObjectFunctions::CreateLuaObject(WorldContextObject,lua_key,val);
-	FString new_name = "LuaGen_" + name;
-	newobjectlua->Rename(*new_name);
-	subsys_ref->globalLuaObjects.Add(name,newobjectlua);
-	return newobjectlua;
-}
-
 

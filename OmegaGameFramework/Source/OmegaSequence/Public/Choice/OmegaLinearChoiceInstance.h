@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "OmegaLinearChoice.h"
 #include "Actors/Actor_ChoiceBase.h"
+#include "Types/Struct_CustomNamedList.h"
 #include "OmegaLinearChoiceInstance.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnChoiceSelected, UOmegaLinearChoice*, Choice, int32, SelectedChoice);
@@ -17,11 +18,13 @@ struct FOmegaLinearChoices
 
 	UPROPERTY(BlueprintReadOnly, Category="LinearEvents", instanced, EditAnywhere)
 	TArray<class UOmegaLinearChoice*> Choices;
-	
+
+	UPROPERTY() FOmegaBitflagsBase flags;
+	UPROPERTY() FOmegaClassNamedLists NamedLists;
 };
 
 UCLASS()
-class OMEGASEQUENCE_API AOmegaLinearChoiceInstance : public AOmegaActor_ChoiceBASE
+class OMEGASEQUENCE_API AOmegaLinearChoiceInstance : public AOmegaActor_ChoiceBASE, public IDataInterface_General
 {
 	GENERATED_BODY()
 
@@ -29,7 +32,7 @@ public:
 	UPROPERTY()
 	FOmegaLinearChoices ChoiceData;
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnChoiceSelected OnChoiceSelected;
 	
 	UFUNCTION(BlueprintCallable, Category="LinearChoice")
@@ -37,4 +40,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="LinearChoice")
 	TArray<UOmegaLinearChoice*> GetChoices();
+	
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
 };

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "Engine/DataAsset.h"
+#include "Engine/World.h"
 #include "FlowAssetTrait.generated.h"
 
 class UFlowNode;

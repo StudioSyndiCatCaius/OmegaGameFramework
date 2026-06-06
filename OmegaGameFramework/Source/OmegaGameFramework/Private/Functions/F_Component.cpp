@@ -13,6 +13,22 @@ bool UActorModifierScript::OnAppliedToActor_Implementation(AActor* Actor) const
 	return false;
 }
 
+bool UComponentModScript_SkeletalMesh::OnAppliedToComponent_Implementation(USkeletalMeshComponent* Component) const
+{
+	return false;
+}
+
+bool UComponentModScript_StaticMesh::OnAppliedToComponent_Implementation(UStaticMeshComponent* Component) const
+{
+	return false;
+}
+
+bool UComponentModScript_InstancedStaticMesh::OnAppliedToComponent_Implementation(
+	UInstancedStaticMeshComponent* Component) const
+{
+	return false;
+}
+
 void UOmegaComponentModifierFunctions::ApplyModifierTo_Actor(FActorModifiers mods, AActor* Actor)
 {
 	if(Actor)
@@ -57,27 +73,36 @@ void UOmegaComponentModifierFunctions::ApplyModifierTo_Component(FComponentMods 
 void UOmegaComponentModifierFunctions::ApplyModifierTo_SkeletalMesh(FComponentMod_SkeletalMesh mod,
                                                                     USkeletalMeshComponent* Component)
 {
-	if(Component && mod.Script)
+	if(Component)
 	{
-		mod.Script->OnAppliedToComponent(Component);
+		for (auto* s : mod.Scripts)
+		{
+			if(s) { s->OnAppliedToComponent(Component); }
+		}
 	}
 }
 
 void UOmegaComponentModifierFunctions::ApplyModifierTo_StaticMesh(FComponentMod_StaticMesh mod,
 	UStaticMeshComponent* Component)
 {
-	if(Component && mod.Script)
+	if(Component)
 	{
-		mod.Script->OnAppliedToComponent(Component);
+		for (auto* s : mod.Scripts)
+		{
+			if(s) { s->OnAppliedToComponent(Component); }
+		}
 	}
 }
 
 void UOmegaComponentModifierFunctions::ApplyModifierTo_InstancedStaticMesh(FComponentMod_InstancedStaticMesh mod,
 	UInstancedStaticMeshComponent* Component)
 {
-	if(Component && mod.Script)
+	if(Component)
 	{
-		mod.Script->OnAppliedToComponent(Component);
+		for (auto* s : mod.Scripts)
+		{
+			if(s) { s->OnAppliedToComponent(Component); }
+		}
 	}
 }
 

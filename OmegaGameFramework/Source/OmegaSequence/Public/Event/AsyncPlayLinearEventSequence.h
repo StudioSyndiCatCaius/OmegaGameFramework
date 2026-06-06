@@ -30,16 +30,16 @@ public:
 	
 	UFUNCTION()
 	void Local_NewEvent(const UOmegaLinearEventInstance* Instance, const UOmegaLinearEvent* Event, int32 EventIndex);
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnAsynLinEventUpdated NewEvent;
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnFinished OnFinished;
 	
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Event Sequence")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly, WorldContext = "WorldContextObject"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Event Sequence")
 	static UAsyncPlayLinearEventSequence* PlayLinearEventSequence(UObject* WorldContextObject, FLinearEventSequence Events, int32 StartingIndex);
 
 };

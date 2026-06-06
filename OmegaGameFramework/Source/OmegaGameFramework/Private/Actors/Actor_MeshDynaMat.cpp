@@ -2,6 +2,7 @@
 
 
 #include "Actors/Actor_MeshDynaMat.h"
+#include "Engine/StaticMesh.h"
 
 void AStaticMeshDynaMat::OnConstruction(const FTransform& Transform)
 {

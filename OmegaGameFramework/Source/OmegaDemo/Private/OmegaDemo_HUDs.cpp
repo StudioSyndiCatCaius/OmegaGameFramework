@@ -6,12 +6,17 @@
 #include "OmegaDemo_Const.h"
 #include "Animation/WidgetAnimation.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/Subsystem_Message.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_World.h"
 
 
 void UHudBase_Dialogue::NativeConstruct()
 {
 	OnMessageStateBlendUpdate(0.0);
+	if (AllowedMessageTypes.IsEmpty())
+	{
+		OGF_Log::Warning("UHudBase_Dialogue has not `Allowed Message Types` set. This means ANY messages sent will be dispalyed by it.");	
+	}
 	Super::NativeConstruct();
 }
 
@@ -42,30 +47,26 @@ void UHudBase_Dialogue::OnGameplayMessage_Implementation(UOmegaGameplayMessage* 
 				}
 			}
 		}
-	}
-	Super::OnGameplayMessage_Implementation(Message, MessageCategory, meta);
-}
-
-void UHudBase_Dialogue::OnGlobalEvent_Implementation(FName Event, UObject* Context)
-{
-	if(Event==GE_MESSAGE_START)
-	{
-		if(Context==l_LastMessage)
+		if(Message==l_LastMessage)
 		{
 			f_MessageStateTarget=1.0;
 			b_messageVisible=true;
 		}
 	}
-	else if(Event==GE_MESSAGE_END)
-	{
-		if(Context==l_LastMessage)
-		{
-			b_messageVisible=false;
-			GetWorld()->GetTimerManager().SetTimer(timer_waitNextmsg,this,&UHudBase_Dialogue::L_WaitNextMsg_Finish,MessageEnd_WaitForNext);
-		}
-	}
-	Super::OnGlobalEvent_Implementation(Event, Context);
+	Super::OnGameplayMessage_Implementation(Message, MessageCategory, meta);
 }
+
+void UHudBase_Dialogue::OnGameplayMessageEnd_Implementation(UOmegaGameplayMessage* Message,
+	FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta)
+{
+	Super::OnGameplayMessageEnd_Implementation(Message, MessageCategory, meta);
+	if(Message==l_LastMessage)
+	{
+		b_messageVisible=false;
+		GetWorld()->GetTimerManager().SetTimer(timer_waitNextmsg,this,&UHudBase_Dialogue::L_WaitNextMsg_Finish,MessageEnd_WaitForNext);
+	}
+}
+
 
 void UHudBase_Dialogue::L_WaitNextMsg_Finish()
 {

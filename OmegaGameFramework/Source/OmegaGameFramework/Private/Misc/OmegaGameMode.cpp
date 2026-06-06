@@ -5,11 +5,16 @@
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Actors/Actor_DynamicCamera.h"
 #include "Actors/Actor_Player.h"
+#include "Components/Component_Combatant.h"
+#include "DataAssets/DA_Calendar.h"
+#include "Functions/F_Entity.h"
 #include "Functions/F_Widget.h"
-#include "Subsystems/Subsystem_DynamicCamera.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_GameManager.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_World.h"
 
 void AOmegaGameMode::Native_DragSelectEnd(const TArray<AActor*>& actors)
 {
@@ -19,7 +24,7 @@ void AOmegaGameMode::Native_DragSelectEnd(const TArray<AActor*>& actors)
 
 void AOmegaGameMode::Local_LoadSystemShutdown(UObject* Context, FString Flag)
 {
-	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	UOmegaSubsystem_World* SystemRef = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	
 	//Activate Game Systems
 	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : PostLoadGameplaySystems)
@@ -35,11 +40,56 @@ AOmegaGameMode::AOmegaGameMode()
 	PlayerControllerClass=AOmegaPlayer::StaticClass();
 	HUDClass=AOmegaHUD::StaticClass();
 	DragSelectColor=FLinearColor(1,1,1,0.4);
+
+	FName GlobalNameId = "_GLOBAL_";
+	
+	Combatant=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
+	Combatant->use_entity_id=true;
+	Combatant->entity_id=UOmegaFunctions_Entity::Conv_Name_2_EntityID(GlobalNameId);
+	
+	AssetSquad=CreateOptionalDefaultSubobject<UAssetSquadComponent>("AssetSquad");
+	AssetSquad->bBindToSave=true;
+	AssetSquad->SaveBinding=GlobalNameId;
+	
+	EntityInstances=CreateOptionalDefaultSubobject<UInstanceActorComponent>("Entity Instances");
+	EntityInstances->Instance_NamePrefex="E__";
+	EntityInstances->InstancedActorClass=AOmegaInstancedEntity::StaticClass();
+	
+	Calendar=CreateOptionalDefaultSubobject<UOmegaCalendarComponent>("Calendar");
+	Calendar->bBindToSave=true;
+	Calendar->SaveBinding=GlobalNameId;
+	if (UOAsset_Calendar* _calanderAsset=LoadObject<UOAsset_Calendar>(this,TEXT("/OmegaGameFramework/DataAssets/Calendar/Calendar/Calendar_Earth.Calendar_Earth")))
+	{
+		Calendar->CalendarAsset=_calanderAsset;	
+	}
+}
+
+#if WITH_EDITOR
+void AOmegaGameMode::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeChainProperty(PropertyChangedEvent);
+
+	// Get the root property name
+	const FName PropertyName = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UOmegaGameManager, System_Config))
+	{
+		ValidateTemplates();
+	}
+}
+#endif
+
+void AOmegaGameMode::ValidateTemplates()
+{
+	for (FOmegaGameplaySystemConfig& Config : System_Config)
+	{
+		Config.ValidateTemplates(this);
+	}
 }
 
 void AOmegaGameMode::Local_ActivatePersistentSystems()
 {
-	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	UOmegaSubsystem_World* SystemRef = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	
 	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : PersistentGameplaySystems)
 	{
@@ -51,8 +101,8 @@ void AOmegaGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	//Fire OnLevelOpened Delegate
-	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaGameManager>()->OnNewLevel.Broadcast(UGameplayStatics::GetCurrentLevelName(this), this);
-	UOmegaGameplaySubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	UGameplayStatics::GetGameInstance(this)->GetSubsystem<UOmegaSubsystem_GameInstance>()->OnNewLevel.Broadcast(UGameplayStatics::GetCurrentLevelName(this), this);
+	UOmegaSubsystem_World* SystemRef = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	//Activate Game Systems
 	for (const TSubclassOf<AOmegaGameplaySystem>& TempSystem : AutoGameplaySystems)
 	{
@@ -84,16 +134,16 @@ void AOmegaGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 	if(AOmegaPlayer* p=Cast<AOmegaPlayer>(NewPlayer))
 	{
-		p->Systems_Auto.Append(PlayerSystems_Auto);
-		p->SetSystemsActive(PlayerSystems_Auto,this,"Auto",true);
-		p->Systems_Persistent.Append(PlayerSystems_Auto);
+		//p->Systems_Auto.Append(PlayerSystems_Auto);
+		//p->SetSystemsActive(PlayerSystems_Auto,this,"Auto",true);
+		//p->Systems_Persistent.Append(PlayerSystems_Auto);
 	}
 	
 	if (bAutoActivateDynamicCamera)
 	{
-		if (UOmegaDynamicCameraSubsystem* _subsys=NewPlayer->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>())
+		if (UOmegaSubsystem_Player* _subsys=NewPlayer->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>())
 		{
-			_subsys->SetDynamicCameraActive(bAutoActivateDynamicCamera);
+			_subsys->DynaCam_SetActive(bAutoActivateDynamicCamera);
 			if (DefaultDynamicCamera)
 			{
 				AOmegaDynamicCamera* _NewCam=GetWorld()->SpawnActorDeferred<AOmegaDynamicCamera>(DefaultDynamicCamera,NewPlayer->GetLevelTransform());
@@ -126,6 +176,8 @@ bool AOmegaHUD::isDragInputDown() const
 void AOmegaHUD::BeginPlay()
 {
 	Super::BeginPlay();
+	ss_world=OGF_Subsystems::oWorld(this);
+	
 	if(AOmegaGameMode* _gm=Cast<AOmegaGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
 		ref_gameMode=_gm;
@@ -183,6 +235,11 @@ void AOmegaHUD::DrawHUD()
 				ref_gameMode->Native_DragSelectEnd(actors_out);
 			}
 		}
+	}
+	
+	for (auto* sys : ss_world->GetActiveGameplaySystems())
+	{
+		sys->OnHUDDraw(this);
 	}
 }
 

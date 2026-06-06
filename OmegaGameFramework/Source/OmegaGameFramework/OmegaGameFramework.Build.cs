@@ -6,13 +6,7 @@ public class OmegaGameFramework : ModuleRules
 {
 	public OmegaGameFramework(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
-		//bEnforceIWYU = true;
-		bUseUnity = false;
-
-		PrecompileForTargets = PrecompileTargetsType.Any;
-
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -34,6 +28,8 @@ public class OmegaGameFramework : ModuleRules
 			{
 				"Core",
 				"CoreUObject",
+				"StructUtils",
+				"OmegaCore",
 				"CommonUI",
 				"CommonInput",
 				"EnhancedInput",
@@ -45,6 +41,12 @@ public class OmegaGameFramework : ModuleRules
 				"ApplicationCore",
 				"LevelSequence",
 				"MovieScene",
+				"GeometryScriptingCore",
+				"PhysicsCore",
+				"RenderCore",
+				"GeometryCore",
+				"GeometryFramework",
+				"DynamicMesh",
 				"ImageWrapper",
 				"MetasoundEngine",
 				"UMG",
@@ -52,16 +54,16 @@ public class OmegaGameFramework : ModuleRules
 				"PakFile",
 				"Niagara",
 				"Json",
+				//"CustomizableSequencerTracks",
 				"JsonUtilities",
+				"AudioMixer",
 				"JsonBlueprintUtilities",
 				"PCG",
 				"BinkMediaPlayer",
 				"StateTreeModule",
-				"GameplayStateTreeModule",
-				//"GameplayTasks",
-				//"GameFeatures",
-				//"ModularGameplay"
-				// ... add other public dependencies that you statically link with here ...
+				"GameplayStateTreeModule", "GameplayDebugger",
+				"AIModule",
+				"NavigationSystem",
 			}
 			);
 		
@@ -78,10 +80,14 @@ public class OmegaGameFramework : ModuleRules
 				"PropertyPath",
 				"DeveloperSettings",
 				"AudioPlatformConfiguration",
-				// ... add private dependencies that you statically link with here ...	
 			}
 			);
 		
+		if (Target.bBuildEditor)
+		{
+			PublicDependencyModuleNames.Add("BlueprintGraph");
+		}
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{

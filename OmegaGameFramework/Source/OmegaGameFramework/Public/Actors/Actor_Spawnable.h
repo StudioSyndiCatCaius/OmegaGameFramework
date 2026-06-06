@@ -3,73 +3,93 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actor_Gameplay.h"
 #include "GameFramework/Actor.h"
+#include "Types/Struct_SpawnableTypeConfig.h"
 #include "Actor_Spawnable.generated.h"
 
-UCLASS(Blueprintable,BlueprintType,Const,meta=(ShowWorldContextPin),EditInlineNew,CollapseCategories,Abstract)
-class OMEGAGAMEFRAMEWORK_API UOmegaActorSpawnableModifer : public UObject
+class UOmegaFlowAssetBase;
+class UOmegaZoneData;
+
+USTRUCT(BlueprintType)
+struct FOmegaSpawnableConfig
 {
 	GENERATED_BODY()
-
-public:
-	UFUNCTION(BlueprintNativeEvent,Category="Spawnable")
-	void OnActorSetup(AActor* Actor, AOmegaActorSpawnable* Spawnable) const;
-
-	UFUNCTION(BlueprintNativeEvent,Category="Spawnable")
-	void OnActorSpawned(AActor* Actor, AOmegaActorSpawnable* Spawnable) const;
-};
-
-
-UCLASS(Blueprintable,BlueprintType,CollapseCategories,EditInlineNew,Const,Abstract,meta=(ShowWorldContextPin))
-class OMEGAGAMEFRAMEWORK_API UOmegaActorSpawnableScript : public UObject
-{
-	GENERATED_BODY()
-
-public:
-
-	UFUNCTION(BlueprintNativeEvent,Category="Spawnable")
-	AActor* AttemptSpawn(AOmegaActorSpawnable* OwningActor) const;
-};
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaActorSpawnableScript_Simple : public UOmegaActorSpawnableScript
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere,Category="Spawnable")
-	TArray<TSoftClassPtr<AActor>> Possibles;
 	
-	virtual AActor* AttemptSpawn_Implementation(AOmegaActorSpawnable* OwningActor) const override;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable",meta=(GetOptions="L_getSpawnables"))
+	FName SpawnableID;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	TObjectPtr<UPrimaryDataAsset> Identity;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	TSoftObjectPtr<UOmegaFlowAssetBase> Flow;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	TObjectPtr<UOmegaZoneData> Zone;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaBitflagsBase Bitflags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaClassNamedLists Lists;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaActorRelatives Relatives;
+	
 };
 
-UCLASS()
+
+class UArrowComponent;
+class UBoxComponent;
+class UTextRenderComponent;
+// ===================================================================================================================
+// IntState
+// ===================================================================================================================
+UINTERFACE(MinimalAPI, DisplayName="♎Actor🔵 - Spawnable") class UActorInterface_Spawnable : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IActorInterface_Spawnable
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - On Spawn")
+	void OnSpawnableSpawn(AOmegaActorSpawnable* Spawner, const FString& Flag);
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - Get Preview Config")
+	void GetSpawnablePreviewConfig(UTexture2D*& Icon, FVector& RootOffset, FText& Name,FColor& Color,float& IconScale,FVector& BoxExtent,float& BoxThickness);
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - Get Spawn Config")
+	void GetSpawnableSpawnConfig(bool& bAutospawn);
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - Get Actor Label")
+	FString GetSpawnable_ActorLabel();
+};
+
+
+UCLASS(HideCategories=(Replication,Collision,HLOD,Physics,Networking,Input,Rendering,LevelInstance,Cooking,WorldPartition,DataLayers))
 class OMEGAGAMEFRAMEWORK_API AOmegaActorSpawnable : public AActor
 {
 	GENERATED_BODY()
 
 	UPROPERTY() AActor* REF_linkedActor=nullptr;
-
+	UPROPERTY() AActor* REF_Default=nullptr;
+	TSubclassOf<AActor> GetSpawnableClass();
+	FOmegaSpawnableTypeConfig GetSpawnableTypeConfig(bool& valid);
+	bool L_ClassUsesInterface();
 public:
+	UFUNCTION() TArray<FName> L_getSpawnables() const;
 	AOmegaActorSpawnable();
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="Spawnable")
-	UOmegaActorSpawnableScript* Script;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
-	float SpawnChance=1.0;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
-	bool Autospawn;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced,Category="Spawnable")
-	TArray<UOmegaActorSpawnableModifer*> Modifiers;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
-	ESpawnActorCollisionHandlingMethod CollisionMethod;
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="Spawnable") void UpdateWorldLabel();
 	
+	UFUNCTION(BlueprintPure,Category="Spawnable")
+	bool Spawnable_IsAlive() const;
 	UFUNCTION(BlueprintCallable,Category="Spawnable")
-	bool AttemptSpawn(bool bForceRespawn,AActor*& Actor);
+	void Spawnable_Spawn(bool bForceRespawn);
+	UFUNCTION(BlueprintCallable,Category="Spawnable")
+	void Spawnable_Destroy();
 	
-	UFUNCTION(BlueprintPure,Category="Spawnable",DisplayName="Is Linked Actor Alive?")
-	bool LinkedActor_IsAlive() const ;
-	UFUNCTION(BlueprintPure,Category="Spawnable",DisplayName="Get Linked Actor")
-	AActor* LinkedActor_Get() const {return REF_linkedActor;};
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") USceneComponent* RootComp;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UBoxComponent* DisplayRoot;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UBillboardComponent* BillboardComponent;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UTextRenderComponent* TextRenderComponent;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UArrowComponent* ArrowComponent;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable", meta=(ShowOnlyInnerProperties))
+	FOmegaSpawnableConfig Config;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	FString Flag;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	int32 id;
 };

@@ -5,7 +5,6 @@
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/Component_ActorConfig.h"
 #include "Components/Component_Saveable.h"
 #include "Components/StateTreeComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -48,7 +47,7 @@ UOAsset_Appearance* UOmegaProp_Preset::GetAppearanceAsset_Implementation()
 
 void UOmegaProp_Preset::Apply(AOmegaProp* prop)
 {
-	if(prop)
+	if(prop && prop->RangeBox)
 	{
 		USceneComponent* socket_target=nullptr;
 		prop->RangeBox->SetCollisionEnabled(CollisionType);
@@ -123,51 +122,31 @@ UOAsset_Appearance* AOmegaProp::GetAppearanceAsset_Implementation()
 {
 	if(Preset)
 	{
-		return Execute_GetAppearanceAsset(Preset);
+		
 	}
 	return nullptr;
 }
 
 void AOmegaProp::OnConstruction(const FTransform& Transform)
 {
-	if(UOmegaProp_Preset* p=L_GetPreset())
-	{
-		p->Apply(this);
-	}
+	
 	Super::OnConstruction(Transform);
 }
 
 void AOmegaProp::BeginPlay()
 {
-	if(UOmegaProp_Preset* p=L_GetPreset())
-	{
-		if(!p->StaticMesh) { MeshStatic->DestroyComponent();}
-		if(!p->SkeletalMesh) { MeshSkeletal->DestroyComponent();}
-		if(!p->Audio) { Audio->DestroyComponent();}
-		if(!p->Niagara) { Niagara->DestroyComponent();}
 
-		//SetActorTickEnabled(p->bCanTick);
-	}
 	Super::BeginPlay();
 }
 
-UOmegaProp_Preset* AOmegaProp::L_GetPreset()
-{
-	if(Preset)
-	{
-		return Preset;
-	}
-	return nullptr;
-}
+
 
 AOmegaProp::AOmegaProp()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
-	
+	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
 	RangeBox=CreateOptionalDefaultSubobject<UBoxComponent>("Range");
-	RangeBox->SetupAttachment(RootComponent);
-	
 	MeshStatic=CreateOptionalDefaultSubobject<UStaticMeshComponent>("Mesh - Static");
 	MeshStatic->SetupAttachment(RootComponent);
 	MeshStatic->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
@@ -182,9 +161,8 @@ AOmegaProp::AOmegaProp()
 	Niagara=CreateOptionalDefaultSubobject<UNiagaraComponent>("Niagara");
 	Niagara->SetupAttachment(RootComponent);
 	
-	Saveable=CreateOptionalDefaultSubobject<UOmegaSaveableComponent>("Savable");
-	StateTree=CreateOptionalDefaultSubobject<UStateTreeComponent>("StateTree");
-	ActorConfig=CreateOptionalDefaultSubobject<UActorConfigComponent>("Config");
+	//Saveable=CreateOptionalDefaultSubobject<UOmegaSaveableComponent>("Savable");
+	//StateTree=CreateOptionalDefaultSubobject<UStateTreeComponent>("StateTree");
 
 	RootComponent->SetMobility(EComponentMobility::Type::Static);
 	TArray<USceneComponent*> childComps;
@@ -200,12 +178,3 @@ AOmegaProp::AOmegaProp()
 	
 }
 
-void AOmegaProp::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
-{
-	if(Preset)
-	{
-		Name=UDataInterface_General::GetObjectName(Preset);
-		Description=UDataInterface_General::GetObjectDesc(Preset);
-	}
-}

@@ -16,7 +16,7 @@ class FLOW_API AFlowWorldSettings : public AWorldSettings
 	GENERATED_UCLASS_BODY()
 
 private:
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Flow", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Flow", meta = (AllowPrivateAccess))
 	UFlowComponent* FlowComponent;
 
 public:

@@ -8,17 +8,32 @@
 
 void UAsyncAction_LevelSequence::Tick(float DeltaTime)
 {
+	if (!b_tickActive) { return; }
 	if(LocalPlayer)
 	{
-		FQualifiedFrameTime time_frame= LocalPlayer->GetCurrentTime();
-		int32 frame=time_frame.Time.FrameNumber.Value;
-		
-		//UE_LOG(LogTemp, Warning, TEXT("Ticked frame at %s"), *FString::FromInt(frame));
-		if(!seen_frames.Contains(frame) && mapped_frames.Contains(frame))
+		if (LocalPlayer->IsPlaying())
 		{
-			seen_frames.Add(frame);
-			OnMark.Broadcast(LocalSeqActor,mapped_frames[frame]);
+			FQualifiedFrameTime time_frame= LocalPlayer->GetCurrentTime();
+			int32 frame=time_frame.Time.FrameNumber.Value;
+		
+			//UE_LOG(LogTemp, Warning, TEXT("Ticked frame at %s"), *FString::FromInt(frame));
+			if(!seen_frames.Contains(frame) && mapped_frames.Contains(frame))
+			{
+				seen_frames.Add(frame);
+				if (LocalSeqActor)
+				{
+					OnMark.Broadcast(LocalSeqActor,mapped_frames[frame]);	
+				}
+			}
 		}
+		else
+		{
+			b_tickActive=false;
+		}
+	}
+	else
+	{
+		b_tickActive=false;
 	}
 }
 
@@ -32,86 +47,135 @@ void UAsyncAction_LevelSequence::Local_Play()
 void UAsyncAction_LevelSequence::Local_Finish()
 {
 	Finished.Broadcast();
+	L_Kill();
 }
 
 void UAsyncAction_LevelSequence::Local_Stop()
 {
 	Stopped.Broadcast();
+	L_Kill();
+}
+
+void UAsyncAction_LevelSequence::L_Kill()
+{
+	if (!b_killing)
+	{
+		b_tickActive = false;
+		b_killing = true;
+		if (L_config.bAutoDestroy && IsValid(LocalSeqActor))
+		{
+			// Defer destruction by one tick. Destroying the actor synchronously inside
+			// OnFinished/OnStop crashes because StopInternal() is still on the callstack
+			// holding a reference to the SequenceTickManager, which the actor owns.
+			// Destroying it immediately nulls the TickManager, causing an ensure failure.
+			TWeakObjectPtr<ALevelSequenceActor> WeakActor(LocalSeqActor);
+			if (UWorld* World = LocalSeqActor->GetWorld())
+			{
+				World->GetTimerManager().SetTimerForNextTick([WeakActor]()
+				{
+					if (ALevelSequenceActor* Actor = WeakActor.Get())
+					{
+						Actor->K2_DestroyActor();
+					}
+				});
+			}
+		}
+	}
 }
 
 void UAsyncAction_LevelSequence::Activate()
 {
-	if(!LocalContext->GetWorld() || !LocalLevelSequence) //Fail of invalid world
+	if(!LocalContext->GetWorld() || !LocalLevelSequence)
 	{
 		OnFailed.Broadcast();
-		SetReadyToDestroy();
+		L_Kill();
+		return;
 	}
-	
+
 	LocalPlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(LocalContext, LocalLevelSequence, LocalSettings, LocalSeqActor);
-	
+
 	if(!LocalPlayer)
 	{
 		OnFailed.Broadcast();
-		SetReadyToDestroy();
+		L_Kill();
+		return;
 	}
-	if(LocalSeqActor)
-	{
-		if(Local_OverrideInstanceData)
-		{
-			LocalSeqActor->bOverrideInstanceData = Local_OverrideInstanceData;
-			UDefaultLevelSequenceInstanceData* TempSeqData = Cast<UDefaultLevelSequenceInstanceData>(LocalSeqActor->DefaultInstanceData);
 
-			if(LocalSeqActor)
-			{
-				TempSeqData->TransformOriginActor = Local_OriginActor;
-			}
-			TempSeqData->TransformOrigin = Local_OriginTransform;
-		}
-	
-		LocalPlayer->OnFinished.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Finish);
-		LocalPlayer->OnStop.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Stop);
-
-		Local_Play();
-	}
-	else
+	if(!LocalSeqActor)
 	{
 		OnFailed.Broadcast();
-		SetReadyToDestroy();
+		L_Kill();
+		return;
 	}
+
+	if(L_config.bOverrideInstance)
+	{
+		LocalSeqActor->bOverrideInstanceData = true;
+		UDefaultLevelSequenceInstanceData* TempSeqData = Cast<UDefaultLevelSequenceInstanceData>(LocalSeqActor->DefaultInstanceData);
+		if(TempSeqData)
+		{
+			TempSeqData->TransformOriginActor = L_config.OriginActor;
+			TempSeqData->TransformOrigin = L_config.OriginTransform;
+		}
+	}
+
+	LocalPlayer->OnFinished.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Finish);
+	LocalPlayer->OnStop.AddDynamic(this, &UAsyncAction_LevelSequence::Local_Stop);
+
+	TArray<FName> Bind_list;
+	L_config.ActorBindings.GetKeys(Bind_list);
+	for (FName name : Bind_list)
+	{
+		if (AActor* a = L_config.ActorBindings[name])
+		{
+			LocalSeqActor->AddBindingByTag(name, a);
+		}
+	}
+	b_tickActive = true;
+	Local_Play();
 }
 
+
 UAsyncAction_LevelSequence* UAsyncAction_LevelSequence::PlayLevelSequence(UObject* WorldContextObject,
-	ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, bool bOverrideInstanceData,
-	AActor* OriginActor, FTransform OriginTransform)
+                                                                          ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, FOmegaLevelSequenceConfig Config)
 {
+	if (!WorldContextObject) { return nullptr; }
 	UAsyncAction_LevelSequence* NewSeq = NewObject<UAsyncAction_LevelSequence>();
 
 	if(WorldContextObject)
 	{
 		NewSeq->LocalContext = WorldContextObject;
 	}
-	if(OriginActor)
+		
+	NewSeq->L_config=Config;
+	if (LevelSequence)
 	{
-		NewSeq->Local_OriginActor = OriginActor;
+		// Sequences with a Blueprint Director cannot be safely duplicated at runtime.
+		// DuplicateObject on a Blueprint triggers CDO registration which conflicts with
+		// any REINST_ stub left from a prior compilation cycle, causing a fatal crash.
+		// DirectorBlueprint is protected, so check via property reflection.
+		static FObjectPropertyBase* DirectorProp = CastField<FObjectPropertyBase>(
+			FindFProperty<FProperty>(ULevelSequence::StaticClass(), TEXT("DirectorBlueprint")));
+		const bool bHasDirectorBP = DirectorProp && DirectorProp->GetObjectPropertyValue_InContainer(LevelSequence) != nullptr;
+		if (Config.bDuplicateSequence && !bHasDirectorBP)
+		{
+			NewSeq->LocalLevelSequence = DuplicateObject(LevelSequence,NewSeq);
+		}
+		else
+		{
+			NewSeq->LocalLevelSequence = LevelSequence;
+		}
+		TArray<FMovieSceneMarkedFrame> loc_frames = NewSeq->LocalLevelSequence->GetMovieScene()->GetMarkedFrames();
+		for(FMovieSceneMarkedFrame TempFrame: loc_frames)
+		{
+			UMovieScene* MovieScene=NewSeq->LocalLevelSequence->GetMovieScene();
+			TempFrame.FrameNumber = FFrameRate::TransformTime(TempFrame.FrameNumber, MovieScene->GetTickResolution(), MovieScene->GetDisplayRate()).RoundToFrame();
+			UE_LOG(LogTemp, Warning, TEXT("Mapped Mark from at %s"), *FString::FromInt(TempFrame.FrameNumber.Value));
+	
+			NewSeq->mapped_frames.Add(TempFrame.FrameNumber.Value,TempFrame);
+		}
 	}
-	if(LevelSequence)
-	{
-		NewSeq->LocalLevelSequence = LevelSequence;
-	}
-	NewSeq->LocalLevelSequence = LevelSequence;
 	NewSeq->LocalSettings = Settings;
-	NewSeq->Local_OverrideInstanceData = bOverrideInstanceData;
-	NewSeq->Local_OriginTransform = OriginTransform;
-
-	TArray<FMovieSceneMarkedFrame> loc_frames = LevelSequence->GetMovieScene()->GetMarkedFrames();
-	for(FMovieSceneMarkedFrame TempFrame: loc_frames)
-	{
-		UMovieScene* MovieScene=LevelSequence->GetMovieScene();
-		TempFrame.FrameNumber = FFrameRate::TransformTime(TempFrame.FrameNumber, MovieScene->GetTickResolution(), MovieScene->GetDisplayRate()).RoundToFrame();
-		UE_LOG(LogTemp, Warning, TEXT("Mapped Mark from at %s"), *FString::FromInt(TempFrame.FrameNumber.Value));
-	
-		NewSeq->mapped_frames.Add(TempFrame.FrameNumber.Value,TempFrame);
-	}
-	
+		
 	return NewSeq;
 }

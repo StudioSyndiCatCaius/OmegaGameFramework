@@ -14,9 +14,9 @@ struct FOmegaDynamicMaterialParams
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Material") TMap<FName,float> params_scalar;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Material") TMap<FName,FLinearColor> params_vector;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Material") TMap<FName,UTexture2D*> params_texture;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Material") TMap<FName,UTexture*> params_texture;
 
-	void Apply(UMaterialInstanceDynamic* mat)
+	void Apply(UMaterialInstanceDynamic* mat) const
 	{
 		if(mat)
 		{

@@ -56,6 +56,7 @@ void UDataWidgetComponent::BeginPlay()
 	Super::BeginPlay();
 	if (!GetWidgetClass())
 	{
+		/*
 		if(TSubclassOf<UDataWidget> _NewClass=GetMutableDefault<UOmegaSettings>()->DataWidgets_PerClass.FindOrAdd(
 			TSoftClassPtr<AActor>(GetOwner()->GetClass())).LoadSynchronous())
 		{
@@ -63,7 +64,7 @@ void UDataWidgetComponent::BeginPlay()
 			{
 				SetWidget(_dw);
 			}
-		}
+		}*/
 	}
 	else
 	{

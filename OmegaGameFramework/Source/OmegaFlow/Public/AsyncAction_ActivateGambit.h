@@ -19,15 +19,15 @@ class OMEGAFLOW_API UAsyncAction_ActivateGambit : public UBlueprintAsyncActionBa
 
 public:
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FAbilityGambitCompleted Completed;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FAbilityGambitCancled Canceled;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FAbilityGambitFailed Failed;
 	
 	UPROPERTY() UCombatantComponent* CombatantRef;
-	UPROPERTY() UCombatantGambitAsset* LocalGambit;
+	UPROPERTY() UOmegaGambit_Asset* LocalGambit;
 	UPROPERTY() AOmegaAbility* LocalAbility;
 	
 	UFUNCTION()
@@ -35,7 +35,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Run Combatant Gambit")
-	static UAsyncAction_ActivateGambit* ActivateGambit(UCombatantComponent* Combatant, UCombatantGambitAsset* Gambit);
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Run Combatant Gambit")
+	static UAsyncAction_ActivateGambit* ActivateGambit(UCombatantComponent* Combatant, UOmegaGambit_Asset* Gambit);
 
 };

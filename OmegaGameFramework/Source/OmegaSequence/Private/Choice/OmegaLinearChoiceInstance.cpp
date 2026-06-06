@@ -24,3 +24,12 @@ TArray<UOmegaLinearChoice*> AOmegaLinearChoiceInstance::GetChoices()
 	return ChoiceData.Choices;
 }
 
+void AOmegaLinearChoiceInstance::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
+	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
+{
+	MetaConfig.bitflags=ChoiceData.flags;
+	MetaConfig.named_lists=ChoiceData.NamedLists;
+}
+
+
+

@@ -9,21 +9,6 @@
 #include "Condition/Condition_Combatant.h"
 
 
-void UOAsset_CommonSkill::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
-{
-	Super::GetGeneralDataText_Implementation(Label, Context, Name, Description);
-	if(bAppendEffectsDescription)
-	{
-		FString str=Description.ToString();
-
-		//FOmegaCustomScriptedEffects ef=GetScriptedEffects("");
-		//Description=ef.GetEffectsDescription();
-
-		
-		//Description=FText::FromString(str);
-	}
-}
 
 bool UOAsset_CommonSkill::CanUseSkill_Implementation(UCombatantComponent* Combatant)
 {
@@ -32,9 +17,31 @@ bool UOAsset_CommonSkill::CanUseSkill_Implementation(UCombatantComponent* Combat
 	return con.CheckConditions(Combatant->GetOwner());
 }
 
-TMap<UOmegaAttribute*, float> UOAsset_CommonSkill::GetSkillAttributeCosts_Implementation(UCombatantComponent* Combatant,
-                                                                                         UObject* Context)
+void UOAsset_CommonSkill::SetValue_Implementation(FLuaValue Value, const FString& Flag)
 {
-	return AttributeUseCost;
+	Super::SetValue_Implementation(Value, Flag);
+}
+
+FOmegaSkillConfig UOAsset_CommonSkill::Skill_GetConfig_Implementation(UCombatantComponent* Combatant)
+{
+	return SkillConfig;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// Buff attribute
+// --------------------------------------------------------------------------------------------------------------
+
+
+void UOAsset_Skill_BuffAttribute::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
+	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
+{
+	
+}
+
+void UOAsset_Skill_BuffAttribute::GetObjectGameplayTags_Implementation(FGameplayTag& CategoryTag,
+	FGameplayTagContainer& GameplayTags)
+{
+	CategoryTag=categoryTag;
+	GameplayTags=gameplayTags;
 }
 

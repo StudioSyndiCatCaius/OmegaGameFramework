@@ -3,7 +3,7 @@
 
 #include "Actors/Actor_GameplayEffect.h"
 #include "Components/TextBlock.h"
-#include "Misc/OmegaAttribute.h"
+#include "DataAssets/DA_Attribute.h"
 #include "Functions/F_Common.h"
 #include "TimerManager.h"
 #include "Components/Component_Combatant.h"
@@ -57,12 +57,9 @@ void AOmegaGameplayEffect::BeginPlay()
 	if(TargetedCombatant)
 	{
 		TargetedCombatant->OnDamaged.AddDynamic(this, &AOmegaGameplayEffect::OnAttributeDamaged);
-		for(FName TempTag : ActorsTagsGranted)
-		{
-			TargetedCombatant->GetOwner()->Tags.Add(TempTag);
-		}
 	}
-	EffectBeginPlay(EffectContext);
+	
+	
 }
 
 void AOmegaGameplayEffect::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -70,139 +67,47 @@ void AOmegaGameplayEffect::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 	if(EndPlayReason == EEndPlayReason::Destroyed)
 	{
-		if(TargetedCombatant)
-		{
-			for(FName TempTag : ActorsTagsGranted)
-			{
-				TargetedCombatant->GetOwner()->Tags.Remove(TempTag);
-			}
-		}
+		
 	}
 }
 
-void AOmegaGameplayEffect::ApplyAdditionalDamage(UOmegaAttribute* Attribute, float Amount)
-{
-	TargetedCombatant->ApplyAttributeDamage(Attribute, Amount, CombatantInstigator, EffectContext, GetDamageType(EffectContext), GetImpactHitResult());
-}
+
 
 //Trigger the Effect
 void AOmegaGameplayEffect::LifetimeEnd()
 {
-	
 	TriggerEffect();
 	K2_DestroyActor();
 }
 
 
-//Run Damage Calculation
-float AOmegaGameplayEffect::CalculateDamageValue()
-{
-	if(LocalFormula)
-	{
-		float LocalDamage;
-		LocalFormula->GetDamageAmount(CombatantInstigator, TargetedCombatant, LocalDamage);
-		LocalDamage = LocalDamage * Power;
-		return LocalDamage;
-	}
-	return 0;
-}
 
 //####################################//####################################//####################################
 //-----Generals
 //####################################//####################################//####################################
-void AOmegaGameplayEffect::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	Label = UOmegaGameFrameworkBPLibrary::GetObjectLabel(EffectContext);
-}
-
-void AOmegaGameplayEffect::GetGeneralAssetColor_Implementation(FLinearColor& Color)
+void AOmegaGameplayEffect::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
-		Execute_GetGeneralAssetColor(EffectContext, Color);
+		IDataInterface_General::Execute_GetGeneralDataText(EffectContext, Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 	}
 }
 
-void AOmegaGameplayEffect::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
-{
-	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		Execute_GetGeneralDataText(EffectContext,Label,Context,Name,Description);
-	}
-}
-
-void AOmegaGameplayEffect::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-                                                               UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		Execute_GetGeneralDataImages(EffectContext,Label,Context,Texture,Material,Brush);
-	}
-}
 
 // Called every frame
 void AOmegaGameplayEffect::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (GetWorldTimerManager().IsTimerActive(LifetimeTimer))
-	{
-		PastLifetime = GetWorldTimerManager().GetTimerElapsed(LifetimeTimer);
-		RemainingLifetime = GetWorldTimerManager().GetTimerRemaining(LifetimeTimer);
 
-		LifetimeUpdated(PastLifetime, RemainingLifetime);
-	};
 }
 
 //Trigger the effects and destory this Effect Actor.
 void AOmegaGameplayEffect::TriggerEffect()
 {
-	float DamageVal = CalculateDamageValue();
-	float DamageFinal = 0;
-	// Damage Attributes //
-	if(EffectedAttribute)
-	{
-		if(AttrbuteEffectType == EOmegaEffectType::OET_Heal)
-		{
-			DamageVal = DamageVal*-1;
-		}
-		if(TargetedCombatant)
-		{
-			 DamageFinal = TargetedCombatant->ApplyAttributeDamage(EffectedAttribute, DamageVal, CombatantInstigator, EffectContext, GetDamageType(EffectContext), GetImpactHitResult());
-		}
-	}
-	
-	//--Popup--//
-	if(bShowPopupOnTrigger)
-	{
-		UOmegaEffectPopup* LocalPopup = Cast<UOmegaEffectPopup>(CreateWidget(GetWorld(), Local_GetPopupClass()));
-		LocalPopup->OwningEffect = this;
-		LocalPopup->Incoming_Color = GetTriggeredPopupColor();
-		if(UseCustomPopupText)
-		{
-			LocalPopup->Incoming_Text = GetTriggeredPopupText();
-		}
-		else
-		{
-			LocalPopup->Incoming_Text = UKismetTextLibrary::Conv_DoubleToText(DamageFinal, ERoundingMode::FromZero);
-		}
-		
-			
-		if(TargetedCombatant)
-		{
-			LocalPopup->GetOwningPlayer()->ProjectWorldLocationToScreen(TargetedCombatant->GetOwner()->GetActorLocation(), LocalPopup->InitPosition);
-		}
-		
-		// After setting everything, add to viewport
-		LocalPopup->AddToViewport();
-	}
-
 	//Remove Effects
-	Local_RemoveEffects(RemoveEffectsOnTrigger);
+	//Local_RemoveEffects(RemoveEffectsOnTrigger);
 	
-	EffectApplied(DamageFinal);
-	OnEffectTriggered.Broadcast(this, DamageFinal);
 	UE_LOG(LogTemp, Display, TEXT("Applied Effect"));
 	
 	if(EffectLifetime == EEffectLifetime::EffectLifetime_OnTrigger)
@@ -212,36 +117,12 @@ void AOmegaGameplayEffect::TriggerEffect()
 	
 }
 
-void AOmegaGameplayEffect::RemoveEffects_OfThisClass()
+bool AOmegaGameplayEffect::EffectCanApply_Implementation(UCombatantComponent* EffectInstigator,
+	UCombatantComponent* EffectTarget, UObject* Context, FOmegaCommonMeta Meta)
 {
-	if(TargetedCombatant)
-	{
-		for(auto* e : TargetedCombatant->GetAllEffects())
-		{
-			if(e && e!=this && e->GetClass()==GetClass())
-			{
-				e->K2_DestroyActor();
-			}
-		}
-	}
+	return true;
 }
 
-AOmegaGameplayEffect* AOmegaGameplayEffect::TryGetEffect_OfThisClass(bool& result)
-{
-	if(TargetedCombatant)
-	{
-		for(auto* e : TargetedCombatant->GetAllEffects())
-		{
-			if(e && e!=this && e->GetClass()==GetClass())
-			{
-				result=true;
-				return e;
-			}
-		}
-	}
-	result=false;
-	return nullptr;
-}
 
 UOmegaDamageType* AOmegaGameplayEffect::GetDamageType_Implementation(UObject* Context)
 {
@@ -264,64 +145,50 @@ void AOmegaGameplayEffect::Local_RemoveEffects(FGameplayTagContainer Effects)
 }
 
 //Tags
-FGameplayTag AOmegaGameplayEffect::GetObjectGameplayCategory_Implementation()
+void AOmegaGameplayEffect::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags)
 {
-	return EffectCategory;
+	OutCategoryTag = EffectCategory;
+	OutGameplayTags = EffectTags;
 }
 
-FGameplayTagContainer AOmegaGameplayEffect::GetObjectGameplayTags_Implementation()
+bool AOmegaGameplayEffect::L_ContextUsesInterface() const
 {
-	return EffectTags;
-}
-
-FSlateColor AOmegaGameplayEffect::GetTriggeredPopupColor_Implementation()
-{
-	FSlateColor NewColor = FLinearColor(1.0,1.0,1.0);
-	if(EffectedAttribute)
+	if (EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 	{
-		switch (AttrbuteEffectType) {
-			case EOmegaEffectType::OET_Damage:
-				NewColor = EffectedAttribute->DamageColor;
-				break;
-			case EOmegaEffectType::OET_Heal:
-				NewColor = EffectedAttribute->AttributeColor;
-				break;
-			default: ;
-		}
+		return true;
 	}
-	return NewColor;
+	return false;
 }
 
-void UDamageFormula::GetDamageAmount_Implementation(UCombatantComponent* Instigator, UCombatantComponent* Target,
-	float& DamageOut)
+float AOmegaGameplayEffect::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
+                                                        UCombatantComponent* instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
 {
-	return;
+	if (L_ContextUsesInterface())
+	{
+		return IDataInterface_Combatant::Execute_ModifyDamage(EffectContext,Attribute, Target, instigator, BaseDamage, DamageType,
+																	 Context);		
+	}
+	return IDataInterface_Combatant::ModifyDamage_Implementation(Attribute, Target, instigator, BaseDamage, DamageType,
+	                                                             Context);
 }
 
-void UOmegaEffectPopup::NativeConstruct()
+TArray<FOmegaAttributeModifier> AOmegaGameplayEffect::GetModifierValues_Implementation(
+	UCombatantComponent* CombatantComponent)
 {
-	Super::NativeConstruct();
-
-	GetDamageText()->SetText(Incoming_Text);
-	GetDamageText()->SetColorAndOpacity(Incoming_Color);
-
-	CurrentPosition = InitPosition;
-	SetPositionInViewport(InitPosition);
-	
-	GetWorld()->GetTimerManager().SetTimer(LifetimeTimer, this, &UOmegaEffectPopup::RemoveFromParent, GetPopupLifetime(), false);
+	if (L_ContextUsesInterface())
+	{
+		return IDataInterface_Combatant::Execute_GetModifierValues(EffectContext,CombatantComponent);
+	}
+	return IDataInterface_Combatant::GetModifierValues_Implementation(CombatantComponent);
 }
 
-void UOmegaEffectPopup::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+UPrimaryDataAsset* AOmegaGameplayEffect::GetDamageType_Weight_Implementation(UCombatantComponent* Combatant,
+	UOmegaDamageType* DamageType, float& weight, int32& priority)
 {
-	Super::NativeTick(MyGeometry, InDeltaTime);
-	
-	CurrentPosition = UKismetMathLibrary::Vector2DInterpTo(CurrentPosition, InitPosition+GetTargetViewportPosition(), InDeltaTime, 1/GetPopupLifetime());
-	SetPositionInViewport(CurrentPosition);
-	
+	if (L_ContextUsesInterface())
+	{
+		return IDataInterface_Combatant::Execute_GetDamageType_Weight(EffectContext,Combatant, DamageType, weight, priority);
+	}
+	return IDataInterface_Combatant::GetDamageType_Weight_Implementation(Combatant, DamageType, weight, priority);
 }
 
-
-float UOmegaEffectPopup::GetPopupLifetime_Implementation()
-{
-	return 2.0;
-}

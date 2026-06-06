@@ -3,8 +3,29 @@
 
 #include "Functions/OmegaFunctions_CombatantFilter.h"
 
+#include "Interfaces/I_Skill.h"
+
+const TArray<UCombatantComponent*> UCombatantFilterScript::FilterCombatants_Implementation(
+	UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& CombatantsIn) const
+{
+	return TArray<UCombatantComponent*>();
+}
+
+TArray<UCombatantComponent*> UCombatantFilterCollection::FilterCombatants(UCombatantComponent* Instigator, TArray<UCombatantComponent*> In)
+{
+	TArray<UCombatantComponent*> out=In;
+	for (auto* i : FilterScripts)
+	{
+		if (i)
+		{
+			out=i->FilterCombatants(Instigator,out);
+		}
+	}
+	return out;
+}
+
 TArray<UCombatantComponent*> UCombatantFilterFunctions::FilterCombatants_ByScript(UCombatantComponent* Instigator,
-	TArray<UCombatantComponent*> CombatantsIn, FCombatantFilterData Filter)
+                                                                                  TArray<UCombatantComponent*> CombatantsIn, FCombatantFilterData Filter)
 {
 	TArray<UCombatantFilterScript*> filter_scripts=Filter.FilterScripts;
 	TArray<UCombatantComponent*> out=CombatantsIn;
@@ -23,16 +44,6 @@ TArray<UCombatantComponent*> UCombatantFilterFunctions::FilterCombatants_ByScrip
 	return out;
 }
 
-TArray<UCombatantComponent*> UCombatantFilterFunctions::FilterCombatants_ByAsset(UCombatantComponent* Instigator,
-	TArray<UCombatantComponent*> CombatantsIn, UObject* FilterAsset)
-{
-	TArray<UCombatantComponent*> out;
-	if(FilterAsset && FilterAsset->GetClass()->ImplementsInterface(UDataInterface_CombatantFilter::StaticClass()))
-	{
-		return FilterCombatants_ByScript(Instigator,CombatantsIn,IDataInterface_CombatantFilter::Execute_GetSkillTargetFilterData(FilterAsset));
-	}
-	return out;
-}
 
 UPrimaryDataAsset* UCombatantFilterFunctions::SelectFirstSkillThatCanTarget(UCombatantComponent* Instigator,
 	TArray<UPrimaryDataAsset*> Skills, UCombatantComponent* Target, bool& Outcome)
@@ -41,11 +52,12 @@ UPrimaryDataAsset* UCombatantFilterFunctions::SelectFirstSkillThatCanTarget(UCom
 	{
 		for(auto* s : Skills)
 		{
-			if(s)
+			if(s && s->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
 			{
+				FOmegaSkillConfig _SkillConfig=IDataInterface_Skill::Execute_Skill_GetConfig(s,Instigator);
 				TArray<UCombatantComponent*> lis;
 				lis.Add(Target);
-				lis=FilterCombatants_ByAsset(Instigator,lis,s);
+				lis=FilterCombatants_ByScript(Instigator,lis,_SkillConfig.TargetFilter);
 				if(lis.Contains(Target))
 				{
 					Outcome=true;

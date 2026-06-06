@@ -1,6 +1,8 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #include "Misc/OmegaUtils_BP.h"
+#include "Materials/MaterialInterface.h"
+#include "Engine/StaticMesh.h"
 
 UStaticMesh* OGF_BP::Load_Mesh(UObject* outer, FString name, FString path)
 {

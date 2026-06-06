@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "OmegaUserWidget.generated.h"
 
+class UCombatantComponent;
+class AOmegaPlayer;
 class UImage;
 class UCommonTextBlock;
 class UCommonBorder;
@@ -25,6 +27,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") UCommonTextBlock* GetText_ByName(FName Name);
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") UImage* GetImage_ByName(FName Name);
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="OmegaWidget") UUserWidget* GetUserWidget_ByName(FName Name);
+	
+	UFUNCTION(BlueprintPure,Category="OmegaWidget") AOmegaPlayer* GetOwningOmegaPlayer() const;
+	UFUNCTION(BlueprintPure,Category="OmegaWidget",DisplayName="Get Owning Combatant (from Controller)") UCombatantComponent* GetOwningCombatant_Controller() const;
+	UFUNCTION(BlueprintPure,Category="OmegaWidget",DisplayName="Get Owning Combatant (from Pawn)") UCombatantComponent* GetOwningCombatant_Pawn() const;
 	
 	//---------------------------------------------------------------------------------------------//
 	//	Tags

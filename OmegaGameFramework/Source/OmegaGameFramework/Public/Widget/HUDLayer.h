@@ -9,7 +9,7 @@
 #include "ScreenWidget.h"
 #include "HUDLayer.generated.h"
 
-class UOmegaPlayerSubsystem;
+class UOmegaSubsystem_Player;
 
 
 
@@ -37,36 +37,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category="HUD")
 	void RemoveHUDLayer();
 
-	//UFUNCTION(BlueprintImplementableEvent)
+	//UFUNCTION(BlueprintImplementableEvent, Category="Omega")
 	//void LayerRemoved();
 
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	FGameplayTagContainer HUDTags;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
-	int32 SlateLayerIndex;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	bool bReverseCloseAnim=true;
-	
-	UFUNCTION(BlueprintNativeEvent, DisplayName="On Global Event (Name)")
-	void OnGlobalEvent(FName Event, UObject* Context);
-	UFUNCTION(BlueprintNativeEvent, DisplayName="On Global Event (Tag)")
-	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
-	
-	UFUNCTION() void Local_BindGlobalEvent();
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnActorTaggedTargetChanged(AActor* Instigator, FGameplayTag Tag, AActor* Target, bool bRegsitered);
-	UFUNCTION(BlueprintNativeEvent)
-	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnInputMethodChanged(bool bIsGamepad);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	UWidgetAnimation* GetAppearAnimation();
-	UFUNCTION(BlueprintImplementableEvent)
-	UWidgetAnimation* GetRemovedAnimation();
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega") UWidgetAnimation* GetAppearAnimation();
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega") UWidgetAnimation* GetRemovedAnimation();
 
 private:
 
@@ -76,7 +57,7 @@ private:
 
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_HUDSource : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - HUD Source") class UDataInterface_HUDSource : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_HUDSource
 {
 	GENERATED_BODY()

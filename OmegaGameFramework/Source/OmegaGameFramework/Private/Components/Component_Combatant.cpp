@@ -4,34 +4,28 @@
 #include "Components/Component_Combatant.h"
 
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
-#include "OmegaSettings_Global.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
-#include "Components/TextBlock.h"
-#include "Components/ProgressBar.h"
+#include "OmegaGameManager.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetTextLibrary.h"
-
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_GameplayEffect.h"
-
-#include "Subsystems/Subsystem_Gameplay.h"
-
-#include "Interfaces/I_Widget.h"
+#include "Components/Component_Inventory.h"
+#include "Functions/F_Gambit.h"
+#include "Components/Component_Leveling.h"
+#include "Subsystems/Subsystem_World.h"
 #include "Interfaces/I_Combatant.h"
-
-#include "Misc/OmegaAttribute.h"
-#include "Misc/OmegaDamageType.h"
-#include "DataAssets/DA_CombatantGambits.h"
-#include "Misc/OmegaFaction.h"
-
+#include "DataAssets/DA_Attribute.h"
+#include "DataAssets/DA_DamageType.h"
+#include "DataAssets/DA_Faction.h"
 #include "Components/PrimitiveComponent.h"
+#include "Functions/F_Combatant.h"
 #include "Functions/F_Common.h"
-
+#include "Functions/F_Entity.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Misc/OmegaUtils_Methods.h"
 
 
 float UCombatantComponent::L_ModifyDamage(UOmegaAttribute* Attribute,UCombatantComponent* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context)
@@ -40,59 +34,79 @@ float UCombatantComponent::L_ModifyDamage(UOmegaAttribute* Attribute,UCombatantC
 	
 	if (Attribute)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Modifying damage to '%s' on attribute '%s' with starting value: '%f' "), *GetName(),*Attribute->GetName(),FinalDamage);
-		UOmegaGlobalSettings* globSet=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings();
+		UE_LOG(LogTemp, Log, TEXT("COMBATANT: Modifying damage to '%s' on attribute '%s' with starting value: '%f' "), *GetOwner()->GetName(),*Attribute->GetName(),FinalDamage);
+		UOmegaGameManager* globSet=GetMutableDefault<UOmegaSettings>()->GetGameCore();
 	
 	
 		FinalDamage=globSet->Combatant_ModifyDamage_PreMod(Attribute,this,Instigator,BaseDamage,DamageType,Context);
-		UE_LOG(LogTemp, Log, TEXT("		---  Applying PRE SOURCE modifiers. Result: '%f' "),FinalDamage);
+		UE_LOG(LogTemp, Log, TEXT("COMBATANT: 		---  Applying PRE SOURCE modifiers. Result: '%f' "),FinalDamage);
 		
-		UE_LOG(LogTemp, Log, TEXT("		---  Applying SOURCE modifiers."));
+		UE_LOG(LogTemp, Log, TEXT("COMBATANT: 		---  Applying SOURCE modifiers."));
 		for(auto* TempMod : GetDamageModifiers())
 		{
-			if (TempMod)
+			if (TempMod && TempMod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 			{
-				FinalDamage = IDataInterface_DamageModifier::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, BaseDamage, DamageType, Context); //Apply Damage Modifier
-				UE_LOG(LogTemp, Log, TEXT("				-----  Applying SOURCE modifier from '%s' with result: %f."), *TempMod->GetName(), FinalDamage);
+				FinalDamage=IDataInterface_Combatant::Execute_ModifyDamage(TempMod, Attribute, this, Instigator, FinalDamage, DamageType, Context); //Apply Damage Modifier
+				UE_LOG(LogTemp, Log, TEXT("COMBATANT: 				-----  Applying SOURCE modifier from '%s' with result: %f."), *TempMod->GetName(), FinalDamage);
 			}
 		}
 		
-		FinalDamage=globSet->Combatant_ModifyDamage_PostMod(Attribute,this,Instigator,BaseDamage,DamageType,Context);
-		UE_LOG(LogTemp, Log, TEXT("		---  Applying POST SOURCE modifiers. Result: '%f' "),FinalDamage);
+		FinalDamage=globSet->Combatant_ModifyDamage_PostMod(Attribute,this,Instigator,FinalDamage,DamageType,Context);
+		UE_LOG(LogTemp, Log, TEXT("COMBATANT: 		---  Applying POST SOURCE modifiers. Result: '%f' "),FinalDamage);
 	}
 	
 	return FinalDamage;
 }
 
+TArray<UObject*> UCombatantComponent::GetAllModifiers()
+{
+	TArray<UObject*> out;
+	
+	TArray<UObject*> base=SOURCES_Master;
+	/*
+	if(bUseSkillsAsMasterSource)
+	{
+		for(UObject* TempMod: static_cast<TArray<UObject*>>(GetAllSkills()))
+		{
+			base.Add(TempMod);	
+		}
+	}*/
+	
+	for(auto* TempMod : base)
+	{
+		if(TempMod && TempMod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+		{
+			out.Add(TempMod);
+			out.Append(IDataInterface_Combatant::Execute_Combatant_GetScriptedModifiers(TempMod).Modifiers);
+		}
+	}
+	
+	return out;
+}
+
 UCombatantComponent::UCombatantComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	
+	ModiferToggle_Inventory.bModify_Attributes=false;
+	ModiferToggle_Inventory.bModify_Damage=false;
+	ModiferToggle_Inventory.bModify_Skill=false;
 }
 
 void UCombatantComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	if(UOmegaAttributeSet* NewSet=GetMutableDefault<UOmegaSettings>()->Default_AttributeSet.LoadSynchronous())
-	{
-		AttributeSet=NewSet;
-	}
+	
+	OGF_CFG()->L_GetCombatantConfigFromActor(GetOwner()).Apply(this);
     
-	auto* WorldSubsystem = GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+	auto* WorldSubsystem = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	if (WorldSubsystem)
 	{
 		WorldSubsystem->Native_RegisterCombatant(this, true);
 	}
     
 	ref_OwnerPawn = Cast<APawn>(GetOwner());
-
-	// Grant StarterAbilities
-	for (auto ab: OGF_CFG()->Default_Abilities)
-	{
-		if (TSubclassOf<AOmegaAbility> abc=ab.LoadSynchronous())
-		{
-			SetAbilityGranted(abc,true);
-		}
-	}
+	
 	SetAbilitiesGranted(GrantedAbilities,true);
 
 	InitializeAttributes();
@@ -102,10 +116,11 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if(EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::RemovedFromWorld)
 	{
-		GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->Native_RegisterCombatant(this, false);
+		if(UOmegaSubsystem_World* WorldSub = GetWorld()->GetSubsystem<UOmegaSubsystem_World>())
+		{
+			WorldSub->Native_RegisterCombatant(this, false);
+		}
 	}
-	
-
 	
 	//Destroy Effects
 	for(auto* TempActor : GetAllEffects())
@@ -121,35 +136,74 @@ void UCombatantComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
-void UCombatantComponent::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
+void UCombatantComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
 {
-	if(CombatantDataAsset && CombatantDataAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bAutorunAbilitySelector)
 	{
-		IDataInterface_General::Execute_GetGeneralDataText(CombatantDataAsset,Label,Context,Name,Description);	
-	}
-	if(GetOwner()->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		IDataInterface_General::Execute_GetGeneralDataText(GetOwner(),Label,Context,Name,Description);	
+		// Iterate abilities_granted directly to avoid the TArray allocation that GetActiveAbilities() would make.
+		for (AOmegaAbility* Ability : abilities_granted)
+		{
+			if (Ability && Ability->bIsActive && Ability->BlockAutoAbilitySelectorWhileActive)
+			{
+				return;
+			}
+		}
+
+		SelectorAccumulator += DeltaTime;
+		if (SelectorAccumulator >= AbilitySelectorFrequency)
+		{
+			SelectorAccumulator = 0.f;
+
+			// Verify the tracked selector ability is still running (only needs to happen at selection time).
+			if (bSelectorAbilityActive)
+			{
+				if (!SelectorActiveAbilityClass || !IsAbilityActive(SelectorActiveAbilityClass))
+				{
+					bSelectorAbilityActive = false;
+					SelectorActiveAbilityClass = nullptr;
+				}
+			}
+
+			UObject* Context = nullptr;
+			TSubclassOf<AOmegaAbility> Selected = SelectAbilityByUtility(Context, false);
+
+			if (!Selected) { return; }
+
+			if (bSelectorAbilityActive && Selected == SelectorActiveAbilityClass) { return; }
+
+			if (bSelectorAbilityActive)
+			{
+				if (!bCancelAbilityOnSelectorChange) { return; }
+				StopAbility(SelectorActiveAbilityClass, true);
+				bSelectorAbilityActive = false;
+				SelectorActiveAbilityClass = nullptr;
+			}
+
+			bool bSuccess = false;
+			ExecuteAbility(Selected, Context, bSuccess);
+			if (bSuccess)
+			{
+				bSelectorAbilityActive = true;
+				SelectorActiveAbilityClass = Selected;
+			}
+		}
 	}
 }
 
-void UCombatantComponent::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+void UCombatantComponent::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name,
+                                                            FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	if(CombatantDataAsset && CombatantDataAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
-		IDataInterface_General::Execute_GetGeneralDataImages(CombatantDataAsset,Label,Context,Texture,Material,Brush);	
+		IDataInterface_General::Execute_GetGeneralDataText(CombatantDataAsset, Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 	}
-	if(GetOwner()->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
+	else if(GetOwner()->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
-		IDataInterface_General::Execute_GetGeneralDataImages(GetOwner(),Label,Context,Texture,Material,Brush);	
+		IDataInterface_General::Execute_GetGeneralDataText(GetOwner(), Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 	}
-}
-
-void UCombatantComponent::GetGeneralAssetColor_Implementation(FLinearColor& Color)
-{
-	Color=GetFactionColor();
 }
 
 float UCombatantComponent::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
@@ -224,13 +278,26 @@ bool UCombatantComponent::CombatantHasAllTag(FGameplayTagContainer Tags, bool Ex
 }
 
 
+void UCombatantComponent::SetOverrideAbilitySkelMesh(USkeletalMeshComponent* mesh)
+{
+	if (mesh)
+	{
+		Override_AbilitySkelMesh=mesh;
+	}
+	else
+	{
+		mesh=nullptr;
+	}
+}
 
 ////////////////////////////////////
 ////////// -- UPDATE DATA -- //////////
 ///////////////////////////////////
 void UCombatantComponent::Update()
 {
+	if (blockUpdateCall.Num()>0) { return; }
 	L_CacheAttributeMods();
+	OnUpdated.Broadcast(this);
 }
 
 APawn* UCombatantComponent::GetOwnerPawn() const
@@ -344,6 +411,15 @@ void UCombatantComponent::SetAbilitiesGranted(TArray<TSubclassOf<AOmegaAbility>>
 }
 
 
+void UCombatantComponent::SetAbilitiesDisabled(bool bDisabled)
+{
+	bAbilitiesDisabled=bDisabled;
+	if(bAbilitiesDisabled)
+	{
+		CancelAllAbilities();
+	}
+}
+
 AOmegaAbility* UCombatantComponent::GetAbility(TSubclassOf<AOmegaAbility> AbilityClass, bool& bSuccess)
 {
 	bSuccess = false;
@@ -365,12 +441,21 @@ AOmegaAbility* UCombatantComponent::ExecuteAbility(TSubclassOf<AOmegaAbility> Ab
 {
 	bSuccess = false;
 	bool bValidAbility=false;
-	if(AOmegaAbility* _ability = GetAbility(AbilityClass, bValidAbility))
+	if (AbilityClass)
 	{
-		_ability->ContextObject=Context;
-		bSuccess=_ability->Native_Execute();
-		return _ability;
+		if(AOmegaAbility* _ability = GetAbility(AbilityClass, bValidAbility))
+		{
+			_ability->ContextObject=Context;
+			bSuccess=_ability->Native_Execute();
+			return _ability;
+		}
+		OGF_Log::LogError("ABILITY - failed to execute :: could not get ability. possible not granted");
 	}
+	else
+	{
+		OGF_Log::LogError("ABILITY - failed to execute :: invalid class");
+	}
+	
 	return nullptr;
 }
 
@@ -497,30 +582,16 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 		GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
 		float FinalDamage = BaseDamage;
 
-		//Aply Damage Modifiers
+		//Apply Damage Modifiers
 		FinalDamage=L_ModifyDamage(Attribute,Instigator,FinalDamage,DamageType,Context);
-		
-		// DAMAGE TYPE REACTIONS
-		if(DamageType && DamageTypeReactions.Contains(DamageType))
-		{
-			UOmegaDamageTypeReactionAsset* ReactClass = DamageTypeReactions.FindOrAdd(DamageType);
-			if(ReactClass)
-			{
-				IDataInterface_DamageModifier::Execute_ModifyDamage(ReactClass, Attribute, this, Instigator, BaseDamage, LocalDamageType, Context); //Apply Damage Modifier
-			}
-			if(ReactionEffectClass && ReactClass)
-			{
-				CreateEffect(ReactionEffectClass,1.0,this,FGameplayTagContainer(),ReactClass);
-			}
-		}
-	
+
 		//--------------------- FINISH AND APPLY ---------------------///
 	
 		CurrentValue = CurrentValue - FinalDamage;		//Deduct final damage value from current attribute value
 		CurrentValue = FMath::Clamp(CurrentValue, 0.0f, MaxVal);		//Make sure the value does not go under 0 or exceed the max allowed value
 
 		//FINALIZE
-		CurrentAttributeValues.Add(Attribute, CurrentValue);
+		L_GetEntityData()->Attributes.Add(Attribute, CurrentValue);
 		OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, LocalDamageType, Hit);
 		Update();
 		return FinalDamage;
@@ -576,18 +647,21 @@ void UCombatantComponent::L_CacheAttributeMods()
 ////////////////
 TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
 {
-	TArray<UPrimaryDataAsset*> OutSkills = Skills;
-	for(auto* TempSource : L_GetSources_Skill())
+	TArray<UPrimaryDataAsset*> OutSkills = L_GetEntityData()->GetSkills();
+	for(auto* TempSource : GetAllModifiers())
 	{
-		for(auto* TempSkill : IDataInterface_SkillSource::Execute_GetSkills(TempSource,this))
+		if (TempSource && TempSource->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
-			if(TempSkill)
+			for(auto* TempSkill : IDataInterface_Combatant::Execute_GetSkills(TempSource,this))
 			{
-				OutSkills.Add(TempSkill);
+				if(TempSkill)
+				{
+					OutSkills.Add(TempSkill);
+				}
 			}
 		}
 	}
-	OutSkills.Append(GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->Combatant_Append_Skills(this));
+	OutSkills.Append(GetMutableDefault<UOmegaSettings>()->GetGameCore()->Combatant_Append_Skills(this));
 	return OutSkills;
 }
 
@@ -598,7 +672,7 @@ void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill, bool Added)
 		bool has_interface=Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass());
 		if(Added)
 		{
-			Skills.Add(Skill);
+			L_GetEntityData()->Skills.Add(Skill);
 			if(has_interface)
 			{
 				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,true);
@@ -606,7 +680,7 @@ void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill, bool Added)
 		}
 		else
 		{
-			Skills.Remove(Skill);
+			L_GetEntityData()->Skills.Remove(Skill);
 			if(has_interface)
 			{
 				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,false);
@@ -623,86 +697,90 @@ void UCombatantComponent::AddSkills(TArray<UPrimaryDataAsset*> skill_list, bool 
 	}
 }
 
-
-bool UCombatantComponent::SetSkillSourceActive(UObject* SkillSource, bool bActive)
+UPrimaryDataAsset* UCombatantComponent::Skill_SelectByUtility(TArray<UCombatantComponent*> Targets,
+	FGameplayTag Tag, float RandomOffsetRange)
 {
-	if(!SkillSource )
-	{
-		return false;
-	}
-	if(SkillSource->Implements<UDataInterface_SkillSource>())
-	{
-		if(bActive)
-		{
-			SOURCES_Skills.AddUnique(SkillSource);
-		}
-		else
-		{
-			SOURCES_Skills.Remove(SkillSource);
-		}
-	}
-	return true;
+	return UCombatantFunctions::SelectSkillByUtility(this,GetAllSkills(),Targets,Tag,RandomOffsetRange);
 }
 
-TArray<UObject*> UCombatantComponent::L_GetSources_Skill()
+void UCombatantComponent::SetCombatantTagsActive(FGameplayTagContainer GameplayTags, bool TagsActive)
 {
-	TArray<UObject*> OutSkills;
-	for(auto* i : SOURCES_Skills)
+	if(TagsActive)
 	{
-		if(i && i->GetClass()->ImplementsInterface(UDataInterface_SkillSource::StaticClass()))
-		{
-			OutSkills.AddUnique(i);
-		}
+		CombatantTags.AppendTags(GameplayTags);
 	}
-	for(auto* i : SOURCES_Master)
+	else
 	{
-		if(i && i->GetClass()->ImplementsInterface(UDataInterface_SkillSource::StaticClass()))
-		{
-			OutSkills.AddUnique(i);
-		}
+		CombatantTags.RemoveTags(GameplayTags);
 	}
-	return OutSkills;
+}
+
+void UCombatantComponent::SetTagsActive(FGameplayTagContainer GameplayTags, bool TagsActive)
+{
+	if(TagsActive)
+	{
+		L_GetEntityData()->Tags.AppendTags(GameplayTags);
+	}
+	else
+	{
+		L_GetEntityData()->Tags.RemoveTags(GameplayTags);
+	}
 }
 
 
-bool UCombatantComponent::SetDamageModifierActive(UObject* Modifier, bool bActive)
-{
-	if(!Modifier)
-	{
-		return false;
-	}
-	if(Modifier->Implements<UDataInterface_DamageModifier>())
-	{
-		if(bActive)
-		{
-			SOURCES_DamageMods.Add(Modifier);
-		}
-		else
-		{
-			SOURCES_DamageMods.Remove(Modifier);
-		}
-	}
-	return false;
-}
+
+
+
 
 TArray<UObject*> UCombatantComponent::GetDamageModifiers()
 {
 	TArray<UObject*> OutMods;
-	for(auto* TempMod : SOURCES_DamageMods)
+
+	for(auto* TempMod : GetAllModifiers())
 	{
-		if(TempMod && TempMod->Implements<UDataInterface_DamageModifier>())
+		if(TempMod && TempMod->Implements<UDataInterface_Combatant>())
 		{
-			OutMods.Add(TempMod);
+			FOmegaCombatantSourceConfig cfg=IDataInterface_Combatant::Execute_Combatant_GetConfig(TempMod);
+			if (cfg.bUseDamageModifier)
+			{
+				OutMods.Add(TempMod);
+			}
 		}
 	}
-	for(auto* TempMod : SOURCES_Master)
-	{
-		if(TempMod && TempMod->Implements<UDataInterface_DamageModifier>())
-		{
-			OutMods.Add(TempMod);
-		}
-	}
+	
 	return OutMods;
+}
+
+void UCombatantComponent::SetEffectsDisabled(bool bDisabled)
+{
+	bEffectsDisabled = bDisabled;
+	if(bEffectsDisabled)
+	{
+		RemoveAllEffects();
+	}
+}
+
+bool UCombatantComponent::CanApplyEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, UCombatantComponent* Instigator,
+                                         UObject* Context, FOmegaCommonMeta _meta)
+{
+	if (EffectClass && !bEffectsDisabled)
+	{
+		AOmegaGameplayEffect* def=EffectClass.GetDefaultObject();
+		for (AOmegaGameplayEffect* ef : GetAllEffects())
+		{
+			if (ef && ef->BlockEffects.HasAnyExact(def->EffectTags))
+			{
+				return false;
+			}
+		}
+		
+		if (EffectClass->GetDefaultObject<AOmegaGameplayEffect>()->EffectCanApply(Instigator,this,Context,_meta))
+		{
+			return true;
+		}
+		
+	}
+	return false;
 }
 
 //// Get Attribute Values + Attribute Modifiers
@@ -736,7 +814,7 @@ void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& C
 	}
 	else
 	{
-		CurrentValue = CurrentAttributeValues.FindOrAdd(Attribute);
+		CurrentValue = L_GetEntityData()->Attributes.FindOrAdd(Attribute);
 	}
 }
 
@@ -746,7 +824,7 @@ float UCombatantComponent::GetAttributeBaseValue(UOmegaAttribute* Attribute)
 {
 	int32 attribute_rank=GetAttributeLevel(Attribute);
 	float _baseVal=Attribute->GetAttributeValue(Level, attribute_rank, AttributeValueCategory);
-	_baseVal=OGF_GLOBAL_SETTINGS()->Attribute_GetMaxValue(this,Attribute,attribute_rank,_baseVal);
+	//_baseVal=OGF_GAME_CORE()->Attribute_GetMaxValue(this,Attribute,attribute_rank,_baseVal);
 	return _baseVal;
 }
 
@@ -770,13 +848,29 @@ bool UCombatantComponent::IsAbilityTagBlocked(FGameplayTagContainer Tags)
 
 void UCombatantComponent::SetOverrideMaxAttribute(UOmegaAttribute* Attribute, float Value)
 {
-	OverrideMaxAttributes.Add(Attribute,Value);
-	Update();
+	if (Attribute)
+	{
+		OverrideMaxAttributes.Add(Attribute,Value);
+		float _val=L_GetEntityData()->Attributes.FindOrAdd(Attribute);
+		L_GetEntityData()->Attributes.Add(Attribute,UKismetMathLibrary::FClamp(_val,0,Value	));
+		Update();	
+	}
 }
 
 void UCombatantComponent::SetOverrideMaxAttributes(TMap<UOmegaAttribute*, float> Value)
 {
+	blockUpdateCall.Add(496);
 	OverrideMaxAttributes=Value;
+	TArray<UOmegaAttribute*> TempAttributes;
+	Value.GetKeys(TempAttributes);
+	for (UOmegaAttribute* TempAttribute : TempAttributes)
+	{
+		if (TempAttribute)
+		{
+			SetOverrideMaxAttribute(TempAttribute, Value[TempAttribute]);
+		}
+	}
+	blockUpdateCall.Remove(496);
 	Update();
 }
 
@@ -795,30 +889,59 @@ float UCombatantComponent::GetAttributePercentage(UOmegaAttribute* Attribute)
 	return 0.0;
 }
 
-TMap<UOmegaAttribute*, float> UCombatantComponent::GetCurrentAttributeValues()
+TMap<UOmegaAttribute*, float> UCombatantComponent::GetCurrentAttributeValues(bool bCurrent)
 {
-	return CurrentAttributeValues;
+	TMap<UOmegaAttribute*, float> out;
+	float CurVal;
+	float MaxVal;
+	TArray<UOmegaAttribute*> AttributeList; 
+    if (AttributeSet)
+    {
+    	for (auto a : AttributeSet->GetAllAttributes())
+    	{
+    		GetAttributeValue(a,CurVal,MaxVal);
+    		if (bCurrent)
+    		{
+    			out.Add(a,CurVal);
+    		}
+		    else
+		    {
+		    	out.Add(a,MaxVal);
+		    }
+    	}
+    }
+	
+	return out;
 }
 
 void UCombatantComponent::SetCurrentAttributeValue(UOmegaAttribute* Attribute, float Value)
 {
 	if(Attribute)
 	{
-		CurrentAttributeValues.Add(Attribute,Value);
+		L_GetEntityData()->Attributes.Add(Attribute,Value);
 	}
 	Update();
 }
 
 void UCombatantComponent::SetCurrentAttributeValues(TMap<UOmegaAttribute*, float> Values)
 {
-	CurrentAttributeValues = Values;
+	TArray<UOmegaAttribute*> AssetList;
+	Values.GetKeys(AssetList);
+	for (auto a : AssetList)
+	{
+		if (a)
+		{
+			L_GetEntityData()->Attributes.Add(a,Values[a]);
+		}
+	}
+	
 	Update();
 }
 
 void UCombatantComponent::SetCombatantLevel(int32 NewLevel, bool ReinitializeStats)
 {
 	Level = NewLevel;
-	OnLevelChanged.Broadcast(NewLevel);
+
 	if(ReinitializeStats)
 	{
 		InitializeAttributes();
@@ -852,7 +975,7 @@ void UCombatantComponent::InitializeAttributes()
 
 				if(!TempAtt->bIsValueStatic)
 				{
-					CurrentAttributeValues.Add(TempAtt, DumVal*TempAtt->StartValuePercentage);	
+					L_GetEntityData()->Attributes.Add(TempAtt,DumVal*TempAtt->StartValuePercentage);	
 				}
 			}
 		}
@@ -877,24 +1000,6 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetModifierValues_Implement
 }
 
 
-void UCombatantComponent::SetAttributeModifierActive(UObject* Modifier, bool bActive)
-{
-	if(Modifier)
-	{
-		if(bActive && !SOURCES_AttributeMods.Contains(Modifier))
-		{
-			SOURCES_AttributeMods.Add(Modifier);
-			//Local_CacheAttributeMods();
-			Update();
-		}
-		else if(!bActive && SOURCES_AttributeMods.Contains(Modifier))
-		{
-			SOURCES_AttributeMods.Remove(Modifier);
-			Update();
-		}
-	}
-}
-
 // Compare Modifier list to base value.
 float UCombatantComponent::GetAttributeComparedValue(UOmegaAttribute* Attribute, TArray<UObject*> Modifiers)
 {
@@ -906,24 +1011,60 @@ float UCombatantComponent::GetAttributeComparedValue(UOmegaAttribute* Attribute,
 ///////////////////////////////////
 const TArray<UObject*> UCombatantComponent::GetAttributeModifiers()
 {
-	//Base Modifiers
-	TArray<UObject*> _mods = SOURCES_AttributeMods;
+	return GetAllModifiers();
+}
+
+TArray<FOmegaAttributeModifier> UCombatantComponent::CompareObjectAttributeModifiers(UObject* Compared,
+	UObject* Uncompared)
+{
+	TArray<FOmegaAttributeModifier> Modifiers=UDataInterface_Combatant::GetObjectModifiers(this,this);
+	TArray<FOmegaAttributeModifier> modsComp=UDataInterface_Combatant::GetObjectModifiers(this,Compared);
+	TArray<FOmegaAttributeModifier> modsUncomp=UDataInterface_Combatant::GetObjectModifiers(this,Uncompared);
+	modsUncomp=UCombatantFunctions::AttributeMods_Scale(modsUncomp,-1);	
 	
-	if(bUseSkillsAsMasterSource)
-	{
-		for(UObject* TempMod: static_cast<TArray<UObject*>>(GetAllSkills()))
-		{
-			_mods.Add(TempMod);	
-		}
-	}
+	Modifiers.Append(modsComp);
+	Modifiers.Append(modsUncomp);
+	FOmegaAttributeModifier::Simplify(Modifiers);
+	return Modifiers;
+}
+
+void UCombatantComponent::CompareObjectAttributeModifiers_Single(UOmegaAttribute* Attribute, UObject* Compared,
+	UObject* Uncompared, float& oldValue, float& newValue)
+{
+	if (!Attribute) { return; }
+	TArray<FOmegaAttributeModifier> CompMods=CompareObjectAttributeModifiers(Compared,Uncompared);
+	newValue=AdjustAttributeValueByModifiers(Attribute,CompMods);
+	float dumpVal;
+	GetAttributeValue(Attribute,dumpVal,oldValue);
+}
+
+UPrimaryDataAsset* UCombatantComponent::GetDamageTypeWeight(UOmegaDamageType* DamageType, float& Total, float& Average)
+{
+	if (!DamageType) { return nullptr;}
+	Total=0;
+	UPrimaryDataAsset* asset=nullptr;
+	int32 lastPriority=0;
+	int32 sourceCount=0;
 	for(auto* i : SOURCES_Master)
 	{
-		if(i && i->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		if(i && i->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
-			_mods.Add(i);
+			float Weight=0;
+			int32 newPriority=0;
+			UPrimaryDataAsset* lastAsset= IDataInterface_Combatant::Execute_GetDamageType_Weight(i,this,DamageType,Weight,newPriority);
+			sourceCount+=1;
+			Total+=Weight;
+			if (newPriority>=lastPriority)
+			{
+				lastPriority=newPriority;
+				asset=lastAsset;
+			}
 		}
 	}
-	return _mods;
+	
+	Average=Total/sourceCount;
+	
+	return asset;
 }
 
 ///Applies Modifier Values
@@ -943,10 +1084,10 @@ float UCombatantComponent::L_GetAllModsOfAttribute(TArray<UObject*> Modifiers, f
 		// Make suRe this object uses a Attribute Modifier Interface
 		if(TempObject)
 		{
-			if(TempObject->Implements<UDataInterface_AttributeModifier>())
+			if(TempObject->Implements<UDataInterface_Combatant>())
 			{
 				//Gather Attributes from Object
-				TArray<FOmegaAttributeModifier> NewMods = IDataInterface_AttributeModifier::Execute_GetModifierValues(TempObject,this);
+				TArray<FOmegaAttributeModifier> NewMods = IDataInterface_Combatant::Execute_GetModifierValues(TempObject,this);
 				TempModList.Append(NewMods);
 				
 			}
@@ -956,6 +1097,19 @@ float UCombatantComponent::L_GetAllModsOfAttribute(TArray<UObject*> Modifiers, f
 
 	
 	return OutValue;
+}
+
+void UCombatantComponent::OnTagEvent_Implementation(FGameplayTag Event)
+{
+	IActorTagEventInterface::OnTagEvent_Implementation(Event);
+	
+	for (UPrimaryDataAsset* skl : GetAllSkills())
+	{
+		if (skl && skl->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
+		{
+			IDataInterface_Skill::Execute_Skill_OnActorEvent(skl,this,Event);
+		}
+	}
 }
 
 
@@ -983,9 +1137,9 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetAllModifierValues()
 	TArray<UObject*> ModsLocal = GetAttributeModifiers();
 	for(auto* TempMod: ModsLocal)
 	{
-		if(TempMod!=nullptr && TempMod->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		if(TempMod!=nullptr && TempMod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
-			TArray<FOmegaAttributeModifier> in_mods=IDataInterface_AttributeModifier::Execute_GetModifierValues(TempMod,this);
+			TArray<FOmegaAttributeModifier> in_mods=IDataInterface_Combatant::Execute_GetModifierValues(TempMod,this);
 			OutModVals.Append(in_mods);
 		}
 	}
@@ -997,10 +1151,6 @@ TArray<FOmegaAttributeModifier> UCombatantComponent::GetAllModifierValues()
 ////////// -- Effects -- /////////
 ///////////////////////////////////
 
-FGameplayTagContainer UCombatantComponent::GetBlockedEffectTags()
-{
-	return BlockEffectWithTags;
-}
 
 AOmegaGameplayEffect* UCombatantComponent::GetEffectOfContext(UObject* Context,
 	TSubclassOf<AOmegaGameplayEffect> EffectClass)
@@ -1015,67 +1165,38 @@ AOmegaGameplayEffect* UCombatantComponent::GetEffectOfContext(UObject* Context,
 	return nullptr;
 }
 
-float UCombatantComponent::GetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass)
+
+class AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass,
+	UCombatantComponent* Instigator, UObject* Context, FOmegaCommonMeta meta)
 {
-	if(EffectClass)
+	if (EffectClass)
 	{
-		const float DefaultRate = GetMutableDefault<AOmegaGameplayEffect>(EffectClass)->DefaultSuccessRate;
-		if(EffectSuccessRate.Contains(EffectClass))
+		if (CanApplyEffect(EffectClass,Instigator,Context, meta))
 		{
-			return  FMath::Clamp(EffectSuccessRate[EffectClass]+DefaultRate,0.0f,2.0f);
-		}
-		return DefaultRate;
-	}
-	return 1;
-}
-
-void UCombatantComponent::SetEffectSuccessRate(TSubclassOf<AOmegaGameplayEffect> EffectClass, float OffsetRate)
-{
-	EffectSuccessRate.Add(EffectClass,OffsetRate);
-}
-
-
-
-AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, float Power, UCombatantComponent* Target, FGameplayTagContainer AddedTags, UObject* Context)
-{
-	//Check Effect Success Rate. Abort function if unsuccessful
-	const float SuccessValue = UKismetMathLibrary::RandomFloat();
-	if(SuccessValue>GetEffectSuccessRate(EffectClass))
-	{
-		return nullptr;
-	}
+			const FTransform SpawnWorldPoint = GetOwner()->GetActorTransform();
 		
-	if (EffectClass && Target &&
-		!Target->GetBlockedEffectTags().HasAny(GetMutableDefault<AOmegaGameplayEffect>(EffectClass)->EffectTags))
-	{
-		const FTransform SpawnWorldPoint = Target->GetOwner()->GetActorTransform();
-		
-		class AOmegaGameplayEffect* LocalEffect = GetWorld()->SpawnActorDeferred<AOmegaGameplayEffect>(EffectClass, SpawnWorldPoint, nullptr);
-		LocalEffect->SetOwner(Target->GetOwner());
-		LocalEffect->TargetedCombatant = Target;
-		LocalEffect->EffectContext = Context;
-		LocalEffect->CombatantInstigator = this;
-		LocalEffect->Power = Power;
-		//Add new tags to effect
-		TArray<FGameplayTag> LocalTags;
-		AddedTags.GetGameplayTagArray(LocalTags);
-
-		for (FGameplayTag TempTag : LocalTags)
-		{
-			LocalEffect->EffectTags.AddTag(TempTag);
-		}
-		UGameplayStatics::FinishSpawningActor(LocalEffect, SpawnWorldPoint);
-
-		LocalEffect->AttachToActor(Target->GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-		
-		Update();
-		return LocalEffect;
-
-	}
+			if (AOmegaGameplayEffect* LocalEffect = GetWorld()->SpawnActorDeferred<AOmegaGameplayEffect>(EffectClass, SpawnWorldPoint, nullptr))
+			{
+				LocalEffect->SetOwner(GetOwner());
+				LocalEffect->TargetedCombatant = this;
+				LocalEffect->EffectContext = Context;
+				LocalEffect->CombatantInstigator = Instigator;
+				
+				UGameplayStatics::FinishSpawningActor(LocalEffect, SpawnWorldPoint);
 	
+				LocalEffect->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+				LocalEffect->EffectBeginPlay(Context,meta);
+				Update();
+				return LocalEffect;
+			}
+		}
+		
+	}
 	Update();
 	return nullptr;
 }
+
+
 
 bool UCombatantComponent::HasEffectWithTags(FGameplayTagContainer Tags)
 {
@@ -1152,6 +1273,17 @@ AOmegaGameplayEffect* UCombatantComponent::GetActiveEffectOfClass(TSubclassOf<AO
 	
 }
 
+
+void UCombatantComponent::RemoveAllEffects()
+{
+	for (auto* ef : GetAllEffects())
+	{
+		if (ef)
+		{
+			ef->K2_DestroyActor();
+		}
+	}
+}
 
 void UCombatantComponent::RemoveEffectsWithTags(FGameplayTagContainer EffectTags)
 {
@@ -1387,10 +1519,153 @@ TArray<UCombatantComponent*> UCombatantComponent::FilterCombatantsByAffinity(TAr
 	return OutCombatants;
 }
 
+bool UCombatantComponent::HasSkill(UPrimaryDataAsset* Skill)
+{
+	if (!Skill) return false;
+	return GetAllSkills().Contains(Skill);
+}
+
 
 TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_Implementation(UCombatantComponent* Combatant)
 {
 	return GetAllSkills();
+}
+
+void UCombatantComponent::OnInputAction_Begin_Implementation(APlayerController* Player, FGameplayTag Action,
+	FVector axis)
+{
+	for (auto* a : GetGrantedAbilities())
+	{
+		if (Action==a->LinkedInputAction)
+		{
+			//OGF_Log::LogInfo("ABILITY - executing via input ::"+a->GetName());
+			a->Execute(this);	
+		}
+		IDataInterface_InputAction::Execute_OnInputAction_Begin(a,Player,Action,axis);
+	}
+}
+
+void UCombatantComponent::OnInputAction_Update_Implementation(APlayerController* Player, FGameplayTag Action,
+	float DeltaTime, FVector axis)
+{
+	for (auto* a : GetGrantedAbilities())
+	{
+		IDataInterface_InputAction::Execute_OnInputAction_Update(a,Player,Action,DeltaTime,axis);
+	}
+}
+
+void UCombatantComponent::OnInputAction_End_Implementation(APlayerController* Player, FGameplayTag Action, FVector axis)
+{
+	for (auto* a : GetGrantedAbilities())
+	{
+		if (Action==a->LinkedInputAction && a->bStopAbilityOnInputActionEnd)
+		{
+			a->CancelAbility();	
+		}
+		IDataInterface_InputAction::Execute_OnInputAction_End(a,Player,Action,axis);
+	}
+}
+
+void UCombatantComponent::ForceSetEntityData(FOmegaEntity data)
+{
+	if (use_entity_id)
+	{
+		UOmegaFunctions_Entity::SetEntity_ByID(this,entity_id,data);
+	}
+	else
+	{
+		entity_data=data;
+	}
+	Update();
+}
+
+FOmegaEntity UCombatantComponent::GetEntityData()
+{
+	if(use_entity_id)
+	{
+		return UOmegaFunctions_Entity::GetEntity_ByID(this,entity_id);
+	}
+	return entity_data;
+}
+
+FOmegaEntity* UCombatantComponent::L_GetEntityData()
+{
+	if (use_entity_id)
+	{
+		if (FOmegaEntity* EntityData = UOmegaFunctions_Entity::getEntityRefById(this,entity_id,SAVE_GAME))
+		{
+			return EntityData;
+		}
+	}
+	return &entity_data;
+}
+
+FOmegaEntity_AssetData* UCombatantComponent::L_GetEntity_AssetData(UPrimaryDataAsset* asset)
+{
+	if (asset)
+	{
+		return &L_GetEntityData()->AssetData.FindOrAdd(asset);
+	}
+	return nullptr;
+}
+
+TArray<UPrimaryDataAsset*> UCombatantComponent::L_GetEntity_AssetsSaved()
+{
+	TArray<UPrimaryDataAsset*> out;
+	
+	if(FOmegaEntity* dat=L_GetEntityData())
+	{
+		return dat->GetAssetDataList();
+	}
+	
+	return out;
+}
+
+
+
+TSubclassOf<AOmegaAbility> UCombatantComponent::SelectAbilityByUtility(UObject*& AbilityContext, bool ShuffleFirst)
+{
+	AbilityContext = nullptr;
+
+	TArray<AOmegaAbility*> Abilities = GetGrantedAbilities();
+
+	if (ShuffleFirst)
+	{
+		for (int32 i = Abilities.Num() - 1; i > 0; --i)
+		{
+			const int32 j = FMath::RandRange(0, i);
+			Abilities.Swap(i, j);
+		}
+	}
+
+	float BestUtil = 0.f;
+	int32 BestPriority = INT32_MIN;
+	TSubclassOf<AOmegaAbility> BestClass = nullptr;
+
+	for (AOmegaAbility* Ab : Abilities)
+	{
+		if (!Ab) { continue; }
+
+		UObject* LocalContext = nullptr;
+		int32 Priority = 0;
+		const float UtilVal = Ab->UtilityCheck(this, LocalContext, Priority);
+
+		// Ignore anything at or below zero.
+		if (UtilVal <= 0.f) { continue; }
+
+		const bool bBetterUtil = UtilVal > BestUtil;
+		const bool bSameUtilHigherPriority = (UtilVal == BestUtil) && (Priority > BestPriority);
+
+		if (bBetterUtil || bSameUtilHigherPriority)
+		{
+			BestUtil = UtilVal;
+			BestPriority = Priority;
+			BestClass = Ab->GetClass();
+			AbilityContext = LocalContext;
+		}
+	}
+
+	return BestClass;
 }
 
 bool UCombatantComponent::RunDefaultGambit()
@@ -1402,7 +1677,7 @@ bool UCombatantComponent::RunDefaultGambit()
 	return false;
 }
 
-bool UCombatantComponent::RunGambit(UCombatantGambitAsset* Gambit, bool bReplaceDefaultGambit)
+bool UCombatantComponent::RunGambit(UOmegaGambit_Asset* Gambit, bool bReplaceDefaultGambit)
 {
 	if(Gambit)
 	{
@@ -1422,29 +1697,477 @@ bool UCombatantComponent::RunGambit(UCombatantGambitAsset* Gambit, bool bReplace
 	return false;
 }
 
-bool UCombatantComponent::GetActionDataFromGambit(UCombatantGambitAsset* Gambit, TSubclassOf<AOmegaAbility>& Ability,
+bool UCombatantComponent::GetActionDataFromGambit(UOmegaGambit_Asset* Gambit, TSubclassOf<AOmegaAbility>& Ability,
 	UObject*& Context)
 {
-	if(Gambit)
+	
+	return false;
+}
+
+// ------------------------------------------------------------------------------------------
+// EQUIPMENT
+// ------------------------------------------------------------------------------------------
+
+TMap<UEquipmentSlot*, UPrimaryDataAsset*> UCombatantComponent::Equipment_Get()
+{
+	TMap<UEquipmentSlot*, UPrimaryDataAsset*> out=OGF_GAME_CORE()->Equipment_Append(this);
+	out.Append(L_GetEntityData()->Equipment);
+	return out;
+}
+
+TArray<UPrimaryDataAsset*> UCombatantComponent::Equipment_GetEquipList()
+{
+	TArray<UEquipmentSlot*> eq;
+	Equipment_Get().GetKeys(eq);
+	
+	TArray<UPrimaryDataAsset*> out;
+	for (auto* i : eq)
 	{
-		for (auto* a :Gambit->GetAllGambitActions())
+		if (i)
 		{
-			if(a)
-			{
-				
-				if(a->CanRunGambit(this))
-				{
-					a->RunGambitAction(this,Ability,Context);
-					return true;
-				}
-			}
+			out.Add(Equipment_Get().FindOrAdd(i));
 		}
+	}
+	
+	return out;
+}
+
+UPrimaryDataAsset* UCombatantComponent::Equipment_GetInSlot(UEquipmentSlot* Slot, bool& result)
+{
+	result=false;
+	if (UPrimaryDataAsset* _item=Equipment_Get().FindOrAdd(Slot))
+	{
+		result=true;
+		return _item;
+	}
+	return nullptr;
+}
+
+void UCombatantComponent::Equipment_SetInSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot)
+{
+	blockUpdateCall.Add(2001);
+	if (Slot)
+	{
+		Equipment_ClearSlot(Slot);
+		if(Item)
+		{
+			L_GetEntityData()->Equipment[Slot]=Item;	
+			OnSlot_Equip.Broadcast(this,Slot,Item);
+		}
+	}
+	blockUpdateCall.Remove(2001);
+	Update();
+}
+
+void UCombatantComponent::Equipment_SetAll(TMap<UEquipmentSlot*, UPrimaryDataAsset*> equipment)
+{
+	L_GetEntityData()->Equipment=equipment;
+	Update();
+}
+
+void UCombatantComponent::Equipment_ClearSlot(UEquipmentSlot* Slot)
+{
+	if (Slot)
+	{
+		bool _res;
+		if (UPrimaryDataAsset* _item=Equipment_GetInSlot(Slot,_res))
+		{
+			OnSlot_Unequip.Broadcast(this,Slot,_item);
+		}
+		L_GetEntityData()->Equipment.Add(Slot,nullptr);
+		
+		Update();
+	}
+}
+
+bool UCombatantComponent::Equipment_CanSetInSlot(UPrimaryDataAsset* Item, UEquipmentSlot* Slot)
+{
+	return true;
+}
+
+// ------------------------------------------------------------------------------------------
+// INVENTORY
+// ------------------------------------------------------------------------------------------
+
+bool UCombatantComponent::Inventory_Add(UPrimaryDataAsset* Item, int32 amount)
+{
+	if (Item)
+	{
+		int32 _newAmount=amount+Inventory_GetAmount(Item);
+		int32 _max=Inventory_GetMax(Item);
+		if(_max>=0) { _newAmount=FMath::Min(_newAmount,_max); }
+		L_GetEntityData()->Inventory.Add(Item,_newAmount);
+		OnInventoryEdit.Broadcast(this,Item,amount);
+		Update();
+		return true;
 	}
 	return false;
 }
 
+void UCombatantComponent::Inventory_AddList(TMap<UPrimaryDataAsset*, int32> Assets, bool bInvertAmount)
+{
+	blockUpdateCall.Add(3001);
+	TArray<UPrimaryDataAsset*> asset_keys;
+	Assets.GetKeys(asset_keys);
+	for(auto* i : asset_keys)
+	{
+		int32 multiplier=1;
+		if(bInvertAmount) {multiplier=-1;}
+		Inventory_Add(i,Assets[i]*multiplier);
+	}
+	blockUpdateCall.Remove(3001);
+	Update();
+}
 
-//##################################################################################################################
-// Deprecated
-//##################################################################################################################
+void UCombatantComponent::Inventory_Transfer(UCombatantComponent* To, UPrimaryDataAsset* Asset, int32 Amount,
+                                             bool bTransferAll)
+{
+	if(!Asset || !To)
+	{
+		return;
+	}
+	int32 AmountToRemove = Amount;
+	if(bTransferAll)
+	{
+		AmountToRemove = Inventory_GetAmount(Asset);
+	}
+	else
+	{
+		AmountToRemove = UKismetMathLibrary::Clamp(AmountToRemove, 0, Inventory_GetAmount(Asset));
+	}
+
+	//Transfer
+	blockUpdateCall.Add(3002);
+	Inventory_Add(Asset, AmountToRemove*-1);
+	To->Inventory_Add(Asset, AmountToRemove);
+	blockUpdateCall.Remove(3002);
+	Update();
+}
+
+void UCombatantComponent::Inventory_TransferAll(UCombatantComponent* To)
+{
+	TArray<UPrimaryDataAsset*> AssetListLocal;
+	Inventory_Get().GetKeys(AssetListLocal);
+
+	blockUpdateCall.Add(3003);
+	for(auto* TempAsset : AssetListLocal)
+	{
+		Inventory_Transfer(To, TempAsset, 0, true);
+	}
 	
+	blockUpdateCall.Remove(3003);
+	Update();
+}
+
+void UCombatantComponent::Inventory_Set(TMap<UPrimaryDataAsset*, int32> map,bool bClearFirst)
+{
+	blockUpdateCall.Add(3004);
+	if (bClearFirst)
+	{
+		Inventory_Clear();	
+	}
+	TArray<UPrimaryDataAsset*> temp;
+	map.GetKeys(temp);
+	for(auto i : temp)
+	{
+		if (i)
+		{
+			L_GetEntityData()->Inventory.Append(map);		
+		}
+	}
+	blockUpdateCall.Remove(3004);
+	Update();
+}
+
+void UCombatantComponent::Inventory_Clear()
+{
+	L_GetEntityData()->Inventory.Empty();
+	OnInventoryEdit.Broadcast(this,nullptr,0);
+	Update();
+}
+
+TMap<UPrimaryDataAsset*, int32> UCombatantComponent::Inventory_Get(int32 Minimum)
+{
+	TMap<UPrimaryDataAsset*, int32> out;
+	
+	if (FOmegaEntity* e=L_GetEntityData())
+	{
+		TArray<UPrimaryDataAsset*> item_list;
+		e->Inventory.GetKeys(item_list);
+		for (UPrimaryDataAsset* a : item_list)
+		{
+			if (a)
+			{
+				if (Inventory_GetAmount(a)>=Minimum)
+				{
+					out.Add(a);
+				}
+			}
+		}
+	}
+	
+	return out;
+}
+
+int32 UCombatantComponent::Inventory_GetAmount(UPrimaryDataAsset* Item)
+{
+	if (Item)
+	{
+		if (L_GetEntityData()->Inventory.Contains(Item))
+		{
+			return L_GetEntityData()->Inventory.FindOrAdd(Item);	
+		}
+	}
+	return 0;
+}
+
+TArray<UPrimaryDataAsset*> UCombatantComponent::Inventory_GetItemsAsArray()
+{
+	TArray<UPrimaryDataAsset*> out;
+	Inventory_Get().GetKeys(out);
+	return out;
+}
+
+bool UCombatantComponent::Inventory_HasMinimum(TMap<UPrimaryDataAsset*, int32> Assets)
+{
+	TArray<UPrimaryDataAsset*> temp;
+	Assets.GetKeys(temp);
+	for (auto* a : temp)
+	{
+		if (a)
+		{
+			int32 i_amount=Inventory_GetAmount(a);
+			if (i_amount<Assets[a])
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+void UCombatantComponent::Inventory_OverrideMax(UPrimaryDataAsset* Item, int32 Max, bool bAdd)
+{
+	if (Item)
+	{
+		int32 val=Max;
+		if (bAdd)
+		{
+			val+=InventoryMaxOverrides.FindOrAdd(Item);
+		}
+		InventoryMaxOverrides.Add(Item, val);
+	}
+}
+
+void UCombatantComponent::Inventory_OverrideMaxList(TMap<UPrimaryDataAsset*, int32> max)
+{
+	TArray<UPrimaryDataAsset*> keys;
+	max.GetKeys(keys);
+	for (auto* item : keys)
+	{
+		Inventory_OverrideMax(item, max[item]);
+	}
+}
+
+void UCombatantComponent::Inventory_OverrideMaxClear(UPrimaryDataAsset* Asset)
+{
+	if (Asset)
+	{
+		InventoryMaxOverrides.Remove(Asset);
+	}
+}
+
+void UCombatantComponent::Inventory_OverrideMaxClearAll()
+{
+	InventoryMaxOverrides.Empty();
+}
+
+int32 UCombatantComponent::Inventory_GetMax(UPrimaryDataAsset* Item)
+{
+	if (!Item) { return 0; }
+	if (Item && InventoryMaxOverrides.Contains(Item))
+	{
+		return InventoryMaxOverrides[Item];
+	}
+	if (Item->GetClass()->ImplementsInterface(UDataInterface_InventoryItem::StaticClass()))
+	{
+		int32 i_amount=IDataInterface_InventoryItem::Execute_GetMaxCollectionNumber(Item);
+		if (i_amount>0)
+		{
+			return i_amount;
+		}
+	}
+	return 999999999;
+}
+
+float UCombatantComponent::Inventory_GetPercent(UPrimaryDataAsset* Item)
+{
+	float cur=Inventory_GetAmount(Item);
+	float max=Inventory_GetMax(Item);
+	return cur/max;
+}
+
+// ------------------------------------------------------------------------------------------
+// LEVELING
+// ------------------------------------------------------------------------------------------
+
+void UCombatantComponent::XP_Set(UOmegaLevelingAsset* Type, float amount, bool bAdded)
+{
+	if (Type)
+	{
+		blockUpdateCall.Add(4001);
+		int32 cur_level=XP_GetLevel(Type);
+		float _cur=XP_Get(Type);
+		float base=amount;
+		if (bAdded)
+		{
+			base+=_cur;
+		}
+		L_GetEntityData()->Attributes.Add(Type,base);
+		OnXpChanged.Broadcast(this,Type,_cur,base);
+		
+		int32 new_lvl=XP_GetLevel(Type);
+		if (cur_level!=new_lvl)
+		{
+			OnLevelChanged.Broadcast(this,Type,cur_level,new_lvl);
+		}
+		blockUpdateCall.Remove(4001);
+		Update();
+	}
+}
+
+void UCombatantComponent::XP_SetAll(TMap<UOmegaLevelingAsset*, float> XP, bool bAdded)
+{
+	TArray<UOmegaLevelingAsset*> temps;
+	blockUpdateCall.Add(4020);
+	for (auto a : temps)
+	{
+		if (a)
+		{
+			XP_Set(a,XP[a],bAdded);
+		}
+	}
+	blockUpdateCall.Remove(4020);
+	Update();
+}
+
+void UCombatantComponent::XP_SetLevel(UOmegaLevelingAsset* Type, int32 NewLevel)
+{
+	if (Type)
+	{
+		blockUpdateCall.Add(4002);
+		float _min , _max; 
+		Type->GetXPFromLevel(NewLevel,_min,_max);
+		XP_Set(Type,_min,false);
+		blockUpdateCall.Remove(4002);
+		Update();
+	}
+}
+
+
+TMap<UOmegaLevelingAsset*, float> UCombatantComponent::XP_GetAll()
+{
+	TMap<UOmegaLevelingAsset*, float> out;
+	TArray<UPrimaryDataAsset*> AssetList;
+	L_GetEntityData()->Attributes.GetKeys(AssetList);
+	for (auto a : AssetList)
+	{
+		if (a && a->GetClass()->IsChildOf(UOmegaLevelingAsset::StaticClass()))
+		{
+			out.Add(Cast<UOmegaLevelingAsset>(a),L_GetEntityData()->Attributes.FindOrAdd(a));
+		}
+	}
+	return out;
+}
+
+float UCombatantComponent::XP_Get(UOmegaLevelingAsset* Type)
+{
+	return XP_GetAll().FindOrAdd(Type);
+}
+
+void UCombatantComponent::XP_GetValues(UOmegaLevelingAsset* Type, float& LevelMin, float& LevelMax, float& Percent)
+{
+	if (Type)
+	{
+		int32 _lvl=XP_GetLevel(Type);
+		Type->GetXPFromLevel(_lvl,LevelMin,LevelMax);
+		float _cur=XP_Get(Type);
+		Percent=(_cur-LevelMin)/(LevelMax-LevelMin);
+	}
+}
+
+int32 UCombatantComponent::XP_GetLevel(UOmegaLevelingAsset* Type)
+{
+	if (Type)
+	{
+		return Type->GetLevelFromXP(XP_Get(Type));
+	}
+	return 0;
+}
+	
+// ------------------------------------------------------------------------------------------
+// Asset Tags
+// ------------------------------------------------------------------------------------------
+
+void UCombatantComponent::AssetLink_RemoveAllTags(UPrimaryDataAsset* Asset)
+{
+	if (Asset)
+	{
+		L_GetEntity_AssetData(Asset)->GameplayTags=FGameplayTagContainer();
+	}
+}
+
+void UCombatantComponent::AssetLink_SetTagsActive(UPrimaryDataAsset* Asset, FGameplayTagContainer Tags,
+	bool bTagsActive)
+{
+	if (Asset)
+	{
+		if (bTagsActive)
+		{
+			L_GetEntity_AssetData(Asset)->GameplayTags.AppendTags(Tags);
+		}
+		else
+		{
+			L_GetEntity_AssetData(Asset)->GameplayTags.RemoveTags(Tags);
+		}
+	}
+}
+
+FGameplayTagContainer UCombatantComponent::AssetLink_GetActiveTags(UPrimaryDataAsset* Asset)
+{
+	if (Asset)
+	{
+		return L_GetEntity_AssetData(Asset)->GameplayTags;	
+	}
+	return FGameplayTagContainer();
+}
+	
+// ------------------------------------------------------------------------------------------
+// Param 
+// ------------------------------------------------------------------------------------------
+
+void UCombatantComponent::EntityParam_Bool_Set(FName Param, bool Value)
+{
+	L_GetEntityData()->params_int32.Add(Param,Value);
+}
+
+bool UCombatantComponent::EntityParam_Bool_Get(FName Param)
+{
+	return L_GetEntityData()->params_int32.FindOrAdd(Param)>0;
+}
+
+void UCombatantComponent::EntityParam_Int_Set(FName Param, int32 Value, bool bAdded)
+{
+	int32 _target=Value;
+	if (bAdded)
+	{
+		_target+=EntityParam_Int_Get(Param);
+	}
+	L_GetEntityData()->params_int32.Add(Param,_target);
+}
+
+int32 UCombatantComponent::EntityParam_Int_Get(FName Param)
+{
+	return L_GetEntityData()->params_int32.FindOrAdd(Param);
+}
+

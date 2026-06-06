@@ -3,15 +3,21 @@
 
 #include "Actors/Actor_InteractTransit.h"
 
+#include "Actors/Actor_Zone.h"
+#include "Components/ArrowComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "DataAssets/DA_Zone.h"
+#include "Functions/F_Common.h"
 #include "Functions/F_Component.h"
-#include "Subsystems/Subsystem_Zone.h"
+#include "Subsystems/Subsystem_World.h"
 
 
-FText AInteractTransit::L_GetName() const
+FText AInteractTransit::L_GetName()
 {
-	return UDataInterface_General::GetObjectName(GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->GetLevelData(TransitLevel));
+	return UDataInterface_General::GetObjectName(UOmegaGameFrameworkBPLibrary::GetOmegaWorldManager(this)->Zone_GetLevelData(TransitLevel),FGameplayTag());
 }
 
 AInteractTransit::AInteractTransit()
@@ -84,11 +90,11 @@ void AInteractTransit::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AInteractTransit::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-                                                         FText& Description)
+void AInteractTransit::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name,
+                                                         FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	Name=L_GetName();
-	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
+	Label=GetName();
 }
 
 bool AInteractTransit::IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag,
@@ -104,7 +110,7 @@ void AInteractTransit::OnInteraction_Implementation(AActor* InteractInstigator, 
 	{
 		if(p->IsPlayerControlled())
 		{
-			GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->TransitPlayerToLevel(TransitLevel,SpawnTag);
+			UOmegaGameFrameworkBPLibrary::GetOmegaWorldManager(this)->Zone_TransitToLevel(TransitLevel,SpawnTag);
 		}
 	}
 }

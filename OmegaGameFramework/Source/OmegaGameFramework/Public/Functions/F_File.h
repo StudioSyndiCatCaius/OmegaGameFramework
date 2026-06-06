@@ -48,11 +48,17 @@ class UOmegaFileFunctions : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-
-	UFUNCTION(BlueprintCallable,Category="Omega|File")
-	static TArray<FString> GetExternalContentDirectories();
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|File")
+	UFUNCTION(BlueprintPure,Category="Omega|File",DisplayName="File - Get Plugin Base Directory")
+	static FString GetPluginBaseDir(const FString& PluginName);
+
+	UFUNCTION(BlueprintCallable,Category="Omega|File",DisplayName="File - Get Game Data Directories",meta=(AdvancedDisplay="OverrideFolder"))
+	static TArray<FString> GameData_GetDirectories(FString OverrideFolder="");
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|File",DisplayName="File - Get Game Data Files")
+	static TArray<FString> GameData_GetFiles(const FString& subdirectory,const FString& extension, bool bRecursive);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|File",DisplayName="File - Get Subfolders")
 	static TArray<FString> GetSubfolders(FString RootPath, bool OnlyNames=false);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|File|Import",meta=(AdvancedDisplay="MipGenSettings"))

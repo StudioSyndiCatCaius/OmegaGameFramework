@@ -7,24 +7,25 @@
 #include "Component_DebugText.generated.h"
 
 
+// Renders a debug text string in the world at the component's location. Useful for displaying runtime values during development.
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UComponent_DebugText : public UTextRenderComponent
 {
 	GENERATED_BODY()
 
 	void UpdateText();
-	
+
 public:
 	// Sets default values for this component's properties
 	UComponent_DebugText();
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-	
+
 #endif
-	
-	
-	
+
+
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

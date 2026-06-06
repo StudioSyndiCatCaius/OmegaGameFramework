@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/GameInstance.h"
 #include "Interfaces/I_Common.h"
 #include "UObject/Object.h"
 #include "OmegaLinearChoice.generated.h"

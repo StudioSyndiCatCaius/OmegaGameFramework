@@ -8,31 +8,24 @@
 
 #include "LuaInterface.generated.h"
 
-// This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class ULuaInterface : public UInterface
-{
-	GENERATED_BODY()
-};
+class ULuaInterface : public UInterface { GENERATED_BODY() };
 
-/**
- * 
- */
+
 class LUAMACHINE_API ILuaInterface
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Lua")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="ΩI|Lua",DisplayName="Lua - Set Value")
 	void SetValue(FLuaValue Value,const FString& Flag="");
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Lua")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="ΩI|Lua",DisplayName="Lua - Set Key")
 	void SetKey(FLuaValue Key);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Lua")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="ΩI|Lua",DisplayName="Lua - Get Value")
 	FLuaValue GetValue(const FString& Field);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Lua")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="ΩI|Lua",DisplayName="Lua - Get Value")
 	FLuaValue GetKey();
 };

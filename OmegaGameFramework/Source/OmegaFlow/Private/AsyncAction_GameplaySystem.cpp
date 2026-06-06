@@ -3,7 +3,7 @@
 
 #include "AsyncAction_GameplaySystem.h"
 
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 
 
 UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
@@ -43,7 +43,7 @@ void UAsyncAction_GameplaySystem::Activate()
 		if(LocalSystemClass)
 		{
 			bool IsAlreadyActiveSystem;
-			SubSysRef = Local_WorldContext->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>();
+			SubSysRef = Local_WorldContext->GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 			SubSysRef->GetGameplaySystem(LocalSystemClass, IsAlreadyActiveSystem);
 		
 			if(!IsAlreadyActiveSystem)

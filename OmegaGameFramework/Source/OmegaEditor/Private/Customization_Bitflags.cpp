@@ -3,7 +3,6 @@
 #include "Customization_Bitflags.h"// OmegaBitflagsCustomization.cpp
 
 #include "DetailLayoutBuilder.h"
-#include "Interfaces/I_BitFlag.h"
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
 #include "Widgets/Input/SCheckBox.h"
@@ -16,7 +15,8 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Text/STextBlock.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameManager.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Types/Struct_CustomNamedList.h"
 
 
@@ -48,9 +48,41 @@ void FOmegaBitflagsCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> Pr
     BitmaskPropertyHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FOmegaBitflagsBase, Bitmask));
     BitEnumsPropertyHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FOmegaBitflagsBase, BitEnums));
     StructPropertyHandle = PropertyHandle;
-
-    // Get the owner class
-    CachedOwnerClass = GetOwnerClass(PropertyHandle);
+    
+// Get raw pointer to the struct data
+    void* StructData = nullptr;
+    StructPropertyHandle->GetValueData(StructData);
+    //bool FoundClass=false;
+    if (FOmegaBitflagsBase* _struct=static_cast<FOmegaBitflagsBase*>(StructData))
+    {
+        if (UObject* o= _struct->override_source.Get())
+        {
+            cachedEditorData = *OGF_CFG()->GetEditorDataForClass(o->GetClass());
+        }
+        else if (_struct->override_config)
+        {
+            cachedEditorData= _struct->override_configData;
+        }
+        else if (const FOmegaBitmaskEditorData* d= OGF_CFG()->GetEditorDataForClass(GetOwnerClass(PropertyHandle)))
+        {
+            cachedEditorData= *d;
+        }
+        //cachedEditorData=_struct->GetConfig(GetOwnerClass(PropertyHandle));
+        /*
+        if (_struct->override_source.Get())
+        {
+            CachedOwnerClass=_struct->override_source->GetClass();
+            FoundClass=true;
+        }*/
+    }
+    /*
+    if (!FoundClass)
+    {
+        // Get the owner class
+        CachedOwnerClass = GetOwnerClass(PropertyHandle);    
+    }
+    */
+    
 
     HeaderRow
     .NameContent()
@@ -61,7 +93,7 @@ void FOmegaBitflagsCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> Pr
     [
         SNew(STextBlock)
         .Text(this, &FOmegaBitflagsCustomization::GetHeaderValueText)
-        .Font(IPropertyTypeCustomizationUtils::GetRegularFont())
+        .Font(IPropertyTypeCustomizationUtils::GetBoldFont())
     ];
 }
 
@@ -71,8 +103,8 @@ void FOmegaBitflagsCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> 
     {
         return;
     }
-
-    if (!CachedOwnerClass)
+    const FOmegaBitmaskEditorData* EditorData = &cachedEditorData;
+    if (!CachedOwnerClass && !EditorData)
     {
         ChildBuilder.AddCustomRow(FText::FromString("Error"))
         .WholeRowContent()
@@ -91,7 +123,7 @@ void FOmegaBitflagsCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> 
     }
 
     // Get the editor data for this class
-    const FOmegaBitmaskEditorData* EditorData = Settings->GetEditorDataForClass(CachedOwnerClass);
+    //const FOmegaBitmaskEditorData* EditorData = Settings->GetEditorDataForClass(CachedOwnerClass);
     
     if (!EditorData)
     {
@@ -188,6 +220,10 @@ void FOmegaBitflagsCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> 
         // Add each bitenum
         for (int32 i = 0; i < EditorData->BitEnums.Num() && i < 16; ++i)
         {
+            if (!EditorData->BitEnums.IsValidIndex(i))
+            {
+                continue;
+            }
             const FOmegaBitmaskEditorEnumData& EnumData = EditorData->BitEnums[i];
             
             // Skip if the title is empty
@@ -314,42 +350,30 @@ void FOmegaBitflagsCustomization::SetBitEnumValue(int32 BitIndex, int32 NewValue
 
 FText FOmegaBitflagsCustomization::GetBitEnumDisplayText(int32 BitIndex) const
 {
-    const UOmegaSettings* Settings = GetDefault<UOmegaSettings>();
-    if (!Settings || !CachedOwnerClass)
+    int32 Value = GetBitEnumValue(BitIndex);
+
+    if (cachedEditorData.BitEnums.IsValidIndex(BitIndex))
     {
-        return FText::FromString("0");
+        const FOmegaBitmaskEditorEnumData& EnumData = cachedEditorData.BitEnums[BitIndex];
+        if (EnumData.Options.IsValidIndex(Value) && !EnumData.Options[Value].Title.IsEmpty())
+        {
+            return FText::FromString(FString::Printf(TEXT("[%d] %s"), Value, *EnumData.Options[Value].Title.ToString()));
+        }
     }
 
-    int32 Value = GetBitEnumValue(BitIndex);
-    FText OptionName = Settings->GetBitEnumOptionName(CachedOwnerClass, BitIndex, Value);
-    
-    // Always show [index] name format
-    if (OptionName.IsEmpty() || OptionName.ToString().TrimStartAndEnd().IsEmpty())
-    {
-        return FText::FromString(FString::Printf(TEXT("[%d]"), Value));
-    }
-    
-    return FText::FromString(FString::Printf(TEXT("[%d] %s"), Value, *OptionName.ToString()));
+    return FText::FromString(FString::Printf(TEXT("[%d]"), Value));
 }
 
 TSharedRef<SWidget> FOmegaBitflagsCustomization::GenerateEnumComboContent(int32 BitIndex)
 {
     FMenuBuilder MenuBuilder(true, nullptr);
 
-    const UOmegaSettings* Settings = GetDefault<UOmegaSettings>();
-    if (!Settings || !CachedOwnerClass)
+    if (!cachedEditorData.BitEnums.IsValidIndex(BitIndex))
     {
         return MenuBuilder.MakeWidget();
     }
 
-    const FOmegaBitmaskEditorData* EditorData = Settings->GetEditorDataForClass(CachedOwnerClass);
-    
-    if (!EditorData || !EditorData->BitEnums.IsValidIndex(BitIndex))
-    {
-        return MenuBuilder.MakeWidget();
-    }
-
-    const FOmegaBitmaskEditorEnumData& EnumData = EditorData->BitEnums[BitIndex];
+    const FOmegaBitmaskEditorEnumData& EnumData = cachedEditorData.BitEnums[BitIndex];
     
     // Show options from the enum data, or default to 0-15 if no options defined
     int32 NumOptions = EnumData.Options.Num() > 0 ? FMath::Min(EnumData.Options.Num(), 16) : 16;

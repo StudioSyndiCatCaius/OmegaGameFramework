@@ -7,16 +7,16 @@
 #include "LuaSubsystem.h"
 #include "Components/AudioComponent.h"
 #include "Functions/F_Combatant.h"
-#include "OmegaMutable_Functions.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
+#include "Actors/Actor_Tool.h"
+#include "Actors/Actor_Zone.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Component_CombatantExtension.h"
 #include "Components/Component_DataWidget.h"
-#include "Components/Component_Interactable.h"
 #include "Components/Component_UtilMesh.h"
 #include "Components/StateTreeComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -24,22 +24,24 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Misc/OmegaFaction.h"
-#include "Misc/OmegaUtils_Methods.h"
-#include "Subsystems/Subsystem_GameManager.h"
-
+#include "DataAssets/DA_Faction.h"
+#include "DataAssets/DA_Zone.h"
+#include "Functions/F_Common.h"
 
 class ULuaWorldSubsystem;
 
-void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, UActorIdentityComponent* Component)
+void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, UGameplayActorComponent* Component)
 {
 	if(IdentityAsset)
 	{
-		if(IdentityAsset!=CharacterAsset)
-		{
-			CharacterAsset=IdentityAsset;
-		}
 		Combatant->SetSourceDataAsset(IdentityAsset);
+		
+		//Fix Preset if not matching
+		if (Preset.GetObject()!=IdentityAsset && IdentityAsset->GetClass()->ImplementsInterface(UDataInterface_Character::StaticClass()))
+		{
+			SetCharacterPreset(IdentityAsset);
+		}
+		
 		//UOmegaSkinFunctions::SetSkinFromAsset(SkinComponent,IdentityAsset);
 	}
 }
@@ -80,6 +82,14 @@ void AOmegaCharacter::N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPrimary
 	OnActorIdentityChanged(new_asset,ActorIdentity);
 }
 
+void AOmegaCharacter::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
+{
+	bitflags=Flags;
+	named_lists=NamedLists;
+	seed=Seed;
+}
+
 // Sets default values
 AOmegaCharacter::AOmegaCharacter()
 {
@@ -87,19 +97,10 @@ AOmegaCharacter::AOmegaCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	ActorIdentity = CreateDefaultSubobject<UActorIdentityComponent>(TEXT("Actor Identity"));
 	Combatant = CreateDefaultSubobject<UCombatantComponent>(TEXT("Combatant"));
 
-	Equipment = CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
-	Inventory = CreateDefaultSubobject<UDataAssetCollectionComponent>(TEXT("Inventory"));
-	Leveling = CreateDefaultSubobject<ULevelingComponent>(TEXT("Leveling"));
-	Saveable = CreateDefaultSubobject<UOmegaSaveableComponent>(TEXT("Saveable"));
-	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
-	Interactable = CreateDefaultSubobject<UOmegaComponent_Interactable>(TEXT("Interactable"));
-	GameplayPause = CreateDefaultSubobject<UGameplayPauseComponent>(TEXT("GameplayPause"));
-	GameplayPause->PauseCategory=FGameplayTag::RequestGameplayTag(TEXT("Character.Type.Field"));
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
-	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
+	//LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
 	
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("Camera Boom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -114,8 +115,8 @@ AOmegaCharacter::AOmegaCharacter()
 	DataWidget->SetupAttachment(RootComponent);
 	DataWidget->SetWidgetSpace(EWidgetSpace::Screen);
 	
-	SkinTarget=CreateOptionalDefaultSubobject<UChildActorComponent>(TEXT("SkinTarget"));
-	SkinTarget->SetupAttachment(GetMesh());
+	ChildSlot=CreateOptionalDefaultSubobject<UChildActorComponent>(TEXT("Child Slot"));
+	ChildSlot->SetupAttachment(GetMesh());
 
 	AudioComponent=CreateOptionalDefaultSubobject<UAudioComponent>(TEXT("Audio"));
 	AudioComponent->SetupAttachment(GetMesh());
@@ -129,7 +130,10 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	Text_Name = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Text Name"));
 	Text_Name->SetupAttachment(RootComponent);
-	Text_Name->SetMaterial(0,LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")));
+	if (UMaterial* _mat=LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")))
+	{
+		Text_Name->SetMaterial(0,_mat);
+	}
 	Text_Name->HorizontalAlignment=EHTA_Center;
 	Text_Name->WorldSize=40;
 	Text_Name->VerticalAlignment=EVRTA_TextBottom;
@@ -144,7 +148,10 @@ AOmegaCharacter::AOmegaCharacter()
 	{
 		FVector bounds_loc=GetMesh()->GetLocalBounds().BoxExtent;
 		Text_Name->SetRelativeLocation(bounds_loc+FVector(0,0,140));
-		Icon_Faction->SetRelativeLocation(bounds_loc+FVector(0,0,110));
+		if (Icon_Faction)
+		{
+			Icon_Faction->SetRelativeLocation(bounds_loc+FVector(0,0,110));
+		}
 	}
 
 	GetCapsuleComponent()->ShapeColor=FColor::Cyan;
@@ -152,35 +159,34 @@ AOmegaCharacter::AOmegaCharacter()
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MatRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male"));
 	GetMesh()->SetSkeletalMeshAsset(MatRef.Object);
 	
+	Tools=CreateOptionalDefaultSubobject<UOmegaToolComponent>(TEXT("Tools"));
 
-	bUseControllerRotationYaw=false;
-	GetCharacterMovement()->bOrientRotationToMovement=true;
 }
 
 void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 {
 	L_Camera_Update();
-	if(CharacterAsset)
+	ActorIdentity->Local_RunConstruct();
+	
+	//corrective flow set. remove long term
+	if (DialogueFlow.IsValid() && !ActorIdentity->DefaultFlow)
 	{
-		SetCharacterAsset(CharacterAsset);
+		ActorIdentity->DefaultFlow=DialogueFlow;
+		DialogueFlow=nullptr;
 	}
-	/*
-	if(SkinComponent)
-	{
-		SkinComponent->SetupLinkedComponents(GetMesh(),SkinTarget);
-		SkinComponent->Assemble();
-	}
-*/
-
+	
 	if(Combatant && Combatant->FactionDataAsset)
 	{
-		Icon_Faction->SetVisibility(false);
-		if(UTexture2D* texture =Cast<UTexture2D>(Combatant->FactionDataAsset->FactionIcon.GetResourceObject()))
+		FSlateBrush _br=Combatant->FactionDataAsset->FactionIcon;
+		if (Icon_Faction)
 		{
-			Icon_Faction->SetVisibility(true);
-			Icon_Faction->SetSprite(texture);
+			Icon_Faction->SetVisibility(false);
+			if(UTexture2D* texture =Cast<UTexture2D>(_br.GetResourceObject()))
+			{
+				Icon_Faction->SetVisibility(true);
+				Icon_Faction->SetSprite(texture);
+			}
 		}
-		
 	}
 	if(Text_Name)
 	{
@@ -188,19 +194,23 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 		{
 			Text_Name->SetTextRenderColor(Combatant->GetFactionColor().ToFColorSRGB());	
 		}
-		Text_Name->SetText(L_GetDisplayName());	
+		Text_Name->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(this,FGameplayTag()));	
 	}
-	
-	
+	SetCharacterPreset(Preset);
 	Super::OnConstruction(Transform);
 }
 
 
-
-FVector AOmegaCharacter::GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const
+UFlowAsset* AOmegaCharacter::GetFlowAsset_Implementation(FGameplayTag Tag)
 {
-	return GetMesh()->GetSocketLocation(LookAimSocketName);
+	if (UFlowAsset* _fl=Cast<UFlowAsset>(ActorIdentity->DefaultFlow.LoadSynchronous()))
+	{
+		return _fl;
+	}
+	return nullptr;
 }
+
+
 
 
 
@@ -208,25 +218,16 @@ FVector AOmegaCharacter::GetAimTargetLocation_Implementation(const UAimTargetCom
 void AOmegaCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	if(Leveling)
-	{
-		Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
-		Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
-	}
+	//if(Leveling)
+	//{
+	//	Leveling->OnLevelUp.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
+	//	Leveling->OnLevelDown.AddDynamic(this, &AOmegaCharacter::Local_LevelUpdate);
+	//}
 	//DataItem->OnDataItemChanged.AddDynamic(this, &AOmegaCharacter::Local_UpdateDataItem);
 	if(DefaultEmote)
 	{
 		UOmegaAnimationFunctions::PlayEmoteAnimation(this,DefaultEmote);
 	}
-	if(Autobind_NamedGlobalEvents)
-	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &AOmegaCharacter::OnGlobalEvent_Named);
-	}
-	if(Autobind_TaggedGlobalEvents)
-	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnTaggedGlobalEvent.AddDynamic(this, &AOmegaCharacter::OnGlobalEvent_Tagged);
-	}
-	_ActivateSubscriptCol(SubscriptCollections);
 
 }
 
@@ -236,8 +237,7 @@ void AOmegaCharacter::Local_AddCombatantSource(UObject* Source)
 {
 	if(Source)
 	{
-		Combatant->SetAttributeModifierActive(Source,true);
-		Combatant->SetSkillSourceActive(Source, true);
+		
 	}
 }
 
@@ -262,93 +262,10 @@ void AOmegaCharacter::Camera_Front()
 	L_Camera_Update();
 }
 
-TArray<UOmegaObjectTrait*> AOmegaCharacter::GetTraits_Implementation()
-{
-	TArray<UOmegaObjectTrait*> out;
-	if(UseIdentityTraits)
-	{
-		if(UPrimaryDataAsset* _asset = ActorIdentity->GetIdentitySourceAsset())
-		{
-			out.Append(UDataInterface_Traits::GetObjectTraits(_asset));
-		}
-	}
-	out.Append(Traits);
-	return out;
-}
 
 
-void AOmegaCharacter::Local_LevelUpdate(ULevelingComponent* comp,int32 NewLevel,int32 LastLevel,UOmegaLevelingAsset* asset)
-{
-	Combatant->Level = Leveling->GetCurrentLevel();
-}
-
-void AOmegaCharacter::Local_UpdateDataItem(UOmegaDataItem* NewItem)
-{
-//	Combatant->CombatantDataAsset = NewItem;
-	Combatant->Update();
-}
 
 
-FText AOmegaCharacter::L_GetDisplayName()
-{
-	FText text_out;
-	FText desc_out;
-	if(!OverrideName.IsEmpty())
-	{
-		return OverrideName;
-	}
-	if(b_IdentityHasGeneralInterface())
-    {
-    	Execute_GetGeneralDataText(ActorIdentity->GetIdentitySourceAsset(),"",this,text_out,desc_out);
-    }
-	return text_out;
-}
-
-FText AOmegaCharacter::L_GetDisplayDescript()
-{
-	FText text_out;
-	FText desc_out;
-	if(b_IdentityHasGeneralInterface())
-	{
-		Execute_GetGeneralDataText(ActorIdentity->GetIdentitySourceAsset(),"",this,text_out,desc_out);
-	}
-	return desc_out;
-}
-
-void AOmegaCharacter::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-                                                        FText& Description)
-{
-	Name=L_GetDisplayName();
-	Description=L_GetDisplayDescript();
-	IDataInterface_General::GetGeneralDataText_Implementation(Label, Context, Name, Description);
-}
-
-void AOmegaCharacter::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	if(b_IdentityHasGeneralInterface())
-	{
-		Execute_GetGeneralDataImages(ActorIdentity->GetIdentitySourceAsset(),"",this,Texture,Material,Brush);
-	}
-	IDataInterface_General::GetGeneralDataImages_Implementation(Label, Context, Texture, Material, Brush);
-}
-
-
-UOAsset_Appearance* AOmegaCharacter::GetAppearanceAsset_Implementation()
-{
-
-	if(ActorIdentity && ActorIdentity->GetIdentitySourceAsset() &&
-		ActorIdentity->GetIdentitySourceAsset()->GetClass()->ImplementsInterface(UDataInterface_AppearanceSource::StaticClass()))
-	{
-		return IDataInterface_AppearanceSource::Execute_GetAppearanceAsset(ActorIdentity->GetIdentitySourceAsset());
-	}
-	return Super::GetAppearanceAsset_Implementation();
-}
-
-TArray<FName> AOmegaEncounterCharacter::GetKeys_Encounter()
-{
-	return GetWorld()->GetSubsystem<ULuaWorldSubsystem>()->GetGlobalKeys(OMEGA_LUA_GTABLE_ENCOUNTERS);
-}
 
 // ========================================================================================================
 // Encounter Character
@@ -363,14 +280,8 @@ AOmegaEncounterCharacter::AOmegaEncounterCharacter()
 		GetMesh()->SetSkeletalMesh(mesh);
 	}
 	
-	ActorIdentity = CreateDefaultSubobject<UActorIdentityComponent>(TEXT("Actor Identity"));
-	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
-	SubscriptComponent = CreateDefaultSubobject<USubscriptComponent>(TEXT("Subscript"));
-	SkinComponent = CreateDefaultSubobject<USkinComponent>(TEXT("Skin"));
-	GameplayPause = CreateDefaultSubobject<UGameplayPauseComponent>(TEXT("GameplayPause"));
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
-	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
-	
+
 	OverlapRange=CreateOptionalDefaultSubobject<UBoxComponent>("Box");
 	OverlapRange->SetupAttachment(RootComponent);
 	OverlapRange->ShapeColor=FColor::Red;
@@ -406,9 +317,9 @@ void AOmegaEncounterCharacter::OnConstruction(const FTransform& Transform)
 
 UOmegaEncounter_Asset* AOmegaEncounterCharacter::GetEncounterAsset() const
 {
-	if(UOmegaZoneSubsystem*  sub=GetWorld()->GetSubsystem<UOmegaZoneSubsystem>())
+	if(UOmegaSubsystem_World*  sub=GetWorld()->GetSubsystem<UOmegaSubsystem_World>())
 	{
-		if(UOmegaZoneData* zoneDat=sub->GetTopLoadedZones())
+		if(UOmegaZoneData* zoneDat=sub->GetWorldManager()->Zone_GetFirstLoaded())
 		{
 			if(zoneDat->Default_Encounter) { return zoneDat->Default_Encounter;}
 		}
@@ -424,7 +335,11 @@ AOmegaReferenceCharacter::AOmegaReferenceCharacter()
 	//bIsSpatiallyLoaded=false;
 	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
 	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
-
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->GravityScale=0;
+		GetCharacterMovement()->MovementMode=EMovementMode::MOVE_None;
+	}
 	if (USkeletalMesh* mesh=GetMutableDefault<UOmegaSettings>()->CharacterMesh_Reference.LoadSynchronous())
 	{
 		GetMesh()->SetSkeletalMesh(mesh);
@@ -439,8 +354,6 @@ void AOmegaReferenceCharacter::BeginPlay()
 
 AOmegaCinematicCharacter::AOmegaCinematicCharacter()
 {
-	ActorIdentityComponent=CreateOptionalDefaultSubobject<UActorIdentityComponent>("ActorID");
-
 	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
 	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
 	if (USkeletalMesh* mesh=GetMutableDefault<UOmegaSettings>()->CharacterMesh_Cinematic.LoadSynchronous())

@@ -4,11 +4,13 @@
 
 #include "GameplayTagContainer.h"
 #include "Engine/DeveloperSettings.h"
-#include "Misc/OmegaUtils_Enums.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Templates/SubclassOf.h"
 #include "FlowSettings.generated.h"
 
 class UFlowNode;
+class UFlowAsset;
+class UFlowAssetTrait;
 
 /**
  *

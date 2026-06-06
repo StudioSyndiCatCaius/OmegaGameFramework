@@ -10,10 +10,10 @@ struct FOmegaCustomNamedList
 {
 	GENERATED_BODY()
     
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Data")
 	FName ListID;
     
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Data")
 	FName Option;
 };
 
@@ -21,8 +21,11 @@ USTRUCT(BlueprintType)
 struct FOmegaClassNamedLists
 {
 	GENERATED_BODY()
+	
+	UPROPERTY(Transient) bool override_keys;
+	UPROPERTY(Transient) TArray<FName> override_keyList;
     
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Metaconfig")
 	TMap<FName, FOmegaCustomNamedList> CustomNamedList;
     
 

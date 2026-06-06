@@ -1,27 +1,20 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
-
 #include "Widget/UI_Background.h"
 
+#include "OmegaSettings_Slate.h"
 #include "Components/BorderSlot.h"
 #include "Components/Image.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Components/NamedSlot.h"
 #include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Misc/OmegaUtils_Macros.h"
 
-
-void L_SetContentToSlot(UWidget* content, UNamedSlot* slot)
-{
-	if(slot)
-	{
-		slot->ClearChildren();
-		if(content)
-		{
-			slot->AddChild(content);
-		}
-	}
-}
+// ---------------------------------------------------------------------------------------------------------------------
+// Style asset
+// ---------------------------------------------------------------------------------------------------------------------
 
 TArray<FOmegaUI_SectionInfo> UOmegaUIStyle_Background::GetBorderSections_Implementation()
 {
@@ -32,32 +25,93 @@ TArray<FOmegaUI_SectionInfo> UOmegaUIStyle_Background::GetBorderSections_Impleme
 	return out;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Style resolution
+// ---------------------------------------------------------------------------------------------------------------------
+
+UOmegaUIStyle_Background* UOmegaUI_Background::L_GetStyle() const
+{
+	if (!UseStyle) { return nullptr; }
+	if (OverrideStyle) { return OverrideStyle; }
+	if (UOmegaSlateTheme* Theme = UOmegaWidgetInterface::GetTheme(const_cast<UOmegaUI_Background*>(this)))
+	{
+		return Theme->GetStyle_Background(StyleTag);
+	}
+	return nullptr;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Lifecycle
+// ---------------------------------------------------------------------------------------------------------------------
+
 void UOmegaUI_Background::NativePreConstruct()
 {
-	SetStyle(Style);
+	SetStyleAsset(L_GetStyle());
 	Super::NativePreConstruct();
 }
 
+void UOmegaUI_Background::NativeConstruct()
+{
+	SetStyleAsset(L_GetStyle());
+	Super::NativeConstruct();
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------------------------------------------------
+
+void UOmegaUI_Background::SetStyleAsset(UOmegaUIStyle_Background* InStyle)
+{
+	if (InStyle) { OverrideStyle = InStyle; }
+	if (UOmegaUIStyle_Background* Resolved = L_GetStyle())
+	{
+		SetStyle(Resolved);
+		// Retrieve the background image widget so PP can target its dynamic material
+		UImage* Img = nullptr;
+		UOverlay* Overlay = nullptr;
+		UPanelWidget* Panel = nullptr;
+		GetWidgets_Base(Img, Overlay, Panel);
+		UMaterialInstanceDynamic* DynMat = Img ? Img->GetDynamicMaterial() : nullptr;
+		Resolved->PostProcess.Apply(DynMat);                              // 2. style asset PP
+		if (UOmegaSlateTheme* Theme = UOmegaWidgetInterface::GetTheme(this))
+		{
+			Theme->PostProcess.Apply(DynMat);                          // 3. theme PP
+		}
+	}
+}
+
+void UOmegaUI_Background::SetStyle(UOmegaUIStyle_Background* InStyle)
+{
+	if (!InStyle) { return; }
+
+	UImage* img;
+	UOverlay* overlay;
+	UPanelWidget* panel = nullptr;
+	GetWidgets_Base(img, overlay, panel);
+
+	if (img)
+	{
+		img->SetBrush(InStyle->Background_Brush);
+		if (UOverlaySlot* slot = Cast<UOverlaySlot>(img->Slot))
+		{
+			slot->SetPadding(InStyle->Background_Margins);
+		}
+	}
+
+	TArray<FOmegaUI_SectionInfo> sec = InStyle->GetBorderSections();
+	for (int i = 0; i < sec.Num(); ++i)
+	{
+		L_UpdateStyleElements(sec[i], i);
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Private helpers
+// ---------------------------------------------------------------------------------------------------------------------
+
 void UOmegaUI_Background::L_Refresh()
 {
-	/*
-	if(Style)
-	{
-		if(img_bkg)
-		{
-			img_bkg->SetBrush(Style->Background_Brush);
-		}
-		// Fix: Get the overlay slot correctly
-		if(UOverlaySlot* vbox_slot = Cast<UOverlaySlot>(vbox->Slot))
-		{
-			vbox_slot->SetPadding(Style->Background_Margins);
-		}
-		L_UpdateStyleElements(Style->Top_Style,Border_top);
-		L_UpdateStyleElements(Style->Center_Style,Border_center);
-		L_UpdateStyleElements(Style->Bottom_Style,Border_bottom);
-		//L_UpdateStyleElements(Style->Background_Style,img_bkg,nullptr,RootOverlay);
-	}
-	*/
+	if (UOmegaUIStyle_Background* Resolved = L_GetStyle()) { SetStyle(Resolved); }
 }
 
 void UOmegaUI_Background::L_UpdateStyleElements(FOmegaUI_SectionInfo style, int32 index)
@@ -65,69 +119,32 @@ void UOmegaUI_Background::L_UpdateStyleElements(FOmegaUI_SectionInfo style, int3
 	UBorder* Border;
 	UNamedSlot* nslot;
 	USizeBox* SizeBox;
-	GetWidgets_Section(index,nslot,Border,SizeBox);
-	if(Border)
+	GetWidgets_Section(index, nslot, Border, SizeBox);
+
+	if (Border)
 	{
 		Border->SetBrush(style.Brush);
 		Border->SetPadding(style.InnerMargins);
-		if(UVerticalBoxSlot* slot = Cast<UVerticalBoxSlot>(Border->Slot))
+		if (UVerticalBoxSlot* slot = Cast<UVerticalBoxSlot>(Border->Slot))
 		{
-			slot->SetPadding(style.OuterMargins); 
+			slot->SetPadding(style.OuterMargins);
 			slot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 		}
-		if(UBorderSlot* slot=Cast<UBorderSlot>(Border->AddChild(nslot)))
+		if (UBorderSlot* slot = Cast<UBorderSlot>(Border->AddChild(nslot)))
 		{
 			slot->SetHorizontalAlignment(HAlign_Fill);
 			slot->SetVerticalAlignment(VAlign_Fill);
 		}
 	}
-	if(SizeBox)
+
+	if (SizeBox)
 	{
 		SizeBox->SetWidthOverride(style.BoxSize.X);
 		SizeBox->SetHeightOverride(style.BoxSize.Y);
 	}
 }
 
-void UOmegaUI_Background::L_InitSection(UBorder*& border, UNamedSlot*& nslot,FName slotName)
+void UOmegaUI_Background::L_InitSection(UBorder*& border, UNamedSlot*& nslot, FName slotName)
 {
-	/*
-	if(vbox)
-	{
-		border=NewObject<UBorder>(this);
-		UVerticalBoxSlot* slot_vbox=vbox->AddChildToVerticalBox(border);
-		slot_vbox->SetHorizontalAlignment(HAlign_Fill);
-		slot_vbox->SetVerticalAlignment(VAlign_Fill);
-		nslot=NewObject<UNamedSlot>(this,slotName);
-		border->AddChild(nslot);
-	}
-	*/
+	// Reserved for runtime-constructed section initialisation
 }
-
-void UOmegaUI_Background::SetStyle(UOmegaUIStyle_Background* InStyle)
-{
-	if(InStyle)
-	{
-		Style=InStyle;
-		UImage* img;
-		UOverlay* overlay;
-		UPanelWidget* panel = nullptr;
-		GetWidgets_Base(img,overlay,panel);
-		if(Style)
-		{
-			if(img)
-			{
-				img->SetBrush(Style->Background_Brush);
-				if(UOverlaySlot* slot=Cast<UOverlaySlot>(img->Slot))
-				{
-					slot->SetPadding(Style->Background_Margins);
-				}
-			}
-			TArray<FOmegaUI_SectionInfo> sec=Style->GetBorderSections();
-			for (int i = 0; i < sec.Num(); ++i)
-			{
-				L_UpdateStyleElements(sec[i],i);
-			}
-		}
-	}
-}
-

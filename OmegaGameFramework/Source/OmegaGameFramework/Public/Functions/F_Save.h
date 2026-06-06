@@ -17,98 +17,68 @@ class UOmegaSaveGame;
 class USaveGame;
 
 
+UENUM(BlueprintType)
+enum EOmegaSaveDirectory : uint8
+{
+	OmegaSaveDir_UserData UMETA(DisplayName="User Data"), //saves to user AppData game folder (the normal save location)
+	OmegaSaveDir_GameData UMETA(DisplayName="Game Folder"), //saves to the Project/packaged game local "Saved" folder
+};
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Save",DisplayName="💾Save - Get Directory Path") 
+	static FString GetSaveDirectoryPath(TEnumAsByte<EOmegaSaveDirectory> Directory);
 
-	UFUNCTION(BlueprintPure,Category="Omega|Save", meta = (WorldContext = "WorldContextObject",DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintPure,Category="Omega|Save",DisplayName="💾Save - Make File Path (Name)") 
+	static FString MakeSaveFilePath_Name(TEnumAsByte<EOmegaSaveDirectory> Directory, const FString& Name);
+	UFUNCTION(BlueprintPure,Category="Omega|Save",DisplayName="💾Save - Make File Path (Slot)")
+	static FString MakeSaveFilePath_Slot(TEnumAsByte<EOmegaSaveDirectory> Directory, int32 Slot);
+	
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Save", meta = (WorldContext = "WorldContextObject",DeterminesOutputType="Class"),DisplayName="💾Save - Get GAME") 
 	static UOmegaSaveGame* GetSave_Game(const UObject* WorldContextObject, TSubclassOf<UOmegaSaveGame> Class=nullptr);
 
-	UFUNCTION(BlueprintPure,Category="Omega|Save", meta = (WorldContext = "WorldContextObject",DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintPure,Category="Omega|Save", meta = (WorldContext = "WorldContextObject",DeterminesOutputType="Class"),DisplayName="💾Save - Get GLOBAL")
 	static UOmegaSaveGlobal* GetSave_Global(const UObject* WorldContextObject, TSubclassOf<UOmegaSaveGlobal> Class=nullptr);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Set TagParam <Int>")
+	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set TagParam <Int>")
 	static void SetSaveParam_Tag_Int(const UObject* WorldContextObject, FGameplayTag Param, int32 Value, bool bGlobal);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Set TagParam <Bool>")
+	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set TagParam <Bool>")
 	static void SetSaveParam_Tag_Bool(const UObject* WorldContextObject, FGameplayTag Param, bool Value, bool bGlobal);
 
-	UFUNCTION(BlueprintPure, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Get TagParam <Int>")
+	UFUNCTION(BlueprintPure, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Get TagParam <Int>")
 	static int32 GetSaveParam_Tag_Int(const UObject* WorldContextObject, FGameplayTag Param, bool bGlobal);
 
-	UFUNCTION(BlueprintPure, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Set TagParam <Bool>")
+	UFUNCTION(BlueprintPure, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set TagParam <Bool>")
 	static bool GetSaveParam_Tag_Bool(const UObject* WorldContextObject, FGameplayTag Param, bool bGlobal);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",ExpandBoolAsExecs = "Outcome",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Check TagParam <Bool>")
+	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",ExpandBoolAsExecs = "Outcome",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Check TagParam <Bool>")
 	static bool CheckSaveParam_Tag_Bool(const UObject* WorldContextObject, FGameplayTag Param, bool bGlobal, bool& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",ExpandEnumAsExecs = "Outcome",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Check TagParam <Int>")
+	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",ExpandEnumAsExecs = "Outcome",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Check TagParam <Int>")
 	static int32 CheckSaveParam_Tag_Int(const UObject* WorldContextObject, FGameplayTag Param, int32 CheckValue, bool bGlobal, TEnumAsByte<EOmegaComparisonMethodSimple>& Outcome);
 
-	//Asset
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Data Asset - Get JSON")
-	static FJsonObjectWrapper DataAsset_GetJson(const UObject* WorldContextObject, UPrimaryDataAsset* Asset, bool bGlobal);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) Data Asset - Set JSON")
-	static void DataAsset_SetJson(const UObject* WorldContextObject, UPrimaryDataAsset* Asset, FJsonObjectWrapper Json, bool bGlobal);
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",meta = (WorldContext = "WorldContextObject"),DisplayName="💾Save - Create New Game")
+	static UOmegaSaveGame* CreateGame(const UObject* WorldContextObject);
 	
-	//GUID
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) GUID - Get JSON")
-	static FJsonObjectWrapper GUID_GetJson(const UObject* WorldContextObject, FGuid Guid, bool bGlobal);
-
-	UFUNCTION(BlueprintCallable, Category="Omega|Save", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="(SAVE) GUID - Set JSON")
-	static void GUID_SetJson(const UObject* WorldContextObject, FGuid Guid, FJsonObjectWrapper Json, bool bGlobal);
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",meta = (WorldContext = "WorldContextObject"),DisplayName="💾Save - Start Game")
+	static bool StartGame(const UObject* WorldContextObject,UOmegaSaveGame* Game, bool bLoadSaveLevel);
 	
-	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="Save Game (Custom)")
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="💾Save - Save Game (Custom)")
 	static bool Custom_SaveGame(USaveGame* SaveGameObject, const FString& path, const FString& file);
 
-	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="Load Game (Custom)")
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="💾Save - Load Game (Custom)")
 	static USaveGame* Custom_LoadGame(const FString& path, const FString& file);
-
-	// Param Set
-	UFUNCTION(BlueprintPure,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Get Param (Bool)")
-	static bool GetSaveParam_Bool(const UObject* WorldContextObject, FName Param, bool bGlobal,bool Fallback=false);
-	UFUNCTION(BlueprintPure,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Get Param (Int)")
-	static int32 GetSaveParam_Int(const UObject* WorldContextObject, FName Param, bool bGlobal,int32 Fallback=0);
-	UFUNCTION(BlueprintPure,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Get Param (Float)")
-	static float GetSaveParam_Float(const UObject* WorldContextObject, FName Param, bool bGlobal,float Fallback=0.0);
-	UFUNCTION(BlueprintPure,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Get Param (String)")
-	static FString GetSaveParam_String(const UObject* WorldContextObject, FName Param, bool bGlobal,const FString& Fallback="");
-	UFUNCTION(BlueprintPure,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Get Param (Vector)")
-	static FVector GetSaveParam_Vector(const UObject* WorldContextObject, FName Param, bool bGlobal,FVector Fallback);
-	UFUNCTION(BlueprintPure,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Get Param (DataAsset)")
-	static UPrimaryDataAsset* GetSaveParam_DataAsset(const UObject* WorldContextObject, FName Param, bool bGlobal,UPrimaryDataAsset* Fallback=nullptr);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set Save Param (Bool)")
-	static void SetSaveParam_Bool(const UObject* WorldContextObject, bool Value, FName Param, bool bGlobal);
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set Save Param (Int)")
-	static void SetSaveParam_Int(const UObject* WorldContextObject, int32 Value, FName Param, bool bGlobal);
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set Save Param (Float)")
-	static void SetSaveParam_Float(const UObject* WorldContextObject, float Value, FName Param, bool bGlobal);
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set Save Param (String)")
-	static void SetSaveParam_String(const UObject* WorldContextObject, const FString& Value, FName Param, bool bGlobal);
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set Save Param (Vector)")
-	static void SetSaveParam_Vector(const UObject* WorldContextObject, FVector Value, FName Param, bool bGlobal);
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Param", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"),DisplayName="💾Save - Set Save Param (DataAsset)")
-	static void SetSaveParam_DataAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Value, FName Param, bool bGlobal);
 	
-	// ===============================================================
-	// ENTITY
-	// ===============================================================
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
-	static void SetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key, FOmegaEntity Entity, bool bGlobal);
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
-	static FOmegaEntity GetEntity_ByAsset(const UObject* WorldContextObject, UPrimaryDataAsset* Key, bool bGlobal);
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="💾Save - Load All Games in path")
+	static TArray<USaveGame*> Custom_LoadGame_AllInPath(const FString& path);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
-	static void SetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, FOmegaEntity Entity, bool bGlobal);
-	UFUNCTION(BlueprintCallable,Category="Omega|Save|Entity", meta = (WorldContext = "WorldContextObject",AdvancedDisplay="bGlobal"))
-	static FOmegaEntity GetEntity_ByGuid(const UObject* WorldContextObject, FGuid Key, bool bGlobal);
-	
-
-
 };
 

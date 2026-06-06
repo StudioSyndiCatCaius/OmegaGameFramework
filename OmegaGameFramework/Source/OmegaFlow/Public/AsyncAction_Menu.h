@@ -18,9 +18,9 @@ class OMEGAFLOW_API UAsyncAction_Menu : public UBlueprintAsyncActionBase
 
 public:
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnMenuClosed Closed;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnMenuFailed Failed;
 	
 	UPROPERTY() APlayerController* PlayerRef;
@@ -34,7 +34,7 @@ public:
 	void NativeShutdown(FGameplayTagContainer CloseTags, UObject* Context, const FString OutFlag);
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player, OpenTags, OpenFlag"), Category="Omega|AsyncGameplayTasks"
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly, WorldContext="WorldContextObject", AdvancedDisplay="Player, OpenTags, OpenFlag"), Category="Omega|AsyncGameplayTasks"
 		,DisplayName="Ω🔷 Open Menu")
 	static UAsyncAction_Menu* OpenMenu(UObject* WorldContextObject, APlayerController* Player, const TSubclassOf<UMenu> MenuClass, UObject* Context, const FGameplayTagContainer OpenTags, const FString& OpenFlag,FOmegaCommonMeta meta);
 

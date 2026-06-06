@@ -3,13 +3,13 @@
 
 #include "Functions/F_Combatant.h"
 #include "Kismet/GameplayStatics.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Subsystems/Subsystem_World.h"
 #include "OmegaSettings.h"
 #include "Actors/Actor_GameplayEffect.h"
 #include "Components/Component_Combatant.h"
 #include "Condition/Condition_Combatant.h"
+#include "DynamicMesh/DynamicMesh3.h"
 #include "Functions/F_Animation.h"
-#include "Functions/F_AVContext.h"
 #include "GameFramework/Pawn.h"
 #include "Functions/F_Utility.h"
 #include "GameFramework/Character.h"
@@ -98,8 +98,21 @@ void UCombatantFunctions::RemoveGameplayEffects_OfClass(UCombatantComponent* Com
 
 
 
+
+float UCombatantUtility_Script::CheckUtility_Implementation(UCombatantComponent* Combatant,
+	const TArray<UCombatantComponent*>& Targets, FGameplayTag UtilityTag, FOmegaCommonMeta meta) const
+{
+	return 0.0;
+}
+
+float FCombatantUtility_Container::CheckUtility(UCombatantComponent* Combatant, TArray<UCombatantComponent*> Targets,
+                                                FGameplayTag UtilityTag, FOmegaCommonMeta meta)
+{
+	return 0.0;
+}
+
 bool UCombatantFunctions::CheckCombatantConditions(UCombatantComponent* Combatant,
-	FOmegaConditions_Combatant Conditions)
+                                                   FOmegaConditions_Combatant Conditions)
 {
 	if(Combatant)
 	{
@@ -171,7 +184,7 @@ void UCombatantFunctions::ApplyEffectFromContainer(UCombatantComponent* Combatan
 		{
 			LocalContext = Instigator;
 		}
-		Instigator->CreateEffect(Effect.EffectClass, Effect.Power, Combatant, Effect.AddedTags, LocalContext);
+		Combatant->CreateEffect(Effect.EffectClass, Instigator, LocalContext,FOmegaCommonMeta());
 	}
 }
 
@@ -190,7 +203,7 @@ UCombatantComponent* UCombatantFunctions::GetPlayerCombatant(const UObject* Worl
 
 void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObject, FGameplayTag Faction, FName Notify)
 {
-	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants();
+	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants();
 
 	for(auto* TempComb : LocalList)
 	{
@@ -204,7 +217,7 @@ void UCombatantFunctions::NotifyCombatantFaction(const UObject* WorldContextObje
 void UCombatantFunctions::NotifyCombatant_FactionOfTag(const UObject* WorldContextObject, FGameplayTag Tag,
 	FName Notify)
 {
-	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants();
+	TArray<UCombatantComponent*> LocalList = WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants();
 
 	for(auto* TempComb : LocalList)
 	{
@@ -253,16 +266,112 @@ TArray<FOmegaAttributeModifier> UCombatantFunctions::MakeAttributeMods_FromFlatI
 	return MakeAttributeMods_FromFlatValues(in,AsMultiplier);
 }
 
+TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_Scale(TArray<FOmegaAttributeModifier> In,
+	float Scale, bool bIncrements, bool bMultipliers)
+{
+	TArray<FOmegaAttributeModifier> out;
+	
+	for (FOmegaAttributeModifier mod : In)
+	{
+		FOmegaAttributeModifier new_mod;
+		new_mod.Attribute=mod.Attribute;
+		if (bIncrements)
+		{
+			new_mod.Multiplier=mod.Multiplier*Scale;	
+		}
+		if (bMultipliers)
+		{
+			new_mod.Incrementer=mod.Incrementer*Scale;	
+		}
+		out.Add(new_mod);
+	}
+	
+	return out;
+}
+
+TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_Flatten(TArray<FOmegaAttributeModifier> In)
+{
+	TMap<UOmegaAttribute*, float> att_inc;
+	TMap<UOmegaAttribute*, float> att_scal;
+	TArray<UOmegaAttribute*> local_attributes;
+	
+	for (FOmegaAttributeModifier mod : In)
+	{
+		if (mod.Attribute)
+		{
+			att_inc.Add(mod.Attribute,att_inc.FindOrAdd(mod.Attribute)+mod.Incrementer);
+			att_scal.Add(mod.Attribute,att_scal.FindOrAdd(mod.Attribute)+mod.Multiplier);
+			
+			if (!local_attributes.Contains(mod.Attribute))
+			{
+				local_attributes.Add(mod.Attribute);
+			}
+		}
+	}
+	
+	TArray<FOmegaAttributeModifier> out;
+	for (auto* at :local_attributes)
+	{
+		FOmegaAttributeModifier new_mod;
+		new_mod.Attribute=at;
+		new_mod.Incrementer=att_inc.FindOrAdd(at);
+		new_mod.Multiplier=att_scal.FindOrAdd(at);
+		out.Add(new_mod);
+	}
+	return out;
+}
+
+TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_Combine(TArray<FOmegaAttributeModifier> A,
+	TArray<FOmegaAttributeModifier> B, bool Flatten)
+{
+	TArray<FOmegaAttributeModifier> out=A;
+	out.Append(B);
+	if (Flatten)
+	{
+		out=AttributeMods_Flatten(out);
+	}
+	return out;
+}
+
+void UCombatantFunctions::AttributeMods_GetSingleValue(TArray<FOmegaAttributeModifier> mods, UOmegaAttribute* Attribute,
+	float& Increment, float& Multiplier)
+{
+	TArray<FOmegaAttributeModifier> InMods=AttributeMods_Flatten(mods);
+	for (FOmegaAttributeModifier m : InMods)
+	{
+		if (m.Attribute==Attribute)
+		{
+			Increment=m.Incrementer;
+			Multiplier=m.Multiplier;
+			return;
+		}
+	}
+}
+
+TArray<UOmegaAttribute*> UCombatantFunctions::AttributeMods_GetAttributeList(TArray<FOmegaAttributeModifier> mods)
+{
+	TArray<FOmegaAttributeModifier> InMods=AttributeMods_Flatten(mods);
+	TArray<UOmegaAttribute*> out;
+	for (FOmegaAttributeModifier m : InMods)
+	{
+		if (m.Attribute)
+		{
+			out.Add(m.Attribute);	
+		}
+	}
+	return out;
+}
+
 void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
                                                           UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue)
 {
 	if(Combatant && Attribute)
 	{
-		TArray<FOmegaAttributeModifier> outMods=IDataInterface_AttributeModifier::Execute_GetModifierValues(Combatant,Combatant);
-		if(UncomparedSource && UncomparedSource->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		TArray<FOmegaAttributeModifier> outMods=IDataInterface_Combatant::Execute_GetModifierValues(Combatant,Combatant);
+		if(UncomparedSource && UncomparedSource->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
 			TArray<FOmegaAttributeModifier> mods_newOut;
-			TArray<FOmegaAttributeModifier> mods_UnComp=IDataInterface_AttributeModifier::Execute_GetModifierValues(UncomparedSource,Combatant);
+			TArray<FOmegaAttributeModifier> mods_UnComp=IDataInterface_Combatant::Execute_GetModifierValues(UncomparedSource,Combatant);
 			for (FOmegaAttributeModifier temp_CombatantMod : outMods)
 			{
 				for (FOmegaAttributeModifier temp_UncomparedMod : mods_UnComp)
@@ -277,9 +386,9 @@ void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* C
 			}
 			outMods=mods_newOut;
 		}
-		if(ComparedSource && ComparedSource->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		if(ComparedSource && ComparedSource->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
-			outMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(ComparedSource,Combatant));
+			outMods.Append(IDataInterface_Combatant::Execute_GetModifierValues(ComparedSource,Combatant));
 		}
 		
 		float curval;
@@ -288,7 +397,7 @@ void UCombatantFunctions::CompareSingleAttributeModifiers(UCombatantComponent* C
 	}
 }
 
-bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject)
+bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject, bool bCheckAttributeCost)
 {
 	if(Combatant && SkillObject)
 	{
@@ -298,19 +407,34 @@ bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, U
 			{
 				return false;
 			}
-			TArray<UOmegaAttribute*> att_list;
-			TMap<UOmegaAttribute*, float> att_vals = IDataInterface_Skill::Execute_GetSkillAttributeCosts(
-				SkillObject, Combatant, nullptr);
-			att_vals.GetKeys(att_list);
-			for(auto* TempAtt : att_list)
+			
+			FOmegaSkillConfig SkillConfig=IDataInterface_Skill::Execute_Skill_GetConfig(SkillObject,Combatant);
+			
+			if (!SkillConfig.UseRequiredSkills.IsEmpty())
 			{
-				if(TempAtt)
+				TArray<UPrimaryDataAsset*> combSkills=Combatant->GetAllSkills();
+				for (auto* s : SkillConfig.UseRequiredSkills)
 				{
-					float val_cur; float val_max;
-					Combatant->GetAttributeValue(TempAtt, val_cur,val_max);
-					if(val_cur<att_vals[TempAtt])
+					if (!combSkills.Contains(s)) {return false;}
+				}
+			}
+			
+			if (bCheckAttributeCost)
+			{
+				TArray<UOmegaAttribute*> att_list;
+				
+				TMap<UOmegaAttribute*, float> att_vals = SkillConfig.AttributeUseCost;
+				att_vals.GetKeys(att_list);
+				for(auto* TempAtt : att_list)
+				{
+					if(TempAtt)
 					{
-						return false; // return false if even 1 attribute is insufficient
+						float val_cur; float val_max;
+						Combatant->GetAttributeValue(TempAtt, val_cur,val_max);
+						if(val_cur<att_vals[TempAtt])
+						{
+							return false; // return false if even 1 attribute is insufficient
+						}
 					}
 				}
 			}
@@ -320,17 +444,46 @@ bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, U
 	return false;
 }
 
+UPrimaryDataAsset* UCombatantFunctions::SelectSkillByUtility(UCombatantComponent* Combatant,
+	TArray<UPrimaryDataAsset*> Skills, TArray<UCombatantComponent*> Targets,
+	FGameplayTag Tag, float RandomOffsetRange)
+{
+	if (Skills.IsEmpty()) return nullptr;
+
+	UPrimaryDataAsset* BestSkill = nullptr;
+	float BestScore = TNumericLimits<float>::Lowest();
+
+	for (UPrimaryDataAsset* Skill : Skills)
+	{
+		if (!Skill || !Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass())) continue;
+
+		if (!IDataInterface_Skill::Execute_CanUseSkill(Skill, Combatant)) continue;
+		
+		float Score = IDataInterface_Skill::Execute_Skill_CheckUtility(Skill, Combatant, Targets, Tag);
+		Score += FMath::FRandRange(-RandomOffsetRange, RandomOffsetRange);
+
+		const bool bBetter (Score > BestScore);
+		if (bBetter)
+		{
+			BestScore = Score;
+			BestSkill = Skill;
+		}
+	}
+
+	return BestSkill;
+}
+
 bool UCombatantFunctions::ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject)
 {
 	if(!Combatant || !SkillObject) { return false; }
 	
-	if(CanCombatantUseSkill(Combatant,SkillObject))
+	if(CanCombatantUseSkill(Combatant,SkillObject, true))
 	{
 		if(SkillObject->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
 		{
 			TArray<UOmegaAttribute*> att_list;
-			TMap<UOmegaAttribute*, float> att_vals = IDataInterface_Skill::Execute_GetSkillAttributeCosts(
-				SkillObject, Combatant, nullptr);
+			FOmegaSkillConfig SkillConfig=IDataInterface_Skill::Execute_Skill_GetConfig(SkillObject,Combatant);
+			TMap<UOmegaAttribute*, float> att_vals = SkillConfig.AttributeUseCost;
 			att_vals.GetKeys(att_list);
 			
 			for(auto* TempAtt : att_list)
@@ -357,18 +510,18 @@ TMap<UOmegaAttribute*, float> UCombatantFunctions::CompareAttributeModifiers(UCo
 		TArray<FOmegaAttributeModifier> TempMods = Combatant->GetAllModifierValues();
 
 		//Remove modifiers from Uncomapred Value
-		if(UncomparedModifer && UncomparedModifer->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		if(UncomparedModifer && UncomparedModifer->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
-			for(const FOmegaAttributeModifier TempMod : IDataInterface_AttributeModifier::Execute_GetModifierValues(UncomparedModifer))
+			for(const FOmegaAttributeModifier TempMod : IDataInterface_Combatant::Execute_GetModifierValues(UncomparedModifer))
 			{
 				TempMods.Remove(TempMod);
 			}
 		}
 
 		//Add compared values
-		if(ComparedModifier && ComparedModifier->GetClass()->ImplementsInterface(UDataInterface_AttributeModifier::StaticClass()))
+		if(ComparedModifier && ComparedModifier->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
-			TempMods.Append(IDataInterface_AttributeModifier::Execute_GetModifierValues(ComparedModifier));
+			TempMods.Append(IDataInterface_Combatant::Execute_GetModifierValues(ComparedModifier));
 		}
 
 		//Add attributes to map
@@ -429,7 +582,7 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatantsWithDataAsset(
 	TArray<UCombatantComponent*> out;
 	if (WorldContextObject && Asset)
 	{
-		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants())
 		{
 			if(c && c->CombatantDataAsset==Asset)
 			{
@@ -472,7 +625,7 @@ TArray<UCombatantComponent*> UCombatantFunctions::GetAllCombatants_OfFaction(UOb
 	TArray<UCombatantComponent*> out;
 	if (WorldContextObject && Faction)
 	{
-		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetAllCombatants())
+		for (auto* c : WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetAllCombatants())
 		{
 			if(c && c->FactionDataAsset==Faction)
 			{
@@ -576,6 +729,36 @@ void UCombatantFunctions::DoesCombatantHaveEffectWithTag(UCombatantComponent* Co
 	{
 		Outcome=false;
 	}
+}
+
+float UCombatantFunctions::CheckAttributeValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
+	float Value, EOmegaAttributeValueType ValueType, TEnumAsByte<EOmegaComparisonMethod> Method, bool& Outcome)
+{
+	float CurVal = 0.f;
+	float MaxVal = 0.f;
+	if(Combatant && Attribute)
+	{
+		Combatant->GetAttributeValue(Attribute, CurVal, MaxVal);
+	}
+	float SelectedVal;
+	switch(ValueType)
+	{
+	case EOmegaAttributeValueType::AttValue_Max:     SelectedVal = MaxVal; break;
+	case EOmegaAttributeValueType::AttValue_Percent: SelectedVal = (MaxVal > 0.f) ? (CurVal / MaxVal) : 0.f; break;
+	default:                                         SelectedVal = CurVal; break;
+	}
+	bool bResult;
+	switch(Method)
+	{
+	case Compare_Equal:     bResult = SelectedVal == Value; break;
+	case Compare_Great:     bResult = SelectedVal >  Value; break;
+	case Compare_Less:      bResult = SelectedVal <  Value; break;
+	case Compare_GreatEqual: bResult = SelectedVal >= Value; break;
+	case Compare_LessEqual:  bResult = SelectedVal <= Value; break;
+	default:                bResult = false; break;
+	}
+	Outcome = bResult;
+	return SelectedVal;
 }
 
 

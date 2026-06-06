@@ -47,7 +47,7 @@ public:
     BlueprintCallable,
     meta = (
       DisplayName = "Copy File or Directory Async",
-      BlueprintInternalUseOnly="true",
+      BlueprintInternalUseOnly,
       Category="FileSDK",
       WorldContext="WorldContextObject"
     )
@@ -64,7 +64,7 @@ public:
   /**
    * This execution pin is called when the copy finishes, regardless if it was successful or not.
    */
-  UPROPERTY(BlueprintAssignable)
+  UPROPERTY(BlueprintAssignable, Category="Omega")
   FFileSDKOnCopyCompleted Completed;
 
   /**

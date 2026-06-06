@@ -12,17 +12,22 @@ void UOmegaAchievementListener::UnlockAchievement() const
 	// unlock cod goes here
 }
 
-void UOmegaAchievement::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
-{
-	Name=Achievement_Name;
-	Description=Achievement_Description;
-}
+#define LOCAL_ADD_PLAT_SET(key,asset) \
+PlatformAssets.Add(key,TSoftObjectPtr<UOmegaPlatformAsset>(FSoftObjectPath("/OmegaGameFramework/DataAssets/Platforms/OmegaPlatform_settings_"#asset".OmegaPlatform_settings_"#asset)));
 
-void UOmegaAchievement::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
+UOmegaPlatformSettings::UOmegaPlatformSettings(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-	Brush=Achievement_Icon;
+	DefaultPlatform=TSoftObjectPtr<UOmegaPlatformAsset>(FSoftObjectPath("/OmegaGameFramework/DataAssets/Platforms/OmegaPlatform_settings_pc.OmegaPlatform_settings_pc"));
+	
+	LOCAL_ADD_PLAT_SET("Windows",pc);
+	LOCAL_ADD_PLAT_SET("Mac",mac);
+	LOCAL_ADD_PLAT_SET("Linux",deck);
+	LOCAL_ADD_PLAT_SET("XboxOneGDK",xbox);
+	LOCAL_ADD_PLAT_SET("PS4",ps4);
+	LOCAL_ADD_PLAT_SET("PS5",ps5);
+	LOCAL_ADD_PLAT_SET("Switch",Switch);
+	
 }
 
 UOmegaPlatformAsset* UOmegaPlatformSettings::GetPlatformAsset() const
@@ -55,7 +60,7 @@ FSlateBrush UOmegaPlatformFunctions::GetCurrentPlatformActionIcon(const UObject*
 	
 		for(FKey TempKey : TempKeys)
 		{
-			if(TempKey.IsGamepadKey()==TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaPlayerSubsystem>()->IsUsingGamepad())
+			if(TempKey.IsGamepadKey()==TempPlayer->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->IsUsingGamepad())
 			{
 				return PlatformAsset->GetKeySlateBrush(TempKey);
 			}

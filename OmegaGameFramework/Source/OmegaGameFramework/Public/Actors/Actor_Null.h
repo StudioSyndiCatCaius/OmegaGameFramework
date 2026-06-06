@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "Actor_Null.generated.h"
 
+
+
+// A minimal actor with no visual or collision components. Useful as a placeholder, spawn target, or scripting anchor.
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaNullActor : public AActor
 {
@@ -13,9 +16,10 @@ class OMEGAGAMEFRAMEWORK_API AOmegaNullActor : public AActor
 
 public:
 	AOmegaNullActor();
-	
+
 	virtual void BeginPlay() override;
 
+	// Label assigned to this actor in the world outliner when it spawns. Exposed on spawn for easy scripting.
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="NullActor",meta=(ExposeOnSpawn)) FName NewActorLabel;
 
 

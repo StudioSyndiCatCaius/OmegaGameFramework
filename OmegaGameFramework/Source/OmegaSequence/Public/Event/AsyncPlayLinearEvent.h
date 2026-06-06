@@ -18,13 +18,13 @@ public:
 
 	virtual void Activate() override;
 
-	UPROPERTY(BlueprintAssignable) FEventFinished Finished;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FEventFinished Finished;
 
 	UFUNCTION() void LocalEnd(UOmegaLinearEvent* Event,const FString& Flag);
 
 	UPROPERTY() UOmegaLinearEvent* EventRef;
 	UPROPERTY() FString in_flag;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Event")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Event")
 	static UAsyncPlayLinearEvent* PlayLinearEvent(UOmegaLinearEvent* Event,const FString& Flag);
 };

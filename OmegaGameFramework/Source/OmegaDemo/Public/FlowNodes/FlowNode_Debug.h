@@ -11,7 +11,7 @@ class UOmegaModifier_Save;
 class UOmegaSaveCondition;
 
 //
-UCLASS(DisplayName="Debug - In Debug Mode?",Category="Debug")
+UCLASS(DisplayName="🐞In Debug Mode?",Category="Debug")
 class OMEGADEMO_API UFlowNode_DebugModeCheck : public UFlowNode
 {
 	GENERATED_BODY()

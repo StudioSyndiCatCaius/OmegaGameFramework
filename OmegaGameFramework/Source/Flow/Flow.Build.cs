@@ -13,6 +13,7 @@ public class Flow : ModuleRules
 			"LevelSequence",
 			"OmegaGameFramework",
 			"Json",
+			"LuaMachine",
 			"JsonBlueprintUtilities",
 			"JsonUtilities",
 		});

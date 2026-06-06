@@ -13,8 +13,8 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Styling/AppStyle.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
-#include "Interfaces/I_NamedLists.h"
+#include "OmegaGameManager.h"
+#include "Interfaces/I_Common.h"
 #include "Types/Struct_CustomNamedList.h"
 
 
@@ -37,7 +37,8 @@ void FCustomization_ClassNamedLists::CustomizeHeader(
         [
             SNew(STextBlock)
             .Text(StructPropertyHandle->GetPropertyDisplayName().ToUpper())
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+            .Font(IPropertyTypeCustomizationUtils::GetBoldFont())
+            //.Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
             .ColorAndOpacity(FLinearColor(0.8f, 0.9f, 1.0f, 1.0f)) // Light blue tint
             
         ]
@@ -74,13 +75,28 @@ void FCustomization_ClassNamedLists::CustomizeChildren(
 
     // Get the list of ListIDs from settings
     TArray<FName> Lists;
-    if (OuterObject->GetClass()->ImplementsInterface(UDataInterface_NamedLists::StaticClass()))
+    /*
+    if (OuterObject->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
     {
-        Lists=IDataInterface_NamedLists::Execute_Override_ObjectLists(OuterObject);
+        FOmegaBitflagsBase b; 
+        FGuid g; 
+        int32 s; 
+        FOmegaClassNamedLists Lists; 
+        IDataInterface_General::Execute_GetMetaConfig(OuterObject,b,g,s,Lists); 
+        Lists=IDataInterface_General::Execute_Override_ObjectLists(OuterObject);
+    }*/
+    void* StructData = nullptr;
+    StructPropertyHandle->GetValueData(StructData);
+    if (FOmegaClassNamedLists* _struct=static_cast<FOmegaClassNamedLists*>(StructData))
+    {
+        if (_struct->override_keys)
+        {
+            Lists=_struct->override_keyList;   
+        }
     }
     if (Lists.Num() == 0)
     {
-        GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->CustomList_GetListFromObject(OuterObject);
+        Lists=GetMutableDefault<UOmegaSettings>()->GetGameCore()->CustomList_GetListFromObject(OuterObject);
     }
 
     // Create a darker background container for all dropdowns
@@ -123,7 +139,7 @@ TSharedRef<SWidget> FCustomization_ClassNamedLists::CreateDropdownList(
             + SHorizontalBox::Slot()
             .AutoWidth()
             .VAlign(VAlign_Center)
-            .Padding(FMargin(0.0f, 0.0f, 8.0f, 0.0f))
+            .Padding(FMargin(0.0f, 0.0f, 5.0f, 0.0f))
             [
                 SNew(SBox)
                 .MinDesiredWidth(120.0f)
@@ -170,7 +186,7 @@ TSharedRef<SWidget> FCustomization_ClassNamedLists::CreateDropdownForList(
         .OnGetMenuContent_Lambda([this, ListID, StructPropertyHandle]() -> TSharedRef<SWidget>
         {
             // Get options for this specific ListID
-            TArray<FName> Options=GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->CustomList_GetOptions(ListID);
+            TArray<FName> Options=GetMutableDefault<UOmegaSettings>()->GetGameCore()->CustomList_GetOptions(ListID);
 
             // Build menu
             FMenuBuilder MenuBuilder(true, nullptr);

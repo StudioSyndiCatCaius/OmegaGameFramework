@@ -37,7 +37,7 @@ public:
 // PROPERTY FUNCTIONS
 //#####################################################################################################
 UCLASS()
-class UOmegaSoftPropertyFunctions : public UBlueprintFunctionLibrary
+class UOmegaFunctions_SoftProperty : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

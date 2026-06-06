@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Functions/F_GlobalParam.h"
 #include "GameFramework/Actor.h"
-#include "Misc/OmegaUtils_Enums.h"
 #include "Actor_RandomSpawnable.generated.h"
 
 

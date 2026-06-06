@@ -58,26 +58,36 @@ void UFlowNode_Camera_Blend::ExecuteInput(const FName& PinName)
 	TriggerOutput(TEXT("Begin"), false);
 	if(APlayerController* pc=GetWorld()->GetFirstPlayerController())
 	{
-		if(BlendTarget)
+		AActor* ac=nullptr;
+		if (bUseSelector)
 		{
-			if(BlendTarget->GetActors(GetWorld()).IsValidIndex(0))
+			if(BlendTarget)
 			{
-				if(AActor* ac=BlendTarget->GetActors(GetWorld())[0])
+				if(BlendTarget->GetActors(GetWorld()).IsValidIndex(0))
 				{
-					pc->SetViewTargetWithBlend(ac,Duration,BlendType,BlendExponent);
-					if(Duration>0.0)
-					{
-						GetWorld()->GetTimerManager().SetTimer(timer_handle,this,&UFlowNode_Camera_Blend::L_Finished,Duration,false);
-					}
-					else
-					{
-						L_Finished();
-					}
-					return;
+					ac=BlendTarget->GetActors(GetWorld())[0];
 				}
 			}
 		}
+		else
+		{
+			ac=BlendTargetCamera.LoadSynchronous();
+		}
+		if(ac)
+		{
+			pc->SetViewTargetWithBlend(ac,Duration,BlendType,BlendExponent);
+			if(Duration>0.0)
+			{
+				GetWorld()->GetTimerManager().SetTimer(timer_handle,this,&UFlowNode_Camera_Blend::L_Finished,Duration,false);
+			}
+			else
+			{
+				L_Finished();
+			}
+			return;
+		}
 	}
+	
 	TriggerOutput(TEXT("Finish"), true);
 }
 

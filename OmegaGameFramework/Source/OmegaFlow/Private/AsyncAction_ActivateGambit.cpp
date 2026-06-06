@@ -41,7 +41,7 @@ void UAsyncAction_ActivateGambit::Activate()
 	
 }
 
-UAsyncAction_ActivateGambit* UAsyncAction_ActivateGambit::ActivateGambit(UCombatantComponent* Combatant, UCombatantGambitAsset* Gambit)
+UAsyncAction_ActivateGambit* UAsyncAction_ActivateGambit::ActivateGambit(UCombatantComponent* Combatant, UOmegaGambit_Asset* Gambit)
 {
 	UAsyncAction_ActivateGambit* NewAbility = NewObject<UAsyncAction_ActivateGambit>();
 

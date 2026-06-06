@@ -11,8 +11,6 @@
 #include "Editor/Kismet/Internal/DiffControl.h"
 #endif
 
-
-
 struct FDiffResultItem;
 class UEdGraph;
 struct FEdGraphEditAction;

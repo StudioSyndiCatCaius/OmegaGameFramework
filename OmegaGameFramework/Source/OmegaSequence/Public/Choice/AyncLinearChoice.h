@@ -25,12 +25,12 @@ public:
 	UFUNCTION()
 	void LocalChoiceSelected(UOmegaLinearChoice* Choice, int32 ChoiceIndex);
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnFinish OnSelected;
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true",WorldContext="WorldContextObject"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Choice")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly,WorldContext="WorldContextObject"), Category="Omega|GameplayTasks|LinearEvent", DisplayName="Ω🔷 Play Linear Choice")
 	static UAyncLinearChoice* PlayLinearChoice(UObject* WorldContextObject, FOmegaLinearChoices Choices, TSubclassOf<AOmegaLinearChoiceInstance> InstanceClass);
 
 };

@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Widget/DataWidget.h"
 #include "Actor_WorldMapPoint.generated.h"
 
 
+class UDataWidget;
 class UActorConfigComponent;
 class UOmegaZoneData;
 class USphereComponent;
@@ -28,13 +28,12 @@ public:
 	virtual void NotifyActorBeginCursorOver() override;
 	virtual void NotifyActorEndCursorOver() override;
 
-	UPROPERTY(BlueprintAssignable) FWorldMapPointDelegatePlayer OnPointSelected;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FWorldMapPointDelegatePlayer OnPointSelected;
 	
 	UFUNCTION() void OnDW_Selected(UDataWidget* DataWidget);
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") USphereComponent* Range;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UDataWidgetComponent* DataWidgetComponent;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") UActorConfigComponent* Config;
 
 	UPROPERTY() UBillboardComponent* cmp_icon;
 

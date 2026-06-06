@@ -15,13 +15,13 @@ class UCombatantComponent;
 // COMBATANT FILTER
 // ================================================================================================================
 
-UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,meta=(ShowWorldContextPin))
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,Abstract,Const,meta=(ShowWorldContextPin),CollapseCategories)
 class OMEGAGAMEFRAMEWORK_API UCombatantFilterScript : public UObject
 {
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="CombatantFilter")
+	UFUNCTION(BlueprintNativeEvent, Category="CombatantFilter")
 	const TArray<UCombatantComponent*> FilterCombatants(UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& CombatantsIn) const;
 };
 
@@ -30,6 +30,9 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFilterCollection : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 public:
+	
+	UFUNCTION(BlueprintCallable,Category="Combatant|Filter") 
+	TArray<UCombatantComponent*> FilterCombatants(UCombatantComponent* Instigator, TArray<UCombatantComponent*> In);
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced, Category="Filter")
 	TArray<UCombatantFilterScript*> FilterScripts;
@@ -41,24 +44,11 @@ struct FCombatantFilterData
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Filter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Filter",DisplayName="🎯Filter (Presets)")
 	TArray<UCombatantFilterCollection*> FilterCollections;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced, Category="Filter")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Instanced, Category="Filter",DisplayName="🎯Filter (Inline)")
 	TArray<UCombatantFilterScript*> FilterScripts;
 };
-
-UINTERFACE(MinimalAPI) class UDataInterface_CombatantFilter : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_CombatantFilter
-{
-	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-public:
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Skill",DisplayName="Skill - Get Target Filter")
-	FCombatantFilterData GetSkillTargetFilterData();
-};
-
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UCombatantFilterFunctions : public UBlueprintFunctionLibrary
@@ -68,10 +58,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Combatant|Filter")
 	static TArray<UCombatantComponent*> FilterCombatants_ByScript(UCombatantComponent* Instigator, TArray<UCombatantComponent*> CombatantsIn, FCombatantFilterData Filter);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Combatant|Filter")
-	static TArray<UCombatantComponent*> FilterCombatants_ByAsset(UCombatantComponent* Instigator, TArray<UCombatantComponent*> CombatantsIn, UObject* FilterAsset);
-
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|Combatant|Filter",meta=(ExpandBoolAsExecs="Outcome"))
 	static UPrimaryDataAsset* SelectFirstSkillThatCanTarget(UCombatantComponent* Instigator, TArray<UPrimaryDataAsset*> Skills, UCombatantComponent* Target, bool& Outcome);
 

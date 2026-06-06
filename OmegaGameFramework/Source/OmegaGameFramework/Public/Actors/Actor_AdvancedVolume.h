@@ -3,17 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/BoxComponent.h"
-#include "Components/SphereComponent.h"
+#include "OmegaActors.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "GameFramework/Actor.h"
 #include "Actor_AdvancedVolume.generated.h"
 
 class UTextRenderComponent;
 class UBillboardComponent;
+class UBoxComponent;
+class USphereComponent;
 
+// Abstract base for volume actors that render as a colored shape in the editor and expose overlap detection.
 UCLASS(Abstract)
-class OMEGAGAMEFRAMEWORK_API AAdvancedVolume : public AActor
+class OMEGAGAMEFRAMEWORK_API AAdvancedVolume : public AOmegaActorBASE
 {
 	GENERATED_BODY()
 
@@ -32,45 +34,52 @@ protected:
 	UPROPERTY() UStaticMesh* ShapeMeshRef;
 
 public:
-	
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Controls whether the volume renders as a sphere or a box.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Volume")
 	EVolumeShape Shape;
+	// The tint color applied to the volume's debug visualization material.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Volume")
 	FLinearColor Color;
+
+	// Changes the volume's debug visualization color at runtime.
+	UFUNCTION(BlueprintCallable, Category="Volume") void SetColor(FLinearColor NewColor);
+
 	UPROPERTY()
 	TEnumAsByte<ECollisionChannel> CollisionType;
-	
-	UFUNCTION(BlueprintImplementableEvent, Category="Volume")
-	UTexture2D* GetVolumeIcon();
-	UFUNCTION(BlueprintImplementableEvent, Category="Volume")
-	FText GetVolumeText();
-	
-	UPROPERTY() UStaticMeshComponent* Volume;
+
+	// The static mesh component that visualizes the volume shape in the editor.
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UStaticMeshComponent* Volume;
+	// Text render component used to display a label above the volume in the editor.
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UTextRenderComponent* TextDisplay;
+	// Billboard icon shown in the editor viewport for this volume.
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UBillboardComponent* IconDisplay;
 	UPROPERTY() UBoxComponent* Bounds_box;
 	UPROPERTY() USphereComponent* Bounds_sphere;
-	UPROPERTY() UTextRenderComponent* TextDisplay;
-	UPROPERTY() UBillboardComponent* IconDisplay;
 };
 
 // ====================================================================================================
 // Global Event
 // ====================================================================================================
 
+// A volume that fires a named global event and/or a gameplay tag event when any actor enters it.
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API AVolumeTrigger_GlobalEvent : public AAdvancedVolume
 {
 	GENERATED_BODY()
 
 	AVolumeTrigger_GlobalEvent();
-	
+
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
 public:
 
+	// Named event broadcast globally when an actor enters this volume.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GlobalEvent") FName Event_Named;
+	// Gameplay tag event broadcast globally when an actor enters this volume.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GlobalEvent") FGameplayTag Event_Tag;
-	
+
 };

@@ -6,7 +6,6 @@
 #include "GameplayTagContainer.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-#include "Subsystems/Subsystem_QueueEvents.h"
 #include "AsyncAction_GameplaySystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShutdown, UObject*, Context, FString, Flag);
@@ -20,21 +19,21 @@ class OMEGAFLOW_API UAsyncAction_GameplaySystem : public UBlueprintAsyncActionBa
 
 public:
 
-	UPROPERTY(BlueprintAssignable) FShutdown OnShutdown;
-	UPROPERTY(BlueprintAssignable) FSystemNotify Notify;
-	UPROPERTY(BlueprintAssignable) FOnFailedActivateSystem Failed;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FShutdown OnShutdown;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FSystemNotify Notify;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFailedActivateSystem Failed;
 	UFUNCTION() void NativeShutdown(UObject* Context, const FString Flag);
 	UFUNCTION() void Native_Notify(UObject* Context, const FString Flag);
 	
 	UPROPERTY() TSubclassOf<AOmegaGameplaySystem> LocalSystemClass;
 	UPROPERTY() FString LocalOpenFlag;
 	UPROPERTY() UObject* LocalContext = nullptr;
-	UPROPERTY() UOmegaGameplaySubsystem* SubSysRef;
+	UPROPERTY() UOmegaSubsystem_World* SubSysRef;
 	UPROPERTY() const UObject* Local_WorldContext;
 	UPROPERTY() FOmegaCommonMeta in_meta;
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),
 		DisplayName="Ω🔷 Activate Gameplay System") 
 	static UAsyncAction_GameplaySystem* ActivateGameplaySystem(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag, FOmegaCommonMeta meta);
 

@@ -1,0 +1,19 @@
+// Copyright Studio Syndicat 2021. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+
+#include "Misc/GeneralDataObject.h"
+#include "DA_PlayerID.generated.h"
+
+UCLASS(Blueprintable, BlueprintType)
+class OMEGAGAMEFRAMEWORK_API UOAsset_PlayerID : public UOmegaDataAsset
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Player") int32 DefaultIndex=-1;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Player") FLinearColor PlayerColor;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override {};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
+};

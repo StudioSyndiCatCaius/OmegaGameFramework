@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "GameFramework/Actor.h"
 #include "Component_Significance.generated.h"
 
-//
+// Placeholder component reserved for significance-based relevance and LOD management.
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API USignificanceComponent : public UActorComponent
 {
@@ -25,6 +24,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
-	
-};
 
+};

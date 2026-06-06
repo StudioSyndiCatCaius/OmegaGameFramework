@@ -13,7 +13,7 @@
 AOmegaBulletActor::AOmegaBulletActor()
 {
 	// Set this actor to call Tick() every frame.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	// Initialize components
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -29,40 +29,68 @@ AOmegaBulletActor::AOmegaBulletActor()
 	ProjectileComponent->ProjectileGravityScale=0;
 
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AOmegaBulletActor::OnSphereOverlap);
+	SphereComponent->OnComponentHit.AddDynamic(this,&AOmegaBulletActor::OnSphereHit);	
 }
 
 void AOmegaBulletActor::BeginPlay()
 {
-	local_spawnCue(CueOnSpawn);
+	local_spawnCue(CueOnSpawn,FHitResult());
+	if (InstigatorCombatant)
+	{
+		SphereComponent->IgnoreActorWhenMoving(InstigatorCombatant->GetOwner(),true);
+	}
+	if (GetInstigator()) { SphereComponent->IgnoreActorWhenMoving(GetInstigator(),true); }
 	Super::BeginPlay();
 }
 
 
 void AOmegaBulletActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	TriggerImpact(OtherActor);
+	FHitResult _hit;
+	if (bImpactOnOverlap) { Native_Impact(OtherActor,_hit);}
 }
 
-void AOmegaBulletActor::TriggerImpact(AActor* ImpactedActor)
+void AOmegaBulletActor::OnSphereHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (bImpactOnHit) { Native_Impact(OtherActor,Hit);}
+}
+
+void AOmegaBulletActor::Native_Impact(AActor* ImpactedActor, FHitResult HitResult)
+{
+	if (bHandlingImpact) { return; }
+	if (ImpactedActor && (!InstigatorCombatant || ImpactedActor!=InstigatorCombatant->GetOwner()))
+	{
+		bHandlingImpact = true;
+		TriggerImpact(ImpactedActor,HitResult);
+		bHandlingImpact = false;
+	}
+}
+
+void AOmegaBulletActor::TriggerImpact(AActor* ImpactedActor, FHitResult HitResult)
 {
 	if(ImpactedActor)
 	{
 		//try get combatant
 		UCombatantComponent* comb_target = local_getCombatant(ImpactedActor);
 		
+		impactCount+=1;
 		OnImpact(ImpactedActor,comb_target);
-		local_spawnCue(CueOnImpact);
+		local_spawnCue(CueOnImpact,HitResult);
 		UOmegaScriptedEffectFunctions::ApplyCustomScriptedEffectToCombatant(ImpactEffects,comb_target,InstigatorCombatant);
 		
-		Destroy();
+		if (ImpactDestroy!=0 && impactCount>=ImpactDestroy)
+		{
+			Destroy();
+		}
 	}
 }
 
-void AOmegaBulletActor::local_spawnCue(TSubclassOf<AOmegaGameplayCue> cue)
+void AOmegaBulletActor::local_spawnCue(FOmegaGameplayCueConfig cue, FHitResult HitResult)
 {
-	if(cue)
+	if(cue.CueClass)
 	{
-		UOmegaGameplayCueFunctions::PlayGameplayCue(this,cue,GetActorTransform(),FHitResult(),nullptr);
+		UOmegaGameplayCueFunctions::PlayGameplayCue_FromConfig(this,cue,GetActorTransform(),HitResult,nullptr);
 	}
 }
 

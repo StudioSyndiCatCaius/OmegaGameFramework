@@ -25,9 +25,9 @@ public:
 	
 	UPROPERTY() FLinearEventSequence SequenceData;
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnEventSequenceFinish OnEventSequenceFinish;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnEventUpdated OnEventUpdated;
 	
 	UFUNCTION() void NextEvent(const FString& Flag);

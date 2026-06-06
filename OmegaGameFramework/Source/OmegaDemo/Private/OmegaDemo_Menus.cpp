@@ -2,39 +2,21 @@
 
 
 #include "OmegaDemo_Menus.h"
-
+#include "Engine/GameInstance.h"
 #include "OmegaSettings_Slate.h"
+#include "Subsystems/Subsystem_Save.h"
 #include "Widget/DataList.h"
 
 
-UWidgetSwitcher* UMenuBase_Title::GetWidget_WidgetSwitcher_State_Implementation()
-{
-	if(Switcher_SplashState)
-	{
-		return Switcher_SplashState;
-	}
-	return nullptr;
-}
 
 void UMenuBase_Title::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-	if(UOmegaSettings_Slate* set=UOmegaSlateFunctions::GetCurrentSlateStyle())
-	{
-		if(IMG_Logo)
-		{
-			IMG_Logo->SetBrushResourceObject(set->LogoDefault.GetResourceObject());
-		}
-		
-	}
+	
 }
 
 void UMenuBase_SaveLoad::L_SetSavePathCategory(int32 cat)
 {
-	if(UWidgetSwitcher* sw=GetWidget_WidgetSwitcher_State())
-	{
-		sw->SetActiveWidgetIndex(cat);
-	}
 	if(l_subsys)
 	{
 		if(UDataList* savlist=GetDataList_SavePaths(cat))

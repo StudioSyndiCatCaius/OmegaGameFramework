@@ -42,12 +42,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAnimationFunctions : public UBlueprintFunctio
 public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Animation",meta=(ExpandBoolAsExecs="Result"))
 	static UAnimInstance* TryGetAnimInstanceFromObject(UObject* Object, TSubclassOf<UAnimInstance> AnimClass, bool& Result);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Animation")
-	static void PlayMontage_ByTag(USkeletalMeshComponent* Mesh, FGameplayTag MontageTag);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Animation",meta=(AdvancedDisplay="blend_settings"))
-	static void StopMontage_ByTag(USkeletalMeshComponent* Mesh, FGameplayTag MontageTag,FMontageBlendSettings blend_settings);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Animation")
 	static void PlayEmoteAnimation(ACharacter* Character, UOmegaAnimationEmote* Emote);

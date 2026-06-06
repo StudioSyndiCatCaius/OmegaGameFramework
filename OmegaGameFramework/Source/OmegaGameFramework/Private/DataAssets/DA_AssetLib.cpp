@@ -3,6 +3,8 @@
 
 #include "DataAssets/DA_AssetLib.h"
 
+#include "LevelSequence.h"
+
 template<typename T>
 const T& GetRandomElement(const TArray<T>& Array)
 {
@@ -32,7 +34,10 @@ UAnimSequence* UOmegaAssetLibrary_Animation::GetAnimation_Named(FName Name, bool
 	}
 	if(Fallback)
 	{
-		return Fallback->GetAnimation_Named(Name,RandomFromList,Result);
+		if (UAnimSequence* over=Fallback->GetAnimation_Named(Name,RandomFromList,Result))
+		{
+			return over; 
+		}
 	}
 	return fall_back;
 }
@@ -59,7 +64,10 @@ UAnimMontage* UOmegaAssetLibrary_Animation::GetMontage_Named(FName Name, bool Ra
 	}
 	if(Fallback)
 	{
-		return Fallback->GetMontage_Named(Name,RandomFromList,Result);
+		if (UAnimMontage* over=Fallback->GetMontage_Named(Name,RandomFromList,Result))
+		{
+			return over; 
+		}
 	}
 	return fall_back;
 }
@@ -81,11 +89,13 @@ ULevelSequence* UOmegaAssetLibrary_Animation::GetLevelSequence_Named(FName Name,
 			Result=true;
 			return LevelSequences_Named[Name];
 		}
-		
 	}
 	if(Fallback)
 	{
-		return Fallback->GetLevelSequence_Named(Name,RandomFromList,Result);
+		if (ULevelSequence* over=Fallback->GetLevelSequence_Named(Name,RandomFromList,Result))
+		{
+			return over; 
+		}
 	}
 	return fall_back;
 }
@@ -190,3 +200,50 @@ FSlateBrush UOmegaAssetLibrary_SlateBrush::GetBrush_Named(FName Name, bool& Resu
 	}
 	return fall_back;
 }
+
+bool UDataInterface_AssetLibraries::Uses(UObject* object)
+{
+	if (object && object->GetClass()->ImplementsInterface(UDataInterface_AssetLibraries::StaticClass()))
+	{
+		return true;
+	}
+	return false;
+}
+
+#define LOCAL_GETLIBS \
+UOmegaAssetLibrary_Animation* anim = nullptr; \
+UOmegaAssetLibrary_Sound* sound = nullptr; \
+UOmegaAssetLibrary_SlateBrush* _slate = nullptr; \
+IDataInterface_AssetLibraries::Execute_GetAppearanceLibraries(Object,anim,sound,_slate); \
+
+UOmegaAssetLibrary_Animation* UDataInterface_AssetLibraries::getAnim(UObject* Object)
+{
+	if (Uses(Object))
+	{
+		LOCAL_GETLIBS
+		if (anim) { return anim;}
+	}
+	return nullptr;
+}
+
+UOmegaAssetLibrary_SlateBrush* UDataInterface_AssetLibraries::getSlate(UObject* Object)
+{
+	if (Uses(Object))
+	{
+		LOCAL_GETLIBS
+		if (_slate){return _slate;}
+	}
+	return nullptr;
+}
+
+UOmegaAssetLibrary_Sound* UDataInterface_AssetLibraries::getSound(UObject* Object)
+{
+	if (Uses(Object))
+	{
+		LOCAL_GETLIBS
+		if (sound){return sound;}
+	}
+	return nullptr;
+}
+
+#undef LOCAL_GETLIBS

@@ -34,11 +34,6 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSelector : public UObject
 {
 	GENERATED_BODY()
 
-	virtual UWorld* GetWorld() const override;
-	UFUNCTION() virtual UGameInstance* GetGameInstance() const;
-	
-	UOmegaActorSelector(const FObjectInitializer& ObjectInitializer);
-	UPROPERTY(Transient) UWorld* WorldPrivate = nullptr;
 public:
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor Selector")

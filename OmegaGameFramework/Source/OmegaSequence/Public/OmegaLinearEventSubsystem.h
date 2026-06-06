@@ -90,9 +90,9 @@ public:
 		return TempEvents;
 	}
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnLinearEventBegin OnLinearEventBegin;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnLinearEventSequenceEnd OnLinearEventSequenceEnd;
 	
 	// ============================================================================================================
@@ -121,18 +121,13 @@ class OMEGASEQUENCE_API UOmegaLinearEventScriptReader : public UObject
 	GENERATED_BODY()
 
 public:
-
-	UFUNCTION(BlueprintImplementableEvent, Category="Script")
-	TSubclassOf<UOmegaDataParserReader> GetParserClass();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Script")
 	TArray<FOmegaLinearEventScriptData> ConvertScriptToEventData(const FString& Script);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Script")
 	TSubclassOf<UOmegaLinearEvent> GetEventClassFromString(const FString& Script);
-
-	UFUNCTION(BlueprintCallable, Category="Script")
-	FLinearEventSequence ConvertToLinearEventSequence(const FString& Script, TSubclassOf<UOmegaDataParserReader> ReaderClass, bool ScriptIsPath);
+	
 	
 };
 

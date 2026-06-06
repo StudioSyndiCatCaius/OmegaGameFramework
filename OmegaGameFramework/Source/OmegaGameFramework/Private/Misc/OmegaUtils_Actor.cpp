@@ -3,7 +3,6 @@
 #include "Misc/OmegaUtils_Actor.h"
 
 
-
 AActor* UOmegaActorUtilFunctions::GetSelectedActor(UObject* WorldContextObject, FOmegaActorSelectorData selectorData)
 {
 	if(selectorData.Selector)
@@ -21,22 +20,6 @@ TArray<AActor*> UOmegaActorUtilFunctions::GetSelectedActors(UObject* WorldContex
 	return selectorData.Selector->Private_GetActorList(WorldContextObject->GetWorld());
 }
 
-UWorld* UOmegaActorSelector::GetWorld() const
-{
-	if(WorldPrivate) {return WorldPrivate; }
-	if(GetGameInstance()) { return GetGameInstance()->GetWorld(); } return nullptr;
-}
-
-UGameInstance* UOmegaActorSelector::GetGameInstance() const
-{
-	return Cast<UGameInstance>(GetOuter());
-}
-
-UOmegaActorSelector::UOmegaActorSelector(const FObjectInitializer& ObjectInitializer)
-{
-	if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); }
-}
-
 AActor* UOmegaActorSelector::Private_GetActor(UWorld* WorldContext)
 {
 	if(Private_GetActorList(WorldContext).IsValidIndex(0))
@@ -50,7 +33,6 @@ TArray<AActor*> UOmegaActorSelector::Private_GetActorList(UWorld* WorldContext)
 {
 	if(WorldContext)
 	{
-		WorldPrivate=WorldContext;
 		return GetActors(WorldContext);
 	}
 	TArray<AActor*> nullOut;

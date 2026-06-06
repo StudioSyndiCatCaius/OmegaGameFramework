@@ -10,7 +10,8 @@ public class FlowEditor : ModuleRules
 
         PublicDependencyModuleNames.AddRange(new[]
         {
-            "Flow"
+            "Flow",
+            "OmegaGameFramework"
         });
 
         PrivateDependencyModuleNames.AddRange(new[]
@@ -42,8 +43,8 @@ public class FlowEditor : ModuleRules
             "Projects",
             "PropertyEditor",
             "RenderCore",
-            "Sequencer",
             "SequencerCore",
+            "Sequencer",
             "Slate",
             "SlateCore",
             "SourceControl",

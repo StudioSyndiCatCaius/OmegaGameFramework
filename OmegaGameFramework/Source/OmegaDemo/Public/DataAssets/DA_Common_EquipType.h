@@ -3,15 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
+#include "DataAssets/DA_Attribute.h"
+#include "Interfaces/I_Combatant.h"
 #include "DataAssets/DA_Appearance.h"
 #include "Condition/Condition_Actor.h"
-#include "DataAssets/DA_CombatSource.h"
 #include "DA_Common_EquipType.generated.h"
 
 
-UCLASS(Blueprintable, BlueprintType)
-class OMEGADEMO_API UOAsset_Common_EquipType : public UOAsset_CombatSource, public IDataInterface_AppearanceSource
+UCLASS(Blueprintable, BlueprintType,DisplayName="♎Demo - Equip Type (Common)")
+class OMEGADEMO_API UOAsset_Common_EquipType : public UOmegaDemoDataAsset, public IDataInterface_AppearanceSource, public IDataInterface_Combatant
 {
 	GENERATED_BODY()
 public:
@@ -35,6 +35,10 @@ public:
 	bool DefaultToParentAppearance=true;
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Appearance")
 	UOAsset_Appearance* Appearance;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combatant", meta=(ShowOnlyInnerProperties))
+	FOmegaScripted_CombatantModifiers Modifiers;
+	virtual FOmegaScripted_CombatantModifiers Combatant_GetScriptedModifiers_Implementation() override { return Modifiers; };
 	
 	bool AreConditionsValid(AActor* Actor) const;
 	TArray<UOmegaCondition_Actor*> GetAllConditions() const;

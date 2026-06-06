@@ -6,6 +6,8 @@
 #include "Actors/Actor_AdvancedVolume.h"
 
 #include "Components/BillboardComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Components/StaticMeshComponent.h"
@@ -30,6 +32,7 @@ AAdvancedVolume::AAdvancedVolume()
 	if(Volume)
 	{
 		Volume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Volume->SetCollisionResponseToAllChannels(ECR_Ignore);
 		Volume->SetupAttachment(RootRef);
 		Volume->SetHiddenInGame(true);
 		Volume->SetCanEverAffectNavigation(false);
@@ -82,6 +85,15 @@ void AAdvancedVolume::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AAdvancedVolume::SetColor(FLinearColor NewColor)
+{
+	Color=NewColor;
+	UMaterialInstanceDynamic* LocalMatInst = Volume->CreateDynamicMaterialInstance(0, VolumeMaterial_ref);
+	LocalMatInst->SetVectorParameterValue("Color", Color);
+	LocalMatInst->SetScalarParameterValue("Opacity", 0.35);
+	Bounds_sphere->ShapeColor=Color.ToFColorSRGB();
+	Bounds_box->ShapeColor=Color.ToFColorSRGB();
+}
 
 
 void AAdvancedVolume::OnConstruction(const FTransform& Transform)
@@ -111,27 +123,20 @@ void AAdvancedVolume::OnConstruction(const FTransform& Transform)
 	
 	if(Volume)
 	{
-		Volume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		UMaterialInstanceDynamic* LocalMatInst = Volume->CreateDynamicMaterialInstance(0, VolumeMaterial_ref);
-		LocalMatInst->SetVectorParameterValue("Color", Color);
-		LocalMatInst->SetScalarParameterValue("Opacity", 0.35);
-		Bounds_sphere->ShapeColor=Color.ToFColorSRGB();
-		Bounds_box->ShapeColor=Color.ToFColorSRGB();
+		SetColor(Color);
 	}
 	
 	
 	//------------------------------------ICON--------------------------------------//
-	if(GetVolumeIcon())
+	if(IconDisplay)
 	{
-		IconDisplay->SetSprite(GetVolumeIcon());
-		IconDisplay->SetWorldLocation(GetActorLocation()+FVector(0,0,50));
 		IconDisplay->SetWorldScale3D(FVector(1,1,1));
 	}
 	
 	//------------------------------------Name--------------------------------------//
 	if(TextDisplay)
 	{
-		TextDisplay->SetText(GetVolumeText());
+		TextDisplay->SetWorldRotation(FRotator(0,0,0));
 		TextDisplay->SetWorldScale3D(FVector(1,1,1));
 		TextDisplay->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextTop);
 		TextDisplay->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
@@ -155,14 +160,13 @@ void AVolumeTrigger_GlobalEvent::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		if(_pawn->IsPlayerControlled())
 		{
-			UOmegaGameManager* _sys = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>();
 			if(Event_Named.IsValid())
 			{
-				_sys->FireGlobalEvent(Event_Named,this);
+				SS_GI->FireGlobalEvent(Event_Named,this, FOmegaCommonMeta());
 			}
 			if(Event_Tag.IsValid())
 			{
-				_sys->FireTaggedGlobalEvent(Event_Tag,this);
+				SS_GI->FireTaggedGlobalEvent(Event_Tag,this, FOmegaCommonMeta());
 			}
 		}
 	}

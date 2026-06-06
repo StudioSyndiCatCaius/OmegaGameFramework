@@ -4,6 +4,7 @@
 #include "Widget/DataTooltip.h"
 
 #include "Components/Image.h"
+#include "Components/TextBlock.h"
 #include "Functions/F_Common.h"
 #include "Widget/DataWidget.h"
 
@@ -34,15 +35,15 @@ void UDataTooltip::Refresh()
 		{
 			if(GetAssetDescriptionWidget())
 			{
-				GetAssetDescriptionWidget()->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(source_object));
+				GetAssetDescriptionWidget()->SetText(UDataInterface_General::GetObjectDesc(source_object,FGameplayTag()));
 			}
 			if(GetAssetNameWidget())
 			{
-				GetAssetNameWidget()->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(source_object));
+				GetAssetNameWidget()->SetText(UDataInterface_General::GetObjectName(source_object,FGameplayTag()));
 			}
 			if(GetAssetIconWidget())
 			{
-				GetAssetIconWidget()->SetBrush(UOmegaGameFrameworkBPLibrary::GetObjectIcon(source_object));
+				GetAssetIconWidget()->SetBrush(UDataInterface_General::GetObjectIcon(source_object,FGameplayTag()));
 				if (bOverride_IconSize)
 				{
 					GetAssetIconWidget()->SetDesiredSizeOverride(IconSize);

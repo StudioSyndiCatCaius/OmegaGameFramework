@@ -8,11 +8,12 @@
 UENUM(Blueprintable,BlueprintType)
 enum EOmegaGlobalParamTarget
 {
-	WORLD,
-	GAME_INSTANCE,
-	SAVE_GAME,
-	SAVE_GLOBAL,
+	WORLD			UMETA(DisplayName = "🌎World"),
+	GAME_INSTANCE	UMETA(DisplayName = "🎮Game Instance"),
+	SAVE_GAME		UMETA(DisplayName = "💾Save"),
+	SAVE_GLOBAL		UMETA(DisplayName = "💾Global"),
 };
+
 
 UENUM(Blueprintable, BlueprintType)
 enum EFactionAffinity
@@ -34,8 +35,8 @@ enum EOmegaStarRank
 	Star0	UMETA(DisplayName = "☆☆☆☆☆"),
 };
 
-UENUM(Blueprintable)
-enum EOmegaComparisonMethod
+UENUM(Blueprintable,BlueprintType)
+enum EOmegaComparisonMethod  : uint8
 {
 	Compare_Equal		UMETA(DisplayName = "="),
 	Compare_Great		UMETA(DisplayName = ">"),
@@ -44,12 +45,20 @@ enum EOmegaComparisonMethod
 	Compare_LessEqual	UMETA(DisplayName = "<="),
 };
 
-UENUM(Blueprintable)
+UENUM(Blueprintable,BlueprintType)
 enum EOmegaComparisonMethodSimple
 {
 	IsGreater		UMETA(DisplayName = ">"),
 	IsEqual			UMETA(DisplayName = "="),
 	IsLess			UMETA(DisplayName = "<"),
+};
+
+UENUM(BlueprintType)
+enum class EOmegaAttributeValueType : uint8
+{
+	AttValue_Current		UMETA(DisplayName = "Current"),
+	AttValue_Max			UMETA(DisplayName = "Max"),
+	AttValue_Percent		UMETA(DisplayName = "Percent"),
 };
 
 UENUM(BlueprintType)
@@ -87,12 +96,12 @@ enum class EOmegaGamepad_Shoulder : uint8
 // =============================
 
 UENUM(Blueprintable)
-enum EOmegaQuestStatus
+enum EOmegaQuestStatus : uint8 
 {
-	Unstarted		UMETA(DisplayName = "Unstarted"),
-	Active			UMETA(DisplayName = "Active"),
-	Complete		UMETA(DisplayName = "Complete"),
-	Failed			UMETA(DisplayName = "Failed"),
+	QuestStatus_Unstarted		UMETA(DisplayName = "Unstarted"),
+	QuestStatus_Active			UMETA(DisplayName = "Active"),
+	QuestStatus_Complete		UMETA(DisplayName = "Complete"),
+	QuestStatus_Failed			UMETA(DisplayName = "Failed"),
 };
 
 UENUM(BlueprintType)

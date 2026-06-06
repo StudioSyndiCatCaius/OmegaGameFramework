@@ -7,11 +7,28 @@
 #include "DataAssets/DA_Month.h"
 #include "DataAssets/DA_Day.h"
 #include "DataAssets/DA_DayPeriod.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Save.h"
 
 
-FOmegaCalendarData UOmegaCalendarComponent::GetCurrentTime(int32 offset) const
+FOmegaCalendarData* UOmegaCalendarComponent::GetCalendarData()
 {
-	FOmegaCalendarData out=CalendarData;
+	if (bBindToSave)
+	{
+		if (UOmegaSaveSubsystem* ss= OGF_Subsystems::oSave(this))
+		{
+			if (UOmegaSaveBase* sav=ss->GetSaveObject(false))
+			{
+				return &sav->CalendarData.FindOrAdd(SaveBinding);
+			}
+		}
+	}
+	return &CalendarData;
+}
+
+FOmegaCalendarData UOmegaCalendarComponent::GetCurrentTime(int32 offset)
+{
+	FOmegaCalendarData out=*GetCalendarData();
 	out.Period+=offset;
 	out.Day+=offset;
 	out.Month+=offset;
@@ -19,31 +36,38 @@ FOmegaCalendarData UOmegaCalendarComponent::GetCurrentTime(int32 offset) const
 	return out;
 }
 
+FRandomStream UOmegaCalendarComponent::GetCurrentTimeSeed(int32 offset)
+{
+	FOmegaCalendarData time=GetCurrentTime(offset);
+	int32 seed=time.Period+(time.Day*100)+(time.Month*10000)+(time.Year*1000000);
+	return FRandomStream(seed); 
+}
+
 void UOmegaCalendarComponent::AdvanceTime()
 {
 	if(CalendarAsset)
 	{
-		CalendarData.Period+=1;
-		if(CalendarAsset->DayPeriods.Num()<=CalendarData.Period)
+		GetCalendarData()->Period+=1;
+		if(CalendarAsset->DayPeriods.Num()<=GetCalendarData()->Period)
 		{
-			CalendarData.Period=0;
-			CalendarData.Day+=1;
+			GetCalendarData()->Period=0;
+			GetCalendarData()->Day+=1;
 			//Wrap Month
 			if(GetMonth_Asset() && GetMonth_Asset()->NumberOfDays<GetDay_Number())
 			{
-				CalendarData.Day=0;
-				CalendarData.Month+=1;
+				GetCalendarData()->Day=0;
+				GetCalendarData()->Month+=1;
 				//Wrap Year
-				if(CalendarAsset->Months.Num()<=CalendarData.Month)
+				if(CalendarAsset->Months.Num()<=GetCalendarData()->Month)
 				{
-					CalendarData.Month=0;
-					SetYear(CalendarData.Year+1);
+					GetCalendarData()->Month=0;
+					SetYear(GetCalendarData()->Year+1);
 				}
-				SetMonth(CalendarData.Month+1);
+				SetMonth(GetCalendarData()->Month+1);
 			}
-			SetDay(CalendarData.Day);
+			SetDay(GetCalendarData()->Day);
 		}
-		SetPeriod(CalendarData.Period);
+		SetPeriod(GetCalendarData()->Period);
 	}
 }
 
@@ -68,22 +92,22 @@ bool UOmegaCalendarComponent::IsCurrentTime_InBetween(FOmegaCalendarData A, FOme
 
 void UOmegaCalendarComponent::SetPeriod(int32 index)
 {
-	CalendarData.Period=index;
-	OnPeriodChanged.Broadcast(this,CalendarData.Period);
+	GetCalendarData()->Period=index;
+	OnPeriodChanged.Broadcast(this,GetCalendarData()->Period);
 }
 
-int32 UOmegaCalendarComponent::GetPeriod_Number() const
+int32 UOmegaCalendarComponent::GetPeriod_Number()
 {
-	return CalendarData.Period;
+	return GetCalendarData()->Period;
 }
 
-UOAsset_DayPeriod* UOmegaCalendarComponent::GetPeriod_Asset() const
+UOAsset_DayPeriod* UOmegaCalendarComponent::GetPeriod_Asset()
 {
 	if(CalendarAsset)
 	{
-		if(CalendarAsset->DayPeriods.IsValidIndex(CalendarData.Period))
+		if(CalendarAsset->DayPeriods.IsValidIndex(GetCalendarData()->Period))
 		{
-			return CalendarAsset->DayPeriods[CalendarData.Period];
+			return CalendarAsset->DayPeriods[GetCalendarData()->Period];
 		}
 	}
 	return nullptr;
@@ -95,16 +119,16 @@ UOAsset_DayPeriod* UOmegaCalendarComponent::GetPeriod_Asset() const
 
 void UOmegaCalendarComponent::SetDay(int32 index)
 {
-	CalendarData.Day=index;
-	OnDayChanged.Broadcast(this,CalendarData.Day);
+	GetCalendarData()->Day=index;
+	OnDayChanged.Broadcast(this,GetCalendarData()->Day);
 }
 
-int32 UOmegaCalendarComponent::GetDay_Number() const
+int32 UOmegaCalendarComponent::GetDay_Number()
 {
-	return CalendarData.Day;
+	return GetCalendarData()->Day;
 }
 
-UOAsset_Day* UOmegaCalendarComponent::GetDay_Asset() const
+UOAsset_Day* UOmegaCalendarComponent::GetDay_Asset()
 {
 	if(CalendarAsset)
 	{
@@ -119,20 +143,20 @@ UOAsset_Day* UOmegaCalendarComponent::GetDay_Asset() const
 
 void UOmegaCalendarComponent::SetMonth(int32 index)
 {
-	CalendarData.Month=index;
-	OnMonthChanged.Broadcast(this,CalendarData.Month);
+	GetCalendarData()->Month=index;
+	OnMonthChanged.Broadcast(this,GetCalendarData()->Month);
 }
 
-int32 UOmegaCalendarComponent::GetMonth_Number() const
+int32 UOmegaCalendarComponent::GetMonth_Number()
 {
-	return CalendarData.Month;
+	return GetCalendarData()->Month;
 }
 
-UOAsset_Month* UOmegaCalendarComponent::GetMonth_Asset() const
+UOAsset_Month* UOmegaCalendarComponent::GetMonth_Asset()
 {
 	if(CalendarAsset)
 	{
-		return CalendarAsset->GetMonth_FromIndex(CalendarData.Month);
+		return CalendarAsset->GetMonth_FromIndex(GetCalendarData()->Month);
 	}
 	return nullptr;
 }
@@ -143,8 +167,8 @@ UOAsset_Month* UOmegaCalendarComponent::GetMonth_Asset() const
 // =====================================================================================================================
 void UOmegaCalendarComponent::SetYear(int32 index)
 {
-	CalendarData.Year=index;
-	OnYearChanged.Broadcast(this,CalendarData.Year);
+	GetCalendarData()->Year=index;
+	OnYearChanged.Broadcast(this,GetCalendarData()->Year);
 }
 
 // =====================================================================================================================

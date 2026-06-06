@@ -25,7 +25,7 @@ struct FOmegaConditions_Actor
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Conditions")
 	TArray<UOmegaCondition_Actor*> Conditions;
 
-	bool CheckConditions(AActor* actor)
+	bool CheckConditions(AActor* actor) const
 	{
 		if(actor)
 		{

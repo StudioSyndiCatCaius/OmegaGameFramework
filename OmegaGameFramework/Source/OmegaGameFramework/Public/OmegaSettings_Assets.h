@@ -9,11 +9,12 @@
 #include "UObject/Object.h"
 #include "OmegaSettings_Assets.generated.h"
 
+class UOmegaAssetHandlerConfig;
 class UEquipmentSlot;
 class UOmegaAttribute;
 class UHUDLayer;
 class UMenu;
-class UOmegaGlobalSettings;
+class UOmegaGameManager;
 class AOmegaGameplaySystem;
 class UOmegaGameplayModule;
 class UOmegaAttributeSet;
@@ -27,40 +28,62 @@ UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Omega: Asset"))
 class OMEGAGAMEFRAMEWORK_API UOmegaAssetSettings : public UDeveloperSettings
 {
 	GENERATED_UCLASS_BODY()
-
 public:
+	
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor") void LoadDevConfig();
 	
 	// ---------------------------------------------------------------------------
 	// Named Assets
 	// ---------------------------------------------------------------------------
-	UPROPERTY(EditAnywhere, config, Category = "Named Assets")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Quickload")
+	TArray<FString> Quickload_ContentDirectories;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Quickload")
+	TArray<FString> Quickload_ClassDirectories;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Quickload")
+	TMap<TSoftClassPtr<UObject>,FString> Quickload_ClassNameRemap;
+	
+	// ---------------------------------------------------------------------------
+	// Named Assets
+	// ---------------------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Tagged Assets (Omega)",meta=(ForceInlineRow,Categories="UASSET"))
+	TMap<FGameplayTag, TSoftObjectPtr<UPrimaryDataAsset>> GlobalTagged_DataAssets;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Tagged Assets (Omega)",meta=(ForceInlineRow,Categories="UCLASS"))
+	TMap<FGameplayTag, TSoftClassPtr<UObject>> GlobalTagged_Classes;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Tagged Assets (Omega)",meta=(ForceInlineRow,Categories="UASSET_LIST"))
+	TMap<FGameplayTag, FOmegaList_DataAsset_Soft> GlobalTagged_AssetList;
+
+	// ---------------------------------------------------------------------------
+	// Named Assets
+	// ---------------------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "🇺 Named Assets (Unreal)") TMap<FName, TSoftObjectPtr<UTexture2D>> Named_Textures;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "🇺 Named Assets (Unreal)") TMap<FName, TSoftObjectPtr<UMaterialInterface>> Named_Material;
+	
+	// ---------------------------------------------------------------------------
+	// Named Assets
+	// ---------------------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Named Assets (Omega)")
 	TMap<FName, TSoftObjectPtr<UPrimaryDataAsset>> Named_DataAssets;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Named Assets")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Named Assets (Omega)")
 	TMap<FName, TSoftObjectPtr<UOmegaAttribute>> Named_Attributes;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Named Assets")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Named Assets (Omega)")
 	TMap<FName, TSoftObjectPtr<UEquipmentSlot>> Named_EquipSlots;
 	
-	UPROPERTY(EditAnywhere, config, Category = "Named Assets")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "♎ Named Assets (Omega)")
 	TMap<FName, TSoftObjectPtr<UOmegaFaction>> Named_Faction;
-	
-	UPROPERTY(EditAnywhere, config, Category = "Named Classes")
-	TMap<FName, TSoftClassPtr<UPrimaryDataAsset>> Named_DataAssetClasses;
-	
-	UPROPERTY(EditAnywhere, config, Category = "Named Classes")
-	TMap<FName, TSoftClassPtr<AOmegaGameplaySystem>> Named_Systems;
-	
-	UPROPERTY(EditAnywhere, config, Category = "Named Classes")
-	TMap<FName, TSoftClassPtr<UMenu>> Named_Menus;
-	
-	UPROPERTY(EditAnywhere, config, Category = "Named Classes")
-	TMap<FName, TSoftClassPtr<UHUDLayer>> Named_HUDLayers;
 	
 	// ---------------------------------------------------------------------------
 	// Named Lists
 	// ---------------------------------------------------------------------------
-	UPROPERTY(EditAnywhere, config, Category = "Named Lists")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "📋 Named Lists")
+	TMap<FName, FOmegaList_Object_Soft> NamedList_Object;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,config, Category = "📋 Named Lists")
 	TMap<FName, FOmegaList_DataAsset_Soft> NamedList_DataAssets;
 };
 

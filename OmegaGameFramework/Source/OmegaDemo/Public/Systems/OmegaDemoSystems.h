@@ -7,23 +7,26 @@
 #include "GameFramework/Actor.h"
 #include "OmegaDemoSystems.generated.h"
 
+class UCombatantComponent;
+class UOmegaCombatEncounter_Component;
+class UTurnBasedManagerComponent;
+
 UCLASS(Abstract)
 class OMEGADEMO_API AOmegaDemoSystems : public AOmegaGameplaySystem
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
+
 	AOmegaDemoSystems();
 
 protected:
-	// Called when the game starts or when spawned
+
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 	virtual void SystemActivated_Implementation(UObject* Context, const FString& Flag) override;
-	
 };
+
+

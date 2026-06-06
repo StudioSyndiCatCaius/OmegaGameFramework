@@ -7,11 +7,23 @@
 #include "FlowTypes.h"
 #include "OmegaLinearEventSubsystem.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
 #include "Engine/World.h"
 #include "LinearEvents/LinearChoice_SimpleChoice.h"
 #include "Subsystems/Subsystem_Save.h"
 
+
+UFlowNode_LinkedChoice* UFlowNode_LinearChoice::GetLinkedChoice_ByID(FName ID)
+{
+	for (auto* n : cached_linkNodes)
+	{
+		if (n && n->LinkID==ID)
+		{
+			return n;
+		}
+	}
+	return nullptr;
+}
 
 UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 {
@@ -35,6 +47,19 @@ UFlowNode_LinearChoice::UFlowNode_LinearChoice()
 #endif
 }
 
+TArray<FName> UFlowNode_LinearChoice::L_LinkedNodes()
+{
+	TArray<FName> out;
+	for (auto* n : GetFlowAsset()->GetAllNodes())
+	{
+		if (UFlowNode_LinkedChoice* _link=Cast<UFlowNode_LinkedChoice>(n))
+		{
+			out.Add(_link->LinkID);
+		}
+	}
+	return out;
+}
+
 void UFlowNode_LinearChoice::LocalChoiceSelect(UOmegaLinearChoice* Choice, int32 Index)
 {
 	if(SaveParamToSet.IsValid())
@@ -45,14 +70,42 @@ void UFlowNode_LinearChoice::LocalChoiceSelect(UOmegaLinearChoice* Choice, int32
 	{
 		GetFlowAsset()->SetLocalParam_Int(LocalParamToSet,Index);
 	}
-	FString OutputLocalName = FString::FromInt(Index);
-	TriggerOutput(FName(OutputLocalName));
+	int32 local_count = Choices.Choices.Num();
+	if (Index < local_count)
+	{
+		TriggerOutput(FName(FString::FromInt(Index)));
+	}
+	else
+	{
+		int32 linked_index = Index - local_count;
+		if (!LinkedChoiceNodes.IsValidIndex(linked_index))
+		{
+			Finish();
+			return;
+		}
+		FName link_id = LinkedChoiceNodes[linked_index];
+		UFlowNode_LinkedChoice* c = GetLinkedChoice_ByID(link_id);
+		if (c)
+		{
+			c->TriggerFirstOutput(true);
+		}
+		Finish();
+	}
 }
 
 
-
-void UFlowNode_LinearChoice::ExecuteInput(const FName& PinName)
+ 
+void UFlowNode_LinearChoice::ExecuteInput(const FName&PinName)
 {
+	cached_linkNodes.Empty();
+	for (auto* n : GetFlowAsset()->GetAllNodes())
+	{
+		if (UFlowNode_LinkedChoice* _link=Cast<UFlowNode_LinkedChoice>(n))
+		{
+			cached_linkNodes.AddUnique(_link);
+		}
+	}
+	
 	TSubclassOf<AOmegaLinearChoiceInstance> class_in=InstanceClass;
 	if(!class_in)
 	{
@@ -61,7 +114,24 @@ void UFlowNode_LinearChoice::ExecuteInput(const FName& PinName)
 			class_in=newClass;
 		}
 	}
-	ChoiceInst = GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>()->PlayLinearChoice(Choices, class_in);
+	FOmegaLinearChoices c=Choices;
+	
+	TArray<UOmegaLinearChoice*> LinkedChoices;
+	for (FName link_id : LinkedChoiceNodes)
+	{
+		for (auto* n : cached_linkNodes)
+		{
+			if (n->LinkID == link_id && UOmegaFunctions_GlobalScripting::RunGlobalConditions(this,n->Conditions))
+			{
+				LinkedChoices.Add(n->Choice);
+			}
+		}
+	}
+	
+	c.Choices.Append(LinkedChoices);
+	c.flags=Flags;
+	c.NamedLists=NamedLists;
+	ChoiceInst = GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>()->PlayLinearChoice(c, class_in);
 	ChoiceInst->OnChoiceSelected.AddDynamic(this, &UFlowNode_LinearChoice::LocalChoiceSelect);
 	
 	Super::ExecuteInput(PinName);
@@ -108,5 +178,22 @@ void UFlowNode_LinearChoice::SubscribeToAssetChanges()
 	}
 }
 
+#endif
 
+UFlowNode_LinkedChoice::UFlowNode_LinkedChoice()
+{
+	InputPins.Empty();
+}
+
+void UFlowNode_LinkedChoice::ExecuteInput(const FName& PinName)
+{
+	Super::ExecuteInput(PinName);
+	TriggerFirstOutput(true);
+}
+
+#if WITH_EDITOR
+FString UFlowNode_LinkedChoice::GetNodeDescription() const
+{
+	return "Linked Choice : "+LinkID.ToString()+"";
+}
 #endif

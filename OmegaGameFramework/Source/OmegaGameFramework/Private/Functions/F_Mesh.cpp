@@ -3,6 +3,9 @@
 
 #include "Functions/F_Mesh.h"
 #include "Engine/Texture2D.h"
+#include "ReferenceSkeleton.h"
+#include "Engine/SkeletalMesh.h"
+
 #include "ImageUtils.h"
 #include "RenderUtils.h"
 

@@ -4,10 +4,33 @@
 // Sets default values
 
 #include "Functions/F_TagEvent.h"
+
+#include "OmegaGameManager.h"
+#include "OmegaSettings.h"
 #include "Components/SkeletalMeshComponent.h"
 
 #include "Components/BillboardComponent.h"
-#include "Subsystems/Subsystem_Actors.h"
+#include "Subsystems/Subsystem_World.h"
+
+TMap<AActor*, FGameplayTag> FOmegaActorTagEventContainer::GetHardEvents()
+{
+	TMap<AActor*, FGameplayTag> out;
+	TArray<TSoftObjectPtr<AActor>> TempActorList;
+	Events.GetKeys(TempActorList);
+	for(auto softActor : TempActorList)
+	{
+		if(AActor* tempActor=softActor.LoadSynchronous())
+		{
+			out.Add(tempActor,Events[softActor]);
+		}
+	}
+	return out;
+}
+
+void UActorTagEventFunctions::FireActorTagEvents_Container(FOmegaActorTagEventContainer Container)
+{
+	FireActorTagEvents(Container.GetHardEvents());
+}
 
 void UActorTagEventFunctions::FireActorTagEvents(TMap<AActor*, FGameplayTag> Events)
 {
@@ -29,9 +52,9 @@ void UActorTagEventFunctions::FireTagEventOnActors(TArray<AActor*> Actors, FGame
 			if(TempActor->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))
 			{
 				IActorTagEventInterface::Execute_OnTagEvent(TempActor, Event);
-				TempActor->GetWorld()->GetSubsystem<UOmegaActorSubsystem>()->OnActorTagEvent.Broadcast(TempActor,Event);
+				TempActor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->OnActorTagEvent.Broadcast(TempActor,Event);
 			}
-			
+			OGF_GAME_CORE()->Actor_OnTagEvent(TempActor,Event);
 			for(UActorComponent* TempComp : TempActor->GetComponents())
 			{
 				if(TempComp && TempComp->GetClass()->ImplementsInterface(UActorTagEventInterface::StaticClass()))

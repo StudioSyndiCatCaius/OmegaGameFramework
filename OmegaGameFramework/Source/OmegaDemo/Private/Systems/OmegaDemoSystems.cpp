@@ -2,6 +2,9 @@
 
 #include "Systems/OmegaDemoSystems.h"
 
+#include "LevelSequence.h"
+#include "LevelSequencePlayer.h"
+
 
 // Sets default values
 AOmegaDemoSystems::AOmegaDemoSystems()
@@ -27,4 +30,3 @@ void AOmegaDemoSystems::SystemActivated_Implementation(UObject* Context, const F
 {
 	Super::SystemActivated_Implementation(Context, Flag);
 }
-

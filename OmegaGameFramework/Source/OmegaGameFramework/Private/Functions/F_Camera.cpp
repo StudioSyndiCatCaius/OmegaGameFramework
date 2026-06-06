@@ -2,9 +2,10 @@
 
 
 #include "Functions/F_Camera.h"
-#include "IPlatformFilePak.h"
-#include "Subsystems/Subsystem_DynamicCamera.h"
-#include "Subsystems/Subsystem_Gameplay.h"
+#include "Actors/Actor_DynamicCamera.h"
+#include "Subsystems/Subsystem_Player.h"
+#include "Subsystems/Subsystem_World.h"
+#include "Camera/CameraComponent.h"
 
 
 APlayerController* _TryGetPlayer(UObject* Context, APlayerController* lit) 
@@ -77,7 +78,7 @@ void UOmegaCameraFunctions::SetViewTarget_ActorBinding(UObject* WorldContextObje
 {
 	if(WorldContextObject)
 	{
-		AActor* in_actor=WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplaySubsystem>()->GetGlobalActorBinding(Binding);
+		AActor* in_actor=WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetGlobalActorBinding(Binding);
 		SetViewTarget_Actor(WorldContextObject,in_actor,BlendTime,Player);
 	}
 }
@@ -95,13 +96,31 @@ void UOmegaCameraFunctions::SetViewTarget_ActorSelector(UObject* WorldContextObj
 	SetViewTarget_Actor(WorldContextObject,in_actor,BlendTime,Player);
 }
 
-AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Master(UObject* WorldContextObject, bool& Outcome, 
+void UOmegaCameraFunctions::DynamicCamera_SetActive(UObject* WorldContextObject, bool bActive,
 	APlayerController* Player)
 {
 	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 	{
+		_player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->DynaCam_SetActive(bActive);
+	}
+}
+
+bool UOmegaCameraFunctions::DynamicCamera_IsActive(UObject* WorldContextObject, APlayerController* Player)
+{
+	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+	{
+		return _player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->DynaCam_IsActive();
+	}
+	return false;
+}
+
+AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Master(UObject* WorldContextObject, bool& Outcome, 
+                                                                    APlayerController* Player)
+{
+	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+	{
 		Outcome=true;
-		return _player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetDynamicCamera();
+		return _player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->DynaCam_GetMaster();
 	}
 	Outcome=false;
 	return nullptr;
@@ -113,7 +132,7 @@ AOmegaDynamicCamera* UOmegaCameraFunctions::GetDynamicCamera_Source(UObject* Wor
 	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 	{
 		Outcome=true;
-		return _player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->GetSourceCamera();
+		return _player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->DynaCam_GetSource();
 	}
 	Outcome=false;
 	return nullptr;
@@ -126,7 +145,7 @@ bool UOmegaCameraFunctions::SetDynamicCamera_Override(UObject* WorldContextObjec
 	{
 		if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 		{
-			_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->SetOverrideCamera(SourceCamera,bSnapTo);
+			_player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->DynaCam_SetOverride(SourceCamera,bSnapTo);
 			return true;
 		}
 	}
@@ -137,10 +156,22 @@ bool UOmegaCameraFunctions::ClearDynamicCamera_Override(UObject* WorldContextObj
 {
 	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 	{
-		_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>()->ClearOverrideCamera();
+		_player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->DynaCam_ClearOverride();
 		return true;
 	}
 	return false;
+}
+
+void UOmegaCameraFunctions::DynamicCamera_SnapToSource(UObject* WorldContextObject, APlayerController* Player)
+{
+	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
+	{
+		UOmegaSubsystem_Player* _subsystem=_player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>();
+		if (_subsystem && _subsystem->DynaCam_IsActive())
+		{
+			_subsystem->DynaCam_SnapToCurrent();
+		}
+	}
 }
 
 bool UOmegaCameraFunctions::SetViewTargetToDynamicCamera(UObject* WorldContextObject, APlayerController* Player)
@@ -148,10 +179,10 @@ bool UOmegaCameraFunctions::SetViewTargetToDynamicCamera(UObject* WorldContextOb
 	//if (true) { return false;}
 	if(APlayerController* _player = _TryGetPlayer(WorldContextObject,Player))
 	{
-		UOmegaDynamicCameraSubsystem* _subsystem=_player->GetLocalPlayer()->GetSubsystem<UOmegaDynamicCameraSubsystem>();
-		if (_subsystem && _subsystem->IsDynamicCameraActive())
+		UOmegaSubsystem_Player* _subsystem=_player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>();
+		if (_subsystem && _subsystem->DynaCam_IsActive())
 		{
-			if(AOmegaDynamicCamera* mcam=_subsystem->GetDynamicCamera())
+			if(AOmegaDynamicCamera* mcam=_subsystem->DynaCam_GetMaster())
 			{
 				_player->SetViewTarget(mcam);
 				return true;

@@ -6,7 +6,6 @@
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
 #include "ScreenWidget.h"
-#include "Components/WidgetSwitcher.h"
 #include "Interfaces/I_Widget.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
@@ -19,7 +18,7 @@ class UOmegaInputMode;
 class UDataListCustomEntry;
 class UOmegaGameplayMessage;
 
-UINTERFACE(MinimalAPI) class UDataInterface_CommonMenu : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Common Menu") class UDataInterface_CommonMenu : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_CommonMenu
 {
 	GENERATED_BODY()
@@ -45,6 +44,20 @@ public:UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menu")
 	virtual TArray<UObject*> GetDataListEntries_Implementation(UMenu* Menu) override;
 };
 
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API AOmegaMenuWrapperActor : public AActor
+{
+	GENERATED_BODY()
+
+public:
+	AOmegaMenuWrapperActor();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu") UCombatantComponent* Combatant;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu") UChildActorComponent* ChildActor;
+	
+};
+
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
@@ -62,17 +75,19 @@ protected:
 public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
 	UDataList* GetDefaultDataList();
-	
+
 	UPROPERTY() FGameplayTagContainer TempTags;
 	//----------------------------------------------------------------------
 	// Menu
 	//----------------------------------------------------------------------
 	
 	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
-	FText DisplayName;
-	UPROPERTY(EditAnywhere, Category = "Menu")
-	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu") FText DisplayName;
+	UPROPERTY(EditAnywhere, Category = "Menu") TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
+	UPROPERTY(EditAnywhere, Category = "Menu",meta=(Categories="SYSTEM")) FGameplayTagContainer BlockedSystemTags;
+	// if valid, this child actor class will be spawned on the Menu's wrapper actor
+	UPROPERTY(EditAnywhere, Category = "Menu") TSubclassOf<AActor> WrapperChildActor;
+	
 	
 	UFUNCTION()
 		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag);
@@ -97,6 +112,15 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Widget|Menu")
 		void MenuClosed(FGameplayTagContainer Tags, const FString& Flag);
 
+	//----------------------------------------------------------------------
+	// Wrapper Actor
+	//----------------------------------------------------------------------
+	UPROPERTY() AOmegaMenuWrapperActor* WrapperActor;
+	UFUNCTION(BlueprintPure,Category="Menu|ActorWrapper") AOmegaMenuWrapperActor* GetMenuWrapperActor() const;
+	
+	UFUNCTION(BlueprintCallable,Category="Menu|ActorWrapper",meta=(DeterminesOutputType="Class")) AActor* GetMenuWrapperChildActor(TSubclassOf<AActor> Class);
+	
+	
 	//----------------------------------------------------------------------
 	// Reset
 	//----------------------------------------------------------------------
@@ -163,48 +187,18 @@ public:
 	
 	///PROPERTIES//
 
-	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu")
-	bool bIsOpen;
+	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu") bool bIsOpen;
 
 	///DELGATES//
-	UPROPERTY(BlueprintAssignable)
-		FOpened OnOpened;
-	UPROPERTY(BlueprintAssignable)
-		FClosed OnClosed;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOpened OnOpened;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FClosed OnClosed;
 
-	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Name)")
-	void OnGlobalEvent(FName Event, UObject* Context);
-	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Global Event (Tag)")
-	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Context);
-	UFUNCTION() void Local_BindGlobalEvent();
 
-	UFUNCTION(BlueprintNativeEvent)
-	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta);
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnInputMethodChanged(bool bIsGamepad);
 
-	//----------------------------------------------------------------------
-	// State
-	//----------------------------------------------------------------------
 
-public:
-	UPROPERTY() int32 menu_state;
-	virtual void Native_UpdateState();
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Menu|State")
-	void OnMenuStateChanged(int32 new_state);
-
-	UFUNCTION(BlueprintNativeEvent,Category="Menu|State")
-	UWidgetSwitcher* GetWidget_WidgetSwitcher_State();
-	
-	UFUNCTION(BlueprintCallable,Category="Menu|State")
-	void SetMenuState(int32 state);
-
-	UFUNCTION(BlueprintCallable,Category="Menu|State")
-	int32 GetMenuState() const { return menu_state;};
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Menu Source") class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_MenuSource
 {
 	GENERATED_BODY()

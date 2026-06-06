@@ -4,29 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Components/Component_TurnBasedManager.h"
-#include "DataAssets/DA_CombatSource.h"
 #include "Functions/F_ScriptedEffects.h"
+#include "Misc/GeneralDataObject.h"
 #include "DA_TurnEffect.generated.h"
 
 
 
 
 UCLASS(Blueprintable, BlueprintType,DisplayName="Ω Turn Effect - Common")
-class OMEGADEMO_API UOAsset_TurnEffect_Common : public UOAsset_CombatSource, public IOmegaScriptedEffectsInterface, public IDataInterface_TurnEntity
+class OMEGADEMO_API UOAsset_TurnEffect_Common : public UOmegaDemoDataAsset, public IDataInterface_ScriptedEffects, public IDataInterface_TurnEntity
 {
 	GENERATED_BODY()
 public:
-	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation(FName Name) override
-	{
-		if(Name.IsValid())
-		{
-			if(Effects_Named.Contains(Name)) { return Effects_Named[Name];}
-			return FOmegaCustomScriptedEffects();
-		}
-		FOmegaCustomScriptedEffects c;
-		c.CustomEffects=Effects_Default;
-		return c;
-	}
+
 
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Effects")
 	TArray<UOmegaScriptedEffect*> Effects_Default;

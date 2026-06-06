@@ -64,13 +64,21 @@ AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, c
 	return LocalActor;
 }
 
-void UInstanceActorComponent::CreateInstances(TArray<UObject*> Contexts, const FString& Flag,
+TArray<AOmegaInstanceActor*>  UInstanceActorComponent::CreateInstances(TArray<UObject*> Contexts, const FString& Flag,
 	FTransform LocalTransform)
 {
+	TArray<AOmegaInstanceActor*> out;
 	for(auto* i : Contexts)
 	{
-		if(i) { CreateInstance(i,Flag,LocalTransform);}
+		if(i)
+		{
+			if (AOmegaInstanceActor* a=CreateInstance(i,Flag,LocalTransform))
+			{
+				out.Add(a);	
+			}
+		}
 	}
+	return out;
 }
 
 AOmegaInstanceActor* UInstanceActorComponent::TryGetInstanceByContext(UObject* Context, bool CreateIfInvalid,
@@ -177,13 +185,16 @@ TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstancesOfCategory(FGa
 	for(auto* TempInst : GetInstances())
 	{
 		bool LocalIsValid = false;
+		FGameplayTagContainer InstTags;
+		FGameplayTag _cat;
+		IDataInterface_General::Execute_GetObjectGameplayTags(TempInst, _cat, InstTags);
 		if(bExact)
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempInst).MatchesTagExact(CategoryTag); 
+			LocalIsValid = InstTags.HasTagExact(CategoryTag);
 		}
 		else
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(TempInst).MatchesTag(CategoryTag);
+			LocalIsValid = InstTags.HasTag(CategoryTag);
 		}
 
 		if(LocalIsValid != bExclude)
@@ -201,13 +212,16 @@ TArray<AOmegaInstanceActor*> UInstanceActorComponent::GetInstancesWithGameplayTa
 	for(auto* TempInst : GetInstances())
 	{
 		bool LocalIsValid = false;
+		FGameplayTagContainer InstTags;
+		FGameplayTag _cat;
+		IDataInterface_General::Execute_GetObjectGameplayTags(TempInst, _cat, InstTags);
 		if(bExact)
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempInst).HasAnyExact(Tags); 
+			LocalIsValid = InstTags.HasAnyExact(Tags);
 		}
 		else
 		{
-			LocalIsValid = IGameplayTagsInterface::Execute_GetObjectGameplayTags(TempInst).HasAny(Tags);
+			LocalIsValid = InstTags.HasAny(Tags);
 		}
 
 		if(LocalIsValid != bExclude)
@@ -304,25 +318,36 @@ void UInstanceActorComponent::TriggerNotify_OnAll(FName Notify)
 
 
 
-// Sets default values
 AOmegaInstanceActor::AOmegaInstanceActor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
+bool AOmegaInstanceActor::L_ContextUsesInterface() const
+{
+	if (ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_InstanceActor::StaticClass()))
+	{
+		return true;
+	}
+	return false;
+}
+
+
 void AOmegaInstanceActor::BeginPlay()
 {
 	Super::BeginPlay();
 	if(ContextObject)
 	{
 		ContextLabel = UOmegaGameFrameworkBPLibrary::GetObjectLabel(ContextObject);
-		Context_Name = UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(ContextObject);
-		Context_Description = UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(ContextObject);
-		Context_Icon = UOmegaGameFrameworkBPLibrary::GetObjectIcon(ContextObject);
+		Context_Name = UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(ContextObject,FGameplayTag());
+		Context_Description = UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(ContextObject,FGameplayTag());
+		Context_Icon = UOmegaGameFrameworkBPLibrary::GetObjectIcon(ContextObject,FGameplayTag());
+		
+		if (L_ContextUsesInterface())
+		{
+			IDataInterface_InstanceActor::Execute_InstanceActor_BeginPlay(ContextObject,this);
+		}
 	}
-	
 }
 
 // Called every frame
@@ -338,58 +363,20 @@ bool AOmegaInstanceActor::Local_SourceHasInterface() const
 	return ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass());	
 }
 
-void AOmegaInstanceActor::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-                                                            FText& Description)
+void AOmegaInstanceActor::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	if(Local_SourceHasInterface())
 	{
-		IDataInterface_General::Execute_GetGeneralDataText(ContextObject, Label, Context, Name, Description);
+		IDataInterface_General::Execute_GetGeneralDataText(ContextObject, Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 	}
 }
 
-void AOmegaInstanceActor::GetGeneralAssetLabel_Implementation(FString& Label)
+void AOmegaInstanceActor::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags)
 {
 	if(Local_SourceHasInterface())
 	{
-		IDataInterface_General::Execute_GetGeneralAssetLabel(ContextObject, Label);
+		IDataInterface_General::Execute_GetObjectGameplayTags(ContextObject, OutCategoryTag, OutGameplayTags);
 	}
-}
-
-void AOmegaInstanceActor::GetGeneralAssetColor_Implementation(FLinearColor& Color)
-{
-	if(Local_SourceHasInterface())
-	{
-		IDataInterface_General::Execute_GetGeneralAssetColor(ContextObject, Color);
-	}
-}
-
-void AOmegaInstanceActor::GetGeneralDataImages_Implementation(const FString& Label, const UObject* Context,
-	UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	if(Local_SourceHasInterface())
-	{
-		IDataInterface_General::Execute_GetGeneralDataImages(ContextObject, Label, Context, Texture, Material, Brush);
-	}
-}
-
-FGameplayTag AOmegaInstanceActor::GetObjectGameplayCategory_Implementation()
-{
-	FGameplayTag LocalCategory;
-	if(Local_SourceHasInterface())
-	{
-		LocalCategory = IGameplayTagsInterface::Execute_GetObjectGameplayCategory(ContextObject);
-	}
-	return LocalCategory;
-}
-
-FGameplayTagContainer AOmegaInstanceActor::GetObjectGameplayTags_Implementation()
-{
-	FGameplayTagContainer LocalTags;
-	if(Local_SourceHasInterface())
-	{
-		LocalTags = IGameplayTagsInterface::Execute_GetObjectGameplayTags(ContextObject);
-	}
-	return LocalTags;
 }
 
 void AOmegaInstanceActor::TriggerNotify(FName Notify)

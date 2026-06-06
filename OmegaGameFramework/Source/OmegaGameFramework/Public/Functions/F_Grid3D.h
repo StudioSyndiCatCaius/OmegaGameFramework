@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "GameFramework/Actor.h"
 #include "Engine/DataAsset.h"
 #include "Misc/GeneralDataObject.h"
 #include "F_Grid3D.generated.h"
@@ -177,9 +178,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Selector : public UActorComponent
 	UPROPERTY() AOmegaGrid3D_Tile* REF_SelectedTile;
 public:
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnGrid3DTileSelected OnGrid3DTileSelected;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnGrid3DTileRegistered OnGrid3DTileRegistered;
 
 	UFUNCTION(BlueprintCallable,Category="Grid3D Selector")
@@ -228,9 +229,9 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
-	UPROPERTY(BlueprintAssignable) FOnGrid3DMover_StateChange_Move OnGrid3DMover_StateChange_Move;
-	UPROPERTY(BlueprintAssignable) FOnGrid3DMover_StateChange_Rotate OnGrid3DMover_StateChange_Rotate;
-	UPROPERTY(BlueprintAssignable) FOnGrid3DMover_MoveUpdate OnGrid3DMover_MoveUpdate;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DMover_StateChange_Move OnGrid3DMover_StateChange_Move;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DMover_StateChange_Rotate OnGrid3DMover_StateChange_Rotate;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DMover_MoveUpdate OnGrid3DMover_MoveUpdate;
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover")
 	void SetLinkedOccupant(UOmegaGrid3D_Occupant* Occupant);

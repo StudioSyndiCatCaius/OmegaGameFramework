@@ -1,6 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "OmegaGameManager.h"
+#include "OmegaSettings.h"
 #include "Actors/Actor_Ability.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_TurnBasedManager.h"
@@ -8,6 +10,7 @@
 
 #include "Functions/F_TagEvent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_GameManager.h"
 
 
@@ -26,15 +29,7 @@ UTurnBasedManagerComponent::UTurnBasedManagerComponent()
 void UTurnBasedManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if(!TurnManager)
-	{
-		TurnManager=NewObject<UTurnManagerBase>(this,UTurnManagerBase::StaticClass());
-	}
-	if(TurnManager)
-	{
-		TurnManager->TurnManagerRef=this;
-	}
+	
 }
 
 
@@ -45,15 +40,6 @@ void UTurnBasedManagerComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
-}
-
-void UTurnBasedManagerComponent::SetTurnManagerClass(TSubclassOf<UTurnManagerBase> NewClass)
-{
-	if(NewClass)
-	{
-		TurnManager = NewObject<UTurnManagerBase>(this, NewClass);
-		TurnManager->TurnManagerRef = this;
-	}
 }
 
 void UTurnBasedManagerComponent::SetTurnAbilityClass(TSubclassOf<AOmegaAbility> AbilityClass)
@@ -97,43 +83,51 @@ UCombatantComponent* UTurnBasedManagerComponent::GetTurnMemberAtIndex(int32 Inde
 }
 
 //Add to Turn Order
-void UTurnBasedManagerComponent::AddToTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::AddToTurnOrder(UCombatantComponent* Combatant)
 {
-	if(!TurnManager->BlockFromTurnOrder(Combatant))
+	//if(!TurnManager->BlockFromTurnOrder(Combatant))
+	if (true)
 	{
-		TurnOrder.Add(Combatant);	// NEEDS TO BE FINISHED!! Must add to appropriate Index
-		OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant), Flag, Tags);
-	
-		if(DoesCombatantUseInterface(Combatant))
+		bool bIsBlocked=false;
+		if (Query_BlockFromTurnOrder.IsBound())
 		{
-			IActorInterface_TurnOrderCombatant::Execute_OnAddedToTurnOrder(GetActiveTurnMember()->GetOwner(), this, Flag, Tags);
+			bIsBlocked=Query_BlockFromTurnOrder.Execute(Combatant);
+		}
+		if (!bIsBlocked)
+		{
+			TurnOrder.Add(Combatant);	// NEEDS TO BE FINISHED!! Must add to appropriate Index
+			OnAddedToTurnOrder.Broadcast(Combatant, TurnOrder.Find(Combatant));
+	
+			if(DoesCombatantUseInterface(Combatant))
+			{
+				IActorInterface_TurnOrderCombatant::Execute_OnAddedToTurnOrder(GetActiveTurnMember()->GetOwner(), this);
+			}
 		}
 	}
 }
 
 //Remove From Turn Order
-void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::RemoveFromTurnOrder(UCombatantComponent* Combatant)
 {
 	if(!Combatant)
 	{
 		return;
 	}
 	TurnOrder.Remove(Combatant);
-	OnRemovedFromTurnOrder.Broadcast(this,Combatant, Flag, Tags);
+	OnRemovedFromTurnOrder.Broadcast(this,Combatant);
 	if(DoesCombatantUseInterface(Combatant))
 	{
-		IActorInterface_TurnOrderCombatant::Execute_OnRemovedFromTurnOrder(Combatant->GetOwner(), this, Flag, Tags);
+		IActorInterface_TurnOrderCombatant::Execute_OnRemovedFromTurnOrder(Combatant->GetOwner(), this);
 	}
 }
 
-void UTurnBasedManagerComponent::RemoveFactionFromTurnOrder(FGameplayTag Faction, FString Flag,
-	FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::RemoveFactionFromTurnOrder(FGameplayTag Faction)
 {
 	for(auto* TempComb : GetRegisteredCombatants())
 	{
 		if(TempComb && TempComb->GetFactionTag()==Faction)
 		{
-			RemoveFromTurnOrder(TempComb,Flag,Tags);
+			RemoveFromTurnOrder(TempComb);
 		}
 	}
 }
@@ -146,23 +140,24 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 	//Setup Basic Turn Order
 	for(auto* TempComb : GetRegisteredCombatants())
 	{
-		AddToTurnOrder(TempComb, "",FGameplayTagContainer());
+		AddToTurnOrder(TempComb);
 	}
 	//TurnOrder = GetRegisteredCombatants();
-	
-	if(TurnManager)
-	{
-		// Create a copy of the input array to keep the original intact
-		TArray<UCombatantComponent*> TempOrder = TurnOrder;
+	// Create a copy of the input array to keep the original intact
+    TArray<UCombatantComponent*> TempOrder = TurnOrder;
 
-		// Sort the array using the ShouldCheckedObjectSortFirst function as a comparison
-		TempOrder.Sort([&](UCombatantComponent& A, UCombatantComponent& B)
-		{
-			return TurnManager->ShouldTargetActFirst(&A,&B);
-		});
+    // Sort the array using the ShouldCheckedObjectSortFirst function as a comparison
+    TempOrder.Sort([&](UCombatantComponent& A, UCombatantComponent& B)
+    {
+    	if (Query_CombatantActFirst.IsBound())
+    	{
+    		return Query_CombatantActFirst.Execute(&A,&B);
+    	}
+    	return false;
+    });
 
-		TurnOrder = TempOrder;
-	}
+    TurnOrder = TempOrder;
+
 
 	OnTurnOrderGenerated.Broadcast(this);
 	return TurnOrder;
@@ -170,16 +165,17 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GenerateTurnOrder()
 
 
 // NEXT TURN
-bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, FGameplayTagContainer Tags, FString& FailReason)
+bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString& FailReason)
 {
 	//END CURRENT TURN
 	if(GetActiveTurnMember() != nullptr)		//If active turn member is valid
 	{
-		OnTurnEnd.Broadcast(this,GetActiveTurnMember(), Flag, Tags);
-		RemoveFromTurnOrder(GetActiveTurnMember(), Flag, Tags);
+		OnTurnEnd.Broadcast(this,GetActiveTurnMember());
+		//OGF_GAME_CORE()->TurnManager_TurnEnd(this,GetActiveTurnMember());
+		RemoveFromTurnOrder(GetActiveTurnMember());
 //		GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnEnd);
 		UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnEnd);
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(TagEventsOnTurnEnd_Global,this);
+		OGF_Subsystems::oGameInstance(this)->FireTaggedGlobalEvent(TagEventsOnTurnEnd_Global,this, FOmegaCommonMeta());
 	}
 	
 	//If Empty and should regenerator
@@ -193,9 +189,10 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 	if(GetTurnMemberAtIndex(0))
 	{
 		FString LocalFailReason;
-		if(TurnManager->FailBeingTurn(FailReason))	//When Failed to Start Turn
+		if(false)	//When Failed to Start Turn
 		{
 			OnTurnFail.Broadcast(FailReason);
+			//OGF_GAME_CORE()->TurnManager_TurnFail(this,FailReason);
 			return false;
 		}
 		FailReason = "";
@@ -203,7 +200,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 		ActiveTurnMember = GetTurnMemberAtIndex(0);
 		
 
-		BeginTurn(GetActiveTurnMember(), Flag, Tags);
+		BeginTurn(GetActiveTurnMember());
 		
 		//Function on Combatant Actor
 		if(DoesCombatantUseInterface(GetActiveTurnMember()))
@@ -219,12 +216,12 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString Flag, F
 	}
 }
 
-void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant)
 {
-	OnTurnStart.Broadcast(this,Combatant, Flag, Tags);
+	OnTurnStart.Broadcast(this,Combatant);
 	bool LocalSuccess;
 	Combatant->SetAbilityGranted(Local_GetTurnAbility(),true);
-	//GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnStart);
+	//OGF_GAME_CORE()->TurnManager_TurnStart(this,Combatant);
 	
 	// TAG EVENTS
 	UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnBegin);
@@ -234,7 +231,7 @@ void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant, FStri
 	{
 		LocalTurnAbility->OnAbilityFinished.AddDynamic(this, &UTurnBasedManagerComponent::Local_TurnAbilityFinish);
 	}
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireTaggedGlobalEvent(TagEventsOnTurnBegin_Global,this);
+	OGF_Subsystems::oGameInstance(this)->FireTaggedGlobalEvent(TagEventsOnTurnBegin_Global,this, FOmegaCommonMeta());
 }
 
 TSubclassOf<AOmegaAbility> UTurnBasedManagerComponent::Local_GetTurnAbility() const
@@ -260,22 +257,22 @@ void UTurnBasedManagerComponent::Local_TurnAbilityFinish(bool Cancelled)
 	///Should Repeat Turn?
 	if(bRepeatTurnOnAbilityCancel && Cancelled)			
 	{
-		BeginTurn(GetActiveTurnMember(), "Repeat", RepeatedTurnTags);
+		BeginTurn(GetActiveTurnMember());
 	}
 	else if(bAutoAdvanceTurn) //Try Start Turn
 	{
 		
 		FString TurnFailReason;
-		NextTurn(bGenerateTurnOrderIfEmpty, "NextTurn", NextTurnTags, TurnFailReason);
+		NextTurn(bGenerateTurnOrderIfEmpty, TurnFailReason);
 	}
 	
 }
 
-void UTurnBasedManagerComponent::ClearTurnOrder(FString Flag, FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::ClearTurnOrder()
 {
 	for(UCombatantComponent* TempCombatant : TurnOrder)
 	{
-		RemoveFromTurnOrder(TempCombatant, Flag, Tags);
+		RemoveFromTurnOrder(TempCombatant);
 	}
 	TurnOrder.Empty();
 }
@@ -317,9 +314,9 @@ TArray<UCombatantComponent*> UTurnBasedManagerComponent::GetRegisteredCombatants
 }
 
 // REGISTER
-void UTurnBasedManagerComponent::RegisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::RegisterCombatant(UCombatantComponent* Combatant)
 {
-	if(Combatant && !BlockCombatantTagsFromRegister.HasAny(Combatant->GetCombatantTags()))
+	if(Combatant)
 	{
 		RegisteredCombatants.AddUnique(Combatant);
 	}
@@ -327,7 +324,7 @@ void UTurnBasedManagerComponent::RegisterCombatant(UCombatantComponent* Combatan
 
 
 // UNREGISTER
-void UTurnBasedManagerComponent::UnregisterCombatant(UCombatantComponent* Combatant, FString Flag, FGameplayTagContainer Tags)
+void UTurnBasedManagerComponent::UnregisterCombatant(UCombatantComponent* Combatant)
 {
 	RegisteredCombatants.Remove(Combatant);
 	if(TurnOrder.Contains(Combatant))
@@ -342,7 +339,7 @@ void UTurnBasedManagerComponent::ClearRegisteredCombatants(FString Flag, FGamepl
 	{
 		if(TempCombatant)
 		{
-			UnregisterCombatant(TempCombatant, Flag, Tags);
+			UnregisterCombatant(TempCombatant);
 		}
 	}
 }
@@ -364,8 +361,7 @@ bool UTurnTrackerComponent::L_usesInterface(const UObject* obj) const
 	return false;
 }
 
-void UTurnTrackerComponent::L_OnTurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant,
-	FString Flag, FGameplayTagContainer Tags)
+void UTurnTrackerComponent::L_OnTurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant)
 {
 	if(Combatant==linked_combatant)
 	{
@@ -377,8 +373,7 @@ void UTurnTrackerComponent::L_OnTurnStart(UTurnBasedManagerComponent* Component,
 	}
 }
 
-void UTurnTrackerComponent::L_OnTurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant,
-	FString Flag, FGameplayTagContainer Tags)
+void UTurnTrackerComponent::L_OnTurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant)
 {
 	if(Combatant==linked_combatant)
 	{

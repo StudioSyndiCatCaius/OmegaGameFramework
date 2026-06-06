@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/WidgetSwitcher.h"
+#include "Types/Struct_Message.h"
 #include "Widget/DataWidget.h"
 #include "Widget/HUDLayer.h"
 #include "OmegaDemo_HUDs.generated.h"
@@ -26,7 +27,8 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void OnGameplayMessage_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta) override;
-	virtual void OnGlobalEvent_Implementation(FName Event, UObject* Context) override;
+	virtual void OnGameplayMessageEnd_Implementation(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta meta) override;
+
 	
 	UPROPERTY(EditAnywhere,Category="Menu") FGameplayTagContainer AllowedMessageTypes;
 	UPROPERTY(EditAnywhere,Category="Menu") float MessageEnd_WaitForNext=0.1f;

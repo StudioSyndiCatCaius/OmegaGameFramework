@@ -2,7 +2,8 @@
 
 
 #include "LinearEvents/LinearEvent_SimpleMessage.h"
-
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
 #include "FlowAsset.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
@@ -13,14 +14,14 @@
 #include "OmegaLinearEventSubsystem.h"
 #include "GameFramework/Character.h"
 #include "MovieSceneSequencePlaybackSettings.h"
-#include "Components/Component_AimTargeter.h"
 #include "Functions/F_Component.h"
+#include "Functions/F_Localization.h"
+#include "Functions/F_Message.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Selectors/Selector_LevelSequence.h"
 #include "Selectors/Selector_Montage.h"
-#include "Subsystems/Subsystem_Actors.h"
-#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_World.h"
 
 UObject* ULinearEvent_SimpleMessage::local_GetInstigator() const
 {
@@ -48,27 +49,20 @@ FString ULinearEvent_SimpleMessage::GetLogString_Implementation() const
 	return OutText.ToString();
 }
 
-void ULinearEvent_SimpleMessage::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context,
-                                                                   FText& Name, FText& Description)
-{
-	Description = Text;
-}
-
-
 void ULinearEvent_SimpleMessage::Native_Begin(const FString& Flag)
 {
 	Super::Native_Begin();
 	
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
-	msg=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaMessageSubsystem>()->FireCustomGameplayMessage(local_GetInstigator(),Text,MessageCategory,meta);
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->FireGlobalEvent(FName(GE_MESSAGE_START), msg.Message);
+	GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->OnGameplayMessage_End.AddDynamic(this,&ULinearEvent_SimpleMessage::Native_MessageEnd);
+	msg=UOmegaFunctions_Message::Send(this,Instigator_Asset,Text,Message_Category,meta);
 }
 
-void ULinearEvent_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
+void ULinearEvent_SimpleMessage::Native_MessageEnd(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory,
+	FOmegaGameplayMessageMeta Meta)
 {
-	if(Event==FName(GE_MESSAGE_END) && Context==msg.Message)
+	if (Message==msg)
 	{
-		GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.RemoveDynamic(this, &ULinearEvent_SimpleMessage::LocalGEvent);
+		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->OnGameplayMessage_End.RemoveDynamic(this, &ULinearEvent_SimpleMessage::Native_MessageEnd);
 		Finish("");
 	}
 }
@@ -89,9 +83,12 @@ AActor* UFlowNode_SimpleMessage::local_GetInstigatorActor() const
 {
 	if(Instigator_Asset)
 	{
-		if(AActor* a=GetFlowAsset()->GetActorByBinding_Asset(Instigator_Asset,true))
+		if (UPrimaryDataAsset* pda=L_GetInstigatorAsDA())
 		{
-			return a;
+			if(AActor* a=GetFlowAsset()->GetActorByBinding_Asset(pda,true))
+			{
+				return a;
+			}
 		}
 	}
 	return nullptr;
@@ -101,25 +98,26 @@ UObject* UFlowNode_SimpleMessage::local_GetInstigator() const
 {
 	if(GetWorld())
 	{
-		if(Instigator_Asset)
+		if(Instigator_Asset.GetObject())
 		{
-			return Instigator_Asset;
+			return Instigator_Asset.GetObject();
 		}
 	}
 	return nullptr;
 }
 
-void UFlowNode_SimpleMessage::LocalGEvent(FName Event, UObject* Context)
+UPrimaryDataAsset* UFlowNode_SimpleMessage::L_GetInstigatorAsDA() const
 {
-	if(UOmegaGameplayMessage* msg=Cast<UOmegaGameplayMessage>(Context))
+	if (Instigator_Asset.GetObject())
 	{
-		if(Event==FName(GE_MESSAGE_END) && MessageKey==msg->meta.key)
+		if (UPrimaryDataAsset* pda=Cast<UPrimaryDataAsset>(Instigator_Asset.GetObject()))
 		{
-			GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.RemoveDynamic(this, &UFlowNode_SimpleMessage::LocalGEvent);
-			TriggerFirstOutput(true);
+			return pda;
 		}
 	}
+	return nullptr;
 }
+
 
 //####################################################
 // FLOW NODE
@@ -146,11 +144,17 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	
 	ULinearEvent_SimpleMessage* LocalMessage = NewObject<ULinearEvent_SimpleMessage>(GetWorld()->GetGameInstance(), ULinearEvent_SimpleMessage::StaticClass());
 	LocalMessage->EventEnded.AddDynamic(this, &UFlowNode_SimpleMessage::LocalFinish);
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaGameManager>()->OnGlobalEvent.AddDynamic(this, &UFlowNode_SimpleMessage::LocalGEvent);
 	
-	if(Instigator_Asset) { LocalMessage->Instigator_Asset= Instigator_Asset; }
+	if(Instigator_Asset.GetObject())
+	{
+		if (UPrimaryDataAsset* pda=L_GetInstigatorAsDA())
+		{
+			LocalMessage->Instigator_Asset= pda;
+		}	
+	}
+	
 	LocalMessage->Text = Text;
-	LocalMessage->MessageCategory=GetFlowAsset()->GetMessageCategoryTag();
+	LocalMessage->Message_Category=GetFlowAsset()->GetMessageCategoryTag();
 	FOmegaGameplayMessageMeta msg_meta;
 	msg_meta.CommonMeta.Context=this;
 	msg_meta.Brush.SetResourceObject(Portrait);
@@ -179,32 +183,8 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 		}
 
 		// Aim Targeting
-		if(UAimTargetComponent* c=Cast<UAimTargetComponent>(a->GetComponentByClass(UAimTargetComponent::StaticClass())))
-		{
-			if(ClearLookAt)
-			{
-				c->ClearAimTarget();
-			}
-			else if (AActor* t=GetFlowAsset()->GetActorByBinding_Asset(LookAt,true))
-			{
-				c->SetAimTarget(t);
-			}
-			else if(GetWorld() && LookAt_Alt && LookAt_Alt->Private_GetActor(GetWorld()))
-			{
-				c->SetAimTarget(LookAt_Alt->Private_GetActor(GetWorld()));
-			}
-		}
-
-		for(auto* l : Listeners)
-		{
-			if(AActor* ta = GetFlowAsset()->GetActorByBinding_Asset(l,true))
-			{
-				if(UAimTargetComponent* c=Cast<UAimTargetComponent>(ta->GetComponentByClass(UAimTargetComponent::StaticClass())))
-				{
-					c->SetAimTarget(a);
-				}
-			}
-		}
+		
+		// needs reimpement
 	}
 	ULuaBlueprintFunctionLibrary::LuaRunString(this,nullptr,LuaScript.LuaCode);
 	TriggerOutput("Begin", false,  EFlowPinActivationType::Default);
@@ -214,9 +194,9 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 FString UFlowNode_SimpleMessage::GetNodeDescription() const
 {
 	FString SpeakerString;
-	if(Instigator_Asset)
+	if(Instigator_Asset.GetObject())
 	{
-		SpeakerString = Instigator_Asset->GetName();
+		SpeakerString = Instigator_Asset.GetObject()->GetName();
 	}
 	FString in_start=Text.ToString();
 	TArray<FString> char_array=UKismetStringLibrary::GetCharacterArrayFromString(in_start);
@@ -240,11 +220,17 @@ bool UFlowNode_SimpleMessage::GetDynamicTitleColor(FLinearColor& OutColor) const
 	}
 	OutColor=FLinearColor(1,0.2,0,1); return true;
 }
+
 #endif
 
-void UFlowNode_SimpleMessage::GetGeneralAssetLabel_Implementation(FString& Label)
+FSlateBrush UFlowNode_SimpleMessage::K2_GetNodeIcon_Implementation() const
 {
-	Label=MessageKey.ToString();
+	return Super::K2_GetNodeIcon_Implementation();
+}
+
+void UFlowNode_SimpleMessage::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
+{
+	Name = FText::FromName(MessageKey);
 }
 
 TMap<FName, FString> UFlowNode_SimpleMessage::GetSoftPropertyMap_Implementation()
@@ -288,10 +274,19 @@ void UFlowNode_SimpleMessage::Autokey_ByPosition()
 	}
 }
 
+void UFlowNode_SimpleMessage::PreviewVoice()
+{
+	if (USoundBase* sound=UOmegaLocalizationFunctions::GetVoice_Line(nullptr,MessageKey))
+	{
+#if WITH_EDITOR
+		GEditor->PlayPreviewSound(sound);
+#endif
+	}
+}
 
 void UFlowNode_SimpleMessage::LocalFinish(UOmegaLinearEvent* Event, const FString& Flag)
 {
-	//TriggerFirstOutput(true);
+	TriggerFirstOutput(true);
 }
 
 UOAsset_TransformPreset* UFlowNode_SimpleMessage::GetMessage_TransformPreset_Implementation()

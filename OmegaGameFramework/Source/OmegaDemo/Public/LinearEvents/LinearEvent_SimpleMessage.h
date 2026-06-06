@@ -7,11 +7,10 @@
 #include "Interfaces/I_Common.h"
 #include "Event/OmegaLinearEvent.h"
 #include "Functions/F_SoftProperty.h"
-#include "Interfaces/I_BitFlag.h"
 #include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
 #include "Styling/SlateBrush.h"
-#include "Subsystems/Subsystem_Message.h"
+#include "Subsystems/Subsystem_World.h"
 #include "UObject/Object.h"
 #include "LinearEvent_SimpleMessage.generated.h"
 
@@ -27,29 +26,32 @@ UCLASS(DisplayName="(Event) Simple Message")
 class OMEGADEMO_API ULinearEvent_SimpleMessage : public UOmegaLinearEvent, public IDataInterface_General
 {
 	GENERATED_BODY()
-	FOmegaGameplayMessageData msg;
 	UObject* local_GetInstigator() const;
+	UFUNCTION() void Native_MessageEnd(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta Meta);
 	
 public:
 	virtual FString GetLogString_Implementation() const override;
+	UPROPERTY() UOmegaGameplayMessage* msg;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(ExposeOnSpawn="true"),DisplayName="Instigator (Asset)")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(ExposeOnSpawn),DisplayName="Instigator (Asset)")
 	UPrimaryDataAsset* Instigator_Asset;
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn="true"))
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn))
 	FText Text;
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message", meta=(ExposeOnSpawn="true"))
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message", meta=(ExposeOnSpawn))
 	FOmegaGameplayMessageMeta meta;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
-	FGameplayTag MessageCategory  = FGameplayTag::RequestGameplayTag(FName("Message.Dialog"));
-
-	virtual void GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name, FText& Description) override;
+	FGameplayTag Message_Category  = FGameplayTag::RequestGameplayTag(FName("Message.Dialog"));
+	
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
+	{
+		Description = Text;
+	};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	virtual void Native_Begin(const FString& Flag) override;
-
-	UFUNCTION() void LocalGEvent(FName Event, UObject* Context);
 };
 
 UCLASS(DisplayName="💬 Message")
-class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IDataInterface_General, public IOmegaSoftPropertyInterface, public IDataInterface_MessageContext
+class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IOmegaSoftPropertyInterface, public IDataInterface_MessageContext
 {
 	GENERATED_BODY()
 
@@ -58,36 +60,38 @@ class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IDataInte
 	
 	AActor* local_GetInstigatorActor() const;
 	UObject* local_GetInstigator() const;
-	UFUNCTION() void LocalGEvent(FName Event, UObject* Context);
+	UPrimaryDataAsset* L_GetInstigatorAsDA() const;
 public:
 	UFlowNode_SimpleMessage();
 
 	virtual void ExecuteInput(const FName& PinName) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	virtual  TMap<FName, FString> GetSoftPropertyMap_Implementation() override;
+
 
 #if WITH_EDITOR
 	virtual FString GetNodeCategory() const override { return "Gameplay"; };
 	virtual FString GetNodeDescription() const override;
 	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override;
 #endif
-	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="Instigator")
-	UPrimaryDataAsset* Instigator_Asset;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",meta=(MultiLine))
+	virtual FSlateBrush K2_GetNodeIcon_Implementation() const override;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node", meta=(ExposeOnSpawn,DisallowCreateNew), DisplayName="🗣️Instigator")
+	TScriptInterface<IDataInterface_MessageInstigator> Instigator_Asset;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",meta=(MultiLine),DisplayName="💬Text")
 	FText Text;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node")
 	FGameplayTagContainer Tags;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node")
 	UMaterialInterface* Portrait=nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message")
-	FOmegaBitflagsBase Flags;
+
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Message",AdvancedDisplay)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",AdvancedDisplay)
 	FName MessageKey;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Message",AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node",AdvancedDisplay)
 	TMap<FName,FString> ExtraParams;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node",AdvancedDisplay,DisplayName="🗒️Direction Notes") FString Direction;
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Lua",meta=(MultiLine))
 	FOmegaLuaCode LuaScript;
@@ -114,6 +118,8 @@ public:
 	void Autokey_ByNext();
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor")
 	void Autokey_ByPosition();
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor",DisplayName="🔊 Preview Voice")
+	void PreviewVoice();
 	//UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor")
 	//void Import();
 	

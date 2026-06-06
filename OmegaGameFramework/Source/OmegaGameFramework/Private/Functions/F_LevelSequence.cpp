@@ -3,6 +3,7 @@
 
 #include "Functions/F_LevelSequence.h"
 
+#include "LevelSequence.h"
 #include "MovieScene.h"
 
 

@@ -12,6 +12,7 @@
 class UOmegaModifier_Save;
 class UOmegaSaveGame;
 class UOmegaQuest;
+class AOmegaQuestInstance;
 class UGamePreference;
 
 // ====================================================================================================================================
@@ -51,8 +52,6 @@ public:
 	UPROPERTY(EditAnywhere,Category="Save")
 	FGameplayTagContainer AutoSaveTags;
 	UPROPERTY(EditAnywhere,Instanced,Category="DebugProfile")
-	TArray<UOmegaModifier_Save*> SaveMods;
-	UPROPERTY(EditAnywhere,Instanced,Category="DebugProfile")
 	TArray<UOmegaDebugProfileScript*> Scripts;
 
 };
@@ -86,14 +85,14 @@ class UOmegaDebugDevSettings : public UDeveloperSettings
 
 public:
 	
-	UPROPERTY(EditAnywhere, config, Category = "Settings Assets", meta=(MetaClass="/Script/OmegaGameFramework.OmegaSettings_Debug"))
-	FSoftObjectPath DefaultSettings_Debug;
+	UPROPERTY(EditAnywhere, config, Category = "Settings Assets")
+	TSoftObjectPtr<UOmegaSettings_Debug> DefaultSettings_Debug;
 	UPROPERTY(EditAnywhere, config, Category = "Settings Assets")
 	float Delay_AutostartProfile=0.3f;
 	
 	UOmegaSettings_Debug* GetDefaultSettings() const
 	{
-		if(UObject* o=DefaultSettings_Debug.TryLoad())
+		if(UObject* o=DefaultSettings_Debug.LoadSynchronous())
 		{
 			return Cast<UOmegaSettings_Debug>(o);
 		}

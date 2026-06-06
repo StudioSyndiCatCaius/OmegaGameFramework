@@ -15,32 +15,44 @@
 #include "IAssetTools.h"
 #include "OmegaEffectFactory.h"
 #include "Actors/Actor_Environment.h"
-#include "Actor_EventVolume.h"
+#include "Customization_ActorRelatives.h"
+#include "Customization_OmegaEntityID.h"
 #include "Customization_ClassNamedLists.h"
 #include "Customization_CustomNamedList.h"
 #include "Customization_OmegaLinearChoices.h"
 #include "Customization_Bitflags.h"
 #include "OmegaObjectCustomization.h"
-#include "OmegaPropertyHidingCustomization.h"
+#include "Misc/GeneralDataObject.h"
+#include "OmegaActorDetailsCustomization.h"
 #include "OmegaSettings.h"
-#include "OmegaSettings_Global.h"
+#include "OmegaGameManager.h"
 #include "Actors/Actor_Ability.h"
 #include "Actors/Actor_GameplayEffect.h"
 #include "Actors/Actor_Interactable.h"
 #include "Actors/Actor_Spline.h"
+#include "Actors/Actor_Volumes.h"
 #include "Actors/OmegaGameplaySystem.h"
 
-#include "DataAssets/DA_CommonSkill.h"
-#include "DataAssets/DA_CommonCharacter.h"
-#include "DataAssets/DA_CommonItem.h"
-#include "DataAssets/DA_CommonEquipment.h"
-#include "DataAssets/DA_Common_EquipType.h"
-#include "DataAssets/DA_CommonRace.h"
-#include "DataAssets/DA_Job.h"
+#include "OmegaComponentVisualizer.h"
+#include "Actors/Actor_Spawnable.h"
+#include "Actors/Actor_Zone.h"
+#include "AssetActions/OmegaAA_PAL.h"
+#include "ActorPreset/ActorPreset_ActorFactory.h"
+#include "ActorPreset/ActorPreset_ThumbnailRenderer.h"
+#include "Actors/Actor_DemoInteractable.h"
+#include "Actors/Actor_Interactable.h"
+#include "Subsystems/PlacementSubsystem.h"
+#include "Components/Component_Combatant.h"
+#include "GameAsset/GameAsset_ThumbnailRenderer.h"
+#include "GameAsset/OmegaSpawnableConfigCustomization.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Engine.h"
+#include "Types/Struct_ActorRelatives.h"
 
 #include "Widget/DataWidget.h"
 #include "Widget/Menu.h"
 #include "Widget/HUDLayer.h"
+#include "Widget/UI_Widgets.h"
 
 #define LOCTEXT_NAMESPACE "FOmegaEditor"
 
@@ -75,8 +87,20 @@ FString FOmegaEditor::GetPluginFilePath(const FString& RelativePath)
 
 void FOmegaEditor::StartupModule()
 {
-	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaDataItem::StaticClass(), UDataItemThumbnailRender::StaticClass());
-	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaDataAsset::StaticClass(), UDataItemThumbnailRender::StaticClass());
+	// ===================================================================================================
+	// LOAD EDITOR CONFIG
+	// ===================================================================================================
+	
+	StyleSet = MakeShareable(new FSlateStyleSet("OmegaStyle"));
+	FString ContentDir = IPluginManager::Get().FindPlugin("OmegaGameFramework")->GetBaseDir(); 	//Content path of this plugin
+	StyleSet->SetContentRoot(ContentDir);
+
+	FString ConfigFilePath = ContentDir+"/Config/OmegaEditor.ini";
+	
+	UE_LOG(LogTemp, Log, TEXT("attempting load config file: %s"), *ConfigFilePath);
+	ConfigFile.Read(ConfigFilePath);
+	
+	
 	//------REGISTER DEFAULT EVENTS-----////
 
 	RegisterDefaultEvent(AOmegaGameplaySystem, SystemActivated);
@@ -106,10 +130,7 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaGameplayModule,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(HudLayer,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaMenu,AssetCategory_Omega);
-//	OMACRO_REGISTERASSETTYPE(OmegaGameSave,	OmegaAssetCategory);
-//	OMACRO_REGISTERASSETTYPE(OmegaGlobalSave,OmegaAssetCategory);
 	
-	OMACRO_REGISTERASSETTYPE(OmegaAttribute,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaFaction,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaBGM,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaDamageType,AssetCategory_Omega);
@@ -117,7 +138,7 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaLevelData,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaZoneData,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(ZoneLegendAsset,AssetCategory_Omega);
-	OMACRO_REGISTERASSETTYPE(CombatantGambitAsset,AssetCategory_Omega);
+//	OMACRO_REGISTERASSETTYPE(CombatantGambitAsset,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaQuest,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaAnimationEmote,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaStoryStateAsset,AssetCategory_Omega);
@@ -126,8 +147,9 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaCharacterConfig,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaAssetLibrary_Animation,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaAssetLibrary_Sound,AssetCategory_Omega);
-	//OMACRO_REGISTERASSETTYPE(OmegaDataItems,OmegaAssetCategory);
-	
+
+	OMACRO_REGISTERASSETTYPE(OmegaDemoDataAsset,AssetCategory_OmegaDemo);
+	/*
 	OMACRO_REGISTERASSETTYPE(OAsset_CommonCharacter,AssetCategory_OmegaDemo);
 	OMACRO_REGISTERASSETTYPE(OAsset_CommonSkill,AssetCategory_OmegaDemo);
 	OMACRO_REGISTERASSETTYPE(OAsset_CommonItem,AssetCategory_OmegaDemo);
@@ -135,18 +157,53 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OAsset_CommonEquipment,AssetCategory_OmegaDemo);
 	OMACRO_REGISTERASSETTYPE(OAsset_Common_EquipType,AssetCategory_OmegaDemo);
 	OMACRO_REGISTERASSETTYPE(OAsset_CommonRace,AssetCategory_OmegaDemo);
-
-
-	///////////////////////////////////////////////////////
-	//------SETUP ASSET THUMBNAILS-----//// 
-	StyleSet = MakeShareable(new FSlateStyleSet("OmegaStyle"));
-	FString ContentDir = IPluginManager::Get().FindPlugin("OmegaGameFramework")->GetBaseDir(); 	//Content path of this plugin
-	StyleSet->SetContentRoot(ContentDir);
-
-	FString ConfigFilePath = ContentDir+"/Config/OmegaEditor.ini";
+	*/
 	
-	UE_LOG(LogTemp, Log, TEXT("attempting load config file: %s"), *ConfigFilePath);
-	ConfigFile.Read(ConfigFilePath);
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// OMEGA GAME ASSET
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	TypeActions = MakeShared<FGameplayAssetTypeActions>();
+	AssetTools.RegisterAssetTypeActions(TypeActions.ToSharedRef());
+
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ACTOR PRESET
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	ActorPresetTypeActions = MakeShared<FActorPresetTypeActions>(AssetCategory_Omega);
+	AssetTools.RegisterAssetTypeActions(ActorPresetTypeActions.ToSharedRef());
+
+	// Actor Preset thumbnail renderer (3D actor preview in content browser)
+	UThumbnailManager::Get().RegisterCustomRenderer(
+		UOmegaMinimalDataAsset::StaticClass(),
+		UActorPreset_ThumbnailRenderer::StaticClass());
+
+	// OmegaEditor loads at PostEngineInit — after UPlacementSubsystem::RegisterPlacementFactories() has
+	// already run its TObjectIterator scan. Register the factory manually into both systems.
+	if (GEditor)
+	{
+		ActorPresetFactory = NewObject<UActorFactory_ActorPreset>(GetTransientPackage());
+		ActorPresetFactory->AddToRoot(); // prevent GC
+
+		GEditor->ActorFactories.Add(ActorPresetFactory);
+
+		if (UPlacementSubsystem* PS = GEditor->GetEditorSubsystem<UPlacementSubsystem>())
+		{
+			PS->RegisterAssetFactory(TScriptInterface<IAssetFactoryInterface>(ActorPresetFactory));
+		}
+	}
+
+	// Register custom node widget factory
+	NodeFactory = MakeShared<FGameplayAssetGraphNodeFactory>();
+	FEdGraphUtilities::RegisterVisualNodeFactory(NodeFactory);
+
+	// Register custom thumbnail renderer
+	UThumbnailManager::Get().RegisterCustomRenderer(
+		UOmegaGameAsset::StaticClass(),
+		UGameplayAssetThumbnailRenderer::StaticClass());
+	
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// SETUP ASSET THUMBNAILS
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	
 	const FConfigSection* ThumbnailSection = ConfigFile.FindSection(TEXT("thumbnails"));
 	TMap<FString, int32> ThumbnailConfig;
 	UE_LOG(LogTemp, Log, TEXT("attempting load config section: thumbnails"));
@@ -221,8 +278,6 @@ void FOmegaEditor::StartupModule()
 		StyleSet->Set(IcoName, IconTemp);
 	}
 	
-	
-	
 	//Reguster the created style
 	FSlateStyleRegistry::RegisterSlateStyle(*StyleSet);
 
@@ -258,34 +313,62 @@ void FOmegaEditor::StartupModule()
 	FName StructName = FOmegaCustomNamedList::StaticStruct()->GetFName();
 	UE_LOG(LogTemp, Warning, TEXT("Registering customization for: %s"), *StructName.ToString());
     
-    
-	// Register FOmegaCustomNamedList
+	
 	PropertyModule.RegisterCustomPropertyTypeLayout(
 		FOmegaCustomNamedList::StaticStruct()->GetFName(),
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_CustomNamedList::MakeInstance)
 	);
-    
-	// Register FOmegaClassNamedLists
+	
+	//PropertyModule.RegisterCustomPropertyTypeLayout(
+	//FOmegaSpawnableConfig::StaticStruct()->GetFName(),
+	//FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOmegaSpawnableConfigCustomization::MakeInstance));
+	
 	PropertyModule.RegisterCustomPropertyTypeLayout(
 		FOmegaClassNamedLists::StaticStruct()->GetFName(),
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_ClassNamedLists::MakeInstance)
 	);
 	
-	// Register for specific classes or all UObjects
-	PropertyModule.RegisterCustomClassLayout(
-		UObject::StaticClass()->GetFName(),
-		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaObjectCustomization::MakeInstance)
+	// Register the ActorRelatives struct customization
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FOmegaActorRelatives::StaticStruct()->GetFName(),
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_ActorRelatives::MakeInstance)
 	);
-	
-	PropertyModule.RegisterCustomClassLayout(
-		UObject::StaticClass()->GetFName(),
-		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaPropertyHidingCustomization::MakeInstance)
+
+	// Register the EntityID struct customization
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FOmegaEntityID::StaticStruct()->GetFName(),
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOmegaEntityIDCustomization::MakeInstance)
 	);
-	
 
 	PropertyModule.NotifyCustomizationModuleChanged();
 	
+	// ===================================================================================================
+	// Component Visualization
+	// ===================================================================================================
+	if (GUnrealEd)
+	{
+		TSharedPtr<FOmegaComponentVisualizer> Visualizer = MakeShareable(new FOmegaComponentVisualizer());
+        
+		// Register for your specific component class
+		// Replace UYourComponent with your actual component class
+		
+		GUnrealEd->RegisterComponentVisualizer(UCombatantComponent::StaticClass()->GetFName(), Visualizer);
+		Visualizer->OnRegister();
+	}
+	
+	// ===================================================================================================
+    // Asset Actions
+    // ===================================================================================================
+	IAssetTools::Get().RegisterAssetTypeActions(MakeShareable(new FMyPrimaryAssetLabelActions()));
+		
+	// ===================================================================================================
+	// Thumbnail
+	// ===================================================================================================
+
+	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaDataAsset::StaticClass(),UDataItemThumbnailRender::StaticClass());
+	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaSlateStyle::StaticClass(),USlateStyleThumbnailRender::StaticClass());
 }
+
 
 
 void FOmegaEditor::RegisterToolbarExtension()
@@ -299,7 +382,7 @@ void FOmegaEditor::RegisterToolbarExtension()
 		"WorldInit",
 		FExecuteAction::CreateRaw(this, &FOmegaEditor::OnButtonClicked),
 		FText::FromString("WORLD INIT"),
-		FText::FromString("Rerun WORL INIT function in `Global Settings`"),
+		FText::FromString("Rerun WORLD INIT function in `Global Settings`"),
 		FSlateIcon(FAppStyle::GetAppStyleSetName(), "PlayWorld.PlayInViewport")
 	));
 }
@@ -311,23 +394,29 @@ void FOmegaEditor::OnButtonClicked()
 		UWorld* World = GEditor->GetEditorWorldContext().World();
 		if (World)
 		{
-			GetMutableDefault<UOmegaSettings>()->GetGlobalSettings()->OnWorldInit(World);
-			//ULuaWorldSubsystem* Subsystem = World->GetSubsystem<ULuaWorldSubsystem>();
-			//if (Subsystem)
-			//{
-			//	Subsystem->RerunLua();
-			//}
+			GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnWorldInit(World);
 		}
 	}
+	OGF_Log::LogInfo("Rerunning LoadDevConfig");
+	GEngine->GetEngineSubsystem<UOmegaSubsystem_Engine>()->LoadDevConfig();
+	
 }
 
 void FOmegaEditor::ShutdownModule()
 {
-	FSlateStyleRegistry::UnRegisterSlateStyle(StyleSet->GetStyleSetName());
-	if (UObjectInitialized())
+	if (GEditor && ActorPresetFactory)
 	{
-		UThumbnailManager::Get().UnregisterCustomRenderer(UOmegaDataItem::StaticClass());
+		if (UPlacementSubsystem* PS = GEditor->GetEditorSubsystem<UPlacementSubsystem>())
+		{
+			PS->UnregisterAssetFactory(TScriptInterface<IAssetFactoryInterface>(ActorPresetFactory));
+		}
+		GEditor->ActorFactories.Remove(ActorPresetFactory);
+		ActorPresetFactory->RemoveFromRoot();
+		ActorPresetFactory = nullptr;
 	}
+
+	FSlateStyleRegistry::UnRegisterSlateStyle(StyleSet->GetStyleSetName());
+
 
 	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
 	{
@@ -341,10 +430,23 @@ void FOmegaEditor::ShutdownModule()
 		
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaCustomNamedList::StaticStruct()->GetFName());
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaClassNamedLists::StaticStruct()->GetFName());
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaActorRelatives::StaticStruct()->GetFName());
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaEntityID::StaticStruct()->GetFName());
+		
+		PropertyModule.UnregisterCustomPropertyTypeLayout(UOmegaMinimalDataAsset::StaticClass()->GetFName());
+
 		PropertyModule.UnregisterCustomClassLayout(UObject::StaticClass()->GetFName());
+		PropertyModule.UnregisterCustomClassLayout(AActor::StaticClass()->GetFName());
+		
 	}
 	
-
+	// ===================================================================================================
+	// Component Visualization
+	// ===================================================================================================
+	if (GUnrealEd)
+	{
+		GUnrealEd->UnregisterComponentVisualizer(UCombatantComponent::StaticClass()->GetFName());
+	}
 }
 
 

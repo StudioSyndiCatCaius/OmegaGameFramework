@@ -4,27 +4,57 @@
 #include "Components/Component_CombatEncounter.h"
 
 #include "LevelSequence.h"
+#include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "Components/Component_Combatant.h"
-#include "OmegaSettings_Gameplay.h"
+#include "OmegaGameplayConfig.h"
+#include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
+#include "DataAssets/DA_Faction.h"
 #include "Functions/F_Common.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Subsystems/Subsystem_BGM.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_World.h"
 
-UWorld* UOmegaCombatEncounterScript::GetWorld() const { return WorldPrivate; }
-UGameInstance* UOmegaCombatEncounterScript::GetGameInstance() const { return WorldPrivate->GetGameInstance(); }
-UOmegaCombatEncounterScript::UOmegaCombatEncounterScript(const FObjectInitializer& ObjectInitializer) { if (const UObject* Owner = GetOuter()) { WorldPrivate = Owner->GetWorld(); } }
-
-UOmegaCombatEncounter_Component* UOmegaCombatEncounterScript::GetOwningComponent() const
+AOmegaCombatEncounter_Stage::AOmegaCombatEncounter_Stage()
 {
-	if(UOmegaCombatEncounter_Component* out_comp = Cast<UOmegaCombatEncounter_Component>(GetOuter()))
-	{
-		return out_comp;
-	}
-	return nullptr;
+	RootComponent=CreateDefaultSubobject<USceneComponent>("RootComponent");
+	Range=CreateOptionalDefaultSubobject<UBoxComponent>("Range");
+	Range->SetupAttachment(RootComponent);
+	Range->SetBoxExtent(FVector(1000,1000,500));
+	Range->SetLineThickness(7);
 }
+
+AOmegaCombatEncounter_Instance::AOmegaCombatEncounter_Instance()
+{
+	RootComponent=CreateDefaultSubobject<USceneComponent>("RootComponent");
+	comp_spring = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	comp_spring->TargetArmLength=0.0;
+	comp_spring->SetupAttachment(RootComponent);
+	comp_camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	comp_camera->SetupAttachment(comp_spring);
+	comp_camera->PostProcessSettings.MotionBlurAmount=0.1f;
+}
+
+FTransform AOmegaCombatEncounter_Instance::GetTransformByFaction_Implementation(FGameplayTag FactionTag, int32 index)
+{
+	for (UActorComponent* TempComp : K2_GetComponentsByClass(USceneComponent::StaticClass()))
+	{
+		if(USceneComponent* scenComp=Cast<USceneComponent>(TempComp))
+		{
+			if(scenComp && scenComp->ComponentHasTag("BattlerPoint") && scenComp->ComponentHasTag(FName(*UOmegaGameFrameworkBPLibrary::GetLastGameplayTagString(FactionTag))))
+			{
+				return scenComp->GetComponentTransform();
+			}
+		}
+	}
+	return FTransform();
+}
+
+
 
 FTransform AOmegaCombatEncounter_Stage::GetTransformForBattler_Implementation(FGameplayTag FactionTag, int32 index)
 {
@@ -47,10 +77,6 @@ void UOmegaCombatEncounter_Component::BeginPlay()
 {
 	REF_Stage=nullptr;
 	REF_Instance=nullptr;
-	if(EncounterManagerScript)
-	{
-		EncounterManagerScript->WorldPrivate=GetWorld();
-	}
 	TArray<AActor*> tempActors;
 	UGameplayStatics::GetAllActorsOfClass(this,AOmegaCombatEncounter_Stage::StaticClass(),tempActors);
 	for(auto* tempactor : tempActors) { REF_StageList.Add(Cast<AOmegaCombatEncounter_Stage>(tempactor)); } 
@@ -95,9 +121,10 @@ ULevelSequence* UOmegaCombatEncounter_Component::GetEncounter_SequenceIntro() co
 	}
 	if(encounter_source && encounter_source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
-		if(ULevelSequence* _U=IDataInterface_CombatEncounter::Execute_GetCombatEncounter_IntroSequence(encounter_source))
+		FOmegaEncounterConfig _config=IDataInterface_CombatEncounter::Execute_Encounter_Config(encounter_source);
+		if(_config.Override_IntroSequence)
 		{
-			return _U;
+			return _config.Override_IntroSequence;
 		}
 	}
 	return Default_SequenceIntro;
@@ -112,9 +139,10 @@ UOmegaBGM* UOmegaCombatEncounter_Component::GetEncounter_BGM() const
 	}
 	if(encounter_source && encounter_source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
-		if(UOmegaBGM* _bgm=IDataInterface_CombatEncounter::Execute_GetCombatEncounter_BGM(encounter_source))
+		FOmegaEncounterConfig _config=IDataInterface_CombatEncounter::Execute_Encounter_Config(encounter_source);
+		if(_config.Override_BGM)
 		{
-			return _bgm;
+			return _config.Override_BGM;
 		}
 	}
 	return Default_BGM;
@@ -128,12 +156,8 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter(
 		REF_Stage=Stage;
 		REF_Instance = GetWorld()->SpawnActorDeferred<AOmegaCombatEncounter_Instance>(EncounterClass,FTransform());
 		REF_Instance->FinishSpawning(Stage->GetActorTransform());
-		if(EncounterManagerScript)
-		{
-			EncounterManagerScript->OnEncounterStarted(REF_Instance,REF_Stage);
-		}
-		
-		return  REF_Instance;
+		//OGF_GAME_CORE()->Encounter_Begin(this,REF_Instance);
+		return REF_Instance;
 	}
 	return nullptr;
 }
@@ -142,12 +166,30 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter_
 {
 	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
-		encounter_source=Source;
-		AOmegaCombatEncounter_Instance* new_inst =StartEncounter(
-			IDataInterface_CombatEncounter::Execute_GetCombatEncounter_InstanceClass(Source),
-			GetStageFromID(IDataInterface_CombatEncounter::Execute_GetCombatEncounter_StageID(Source)));
-		IDataInterface_CombatEncounter::Execute_OnEncounterBegin(Source,this);
-		return new_inst;
+		FOmegaEncounterConfig _config=IDataInterface_CombatEncounter::Execute_Encounter_Config(Source);
+		TSubclassOf<AOmegaCombatEncounter_Instance> EncounterClass=DefaultEncounterClass;
+		if (_config.EncounterInstance)
+		{
+			EncounterClass=_config.EncounterInstance;
+		}
+	
+		if (EncounterClass)
+		{
+			encounter_source=Source;
+			if (AOmegaCombatEncounter_Instance* new_inst =StartEncounter(EncounterClass,GetStageFromID(_config.StageID)))
+			{
+				IDataInterface_CombatEncounter::Execute_OnEncounterBegin(Source,this);
+				return new_inst;
+			}
+		}
+		else
+		{
+			OGF_Log::Error("ENCOUNTER - Failed to Start: Invalid Encounter Class");
+		}
+	}
+	else
+	{
+		OGF_Log::Error("ENCOUNTER - Failed to Start: Invalid Encounter Source");
 	}
 	return nullptr;
 }
@@ -163,18 +205,15 @@ bool UOmegaCombatEncounter_Component::EndEncounter()
 				b->GetOwner()->K2_DestroyActor();
 			}
 		}
+		//OGF_GAME_CORE()->Encounter_End(this,REF_Instance);
 		REF_Instance->K2_DestroyActor();
-		if(EncounterManagerScript)
-		{
-			EncounterManagerScript->OnEncounterEnded(REF_Instance,REF_Stage);
-		}
 		return true;
 	}
 	return false;
 }
 
-ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* DataAsset, UOmegaFaction* Faction,
-                                                          FTransform Transform, ESpawnActorCollisionHandlingMethod CollisionMethod)
+ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* DataAsset, UOmegaFaction* Faction,FTransform Transform, 
+                                               int32 StageTransformIndex, ESpawnActorCollisionHandlingMethod CollisionMethod)
 {
 	TSubclassOf<ACharacter> in_class=BattlerCharacterClass;
 	if (TSubclassOf<ACharacter> _NewClass= GetMutableDefault<UOmegaSettings>()->Default_EncounterCharacter.LoadSynchronous())
@@ -185,6 +224,12 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 	{
 		if(in_class)
 		{
+			FTransform temp_transform=Transform;
+			if (GetCurrent_Stage() && StageTransformIndex>-1 && Faction)
+			{
+				GetCurrent_Stage()->GetTransformForBattler(Faction->FactionTag,StageTransformIndex);
+			}
+			
 			ACharacter* new_char= GetWorld()->SpawnActorDeferred<ACharacter>(in_class,Transform,REF_Instance,nullptr,CollisionMethod);
 			if(UCombatantComponent* comb_ref = new_char->FindComponentByClass<UCombatantComponent>())
 			{
@@ -199,15 +244,12 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 				REF_BattlerCombatants.Add(comb_ref);
 				if(DataAsset) { comb_ref->SetSourceDataAsset(DataAsset); }
 				if(Faction) { comb_ref->SetFaction_Asset(Faction); }
-				if(EncounterManagerScript)
-				{
-					EncounterManagerScript->OnBattlerSpawned(new_char,comb_ref);
-				}
 				OnEncounterSpawned.Broadcast(new_char);
 				if(new_char->GetClass()->ImplementsInterface(UActorInterface_EncounterBattler::StaticClass()))
 				{
 					IActorInterface_EncounterBattler::Execute_OnBattlerInit(new_char,this,DataAsset,Faction);
 				}
+				//OGF_GAME_CORE()->Encounter_BattlerSpawn(this,new_char);
 				return new_char;
 			}
 			GetWorld()->DestroyActor(new_char);
@@ -226,27 +268,12 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::GetCurrent_Enco
 	return REF_Instance;
 }
 
-void UOmegaCombatEncounter_Component::SetXP(float xp)
+FOmegaEncounterConfig UOmegaEncounter_Asset::Encounter_Config_Implementation()
 {
-	encounter_xp=xp;
+	FOmegaEncounterConfig _cfg;
+	_cfg.EncounterInstance=InstanceClass;
+	_cfg.StageID=StageTag;
+	return _cfg;
 }
 
-void UOmegaCombatEncounter_Component::AddXP(float xp)
-{
-	SetXP(encounter_xp+xp);
-}
 
-float UOmegaCombatEncounter_Component::GetXP() const
-{
-	return encounter_xp;
-}
-
-bool UOmegaEncounter_Asset::OnEncounterBegin_Implementation(UOmegaCombatEncounter_Component* Component)
-{
-	if(Script)
-	{
-		Script->OnEncounterBegin(Component);
-		return true;
-	}
-	return false;
-}

@@ -2,17 +2,6 @@
 
 #include "DataAssets/DA_CommonItem.h"
 
-void UOAsset_CommonItem::GetGeneralDataText_Implementation(const FString& Label, const UObject* Context, FText& Name,
-	FText& Description)
-{
-	Super::GetGeneralDataText_Implementation(Label, Context, Name, Description);
-	if(bAppendEffectsDescription)
-	{
-		FString str=Description.ToString()+
-			UOmegaScriptedEffectFunctions::GetEffects_Description(GetScriptedEffects("")).ToString();
-		Description=FText::FromString(str);
-	}
-}
 
 TMap<UPrimaryDataAsset*, int32> UOAsset_CommonItem::GetTradeAssetRequirements_Implementation(FGameplayTag TradeTag)
 {

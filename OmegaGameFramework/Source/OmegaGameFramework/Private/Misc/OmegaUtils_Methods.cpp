@@ -8,12 +8,21 @@
 #include "GameFramework/SaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/PlatformFilemanager.h"
+#include "Internationalization/Culture.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/FileHelper.h"
+
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "Subsystems/Subsystem_Engine.h"
+#include "Subsystems/Subsystem_World.h"
+#include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Player.h"
+
 // Define static color constants
 const FColor OGF_Log::ErrorColor = FColor::Red;
 const FColor OGF_Log::WarningColor = FColor::Yellow;
-const FColor OGF_Log::InfoColor = FColor::Cyan;
+const FColor OGF_Log::InfoColor = FColor::White;
 const FColor OGF_Log::SuccessColor = FColor::Green;
 
 void OGF_Log::Error(const FString& Message, float Duration)
@@ -103,7 +112,7 @@ void OGF_Log::PrintToScreen(const FString& Message, FColor Color, float Duration
 // ================================================================================================================
 // LOAD
 // ================================================================================================================
-bool OGF_Load::LevelStream_IsLoading(UWorld* World)
+bool OGF_Load::LevelStream_IsLoading(const UWorld* World)
 {
     if(World)
     {
@@ -118,47 +127,45 @@ bool OGF_Load::LevelStream_IsLoading(UWorld* World)
     return false;
 }
 
-FString OGF_File::PathCorrect(const FString& path)
+UOmegaSubsystem_World* OGF_Subsystems::oWorld(const UObject* WorldContext)
 {
-    FString out=path;
-    out=out.Replace(TEXT("{project}"),*FPaths::ProjectDir());
-    out=out.Replace(TEXT("{content}"),*FPaths::ProjectContentDir());
-    out=out.Replace(TEXT("{mods}"),*FPaths::ProjectModsDir());
-    out=out.Replace(TEXT("{saves}"),*FPaths::GameAgnosticSavedDir());
-    out=out.Replace(TEXT("//"),TEXT("/"));
-    
-    FPaths::NormalizeFilename(out);
-    return out;
+    if (WorldContext && WorldContext->GetWorld() && WorldContext->GetWorld()->IsGameWorld())
+    {
+        return WorldContext->GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
+    }
+    return nullptr;
 }
 
-TArray<FString> OGF_File::ListFilesInDirectory(const FString& path, bool bRecursive)
+UOmegaSubsystem_Engine* OGF_Subsystems::oEngine()
 {
-    FString _Path=PathCorrect(path);
-    TArray<FString> FoundFiles;
-    
-    if (bRecursive)
-    {
-        // Search recursively for all files in the directory and subdirectories
-        IFileManager::Get().FindFilesRecursive(FoundFiles, *_Path, TEXT("*"), true, false);
-    }
-    else
-    {
-        // Search only in the specified directory (non-recursive)
-        FString SearchPath = _Path / TEXT("*");
-        IFileManager::Get().FindFiles(FoundFiles, *SearchPath, true, false);
-    }
-    
-    return FoundFiles;
+    return GEngine->GetEngineSubsystem<UOmegaSubsystem_Engine>();
 }
 
-TArray<FString> OGF_File::ListFilesInDirectoryList(TArray<FString> paths, bool bRecursive)
+UOmegaSubsystem_GameInstance* OGF_Subsystems::oGameInstance(const UObject* WorldContext)
 {
-    TArray<FString> out;
-    for (FString dir : paths)
+    if (WorldContext && WorldContext->GetWorld() && WorldContext->GetWorld()->IsGameWorld() && WorldContext->GetWorld()->GetGameInstance())
     {
-        out.Append(ListFilesInDirectory(dir, bRecursive));
+        return WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>();
     }
-    return out;
+    return nullptr;
+}
+
+UOmegaSaveSubsystem* OGF_Subsystems::oSave(const UObject* WorldContext)
+{
+    if (WorldContext && WorldContext->GetWorld() && WorldContext->GetWorld()->IsGameWorld() && WorldContext->GetWorld()->GetGameInstance())
+    {
+        return WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
+    }
+    return nullptr;
+}
+
+UOmegaSubsystem_Player* OGF_Subsystems::oPlayer(const APlayerController* Player)
+{
+    if (Player)
+    {
+        return Player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>();
+    }
+    return nullptr;
 }
 
 
