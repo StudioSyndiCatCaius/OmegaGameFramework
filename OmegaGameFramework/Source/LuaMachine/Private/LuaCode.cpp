@@ -94,12 +94,13 @@ void ULuaCode::PostInitProperties()
 	Super::PostInitProperties();
 }
 
-void ULuaCode::GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const
+void ULuaCode::GetAssetRegistryTags(FAssetRegistryTagsContext Context) const
 {
 	if (AssetImportData)
 	{
-		OutTags.Add(FAssetRegistryTag(SourceFileTagName(), AssetImportData->GetSourceData().ToJson(), FAssetRegistryTag::TT_Hidden));
+		Context.AddTag(FAssetRegistryTag(SourceFileTagName(), AssetImportData->GetSourceData().ToJson(), FAssetRegistryTag::TT_Hidden));
 	}
-	Super::GetAssetRegistryTags(OutTags);
 }
+
+
 #endif

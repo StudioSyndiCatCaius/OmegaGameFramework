@@ -6,16 +6,18 @@
 #include "Components/Component_Combatant.h"
 #include "Functions/F_Tick.h"
 
-void UCombatantAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+
+void UCombatantAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	const FAnimNotifyEventReference& EventReference)
 {
 	if(MeshComp && MeshComp->GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))
-	{
-		Cast<UCombatantComponent>(MeshComp->GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->CombatantNotify(CombatantNotify, Flag);
-	}
+    	{
+    		Cast<UCombatantComponent>(MeshComp->GetOwner()->GetComponentByClass(UCombatantComponent::StaticClass()))->CombatantNotify(CombatantNotify, Flag);
+    	}
 }
 
 void UAnimNotifyState_CombatantTrackTarget::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-	float FrameDeltaTime)
+	float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
 	if (MeshComp)
 	{

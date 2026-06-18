@@ -5,11 +5,13 @@
 #include "CoreMinimal.h"
 #include "OmegaComponent.h"
 #include "Components/ActorComponent.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Component_Calendar.generated.h"
 
 class UOAsset_DayPeriod;
 class UOAsset_Day;
 class UOAsset_Month;
+class UOAsset_Weekday;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPeriodChanged, UOmegaCalendarComponent*, Component, int32, period);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDayChanged, UOmegaCalendarComponent*, Component, int32, day);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeekChanged, UOmegaCalendarComponent*, Component, int32, week);
@@ -78,6 +80,11 @@ public:
 	UFUNCTION(BlueprintPure,Category="Calendar") int32 GetPeriod_Number();
 	// Returns the data asset that describes the current time period.
 	UFUNCTION(BlueprintPure,Category="Calendar") UOAsset_DayPeriod* GetPeriod_Asset();
+	
+	// Returns the current weekday index derived from the current day, wrapping over the calendar's weekday list.
+	UFUNCTION(BlueprintPure,Category="Calendar") int32 GetWeekday_Number();
+	// Returns the data asset that describes the current weekday.
+	UFUNCTION(BlueprintPure,Category="Calendar") UOAsset_Weekday* GetWeekday_Asset();
 
 	// Sets the current day by index.
 	UFUNCTION(BlueprintCallable,Category="Calendar") void SetDay(int32 index);

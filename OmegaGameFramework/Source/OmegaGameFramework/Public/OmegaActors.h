@@ -37,6 +37,12 @@ public:
 	UPROPERTY() UOmegaSubsystem_World* SS_World=nullptr;
 	UPROPERTY() UOmegaSaveSubsystem* SS_Save=nullptr;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Actor") FGuid GameplayGuid;
+	UFUNCTION(BlueprintCallable, Category="Omega Actor",meta=(AdvancedDisplay="Target"))
+	void SetGuidflagValue(uint8 Flag, bool bValue, TEnumAsByte<EOmegaGlobalParamTarget> Target=EOmegaGlobalParamTarget::SAVE_GAME);
+	UFUNCTION(BlueprintPure, Category="Omega Actor",meta=(AdvancedDisplay="Target"))
+	bool GetGuidflagValue(uint8 Flag, TEnumAsByte<EOmegaGlobalParamTarget> Target=EOmegaGlobalParamTarget::SAVE_GAME);
+	
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PreBeginPlay() {};
 	virtual void PostBeginPlay() {};
@@ -54,7 +60,9 @@ public:
 	UPROPERTY() UOmegaSubsystem_Engine* SS_Engine=nullptr;
 	UPROPERTY() UOmegaSubsystem_World* SS_World=nullptr;
 	UPROPERTY() UOmegaSaveSubsystem* SS_Save=nullptr;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Actor") FGuid GameplayGuid;
+	
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PreBeginPlay() {};
 	virtual void PostBeginPlay() {};
@@ -73,6 +81,8 @@ public:
 	UPROPERTY() UOmegaSubsystem_World* SS_World=nullptr;
 	UPROPERTY() UOmegaSaveSubsystem* SS_Save=nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Actor") FGuid GameplayGuid;
+	
 	virtual auto OnConstruction(const FTransform& Transform) -> void override;
 	virtual void PreBeginPlay() {};
 	virtual void PostBeginPlay() {};

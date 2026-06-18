@@ -2,7 +2,7 @@
 
 
 #include "Components/Component_DebugText.h"
-
+#include "Materials/MaterialInterface.h"
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
 #include "Misc/OmegaUtils_Macros.h"

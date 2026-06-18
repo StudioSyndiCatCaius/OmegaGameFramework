@@ -11,6 +11,9 @@
 #include "GeometryScript/MeshNormalsFunctions.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Engine/Engine.h"
+#include "Engine/EngineBaseTypes.h"
+#include "Engine/World.h"
 //#include "Materials/MaterialExpressionStrata.h"
 
 FTransform UOmegaFunctions_DynamicMesh::OffsetTransform(FTransform A, FTransform B)
@@ -532,7 +535,12 @@ UInstancedStaticMeshComponent* UOmegaFunctions_DynamicMesh::GetRandomInstanceMes
 {
 	FRandomStream LocalSteam;
 	UKismetMathLibrary::SetRandomStreamSeed(LocalSteam, Seed);
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION < 7
+	const int32 LocalIndex = UKismetMathLibrary::RandomIntegerFromStream(MeshComps.Num()-1, LocalSteam);
+#else
 	const int32 LocalIndex = UKismetMathLibrary::RandomIntegerFromStream(MeshComps.Num()-1, LocalSteam.GetCurrentSeed());
+#endif
+	
 	return MeshComps[LocalIndex];
 }
 

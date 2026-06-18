@@ -29,7 +29,7 @@ struct FOmegaGameplayMessageMeta
 // ===================================================================================================================
 // INTERFACES
 // ===================================================================================================================
-UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Message Instigator") class UDataInterface_MessageInstigator : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, BlueprintType, DisplayName="♎Data🔴 - Message Instigator") class UDataInterface_MessageInstigator : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageInstigator
 {
 	GENERATED_BODY()
@@ -39,7 +39,7 @@ public:
 	FSlateBrush GetMessageBrush(UOmegaGameplayMessage* Message);
 };
 
-UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Message Context") class UDataInterface_MessageContext : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI,BlueprintType, DisplayName="♎Data🔴 - Message Context") class UDataInterface_MessageContext : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageContext
 {
 	GENERATED_BODY()

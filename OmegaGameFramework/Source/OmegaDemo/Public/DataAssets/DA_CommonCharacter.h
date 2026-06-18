@@ -44,12 +44,7 @@ public:
 	virtual UFlowAsset* GetFlowAsset_Implementation(FGameplayTag Tag) override {return FlowAsset;};
 	virtual bool OnIdentityInit_Implementation(AActor* Actor, UGameplayActorComponent* Component) override;
 	virtual bool OnIdentityUninit_Implementation(AActor* Actor, UGameplayActorComponent* Component) override;
-
-	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	
-	virtual TMap<UPrimaryDataAsset*,int32> GetInventory_Implementation() override;
-	virtual TMap<UEquipmentSlot*,UPrimaryDataAsset*> GetEquipment_Implementation() override;
-
 	UFUNCTION(BlueprintCallable,Category="CommonCharacter")
 	void ApplyInitialsToCombatant(UCombatantComponent* Combatant);
 	
@@ -67,22 +62,22 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character")
 	UFlowAsset* FlowAsset;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat")
-	int32 Level=1;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat",Meta=(GetKeyOptions="opts_attributes"))
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combatant",Meta=(GetKeyOptions="opts_attributes"))
 	TMap<FName,float> Attributes;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat")
-	TArray<TScriptInterface<IDataInterface_Skill>> Skills;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat")
-	UOmegaGambit_Asset* Gambit;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combatant",meta=(ShowOnlyInnerProperties))
+	FOmegaScripted_CombatantModifiers CombatantModifiers;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Initial")
+    int32 Level=1;
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Initial")
+    TArray<TScriptInterface<IDataInterface_Skill>> Skills;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Initial",meta=(GetKeyOptions="opts_equipSlot"))
     TMap<FName,TScriptInterface<IDataInterface_Equipable>> Equipment;
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Initial")
     TMap<UPrimaryDataAsset*,int32> Inventory;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Initial",meta=(GetKeyOptions="opts_xp"))
 	TMap<FName,int32> XpLevels;
-	
+
 	
 	UFUNCTION(BlueprintPure,Category="CommonCharacter") UOAsset_Appearance* GetAppearance() const
 	{
@@ -92,4 +87,5 @@ public:
 	virtual UOAsset_Appearance* GetAppearanceAsset_Implementation() override;
 	
 	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field = "") override;
+	virtual FOmegaScripted_CombatantModifiers Combatant_GetScriptedModifiers_Implementation() override { return CombatantModifiers; };
 };

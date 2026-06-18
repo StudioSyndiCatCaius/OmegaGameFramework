@@ -23,9 +23,7 @@ public:
 	virtual void BeginPlay() override;
 	AOmegaSavedLevelSequence();
 	virtual void Tick(float DeltaTime) override;
-	
-	FOmegaEntity* L_GetEntity() const;
-	
+
 	bool b_isPlaying;
 	
 	UPROPERTY(BlueprintAssignable, Category="Omega") FSavedLevelSequenceDelegateState OnStateChange;
@@ -36,7 +34,6 @@ public:
 	UFUNCTION(BlueprintPure,Category="Saved Level Sequence") bool GetSavedState();
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Level Sequence") ULevelSequence* LevelSequence;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Level Sequence") FGuid GUID;
 };
 
 

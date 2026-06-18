@@ -7,7 +7,6 @@
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Misc/OmegaUtils_Delegates.h"
-#include "PropertyBag.h"
 #include "StructUtils/PropertyBag.h"
 #include "Types/Struct_WidgetOverrides.h"
 #include "Widget/OmegaUserWidget.h"

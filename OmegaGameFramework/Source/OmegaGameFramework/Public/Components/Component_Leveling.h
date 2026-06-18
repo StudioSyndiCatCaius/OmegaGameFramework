@@ -6,6 +6,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "UObject/Interface.h"
 #include "Components/ActorComponent.h"
+#include "Curves/CurveFloat.h"
 #include "Component_Leveling.generated.h"
 
 class UCurveFloat;

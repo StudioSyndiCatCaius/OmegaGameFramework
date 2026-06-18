@@ -13,6 +13,7 @@
 #include "Misc/OmegaUtils_Methods.h"
 #include "OmegaSettings.h"
 #include "Actors/Actor_Player.h"
+#include "TimerManager.h"
 #include "Interfaces/I_StandardInput.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_Player.h"

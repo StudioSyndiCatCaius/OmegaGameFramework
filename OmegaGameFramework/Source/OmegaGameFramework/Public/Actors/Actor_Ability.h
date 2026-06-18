@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Interfaces/I_StandardInput.h"
+#include "Types/Struct_Combatant.h"
 #include "Actor_Ability.generated.h"
 
 class UEquipmentSlot;
@@ -84,7 +85,7 @@ public:
 	
 	UFUNCTION() void L_OnInput_Start(FVector Value);
 	UFUNCTION() void L_OnInput_End(FVector Value);
-	UFUNCTION() virtual void Native_AbilityActivated(class UObject* Context);
+	UFUNCTION() virtual void Native_AbilityActivated(class UObject* Context, FOmegaCombatantEventMeta meta);
 	UFUNCTION() virtual void Native_AbilityFinished(bool Cancelled);
 	UFUNCTION() virtual void Native_ActivatedTick(float DeltaTime);
 	UFUNCTION() virtual bool Native_CanActivate(UObject* Context);
@@ -99,6 +100,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "✊Ability",meta=(Categories="INPUT")) bool BlockAutoAbilitySelectorWhileActive;
 	UPROPERTY(EditDefaultsOnly, Category = "✊Ability - Input",meta=(Categories="INPUT")) FGameplayTag LinkedInputAction;
 	UPROPERTY(EditDefaultsOnly, Category = "✊Ability - Input") bool bStopAbilityOnInputActionEnd;
+	
+	UPROPERTY(BlueprintReadOnly,Category="Ability") FOmegaCombatantEventMeta LastMeta;
+	
 	// ------------------------------------------------------
 	// Tags
 	// ------------------------------------------------------
@@ -148,7 +152,7 @@ public:
 	// ------------------------------------------------------
 
 	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
-	void AbilityActivated(class UObject* Context);
+	void AbilityActivated(UObject* Context, FOmegaCombatantEventMeta meta);
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
 	void AbilityFinished(bool Cancelled);
@@ -160,7 +164,7 @@ public:
 	bool CanActivate(UObject* Context);
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
-	float UtilityCheck(const UCombatantComponent* Combatant, UObject*& ExecuteContext, int32& Priority);
+	float UtilityCheck(const UCombatantComponent* Combatant, UObject*& ExecuteContext,FOmegaCombatantEventMeta& meta, int32& Priority);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "✊Ability")
 	UTimelineComponent* GetAbilityActivationTimeline();
@@ -178,7 +182,7 @@ public:
 	// ------------------------------------------------------
 	
 	UFUNCTION(BlueprintCallable, DisplayName="Activate", Category="Ω|Ability")
-	bool Execute(UObject* Context);
+	bool Execute(UObject* Context, FOmegaCombatantEventMeta meta);
 	
 	UFUNCTION(BlueprintCallable, Category="Ability")
 	bool SetInputEnabledForOwner(bool Enabled);

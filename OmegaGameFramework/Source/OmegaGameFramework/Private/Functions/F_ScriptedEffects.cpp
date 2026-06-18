@@ -51,8 +51,14 @@ FText FOmegaCustomScriptedEffects::GetEffectsDescription(const FString& delimite
 	return out;
 }
 
+float UOmegaScriptedEffect::GetEffectUtilityScore_Implementation(UCombatantComponent* Target,
+	UCombatantComponent* Instigator)
+{
+	return 0.0;
+}
+
 FText UOmegaScriptedEffectFunctions::GetEffects_Description(FOmegaCustomScriptedEffects effects,
-	const FString& delimiter)
+                                                            const FString& delimiter)
 {
 	FText out;
 	for(auto* a :effects.GetAllEffects())
@@ -66,8 +72,27 @@ FText UOmegaScriptedEffectFunctions::GetEffects_Description(FOmegaCustomScripted
 	return out;
 }
 
+void UOmegaScriptedEffectFunctions::GetEffects_UtilityScore(FOmegaCustomScriptedEffects effects,
+	UCombatantComponent* Target, UCombatantComponent* Instigator, float& Total, float& Average)
+{
+	if (Target && Instigator)
+	{
+		float EffectNum=0.0;
+		
+		for(auto* a :effects.GetAllEffects())
+		{
+			if(a)
+			{
+				Total+=a->GetEffectUtilityScore(Target,Instigator);
+				EffectNum+=1.0;
+			}
+		}
+		Average=Total/EffectNum;
+	}
+}
+
 void UOmegaScriptedEffectFunctions::ApplyScriptedEffects_List(TArray<UOmegaScriptedEffect*> Effects,
-                                                                 UCombatantComponent* Target, UCombatantComponent* Instigator)
+                                                              UCombatantComponent* Target, UCombatantComponent* Instigator)
 {
 	for(auto* TempEffect : Effects)
 	{

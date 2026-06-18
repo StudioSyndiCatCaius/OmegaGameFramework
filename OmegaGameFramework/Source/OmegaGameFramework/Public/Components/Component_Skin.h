@@ -7,6 +7,7 @@
 #include "UObject/Interface.h"
 #include "Misc/GeneralDataObject.h"
 #include "Types/Struct_Appearance.h"
+#include "Animation/AnimInstance.h"
 #include "Component_Skin.generated.h"
 
 

@@ -4,10 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Templates/SubclassOf.h"
+#include "UObject/Class.h"
 #include "LuaValue.h"
 #include "UObject/Object.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "Types/Struct_SortedClassPath.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Subsystem_Engine.generated.h"
 
 

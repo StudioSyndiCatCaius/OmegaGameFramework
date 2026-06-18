@@ -17,8 +17,10 @@
 #include "Types/Struct_CombatantConfig.h"
 #include "Types/Struct_InputConfig.h"
 #include "Types/Struct_SpawnableTypeConfig.h"
+#include "GameFramework/Character.h"
 #include "OmegaSettings.generated.h"
 
+class UOmegaProceduralNamedAssetBuilder;
 class UOmegaPhysicsSurfaceType;
 class AOmegaWorldManager;
 class UMetaSoundSource;
@@ -93,7 +95,8 @@ public:
 	//These paths will automatically scanned on Init. 
 	UPROPERTY(EditAnywhere, config, Category = "_CORE",AdvancedDisplay)
 	TArray<FString> AutoscanPaths;
-	
+	UPROPERTY(EditAnywhere, config, Category = "_CORE",DisplayName="⚛️ Procedural Data Asset Builder")
+	TSoftClassPtr<UOmegaProceduralNamedAssetBuilder> ProceduralDataAssetBuilderClass;
 	
 	UPROPERTY()
 	TSoftObjectPtr<UOmegaTextFormater_Collection> DefaultSettings_Text;
@@ -131,7 +134,7 @@ public:
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="🎮Gameplay")
 	TSoftObjectPtr<UOmegaPhysicsSurfaceType> DefaultSurfaceTypeData;
 	
-	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="🎮Gameplay",meta=(ForceInlineRow))
+	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="🎮Gameplay",meta=(ForceInlineRow,Categories="INPUT"))
 	TMap<FGameplayTag,FOmegaInputConfig> InputActionConfigs;
 	
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="🎮Gameplay")

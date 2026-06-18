@@ -9,7 +9,8 @@
 #include "Components/ActorComponent.h"
 #include "Component_InstancedActor.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInstanceNotify, AOmegaInstanceActor*, Instance, FName, Notify);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInstanceActorDelegate, AOmegaInstanceActor*, Instance);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInstanceActorNotify, AOmegaInstanceActor*, Instance, FName, Notify);
 
 // Spawns and manages a pool of AOmegaInstanceActor objects, each bound to a context object. Useful for UI entries, party members, or any per-object actor representation.
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
@@ -79,9 +80,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Instanced Actor Component")
 	TArray<AOmegaInstanceActor*> GetInstancesWithGameplayTags(FGameplayTagContainer Tags, bool bExclude, bool bExact);
 
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnInstanceActorDelegate OnInstanceCreated;
 	// Fires when any spawned instance calls TriggerNotify, passing the notify name.
-	UPROPERTY(BlueprintAssignable, Category="Omega")
-	FOnInstanceNotify OnInstanceNotify;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnInstanceActorNotify OnInstanceNotify;
 
 	// ==========================================
 	// FORMATION

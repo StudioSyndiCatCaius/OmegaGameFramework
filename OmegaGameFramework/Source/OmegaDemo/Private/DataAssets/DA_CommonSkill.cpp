@@ -7,7 +7,7 @@
 #include "Functions/F_ScriptedEffects.h"
 #include "Condition/Condition_Actor.h"
 #include "Condition/Condition_Combatant.h"
-
+#include "Functions/F_Combatant.h"
 
 
 bool UOAsset_CommonSkill::CanUseSkill_Implementation(UCombatantComponent* Combatant)
@@ -27,21 +27,35 @@ FOmegaSkillConfig UOAsset_CommonSkill::Skill_GetConfig_Implementation(UCombatant
 	return SkillConfig;
 }
 
-// --------------------------------------------------------------------------------------------------------------
-// Buff attribute
-// --------------------------------------------------------------------------------------------------------------
-
-
-void UOAsset_Skill_BuffAttribute::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
-	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
+float UOAsset_CommonSkill::Skill_CheckUtility_Implementation(UCombatantComponent* Combatant,
+	const TArray<UCombatantComponent*>& Targets, FGameplayTag Tag)
 {
-	
+	TArray<UCombatantComponent*> targets=Targets;
+	if (SkillConfig.TargetFilter)
+	{
+		targets=SkillConfig.TargetFilter->FilterCombatants(Combatant,Targets);
+	}
+	float out=0.0;
+	float num=0.0;
+	for (auto* i : targets)
+	{
+		if (i)
+		{
+			float score_total, score_average;
+			UOmegaScriptedEffectFunctions::GetEffects_UtilityScore(Effects, i, Combatant, score_total, score_average);
+			out += score_average;
+			num++;
+		}
+	}
+	return out/num;
 }
 
-void UOAsset_Skill_BuffAttribute::GetObjectGameplayTags_Implementation(FGameplayTag& CategoryTag,
-	FGameplayTagContainer& GameplayTags)
+float UOAsset_CommonSkill::Skill_CheckUtility_OneTarget_Implementation(UCombatantComponent* Combatant,
+	UCombatantComponent* Target, FGameplayTag Tag)
 {
-	CategoryTag=categoryTag;
-	GameplayTags=gameplayTags;
+	float score_total, score_average;
+	UOmegaScriptedEffectFunctions::GetEffects_UtilityScore(Effects,Target,Combatant,score_total,score_average);
+	return score_average;
 }
+
 

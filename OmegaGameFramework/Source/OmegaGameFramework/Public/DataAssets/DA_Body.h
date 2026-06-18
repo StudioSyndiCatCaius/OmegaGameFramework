@@ -102,25 +102,25 @@ class OMEGAGAMEFRAMEWORK_API UOmegaBodySlotScript : public UOmegaInstancableObje
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	USkeletalMesh* GetMeshFromIndex(FOmegaBodyOptionValue OptionValue) const;
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	bool PostMeshCreationEdit(USkeletalMesh* Mesh, FOmegaBodyOptionValue OptionValue) const;
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	bool PostMaterialSlotEdit(USkeletalMesh* Mesh,int32 slotIndex, FName SlotName, UMaterialInterface* Material, FOmegaBodyOptionValue OptionValue) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	EOmegaBodySlotType GetScriptSlotType() const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	void OnApplied_ToSkin(AOmegaSkin* Skin, FOmegaBodyOptionValue OptionValue) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	void OnApplied_ToMeshComponent(USkeletalMeshComponent* Component, FOmegaBodyOptionValue OptionValue) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	FVector GetMaxValue() const;
 };
 

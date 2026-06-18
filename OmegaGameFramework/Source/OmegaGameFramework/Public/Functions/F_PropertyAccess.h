@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "UObject/Interface.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+
 #include "F_PropertyAccess.generated.h"
 
 
@@ -15,6 +16,7 @@ class UOmegaFunctions_PropertyAccess : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	/*
 	UFUNCTION(BlueprintPure, Category="Omega|Property Access",DisplayName="Get UProperty (string)")
 	static FString Get_String(UObject* Object, const FString& Property, const FString& Fallback="");
 	UFUNCTION(BlueprintPure, Category="Omega|Property Access",DisplayName="Get UProperty (bool)")
@@ -26,6 +28,7 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Property Access",DisplayName="Get UProperty (Object)",meta=(DeterminesOutputType="Class"))
 	static UObject* Get_Object(UObject* Object,const FString& Property, TSubclassOf<UObject> Class,  UObject* Fallback = nullptr);
-};
+	*/
 
+};
 

@@ -225,7 +225,7 @@ void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant)
 	
 	// TAG EVENTS
 	UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnBegin);
-	LocalTurnAbility = Combatant->ExecuteAbility(Local_GetTurnAbility(), this,LocalSuccess);
+	LocalTurnAbility = Combatant->ExecuteAbility(Local_GetTurnAbility(), this,FOmegaCombatantEventMeta(),LocalSuccess);
 	
 	if(LocalSuccess && LocalTurnAbility)
 	{

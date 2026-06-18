@@ -3,6 +3,7 @@
 
 #include "Widget/DataWidget.h"
 #include "CommonTextBlock.h"
+#include "Curves/CurveFloat.h"
 
 UActorComponent* UDataWidget::local_GetComponentFromObject(UObject* object, TSubclassOf<UActorComponent> Class)
 {

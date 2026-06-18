@@ -5,6 +5,8 @@
 #include "FlowAssetTrait.h"
 #include "FlowSettings.h"
 #include "FlowSubsystem.h"
+#include "EdGraph/EdGraph.h"
+#include "EdGraph/EdGraphPin.h"
 
 #include "Nodes/FlowNode.h"
 #include "Nodes/Route/FlowNode_CustomInput.h"
@@ -106,24 +108,26 @@ void UFlowAsset::PostDuplicate(bool bDuplicateForPIE)
 	}
 }
 
-EDataValidationResult UFlowAsset::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UFlowAsset::IsDataValid(class FDataValidationContext& Context) const
 {
 	for (const TPair<FGuid, UFlowNode*>& Node : Nodes)
-	{
-		if (Node.Value == nullptr || Node.Value->IsDataValid(ValidationErrors) == EDataValidationResult::Invalid)
-		{
-			// refresh data if Node is missing, i.e. its class has been deleted
-			if (Node.Value == nullptr)
-			{
-				HarvestNodeConnections();
-			}
-
-			return EDataValidationResult::Invalid;
-		}
-	}
-
-	return EDataValidationResult::Valid;
+    	{
+			
+    		if (Node.Value == nullptr || Node.Value->IsDataValid(Context) == EDataValidationResult::Invalid)
+    		{
+    			// refresh data if Node is missing, i.e. its class has been deleted
+    			if (Node.Value == nullptr)
+    			{
+    				//HarvestNodeConnections();
+    			}
+    
+    			return EDataValidationResult::Invalid;
+    		}
+    	}
+    
+    	return EDataValidationResult::Valid;
 }
+
 
 TSharedPtr<IFlowGraphInterface> UFlowAsset::FlowGraphInterface = nullptr;
 

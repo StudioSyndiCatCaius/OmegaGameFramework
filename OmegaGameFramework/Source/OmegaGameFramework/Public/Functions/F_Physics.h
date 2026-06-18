@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "F_Trace.h"
+#include "Animation/AnimNotifies/AnimNotify.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"

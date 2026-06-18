@@ -4,6 +4,7 @@
 #include "Functions/F_Graphics.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Misc/ConfigCacheIni.h"
 
 float UOmegaGraphicsFunctions::RHIManagerSampleFunction(float Param)
 {

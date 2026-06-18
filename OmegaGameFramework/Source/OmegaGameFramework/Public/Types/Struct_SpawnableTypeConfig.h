@@ -6,6 +6,7 @@
 #include "Struct_Bitflag.h"
 
 
+#include "Engine/Texture2D.h"
 #include "Struct_SpawnableTypeConfig.generated.h"
 
 class UOmegaSubsystem_World;

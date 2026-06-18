@@ -3,6 +3,7 @@
 
 #include "Actors/Actor_MeshDynaMat.h"
 #include "Engine/StaticMesh.h"
+#include "Components/StaticMeshComponent.h"
 
 void AStaticMeshDynaMat::OnConstruction(const FTransform& Transform)
 {

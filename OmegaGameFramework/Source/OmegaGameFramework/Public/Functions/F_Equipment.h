@@ -11,12 +11,24 @@
 class UOmegaCondition_DataAsset;
 class UDataAssetCollectionComponent;
 
+
+USTRUCT(BlueprintType)
+struct FOmegaEquipableConfig
+{
+	GENERATED_BODY()
+	
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="🗡️Equipment") TArray<UPrimaryDataAsset*> RequiredSkills;
+};
+
 UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - 🗡️Equipable") class UDataInterface_Equipable : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_Equipable
 {
 	GENERATED_BODY()
 
 public:
+	
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🗡️Equipment",DisplayName="🗡️Equipable - Get Config")
+	FOmegaEquipableConfig Equipable_GetConfig(UCombatantComponent* Component);
 	
 	UFUNCTION(BlueprintNativeEvent,Category="♎I|🗡️Equipment",DisplayName="🗡️Equipable - Can Equip?")
 	bool CanEquipItem(UCombatantComponent* Component,UEquipmentSlot* Slot);

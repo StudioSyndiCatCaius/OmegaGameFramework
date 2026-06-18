@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Nodes/FlowNode.h"
 #include "FlowNode_Camera.generated.h"
 

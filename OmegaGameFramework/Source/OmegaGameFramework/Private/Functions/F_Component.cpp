@@ -7,6 +7,7 @@
 #include "Condition/Condition_Actor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Actor.h"
+#include "Materials/Material.h"
 
 bool UActorModifierScript::OnAppliedToActor_Implementation(AActor* Actor) const
 {

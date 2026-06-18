@@ -18,6 +18,7 @@
 #include "Functions/F_Common.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Engine/World.h"
 
 
 UZoneEntityComponent::UZoneEntityComponent()

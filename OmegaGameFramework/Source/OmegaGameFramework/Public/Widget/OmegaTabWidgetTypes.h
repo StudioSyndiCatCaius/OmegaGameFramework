@@ -6,6 +6,8 @@
 #include "CoreMinimal.h"
 #include "Styling/SlateWidgetStyle.h"
 #include "Styling/SlateWidgetStyleContainerBase.h"
+#include "Styling/SlateBrush.h"
+#include "Styling/SlateTypes.h"
 #include "OmegaTabWidgetTypes.generated.h"
 
 // ============================================================================

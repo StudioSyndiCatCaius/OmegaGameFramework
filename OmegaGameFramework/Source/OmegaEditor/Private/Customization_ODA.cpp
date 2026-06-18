@@ -7,6 +7,7 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailWidgetRow.h"
 #include "IDetailPropertyRow.h"
+#include "IPropertyUtilities.h"
 #include "PropertyHandle.h"
 
 #include "Widgets/SBoxPanel.h"
@@ -14,6 +15,7 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Layout/SSplitter.h"
+#include "Widgets/Input/SButton.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Styling/AppStyle.h"
 
@@ -21,11 +23,18 @@
 
 namespace OmegaCustomization
 {
-    static const FString GeneralCategory   = TEXT("General");
-    static const FString ColumnsCategory   = TEXT("OmegaTwoColumnLayout");
-    static const float   ColumnPadding     = 8.f;
-    static const float   CategoryHeaderPad = 4.f;
-    static const float   PropertyNameWidth = 160.f;
+    static const FString GeneralCategory    = TEXT("General");
+    static const FString ColumnsCategory    = TEXT("OmegaTwoColumnLayout");
+    static const FString TabBarCategoryName = TEXT("OmegaCategoryFilterTabs");
+    static const FString AllFilterValue     = TEXT("ALL");
+    static const float   ColumnPadding      = 8.f;
+    static const float   CategoryHeaderPad  = 4.f;
+    static const float   PropertyNameWidth  = 160.f;
+
+    // A new FOmegaDataAssetCustomization instance is created every time the details
+    // panel rebuilds, so the selected filter tab is persisted here, keyed per-object,
+    // to survive ForceRefresh() calls triggered by clicking a tab.
+    static TMap<TWeakObjectPtr<UObject>, FString> ActiveCategoryFilters;
 }
 
 TSharedRef<IDetailCustomization> FOmegaDataAssetCustomization::MakeInstance()
@@ -36,6 +45,10 @@ TSharedRef<IDetailCustomization> FOmegaDataAssetCustomization::MakeInstance()
 void FOmegaDataAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
     using namespace OmegaCustomization;
+
+    UE_LOG(LogTemp, Warning, TEXT("[ODA-DEBUG] FOmegaDataAssetCustomization::CustomizeDetails invoked"));
+
+    CachedPropertyUtilities = DetailBuilder.GetPropertyUtilities();
 
     // ── FIX 1: Use the ACTUAL runtime class of the object being inspected,
     //           not the base UOmegaDataAsset class. This is what makes child
@@ -48,7 +61,10 @@ void FOmegaDataAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     UObject* FirstObject = ObjectsBeingCustomized[0].Get();
     if (!FirstObject) return;
 
+    const TWeakObjectPtr<UObject> ObjectKey = ObjectsBeingCustomized[0];
     UClass* ActualClass = FirstObject->GetClass();
+
+    UE_LOG(LogTemp, Warning, TEXT("[ODA-DEBUG] ActualClass = %s"), *ActualClass->GetName());
 
     // ── Collect every editable property, grouped by leaf category name ───────
 
@@ -67,6 +83,9 @@ void FOmegaDataAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
         TSharedRef<IPropertyHandle> Handle =
             DetailBuilder.GetProperty(Prop->GetFName(), nullptr);
 
+        UE_LOG(LogTemp, Warning, TEXT("[ODA-DEBUG] Prop=%s CPF_Edit=1 ValidHandle=%d"),
+            *Prop->GetName(), Handle->IsValidHandle() ? 1 : 0);
+
         if (!Handle->IsValidHandle()) continue;
 
         FString Category = NormaliseCategory(Prop->GetMetaData(TEXT("Category")));
@@ -78,26 +97,71 @@ void FOmegaDataAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
         CategoryMap.FindOrAdd(Category).Add(Handle);
     }
 
-    // ── Pin "General" to the top in its native UE form ───────────────────────
+    UE_LOG(LogTemp, Warning, TEXT("[ODA-DEBUG] CategoryOrder.Num() = %d"), CategoryOrder.Num());
 
-    if (CategoryMap.Contains(GeneralCategory))
+    if (CategoryOrder.IsEmpty()) return;
+
+    // ── Build the full category list, alphabetised, with "General" forced first ─
+
+    TArray<FString> AllCategories = CategoryOrder;
+    AllCategories.Sort();
+    if (AllCategories.Remove(GeneralCategory) > 0)
+    {
+        AllCategories.Insert(GeneralCategory, 0);
+    }
+
+    // ── Resolve the active filter tab, persisted across panel refreshes ──────
+
+    FString ActiveFilter = ActiveCategoryFilters.FindRef(ObjectKey);
+    if (ActiveFilter.IsEmpty() || (ActiveFilter != AllFilterValue && !AllCategories.Contains(ActiveFilter)))
+    {
+        ActiveFilter = AllFilterValue;
+    }
+
+    // ── Top-most: the category filter tab bar (ALL + one button per category) ─
+
+    IDetailCategoryBuilder& TabBarCat = DetailBuilder.EditCategory(*TabBarCategoryName);
+    TabBarCat.SetSortOrder(-1);
+    TabBarCat.AddCustomRow(FText::GetEmpty())
+    .WholeRowContent()
+    [
+        BuildCategoryTabBar(AllCategories, ObjectKey)
+    ];
+
+    // ── "General" is always the top-most property category when it is visible ─
+
+    const bool bShowGeneral = CategoryMap.Contains(GeneralCategory)
+        && (ActiveFilter == AllFilterValue || ActiveFilter == GeneralCategory);
+
+    if (bShowGeneral)
     {
         DetailBuilder.EditCategory(*GeneralCategory).SetSortOrder(0);
     }
+    else
+    {
+        DetailBuilder.HideCategory(*GeneralCategory);
+    }
 
-    // ── Gather all non-General categories and sort them ──────────────────────
+    // ── Gather all non-General categories, then narrow them down to the filter ─
 
     TArray<FString> OtherCategories;
-    for (const FString& Cat : CategoryOrder)
+    for (const FString& Cat : AllCategories)
     {
         if (!Cat.Equals(GeneralCategory, ESearchCase::IgnoreCase))
         {
             OtherCategories.Add(Cat);
         }
     }
-    OtherCategories.Sort();
 
-    if (OtherCategories.IsEmpty()) return;
+    TArray<FString> OtherCategoriesToShow;
+    if (ActiveFilter == AllFilterValue)
+    {
+        OtherCategoriesToShow = OtherCategories;
+    }
+    else if (OtherCategories.Contains(ActiveFilter))
+    {
+        OtherCategoriesToShow.Add(ActiveFilter);
+    }
 
     // ── FIX 3: Hide non-General categories BEFORE building the replacement
     //           widget. HideCategory must be called with the EXACT category
@@ -109,12 +173,14 @@ void FOmegaDataAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
         DetailBuilder.HideCategory(*Cat);
     }
 
-    // ── Distribute categories alternately into left / right columns ───────────
+    if (OtherCategoriesToShow.IsEmpty()) return;
+
+    // ── Distribute the visible categories alternately into left / right columns ─
 
     TArray<FString> LeftCats, RightCats;
-    for (int32 i = 0; i < OtherCategories.Num(); ++i)
+    for (int32 i = 0; i < OtherCategoriesToShow.Num(); ++i)
     {
-        (i % 2 == 0 ? LeftCats : RightCats).Add(OtherCategories[i]);
+        (i % 2 == 0 ? LeftCats : RightCats).Add(OtherCategoriesToShow[i]);
     }
 
     // ── Inject the two-column Slate widget beneath General ───────────────────
@@ -132,6 +198,64 @@ void FOmegaDataAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     [
         BuildTwoColumnWidget(CategoryMap, LeftCats, RightCats)
     ];
+}
+
+TSharedRef<SWidget> FOmegaDataAssetCustomization::BuildCategoryTabBar(
+    const TArray<FString>& Categories,
+    TWeakObjectPtr<UObject> ObjectKey)
+{
+    using namespace OmegaCustomization;
+
+    TSharedRef<SHorizontalBox> TabBox = SNew(SHorizontalBox);
+
+    auto AddTab = [this, &TabBox, ObjectKey](const FString& Label, const FString& FilterValue)
+    {
+        TabBox->AddSlot()
+        .AutoWidth()
+        .Padding(2.f, 2.f)
+        [
+            SNew(SButton)
+            .ButtonStyle(FAppStyle::Get(), "Button")
+            .ButtonColorAndOpacity_Lambda([ObjectKey, FilterValue]()
+            {
+                const FString Current = ActiveCategoryFilters.FindRef(ObjectKey);
+                const bool bActive = Current.IsEmpty()
+                    ? FilterValue == AllFilterValue
+                    : Current == FilterValue;
+                return bActive ? FLinearColor(0.13f, 0.48f, 0.92f) : FLinearColor(1.f, 1.f, 1.f, 0.6f);
+            })
+            .OnClicked_Lambda([this, ObjectKey, FilterValue]() -> FReply
+            {
+                ActiveCategoryFilters.Add(ObjectKey, FilterValue);
+                if (TSharedPtr<IPropertyUtilities> Utilities = CachedPropertyUtilities.Pin())
+                {
+                    Utilities->ForceRefresh();
+                }
+                return FReply::Handled();
+            })
+            [
+                SNew(SBox)
+                .Padding(FMargin(10.f, 4.f))
+                [
+                    SNew(STextBlock)
+                    .Text(FText::FromString(Label))
+                ]
+            ]
+        ];
+    };
+
+    AddTab(TEXT("ALL"), AllFilterValue);
+    for (const FString& Cat : Categories)
+    {
+        AddTab(Cat, Cat);
+    }
+
+    return SNew(SBorder)
+        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryTop"))
+        .Padding(FMargin(CategoryHeaderPad))
+        [
+            TabBox
+        ];
 }
 
 // ─── helpers (unchanged from before) ─────────────────────────────────────────

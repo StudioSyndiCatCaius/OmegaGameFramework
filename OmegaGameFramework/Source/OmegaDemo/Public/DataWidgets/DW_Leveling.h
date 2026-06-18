@@ -22,12 +22,15 @@ class OMEGADEMO_API UDataWidgetBase_Leveling : public UDataWidgetBase_CombatantB
 	void L_SetTextFromVal(float val, UTextBlock* text) const;
 
 public:
+	
 
 	virtual void Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner) override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Leveling")
 	UOmegaLevelingAsset* LevelingAsset=nullptr;
 
+	UFUNCTION(BlueprintCallable,Category="Leveling") void SetLevelingAsset(UOmegaLevelingAsset* Asset);
+	
 	UFUNCTION(BlueprintImplementableEvent,BlueprintPure,Category="DataWidget")
 	void GetLevelingWidgets(UTextBlock*& text_RankName, UTextBlock*& text_RankValue, UTextBlock*& text_xpName, UTextBlock*& text_xpCurrent,
 		UTextBlock*& text_xpMax, UProgressBar*& ProgressBar_xpPercent);

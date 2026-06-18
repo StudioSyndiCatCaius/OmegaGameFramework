@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Functions/F_ScriptedAnim.h"
-#include "Functions/OmegaFunctions_CombatantFilter.h"
+#include "Functions/F_CombatantFilter.h"
 #include "Functions/F_ScriptedEffects.h"
 #include "Interfaces/I_Skill.h"
 #include "Misc/GeneralDataObject.h"
@@ -25,11 +25,9 @@ public:
 	TMap<FGameplayTag,FOmegaScriptedAnimationData> Animation_Named;
 	virtual FOmegaScriptedAnimationData GetScriptedAnimation_Implementation(FGameplayTag Tag) override;
 	
-	UPROPERTY()
-	FCombatantFilterData TargetFilterData;
 
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadOnly,Category="Combat",DisplayName="💫Effects")
-	TArray<UOmegaScriptedEffect*> Effects;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat",DisplayName="💫Effects")
+	FOmegaCustomScriptedEffects Effects;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat",DisplayName="💫Effects (Tag)",meta=(Categories="ScriptedEffect",ForceInlineRow))
 	TMap<FGameplayTag,FOmegaCustomScriptedEffects> Effects_Named;
 	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation(FGameplayTag Tag) override;

@@ -31,6 +31,8 @@ public class OmegaDemo : ModuleRules
 			"OmegaSequence",
 			"Flow",
 			"GameplayStateTreeModule",
+			"NavigationSystem",
+			"AIModule",
 		});
 
 		if (Target.bBuildEditor)

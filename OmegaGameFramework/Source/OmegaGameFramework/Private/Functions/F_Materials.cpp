@@ -4,7 +4,9 @@
 #include "Functions/F_Materials.h"
 #include "Engine/Texture2D.h"
 #include "ImageUtils.h"
+#include "TextureResource.h"
 #include "RenderUtils.h"
+#include "Components/PrimitiveComponent.h"
 
 void UOmegaMaterialFunctions::ApplyMaterialsToSlots(UPrimitiveComponent* Component,
 	TMap<FName, UMaterialInterface*> Materials)

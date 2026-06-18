@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Engine/DataAsset.h"
 #include "F_GlobalScripting.generated.h"
 
 

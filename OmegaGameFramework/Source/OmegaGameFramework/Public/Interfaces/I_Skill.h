@@ -7,15 +7,16 @@
 #include "GameplayTagContainer.h"
 #include "Functions/F_ScriptedAnim.h"
 #include "Functions/F_ScriptedEffects.h"
-#include "Functions/OmegaFunctions_CombatantFilter.h"
+#include "Functions/F_CombatantFilter.h"
 #include "I_Skill.generated.h"
 
+class UCombatantSelector;
 class UOmegaDamageType;
 class UOmegaAttribute;
 class UCombatantComponent;
 class UCombatantFilter;
 class AOmegaGameplayEffect;
-
+class IDataInterface_Grid3DPathfind;
 
 
 USTRUCT(BlueprintType)
@@ -23,11 +24,18 @@ struct FOmegaSkillConfig
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config") TMap<UOmegaAttribute*, float> AttributeUseCost;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config") FCombatantFilterData TargetFilter;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config") TArray<UPrimaryDataAsset*> UseRequiredSkills;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config") UOmegaDamageType* DamageType;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config") UOmegaAttribute* Attribute;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config")
+	TMap<UOmegaAttribute*, float> AttributeUseCost;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config",DisplayName="🎯Target (Filter)")
+	TObjectPtr<UCombatantFilterCollection> TargetFilter;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config",DisplayName="🎯Target (Selector)")
+	TSubclassOf<UCombatantSelector> TargetSelector;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config")
+	TArray<UPrimaryDataAsset*> UseRequiredSkills;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config",AdvancedDisplay)
+	TScriptInterface<IDataInterface_Grid3DPathfind> Grid3DPathfind;
+	UPROPERTY() UOmegaDamageType* DamageType;
+	UPROPERTY() UOmegaAttribute* Attribute;
 	
 };
 
@@ -60,7 +68,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="♎I|🔥Skill",	DisplayName="🔥Skill - Get Scripted Effects")
 	FOmegaCustomScriptedEffects Skill_GetScriptedEffects(UCombatantComponent* Combatant);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="♎I|🔥Skill", DisplayName="🔥Skill - Check Utility")
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🔥Skill", DisplayName="🔥Skill - Check Utility (Single Target)")
+	float Skill_CheckUtility_OneTarget(UCombatantComponent* Combatant, UCombatantComponent* Target,FGameplayTag Tag);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🔥Skill", DisplayName="🔥Skill - Check Utility (Multi Target)")
 	float Skill_CheckUtility(UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets,FGameplayTag Tag);
 	
 	

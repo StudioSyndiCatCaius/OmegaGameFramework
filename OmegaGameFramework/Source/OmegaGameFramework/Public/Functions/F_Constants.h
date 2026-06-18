@@ -7,6 +7,7 @@
 #include "F_Constants.generated.h"
 
 
+class UOmegaDamageType;
 class UOmegaLevelingAsset;
 class UOmegaAttribute;
 class UEquipmentSlot;
@@ -42,6 +43,7 @@ public:
 	
 	UFUNCTION() static TArray<FName> opts_level();
 	UFUNCTION() static TArray<FName> opts_levelList();
+	UFUNCTION() static TArray<FName> opts_damageType();
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - 💜Data Asset Class")
 	static TSubclassOf<UPrimaryDataAsset> Class_DataAsset(UPARAM(meta = (GetOptions = "opts_dataasset")) FName Name);
@@ -81,6 +83,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Leveling")
 	static UOmegaLevelingAsset* Leveling(UPARAM(meta = (GetOptions = "opts_leveling")) FName Name);
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - DamageType")
+	static UOmegaDamageType* DamageType(UPARAM(meta = (GetOptions = "opts_damageType")) FName Name);
 		
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Text")
 	static FText Text(UPARAM(meta = (GetOptions = "opts_text")) FName Name);

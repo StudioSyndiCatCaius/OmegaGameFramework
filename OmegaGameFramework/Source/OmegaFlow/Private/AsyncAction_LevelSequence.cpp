@@ -4,6 +4,7 @@
 #include "ExtensionLibraries/MovieSceneSequenceExtensions.h"
 #include "MovieSceneSequence.h"
 #include "Runtime/LevelSequence/Public/DefaultLevelSequenceInstanceData.h"
+#include "TimerManager.h"
 
 
 void UAsyncAction_LevelSequence::Tick(float DeltaTime)

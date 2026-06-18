@@ -8,6 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Widgets/SWidget.h"
 #include "Widget/UI_Widgets.h"
+#include "Engine/DataAsset.h"
 #include "UI_Background.generated.h"
 
 class UVerticalBox;

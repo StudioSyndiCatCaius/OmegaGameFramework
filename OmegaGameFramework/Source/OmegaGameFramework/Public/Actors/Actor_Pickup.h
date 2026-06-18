@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Actor_GameplayCue.h"
 #include "GameFramework/Actor.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Misc/GeneralDataObject.h"
 #include "Actor_Pickup.generated.h"
 

@@ -4,6 +4,7 @@
 #include "AsyncAction_GameplaySystem.h"
 
 #include "Subsystems/Subsystem_World.h"
+#include "Engine/World.h"
 
 
 UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem

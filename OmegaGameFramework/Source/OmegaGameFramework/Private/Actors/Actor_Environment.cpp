@@ -6,6 +6,7 @@
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
+#include "Engine/StaticMesh.h"
 
 #if ENGINE_MAJOR_VERSION ==5
 
@@ -22,26 +23,49 @@
 #include "Components/AudioComponent.h"
 #include "Engine/World.h"
 #include "Functions/F_BGM.h"
+#include "Components/StaticMeshComponent.h"
+#include "TimerManager.h"
+#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstance.h"
 #include "Functions/F_GlobalParam.h"
 #include "Subsystems/Subsystem_World.h"
 
 
 class UOmegaBGMSubsystem;
 
+
+
+
+void L_SetCompValid(USceneComponent* Comp, bool Val)
+{
+	if(Comp)
+	{
+		Comp->SetVisibility(Val);
+		Comp->SetComponentTickEnabled(Val);
+	}
+}
+
+
 void AOmegaActorEnvironment::L_PresetSave()
 {
 	if(GetGameInstance() && current_preset)
 	{
-		UOmegaFunctions_GlobalVars::SetGlobalVariable_DataAsset(this,EOmegaGlobalParamTarget::SAVE_GAME,SaveField_Preset,current_preset);
+		if (UPrimaryDataAsset* da=Cast<UPrimaryDataAsset>(current_preset.GetObject()))
+		{
+			UOmegaFunctions_GlobalVars::SetGlobalVariable_DataAsset(this,EOmegaGlobalParamTarget::SAVE_GAME,SaveField_Preset,da);	
+		}
 	}
 }
 
 void AOmegaActorEnvironment::L_PresetLoad()
 {
-	if(UOmegaEnvironmentPreset* p=Cast<UOmegaEnvironmentPreset>(
+	if(UPrimaryDataAsset* p=Cast<UOmegaEnvironmentPreset>(
 			UOmegaFunctions_GlobalVars::GetGlobalVariable_DataAsset(this,EOmegaGlobalParamTarget::SAVE_GAME,SaveField_Preset)))
 	{
-		Set_Preset(p);
+		if (p->GetClass()->ImplementsInterface(UDataInterface_Environment::StaticClass()))
+		{
+			Set_Preset(p);
+		}
 	}
 }
 
@@ -130,15 +154,9 @@ void AOmegaActorEnvironment::OnConstruction(const FTransform& Transform)
 	{
 		SkyLight->RecaptureSky();
 	}
-	if(current_preset && !lock_preset)
+	if(current_preset.GetObject() && !lock_preset)
 	{
-		for(auto* TempScript : current_preset->Scripts)
-		{
-			if(TempScript)
-			{
-				TempScript->OnUpdated(this);
-			}
-		}
+		Refresh();
 	}
 	if(DefaultAmbiantSound && Audio)
 	{
@@ -171,6 +189,7 @@ void AOmegaActorEnvironment::BeginPlay()
 	{
 		L_PresetLoad();
 	}
+	Refresh();
 	Super::BeginPlay();
 }
 
@@ -187,14 +206,6 @@ void AOmegaActorEnvironment::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void L_SetCompValid(USceneComponent* Comp, bool Val)
-{
-	if(Comp)
-	{
-		Comp->SetVisibility(Val);
-		Comp->SetComponentTickEnabled(Val);
-	}
-}
 
 void AOmegaActorEnvironment::Quickset_Atmosphere()
 {
@@ -232,43 +243,103 @@ void AOmegaActorEnvironment::AutosetVirtualTextureFromLandscape()
 
 void AOmegaActorEnvironment::SaveToPreset()
 {
-	if(current_preset)
+	if(current_preset.GetObject())
 	{
-		for(auto* TempScript : current_preset->Scripts)
-		{
-			if(TempScript)
-			{
-				TempScript->OnSaved(this);
-			}
-		}
+		IDataInterface_Environment::Execute_Environment_OnSavedFromActor(current_preset.GetObject(),this);
 	}
 }
 
-void AOmegaActorEnvironment::Set_Preset(UOmegaEnvironmentPreset* Preset)
+void AOmegaActorEnvironment::Set_Preset(TScriptInterface<IDataInterface_Environment> Preset)
 {
-	if(Preset)
+	if(Preset.GetObject())
 	{
-		current_preset=Preset;
-		current_preset->Local_Update(this);
+		current_preset=Preset.GetObject();
+		FOmegaEnvironmentConfig cfg=IDataInterface_Environment::Execute_Environment_GetConfig(Preset.GetObject(),this);
+		L_SetCompValid(Atmosphere,cfg.Use_Atmosphere);
+		L_SetCompValid(Clouds,cfg.Use_Clouds);
+		L_SetCompValid(Fog,cfg.Use_Fog);
+		L_SetCompValid(SkyBox,cfg.Use_Skybox);
+		L_SetCompValid(SkyLight,cfg.Use_SkyLight);
+		L_SetCompValid(DirectionalLight,cfg.Use_SunLight);
+		IDataInterface_Environment::Execute_Environment_OnInit(Preset.GetObject(),this);
 	}
+}
+
+void AOmegaActorEnvironment::Refresh()
+{
+	if (current_preset.GetObject())
+	{
+		Set_Preset(current_preset);
+	}
+}
+
+
+TArray<UOmegaEnvironmentPresetScript*> UOmegaEnvironmentPreset::L_GetScripts() const
+{
+	TArray<UOmegaEnvironmentPresetScript*> out;
+	for (auto* preset : InheritedPresetScripts)
+	{
+		if (preset!=this)
+		{
+			out.Append(preset->Scripts);	
+		}
+	}
+	for(auto* a : Scripts)
+	{
+		if(a)
+		{
+			out.Add(a);
+		}
+	}
+	return out;
 }
 
 void UOmegaEnvironmentPreset::Local_Update(AOmegaActorEnvironment* EnvironmentActor)
 {
 	if(EnvironmentActor)
 	{
-		for(auto* Script: Scripts)
+		for(auto* Script: L_GetScripts())
 		{
-			L_SetCompVis(EnvironmentActor->SkyLight,Use_SkyLight);
-			L_SetCompVis(EnvironmentActor->DirectionalLight,Use_SunLight);
-			L_SetCompVis(EnvironmentActor->Fog,Use_Fog);
-			L_SetCompVis(EnvironmentActor->Atmosphere,Use_Atmosphere);
-			L_SetCompVis(EnvironmentActor->Clouds,Use_Clouds);
-			L_SetCompVis(EnvironmentActor->SkyBox,Use_Skybox);
 			if(Script) {Script->OnUpdated(EnvironmentActor);}
 		}
 	}
 }
+
+void UOmegaEnvironmentPreset::ActorPreset_GetConfig_Implementation(TSubclassOf<AActor>& ActorClass, bool& bPreviewActor,
+	bool& bAllowWorldDrop, bool& bPreviewThumbnailFromActor)
+{
+	ActorClass=AOmegaActorEnvironment::StaticClass();
+	bPreviewActor=true;
+}
+
+bool UOmegaEnvironmentPreset::ActorPreset_PreviewConstruct_Implementation(AActor* Actor)
+{
+	if (AOmegaActorEnvironment* Env=Cast<AOmegaActorEnvironment>(Actor))
+	{
+		Env->Set_Preset(this);
+		return true;
+	}
+	return false;
+}
+
+int32 UOmegaEnvironmentPreset::Environment_OnInit_Implementation(AOmegaActorEnvironment* Actor)
+{
+	Local_Update(Actor);
+	return 0;
+}
+
+int32 UOmegaEnvironmentPreset::Environment_OnSavedFromActor_Implementation(AOmegaActorEnvironment* Actor)
+{
+	for(auto* TempScript : Scripts)
+	{
+		if(TempScript)
+		{
+			TempScript->OnSaved(Actor);
+		}
+	}
+	return 0;
+}
+
 
 UOmegaBGM* AOmegaActorEnvironment::GetEnvironmentBGM_Implementation()
 {

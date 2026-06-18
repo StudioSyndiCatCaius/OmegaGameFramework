@@ -7,6 +7,7 @@
 #include "Engine/DataAsset.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "UObject/Interface.h"
 #include "F_ScriptedAnim.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnScriptedAnimDelegate);
@@ -57,9 +58,7 @@ public:
 	TArray<UOmegaScriptedAnimation_Preset*> anim_preset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect",DisplayName="2️⃣Anim (Inline)")
 	TArray<UOmegaScriptedAnimation*> anim_inline;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect",DisplayName="3️⃣Anim (Presets End)")
-	TArray<UOmegaScriptedAnimation_Preset*> anim_presetEnd;
-	
+
 	TArray<UOmegaScriptedAnimation*> GetAllAnimations() const;
 };
 

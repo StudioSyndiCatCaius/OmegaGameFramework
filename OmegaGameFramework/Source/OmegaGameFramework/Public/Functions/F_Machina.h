@@ -7,6 +7,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Structs.h"
 
+#include "UObject/Interface.h"
 #include "F_Machina.generated.h"
 
 

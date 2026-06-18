@@ -13,6 +13,7 @@
 #include "Interfaces/I_Interaction.h"
 #include "Misc/GeneralDataObject.h"
 #include "Types/Struct_RandomRange.h"
+#include "Engine/HitResult.h"
 #include "Component_GameplayActor.generated.h"
 
 class UOmegaActorConfig;

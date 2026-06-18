@@ -129,6 +129,15 @@ public:
 	/** Returns all instanced entity actors whose identity is part of the given squad. */
 	UFUNCTION(BlueprintPure, Category="Omega|GameMode",meta=(WorldContext="WorldContextObject"),DisplayName="🎮Game Mode - Get Entity Instance (from Squad)")
 	static TArray<AOmegaInstancedEntity*> GetGlobalEntityInstances_FromSquad(UObject* WorldContextObject,UAssetSquad_Identity* Squad);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|GameMode",meta=(WorldContext="WorldContextObject"),DisplayName="🎮Game Mode - Split Squad Entity Instance (at index)")
+	static void SplitGlobalCurrentSquadEntityInst_AtIndex(UObject* WorldContextObject,
+		TArray<AOmegaInstancedEntity*>& Before,TArray<AOmegaInstancedEntity*>& After, int32 index);
+
+	UFUNCTION(BlueprintPure, Category="Omega|GameMode",meta=(WorldContext="WorldContextObject"),DisplayName="🎮Game Mode - Split Squad Entity Instance (at Constant)")
+	static void SplitGlobalCurrentSquadEntityInst_AtConst(UObject* WorldContextObject,
+		TArray<AOmegaInstancedEntity*>& Before,TArray<AOmegaInstancedEntity*>& After, 
+		UPARAM(meta=(GetOptions="UOmegaFunctions_Constants::opts_int")) FName Constant="PartySize");
 
 	//###############################################################################
 	// Gameplay tags
@@ -251,6 +260,11 @@ public:
 	/** Returns a deterministic integer seed derived from the object's GUID. Useful for procedural content. */
 	UFUNCTION(BlueprintPure,Category="Omega|Object") static int32 GetObjectSeed(UObject* Object);
 
+	UFUNCTION(BlueprintPure,Category="Omega|Object") static int32 GetObjectGenericLevel(UObject* Object);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Object")
+	static TArray<UObject*> FilterObjects_ByGenericLevel(TArray<UObject*> In, int32 Level, TEnumAsByte<EOmegaComparisonMethod> Method);
+	
 	//###############################################################################
 	// Asset Getter
 	//###############################################################################

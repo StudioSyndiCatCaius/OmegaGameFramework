@@ -59,7 +59,6 @@ public class OmegaGameFramework : ModuleRules
 				"AudioMixer",
 				"JsonBlueprintUtilities",
 				"PCG",
-				"BinkMediaPlayer",
 				"StateTreeModule",
 				"GameplayStateTreeModule", "GameplayDebugger",
 				"AIModule",

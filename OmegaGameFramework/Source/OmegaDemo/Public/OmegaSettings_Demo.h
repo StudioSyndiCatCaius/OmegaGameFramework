@@ -9,6 +9,7 @@
 
 class AOmegaToolActor;
 class UMenu;
+class UOmegaAttribute;
 class AOmegaGameplaySystem;
 /**
  * 
@@ -27,6 +28,14 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category="Menu") TSoftClassPtr<UMenu> Menu_Info;
 	UPROPERTY(EditAnywhere, Config, Category="Menu") TSoftClassPtr<UMenu> Menu_Choice;
 	UPROPERTY(EditAnywhere, Config, Category="Actors") TSoftClassPtr<AOmegaToolActor> Default_ToolActor;
+	
+	
+	UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
+	TMap<TSoftObjectPtr<UOmegaAttribute>,float> AttributeCost_ScaleByPower;
+	UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
+	TMap<FString,float> AttributeCost_ScaleByType;
+	UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
+	bool AttributeCost_Truncate=true;
 };
 
 UCLASS()

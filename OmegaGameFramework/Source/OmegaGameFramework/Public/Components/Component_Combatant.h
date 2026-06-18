@@ -9,6 +9,7 @@
 #include "Interfaces/I_Skill.h"
 #include "Engine/DataAsset.h"
 #include "Engine/EngineTypes.h"
+#include "Engine/HitResult.h"
 #include "Components/ActorComponent.h"
 #include "Interfaces/I_Combatant.h"
 #include "DataAssets/DA_Attribute.h"
@@ -58,6 +59,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCombatant_LevelChange, UCombata
 
 #define  UFUNC_EQUIP_C(Name) UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equipment - ")
 #define  UFUNC_EQUIP_P(Name) UFUNCTION(BlueprintPure, Category="Equipment", DisplayName="Equipment - ")
+
 
 
 #define PrintError(ErrorText) \
@@ -197,10 +199,10 @@ public:
 	// The entity ID used to look up saved entity data when use_entity_id is true.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="💪Combatant - Data",meta=(EditCondition="use_entity_id")) FOmegaEntityID entity_id;
 
-	// Controls which modifier toggles apply from equipment sources (attribute, skill, damage).
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="💪Combatant - Modifiers") FOmegaCombatantModifierToggles ModiferToggle_Equipment;
-	// Controls which modifier toggles apply from inventory sources (attribute, skill, damage).
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="💪Combatant - Modifiers") FOmegaCombatantModifierToggles ModiferToggle_Inventory;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="💪Combatant - Modifiers")
+	bool bUseEquipmentAsModifiers=true;
+
 
 	FOmegaEntity* L_GetEntityData();
 	FOmegaEntity_AssetData* L_GetEntity_AssetData(UPrimaryDataAsset* asset);
@@ -360,10 +362,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Skills",DisplayName="Skills - Add") void AddSkill(UPrimaryDataAsset* Skill, bool Added);
 	// Adds or removes a list of skills from the combatant's inline skill list.
 	UFUNCTION(BlueprintCallable, Category="Skills",DisplayName="Skills - Add (List)") void AddSkills(TArray<UPrimaryDataAsset*> skill_list, bool Added);
-
-	UFUNCTION(BlueprintCallable, Category="Skills",DisplayName="Skills - Add") 
-	UPrimaryDataAsset* Skill_SelectByUtility(TArray<UCombatantComponent*> Targets,
-		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, float RandomOffsetRange);
 	
 	// ------------------------------------------------------------------------------------------
 	// TAGS
@@ -408,7 +406,7 @@ public:
 
 	// Executes (activates) the ability of AbilityClass with an optional context object. Returns the ability instance.
 	UFUNCTION(BlueprintCallable, Category = "Ability", meta = (AdvancedDisplay = "Context", DisplayName="Activate Ability"))
-	AOmegaAbility* ExecuteAbility(class TSubclassOf<AOmegaAbility> AbilityClass, class UObject* Context, bool& bSuccess);
+	AOmegaAbility* ExecuteAbility(class TSubclassOf<AOmegaAbility> AbilityClass, class UObject* Context, FOmegaCombatantEventMeta meta, bool& bSuccess);
 
 	// Stops the ability of AbilityClass. Pass Cancel=true to treat it as a cancel instead of a normal end.
 	UFUNCTION(BlueprintCallable, Category = "Ability") bool StopAbility(class TSubclassOf<AOmegaAbility> AbilityClass, bool Cancel);
@@ -504,7 +502,11 @@ public:
 
 	// Fires an agonist notify across the combatant that can be recieved in abilities and the parent actor.
 	UFUNCTION(BlueprintCallable, Category="Notify", meta=(AdvancedDisplay="Flag")) void CombatantNotify(FName Notify, const FString& Flag);
+	
+	UFUNCTION(BlueprintCallable, Category="Notify")
+	void FireCombatantEvent(UPARAM(meta=(Categories="EVENT.Combat")) FGameplayTag Event, FOmegaCombatantEventMeta meta);
 
+	
 	// ------------------------------------------------------------------------------------------
 	// Gambit / AI
 	// ------------------------------------------------------------------------------------------
@@ -528,7 +530,7 @@ public:
 
 	// Evaluates all abilities in the gambit by utility score and returns the best choice with its context.
 	UFUNCTION(BlueprintCallable, Category="Gambit")
-	TSubclassOf<AOmegaAbility> SelectAbilityByUtility(UObject*& AbilityContext, bool ShuffleFirst);
+	TSubclassOf<AOmegaAbility> SelectAbilityByUtility(UObject*& AbilityContext, FOmegaCombatantEventMeta meta, bool ShuffleFirst);
 
 	// Runs DefaultGambit and executes the selected ability. Returns true if an ability was activated.
 	UFUNCTION(BlueprintCallable, Category="Gambit")
@@ -678,6 +680,15 @@ public:
 	UFUNCTION(BlueprintPure, Category="Combatant|AssetLink",DisplayName="Asset Link - Set Tags Active")
 	FGameplayTagContainer AssetLink_GetActiveTags(UPrimaryDataAsset* Asset);
 
+	// ------------------------------------------------------------------------------------------
+	// Dynamic Vars
+	// ------------------------------------------------------------------------------------------
+	UFUNCTION(BlueprintPure, Category="Combatant|DynamicVar")
+	void GetDynamic_ScalarValue(UPARAM(meta=(Categories="Combat.Dynamic.Scalar")) FGameplayTag Tag,UObject* Context, 
+		float& Top,float& Total,float& Average);
+	
+	UFUNCTION(BlueprintPure, Category="Combatant|DynamicVar")
+	UPrimaryDataAsset* GetDynamic_AssetValue(UPARAM(meta=(Categories="Combat.Dynamic.Asset"))FGameplayTag Tag,UObject* Context);
 	// ------------------------------------------------------------------------------------------
 	// PARAM
 	// ------------------------------------------------------------------------------------------

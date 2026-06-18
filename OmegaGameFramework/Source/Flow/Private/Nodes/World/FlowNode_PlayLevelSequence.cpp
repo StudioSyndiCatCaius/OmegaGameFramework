@@ -11,6 +11,8 @@
 
 #include "LevelSequence.h"
 #include "LevelSequenceActor.h"
+#include "MovieSceneObjectBindingID.h"
+#include "MovieSceneSequenceID.h"
 #include "VisualLogger/VisualLogger.h"
 
 FFlowNodeLevelSequenceEvent UFlowNode_PlayLevelSequence::OnPlaybackStarted;
@@ -24,6 +26,7 @@ UFlowNode_PlayLevelSequence::UFlowNode_PlayLevelSequence(const FObjectInitialize
 	, bAlwaysRelevant(false)
 	, bApplyOwnerTimeDilation(true)
 	, LoadedSequence(nullptr)
+	, SequenceActor(nullptr)
 	, SequencePlayer(nullptr)
 	, CachedPlayRate(0)
 	, StartTime(0.0f)
@@ -130,8 +133,6 @@ void UFlowNode_PlayLevelSequence::CreatePlayer()
 	LoadedSequence = LoadAsset<ULevelSequence>(Sequence);
 	if (LoadedSequence)
 	{
-		ALevelSequenceActor* SequenceActor;
-
 		AActor* OwningActor = nullptr;
 		if (GetFlowAsset())
 		{
@@ -160,6 +161,45 @@ void UFlowNode_PlayLevelSequence::CreatePlayer()
 		// Finally create the player
 		SequencePlayer = UFlowLevelSequencePlayer::CreateFlowLevelSequencePlayer(this, LoadedSequence, PlaybackSettings, CameraSettings, TransformOriginActor, bReplicates, bAlwaysRelevant, SequenceActor);
 
+		// Apply Flow actor bindings to level sequence possessables
+		if (IsValid(SequenceActor) && IsValid(GetFlowAsset()) && IsValid(LoadedSequence->GetMovieScene()))
+		{
+			UMovieScene* MovieScene = LoadedSequence->GetMovieScene();
+
+			auto BindActor = [&](const FName& SlotName, AActor* Actor)
+			{
+				if (!IsValid(Actor))
+				{
+					return;
+				}
+				for (int32 i = 0; i < MovieScene->GetPossessableCount(); ++i)
+				{
+					const FMovieScenePossessable& Possessable = MovieScene->GetPossessable(i);
+					if (SlotName.ToString() == Possessable.GetName())
+					{
+						SequenceActor->SetBinding(
+							UE::MovieScene::FRelativeObjectBindingID(Possessable.GetGuid(), MovieSceneSequenceID::Root),
+							TArray<AActor*>{Actor}
+						);
+						break;
+					}
+				}
+			};
+
+			for (const auto& [SlotName, Asset] : ActorBindings_ByAsset)
+			{
+				if (IsValid(Asset))
+				{
+					BindActor(SlotName, GetFlowAsset()->GetActorByBinding_Asset(Asset, false));
+				}
+			}
+
+			for (const auto& [SlotName, NameKey] : ActorBindings_ByName)
+			{
+				BindActor(SlotName, GetFlowAsset()->GetActorByBinding_Name(NameKey));
+			}
+		}
+
 		if (SequencePlayer)
 		{
 			SequencePlayer->SetFlowEventReceiver(this);
@@ -180,7 +220,7 @@ void UFlowNode_PlayLevelSequence::ExecuteInput(const FName& PinName)
 		if (GetFlowSubsystem()->GetWorld() && LoadedSequence)
 		{
 			CreatePlayer();
-
+			
 			if (SequencePlayer)
 			{
 				TriggerOutput(TEXT("PreStart"));
@@ -286,6 +326,12 @@ void UFlowNode_PlayLevelSequence::Cleanup()
 		SequencePlayer->OnFinished.RemoveAll(this);
 		SequencePlayer->Stop();
 		SequencePlayer = nullptr;
+	}
+
+	if (IsValid(SequenceActor))
+	{
+		SequenceActor->Destroy();
+		SequenceActor = nullptr;
 	}
 
 	LoadedSequence = nullptr;

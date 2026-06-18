@@ -13,6 +13,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/UniformGridSlot.h"
+#include "Engine/Engine.h"
 
 #include "Widgets/Layout/Anchors.h"
 #include "Blueprint/WidgetLayoutLibrary.h"

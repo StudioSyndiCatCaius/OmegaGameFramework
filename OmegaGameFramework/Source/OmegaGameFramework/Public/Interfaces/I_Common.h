@@ -41,6 +41,8 @@ struct OMEGAGAMEFRAMEWORK_API FOmegaObjectGeneralMetaconfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") int32 seed = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") FOmegaClassNamedLists named_lists;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") FOmegaActorRelatives relative_assets;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") int32 GenericLevel;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") TEnumAsByte<EOmegaStarRank> StarRank;
 };
 
 

@@ -7,6 +7,8 @@
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "Subsystems/Subsystem_World.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/IAssetRegistry.h"
 
 TArray<FName> UOmegaFunctions_Entity::opts_entity_int32()
 {
@@ -116,6 +118,23 @@ FOmegaEntityID UOmegaFunctions_Entity::Conv_GUID_2_EntityID(FGuid Key)
 	return EntityID;
 }
 
+
+TArray<FOmegaEntityID> UOmegaFunctions_Entity::GetAllEntityIDs_FromDataAssetClass(TSubclassOf<UPrimaryDataAsset> Class)
+{
+	TArray<FOmegaEntityID> out;
+	if (!Class) return out;
+	const IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+	TArray<FAssetData> AssetList;
+	AssetRegistry.GetAssetsByClass(Class->GetClassPathName(), AssetList, true);
+	for (const FAssetData& Asset : AssetList)
+	{
+		if (UPrimaryDataAsset* loaded = Cast<UPrimaryDataAsset>(Asset.GetAsset()))
+		{
+			out.Add(Conv_DataAsset_2_EntityID(loaded));
+		}
+	}
+	return out;
+}
 
 UPrimaryDataAsset* UOmegaFunctions_Entity::Conv_EntityID_2_DataAsset(FOmegaEntityID Key)
 {

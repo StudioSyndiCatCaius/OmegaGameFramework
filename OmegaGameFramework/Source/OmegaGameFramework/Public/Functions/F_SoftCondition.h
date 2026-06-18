@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Templates/SubclassOf.h"
 #include "F_SoftCondition.generated.h"
 
 

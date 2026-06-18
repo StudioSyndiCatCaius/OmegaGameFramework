@@ -6,6 +6,7 @@
 #include "AssetRegistry/AssetData.h"
 #include "UObject/Class.h"
 #include "OmegaSettings.h"
+#include "UObject/UObjectIterator.h"
 #include "OmegaSettings_Assets.h"
 #include "Actors/OmegaGameplaySystem.h"
 #include "Functions/F_Equipment.h"
@@ -20,6 +21,7 @@
 #include "UObject/Package.h"
 #include "UObject/UObjectGlobals.h"
 #include "Widget/Menu.h"
+#include "Engine/Blueprint.h"
 
 
 TArray<FName> UOmegaFunctions_Asset::nameOptions_DataAsset()
@@ -59,26 +61,48 @@ TArray<FName> UOmegaFunctions_Asset::nameOptions_List_Asset()
     return out;
 }
 
-TArray<TSubclassOf<UObject>> UOmegaFunctions_Asset::GetAllChildClasses(TSubclassOf<UObject> ParentClass,
-    bool bIncludeDescendants, bool bIncludeParent)
-{TArray<TSubclassOf<UObject>> Result;
+TArray<TSubclassOf<UObject>> UOmegaFunctions_Asset::GetAllChildClasses(
+    TSubclassOf<UObject> ParentClass,
+    bool bIncludeDescendants,
+    bool bIncludeParent)
+{
+    TArray<TSubclassOf<UObject>> Result;
 
-    if (!ParentClass) return Result;
+    if (!ParentClass)
+    {
+        return Result;
+    }
 
     if (bIncludeParent)
-        Result.Add(ParentClass);
-
-    for (TObjectIterator<UClass> It; It; ++It)
     {
-        UClass* Class = *It;
-        if (!Class || Class == ParentClass.Get()) continue;
+        Result.Add(ParentClass);
+    }
 
-        bool bMatches = bIncludeDescendants
-            ? Class->IsChildOf(ParentClass)
-            : Class->GetSuperClass() == ParentClass.Get();
+    if (!bIncludeDescendants)
+    {
+        // Only direct children
+        for (TObjectIterator<UClass> It; It; ++It)
+        {
+            UClass* Class = *It;
+            if (Class && Class->GetSuperClass() == ParentClass.Get())
+            {
+                Result.Add(Class);
+            }
+        }
+    }
+    else
+    {
+        // All descendants (recommended)
+        TArray<UClass*> DerivedClasses;
+        GetDerivedClasses(ParentClass.Get(), DerivedClasses);
 
-        if (bMatches)
-            Result.Add(Class);
+        for (UClass* Class : DerivedClasses)
+        {
+            if (Class)
+            {
+                Result.Add(Class);
+            }
+        }
     }
 
     return Result;

@@ -2,7 +2,7 @@
 
 
 #include "Actors/Actor_WidgetDisplay.h"
-
+#include "Components/PrimitiveComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/SpringArmComponent.h"
 

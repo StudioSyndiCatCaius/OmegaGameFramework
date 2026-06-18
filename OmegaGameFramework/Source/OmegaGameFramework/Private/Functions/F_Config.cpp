@@ -5,6 +5,8 @@
 #include "Misc/FileHelper.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Interfaces/IPluginManager.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 static const TCHAR* IniFileName = TEXT("OmegaGameSettings.ini");
 

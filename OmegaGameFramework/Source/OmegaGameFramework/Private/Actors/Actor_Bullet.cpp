@@ -2,13 +2,14 @@
 
 
 #include "Actors/Actor_Bullet.h"
-
+#include "GameFramework/Pawn.h"
 #include "Actors/Actor_GameplayCue.h"
 #include "Components/SphereComponent.h"
 #include "Components/BillboardComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/Component_Combatant.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 
 AOmegaBulletActor::AOmegaBulletActor()
 {

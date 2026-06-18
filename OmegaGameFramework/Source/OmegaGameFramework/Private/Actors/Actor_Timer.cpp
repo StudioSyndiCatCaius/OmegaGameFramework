@@ -3,6 +3,7 @@
 #include "Actors/Actor_Timer.h"
 #include "Components/AudioComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Sound/SoundBase.h"
 #include "Functions/F_TagEvent.h"
 
 AOmegaTimerActor::AOmegaTimerActor()

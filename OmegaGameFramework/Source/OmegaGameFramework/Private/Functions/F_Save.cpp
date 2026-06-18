@@ -2,13 +2,14 @@
 
 
 #include "Functions/F_Save.h"
-
+#include "Engine/GameInstance.h"
 #include "OmegaSettings.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "HAL/PlatformProcess.h"
 #include "Misc/App.h"
+#include "Engine/World.h"
 
 UOmegaSaveBase* _getEntitySaveObj(const UObject* context,bool bGlobal)
 {

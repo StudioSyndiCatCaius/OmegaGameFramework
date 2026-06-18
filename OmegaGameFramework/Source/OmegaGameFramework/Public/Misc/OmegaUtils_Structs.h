@@ -5,10 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "JsonObjectWrapper.h"
+#include "Engine/DataAsset.h"
 #include "LuaValue.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "StructUtils/InstancedStruct.h"
 #include "Types/Struct_Bitflag.h"
+#include "Styling/SlateBrush.h"
 #include "OmegaUtils_Structs.generated.h"
 
 class UPrimaryDataAsset;

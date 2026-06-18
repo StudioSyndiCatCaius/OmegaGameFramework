@@ -2,7 +2,7 @@
 
 
 #include "Subsystems/Subsystem_Save.h"
-
+#include "Engine/GameViewportClient.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_World.h"
 #include "UnrealClient.h"
@@ -16,6 +16,7 @@
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
 #include "Engine/GameInstance.h"
+#include "Engine/Engine.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "ImageUtils.h"

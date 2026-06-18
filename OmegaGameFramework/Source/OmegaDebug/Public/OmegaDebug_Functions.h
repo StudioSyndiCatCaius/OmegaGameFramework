@@ -4,11 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Engine/TimerHandle.h"
+#include "TimerManager.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Engine/DataAsset.h"
+#include "Engine/DeveloperSettings.h"
+#include "Functions/F_GlobalScripting.h"
 #include "OmegaDebug_Functions.generated.h"
 
 
+class UOmegaGlobalScript;
 class UOmegaModifier_Save;
 class UOmegaSaveGame;
 class UOmegaQuest;
@@ -51,8 +57,8 @@ public:
 	
 	UPROPERTY(EditAnywhere,Category="Save")
 	FGameplayTagContainer AutoSaveTags;
-	UPROPERTY(EditAnywhere,Instanced,Category="DebugProfile")
-	TArray<UOmegaDebugProfileScript*> Scripts;
+	UPROPERTY(EditAnywhere,Category="DebugProfile")
+	FOmegaGlobalScripts Scripts;
 
 };
 

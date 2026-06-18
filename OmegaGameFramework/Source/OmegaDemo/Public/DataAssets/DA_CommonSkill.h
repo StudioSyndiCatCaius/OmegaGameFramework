@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DA_CommonBattleAction.h"
-#include "Functions/OmegaFunctions_CombatantFilter.h"
+#include "Functions/F_CombatantFilter.h"
 #include "Interfaces/I_Skill.h"
 
 #include "Misc/GeneralDataObject.h"
@@ -26,7 +26,8 @@ public:
 	virtual bool CanUseSkill_Implementation(UCombatantComponent* Combatant) override;
 	virtual void SetValue_Implementation(FLuaValue Value, const FString& Flag = "") override;
 	virtual FOmegaSkillConfig Skill_GetConfig_Implementation(UCombatantComponent* Combatant) override;
-	
+	virtual float Skill_CheckUtility_Implementation(UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets, FGameplayTag Tag) override;
+	virtual float Skill_CheckUtility_OneTarget_Implementation(UCombatantComponent* Combatant, UCombatantComponent* Target, FGameplayTag Tag) override;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags")
 	bool bAppendEffectsDescription;
@@ -42,24 +43,3 @@ public:
 	
 };
 
-
-// --------------------------------------------------------------------------------------------------------------
-// Buff attribute
-// --------------------------------------------------------------------------------------------------------------
-
-
-UCLASS(Blueprintable, BlueprintType,DisplayName="♎Demo - Skill (Buff Attribute)")
-class OMEGADEMO_API UOAsset_Skill_BuffAttribute : public UOmegaMinimalDataAsset, public IDataInterface_Skill, public IDataInterface_General
-{
-	GENERATED_BODY()
-	
-public:
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill") UOmegaAttribute* Attribute;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Skill") int32 BuffRank;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTag categoryTag;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FGameplayTagContainer gameplayTags;
-	
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
-	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& CategoryTag, FGameplayTagContainer& GameplayTags) override;
-};

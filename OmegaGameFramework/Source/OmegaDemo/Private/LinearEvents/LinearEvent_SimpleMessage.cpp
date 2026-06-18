@@ -2,6 +2,7 @@
 
 
 #include "LinearEvents/LinearEvent_SimpleMessage.h"
+#include "Materials/MaterialInterface.h"
 #include "Sound/SoundBase.h"
 #include "Components/AudioComponent.h"
 #include "FlowAsset.h"

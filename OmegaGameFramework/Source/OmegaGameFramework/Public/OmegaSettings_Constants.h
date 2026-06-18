@@ -7,8 +7,10 @@
 #include "UObject/Object.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/GeneralDataObject.h"
+#include "Engine/DeveloperSettings.h"
 #include "OmegaSettings_Constants.generated.h"
 
+class UOmegaDamageType;
 class AOmegaGameplaySystem;
 class UMenu;
 class UHUDLayer;
@@ -56,6 +58,8 @@ public:
 	TMap<FName,TSoftObjectPtr<UEquipmentSlot>> Constant_EquipSlots;
 	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Leveling")
 	TMap<FName,TSoftObjectPtr<UOmegaLevelingAsset>> Constant_Leveling;
+	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ DamageTypes")
+	TMap<FName,TSoftObjectPtr<UOmegaDamageType>> Constant_DamageTypes;
 
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// Field

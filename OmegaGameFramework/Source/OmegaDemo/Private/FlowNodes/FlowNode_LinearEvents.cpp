@@ -5,6 +5,7 @@
 
 #include "Event/OmegaLinearEventInstance.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Engine/World.h"
 
 
 UFlowNode_LinearEvents::UFlowNode_LinearEvents()

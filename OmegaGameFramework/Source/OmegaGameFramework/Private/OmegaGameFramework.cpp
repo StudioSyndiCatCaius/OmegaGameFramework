@@ -3,6 +3,7 @@
 #include "OmegaGameFramework.h"
 
 #include "OmegaSettings.h"
+#include "HAL/PlatformFileManager.h"
 
 
 DEFINE_LOG_CATEGORY(OmegaGameFramework);

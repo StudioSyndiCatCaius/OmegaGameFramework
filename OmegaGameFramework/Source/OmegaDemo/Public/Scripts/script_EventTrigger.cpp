@@ -1,13 +1,15 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #include "script_EventTrigger.h"
-
+#include "TimerManager.h"
 #include "FlowAsset.h"
 #include "FlowSubsystem.h"
 #include "OmegaSettings.h"
 #include "OmegaSettings_Demo.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Subsystems/Subsystem_World.h"
+#include "Engine/World.h"
+#include "GameFramework/Controller.h"
 
 
 void UEventTrigger_ActorOverlap::Local_OnOverlap(AActor* OverlappedActor, AActor* OtherActor)

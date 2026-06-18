@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "OmegaActors.h"
 #include "GameFramework/Actor.h"
+#include "Interfaces/I_ActorPreset.h"
 #include "Misc/GeneralDataObject.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "Types/Struct_CustomNamedList.h"
@@ -74,7 +75,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Environment") FOmegaClassNamedLists NamedLists;
 	// The environment preset currently applied to this actor.
 	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Preset")
-	UOmegaEnvironmentPreset* current_preset;
+	TScriptInterface<IDataInterface_Environment> current_preset;
 	// When true, the preset cannot be changed at runtime via Set_Preset.
 	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Lock Preset?")
 	bool lock_preset;
@@ -83,10 +84,13 @@ public:
 	FName SaveField_Preset="Environment";
 	// Applies the given environment preset, updating all managed components.
 	UFUNCTION(BlueprintCallable,Category="Environment")
-	void Set_Preset(UOmegaEnvironmentPreset* Preset);
+	void Set_Preset(TScriptInterface<IDataInterface_Environment> Preset);
+	
+	UFUNCTION(BlueprintCallable,Category="Environment",CallInEditor)
+	void Refresh();
 	// Returns the currently active environment preset.
 	UFUNCTION(BlueprintCallable,Category="Environment")
-	UOmegaEnvironmentPreset* Get_Preset(UOmegaEnvironmentPreset* Preset) const {if(current_preset){return current_preset;} return nullptr;}
+	TScriptInterface<IDataInterface_Environment> Get_Preset() const {if(current_preset){return current_preset;} return nullptr;}
 
 	// Default ambient sound played when the environment is active.
 	UPROPERTY(EditAnywhere,Category="Environment")
@@ -142,22 +146,11 @@ public:
 	void OnUpdated(AOmegaActorEnvironment* Actor) const;
 };
 
-// A data asset that enables/disables specific environment components and runs inline scripts when applied to an AOmegaActorEnvironment.
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaEnvironmentPreset : public UOmegaDataAsset
+USTRUCT(BlueprintType)
+struct FOmegaEnvironmentConfig
 {
 	GENERATED_BODY()
-
-
-	void L_SetCompVis(USceneComponent* comp, bool b)
-	{
-		if(comp)
-		{
-			comp->SetVisibility(b);
-		}
-	};
-
-public:
+	
 	// When true, the sky light component is visible when this preset is applied.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_SkyLight=true;
 	// When true, the directional light component is visible when this preset is applied.
@@ -170,10 +163,55 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_Clouds=true;
 	// When true, the skybox mesh component is visible when this preset is applied.
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Components") bool Use_Skybox=false;
+};
+
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Input Action") class UDataInterface_Environment : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_Environment
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|☁️Environment",DisplayName="Environment - GetConfig")
+	FOmegaEnvironmentConfig Environment_GetConfig(AOmegaActorEnvironment* Actor);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|☁️Environment",DisplayName="Environment - On Init")
+	int32 Environment_OnInit(AOmegaActorEnvironment* Actor);
+
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|☁️Environment",DisplayName="Environment - On BeginPlay")
+	int32 Environment_OnTagEvent(AOmegaActorEnvironment* Actor, FGameplayTag Event);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|☁️Environment",DisplayName="Environment - Saved Changes from Actor")
+	int32 Environment_OnSavedFromActor(AOmegaActorEnvironment* Actor);
+};
+
+
+// A data asset that enables/disables specific environment components and runs inline scripts when applied to an AOmegaActorEnvironment.
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaEnvironmentPreset : public UOmegaDataAsset, public IDataInterface_ActorPreset, public IDataInterface_Environment
+{
+	GENERATED_BODY()
+
+
+public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Environment",meta=(ShowOnlyInnerProperties))
+	FOmegaEnvironmentConfig EnvironmentConfig;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Environment")
+	TArray<UOmegaEnvironmentPreset*> InheritedPresetScripts;
 	// Inline scripts executed when this preset is applied to or saved from an environment actor.
 	UPROPERTY(Instanced,EditAnywhere,BlueprintReadWrite,Category="Environment")
 	TArray<UOmegaEnvironmentPresetScript*> Scripts;
 
+	TArray<UOmegaEnvironmentPresetScript*> L_GetScripts() const;
+	
 	UFUNCTION()
 	void Local_Update(AOmegaActorEnvironment* EnvironmentActor);
+	
+	virtual void ActorPreset_GetConfig_Implementation(TSubclassOf<AActor>& ActorClass, bool& bPreviewActor, bool& bAllowWorldDrop, bool& bPreviewThumbnailFromActor) override;
+	virtual bool ActorPreset_PreviewConstruct_Implementation(AActor* Actor) override;
+	
+	virtual FOmegaEnvironmentConfig Environment_GetConfig_Implementation(AOmegaActorEnvironment* Actor) override { return EnvironmentConfig;};
+	virtual int32 Environment_OnInit_Implementation(AOmegaActorEnvironment* Actor) override;
+	virtual int32 Environment_OnSavedFromActor_Implementation(AOmegaActorEnvironment* Actor) override;
 };

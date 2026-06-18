@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 
+#include "UObject/Interface.h"
 #include "F_Localization.generated.h"
 
 UINTERFACE(MinimalAPI)

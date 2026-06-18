@@ -9,10 +9,13 @@
 #include "Components/SplineComponent.h"
 #include "Functions/F_DynamicMesh.h"
 #include "Functions/F_Spline.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "GeometryScript/CollisionFunctions.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/Actor.h"
+#include "UObject/ConstructorHelpers.h"
 
 void AOmegaSplineActor::L_SetupMeshComp(UInstancedStaticMeshComponent* comp)
 {
@@ -38,7 +41,7 @@ AOmegaSplineActor::AOmegaSplineActor()
     DisplayPoint->SetStaticMesh(MatRef.Object);
     static ConstructorHelpers::FObjectFinder<UStaticMesh> MatBRef(TEXT("/OmegaGameFramework/Meshes/util/OmegaMesh_Pointer.OmegaMesh_Pointer"));
     DisplayLine->SetStaticMesh(MatBRef.Object);
-    static ConstructorHelpers::FObjectFinder<UMaterial> nmat_ref(TEXT("/OmegaGameFramework/Materials/Instances/Flats/M_Flat.M_Flat"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> nmat_ref(TEXT("/OmegaGameFramework/Materials/Instances/Flats/M_Flat.M_Flat"));
     DynaMat=UKismetMaterialLibrary::CreateDynamicMaterialInstance(this,nmat_ref.Object);
     DisplayLine->bIsEditorOnly=true;
     DisplayPoint->bIsEditorOnly=true;

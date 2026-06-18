@@ -205,6 +205,13 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Enemy_Type_Grunt,"Combat.Enemy.Type.Grunt");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Enemy_Type_Boss,"Combat.Enemy.Type.Boss");
 
 // --------------------------------------------------------------------------------------------------------
+// EnemyType
+// --------------------------------------------------------------------------------------------------------
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Dynamic_Scalar,"Combat.Dynamic.Scalar");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Dynamic_Asset,"Combat.Dynamic.Asset");
+
+// --------------------------------------------------------------------------------------------------------
 // Effects
 // --------------------------------------------------------------------------------------------------------
 
@@ -317,6 +324,11 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Physics_Event_Break,"Physics.Event.Break");
 // --------------------------------------------------------------------------------------------------------
 // Event
 // --------------------------------------------------------------------------------------------------------
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat,"Event.Combat");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Death,"Event.Combat.Death");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_Start,"Event.Combat.Turn.Start");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Combat_End,"Event.Combat.Turn.End");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Footstep,"Event.Physics.Footstep");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Event_Phys_Hit,"Event.Physics.Hit");

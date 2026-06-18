@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Slate/WidgetTransform.h"
+#include "Animation/AnimCurveTypes.h"
 #include "F_Math.generated.h"
 
 USTRUCT(BlueprintType)

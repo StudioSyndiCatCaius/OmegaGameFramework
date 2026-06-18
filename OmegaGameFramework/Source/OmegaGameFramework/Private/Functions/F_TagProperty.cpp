@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Functions/F_TagProperty.h"
+#include "Templates/SubclassOf.h"
 
 bool UOmegaFunctions_TagProperty::ObjectUsesInterface(UObject* Object)
 {

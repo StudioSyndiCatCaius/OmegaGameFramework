@@ -4,6 +4,8 @@
 #include "Functions/F_Animation.h"
 
 #include "GameFramework/Character.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
 
 
 UAnimInstance* UOmegaAnimationFunctions::TryGetAnimInstanceFromObject(UObject* Object,TSubclassOf<UAnimInstance> AnimClass,  bool& Result)

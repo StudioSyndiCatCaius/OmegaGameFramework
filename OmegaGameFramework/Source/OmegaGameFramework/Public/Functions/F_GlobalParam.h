@@ -7,6 +7,7 @@
 #include "Types/Struct_SoftParams.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Engine/DataAsset.h"
 #include "F_GlobalParam.generated.h"
 
 

@@ -9,6 +9,7 @@
 #include "Actors/OmegaGameplaySystem.h"
 #include "OmegaSettings_Constants.h"
 #include "Components/Component_Leveling.h"
+#include "DataAssets/DA_DamageType.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 
@@ -42,6 +43,7 @@ TArray<FName> UOmegaFunctions_Constants::opts_text(){ LOCAL_GETKEYS(Constant_Tex
 TArray<FName> UOmegaFunctions_Constants::opts_textList(){ LOCAL_GETKEYS(Constant_TextList)}
 TArray<FName> UOmegaFunctions_Constants::opts_level(){ LOCAL_GETKEYS(Constant_Level) }
 TArray<FName> UOmegaFunctions_Constants::opts_levelList(){LOCAL_GETKEYS(Constant_LevelList)}
+TArray<FName> UOmegaFunctions_Constants::opts_damageType(){LOCAL_GETKEYS(Constant_DamageTypes)}
 
 
 TSubclassOf<UPrimaryDataAsset> UOmegaFunctions_Constants::Class_DataAsset(FName Name)
@@ -144,6 +146,15 @@ UEquipmentSlot* UOmegaFunctions_Constants::EquipSlot(FName Name)
 UOmegaLevelingAsset* UOmegaFunctions_Constants::Leveling(FName Name)
 {
 	if (UOmegaLevelingAsset* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Leveling.FindOrAdd(Name).LoadSynchronous())
+	{
+		return da;
+	}
+	return nullptr;
+}
+
+UOmegaDamageType* UOmegaFunctions_Constants::DamageType(FName Name)
+{
+	if (UOmegaDamageType* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_DamageTypes.FindOrAdd(Name).LoadSynchronous())
 	{
 		return da;
 	}

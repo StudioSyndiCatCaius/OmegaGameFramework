@@ -2,15 +2,16 @@
 
 
 #include "Systems/sys_dialogue.h"
+#include "Misc/EngineVersionComparison.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 #include "Components/AudioComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 
 
-AGameplaySystemBASE_Dialogue::AGameplaySystemBASE_Dialogue()
+AOmegaDemoSystem_Dialogue::AOmegaDemoSystem_Dialogue()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 	CaptureComponent=CreateOptionalDefaultSubobject<USceneCaptureComponent2D>("SceneCapture");
 	CaptureComponent->SetupAttachment(RootComponent);
 	
@@ -27,18 +28,18 @@ AGameplaySystemBASE_Dialogue::AGameplaySystemBASE_Dialogue()
 	}
 }
 
-void AGameplaySystemBASE_Dialogue::BeginPlay()
+void AOmegaDemoSystem_Dialogue::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-void AGameplaySystemBASE_Dialogue::Tick(float DeltaTime)
+void AOmegaDemoSystem_Dialogue::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-bool AGameplaySystemBASE_Dialogue::Image_SetTexture(UTexture* Texture, int32 ImageIndex)
+bool AOmegaDemoSystem_Dialogue::Image_SetTexture(UTexture* Texture, int32 ImageIndex)
 {
 	if (!ImagesComponent) return false;
 	if (AInstanceActor_Image* imgA=Cast<AInstanceActor_Image>(ImagesComponent->GetInstanceByIndex(ImageIndex)))

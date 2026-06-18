@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PropertyBag.h"
+#include "StructUtils/PropertyBag.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "StructUtils/PropertyBag.h"
 #include "F_PropertyBag.generated.h"

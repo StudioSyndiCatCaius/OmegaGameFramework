@@ -8,6 +8,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Subsystems/Subsystem_Save.h"
 
 #include "F_Save.generated.h"
 

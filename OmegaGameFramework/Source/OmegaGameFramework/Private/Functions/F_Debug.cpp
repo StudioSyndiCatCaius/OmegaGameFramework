@@ -2,6 +2,8 @@
 
 
 #include "Functions/F_Debug.h"
+#include "Components/SceneComponent.h"
+#include "DrawDebugHelpers.h"
 
 
 void UOmegaFunctions_Debug::Draw_DebugComponent(USceneComponent* Component, FLinearColor Color, bool bAsSphere,

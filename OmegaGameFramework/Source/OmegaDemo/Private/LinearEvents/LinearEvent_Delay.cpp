@@ -2,6 +2,8 @@
 
 
 #include "LinearEvents/LinearEvent_Delay.h"
+#include "TimerManager.h"
+#include "Engine/World.h"
 
 void ULinearEvent_Delay::Native_Begin(const FString& Flag)
 {

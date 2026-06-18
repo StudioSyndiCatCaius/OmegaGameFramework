@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "F_Inventory.generated.h"
 
 

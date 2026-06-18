@@ -7,6 +7,7 @@
 #include "DataAssets/DA_Month.h"
 #include "DataAssets/DA_Day.h"
 #include "DataAssets/DA_DayPeriod.h"
+#include "DataAssets/DA_Weekday.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Save.h"
 
@@ -108,6 +109,32 @@ UOAsset_DayPeriod* UOmegaCalendarComponent::GetPeriod_Asset()
 		if(CalendarAsset->DayPeriods.IsValidIndex(GetCalendarData()->Period))
 		{
 			return CalendarAsset->DayPeriods[GetCalendarData()->Period];
+		}
+	}
+	return nullptr;
+}
+
+// =====================================================================================================================
+// WEEKDAY
+// =====================================================================================================================
+
+int32 UOmegaCalendarComponent::GetWeekday_Number()
+{
+	if(CalendarAsset && CalendarAsset->Weekdays.Num() > 0)
+	{
+		return GetCalendarData()->Day % CalendarAsset->Weekdays.Num();
+	}
+	return -1;
+}
+
+UOAsset_Weekday* UOmegaCalendarComponent::GetWeekday_Asset()
+{
+	if(CalendarAsset && CalendarAsset->Weekdays.Num() > 0)
+	{
+		int32 idx = GetCalendarData()->Day % CalendarAsset->Weekdays.Num();
+		if(CalendarAsset->Weekdays.IsValidIndex(idx))
+		{
+			return CalendarAsset->Weekdays[idx];
 		}
 	}
 	return nullptr;

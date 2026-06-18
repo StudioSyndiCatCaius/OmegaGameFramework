@@ -31,6 +31,9 @@ public:
 	UFUNCTION(BlueprintPure,Category="Omega|Save|Entity",DisplayName="GUID > Entity ID")
 	static FOmegaEntityID Conv_GUID_2_EntityID(FGuid Key);
 	
+	UFUNCTION(BlueprintPure,Category="Omega|Save|Entity",DisplayName="GUID > Entity ID")
+	static TArray<FOmegaEntityID> GetAllEntityIDs_FromDataAssetClass(TSubclassOf<UPrimaryDataAsset> Class);
+	
 	UFUNCTION(BlueprintPure,Category="Omega|Save|Entity",DisplayName="Entity ID > Data Asset")
 	static UPrimaryDataAsset* Conv_EntityID_2_DataAsset(FOmegaEntityID Key);
 	UFUNCTION(BlueprintPure,Category="Omega|Save|Entity",DisplayName="Entity ID >  Name")

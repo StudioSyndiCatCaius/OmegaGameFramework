@@ -13,6 +13,22 @@ TArray<FOmegaAttributeModifier> UAttributeMod_AddedMultiplier::GetModifierValues
 }
 
 
+float UDamageMod_ByAttributeScale::ModifyDamage_Implementation(UOmegaAttribute* Attribute,
+	UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType,
+	UObject* Context)
+{
+	const float* Scale = AttributeScales.Find(Attribute);
+	if (Scale)
+	{
+		const bool bPositive = BaseDamage >= 0.f;
+		if ((bPositive && bIfPositiveDamage) || (!bPositive && bIfNegativeDamage))
+		{
+			return BaseDamage * (*Scale);
+		}
+	}
+	return BaseDamage;
+}
+
 float UDamageMod_ByAttributePercent::ModifyDamage_Implementation(UOmegaAttribute* Attribute,
                                                                  UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType,
                                                                  UObject* Context)
@@ -63,4 +79,15 @@ TArray<UPrimaryDataAsset*> USkillSource_Common::GetSkills_Implementation(UCombat
 	}
 	
 	return out;
+}
+
+int32 UCombMod_EffectsOnEvent::Combatant_OnEvent_Implementation(UCombatantComponent* Combatant, FGameplayTag Event,
+	FOmegaCombatantEventMeta meta)
+{
+	if (Event==event)
+	{
+		UOmegaScriptedEffectFunctions::ApplyCustomScriptedEffectToCombatant(Effects, Combatant, Combatant);
+	}
+	
+	return 0;
 }

@@ -96,7 +96,7 @@ public:
 	
 	/** Sets the color and opacity of the specified brush */
 	UFUNCTION(BlueprintCallable, Category = "Appearance")
-    void SetColorAndOpacity(FLinearColor InColorAndOpacity, TEnumAsByte<EWheelBrushTarget> Target);
+    void SetColorAndOpacity(FLinearColor InColorAndOpacity, EWheelBrushTarget Target);
 
 	/*============================================================================\
 	|                          Misc Unreal Engine Slate                           |

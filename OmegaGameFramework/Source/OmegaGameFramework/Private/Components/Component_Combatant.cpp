@@ -14,6 +14,7 @@
 #include "Functions/F_Gambit.h"
 #include "Components/Component_Leveling.h"
 #include "Subsystems/Subsystem_World.h"
+#include "Engine/World.h"
 #include "Interfaces/I_Combatant.h"
 #include "DataAssets/DA_Attribute.h"
 #include "DataAssets/DA_DamageType.h"
@@ -72,6 +73,17 @@ TArray<UObject*> UCombatantComponent::GetAllModifiers()
 		}
 	}*/
 	
+	if (bUseEquipmentAsModifiers)
+	{
+		for (auto* a : Equipment_GetEquipList())
+		{
+			if (a)
+			{
+				out.Add(a);
+			}
+		}
+	}
+	
 	for(auto* TempMod : base)
 	{
 		if(TempMod && TempMod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
@@ -88,9 +100,6 @@ UCombatantComponent::UCombatantComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	
-	ModiferToggle_Inventory.bModify_Attributes=false;
-	ModiferToggle_Inventory.bModify_Damage=false;
-	ModiferToggle_Inventory.bModify_Skill=false;
 }
 
 void UCombatantComponent::BeginPlay()
@@ -168,7 +177,8 @@ void UCombatantComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 			}
 
 			UObject* Context = nullptr;
-			TSubclassOf<AOmegaAbility> Selected = SelectAbilityByUtility(Context, false);
+			FOmegaCombatantEventMeta inMeta;
+			TSubclassOf<AOmegaAbility> Selected = SelectAbilityByUtility(Context, inMeta,false);
 
 			if (!Selected) { return; }
 
@@ -183,7 +193,7 @@ void UCombatantComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 			}
 
 			bool bSuccess = false;
-			ExecuteAbility(Selected, Context, bSuccess);
+			ExecuteAbility(Selected, Context,inMeta, bSuccess);
 			if (bSuccess)
 			{
 				bSelectorAbilityActive = true;
@@ -437,7 +447,7 @@ AOmegaAbility* UCombatantComponent::GetAbility(TSubclassOf<AOmegaAbility> Abilit
 ////////////////////////////////////
 ////////// -- ABILITIES -- //////////
 ///////////////////////////////////
-AOmegaAbility* UCombatantComponent::ExecuteAbility(TSubclassOf<AOmegaAbility> AbilityClass, class UObject* Context, bool& bSuccess)
+AOmegaAbility* UCombatantComponent::ExecuteAbility(TSubclassOf<AOmegaAbility> AbilityClass, class UObject* Context, FOmegaCombatantEventMeta meta, bool& bSuccess)
 {
 	bSuccess = false;
 	bool bValidAbility=false;
@@ -446,6 +456,7 @@ AOmegaAbility* UCombatantComponent::ExecuteAbility(TSubclassOf<AOmegaAbility> Ab
 		if(AOmegaAbility* _ability = GetAbility(AbilityClass, bValidAbility))
 		{
 			_ability->ContextObject=Context;
+			_ability->LastMeta=meta;
 			bSuccess=_ability->Native_Execute();
 			return _ability;
 		}
@@ -695,12 +706,6 @@ void UCombatantComponent::AddSkills(TArray<UPrimaryDataAsset*> skill_list, bool 
 	{
 		AddSkill(i,Added);
 	}
-}
-
-UPrimaryDataAsset* UCombatantComponent::Skill_SelectByUtility(TArray<UCombatantComponent*> Targets,
-	FGameplayTag Tag, float RandomOffsetRange)
-{
-	return UCombatantFunctions::SelectSkillByUtility(this,GetAllSkills(),Targets,Tag,RandomOffsetRange);
 }
 
 void UCombatantComponent::SetCombatantTagsActive(FGameplayTagContainer GameplayTags, bool TagsActive)
@@ -1102,14 +1107,7 @@ float UCombatantComponent::L_GetAllModsOfAttribute(TArray<UObject*> Modifiers, f
 void UCombatantComponent::OnTagEvent_Implementation(FGameplayTag Event)
 {
 	IActorTagEventInterface::OnTagEvent_Implementation(Event);
-	
-	for (UPrimaryDataAsset* skl : GetAllSkills())
-	{
-		if (skl && skl->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
-		{
-			IDataInterface_Skill::Execute_Skill_OnActorEvent(skl,this,Event);
-		}
-	}
+	FireCombatantEvent(Event,FOmegaCombatantEventMeta());
 }
 
 
@@ -1424,6 +1422,17 @@ void UCombatantComponent::CombatantNotify(FName Notify, const FString& Payload)
 	OnCombatantNotify.Broadcast(this, Notify, Payload);
 }
 
+void UCombatantComponent::FireCombatantEvent(FGameplayTag Event, FOmegaCombatantEventMeta meta)
+{
+	for (auto* m : GetAllModifiers())
+	{
+		if (m && m->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+		{
+			IDataInterface_Combatant::Execute_Combatant_OnEvent(m, this, Event, meta);
+		}
+	}
+}
+
 
 ///////////////////
 /// Faction ////
@@ -1539,7 +1548,7 @@ void UCombatantComponent::OnInputAction_Begin_Implementation(APlayerController* 
 		if (Action==a->LinkedInputAction)
 		{
 			//OGF_Log::LogInfo("ABILITY - executing via input ::"+a->GetName());
-			a->Execute(this);	
+			a->Execute(this,FOmegaCombatantEventMeta());	
 		}
 		IDataInterface_InputAction::Execute_OnInputAction_Begin(a,Player,Action,axis);
 	}
@@ -1623,7 +1632,7 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::L_GetEntity_AssetsSaved()
 
 
 
-TSubclassOf<AOmegaAbility> UCombatantComponent::SelectAbilityByUtility(UObject*& AbilityContext, bool ShuffleFirst)
+TSubclassOf<AOmegaAbility> UCombatantComponent::SelectAbilityByUtility(UObject*& AbilityContext, FOmegaCombatantEventMeta meta, bool ShuffleFirst)
 {
 	AbilityContext = nullptr;
 
@@ -1648,7 +1657,7 @@ TSubclassOf<AOmegaAbility> UCombatantComponent::SelectAbilityByUtility(UObject*&
 
 		UObject* LocalContext = nullptr;
 		int32 Priority = 0;
-		const float UtilVal = Ab->UtilityCheck(this, LocalContext, Priority);
+		const float UtilVal = Ab->UtilityCheck(this, LocalContext,meta, Priority);
 
 		// Ignore anything at or below zero.
 		if (UtilVal <= 0.f) { continue; }
@@ -1687,7 +1696,7 @@ bool UCombatantComponent::RunGambit(UOmegaGambit_Asset* Gambit, bool bReplaceDef
 		if(GetActionDataFromGambit(Gambit, IncomingAbility,IncomingContext))
 		{
 			bool WasSuccess;
-			ExecuteAbility(IncomingAbility, IncomingContext,WasSuccess);
+			ExecuteAbility(IncomingAbility, IncomingContext,FOmegaCombatantEventMeta(),WasSuccess);
 			if(WasSuccess)
 			{
 				return true;
@@ -2039,6 +2048,7 @@ void UCombatantComponent::XP_Set(UOmegaLevelingAsset* Type, float amount, bool b
 void UCombatantComponent::XP_SetAll(TMap<UOmegaLevelingAsset*, float> XP, bool bAdded)
 {
 	TArray<UOmegaLevelingAsset*> temps;
+	XP.GetKeys(temps);
 	blockUpdateCall.Add(4020);
 	for (auto a : temps)
 	{
@@ -2141,7 +2151,55 @@ FGameplayTagContainer UCombatantComponent::AssetLink_GetActiveTags(UPrimaryDataA
 	}
 	return FGameplayTagContainer();
 }
-	
+
+void UCombatantComponent::GetDynamic_ScalarValue(FGameplayTag Tag, UObject* Context, float& Top, float& Total, float& Average)
+{
+	Top = 0.0f;
+	Total = 0.0f;
+	int32 lastPriority = 0;
+	int32 sourceCount = 0;
+
+	for (auto* mod : GetAllModifiers())
+	{
+		if (mod && mod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+		{
+			int32 priority = 0;
+			float value = IDataInterface_Combatant::Execute_Combatant_ModDynamicScalar(mod, this, Tag, Context, priority, true);
+			sourceCount++;
+			Total += value;
+			if (priority >= lastPriority)
+			{
+				lastPriority = priority;
+				Top = value;
+			}
+		}
+	}
+
+	Average = (sourceCount > 0) ? Total / static_cast<float>(sourceCount) : 0.0f;
+}
+
+UPrimaryDataAsset* UCombatantComponent::GetDynamic_AssetValue(FGameplayTag Tag, UObject* Context)
+{
+	UPrimaryDataAsset* result = nullptr;
+	int32 lastPriority = 0;
+
+	for (auto* mod : GetAllModifiers())
+	{
+		if (mod && mod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+		{
+			int32 priority = 0;
+			UPrimaryDataAsset* asset = IDataInterface_Combatant::Execute_Combatant_ModDynamicAsset(mod, this, Tag, Context, priority, true);
+			if (asset && priority >= lastPriority)
+			{
+				lastPriority = priority;
+				result = asset;
+			}
+		}
+	}
+
+	return result;
+}
+
 // ------------------------------------------------------------------------------------------
 // Param 
 // ------------------------------------------------------------------------------------------

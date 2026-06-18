@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/AudioComponent.h"
 #include "Functions/F_TagEvent.h"
 #include "GameFramework/Actor.h"
 #include "Actor_Timer.generated.h"

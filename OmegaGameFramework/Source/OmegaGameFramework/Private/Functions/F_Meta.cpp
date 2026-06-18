@@ -4,6 +4,7 @@
 #include "Functions/F_Meta.h"
 
 #include "Functions/F_CommandLine.h"
+#include "Templates/SubclassOf.h"
 
 UObject* UOmegaFunctions_Meta::GetFirstObjectOfClass(FOmegaCommonMeta source, TSubclassOf<UObject> Class,
 	bool bIncludeContext)

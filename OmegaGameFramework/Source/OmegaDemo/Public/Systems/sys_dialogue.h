@@ -4,13 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Actors/OmegaGameplaySystem.h"
+#include "Components/AudioComponent.h"
 #include "Components/Component_InstancedActor.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "sys_dialogue.generated.h"
 
 class UInstanceActorComponent;
 
 UCLASS(Abstract)
-class OMEGADEMO_API AGameplaySystemBASE_Dialogue : public AOmegaGameplaySystem
+class OMEGADEMO_API AOmegaDemoSystem_Dialogue : public AOmegaGameplaySystem
 {
 	GENERATED_BODY()
 
@@ -18,7 +20,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	AGameplaySystemBASE_Dialogue();
+	AOmegaDemoSystem_Dialogue();
 	
 	virtual void Tick(float DeltaTime) override;
 	

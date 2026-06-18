@@ -13,6 +13,9 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Engine/World.h"
+#include "Engine/StaticMesh.h"
+#include "GameFramework/Pawn.h"
 
 
 AOmegaPickupActor::AOmegaPickupActor()

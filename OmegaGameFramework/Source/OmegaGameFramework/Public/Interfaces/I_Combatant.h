@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "DataAssets/DA_Attribute.h"
+#include "Types/Struct_Combatant.h"
 #include "I_Combatant.generated.h"
 
 class UOmegaDamageType;
@@ -64,9 +65,17 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|💪Combatant",DisplayName="💪Combatant - Get Skills")
 	TArray<UPrimaryDataAsset*> GetSkills(UCombatantComponent* Combatant);
 	
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - On Event")
+	int32 Combatant_OnEvent(UCombatantComponent* Combatant, FGameplayTag Event, FOmegaCombatantEventMeta meta);
+	
 	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Damage Type Weight")
     UPrimaryDataAsset* GetDamageType_Weight(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, float& weight, int32& priority);
 
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Modify Dynamic (Scalar)")
+	float Combatant_ModDynamicScalar(UCombatantComponent* Combatant, FGameplayTag Tag, UObject* Context, int32& priority,bool bValidConsider);
+	
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Modify Dynamic (Asset)")
+	UPrimaryDataAsset* Combatant_ModDynamicAsset(UCombatantComponent* Combatant, FGameplayTag Tag, UObject* Context, int32& priority,bool bValidConsider);
 };
 
 

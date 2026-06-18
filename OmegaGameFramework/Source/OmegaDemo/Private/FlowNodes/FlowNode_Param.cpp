@@ -4,6 +4,7 @@
 #include "FlowNodes/FlowNode_Param.h"
 
 #include "FlowMacros.h"
+#include "Engine/World.h"
 #include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "Functions/F_GlobalParam.h"

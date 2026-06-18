@@ -7,6 +7,9 @@
 #include "Engine/DataAsset.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "UObject/Object.h"
+#include "Engine/DeveloperSettings.h"
+#include "Engine/Texture2D.h"
+#include "Materials/MaterialInterface.h"
 #include "OmegaSettings_Assets.generated.h"
 
 class UOmegaAssetHandlerConfig;

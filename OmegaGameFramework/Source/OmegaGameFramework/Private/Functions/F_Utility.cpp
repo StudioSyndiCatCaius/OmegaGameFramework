@@ -12,6 +12,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Engine/Engine.h"
+#include "Misc/CommandLine.h"
 
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Engine.h"

@@ -29,8 +29,6 @@ FOmegaCustomScriptedEffects UOAsset_CommonBattleAction::GetScriptedEffects_Imple
 		}
 		return FOmegaCustomScriptedEffects();
 	}
-	FOmegaCustomScriptedEffects ef;
-	ef.CustomEffects=Effects;
-	return ef;
+	return Effects;
 }
 

@@ -13,6 +13,8 @@
 #include "Functions/F_Config.h"
 #include "Functions/F_File.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
+#include "Sound/SoundWave.h"
 #include "Kismet/KismetInternationalizationLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"

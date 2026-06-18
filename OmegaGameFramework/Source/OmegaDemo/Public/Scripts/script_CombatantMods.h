@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Functions/F_ScriptedEffects.h"
 #include "Interfaces/I_Combatant.h"
 #include "script_CombatantMods.generated.h"
 
@@ -26,6 +27,25 @@ public:
 	
 };
 
+// ####################################################################################################
+// DAMAGE MODS
+// ####################################################################################################
+
+UCLASS(DisplayName="♎ C Mod (Damage) - Scale by Attribute")
+class OMEGADEMO_API UDamageMod_ByAttributeScale : public UOmegaScripted_CombatantModifier
+{
+	GENERATED_BODY()
+	
+public:
+	
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Mod") TMap<UOmegaAttribute*,float> AttributeScales;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Mod") bool bIfPositiveDamage=true;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Mod") bool bIfNegativeDamage=false;
+};
+
 
 UCLASS(DisplayName="♎ C Mod (Damage) - By Attribute Percent")
 class OMEGADEMO_API UDamageMod_ByAttributePercent : public UOmegaScripted_CombatantModifier
@@ -47,10 +67,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Mod") float ModifierScale;
 	
 };
-
-// ####################################################################################################
-// DAMAGE MODS
-// ####################################################################################################
 
 UCLASS(DisplayName="♎ C Mod (Damage) - Scale by Damage Type")
 class OMEGADEMO_API UDamageMod_ScaleByDamageType : public UOmegaScripted_CombatantModifier
@@ -89,4 +105,24 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Source") TArray<TScriptInterface<IDataInterface_Skill>> Skills;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Source") TMap<UPrimaryDataAsset*,int32> SkillsByLevel;
 	
+};
+
+
+// ####################################################################################################
+// SKILL SOURCE
+// ####################################################################################################
+
+UCLASS(DisplayName="♎ C Mod (On Event) - ApplyEffects")
+class OMEGADEMO_API UCombMod_EffectsOnEvent : public UOmegaScripted_CombatantModifier
+{
+	GENERATED_BODY()
+	
+public:
+	
+	virtual int32 Combatant_OnEvent_Implementation(UCombatantComponent* Combatant, FGameplayTag Event, FOmegaCombatantEventMeta meta) override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects",meta=(Categories="EVENT.Combat"))
+	FGameplayTag event;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects",meta=(ShowOnlyInnerProperties))
+	FOmegaCustomScriptedEffects Effects;
 };

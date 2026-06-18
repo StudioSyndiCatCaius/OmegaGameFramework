@@ -8,6 +8,7 @@
 #include "Functions/F_Common.h"
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/Subsystem_World.h"
+#include "Engine/World.h"
 
 #define LOC_SUB WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()
 

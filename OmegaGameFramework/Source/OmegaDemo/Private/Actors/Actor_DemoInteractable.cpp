@@ -25,6 +25,8 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "UObject/ConstructorHelpers.h"
 
 
 
@@ -84,9 +86,12 @@ AOmegaInteractable::AOmegaInteractable()
 			SpringArm->bDoCollisionTest=false;
 			Camera=CreateOptionalDefaultSubobject<UCameraComponent>("Camera");
 			Camera->FieldOfView=50;
-			static ConstructorHelpers::FObjectFinder<UStaticMesh> SOFT_CamMesh(TEXT("/OmegaGameFramework/Meshes/util/sm_UTIL_CameraMini.sm_UTIL_CameraMini"));
+
 #if WITH_EDITOR
-			Camera->SetCameraMesh(SOFT_CamMesh.Object);
+			if (UStaticMesh* ms=LoadObject<UStaticMesh>(nullptr,TEXT("/OmegaGameFramework/Meshes/util/sm_UTIL_CameraMini.sm_UTIL_CameraMini")))
+			{
+				Camera->SetCameraMesh(ms);	
+			}
 #endif
 			Camera->SetupAttachment(SpringArm);
 			SpringArm->TargetArmLength=300;

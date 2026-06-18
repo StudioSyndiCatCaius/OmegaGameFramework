@@ -7,6 +7,9 @@
 #include "OmegaTabWidgetTypes.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
+#include "Styling/ISlateStyle.h"
+#include "Styling/SlateWidgetStyleAsset.h"
+#include "Widgets/Layout/SBox.h"
 
 // ============================================================================
 // The Slate Widget

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Components/ActorComponent.h"
+#include "Engine/DataAsset.h"
 #include "Component_AssetSquad.generated.h"
 
 // Defines an identifiable squad group with an optional member cap. Used as a key to categorize asset assignments.

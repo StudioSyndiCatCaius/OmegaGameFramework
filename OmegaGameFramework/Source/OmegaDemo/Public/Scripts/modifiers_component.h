@@ -3,8 +3,12 @@
 #pragma once
 
 #include "Functions/F_Component.h"
+#include "Materials/MaterialInterface.h"
 #include "modifiers_component.generated.h"
 
+class UOmegaBodyType;
+class USkeletalMesh;
+class UMaterialInterface;
 
 UCLASS(DisplayName="(🧍 Skeletal Mesh Mod) Mesh")
 class OMEGADEMO_API USkelMeshMod_Mesh : public UComponentModScript_SkeletalMesh
@@ -12,7 +16,7 @@ class OMEGADEMO_API USkelMeshMod_Mesh : public UComponentModScript_SkeletalMesh
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") USkeletalMesh* SkeletalMesh;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TSoftObjectPtr<USkeletalMesh> SkeletalMesh;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TArray<UMaterialInterface*> Materials;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TMap<FName,UMaterialInterface*> Materials_BySlot;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod",meta=(InlineEditConditionToggle)) bool bEditLocation;
@@ -24,3 +28,18 @@ public:
 	
 	virtual bool OnAppliedToComponent_Implementation(USkeletalMeshComponent* Component) const override;
 };
+
+UCLASS(DisplayName="(🧍 Skeletal Mesh Mod) Body Type Generated")
+class OMEGADEMO_API USkelMeshMod_BodyTypeGenerate : public UComponentModScript_SkeletalMesh
+{
+	GENERATED_BODY()
+public:
+	
+	virtual bool OnAppliedToComponent_Implementation(USkeletalMeshComponent* Component) const override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TSoftObjectPtr<UOmegaBodyType> BodyType;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod",meta=(EditCondition="!UseActorSeed")) int32 Seed;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") bool UseActorSeed;
+
+};
+

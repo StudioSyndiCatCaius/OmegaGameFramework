@@ -46,6 +46,8 @@
 #include "Subsystems/Subsystem_Save.h"
 #include "Types/OmegaActorInstanceMetadata.h"
 #include "Widget/HUDLayer.h"
+#include "Components/PrimitiveComponent.h"
+#include "TimerManager.h"
 
 
 void UOmegaSubsystem_World::Initialize(FSubsystemCollectionBase& Colection)
@@ -85,12 +87,21 @@ void UOmegaSubsystem_World::OnWorldBeginPlay(UWorld& InWorld)
 		}
 	}
 	
-	
-	for(auto* TempState : _sys->GetActiveStoryStates())
+	if (_sys)
 	{
-		for(auto* TempScript : TempState->Scripts)
+		for(auto* TempState : _sys->GetActiveStoryStates())
 		{
-			TempScript->OnLevelChange(_sys, TempState,level_name);
+			if (TempState)
+			{
+				for(auto* TempScript : TempState->Scripts)
+				{
+					if (TempScript)
+					{
+						TempScript->OnLevelChange(_sys, TempState,level_name);
+					}
+				}	
+			}
+		
 		}
 	}
 	
@@ -286,18 +297,6 @@ TArray<UCombatantComponent*> UOmegaSubsystem_World::GetAllCombatants()
 	return OutCombatants;
 }
 
-
-TArray<UCombatantComponent*> UOmegaSubsystem_World::RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass,
-	UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants)
-{
-	TArray<UCombatantComponent*> OutCombatants;
-	if(FilterClass)
-	{
-		
-		OutCombatants = NewObject<UCombatantFilter>(this, FilterClass)->FilterCombatants(Instigator, Combatants);
-	}
-	return OutCombatants;
-}
 
 UOmegaGameplayMessage* UOmegaSubsystem_World::Message_Send(UObject* Instigator, FText Text, FGameplayTag CategoryTag,
 	FOmegaGameplayMessageMeta meta)
@@ -856,6 +855,7 @@ AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bResum
 		if (AOmegaQuestInstance* new_inst=GetWorld()->SpawnActorDeferred<AOmegaQuestInstance>(AOmegaQuestInstance::StaticClass(),FTransform()))
 		{
 			new_inst->QuestAsset=q;
+			new_inst->WM=this;
 #if WITH_EDITOR
 			new_inst->SetActorLabel("QuestInst__"+q->GetName());
 #endif
@@ -1435,13 +1435,7 @@ TArray<UZoneEntityComponent*> AOmegaWorldManager::GetRegisteredZoneEntities_OfLe
 void AOmegaWorldManager::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	if (UPrimaryDataAsset* da=OGF_CFG()->GlobalEntityIdentity.LoadSynchronous())
-	{
-		if (ActorID)
-		{
-			ActorID->SetIdentitySourceAsset(da);
-		}
-	}
+	
 }
 
 FOmegaActorInstanceMetadata AOmegaWorldManager::GetActorMetadata(AActor* Actor) const

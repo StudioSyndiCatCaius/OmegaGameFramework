@@ -1,11 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Actors/Actor_Openable.h"
-
+#include "Animation/AnimSequence.h"
 #include "Components/BoxComponent.h"
 #include "Components/Component_Inventory.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/Pawn.h"
+#include "Animation/AnimInstance.h"
 
 void UOmegaOpenableStyle::Apply(AOmegaOpenableActor* Actor)
 {

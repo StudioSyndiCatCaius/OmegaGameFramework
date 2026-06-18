@@ -9,6 +9,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Algo/Sort.h"
 #include "Statics/OMEGA_File.h"
+#include "Misc/Paths.h"
 
 void ULuaSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {

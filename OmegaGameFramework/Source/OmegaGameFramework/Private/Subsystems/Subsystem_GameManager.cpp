@@ -31,6 +31,7 @@
 #include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_World.h"
+#include "TimerManager.h"
 
 
 UOmegaSaveBase* UOmegaSubsystem_GameInstance::L_GetSaveObject(bool bGlobal) const

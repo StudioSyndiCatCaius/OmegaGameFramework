@@ -145,7 +145,7 @@ void AOmegaAbility::Local_SetInputEnabled(bool Enabled)
 	}
 }
 
-void AOmegaAbility::Native_AbilityActivated(UObject* Context)
+void AOmegaAbility::Native_AbilityActivated(UObject* Context, FOmegaCombatantEventMeta meta)
 {
 	f_activeTickAccumulator = ActiveTickFrequency;
 	if(Config)
@@ -162,7 +162,7 @@ void AOmegaAbility::Native_AbilityActivated(UObject* Context)
 	{
 		EnableInput(GetAbilityOwnerPlayer());
 	}
-	AbilityActivated(Context);
+	AbilityActivated(Context,meta);
 }
 
 void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
@@ -273,7 +273,7 @@ void AOmegaAbility::Tick(float DeltaTime)
 
 void AOmegaAbility::L_OnInput_Start(FVector Value)
 {
-	Execute(nullptr);
+	Execute(nullptr,LastMeta);
 }
 
 void AOmegaAbility::L_OnInput_End(FVector Value)
@@ -283,14 +283,15 @@ void AOmegaAbility::L_OnInput_End(FVector Value)
 
 
 
-float AOmegaAbility::UtilityCheck_Implementation(const UCombatantComponent* Combatant, UObject*& ExecuteContext, int32& Priority)
+float AOmegaAbility::UtilityCheck_Implementation(const UCombatantComponent* Combatant, UObject*& ExecuteContext,
+	FOmegaCombatantEventMeta& meta, int32& Priority)
 {
 	ExecuteContext = nullptr;
 	Priority = 0;
 	return 0.f;
 }
 
-bool AOmegaAbility::Execute(UObject* Context)
+bool AOmegaAbility::Execute(UObject* Context, FOmegaCombatantEventMeta meta)
 {
 	// Success if:
 	if(Native_CanActivate(Context))
@@ -310,7 +311,7 @@ bool AOmegaAbility::Execute(UObject* Context)
 		{
 			GetAbilityActivationTimeline()->Play();
 		}
-		Native_AbilityActivated(Context);
+		Native_AbilityActivated(Context, meta);
 		return true;
 	}
 	return false;
@@ -318,7 +319,7 @@ bool AOmegaAbility::Execute(UObject* Context)
 
 bool AOmegaAbility::Native_Execute() 
 {
-	return Execute(ContextObject);
+	return Execute(ContextObject,LastMeta);
 }
 
 void AOmegaAbility::Native_Start()
@@ -515,6 +516,10 @@ FName AOmegaAbility::GetSubstate_NameFromIndex(int32 index) const
 	return FName();
 }
 
+void AOmegaAbility::AbilityActivated_Implementation(UObject* Context, FOmegaCombatantEventMeta meta)
+{
+}
+
 void AOmegaAbility::ActivatedTick_Implementation(float DeltaTime)
 {
 }
@@ -523,9 +528,6 @@ void AOmegaAbility::AbilityFinished_Implementation(bool Cancelled)
 {
 }
 
-void AOmegaAbility::AbilityActivated_Implementation(class UObject* Context)
-{
-}
 
 
 void AOmegaAbility::Local_TriggerEvents(TArray<FName> Events)

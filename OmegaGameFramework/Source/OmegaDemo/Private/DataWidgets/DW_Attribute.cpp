@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Functions/F_Common.h"
 #include "Widget/WG_DynamicProgressBar.h"
+#include "Engine/HitResult.h"
 
 
 void UDataWidgetBase_Attribute::local_Update()

@@ -44,6 +44,23 @@ struct FOmegaGrid3DPathfindMeta
 };
 
 
+UINTERFACE(DisplayName="♎Actor🔵 - ♟️Grid3D Pathfind") class UDataInterface_Grid3DPathfind : public UInterface
+{
+	GENERATED_BODY()
+public:
+};
+
+class OMEGAGAMEFRAMEWORK_API IDataInterface_Grid3DPathfind
+{
+	GENERATED_BODY()
+public:
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|♟️Grid3D Pathfind",DisplayName="♟️Grid3D Pathfind - Valid?")
+	bool Grid3D_ValidPathfind(AOmegaGrid3D_Tile* Tile);
+	
+};
+
+
 // ===============================================================================================================================
 // Tilemap Component
 // ===============================================================================================================================

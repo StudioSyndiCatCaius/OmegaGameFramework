@@ -4,6 +4,7 @@
 #include "LinearEvents/LinearEvent_EditSaveTags.h"
 
 #include "Subsystems/Subsystem_Save.h"
+#include "Engine/World.h"
 
 void ULinearEvent_EditSaveTags::Native_Begin(const FString& Flag)
 {

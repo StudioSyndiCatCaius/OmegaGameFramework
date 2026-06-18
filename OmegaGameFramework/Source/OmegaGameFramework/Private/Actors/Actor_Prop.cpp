@@ -4,10 +4,14 @@
 
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/SkeletalMesh.h"
 #include "Components/BoxComponent.h"
 #include "Components/Component_Saveable.h"
 #include "Components/StateTreeComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 void UOmegaProp_Preset::L_setBoundsFromComp(UBoxComponent* bounds, USceneComponent* comp,FBoxSphereBounds BoxBounds)
 {

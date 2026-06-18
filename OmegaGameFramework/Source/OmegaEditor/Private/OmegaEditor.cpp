@@ -21,8 +21,10 @@
 #include "Customization_CustomNamedList.h"
 #include "Customization_OmegaLinearChoices.h"
 #include "Customization_Bitflags.h"
+#include "Customization_ODA.h"
 #include "OmegaObjectCustomization.h"
 #include "Misc/GeneralDataObject.h"
+#include "PropertyEditorModule.h"
 #include "OmegaActorDetailsCustomization.h"
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
@@ -340,6 +342,11 @@ void FOmegaEditor::StartupModule()
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOmegaEntityIDCustomization::MakeInstance)
 	);
 
+	// Register the General-pinned / category-filterable layout for all Omega Minimal Data Assets
+	PropertyModule.RegisterCustomClassLayout(
+		UOmegaMinimalDataAsset::StaticClass()->GetFName(),
+		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaDataAssetCustomization::MakeInstance));
+
 	PropertyModule.NotifyCustomizationModuleChanged();
 	
 	// ===================================================================================================
@@ -433,7 +440,7 @@ void FOmegaEditor::ShutdownModule()
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaActorRelatives::StaticStruct()->GetFName());
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaEntityID::StaticStruct()->GetFName());
 		
-		PropertyModule.UnregisterCustomPropertyTypeLayout(UOmegaMinimalDataAsset::StaticClass()->GetFName());
+		PropertyModule.UnregisterCustomClassLayout(UOmegaMinimalDataAsset::StaticClass()->GetFName());
 
 		PropertyModule.UnregisterCustomClassLayout(UObject::StaticClass()->GetFName());
 		PropertyModule.UnregisterCustomClassLayout(AActor::StaticClass()->GetFName());

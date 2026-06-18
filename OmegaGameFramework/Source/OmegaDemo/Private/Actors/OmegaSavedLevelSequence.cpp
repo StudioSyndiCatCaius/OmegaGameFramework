@@ -22,7 +22,6 @@ AOmegaSavedLevelSequence::AOmegaSavedLevelSequence()
 void AOmegaSavedLevelSequence::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	if (!GUID.IsValid()) { GUID=FGuid::NewGuid(); }
 }
 
 
@@ -59,20 +58,11 @@ void AOmegaSavedLevelSequence::Tick(float DeltaTime)
 	}
 }
 
-FOmegaEntity* AOmegaSavedLevelSequence::L_GetEntity() const
-{
-	if (GetGameInstance())
-	{
-		return &OGF_Subsystems::oSave(this)->ActiveSaveData->Entities.Entities_Guid.FindOrAdd(GUID);
-	}
-	return nullptr;
-}
-
 void AOmegaSavedLevelSequence::SetSavedState(bool bState)
 {
 	if (GetSavedState()!=bState)
 	{
-		UOmegaFunctions_GlobalVars::Guidflag_Set(this,GUID,FLAG_SAVEDSEQ_FINISHED,bState);
+		SetGuidflagValue(FLAG_SAVEDSEQ_FINISHED,bState);
 		OnStateChange.Broadcast(this,bState);
 		if (LevelSequenceActor)
 		{
@@ -93,7 +83,7 @@ void AOmegaSavedLevelSequence::SetSavedState(bool bState)
 
 bool AOmegaSavedLevelSequence::GetSavedState()
 {
-	return  UOmegaFunctions_GlobalVars::Guidflag_Get(this,GUID,FLAG_SAVEDSEQ_FINISHED);
+	return GetGuidflagValue(FLAG_SAVEDSEQ_FINISHED);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

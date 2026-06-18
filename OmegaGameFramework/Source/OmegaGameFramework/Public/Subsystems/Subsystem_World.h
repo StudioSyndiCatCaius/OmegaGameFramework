@@ -299,9 +299,6 @@ public:
 	FOnCombatantDamaged OnCombatantDamaged;
 	UFUNCTION()
 	void Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
-
-	UFUNCTION(BlueprintCallable, Category="OmegaGameplaySubsystem")
-	TArray<UCombatantComponent*> RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass, UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);
 	
 	// ────────────────────────────────────────────────────────────────────
 	// Quest

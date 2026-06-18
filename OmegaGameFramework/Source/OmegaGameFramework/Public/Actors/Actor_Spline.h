@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "Actor_Spline.generated.h"
 
 class UInstancedStaticMeshComponent;

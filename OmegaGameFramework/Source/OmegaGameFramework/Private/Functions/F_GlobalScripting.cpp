@@ -7,6 +7,7 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_GameManager.h"
+#include "Engine/Engine.h"
 
 FString UOmegaGlobalScriptBASE::GetFunctionCall_Name() const
 {

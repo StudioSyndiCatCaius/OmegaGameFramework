@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Functions/F_Component.h"
 #include "GameFramework/Actor.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Actor_Openable.generated.h"
 
 class UBoxComponent;

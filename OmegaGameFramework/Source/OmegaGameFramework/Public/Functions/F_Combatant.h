@@ -24,17 +24,14 @@ enum EOmegaCombatTarget
 	Target_AllTargets			UMETA(DisplayName = "All Targets"),
 };
 
-UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UCombatantFilter : public UObject
+UENUM(BlueprintType)
+enum EOmegaSkillUtilityTarget : uint8
 {
-	GENERATED_BODY()
-	
-public:
-	
-	UFUNCTION(BlueprintImplementableEvent, Category="CombatantFilter")
-	const TArray<UCombatantComponent*> FilterCombatants(UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);
-
+	SkillUtilTarg_Multi			UMETA(DisplayName = "Mulit Target"),
+	SkillUtilTarg_SingleAverage	UMETA(DisplayName = "Single Target Average"),
 };
+
+
 
 //---------------------------------------------------------------------------------------------------------------------
 // Utility
@@ -86,9 +83,13 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Can Combatant Use Skill?")
 	static bool CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject, bool bCheckAttributeCost=true);
 	
+	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Get Skill Utility Score")
+	static void GetSkillUtilityScore(UCombatantComponent* Combatant, UPrimaryDataAsset* Skill, TArray<UCombatantComponent*> Targets,
+		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, float& SingleScore,float& SingleScoreAverage,float& MultiScore);
+	
 	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Select Skill by Utility")
 	static UPrimaryDataAsset* SelectSkillByUtility(UCombatantComponent* Combatant, TArray<UPrimaryDataAsset*> Skills, TArray<UCombatantComponent*> Targets,
-		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, float RandomOffsetRange);
+		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, TEnumAsByte<EOmegaSkillUtilityTarget> UtilityTarget, float RandomOffsetRange);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Combatant", DisplayName="🤜Combatant - Select Combatant (Highest Attribute Value)")
 	static UCombatantComponent* GetCombatantWithHighestAttributeValue(TArray<UCombatantComponent*> Combatants, UOmegaAttribute* Attribute, bool bUseCurrentValue);
@@ -113,9 +114,19 @@ public:
     	EOmegaAttributeValueType ValueType,TEnumAsByte<EOmegaComparisonMethod> Method, bool& Outcome);
 	
 	//-----------------------------------------------------------------------------------
-	// Utility
+	// Copy
 	//-----------------------------------------------------------------------------------
-
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current Attributes")
+	static void CopyCurrentAttributes(UCombatantComponent* From, UCombatantComponent* To);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current XP")
+	static void CopyCurrentXP(UCombatantComponent* From, UCombatantComponent* To);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current Inventory")
+	static void CopyCurrentInventory(UCombatantComponent* From, UCombatantComponent* To);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current Equipment")
+	static void CopyCurrentEquipment(UCombatantComponent* From, UCombatantComponent* To);
 	
 	//-----------------------------------------------------------------------------------
 	// Filter

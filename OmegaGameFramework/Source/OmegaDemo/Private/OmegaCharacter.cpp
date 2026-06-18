@@ -27,6 +27,8 @@
 #include "DataAssets/DA_Faction.h"
 #include "DataAssets/DA_Zone.h"
 #include "Functions/F_Common.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Materials/Material.h"
 
 class ULuaWorldSubsystem;
 
@@ -156,8 +158,11 @@ AOmegaCharacter::AOmegaCharacter()
 
 	GetCapsuleComponent()->ShapeColor=FColor::Cyan;
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MatRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male"));
-	GetMesh()->SetSkeletalMeshAsset(MatRef.Object);
+	
+	if (USkeletalMesh* _mesh=LoadObject<USkeletalMesh>(nullptr,TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male")))
+	{
+		GetMesh()->SetSkeletalMeshAsset(_mesh);	
+	}
 	
 	Tools=CreateOptionalDefaultSubobject<UOmegaToolComponent>(TEXT("Tools"));
 

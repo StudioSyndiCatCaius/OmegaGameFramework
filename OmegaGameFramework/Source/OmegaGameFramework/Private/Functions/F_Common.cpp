@@ -5,6 +5,8 @@
 //#include "OmegaGameFramework.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Components/PrimitiveComponent.h"
+#include "Engine/Engine.h"
 //#include "EngineUtils.h"
 #include "JsonBlueprintFunctionLibrary.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -202,6 +204,32 @@ TArray<AOmegaInstancedEntity*> UOmegaGameFrameworkBPLibrary::GetGlobalEntityInst
 		}
 	}
 	return out;
+}
+
+void UOmegaGameFrameworkBPLibrary::SplitGlobalCurrentSquadEntityInst_AtIndex(UObject* WorldContextObject,
+		TArray<AOmegaInstancedEntity*>& Before, TArray<AOmegaInstancedEntity*>& After, int32 index)
+{
+	Before.Empty();
+	After.Empty();
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
+	{
+		if (UAssetSquad_Identity* Squad=m->AssetSquad->CurrentSquad_Get())
+		{
+			TArray<UPrimaryDataAsset*> members=m->AssetSquad->GetSquadMembers(Squad);
+			for (int32 i=0; i<members.Num(); i++)
+			{
+				if (auto* e=GetGlobalEntityInstance(WorldContextObject,members[i]))
+				{
+					(i < index ? Before : After).Add(e);
+				}
+			}
+		}
+	}
+}
+
+void UOmegaGameFrameworkBPLibrary::SplitGlobalCurrentSquadEntityInst_AtConst(UObject* WorldContextObject, TArray<AOmegaInstancedEntity*>& Before, TArray<AOmegaInstancedEntity*>& After, FName Constant)
+{
+	SplitGlobalCurrentSquadEntityInst_AtIndex(WorldContextObject,Before, After, UOmegaFunctions_Constants::Int(Constant));
 }
 
 
@@ -1619,10 +1647,10 @@ void UOmegaGameFrameworkBPLibrary::CombineJsonObjects(const TArray<FJsonObjectWr
 
 		for (auto It = JsonObjectRoot->Values.CreateConstIterator(); It; ++It)
 		{
-			const FString& Key = It.Key();
+			//const FString& Key = It.Key();
 			const TSharedPtr<FJsonValue>& Value = It.Value();
 			
-			CombinedObject.JsonObject->SetField(Key,Value);
+			//CombinedObject.JsonObject->SetField(Key,Value);
 		}
 	}
 }
@@ -1725,6 +1753,7 @@ IDataInterface_General::Execute_GetGeneralDataText(Object,FGameplayTag(),_n,_d,_
 FOmegaBitflagsBase& b=_meta.bitflags; \
 FGuid& g=_meta.guid; \
 int32& s=_meta.seed; \
+int32& gLvl=_meta.GenericLevel; \
 FOmegaClassNamedLists& nl=_meta.named_lists; \
 
 FGuid UOmegaGameFrameworkBPLibrary::GetObjectGUID(UObject* Object)
@@ -1734,6 +1763,9 @@ FGuid UOmegaGameFrameworkBPLibrary::GetObjectGUID(UObject* Object)
 		GENERAL_INTERFACE_GETMETA()
 		return g;
 	}
+	if (AOmegaActorBASE* actor=Cast<AOmegaActorBASE>(Object)) { return actor->GameplayGuid; }
+	if (AOmegaPawnBASE* actor=Cast<AOmegaPawnBASE>(Object)) { return actor->GameplayGuid; }
+	if (AOmegaBaseCharacter* actor=Cast<AOmegaBaseCharacter>(Object)) { return actor->GameplayGuid; }
 	return  FGuid();
 }
 
@@ -1747,6 +1779,42 @@ int32 UOmegaGameFrameworkBPLibrary::GetObjectSeed(UObject* Object)
 		return s;
 	}
 	return 0;
+}
+
+int32 UOmegaGameFrameworkBPLibrary::GetObjectGenericLevel(UObject* Object)
+{
+	
+	if(Object_UsesCommonInterface(Object))
+	{
+		GENERAL_INTERFACE_GETMETA()
+		return gLvl;
+	}
+	return 0;
+}
+
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjects_ByGenericLevel(TArray<UObject*> In, int32 Level,
+	TEnumAsByte<EOmegaComparisonMethod> Method)
+{
+	TArray<UObject*> out;
+	for(auto* temp_object : In)
+	{
+		if(temp_object)
+		{
+			int32 gotLvl=GetObjectGenericLevel(temp_object);
+			bool bMatch = false;
+			switch (Method)
+			{
+			case Compare_Equal:      bMatch = gotLvl == Level; break;
+			case Compare_Great:      bMatch = gotLvl >  Level; break;
+			case Compare_Less:       bMatch = gotLvl <  Level; break;
+			case Compare_GreatEqual: bMatch = gotLvl >= Level; break;
+			case Compare_LessEqual:  bMatch = gotLvl <= Level; break;
+			default: break;
+			}
+			if (bMatch) { out.Add(temp_object); }
+		}
+	}
+	return out;
 }
 
 #undef GENERAL_INTERFACE_GETMETA

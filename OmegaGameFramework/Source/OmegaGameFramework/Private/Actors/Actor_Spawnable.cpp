@@ -18,6 +18,7 @@
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Engine.h"
 #include "Types/Struct_SpawnableTypeConfig.h"
+#include "Materials/Material.h"
 
 
 TSubclassOf<AActor> AOmegaActorSpawnable::GetSpawnableClass()

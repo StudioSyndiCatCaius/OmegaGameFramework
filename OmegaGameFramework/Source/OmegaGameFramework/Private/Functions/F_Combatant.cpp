@@ -13,10 +13,13 @@
 #include "GameFramework/Pawn.h"
 #include "Functions/F_Utility.h"
 #include "GameFramework/Character.h"
+#include "Engine/World.h"
 #include "Misc/Attribute.h"
 #include "Interfaces/I_Combatant.h"
 #include "Interfaces/I_Skill.h"
 #include "Types/Struct_Combatant.h"
+
+
 
 
 TArray<UCombatantComponent*> UCombatantFunctions::FilterCombatantsByTags(
@@ -444,9 +447,31 @@ bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, U
 	return false;
 }
 
+void UCombatantFunctions::GetSkillUtilityScore(UCombatantComponent* Combatant, UPrimaryDataAsset* Skill,
+	TArray<UCombatantComponent*> Targets, FGameplayTag Tag, float& SingleScore,float& SingleScoreAverage, float& MultiTargetScore)
+{
+	if (!Skill || !Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass())) return;
+	if (!IDataInterface_Skill::Execute_CanUseSkill(Skill, Combatant)) return;
+	
+	float targetNum = 0;
+	
+	for (UCombatantComponent* Target : Targets)
+	{
+		if (Target)
+		{
+			float score=IDataInterface_Skill::Execute_Skill_CheckUtility_OneTarget(Skill, Combatant, Target, Tag);
+			targetNum+=1;
+			SingleScore+=score;
+		}
+	}
+	
+	MultiTargetScore=IDataInterface_Skill::Execute_Skill_CheckUtility(Skill, Combatant, Targets, Tag);
+	SingleScoreAverage=SingleScore/targetNum;
+}
+
 UPrimaryDataAsset* UCombatantFunctions::SelectSkillByUtility(UCombatantComponent* Combatant,
-	TArray<UPrimaryDataAsset*> Skills, TArray<UCombatantComponent*> Targets,
-	FGameplayTag Tag, float RandomOffsetRange)
+                                                             TArray<UPrimaryDataAsset*> Skills, TArray<UCombatantComponent*> Targets,
+                                                             FGameplayTag Tag, TEnumAsByte<EOmegaSkillUtilityTarget> UtilityTarget, float RandomOffsetRange)
 {
 	if (Skills.IsEmpty()) return nullptr;
 
@@ -456,10 +481,32 @@ UPrimaryDataAsset* UCombatantFunctions::SelectSkillByUtility(UCombatantComponent
 	for (UPrimaryDataAsset* Skill : Skills)
 	{
 		if (!Skill || !Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass())) continue;
-
 		if (!IDataInterface_Skill::Execute_CanUseSkill(Skill, Combatant)) continue;
 		
-		float Score = IDataInterface_Skill::Execute_Skill_CheckUtility(Skill, Combatant, Targets, Tag);
+		float Score = 0.0f;
+
+		float SingleAverageScore = 0.0f;
+		float MultiTargetScore = 0.0f;
+		GetSkillUtilityScore(Combatant, Skill, Targets, Tag, Score, SingleAverageScore, MultiTargetScore);
+
+		const float SelectedUtilityScore = [&]()
+		{
+			switch (UtilityTarget)
+			{
+			case SkillUtilTarg_Multi:
+				return MultiTargetScore;
+
+			case SkillUtilTarg_SingleAverage:
+				return SingleAverageScore;
+
+			default:
+				return Score;
+			}
+		}();
+
+		Score = SelectedUtilityScore;
+		
+		
 		Score += FMath::FRandRange(-RandomOffsetRange, RandomOffsetRange);
 
 		const bool bBetter (Score > BestScore);
@@ -469,7 +516,7 @@ UPrimaryDataAsset* UCombatantFunctions::SelectSkillByUtility(UCombatantComponent
 			BestSkill = Skill;
 		}
 	}
-
+	
 	return BestSkill;
 }
 
@@ -761,6 +808,37 @@ float UCombatantFunctions::CheckAttributeValue(UCombatantComponent* Combatant, U
 	return SelectedVal;
 }
 
+void UCombatantFunctions::CopyCurrentAttributes(UCombatantComponent* From, UCombatantComponent* To)
+{
+	if (From && To)
+	{
+		To->SetCurrentAttributeValues(From->GetCurrentAttributeValues(true));
+	}
+}
+
+void UCombatantFunctions::CopyCurrentXP(UCombatantComponent* From, UCombatantComponent* To)
+{
+	if (From && To)
+	{
+		To->XP_SetAll(From->XP_GetAll(), false);
+	}
+}
+
+void UCombatantFunctions::CopyCurrentInventory(UCombatantComponent* From, UCombatantComponent* To)
+{
+	if (From && To)
+	{
+		To->Inventory_Set(From->Inventory_Get(), true);
+	}
+}
+
+void UCombatantFunctions::CopyCurrentEquipment(UCombatantComponent* From, UCombatantComponent* To)
+{
+	if (From && To)
+	{
+		To->Equipment_SetAll(From->Equipment_Get());
+	}
+}
 
 
 

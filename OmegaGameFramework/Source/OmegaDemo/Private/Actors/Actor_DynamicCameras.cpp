@@ -4,6 +4,7 @@
 #include "Actors/Actor_DynamicCameras.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/PlayerController.h"
 
 
 ADCam_LookAtPlayer::ADCam_LookAtPlayer()

@@ -8,6 +8,7 @@
 
 #include "ImageUtils.h"
 #include "RenderUtils.h"
+#include "Animation/Skeleton.h"
 
 void UOmegaMeshFunctions::AddCurvesToSkeletonFromMorphs(USkeletalMesh* targetMesh)
 {

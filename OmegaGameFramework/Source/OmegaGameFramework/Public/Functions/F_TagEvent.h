@@ -87,7 +87,7 @@ class OMEGAGAMEFRAMEWORK_API UAnimNotify_TagEvent : public UAnimNotify
 
 public:
 
-	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 	UPROPERTY(EditAnywhere, Category="Events")
 	FGameplayTagContainer Events;

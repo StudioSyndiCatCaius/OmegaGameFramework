@@ -36,7 +36,4 @@ public:
 	FOmegaScripted_CombatantModifiers Modifiers;
 	virtual FOmegaScripted_CombatantModifiers Combatant_GetScriptedModifiers_Implementation() override { return Modifiers; };
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Events",meta=(ShowOnlyInnerProperties,ForceInlineRow))
-	TMap<FGameplayTag,FOmegaCombatantEventContainer> Events;
-
 };

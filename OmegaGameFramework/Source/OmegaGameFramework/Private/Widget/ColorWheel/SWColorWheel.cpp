@@ -19,21 +19,21 @@ void SWColorWheel::Construct(const FArguments& InArgs)
 	OnPositionChanged = InArgs._OnPositionChanged;
 }
 
-void SWColorWheel::SetColorAndOpacity(FLinearColor InColorAndOpacity, TEnumAsByte<EWheelBrushTarget> TargetBrush)
+void SWColorWheel::SetColorAndOpacity(FLinearColor InColorAndOpacity, EWheelBrushTarget TargetBrush)
 {
 	// TODO: Perhaps clean this up in some way?
 	switch (TargetBrush)
 	{
-		case All:
+		case EWheelBrushTarget::All:
 			SetAttribute(HueCircleColorAndOpacity, TAttribute<FSlateColor>(InColorAndOpacity), EInvalidateWidgetReason::None);
 			SetAttribute(PinColorAndOpacity, TAttribute<FSlateColor>(InColorAndOpacity), EInvalidateWidgetReason::Paint);
 			break;
 
-		case SelectorPin:
+		case EWheelBrushTarget::SelectorPin:
 			SetAttribute(PinColorAndOpacity, TAttribute<FSlateColor>(InColorAndOpacity), EInvalidateWidgetReason::Paint);
 			break;
 
-		case HueCircle:
+		case EWheelBrushTarget::HueCircle:
 			SetAttribute(HueCircleColorAndOpacity, TAttribute<FSlateColor>(InColorAndOpacity), EInvalidateWidgetReason::Paint);
 			break;
 	}

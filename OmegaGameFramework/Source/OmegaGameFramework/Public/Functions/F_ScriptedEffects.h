@@ -46,6 +46,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category="Scripted Effect")
 	TArray<TSubclassOf<AOmegaGameplayCue>> GetCuesToPlay();
 
+	UFUNCTION(BlueprintNativeEvent, Category="Scripted Effect")
+	float GetEffectUtilityScore(UCombatantComponent* Target, UCombatantComponent* Instigator);
+	
+	
 };
 
 UCLASS(EditInlineNew)
@@ -84,6 +88,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat")
 	static FText GetEffects_Description(FOmegaCustomScriptedEffects effects, const FString& delimiter=" ");
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="💫Scripted Effects - Get Utility Scrore")
+	static void GetEffects_UtilityScore(FOmegaCustomScriptedEffects effects, UCombatantComponent* Target, 
+		UCombatantComponent* Instigator, float& Total, float& Average);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Combat", DisplayName="💫Scripted Effects - Apply")
 	static void ApplyCustomScriptedEffectToCombatant(FOmegaCustomScriptedEffects Effects, UCombatantComponent* Target=nullptr, UCombatantComponent* Instigator=nullptr);

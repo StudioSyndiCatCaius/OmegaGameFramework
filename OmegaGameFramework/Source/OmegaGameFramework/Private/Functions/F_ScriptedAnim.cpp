@@ -28,13 +28,6 @@ TArray<UOmegaScriptedAnimation*> FOmegaScriptedAnimationData::GetAllAnimations()
 		}
 	}
 	out.Append(anim_inline);
-	for (auto* a : anim_presetEnd)
-	{
-		if (a)
-		{
-			out.Append(a->Animations);
-		}
-	}
 	return out;
 }
 

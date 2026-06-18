@@ -17,6 +17,10 @@ void UDataWidgetBase_Leveling::L_SetTextFromVal(float val, UTextBlock* text) con
 
 void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
+	if (SourceAsset && SourceAsset->GetClass()->IsChildOf(UOmegaLevelingAsset::StaticClass()))
+	{
+		LevelingAsset=Cast<UOmegaLevelingAsset>(SourceAsset);
+	}
 	if (LevelingAsset)
 	{
 		UTextBlock* text_RankName=nullptr;
@@ -54,4 +58,13 @@ void UDataWidgetBase_Leveling::Native_OnRefreshed(UObject* SourceAsset, UObject*
 	}
 
 	Super::Native_OnRefreshed(SourceAsset, ListOwner);
+}
+
+void UDataWidgetBase_Leveling::SetLevelingAsset(UOmegaLevelingAsset* Asset)
+{
+	if (Asset)
+	{
+		LevelingAsset = Asset;
+		Refresh();
+	}
 }

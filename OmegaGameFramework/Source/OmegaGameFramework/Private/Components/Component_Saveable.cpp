@@ -2,8 +2,9 @@
 
 
 #include "Components/Component_Saveable.h"
-
+#include "Engine/GameInstance.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Engine/World.h"
 
 
 void UOmegaSaveableComponent::BeginPlay()

@@ -29,6 +29,7 @@ public:
 
 	UPROPERTY() TSubclassOf<AOmegaAbility> LocalAbilityClass;
 	UPROPERTY() UObject* LocalContext = nullptr;
+	UPROPERTY() FOmegaCombatantEventMeta LocalMeta;
 	UPROPERTY() UCombatantComponent* CombatantRef;
 	
 	UFUNCTION()
@@ -37,7 +38,8 @@ public:
 	virtual void Activate() override;
 	
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", DisplayName="Ω🔷 Activate Ability")
-	static UAsyncAction_ActivateAbility* ActivateAbility(UCombatantComponent* Combatant, const TSubclassOf<AOmegaAbility> Ability, UObject* Context, bool bForceGrant);
+	static UAsyncAction_ActivateAbility* ActivateAbility(UCombatantComponent* Combatant, const TSubclassOf<AOmegaAbility> Ability, 
+		UObject* Context, FOmegaCombatantEventMeta meta, bool bForceGrant);
 
 };
  

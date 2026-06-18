@@ -9,6 +9,8 @@
 #include "Functions/F_Trace.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 
 
 FHitResult UOmegaPhysicsEvent::GetHit(AActor* Instigator)

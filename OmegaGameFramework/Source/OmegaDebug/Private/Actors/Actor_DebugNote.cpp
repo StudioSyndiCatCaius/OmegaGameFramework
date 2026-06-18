@@ -8,6 +8,7 @@
 #include "Components/TextRenderComponent.h"
 #include "Functions/F_Actor.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Materials/Material.h"
 
 void AOmegaDebugNote::OnConstruction(const FTransform& Transform)
 {

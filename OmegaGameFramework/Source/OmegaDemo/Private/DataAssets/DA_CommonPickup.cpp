@@ -2,6 +2,7 @@
 
 
 #include "DataAssets/DA_CommonPickup.h"
+#include "GameFramework/Pawn.h"
 
 bool UOAsset_Pickup_Common::CanPickup_Implementation(APawn* Pawn, APlayerController* Controller)
 {

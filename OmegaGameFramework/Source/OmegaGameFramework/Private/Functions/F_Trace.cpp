@@ -4,6 +4,7 @@
 #include "Functions/F_Trace.h"
 #include "Engine/GameInstance.h"
 #include "Engine/HitResult.h"
+#include "GameFramework/Actor.h"
 #include "Functions/F_Math.h"
 #include "Kismet/KismetSystemLibrary.h"
 

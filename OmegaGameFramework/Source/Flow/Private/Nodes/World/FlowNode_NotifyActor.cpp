@@ -5,6 +5,7 @@
 #include "FlowSubsystem.h"
 
 #include "Engine/World.h"
+#include "Engine/GameInstance.h"
 
 UFlowNode_NotifyActor::UFlowNode_NotifyActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

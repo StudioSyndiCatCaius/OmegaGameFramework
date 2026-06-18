@@ -16,6 +16,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 
 AOmegaMinimalCharacter::AOmegaMinimalCharacter()
 {

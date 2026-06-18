@@ -76,7 +76,7 @@ FLinearColor UColorWidget::GetCurrentColor()
 
 /// Generics ///
 
-void UColorWidget::SetColorAndOpacity(FLinearColor InColorAndOpacity, TEnumAsByte<EWheelBrushTarget> Target)
+void UColorWidget::SetColorAndOpacity(FLinearColor InColorAndOpacity, EWheelBrushTarget Target)
 {
     // Update the values themselves, again this doesnt look good so change it later perhaps.
     auto ColorVal = FSlateColor(InColorAndOpacity);

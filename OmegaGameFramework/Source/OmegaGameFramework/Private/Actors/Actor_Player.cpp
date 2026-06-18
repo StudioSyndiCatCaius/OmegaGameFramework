@@ -8,6 +8,7 @@
 #include "Components/Component_AssetSquad.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_InstancedActor.h"
+#include "Engine/Engine.h"
 
 void AOmegaPlayer::L_Print(const FString& str)
 {

@@ -24,6 +24,8 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
 	FOmegaBitflagsBase Flags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice",meta=(ShowOnlyInnerProperties))
+	FGameplayTagQuery SaveTagsQuery;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice",meta=(ShowOnlyInnerProperties))
 	FOmegaGlobalConditions Conditions;
 	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{

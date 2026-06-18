@@ -67,34 +67,22 @@ bool UOAsset_CommonCharacter::OnIdentityUninit_Implementation(AActor* Actor, UGa
 	return true;
 }
 
-TArray<UPrimaryDataAsset*> UOAsset_CommonCharacter::GetSkills_Implementation(UCombatantComponent* Combatant)
-{
-	TArray<UPrimaryDataAsset*> out;
-	for (const TScriptInterface<IDataInterface_Skill>& Skill : Skills)
-	{
-		if (UPrimaryDataAsset* Asset = Cast<UPrimaryDataAsset>(Skill.GetObject()))
-		{
-			out.Add(Asset);
-		}
-	}
-	return out;
-}
 
-TMap<UPrimaryDataAsset*, int32> UOAsset_CommonCharacter::GetInventory_Implementation()
-{
-	return Inventory;
-}
 
-TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOAsset_CommonCharacter::GetEquipment_Implementation()
-{
-	return GetCharacterEquipment();
-}
 
 void UOAsset_CommonCharacter::ApplyInitialsToCombatant(UCombatantComponent* Combatant)
 {
 	if (Combatant)
 	{
 		Combatant->Equipment_SetAll(GetCharacterEquipment());
+		Combatant->Inventory_Set(Inventory);
+		for (auto i : Skills)
+		{
+			if (UPrimaryDataAsset* pda=Cast<UPrimaryDataAsset>(i.GetObject()))
+			{
+				Combatant->AddSkill(pda,true);
+			}
+		}
 		TArray<FName> lvlasset;
 		XpLevels.GetKeys(lvlasset);
 		for (FName Name : lvlasset)
@@ -104,7 +92,7 @@ void UOAsset_CommonCharacter::ApplyInitialsToCombatant(UCombatantComponent* Comb
 				Combatant->XP_SetLevel(lvla,XpLevels[Name]);
 			}
 		}
-		Combatant->Inventory_Set(Inventory);
+		Combatant->SetCombatantLevel(Level,true);
 	}
 }
 
@@ -138,6 +126,7 @@ TMap<UOmegaAttribute*, float> UOAsset_CommonCharacter::GetAttributes()
 	
 	return out;
 }
+
 
 
 UOAsset_Appearance* UOAsset_CommonCharacter::GetAppearanceAsset_Implementation()

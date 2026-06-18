@@ -62,7 +62,7 @@ public:
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
 
-UCLASS(HideFunctions=(Construct, RemoveFromParent))
+UCLASS(HideFunctions=(Construct, RemoveFromParent),Abstract)
 class OMEGAGAMEFRAMEWORK_API UMenu : public UOmegaScreenWidget, public IWidgetInterface_Input
 {
 	GENERATED_BODY()

@@ -9,6 +9,7 @@
 #include "Condition/Condition_Actor.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Engine/EngineTypes.h"
 
 #include "F_Actor.generated.h"
 

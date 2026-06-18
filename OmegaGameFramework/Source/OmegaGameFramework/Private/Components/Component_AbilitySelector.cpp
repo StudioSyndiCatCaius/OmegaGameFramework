@@ -58,6 +58,7 @@ void UAbilitySelectorComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	int32 BestPriority = INT32_MIN;
 	TSubclassOf<AOmegaAbility> BestClass = nullptr;
 	UObject* BestContext = nullptr;
+	FOmegaCombatantEventMeta BestMeta;
 
 	for (TSubclassOf<AOmegaAbility> AbilityClass : Abilities)
 	{
@@ -68,8 +69,9 @@ void UAbilitySelectorComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		if (!bFound || !Ab) { continue; }
 
 		UObject* LocalContext = nullptr;
+		FOmegaCombatantEventMeta Meta;
 		int32 Priority = 0;
-		const float UtilVal = Ab->UtilityCheck(CombatantRef, LocalContext, Priority);
+		const float UtilVal = Ab->UtilityCheck(CombatantRef, LocalContext,Meta, Priority);
 
 		if (UtilVal <= 0.f) { continue; }
 
@@ -82,6 +84,7 @@ void UAbilitySelectorComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 			BestPriority = Priority;
 			BestClass = AbilityClass;
 			BestContext = LocalContext;
+			BestMeta=Meta;
 		}
 	}
 
@@ -98,7 +101,7 @@ void UAbilitySelectorComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	}
 
 	bool bExecuted = false;
-	CombatantRef->ExecuteAbility(BestClass, BestContext, bExecuted);
+	CombatantRef->ExecuteAbility(BestClass, BestContext,BestMeta, bExecuted);
 
 	if (bExecuted)
 	{

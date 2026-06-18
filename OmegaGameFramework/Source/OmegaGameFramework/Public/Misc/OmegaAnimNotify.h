@@ -16,7 +16,8 @@ class OMEGAGAMEFRAMEWORK_API UCombatantAnimNotify : public UAnimNotify
 	GENERATED_BODY()
 
 public:
-	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
+	
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 	UPROPERTY(EditAnywhere, Category="Notify")
 	FName CombatantNotify;
@@ -32,7 +33,7 @@ class OMEGAGAMEFRAMEWORK_API UAnimNotifyState_CombatantTrackTarget : public UAni
 	GENERATED_BODY()
 
 public:
-	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime) override;
+	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
 
 	UPROPERTY(EditAnywhere, Category="Combatant") float RotateSpeed=5;
 	UPROPERTY(EditAnywhere, Category="Combatant") bool Rotate_X=false;

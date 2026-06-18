@@ -1,7 +1,8 @@
 // Copyright Studio Syndicat 2022. All Rights Reserved.
 
 #include "Functions/F_PropertyBag.h"
-
+#include "UObject/Field.h"              // For CastField
+#include "UObject/UnrealType.h"         // For FTextProperty, FProperty, etc.
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +23,7 @@ static bool GetBagTypeFromProperty(const FProperty* Prop,
 	if (CastField<FDoubleProperty>(Prop)) { OutType = EPropertyBagPropertyType::Double; return true; }
 	if (CastField<FNameProperty>(Prop))   { OutType = EPropertyBagPropertyType::Name;   return true; }
 	if (CastField<FStrProperty>(Prop))    { OutType = EPropertyBagPropertyType::String; return true; }
-	if (CastField<FTextProperty>(Prop))   { OutType = EPropertyBagPropertyType::Text;   return true; }
+	//if (CastField<FTextProperty>(Prop))   { OutType = EPropertyBagPropertyType::Text;   return true; }
 
 	if (const FByteProperty* ByteProp = CastField<FByteProperty>(Prop))
 	{

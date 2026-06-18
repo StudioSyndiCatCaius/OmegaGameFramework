@@ -13,6 +13,7 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
+#include "TimerManager.h"
 
 const uint8 SUBSCRIPT_EVENT_BEGINPLAY=0;
 const uint8 SUBSCRIPT_EVENT_ENDPLAY=1;

@@ -13,6 +13,7 @@
 #include "Misc/FileHelper.h"
 
 #include "Engine/World.h"
+#include "Engine/LevelStreaming.h"
 #include "Engine/GameInstance.h"
 #include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_World.h"

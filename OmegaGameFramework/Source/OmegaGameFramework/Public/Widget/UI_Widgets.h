@@ -18,6 +18,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Types/Struct_Material.h"
 
+#include "Engine/DataAsset.h"
 #include "UI_Widgets.generated.h"
 
 USTRUCT(BlueprintType)
