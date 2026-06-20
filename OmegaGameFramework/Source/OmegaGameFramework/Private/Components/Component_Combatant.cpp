@@ -93,6 +93,15 @@ TArray<UObject*> UCombatantComponent::GetAllModifiers()
 		}
 	}
 	
+	for (auto* _skill : GetSkills_FromSourceList(out))
+	{
+		if(_skill && _skill->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass())
+			&& IDataInterface_Combatant::Execute_Combatant_GetConfig(_skill).bWhenASkillUseAsModifier)
+		{
+			out.Add(_skill);
+		}
+	};
+	
 	return out;
 }
 
@@ -656,10 +665,11 @@ void UCombatantComponent::L_CacheAttributeMods()
 //////////////////
 /// Skills //////
 ////////////////
-TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
+
+TArray<UPrimaryDataAsset*> UCombatantComponent::GetSkills_FromSourceList(TArray<UObject*> SourceList)
 {
-	TArray<UPrimaryDataAsset*> OutSkills = L_GetEntityData()->GetSkills();
-	for(auto* TempSource : GetAllModifiers())
+	TArray<UPrimaryDataAsset*> OutSkills;
+	for(auto* TempSource : SourceList)
 	{
 		if (TempSource && TempSource->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
@@ -672,6 +682,13 @@ TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
 			}
 		}
 	}
+	return OutSkills;
+}
+
+TArray<UPrimaryDataAsset*> UCombatantComponent::GetAllSkills()
+{
+	TArray<UPrimaryDataAsset*> OutSkills = L_GetEntityData()->GetSkills();
+	OutSkills.Append(GetSkills_FromSourceList(GetAllModifiers()));
 	OutSkills.Append(GetMutableDefault<UOmegaSettings>()->GetGameCore()->Combatant_Append_Skills(this));
 	return OutSkills;
 }

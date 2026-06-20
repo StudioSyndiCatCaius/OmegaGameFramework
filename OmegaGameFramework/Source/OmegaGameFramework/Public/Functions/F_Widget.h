@@ -27,13 +27,6 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI")
 	static TArray<UWidget*> GetChildrenWidgets(UWidget* Parent, TSubclassOf<UWidget> FilterClass, bool bRecursive);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI", meta=(AdvancedDisplay="Player", WorldContext="WorldContextObject"),DisplayName="🎮Control Widget - Set")
-	static void ControlWidget_Set(UObject* WorldContextObject, UUserWidget* Widget, APlayerController* Player);
-	UFUNCTION(BlueprintPure,Category="Omega|Slate UI", meta=(AdvancedDisplay="Player", WorldContext="WorldContextObject"),DisplayName="🎮Control Widget - Get")
-	static  UUserWidget* ControlWidget_Get(UObject* WorldContextObject, UUserWidget* Widget, APlayerController* Player);
-	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI", meta=(AdvancedDisplay="Player", WorldContext="WorldContextObject"),DisplayName="🎮Control Widget - Clear")
-	static  void ControlWidget_Clear(UObject* WorldContextObject, APlayerController* Player);
-	
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI", meta=(AdvancedDisplay="Context, Flag, Player", WorldContext="WorldContextObject"))
 	static void SetHUDLayerActive(UObject* WorldContextObject, TSubclassOf<UHUDLayer> HUD, bool bActive, UObject* Context, const FString& Flag, APlayerController* Player);
 	

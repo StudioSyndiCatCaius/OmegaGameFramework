@@ -126,23 +126,18 @@ public:
 
 	UFUNCTION()
 	void CloseAllMenus(AActor* DestroyedActor);
-
-	//Which Menu is this player current inputing into.
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
-	void SetControlWidget(UUserWidget* Widget);
-
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
-	void ClearControlWidget();
-
+	
+	UPROPERTY() UWidget* LastTopWidget=nullptr;
+	UPROPERTY() TArray<UWidget*> ControlWidget_Targets;
+	UFUNCTION() void ControlWidget_Register(UWidget* Widget, bool bRegister);
+	UFUNCTION() UWidget* ControlWidget_GetTop();
+	
 	UFUNCTION()
 	void RemoveMenuFromActiveList(UMenu* Menu);
 
 	UPROPERTY()
 	TArray<class UMenu*> OpenMenus;
-
-	UPROPERTY(BlueprintReadOnly, Category="Widget", meta=(DisplayName="Control Widget"))
-	class UUserWidget* FocusMenu;
-
+	
 	UPROPERTY(BlueprintAssignable, Category="Omega") FMenuOpened OnMenuOpened;
 	UPROPERTY(BlueprintAssignable, Category="Omega") FMenuClosed OnMenuClosed;
 
@@ -175,9 +170,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Input")
 	void InputTag(FGameplayTag Tag);
-
-	UFUNCTION()
-	bool CanInterfaceInput() const;
 	
 	// -- HUD -- //
 	

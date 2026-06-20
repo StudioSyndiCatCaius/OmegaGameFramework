@@ -58,36 +58,7 @@ TArray<UWidget*> UOmegaWidgetFunctions::GetChildrenWidgets(UWidget* Parent, TSub
 
 	return Result;
 }
-void UOmegaWidgetFunctions::ControlWidget_Set(UObject* WorldContextObject, UUserWidget* Widget,
-                                              APlayerController* Player)
-{
-	if (!Widget) { return; }
-	if (APlayerController* p=PlayerFromWorldContext(WorldContextObject,Player))
-	{
-		UOmegaSubsystem_Player* SS_player=OGF_Subsystems::oPlayer(p);
-		SS_player->SetControlWidget(Widget);
-	}
-}
 
-UUserWidget* UOmegaWidgetFunctions::ControlWidget_Get(UObject* WorldContextObject, UUserWidget* Widget,
-	APlayerController* Player)
-{
-	if (APlayerController* p=PlayerFromWorldContext(WorldContextObject,Player))
-	{
-		UOmegaSubsystem_Player* SS_player=OGF_Subsystems::oPlayer(p);
-		return  SS_player->FocusMenu;
-	}
-	return nullptr;
-}
-
-void UOmegaWidgetFunctions::ControlWidget_Clear(UObject* WorldContextObject, APlayerController* Player)
-{
-	if (APlayerController* p=PlayerFromWorldContext(WorldContextObject,Player))
-	{
-		UOmegaSubsystem_Player* SS_player=OGF_Subsystems::oPlayer(p);
-		return  SS_player->ClearControlWidget();
-	}
-}
 
 void UOmegaWidgetFunctions::SetHUDLayerActive(UObject* WorldContextObject, TSubclassOf<UHUDLayer> HUD, bool bActive, UObject* Context, const FString& Flag,
                                               APlayerController* Player)

@@ -68,10 +68,13 @@ class OMEGAGAMEFRAMEWORK_API UMenu : public UOmegaScreenWidget, public IWidgetIn
 	GENERATED_BODY()
 
 protected:
+	virtual void L_SetSubstate(int32 NewState) override;
+	
 	virtual void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
 	//virtual void OnAnimationFinishedPlaying(UUMGSequencePlayer& Player) override;
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual bool InputAction_Disabled_Implementation(APlayerController* Player, FGameplayTag Action) override;
 public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
 	UDataList* GetDefaultDataList();
@@ -84,10 +87,12 @@ public:
 	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu") FText DisplayName;
 	UPROPERTY(EditAnywhere, Category = "Menu") TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
-	UPROPERTY(EditAnywhere, Category = "Menu",meta=(Categories="SYSTEM")) FGameplayTagContainer BlockedSystemTags;
 	// if valid, this child actor class will be spawned on the Menu's wrapper actor
 	UPROPERTY(EditAnywhere, Category = "Menu") TSubclassOf<AActor> WrapperChildActor;
-	
+	//If true, this menu being open will NOT be considered for the Gameplay System blocking tags found in `Omega Settings`
+	UPROPERTY(EditAnywhere,Category="Menu") bool bExemptFromGlobalSystemBlockingTags;
+	//if substate index is set to <0, close the menu
+	UPROPERTY(EditAnywhere,Category="Menu") bool bCloseMenuOnSubstateUnderflow=true;
 	
 	UFUNCTION()
 		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag);
@@ -134,17 +139,26 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	UOmegaInputMode* CustomInputMode;
-
+	
 	//Prevents input when menus is opened for a set amount of time
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Input")
 	float InputBlockDelay=0.2;
 private:
+
+	FTimerHandle InputBlockTimer;
+	UFUNCTION() void InputBlockTimer_End();
+
 	UPROPERTY() float InputBlock_Remaining;
 	UPROPERTY() bool PrivateInputBlocked;
 public:
-	UFUNCTION() bool IsInputBlocked() const { return PrivateInputBlocked || bIsClosing || !bIsOpen || InputBlock_Remaining > 0.0; }
+	UFUNCTION() bool IsInputBlocked() const;
 	
 	virtual bool InputBlocked_Implementation() override;
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Input",DisplayName="Substate - Get Input Target Widgets")
+	TArray<UUserWidget*> GetSubstateInputWidget();
+	
+	virtual UUserWidget* ControlWidget_Get_Implementation(int32& priority) override;
 	//----------------------------------------------------------------------
 	// ANIMATIONS
 	//----------------------------------------------------------------------

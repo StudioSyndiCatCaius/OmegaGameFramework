@@ -14,7 +14,6 @@
 #include "Engine/Engine.h"
 #include "Engine/ViewportStatsSubsystem.h"
 #include "Engine/World.h"
-#include "FlowEditor/Public/Graph/FlowGraphConnectionDrawingPolicy.h"
 #include "Misc/App.h"
 #include "Misc/Paths.h"
 #include "Serialization/MemoryReader.h"

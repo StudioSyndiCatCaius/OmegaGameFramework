@@ -20,7 +20,8 @@ struct FOmegaCombatantSourceConfig
 	
 public:
 	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Combatant") bool bUseDamageModifier;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Combatant") bool bUseDamageModifier = false;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Combatant") bool bWhenASkillUseAsModifier = false;
 };
 
 USTRUCT(BlueprintType)

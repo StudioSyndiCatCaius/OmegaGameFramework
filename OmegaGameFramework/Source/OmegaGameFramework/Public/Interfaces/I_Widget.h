@@ -23,7 +23,11 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_Input
 public:
 	
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
-	void OnControlSetWidget();
+	UUserWidget* ControlWidget_Get(int32& priority);
+	
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Input")
+	void OnBecomeControlWidget();
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
 	void InputNavigate(FVector2D Axis);
 	UFUNCTION(BlueprintNativeEvent, Category="Input")

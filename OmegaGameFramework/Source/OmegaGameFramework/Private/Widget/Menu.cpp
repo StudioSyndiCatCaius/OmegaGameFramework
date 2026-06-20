@@ -40,7 +40,15 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		
 		TempTags = Tags;
 		PrivateInputBlocked = true;
-		InputBlock_Remaining=InputBlockDelay;
+		InputBlock_Remaining = InputBlockDelay;
+		if (InputBlockDelay > 0.0f)
+		{
+			GetWorld()->GetTimerManager().SetTimer(InputBlockTimer, this, &UMenu::InputBlockTimer_End, InputBlockDelay, false);
+		}
+		else
+		{
+			InputBlock_Remaining = 0.0f;
+		}
 		SetIsEnabled(true);
 		SetVisibility(VisibilityOnOpen);
 		SetSubstate_Index(0);
@@ -49,10 +57,12 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		
 		if (SS_Player)
 		{
+			SS_Player->OpenMenus.AddUnique(this);
 			if(CustomInputMode)
 			{
 				SS_Player->SetCustomInputMode(CustomInputMode);
-			}	
+			}
+			SS_Player->ControlWidget_Register(this,true);
 		}
 
 		if (SS_World)
@@ -60,10 +70,9 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 			if(ParallelGameplaySystem)
 			{
 				SS_World->ActivateGameplaySystem(ParallelGameplaySystem, this);
+				SS_World->GameplayModifier_Register(this,true);
 				
-				TArray<FGameplayTag> _tags;
-				BlockedSystemTags.GetGameplayTagArray(_tags);
-				SS_World->ExtraBlockedSystemTags.Append(_tags);
+				SS_World->ForceUpdateGameplayState();
 			}	
 		}
 		
@@ -98,8 +107,9 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 
 void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
 {
-	if (bIsOpen && CanCloseMenu(Tags,Context,Flag))
+	if (bIsOpen && InputBlock_Remaining <= 0.0f && CanCloseMenu(Tags,Context,Flag))
 	{
+		GetWorld()->GetTimerManager().ClearTimer(InputBlockTimer);
 		bIsOpen = false;
 		PrivateInputBlocked = true;
 		
@@ -117,21 +127,8 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		SubsystemRef->RemoveMenuFromActiveList(this);
 		const bool LastMenu = !SubsystemRef->OpenMenus.IsValidIndex(0);
 		SubsystemRef->OnMenuClosed.Broadcast(this, TempTags, LastMenu);
-
-		if(SubsystemRef->FocusMenu && SubsystemRef->FocusMenu==this)
-		{
-			SubsystemRef->ClearControlWidget();
-		}
 		
-		TArray<FGameplayTag> _tags;
-		BlockedSystemTags.GetGameplayTagArray(_tags);
-		for (FGameplayTag Tag : _tags)
-		{
-			if (SS_World->ExtraBlockedSystemTags.Contains(Tag))
-			{
-				SS_World->ExtraBlockedSystemTags.RemoveSingle(Tag);	
-			}
-		}
+		
 
 		SetVisibility(ESlateVisibility::HitTestInvisible);
 
@@ -161,6 +158,18 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			Native_CompleteClose();
 		}
+		if (SS_Player)
+		{
+			if (SS_Player->OpenMenus.Contains(this))
+			{
+				SS_Player->OpenMenus.Remove(this);
+			}
+			SS_Player->ControlWidget_Register(this,false);
+		}
+		if (SS_World)
+		{
+			SS_World->GameplayModifier_Register(this,false);
+		}
 		
 		bIsClosing = true;
 	}
@@ -180,6 +189,20 @@ AOmegaMenuWrapperActor::AOmegaMenuWrapperActor()
 	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
 	Combatant=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
 	ChildActor=CreateOptionalDefaultSubobject<UChildActorComponent>("ChildActor");
+}
+
+void UMenu::L_SetSubstate(int32 NewState)
+{
+	Super::L_SetSubstate(NewState);
+	if (SS_Player)
+	{
+		//refresh top widget
+		SS_Player->ControlWidget_GetTop();
+	}
+	if (bCloseMenuOnSubstateUnderflow && NewState<0)
+	{
+		CloseMenu(FGameplayTagContainer(),nullptr,"");
+	}
 }
 
 void UMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* MovieSceneBlends)
@@ -205,11 +228,6 @@ void UMenu::NativeConstruct()
 
 void UMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	if(InputBlock_Remaining > 0.0)
-	{
-		InputBlock_Remaining=InputBlock_Remaining-InDeltaTime;
-	}
-	
 	float target_val=0.0;
 	if(bIsOpen) { target_val=1.0; }
 	if(target_val != OpenCloseInterp_Value)
@@ -232,6 +250,11 @@ void UMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	}
 	
 	Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
+bool UMenu::InputAction_Disabled_Implementation(APlayerController* Player, FGameplayTag Action)
+{
+	return IsInputBlocked();
 }
 
 
@@ -291,10 +314,40 @@ void UMenu::MenuClosed_Implementation(FGameplayTagContainer Tags, const FString&
 
 void UMenu::MenuOpened_Implementation(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
 {
+	
+}
+
+void UMenu::InputBlockTimer_End()
+{
+	InputBlock_Remaining = 0.0f;
+}
+
+bool UMenu::IsInputBlocked() const
+{
+	return PrivateInputBlocked || bIsClosing || !bIsOpen || InputBlock_Remaining > 0.0;
 }
 
 bool UMenu::InputBlocked_Implementation()
 {
 	return IsInputBlocked();
+}
+
+UUserWidget* UMenu::ControlWidget_Get_Implementation(int32& priority)
+{
+	priority=Priority;
+	if (GetSubstateInputWidget().IsValidIndex(Substate))
+	{
+		if (UUserWidget* gotWidget=GetSubstateInputWidget()[Substate])
+		{
+			priority=Priority+1;
+			return gotWidget;
+		}
+	}
+	return this;
+}
+
+TArray<UUserWidget*> UMenu::GetSubstateInputWidget_Implementation()
+{
+	return TArray<UUserWidget*>();
 }
 

@@ -16,7 +16,7 @@ class OMEGADEMO_API USkelMeshMod_Mesh : public UComponentModScript_SkeletalMesh
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TSoftObjectPtr<USkeletalMesh> SkeletalMesh;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TObjectPtr<USkeletalMesh> SkeletalMesh;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TArray<UMaterialInterface*> Materials;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") TMap<FName,UMaterialInterface*> Materials_BySlot;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod",meta=(InlineEditConditionToggle)) bool bEditLocation;

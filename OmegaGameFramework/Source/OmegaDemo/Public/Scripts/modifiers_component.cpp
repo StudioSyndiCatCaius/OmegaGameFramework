@@ -13,7 +13,7 @@ bool USkelMeshMod_Mesh::OnAppliedToComponent_Implementation(USkeletalMeshCompone
 {
 	if (Component)
 	{
-		if (USkeletalMesh* skMesh=SkeletalMesh.LoadSynchronous())
+		if (USkeletalMesh* skMesh=SkeletalMesh)
 		{
 			Component->SetSkeletalMesh(skMesh);
 			

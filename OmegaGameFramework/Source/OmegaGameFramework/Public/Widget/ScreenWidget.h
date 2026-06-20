@@ -24,6 +24,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaScreenWidget : public UOmegaUserWidget, publi
 {
 	GENERATED_BODY()
 
+protected:
+	
+	virtual void L_SetSubstate(int32 NewState);
+	
 public:
 	
 	UPROPERTY() UOmegaSubsystem_GameInstance* SS_GI;
@@ -52,12 +56,13 @@ public:
 	
 	UFUNCTION() TArray<FName> L_Substates() const { return Substates; }
 	
-	UFUNCTION(BlueprintCallable,Category="System State",DisplayName="Set Widget State (Name)") void SetSubstate_Name(UPARAM(meta=(GetOptions="L_Substates")) FName State);
-	UFUNCTION(BlueprintCallable,Category="System State",DisplayName="Set Widget State (index)") void SetSubstate_Index(int32 State);
-	UFUNCTION(BlueprintPure,Category="System State",DisplayName="Get Widget State (index)") int32 GetSubstate_Index() const { return Substate; };
-	UFUNCTION(BlueprintPure,Category="System State",DisplayName="Get Widget State (Name from index)") FName GetSubstate_NameFromIndex(int32 index) const;
+	UFUNCTION(BlueprintCallable,Category="System State",DisplayName="Substate - Set (Name)") void SetSubstate_Name(UPARAM(meta=(GetOptions="L_Substates")) FName State);
+	UFUNCTION(BlueprintCallable,Category="System State",DisplayName="Substate - Set (index)") void SetSubstate_Index(int32 State);
+	UFUNCTION(BlueprintPure,Category="System State",DisplayName="Substate - Get (index)") int32 GetSubstate_Index() const { return Substate; };
+	UFUNCTION(BlueprintPure,Category="System State",DisplayName="Substate - Get (Name from index)") FName GetSubstate_NameFromIndex(int32 index) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="System State") void OnSubstateChange(int32 NewState,FName NewState_N,int32 OldState,FName OldState_N);
+	UFUNCTION(BlueprintImplementableEvent,Category="System State",DisplayName="Substate - On Changed")
+	void OnSubstateChange(int32 NewState,FName NewState_N,int32 OldState,FName OldState_N);
 	
 	//----------------------------------------------------------------------
 	// Input

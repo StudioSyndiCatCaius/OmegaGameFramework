@@ -27,8 +27,8 @@ UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
     
     CombatantConfig_Default.AttributeSet=TSoftObjectPtr<UOmegaAttributeSet>(FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/Attributes/AttSet_OMEGA_Demo.AttSet_OMEGA_Demo")));
     
-    
-    
+    BlockedSystemsWhenMenusOpen.AddTag(FGameplayTag::RequestGameplayTag("SYSTEM.Exploration"));
+    BlockedSystemsWhenMenusOpen.AddTag(FGameplayTag::RequestGameplayTag("SYSTEM.SubExplore"));
 }
 
 

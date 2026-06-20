@@ -54,7 +54,7 @@ AOmegaInstanceActor* UInstanceActorComponent::CreateInstance(UObject* Context, c
 	UGameplayStatics::FinishSpawningActor(LocalActor, LocalTransform);
 	LocalActor->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	LocalActor->SetActorRelativeTransform(LocalTransform);
-	LocalActor->OnInstanceCreated(LocalActor, Flag);
+	LocalActor->OnInstanceCreated(LocalContext, Flag);
 	OnInstanceCreated.Broadcast(LocalActor);
 	_instanceOrder.AddUnique(LocalActor);
 #if WITH_EDITOR

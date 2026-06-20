@@ -1,6 +1,8 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #include "Widget/DataList.h"
+
+#include "CommonUILibrary.h"
 #include "Widget/DataWidget.h"
 
 #include "Components/HorizontalBox.h"
@@ -61,6 +63,15 @@ UDataList::UDataList(const FObjectInitializer& ObjectInitializer)
 	{
 		ValidateTemplates();	
 	}
+}
+
+UMenu* UDataList::GetOwningMenu()
+{
+	if (UMenu* menu = Cast<UMenu>(UCommonUILibrary::FindParentWidgetOfType(this,UMenu::StaticClass())))
+	{
+		return menu;
+	}
+	return nullptr;
 }
 
 void UDataList::L_ApplyCurveToEntries()
@@ -199,13 +210,6 @@ TArray<FName> UDataList::L_getOverrideNames_Bool()
 	return out;
 }
 
-void UDataList::SetNewControl(UUserWidget* NewWidget)
-{
-	if(NewWidget)
-	{
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(NewWidget);
-	}
-}
 
 void UDataList::ClearList()
 {
@@ -485,7 +489,7 @@ void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 	}
 	else
 	{
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
+		//GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
 	}
 	
 	
@@ -759,20 +763,30 @@ void UDataList::InputConfirm_Implementation()
 
 void UDataList::InputCancel_Implementation()
 {
+	if (UMenu* m=GetOwningMenu())
+	{
+		if (m->GetSubstateInputWidget().Contains(this))
+		{
+			int32 index = m->GetSubstateInputWidget().Find(this)-1;
+			m->SetSubstate_Index(index);
+			OGF_Log::Warning("Canceling Input List - Index = "+FString::FromInt(index));
+		}
+	}
 	OnInputCancel.Broadcast();
 }
 
-void UDataList::OnControlSetWidget_Implementation()
+void UDataList::OnBecomeControlWidget_Implementation()
 {
 	if(bRememberIndexOnControlSet)
 	{
-		HoverEntry(RememberedHoverIndex);
+		HoverEntry(RememberedHoverIndex,true);
 	}
 	else
 	{
 		HoverEntry(0,bRememberIndexOnControlSet);
 	}
 }
+
 
 void UDataList::SetListOwner(UObject* NewOwner)
 {
@@ -983,9 +997,14 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 			Cast<UScrollBox>(ListPanel)->ScrollWidgetIntoView(DataWidget);
 		}
 		
-		if(bAutoSetControlOnHover)
+		//if owned by menu input list, on hover change to this input index
+		if (UMenu* m=GetOwningMenu())
 		{
-			GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
+			if (m->GetSubstateInputWidget().Contains(this))
+			{
+				int32 index = m->GetSubstateInputWidget().Find(this);
+				m->SetSubstate_Index(index);
+			}
 		}
 		RememberedHoverIndex = Entries.Find(DataWidget);
 		OnEntryHovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, RememberedHoverIndex);

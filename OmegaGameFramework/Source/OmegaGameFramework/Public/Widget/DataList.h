@@ -83,6 +83,8 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 
 public:
     UDataList(const FObjectInitializer& ObjectInitializer);
+	
+	UMenu* GetOwningMenu();
 
 	UPROPERTY() UDataTooltip* override_tooltip;
 	
@@ -234,10 +236,7 @@ public:
 	UPROPERTY(EditInstanceOnly, Category="PropertyBag")
 	FInstancedPropertyBag EntryPropertyBagOverrides;
 
-	
-private:
-	UFUNCTION()
-	void SetNewControl(UUserWidget* NewWidget);
+
 public:
 	//###########################################
 	// Entires - Read Only
@@ -332,7 +331,7 @@ public:
 	virtual void InputPage_Implementation(float Axis ) override;
 	virtual void InputConfirm_Implementation() override;
 	virtual void InputCancel_Implementation() override;
-	virtual void OnControlSetWidget_Implementation() override;
+	virtual void OnBecomeControlWidget_Implementation() override;
 
 	//Automatically sets control to this list upon hovering an entry.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Input")

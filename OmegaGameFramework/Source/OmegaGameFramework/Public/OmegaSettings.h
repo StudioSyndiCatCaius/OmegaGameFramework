@@ -113,6 +113,7 @@ public:
 	// Player
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	UPROPERTY(EditAnywhere, config, Category = "👤Player") TSoftClassPtr<AOmegaDynamicCamera> DynamicCameraClass;
+	UPROPERTY(EditAnywhere, config, Category = "👤Player") FGameplayTagContainer BlockedSystemsWhenMenusOpen;
 	UPROPERTY(EditAnywhere, config, Category = "👤Player",AdvancedDisplay) FGameplayTag InputAction_UI_Confirm=FGameplayTag::RequestGameplayTag("INPUT.UI.Confirm");
 	UPROPERTY(EditAnywhere, config, Category = "👤Player",AdvancedDisplay) FGameplayTag InputAction_UI_Cancel=FGameplayTag::RequestGameplayTag("INPUT.UI.Cancel");
 	UPROPERTY(EditAnywhere, config, Category = "👤Player",AdvancedDisplay) FGameplayTag InputAction_UI_Navigate=FGameplayTag::RequestGameplayTag("INPUT.UI.Nav");

@@ -48,6 +48,8 @@
 #include "Widget/HUDLayer.h"
 #include "Components/PrimitiveComponent.h"
 #include "TimerManager.h"
+#include "Interfaces/I_GameplayState.h"
+#include "Widget/Menu.h"
 
 
 void UOmegaSubsystem_World::Initialize(FSubsystemCollectionBase& Colection)
@@ -201,6 +203,34 @@ FGameplayTagContainer UOmegaSubsystem_World::GetBlockedSystemTags()
 	{
 		out.AppendTags(TempSys->BlockSystemTags);
 	}
+	for (auto* tempMod : GameplayModifier_Registered)
+	{
+		if (tempMod)
+		{
+			out.AppendTags(IDataInterface_GameplayModifier::Execute_GameplayModifier_BlockedSystemTags(tempMod));
+		}
+	}
+	bool menusOpen = false;
+	
+	/*
+	 * THIS IS BAD, right now it only checks player one. considering moving functionality for gameplay systems
+	 * Into player subsystem long term
+	 */
+	if (UOmegaSubsystem_Player* SS_P=OGF_Subsystems::oPlayer(UGameplayStatics::GetPlayerController(GetWorld(),0)))
+	{
+		for (UMenu* m : SS_P->OpenMenus)
+		{
+			if (m && !m->bExemptFromGlobalSystemBlockingTags)
+			{
+				menusOpen=true;
+				break;
+			}
+		}
+	}
+	if (menusOpen)
+	{
+		out.AppendTags(GetMutableDefault<UOmegaSettings>()->BlockedSystemsWhenMenusOpen);
+	}
 	return out;
 }
 
@@ -278,8 +308,13 @@ void UOmegaSubsystem_World::Native_RegisterCombatant(UCombatantComponent* Combat
 		
 }
 
+void UOmegaSubsystem_World::ForceUpdateGameplayState()
+{
+	Local_RefreshSystemState();
+}
+
 void UOmegaSubsystem_World::Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-	float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
+                                             float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
 {
 	OnCombatantDamaged.Broadcast(Combatant, Attribute, FinalDamage, Instigator, DamageType, Hit);
 }
@@ -341,6 +376,21 @@ UOmegaGameplayMessage* UOmegaSubsystem_World::Message_GetFirstOfCategory(FGamepl
 
 void UOmegaSubsystem_World::L_MessageDelegateEvent(UOmegaGameplayMessage* Message)
 {
+}
+
+void UOmegaSubsystem_World::GameplayModifier_Register(UObject* Object, bool bIsRegistered)
+{
+	if (Object && Object->GetClass()->ImplementsInterface(UDataInterface_GameplayModifier::StaticClass()))
+	{
+		if (bIsRegistered && !GameplayModifier_Registered.Contains(Object))
+		{
+			GameplayModifier_Registered.Add(Object);
+		}
+		else if (!bIsRegistered && GameplayModifier_Registered.Contains(Object))
+		{
+			GameplayModifier_Registered.Remove(Object);
+		}
+	}
 }
 
 void UOmegaSubsystem_World::SetGlobalActorBinding(FName Binding, AActor* Actor)

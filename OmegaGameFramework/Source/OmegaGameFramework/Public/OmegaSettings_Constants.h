@@ -10,6 +10,9 @@
 #include "Engine/DeveloperSettings.h"
 #include "OmegaSettings_Constants.generated.h"
 
+class UCurveVector;
+class UCurveFloat;
+class UCurveLinearColor;
 class UOmegaDamageType;
 class AOmegaGameplaySystem;
 class UMenu;
@@ -74,7 +77,15 @@ public:
 	TMap<FName,TSoftObjectPtr<UWorld>> Constant_Level;
 	UPROPERTY(EditAnywhere, config, Category = "Levels",DisplayName="♾️ Level (List)")
 	TMap<FName,FOmegaList_Level_Soft> Constant_LevelList;
-
 	
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// Curves
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	UPROPERTY(EditAnywhere, config, Category = "Curves",DisplayName="♾️ Curve (Float)")
+	TMap<FName,TSoftObjectPtr<UCurveFloat>> Constant_FloatCurve;
+	UPROPERTY(EditAnywhere, config, Category = "Curves",DisplayName="♾️ Curve (Vector)")
+	TMap<FName,TSoftObjectPtr<UCurveVector>> Constant_VectorCurve;
+	UPROPERTY(EditAnywhere, config, Category = "Curves",DisplayName="♾️ Curve (Color)")
+	TMap<FName,TSoftObjectPtr<UCurveLinearColor>> Constant_ColorCurve;
 };
 

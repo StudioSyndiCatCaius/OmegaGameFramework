@@ -10,6 +10,9 @@
 #include "OmegaSettings_Constants.h"
 #include "Components/Component_Leveling.h"
 #include "DataAssets/DA_DamageType.h"
+#include "Curves/CurveFloat.h"
+#include "Curves/CurveVector.h"
+#include "Curves/CurveLinearColor.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 
@@ -44,6 +47,9 @@ TArray<FName> UOmegaFunctions_Constants::opts_textList(){ LOCAL_GETKEYS(Constant
 TArray<FName> UOmegaFunctions_Constants::opts_level(){ LOCAL_GETKEYS(Constant_Level) }
 TArray<FName> UOmegaFunctions_Constants::opts_levelList(){LOCAL_GETKEYS(Constant_LevelList)}
 TArray<FName> UOmegaFunctions_Constants::opts_damageType(){LOCAL_GETKEYS(Constant_DamageTypes)}
+TArray<FName> UOmegaFunctions_Constants::opts_curve_float(){LOCAL_GETKEYS(Constant_FloatCurve)}
+TArray<FName> UOmegaFunctions_Constants::opts_curve_vector(){LOCAL_GETKEYS(Constant_VectorCurve)}
+TArray<FName> UOmegaFunctions_Constants::opts_curve_color(){LOCAL_GETKEYS(Constant_ColorCurve)}
 
 
 TSubclassOf<UPrimaryDataAsset> UOmegaFunctions_Constants::Class_DataAsset(FName Name)
@@ -179,4 +185,32 @@ TSoftObjectPtr<UWorld> UOmegaFunctions_Constants::Level(FName Name)
 TArray<TSoftObjectPtr<UWorld>> UOmegaFunctions_Constants::LevelList(FName Name)
 {
 	return GetMutableDefault<UOmegaSettings_Constants>()->Constant_LevelList.FindOrAdd(Name).List;
+}
+
+UCurveFloat* UOmegaFunctions_Constants::Curve_Float(FName Name)
+{
+	if (UCurveFloat* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_FloatCurve.FindOrAdd(Name).LoadSynchronous())
+	{
+		return da;
+	}
+	return nullptr;
+}
+
+UCurveVector* UOmegaFunctions_Constants::Curve_Vector(FName Name)
+{
+	
+	if (UCurveVector* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_VectorCurve.FindOrAdd(Name).LoadSynchronous())
+	{
+		return da;
+	}
+	return nullptr;
+}
+
+UCurveLinearColor* UOmegaFunctions_Constants::Curve_Color(FName Name)
+{
+	if (UCurveLinearColor* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_ColorCurve.FindOrAdd(Name).LoadSynchronous())
+	{
+		return da;
+	}
+	return nullptr;
 }

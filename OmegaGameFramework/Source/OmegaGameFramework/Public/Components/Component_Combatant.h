@@ -353,7 +353,7 @@ public:
 	// ------------------------------------------------------------------------------------------
 	// SKILLS
 	// ------------------------------------------------------------------------------------------
-
+	TArray<UPrimaryDataAsset*> GetSkills_FromSourceList(TArray<UObject*> SourceList);
 	// Returns true if Skill is in this combatant's active skill list.
 	UFUNCTION(BlueprintPure, Category="Skills",DisplayName="Skills - Owned?") bool HasSkill(UPrimaryDataAsset* Skill);
 	// Returns all skills currently available to this combatant from all skill sources.

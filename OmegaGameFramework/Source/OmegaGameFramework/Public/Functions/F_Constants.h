@@ -7,6 +7,7 @@
 #include "F_Constants.generated.h"
 
 
+class UCurveVector;
 class UOmegaDamageType;
 class UOmegaLevelingAsset;
 class UOmegaAttribute;
@@ -44,6 +45,10 @@ public:
 	UFUNCTION() static TArray<FName> opts_level();
 	UFUNCTION() static TArray<FName> opts_levelList();
 	UFUNCTION() static TArray<FName> opts_damageType();
+	
+	UFUNCTION() static TArray<FName> opts_curve_float();
+	UFUNCTION() static TArray<FName> opts_curve_vector();
+	UFUNCTION() static TArray<FName> opts_curve_color();
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - 💜Data Asset Class")
 	static TSubclassOf<UPrimaryDataAsset> Class_DataAsset(UPARAM(meta = (GetOptions = "opts_dataasset")) FName Name);
@@ -97,5 +102,13 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Level List")
 	static TArray<TSoftObjectPtr<UWorld>> LevelList(UPARAM(meta = (GetOptions = "opts_levelList")) FName Name);
+	
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Curve (Float)")
+	static UCurveFloat* Curve_Float(UPARAM(meta = (GetOptions = "opts_curve_float")) FName Name);
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Curve (Vector)")
+	static UCurveVector* Curve_Vector(UPARAM(meta = (GetOptions = "opts_curve_vector")) FName Name);
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Curve (Color)")
+	static UCurveLinearColor* Curve_Color(UPARAM(meta = (GetOptions = "opts_curve_color")) FName Name);
 	
 };

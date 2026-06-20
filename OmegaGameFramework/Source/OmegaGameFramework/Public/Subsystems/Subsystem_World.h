@@ -276,15 +276,19 @@ public:
 	UPROPERTY() TArray<FGameplayTag> ExtraBlockedSystemTags;
 private:
 	
-
 	//Refreshes system states. will shutdown any systems with blocked tags.
-	UFUNCTION()
-	void Local_RefreshSystemState();
+	UFUNCTION() void Local_RefreshSystemState();
 
 public:
-
+	
+	//will forcibly update the gameplay state & things like makeing sure appropriate systems are disabled/blocked.
+	UFUNCTION(BlueprintCallable, Category="Omega")
+	void ForceUpdateGameplayState();
+	
 	UFUNCTION()
 	void Native_RegisterCombatant(UCombatantComponent* Combatant, bool bRegistered);
+	
+
 	
 	UPROPERTY()
 	TArray<UCombatantComponent*> ActiveCombatants;
@@ -326,6 +330,15 @@ public:
 	bool Message_End(UOmegaGameplayMessage* Message);
 	UOmegaGameplayMessage* Message_GetFirstOfCategory(FGameplayTag CategoryTag);
 	void L_MessageDelegateEvent(UOmegaGameplayMessage* Message);
+
+	// ────────────────────────────────────────────────────────────────────
+	// Gameplay State Modifier
+	// ────────────────────────────────────────────────────────────────────
+	UPROPERTY() TArray<UObject*> GameplayModifier_Registered;
+	
+	UFUNCTION(BlueprintCallable, Category="Omega")
+	void GameplayModifier_Register(UObject* Object, bool bIsRegistered);
+	
 	
 	// ────────────────────────────────────────────────────────────────────
 	// Actor - Global Bindings
