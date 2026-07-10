@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "F_Trace.h"
+#include "Animation/AnimNotifies/AnimNotify.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
@@ -18,7 +19,7 @@ struct FOmegaPhysicsEventData
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) TSubclassOf<AOmegaGameplayCue> Cue;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Physics") TSubclassOf<AOmegaGameplayCue> Cue;
 	
 };
 
@@ -29,7 +30,7 @@ class UOmegaPhysicsSurfaceType : public UPrimaryDataAsset
 
 public:
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(Categories="Physics.Event",ForceInlineRow))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Physics",meta=(Categories="Physics.Event",ForceInlineRow))
 	TMap<FGameplayTag,FOmegaPhysicsEventData> EventData;
 	
 };
@@ -41,8 +42,8 @@ class UOmegaPhysicsEvent : public UPrimaryDataAsset
 
 public:
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(Categories="Physics.Event",ForceInlineRow)) FGameplayTag EventTag;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite) FOmegaScriptedTrace TraceEvent;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Physics",meta=(Categories="Physics.Event",ForceInlineRow)) FGameplayTag EventTag;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Physics") FOmegaScriptedTrace TraceEvent;
 	
 	virtual FHitResult GetHit(AActor* Instigator); 
 	
@@ -57,7 +58,7 @@ public:
 	
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 	virtual FString GetNotifyName_Implementation() const override;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(Categories="Physics.Event",ForceInlineRow))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Physics",meta=(Categories="Physics.Event",ForceInlineRow))
 	TSoftObjectPtr<UOmegaPhysicsEvent> Event;
 };
 
@@ -71,4 +72,12 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Text",meta=(WorldContext="WorldContextObject"),DisplayName="💥Physics - Run Event")
 	static void RunEvent(AActor* Instigator, UOmegaPhysicsEvent* Event);
 	
+	// ============================================================
+	// HitResult
+	// ============================================================
+	UFUNCTION(BlueprintPure,Category="Omega|HitResult",meta=(AdvancedDisplay="X,Y,Z"))
+	static FVector OffsetVector_FromHitResult(FHitResult Hit, FVector Offset, FRotator ExtraRotationOffset, bool bImpact=true);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|HitResult",meta=(AdvancedDisplay="X,Y,Z"))
+	static FRotator GetRotationFromHitResultNormal(FHitResult Hit, bool bImpact=true,bool X=true,bool Y=true,bool Z=true);
 };

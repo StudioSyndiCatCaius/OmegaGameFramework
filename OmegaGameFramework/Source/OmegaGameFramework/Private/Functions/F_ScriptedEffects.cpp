@@ -51,8 +51,14 @@ FText FOmegaCustomScriptedEffects::GetEffectsDescription(const FString& delimite
 	return out;
 }
 
+float UOmegaScriptedEffect::GetEffectUtilityScore_Implementation(UCombatantComponent* Target,
+	UCombatantComponent* Instigator)
+{
+	return 0.0;
+}
+
 FText UOmegaScriptedEffectFunctions::GetEffects_Description(FOmegaCustomScriptedEffects effects,
-	const FString& delimiter)
+                                                            const FString& delimiter)
 {
 	FText out;
 	for(auto* a :effects.GetAllEffects())
@@ -66,8 +72,27 @@ FText UOmegaScriptedEffectFunctions::GetEffects_Description(FOmegaCustomScripted
 	return out;
 }
 
+void UOmegaScriptedEffectFunctions::GetEffects_UtilityScore(FOmegaCustomScriptedEffects effects,
+	UCombatantComponent* Target, UCombatantComponent* Instigator, float& Total, float& Average)
+{
+	if (Target && Instigator)
+	{
+		float EffectNum=0.0;
+		
+		for(auto* a :effects.GetAllEffects())
+		{
+			if(a)
+			{
+				Total+=a->GetEffectUtilityScore(Target,Instigator);
+				EffectNum+=1.0;
+			}
+		}
+		Average=Total/EffectNum;
+	}
+}
+
 void UOmegaScriptedEffectFunctions::ApplyScriptedEffects_List(TArray<UOmegaScriptedEffect*> Effects,
-                                                                 UCombatantComponent* Target, UCombatantComponent* Instigator)
+                                                              UCombatantComponent* Target, UCombatantComponent* Instigator)
 {
 	for(auto* TempEffect : Effects)
 	{
@@ -78,7 +103,7 @@ void UOmegaScriptedEffectFunctions::ApplyScriptedEffects_List(TArray<UOmegaScrip
 			//Spawn Cues
 			for(const TSubclassOf<AOmegaGameplayCue>& TempCue : TempEffect->GetCuesToPlay())
 			{
-				UOmegaGameplayCueFunctions::PlayGameplayCue(Target,TempCue,FTransform(), FHitResult(),Target->GetOwner());
+				UOmegaGameplayCueFunctions::PlayGameplayCue(Target,TempCue,FTransform(), FHitResult(),Target->GetOwner()->GetRootComponent());
 			}
 		}
 	}
@@ -94,13 +119,27 @@ void UOmegaScriptedEffectFunctions::ApplyScriptedEffects_Asset(UOmegaScriptedEff
 		//Spawn Cues
 		for(const TSubclassOf<AOmegaGameplayCue>& TempCue : EffectAsset->GameplayCues)
 		{
-			UOmegaGameplayCueFunctions::PlayGameplayCue(Target,TempCue,FTransform(),FHitResult(),Target->GetOwner());
+			UOmegaGameplayCueFunctions::PlayGameplayCue(Target,TempCue,FTransform(),FHitResult(),Target->GetOwner()->GetRootComponent());
 		}
 	}
 }
 
+void UOmegaScriptedEffectFunctions::ApplyScriptedEffects_Source(
+	TScriptInterface<IDataInterface_ScriptedEffects> EffectAsset, FGameplayTag Tag, UCombatantComponent* Target,
+	UCombatantComponent* Instigator)
+{
+	if(EffectAsset.GetObject() && Target && Instigator)
+	{
+		FOmegaCustomScriptedEffects ef=IDataInterface_ScriptedEffects::Execute_GetScriptedEffects(EffectAsset.GetObject(),Tag);
+		ApplyCustomScriptedEffectToCombatant(ef,Target,Instigator);
+		IDataInterface_ScriptedEffects::Execute_OnEffectsApplied(EffectAsset.GetObject(),Target,Instigator,Tag);
+	}
+}
+
+
+
 void UOmegaScriptedEffectFunctions::ApplyCustomScriptedEffectToCombatant(FOmegaCustomScriptedEffects Effects,
-	UCombatantComponent* Target, UCombatantComponent* Instigator)
+                                                                         UCombatantComponent* Target, UCombatantComponent* Instigator)
 {
 	FOmegaCustomScriptedEffects IncomingEffects = Effects;
 
@@ -112,13 +151,3 @@ void UOmegaScriptedEffectFunctions::ApplyCustomScriptedEffectToCombatant(FOmegaC
 	ApplyScriptedEffects_List(IncomingEffects.CustomEffects,Target,Instigator);
 }
 
-void UOmegaScriptedEffectFunctions::ApplyScriptedEffects_Source(UObject* EffectAsset, UCombatantComponent* Target,
-	UCombatantComponent* Instigator, FGameplayTag Tag)
-{
-	if(EffectAsset && EffectAsset->GetClass()->ImplementsInterface(UOmegaScriptedEffectsInterface::StaticClass()))
-	{
-		FOmegaCustomScriptedEffects ef;
-		ApplyCustomScriptedEffectToCombatant(ef,Target,Instigator);
-		IOmegaScriptedEffectsInterface::Execute_OnEffectsApplied(EffectAsset,Target,Instigator,Tag);
-	}
-}

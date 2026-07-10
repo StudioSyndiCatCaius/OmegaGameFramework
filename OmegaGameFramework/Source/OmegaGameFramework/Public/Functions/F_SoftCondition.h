@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Templates/SubclassOf.h"
 #include "F_SoftCondition.generated.h"
 
 
@@ -12,7 +14,7 @@
 // ===================================================================================================================
 // IntState
 // ===================================================================================================================
-UINTERFACE(MinimalAPI) class UDataInterface_SoftCondition : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Soft Condition") class UDataInterface_SoftCondition : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_SoftCondition
 {
 	GENERATED_BODY()

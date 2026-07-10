@@ -6,13 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Interfaces/I_StandardInput.h"
+#include "Types/Struct_Combatant.h"
 #include "Actor_Ability.generated.h"
 
+class UEquipmentSlot;
 class UActorModifierScript;
 class AOmegaAbility;
 class UOmegaCondition_Actor;
 class UCombatantComponent;
-class UInputReceiverComponent;
 class UHUDLayer;
 
 // Delegates
@@ -24,7 +25,6 @@ class ACharacter;
 class UCharacterMovementComponent;
 class UPawnMovementComponent;
 class UEnhancedInputComponent;
-class UHUDLayer;
 class UTimelineComponent;
 class UOmegaSubsystem_GameInstance;
 
@@ -68,6 +68,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaAbility : public AActor, public IDataInterfac
 	
 	UPROPERTY() float f_cooldownTime;
 	UPROPERTY() bool b_IsKilling;
+	UPROPERTY() float f_activeTickAccumulator = 0.f;
 
 	UPROPERTY() UPawnMovementComponent* rev_moveComp;
 	
@@ -84,7 +85,7 @@ public:
 	
 	UFUNCTION() void L_OnInput_Start(FVector Value);
 	UFUNCTION() void L_OnInput_End(FVector Value);
-	UFUNCTION() virtual void Native_AbilityActivated(class UObject* Context);
+	UFUNCTION() virtual void Native_AbilityActivated(class UObject* Context, FOmegaCombatantEventMeta meta);
 	UFUNCTION() virtual void Native_AbilityFinished(bool Cancelled);
 	UFUNCTION() virtual void Native_ActivatedTick(float DeltaTime);
 	UFUNCTION() virtual bool Native_CanActivate(UObject* Context);
@@ -95,32 +96,40 @@ public:
 	UFUNCTION() void RecieveFinish(bool bCancel);
 
 	UPROPERTY(EditDefaultsOnly, Category = "✊Ability",meta=(Categories="INPUT")) float CooldownTime;
-	
+	UPROPERTY(EditDefaultsOnly, Category = "✊Ability",meta=(Categories="INPUT")) float ActiveTickFrequency;
+	UPROPERTY(EditDefaultsOnly, Category = "✊Ability",meta=(Categories="INPUT")) bool BlockAutoAbilitySelectorWhileActive;
 	UPROPERTY(EditDefaultsOnly, Category = "✊Ability - Input",meta=(Categories="INPUT")) FGameplayTag LinkedInputAction;
 	UPROPERTY(EditDefaultsOnly, Category = "✊Ability - Input") bool bStopAbilityOnInputActionEnd;
+	
+	UPROPERTY(BlueprintReadOnly,Category="Ability") FOmegaCombatantEventMeta LastMeta;
+	
 	// ------------------------------------------------------
 	// Tags
 	// ------------------------------------------------------
 	
 	//Tags assosiated with this ability.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "✊Ability - Tags", meta = (Categories = "ABILITY"))
-	struct FGameplayTagContainer AbilityTags;
+	FGameplayTagContainer AbilityTags;
 
 	//Cancel any of the owner's active abilities with any of these tags.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "✊Ability - Tags", meta = (Categories = "ABILITY"))
-	struct FGameplayTagContainer CancelAbilities;
+	FGameplayTagContainer CancelAbilities;
 
 	//Cancels and Prevent any abilites with any of these tags from being activated by the owner until this ability finishes.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "✊Ability - Tags", meta = (Categories = "ABILITY"))
-	struct FGameplayTagContainer BlockAbilities;
+	FGameplayTagContainer BlockAbilities;
 
 	//The Owner Must have these gameplay tags for this ability to activate.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "✊Ability - Tags", meta = (Categories = "ABILITY"))
-	struct FGameplayTagContainer RequiredOwnerTags;
+	FGameplayTagContainer RequiredOwnerTags;
 
 	//The Owner must NOT have ANY of these gameplay tags in order for this ability to activate.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "✊Ability - Tags", meta = (Categories = "ABILITY"))
-	struct FGameplayTagContainer RestrictedOwnerTags;
+	FGameplayTagContainer RestrictedOwnerTags;
+	
+	//Tags granted to owning combatant while ability is active
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "✊Ability - Tags", meta = (Categories = "ABILITY"))
+	FGameplayTagContainer OwnerTagsWhileActive;
 	
 	//----------------------------------------------------------------------
 	// State
@@ -142,22 +151,25 @@ public:
 	// Blueprint Implementable
 	// ------------------------------------------------------
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void AbilityActivated(class UObject* Context);
+	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
+	void AbilityActivated(UObject* Context, FOmegaCombatantEventMeta meta);
 	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Ability")
+	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
 	void AbilityFinished(bool Cancelled);
 	
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
 	void ActivatedTick(float DeltaTime);
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "Ability")
-	bool CanActivate(const UObject* Context);
+	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
+	bool CanActivate(UObject* Context);
 	
-	UFUNCTION(BlueprintImplementableEvent, Category="Ability")
+	UFUNCTION(BlueprintNativeEvent, Category = "✊Ability")
+	float UtilityCheck(const UCombatantComponent* Combatant, UObject*& ExecuteContext,FOmegaCombatantEventMeta& meta, int32& Priority);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "✊Ability")
 	UTimelineComponent* GetAbilityActivationTimeline();
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, Category = "✊Ability")
 	void OnCombatantNotify(UCombatantComponent* OwningCombatant, FName Notify, const FString& Flag);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Combatant")
@@ -170,7 +182,7 @@ public:
 	// ------------------------------------------------------
 	
 	UFUNCTION(BlueprintCallable, DisplayName="Activate", Category="Ω|Ability")
-	bool Execute(UObject* Context);
+	bool Execute(UObject* Context, FOmegaCombatantEventMeta meta);
 	
 	UFUNCTION(BlueprintCallable, Category="Ability")
 	bool SetInputEnabledForOwner(bool Enabled);
@@ -182,10 +194,7 @@ public:
 	//Cancels and Destroys this Ability.
 	UFUNCTION(BlueprintCallable, Category = "Ω|Ability")
 	void CancelAbility();
-
-	// ------------------------------------------------------
-	// Blueprint Pure
-	// ------------------------------------------------------
+	
 	
 	UFUNCTION(BlueprintPure, Category="Cooldown")
 	bool IsAbilityInCooldown() const;
@@ -197,14 +206,19 @@ public:
 	APlayerController* GetAbilityOwnerPlayer();
 	
 	UFUNCTION(BlueprintPure, Category = "Ω|Ability|Owner")
-	class UCharacterMovementComponent* GetAbilityOwnerCharacterMoveComponent();
-
-	UFUNCTION(BlueprintPure, Category = "Ω|Ability|Owner")
 	class USkeletalMeshComponent* GetAbilityOwnerMesh() const;
-	
 
 	UFUNCTION(BlueprintPure, Category="Cooldown")
 	void GetRemainingCooldownValues(float& Normalized, float& Seconds);
+	
+	UFUNCTION(BlueprintPure, Category = "Ω|Ability|Owner")
+	class UCharacterMovementComponent* GetAbilityOwnerCharacterMoveComponent();
+
+	UFUNCTION(BlueprintPure,Category="Ω|Ability|",meta=(ExpandBoolAsExecs="bResult"))
+	bool IsOwner_Falling(bool& bResult);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega Ability",meta=(ExpandBoolAsExecs="bResult",DeterminesOutputType="Class"))
+	UPrimaryDataAsset* GetEquipmentInOwnerSlot(UEquipmentSlot* Slot, TSubclassOf<UPrimaryDataAsset> Class, bool& bResult);
 	
 	//-###########################################################################################################-//
 	//---- UPROPERTY
@@ -226,13 +240,13 @@ public:
 	UPROPERTY() bool FlipFlopInput;
 	UPROPERTY() TSubclassOf<UHUDLayer> HudClass;
 	
-	UPROPERTY(BlueprintReadOnly, DisplayName="Ability Context", meta = (ExposeOnSpawn = "true"), Category = "Ability")
+	UPROPERTY(BlueprintReadOnly, DisplayName="Ability Context", meta = (ExposeOnSpawn), Category = "Ability")
 	UObject* ContextObject = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category="Owner")
 	class UCombatantComponent* CombatantOwner;
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnAbilityEnd OnAbilityFinished;
 	
 	

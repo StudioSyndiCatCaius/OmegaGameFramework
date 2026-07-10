@@ -4,6 +4,7 @@
 #include "Misc/OmegaGameplayModule.h"
 
 #include "Components/Component_Combatant.h"
+#include "Components/Component_GameplayActor.h"
 #include "Subsystems/Subsystem_World.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "UObject/Object.h"
@@ -97,16 +98,32 @@ void UOmegaGameplayModule::L_ActorIdentityRegistered(AActor* Actor, UGameplayAct
 		if(Registered && !registered_GameplayActors.Contains(Component))
 		{
 			registered_GameplayActors.AddUnique(Component);
-			Actor->OnActorBeginOverlap.AddDynamic(this,&UOmegaGameplayModule::OnActor_BeginOverlap);
-			Actor->OnActorEndOverlap.AddDynamic(this,&UOmegaGameplayModule::OnActor_EndOverlap);
-			Actor->OnActorHit.AddDynamic(this, &UOmegaGameplayModule::OnActor_Hit);
-			Actor->OnBeginCursorOver.AddDynamic(this, &UOmegaGameplayModule::OnActor_BeginCursorOver);
-			Actor->OnEndCursorOver.AddDynamic(this, &UOmegaGameplayModule::OnActor_EndCursorOver);
-			Actor->OnClicked.AddDynamic(this, &UOmegaGameplayModule::OnActor_Clicked);
+			if(!registered_GameplayActorOwners.Contains(Actor))
+			{
+				registered_GameplayActorOwners.AddUnique(Actor);
+				Actor->OnActorBeginOverlap.AddDynamic(this,&UOmegaGameplayModule::OnActor_BeginOverlap);
+				Actor->OnActorEndOverlap.AddDynamic(this,&UOmegaGameplayModule::OnActor_EndOverlap);
+				Actor->OnActorHit.AddDynamic(this, &UOmegaGameplayModule::OnActor_Hit);
+				Actor->OnBeginCursorOver.AddDynamic(this, &UOmegaGameplayModule::OnActor_BeginCursorOver);
+				Actor->OnEndCursorOver.AddDynamic(this, &UOmegaGameplayModule::OnActor_EndCursorOver);
+				Actor->OnClicked.AddDynamic(this, &UOmegaGameplayModule::OnActor_Clicked);
+			}
 		}
 		else if (!Registered && registered_GameplayActors.Contains(Component))
 		{
 			registered_GameplayActors.Remove(Component);
+			const bool bActorStillHasComponents = registered_GameplayActors.ContainsByPredicate(
+				[Actor](UGameplayActorComponent* C){ return C && C->GetOwner() == Actor; });
+			if(!bActorStillHasComponents && registered_GameplayActorOwners.Contains(Actor))
+			{
+				registered_GameplayActorOwners.Remove(Actor);
+				Actor->OnActorBeginOverlap.RemoveDynamic(this,&UOmegaGameplayModule::OnActor_BeginOverlap);
+				Actor->OnActorEndOverlap.RemoveDynamic(this,&UOmegaGameplayModule::OnActor_EndOverlap);
+				Actor->OnActorHit.RemoveDynamic(this, &UOmegaGameplayModule::OnActor_Hit);
+				Actor->OnBeginCursorOver.RemoveDynamic(this, &UOmegaGameplayModule::OnActor_BeginCursorOver);
+				Actor->OnEndCursorOver.RemoveDynamic(this, &UOmegaGameplayModule::OnActor_EndCursorOver);
+				Actor->OnClicked.RemoveDynamic(this, &UOmegaGameplayModule::OnActor_Clicked);
+			}
 		}
 	}
 	OnActor_IdentityRegistered(Actor,Component,Registered);

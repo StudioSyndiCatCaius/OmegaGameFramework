@@ -4,11 +4,38 @@
 #include "Functions/F_Zone.h"
 
 #include "Actors/Actor_Zone.h"
+#include "Components/Component_GameplayActor.h"
 #include "Functions/F_Common.h"
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/Subsystem_World.h"
+#include "Engine/World.h"
 
 #define LOC_SUB WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()
+
+bool UOmegaFunctions_Zone::ActorInZone(AActor* Actor, UOmegaZoneData* Zone)
+{
+	if (Actor && Zone)
+	{
+		if (UActorComponent* comp=Actor->GetComponentByClass(UGameplayActorComponent::StaticClass()))
+		{
+			if (Cast<UGameplayActorComponent>(comp)->Zone==Zone) { return true;}
+		}
+	}
+	return false;
+}
+
+TArray<AActor*> UOmegaFunctions_Zone::FilterActorsInZone(TArray<AActor*> Actors, UOmegaZoneData* Zone)
+{
+	TArray<AActor*> out;
+	for (auto* a : Actors)
+	{
+		if (ActorInZone(a,Zone))
+		{
+			out.Add(a);
+		}
+	}
+	return out;
+}
 
 UOmegaLevelData* UOmegaFunctions_Zone::Level_GetData(UObject* WorldContextObject,TSoftObjectPtr<UWorld> Level)
 {
@@ -17,6 +44,21 @@ UOmegaLevelData* UOmegaFunctions_Zone::Level_GetData(UObject* WorldContextObject
 		return LOC_SUB->Zone_GetLevelData(Level);
 	}
 	return nullptr;
+}
+
+TArray<UOmegaLevelData*> UOmegaFunctions_Zone::Level_GetDataList(UObject* WorldContextObject,
+	TArray<TSoftObjectPtr<UWorld>> Levels)
+{
+	TArray<UOmegaLevelData*> out;
+	for (TSoftObjectPtr<UWorld> LevelPtr : Levels)
+	{
+		if (UOmegaLevelData* Level=Level_GetData(WorldContextObject,LevelPtr))
+		{
+			out.Add(Level);
+		}
+	}
+	
+	return out;
 }
 
 UOmegaLevelData* UOmegaFunctions_Zone::Level_GetDataCurrent(UObject* WorldContextObject)
@@ -44,27 +86,27 @@ UOmegaZoneData* UOmegaFunctions_Zone::Zone_GetCurrentLoaded(UObject* WorldContex
 	return nullptr;
 }
 
-void UOmegaFunctions_Zone::Transit_ToPoint(UObject* WorldContextObject,AOmegaZonePoint* Point,APlayerController* Player)
+void UOmegaFunctions_Zone::Transit_ToPoint(UObject* WorldContextObject,AOmegaZonePoint* Point,APlayerController* Player, bool bSkipFade)
 {
 	if (WorldContextObject && WorldContextObject->GetWorld())
 	{
-		return LOC_SUB->Zone_Transit(Point,Player);
+		return LOC_SUB->Zone_Transit(Point,Player,bSkipFade);
 	}
 }
 
-void UOmegaFunctions_Zone::Transit_ToLevel(UObject* WorldContextObject,TSoftObjectPtr<UWorld> Level,FGameplayTag Tag)
+void UOmegaFunctions_Zone::Transit_ToLevel(UObject* WorldContextObject,TSoftObjectPtr<UWorld> Level,FGameplayTag Tag, bool bSkipFade)
 {
 	if (WorldContextObject && WorldContextObject->GetWorld())
 	{
-		return LOC_SUB->Zone_TransitToLevel(Level,Tag);
+		return LOC_SUB->Zone_TransitToLevel(Level,Tag,bSkipFade);
 	}
 }
 
-void UOmegaFunctions_Zone::Transit_ToLevelNamed(UObject* WorldContextObject, FName Level, FGameplayTag Tag)
+void UOmegaFunctions_Zone::Transit_ToLevelNamed(UObject* WorldContextObject, FName Level, FGameplayTag Tag, bool bSkipFade)
 {
 	if (WorldContextObject && WorldContextObject->GetWorld())
 	{
-		return LOC_SUB->Zone_TransitToLevel_Name(Level,Tag);
+		return LOC_SUB->Zone_TransitToLevel_Name(Level,Tag,bSkipFade);
 	}
 }
 

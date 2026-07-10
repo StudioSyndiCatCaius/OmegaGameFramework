@@ -3,10 +3,12 @@
 #include "DataAssets/DA_CommonCharacter.h"
 
 #include "OmegaSettings.h"
-#include "OmegaSettings_Assets.h"
+#include "OmegaSettings_Constants.h"
 #include "Functions/F_Assets.h"
 #include "Actors/Actor_Character.h"
 #include "Components/Component_Combatant.h"
+#include "Components/Component_Leveling.h"
+#include "Functions/F_Constants.h"
 #include "GameFramework/Character.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -27,12 +29,17 @@ void UOAsset_CommonCharacter::L_Init(AActor* a, bool init)
 
 TArray<FName> UOAsset_CommonCharacter::opts_attributes() const
 {
-	OGF_NAMED_ASSET_LIST(Named_Attributes)
+	OGF_NAMED_ASSET_LIST(Constant_Attributes)
 }
 
 TArray<FName> UOAsset_CommonCharacter::opts_equipSlot() const
 {
-	OGF_NAMED_ASSET_LIST(Named_EquipSlots)
+	OGF_NAMED_ASSET_LIST(Constant_EquipSlots)
+}
+
+TArray<FName> UOAsset_CommonCharacter::opts_xp() const
+{
+	OGF_NAMED_ASSET_LIST(Constant_Leveling)
 }
 
 
@@ -60,15 +67,66 @@ bool UOAsset_CommonCharacter::OnIdentityUninit_Implementation(AActor* Actor, UGa
 	return true;
 }
 
-TArray<UPrimaryDataAsset*> UOAsset_CommonCharacter::GetSkills_Implementation(UCombatantComponent* Combatant)
+
+
+
+void UOAsset_CommonCharacter::ApplyInitialsToCombatant(UCombatantComponent* Combatant)
 {
-	return Skills;
+	if (Combatant)
+	{
+		Combatant->Equipment_SetAll(GetCharacterEquipment());
+		Combatant->Inventory_Set(Inventory);
+		for (auto i : Skills)
+		{
+			if (UPrimaryDataAsset* pda=Cast<UPrimaryDataAsset>(i.GetObject()))
+			{
+				Combatant->AddSkill(pda,true);
+			}
+		}
+		TArray<FName> lvlasset;
+		XpLevels.GetKeys(lvlasset);
+		for (FName Name : lvlasset)
+		{
+			if (UOmegaLevelingAsset* lvla=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Leveling.FindOrAdd(Name).LoadSynchronous())
+			{
+				Combatant->XP_SetLevel(lvla,XpLevels[Name]);
+			}
+		}
+		Combatant->SetCombatantLevel(Level,true);
+	}
 }
 
-TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOAsset_CommonCharacter::GetEquipment_Implementation()
+TMap<UEquipmentSlot*, UPrimaryDataAsset*> UOAsset_CommonCharacter::GetCharacterEquipment()
 {
-	return UOmegaFunctions_Asset::ConvNamed_Equipment(Equipment);
+	TMap<FName, UPrimaryDataAsset*> EquipmentAssets;
+	for (const auto& Pair : Equipment)
+	{
+		if (UPrimaryDataAsset* Asset = Cast<UPrimaryDataAsset>(Pair.Value.GetObject()))
+		{
+			EquipmentAssets.Add(Pair.Key, Asset);
+		}
+	}
+	return UOmegaFunctions_Asset::ConvNamed_Equipment(EquipmentAssets);
 }
+
+
+
+TMap<UOmegaAttribute*, float> UOAsset_CommonCharacter::GetAttributes()
+{
+	TMap<UOmegaAttribute*, float> out;
+	TArray<FName> nams;
+	Attributes.GetKeys(nams);
+	for (FName Name : nams)
+	{
+		if (UOmegaAttribute* att = UOmegaFunctions_Constants::Attribute(Name))
+		{
+			out.Add(att,Attributes[Name]);
+		}
+	}
+	
+	return out;
+}
+
 
 
 UOAsset_Appearance* UOAsset_CommonCharacter::GetAppearanceAsset_Implementation()

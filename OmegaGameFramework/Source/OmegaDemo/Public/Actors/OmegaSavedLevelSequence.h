@@ -23,24 +23,21 @@ public:
 	virtual void BeginPlay() override;
 	AOmegaSavedLevelSequence();
 	virtual void Tick(float DeltaTime) override;
-	
-	FOmegaEntity* L_GetEntity() const;
-	
+
 	bool b_isPlaying;
 	
-	UPROPERTY(BlueprintAssignable) FSavedLevelSequenceDelegateState OnStateChange;
-	UPROPERTY(BlueprintAssignable) FSavedLevelSequenceDelegateState OnPlayingStateChange;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FSavedLevelSequenceDelegateState OnStateChange;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FSavedLevelSequenceDelegateState OnPlayingStateChange;
 	
 	UFUNCTION(BlueprintCallable, Category = "Saved Level Sequence") void SetSavedState(bool bState);
 	
-	UFUNCTION(BlueprintPure,Category="Saved Level Sequence") bool GetSavedState() const;
+	UFUNCTION(BlueprintPure,Category="Saved Level Sequence") bool GetSavedState();
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Level Sequence") ULevelSequence* LevelSequence;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Level Sequence") FGuid GUID;
 };
 
 
-UCLASS(DisplayName="Play Saved Level Sequence",Category="Debug")
+UCLASS(DisplayName="🎬Play Level Sequence (Saved)",Category="Debug")
 class OMEGADEMO_API UFlowNode_PlaySavedLevelSequence : public UFlowNode
 {
 	GENERATED_BODY()

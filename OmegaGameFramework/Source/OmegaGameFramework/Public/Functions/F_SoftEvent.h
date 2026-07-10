@@ -12,7 +12,7 @@
 // ===================================================================================================================
 // IntState
 // ===================================================================================================================
-UINTERFACE(MinimalAPI) class UDataInterface_SoftEvent : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Soft Event") class UDataInterface_SoftEvent : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_SoftEvent
 {
 	GENERATED_BODY()

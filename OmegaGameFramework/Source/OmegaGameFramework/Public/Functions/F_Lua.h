@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "LuaValue.h"
+#include "Misc/GeneralDataObject.h"
 
 #include "F_Lua.generated.h"
 
@@ -21,6 +22,17 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Omega|Lua") FLuaValue ParseStringToTable(UObject* WorldContext, const FString& String);
 };
+
+UCLASS(Blueprintable,BlueprintType,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UOmegaLuaDataAsset : public UOmegaMinimalDataAsset
+{
+	GENERATED_BODY()
+public:
+	
+	//UPROPERTY() FLuaValue* LuaData;
+	
+};
+
 
 
 UCLASS()

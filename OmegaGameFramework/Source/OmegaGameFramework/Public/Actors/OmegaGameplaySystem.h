@@ -5,8 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "InputMappingContext.h"
-#include "Widget/HUDLayer.h"
 #include "GameplayTagContainer.h"
 #include "Actor_Ability.h"
 #include "OmegaActors.h"
@@ -16,6 +14,8 @@
 
 #include "OmegaGameplaySystem.generated.h"
 
+class UHUDLayer;
+class UInputMappingContext;
 class AOmegaHUD;
 class AOmegaPlayer;
 class UGameplayActorComponent;
@@ -71,8 +71,8 @@ public:
 	UPROPERTY() FString TempFlag;
 	UPROPERTY() bool bIsInShutdown;
 	
-	UPROPERTY(BlueprintAssignable) FOnNotify OnSystemNotify;
-	UPROPERTY(BlueprintAssignable) FOnSubstateChange OnSystemShutdown;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnNotify OnSystemNotify;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnSubstateChange OnSystemShutdown;
 	UPROPERTY() TArray<class UHUDLayer*> ActivePlayerWidgets;
 	
 	//---------------------------------------------------------------------
@@ -80,11 +80,11 @@ public:
 	//---------------------------------------------------------------------
 
 	//Context Object//
-	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "GameplaySystem")
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn), Category = "GameplaySystem")
 	class UObject* ContextObject;
-	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "GameplaySystem")
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn), Category = "GameplaySystem")
 	FString ActivationFlag;
-	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "GameplaySystem")
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn), Category = "GameplaySystem")
 	FOmegaCommonMeta SystemMeta;
 	
 	UPROPERTY(EditDefaultsOnly, Category="♎Omega|Misc") bool WidgetsOnPlayerScreen=true;
@@ -134,10 +134,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Events")
 	void OnActor_Interaction(AActor* InteractInstigator, AActor* Target, FGameplayTag Tag, FOmegaCommonMeta Context);
 	
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega")
 	void OnGameplayMessage(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta Meta);
 	
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega")
 	void OnGameplayStateChange(FGameplayTag NewState);
 
 	UFUNCTION(BlueprintImplementableEvent,Category="Save")
@@ -147,10 +147,10 @@ public:
 	int32 OnHUDDraw(AOmegaHUD* HUDActor);
 	
 	
-	UFUNCTION(BlueprintNativeEvent, DisplayName="On Activated")
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Activated", Category="Omega")
 	void SystemActivated(class UObject* Context, const FString& Flag);
 	
-	UFUNCTION(BlueprintNativeEvent, DisplayName="On Finish Shutdown")
+	UFUNCTION(BlueprintNativeEvent, DisplayName="On Finish Shutdown", Category="Omega")
 	void SystemShutdown(UObject* Context, const FString& Flag);
 	
 	//Will shut down this gameplay system//
@@ -282,7 +282,7 @@ struct FOmegaBaseSystemStats
 			};
 			for(AOmegaGameplaySystem* a : GetActiveSystems(true))
 			{
-				if(a && a->GetClass()==sys)
+				if(a && a->GetClass()==sys && !a->local_InRestart)
 				{
 					//UE_LOG(LogTemp, Log, TEXT("Cannot activate system: %s | System is already active"), *sys->GetName());
 					return false;

@@ -15,6 +15,7 @@
 #include "OmegaSettings_Assets.h"
 #include "Functions/F_Common.h"
 #include "HAL/PlatformFilemanager.h"
+#include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Misc/Paths.h"
 #include "Misc/PackageName.h"
@@ -55,6 +56,11 @@ void UOmegaSubsystem_Engine::Initialize(FSubsystemCollectionBase& Collection)
 		}
 	}
 	
+}
+
+void UOmegaSubsystem_Engine::GlobalRefresh()
+{
+	OnGlobalRefresh.Broadcast();
 }
 
 void UOmegaSubsystem_Engine::LoadDevConfig()

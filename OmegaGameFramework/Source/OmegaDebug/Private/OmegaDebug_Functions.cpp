@@ -5,6 +5,8 @@
 #include "Functions/F_Quest.h"
 #include "Actors/Actor_Quest.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
 
 UOmegaDebugDevSettings::UOmegaDebugDevSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -60,13 +62,7 @@ void UOmegaDebugSubsystem::StartDebugProfile(UOmegaDebugProfile* Profile)
 		}
 		UOmegaSaveGame* _sav=GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->ActiveSaveData;
 		
-		for(auto* i : Profile->Scripts)
-		{
-			if(i)
-			{
-				i->OnProfileBegin(this);
-			}
-		}
+		UOmegaFunctions_GlobalScripting::RunGlobalScripts(this,Profile->Scripts);
 		if(Profile->bAutostartQuests)
 		{
 			for(TSoftObjectPtr<UOmegaQuest> q : Profile->QuestsToAutostart)

@@ -101,27 +101,10 @@ public:
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// OBJECT
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	
-	//to deprecate?
-	UFUNCTION() TArray<FName> Object_AppendMetatags(UObject* WorldContext, UObject* Object) const
-	{
-		return TArray<FName>();
-	};
-	UFUNCTION() FString Object_RunClassCommand(UObject* Object, int32 command) const
-	{
-		return "";
-	};
-	UFUNCTION() void Object_EditorHideVariables(UObject* Object, TArray<FName>& HiddenProperties, TArray<FName>& HiddenCategories) const
-	{
-		
-	};
-	
+
 	UFUNCTION(BlueprintImplementableEvent,Category="Object") FText Object_OverrideName(UObject* Object,FGameplayTag Tag, bool& bOverride) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Object") FText Object_OverrideDescription(UObject* Object,FGameplayTag Tag, bool& bOverride) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Object") FSlateBrush Object_OverrideIcon(UObject* Object,FGameplayTag Tag, bool& bOverride) const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Object") FString Object_OverrideSoftProperty(UObject* Object, FName ParamName) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Object") TArray<FString> Object_GetDefaultFlags(UObject* object) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Object") UObject* Override_GetAssetFromPath(const FString& path, TSubclassOf<UObject> Class) const;
 	
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -132,30 +115,16 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void Actor_OnConstruct(AActor* Actor) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void Actor_OnBeginPlay(AActor* Actor) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void Actor_OnTagEvent(AActor* Actor, FGameplayTag Event) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor") FText Actor_GetDebugText(AActor* Actor) const;
-	UFUNCTION(BlueprintNativeEvent,Category="Actor") bool Actor_CanSetTagTarget(AActor* Instigator,AActor* Target,FGameplayTag Tag) const;
-	
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_OnConstruct(AActor* Actor,UGameplayActorComponent* Component) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_OnBeginPlay(AActor* Actor,UGameplayActorComponent* Component) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_IdentityInit(AActor* Actor,UGameplayActorComponent* Component,UPrimaryDataAsset* Identity) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_IdentityUninit(AActor* Actor,UGameplayActorComponent* Component,UPrimaryDataAsset* Identity) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor") TMap<FName,TSubclassOf<AActor>> Spawnable_GetNamed() const;
-	
-	
-	void GetActorInstanceMetaParams(AActor* Actor,TArray<FName>& OutBoolParams,TArray<FName>& OutIntParams,TArray<FName>& OutFloatParams,
-		TArray<FName>& OutStringParams, TArray<FName>& OutDataAssetParams, TArray<FName>& OutActorParams ) const
-	{
-		
-	};
-	
-	UFUNCTION(BlueprintNativeEvent,Category="Actor") TArray<AActor*> ActorGroup_Filter(const UObject* WorldContext, FGameplayTag GroupTag,const TArray<AActor*>& InitialGroupActors) const;
-	UFUNCTION(BlueprintNativeEvent,Category="Actor") bool ActorGroup_AllowActor(AActor* Actor,FGameplayTag GroupTag) const;
+
+	//UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_OnConstruct(AActor* Actor,UGameplayActorComponent* Component) const;
+	//UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_OnBeginPlay(AActor* Actor,UGameplayActorComponent* Component) const;
+	//UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_IdentityInit(AActor* Actor,UGameplayActorComponent* Component,UPrimaryDataAsset* Identity) const;
+	//UFUNCTION(BlueprintImplementableEvent,Category="Actor") void ActorID_IdentityUninit(AActor* Actor,UGameplayActorComponent* Component,UPrimaryDataAsset* Identity) const;
 	
 	// Get available relationship keys for a specific actor
 	// This can be customized based on actor type, tags, etc.
 	UFUNCTION(BlueprintImplementableEvent, Category = "Actor") TArray<FName> ActorRealtives_GetKeys(AActor* Actor) const;
-	
-	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Actor") TArray<FName> AssetRealtives_GetKeys(AActor* Actor) const;
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// COMPONENT
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -165,7 +134,6 @@ public:
 	// Message
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	UFUNCTION(BlueprintNativeEvent, Category = "Component") FSlateBrush Message_GetPortrait(UObject* WorldContext, const UOmegaGameplayMessage* Message) const;	
-	
 	
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// MISC
@@ -177,8 +145,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Save") void OnSave_Started(UOmegaSaveGame* Save,UGameInstance* GameInstance) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Save") void OnSave_Saved(UOmegaSaveGame* Save,UGameInstance* GameInstance) const;
 	
-	UFUNCTION(BlueprintNativeEvent,Category="Combatant") float Attribute_GetMaxValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, int32 AttributeRank, float BaseValue) const;
-
 	UFUNCTION(BlueprintNativeEvent,Category="UI") FText Text_PreGameplayFormat(const FText& Text, FGameplayTag Tag, FOmegaCommonMeta meta, UObject* WorldContext) const;
 	UFUNCTION(BlueprintNativeEvent,Category="UI") FText Text_PostGameplayFormat(const FText& Text, FGameplayTag Tag, FOmegaCommonMeta meta, UObject* WorldContext) const;
 	
@@ -212,53 +178,21 @@ public:
 													   UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Combatant") float Combatant_ModifyDamage_PostMod(UOmegaAttribute* Attribute, UCombatantComponent* Target,
 													   UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) const;
-	UFUNCTION(BlueprintImplementableEvent, Category = "Combatant")
-	void Combatant_GetParamKeys(UCombatantComponent* Target,TArray<FName>& keys_bool,TArray<FName>& keys_int) const;
-	
+
 	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") TArray<UPrimaryDataAsset*> Combatant_Append_Skills(UCombatantComponent* Component) const;
 	
 	//UFUNCTION(BlueprintImplementableEvent,Category="Combatant") UPrimaryDataAsset* Equipment_OverrideSlot(UCombatantComponent* Component, UEquipmentSlot* Slot) const;
 	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") TMap<UEquipmentSlot*,UPrimaryDataAsset*> Equipment_Append(UCombatantComponent* Component) const;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") TMap<UPrimaryDataAsset*,int32> Inventory_Append(UCombatantComponent* Component) const;
-	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	// Encounter
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") void Encounter_Begin(UOmegaCombatEncounter_Component* Component,AOmegaCombatEncounter_Instance* Encounter) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") void Encounter_End(UOmegaCombatEncounter_Component* Component,AOmegaCombatEncounter_Instance* Encounter) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") void Encounter_BattlerSpawn(UOmegaCombatEncounter_Component* Component,ACharacter* Battler) const;
-	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	// TurnManager
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") void TurnManager_TurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") void TurnManager_TurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant) const;
-	UFUNCTION(BlueprintImplementableEvent,Category="Combatant") void TurnManager_TurnFail(UTurnBasedManagerComponent* Component, const FString& Reason) const;
-	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	// Quest
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Omega")
-	void Globals_GetParamKeys(EOmegaGlobalParamTarget Target,TArray<FName>& keys_bool,TArray<FName>& keys_int,TArray<FName>& keys_DataAsset) const;
-	
-	TArray<FName> L_GetGlobalParamKeys(EOmegaGlobalParamTarget Target,uint8 type) const;
-	TArray<FName> L_GetCombatantParamKeys(UCombatantComponent* Target,uint8 type) const;
-	
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// 友Localization
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	UFUNCTION(BlueprintNativeEvent,Category="Actor") USoundBase* Localization_GetClipFromPath(UObject* WorldContext, const FString& subpath, const FString& file) const;
 };
 
-/*
-UCLASS(Const,Blueprintable,BlueprintType,meta=(ShowWorldContextPin),Abstract)
-class OMEGAGAMEFRAMEWORK_API UOmegaGameManager : public UOmega_GameManager
-{
-	GENERATED_BODY()
-};
-*/
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaGameCore : public UOmegaGameManager
 {

@@ -8,8 +8,6 @@
 #include "Components/Component_GameplayActor.h"
 #include "Components/Component_Leveling.h"
 #include "Components/Component_Inventory.h"
-#include "Components/Component_ActorState.h"
-#include "Components/Component_AimTargeter.h"
 #include "Components/Component_CombatEncounter.h"
 #include "Functions/F_Equipment.h"
 #include "Components/Component_Saveable.h"
@@ -27,9 +25,10 @@ class UCameraComponent;
 class UStateTreeComponent;
 class UUtilMeshComponent;
 class USpringArmComponent;
+class UOmegaToolComponent;
 
 UCLASS(HideCategories=("Skeletal Mesh, Physics"),DisplayName="Ω Character")
-class OMEGADEMO_API AOmegaCharacter : public AOmegaMinimalCharacter, public IActorInterface_AimTarget,
+class OMEGADEMO_API AOmegaCharacter : public AOmegaMinimalCharacter,
 										public IDataInterface_FlowAsset, public IActorTagEventInterface, public IActorInterface_Interactable
 {
 	GENERATED_BODY()
@@ -50,16 +49,14 @@ class OMEGADEMO_API AOmegaCharacter : public AOmegaMinimalCharacter, public IAct
 	virtual void N_OnCharAssetChange(UPrimaryDataAsset* old_asset, UPrimaryDataAsset* new_asset) override;
 	virtual int32 GetInteraction_BitFlags_Implementation() override { return Flags.Bitmask;};
 
-	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists);
 	
 public:
-	// Sets default values for this character's properties 
 	AOmegaCharacter();
 
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
-
 	
 	void Local_AddCombatantSource(UObject* Source);
 
@@ -87,14 +84,12 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget)) FVector CameraPull;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Camera",AdvancedDisplay,meta=(MakeEditWidget)) FVector CameraOffset;
-
-	virtual FVector GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UCombatantComponent* Combatant;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaSaveableComponent* Saveable;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaSaveStateComponent* SaveVisibility;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay,meta=(ShowOnlyInnerProperties)) UCombatantComponent* Combatant;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAudioComponent* AudioComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UZoneEntityComponent* ZoneEntity;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaToolComponent* Tools;
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAimTargetComponent* LookAim;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UChildActorComponent* ChildSlot;
@@ -124,11 +119,9 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UBoxComponent* OverlapRange;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UOmegaSaveStateComponent* SaveVisibility;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAudioComponent* AudioComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UChildActorComponent* SkinTarget;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UZoneEntityComponent* ZoneEntity;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UAimTargetComponent* LookAim;
 	UPROPERTY() UUtilMeshComponent* UtilMesh;
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UStateTreeComponent* StateTree;
 	

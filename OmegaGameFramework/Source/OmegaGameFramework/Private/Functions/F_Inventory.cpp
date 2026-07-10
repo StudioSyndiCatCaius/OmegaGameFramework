@@ -35,9 +35,9 @@ TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetListTradeCost_
 	for (auto* item_target : item_list)
 	{
 		int32 num_of_itemsIn=Assets[item_target];
-		if(item_target && item_target->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+		if(item_target && item_target->GetClass()->ImplementsInterface(UDataInterface_InventoryItem::StaticClass()))
 		{
-			TMap<UPrimaryDataAsset*, int32> item_trades=IDataAssetCollectionInterface::Execute_GetTradeAssetRequirements(item_target, TradeTag);
+			TMap<UPrimaryDataAsset*, int32> item_trades=IDataInterface_InventoryItem::Execute_GetTradeAssetRequirements(item_target, TradeTag);
 			TArray<UPrimaryDataAsset*> Tradeitem_list;
 			item_trades.GetKeys(Tradeitem_list);
 			for (auto* item_trade : Tradeitem_list)
@@ -70,9 +70,9 @@ TMap<UPrimaryDataAsset*, int32> UDataAssetCollectionFunctions::GetDataAssetTrade
 {
 	TMap<UPrimaryDataAsset*, int32> out;
 	//if uses interface
-	if(Asset && Asset->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+	if(Asset && Asset->GetClass()->ImplementsInterface(UDataInterface_InventoryItem::StaticClass()))
 	{
-		for (const auto& p : IDataAssetCollectionInterface::Execute_GetTradeAssetRequirements(Asset,TradeTag))
+		for (const auto& p : IDataInterface_InventoryItem::Execute_GetTradeAssetRequirements(Asset,TradeTag))
 		{
 			if(p.Key)
 			{

@@ -33,19 +33,20 @@ public:
 	virtual FString GetLogString_Implementation() const override;
 	UPROPERTY() UOmegaGameplayMessage* msg;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(ExposeOnSpawn="true"),DisplayName="Instigator (Asset)")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(ExposeOnSpawn),DisplayName="Instigator (Asset)")
 	UPrimaryDataAsset* Instigator_Asset;
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn="true"))
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Event", meta=(MultiLine, ExposeOnSpawn))
 	FText Text;
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message", meta=(ExposeOnSpawn="true"))
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message", meta=(ExposeOnSpawn))
 	FOmegaGameplayMessageMeta meta;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Message")
 	FGameplayTag Message_Category  = FGameplayTag::RequestGameplayTag(FName("Message.Dialog"));
 	
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{
 		Description = Text;
 	};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	virtual void Native_Begin(const FString& Flag) override;
 };
 
@@ -59,12 +60,15 @@ class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IOmegaSof
 	
 	AActor* local_GetInstigatorActor() const;
 	UObject* local_GetInstigator() const;
+	UPrimaryDataAsset* L_GetInstigatorAsDA() const;
 public:
 	UFlowNode_SimpleMessage();
 
 	virtual void ExecuteInput(const FName& PinName) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	virtual  TMap<FName, FString> GetSoftPropertyMap_Implementation() override;
+
 
 #if WITH_EDITOR
 	virtual FString GetNodeCategory() const override { return "Gameplay"; };
@@ -72,8 +76,8 @@ public:
 	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override;
 #endif
 	virtual FSlateBrush K2_GetNodeIcon_Implementation() const override;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="🗣️Instigator")
-	UPrimaryDataAsset* Instigator_Asset;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node", meta=(ExposeOnSpawn,DisallowCreateNew), DisplayName="🗣️Instigator")
+	TScriptInterface<IDataInterface_MessageInstigator> Instigator_Asset;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",meta=(MultiLine),DisplayName="💬Text")
 	FText Text;
 	
@@ -114,6 +118,8 @@ public:
 	void Autokey_ByNext();
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor")
 	void Autokey_ByPosition();
+	UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor",DisplayName="🔊 Preview Voice")
+	void PreviewVoice();
 	//UFUNCTION(BlueprintCallable,CallInEditor,Category="Editor")
 	//void Import();
 	

@@ -31,7 +31,7 @@ public:
 	virtual FString FlowNode_GetDescription_Implementation() const override;
 	virtual FLinearColor FlowNode_GetColor_Implementation() const override;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node", meta=(ExposeOnSpawn="true",DisallowCreateNew), DisplayName="🗣️Instigator")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node", meta=(ExposeOnSpawn,DisallowCreateNew), DisplayName="🗣️Instigator")
 	UPrimaryDataAsset* Speaker;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",meta=(MultiLine),DisplayName="💬Text")
 	FText Text;
@@ -43,7 +43,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Misc") FOmegaBitflagsBase Flags;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Misc") FOmegaClassNamedLists Lists;
 	
-	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists);
 };
 
 

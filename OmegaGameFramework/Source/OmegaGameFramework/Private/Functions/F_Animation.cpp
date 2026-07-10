@@ -3,8 +3,9 @@
 
 #include "Functions/F_Animation.h"
 
-#include "Functions/F_AVContext.h"
 #include "GameFramework/Character.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
 
 
 UAnimInstance* UOmegaAnimationFunctions::TryGetAnimInstanceFromObject(UObject* Object,TSubclassOf<UAnimInstance> AnimClass,  bool& Result)
@@ -43,29 +44,7 @@ UAnimInstance* UOmegaAnimationFunctions::TryGetAnimInstanceFromObject(UObject* O
 	return nullptr;
 }
 
-void UOmegaAnimationFunctions::PlayMontage_ByTag(USkeletalMeshComponent* Mesh, FGameplayTag MontageTag)
-{
-	if(Mesh && Mesh->GetAnimInstance())
-	{
-		bool result;
-		if(UAnimMontage* ref_montage=UOmegaContextAVFunctions::TryGetObjectContext_Montages(Mesh->GetAnimInstance(), MontageTag,nullptr,result))
-		{
-			Mesh->GetAnimInstance()->Montage_Play(ref_montage);
-		}
-	}
-}
 
-void UOmegaAnimationFunctions::StopMontage_ByTag(USkeletalMeshComponent* Mesh, FGameplayTag MontageTag,FMontageBlendSettings blend_settings)
-{
-	if(Mesh && Mesh->GetAnimInstance())
-	{
-		bool result;
-		if(UAnimMontage* ref_montage=UOmegaContextAVFunctions::TryGetObjectContext_Montages(Mesh->GetAnimInstance(), MontageTag,nullptr,result))
-		{
-			Mesh->GetAnimInstance()->Montage_StopWithBlendSettings(blend_settings,ref_montage);
-		}
-	}
-}
 
 void UOmegaAnimationFunctions::PlayEmoteAnimation(ACharacter* Character, UOmegaAnimationEmote* Emote)
 {

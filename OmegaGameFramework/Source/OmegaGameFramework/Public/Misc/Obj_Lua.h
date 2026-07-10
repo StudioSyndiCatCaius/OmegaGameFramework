@@ -5,12 +5,13 @@
 #include "CoreMinimal.h"
 #include "LuaObject.h"
 #include "DataAssets/DA_Attribute.h"
+#include "Interfaces/I_Combatant.h"
 #include "Obj_Lua.generated.h"
 
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaLuaBaseObject : public ULuaObject, public IDataInterface_AttributeModifier
+class OMEGAGAMEFRAMEWORK_API UOmegaLuaBaseObject : public ULuaObject, public IDataInterface_Combatant
 {
 	GENERATED_BODY()
 

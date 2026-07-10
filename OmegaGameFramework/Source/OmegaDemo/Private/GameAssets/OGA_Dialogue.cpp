@@ -49,7 +49,6 @@ FLinearColor UOGA_Node_DLG_Message::FlowNode_GetColor_Implementation() const
 void UOGA_Node_DLG_Message::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
 	FOmegaClassNamedLists& named_lists)
 {
-	IDataInterface_General::GetMetaConfig_Implementation(bitflags, guid, seed, named_lists);
 	bitflags=Flags;
 	named_lists=Lists;
 }

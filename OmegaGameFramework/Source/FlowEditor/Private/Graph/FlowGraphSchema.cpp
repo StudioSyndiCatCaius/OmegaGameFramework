@@ -17,6 +17,7 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "EdGraph/EdGraph.h"
+#include "Engine/AssetManager.h"
 #include "ScopedTransaction.h"
 
 #define LOCTEXT_NAMESPACE "FlowGraphSchema"
@@ -212,9 +213,20 @@ TArray<TSharedPtr<FString>> UFlowGraphSchema::GetFlowNodeCategories()
 
 	for (const TPair<FName, FAssetData>& AssetData : BlueprintFlowNodes)
 	{
-		if (const UBlueprint* Blueprint = GetPlaceableNodeBlueprint(AssetData.Value))
+		// Prefer the already-loaded blueprint; otherwise read from asset registry tags
+		// to avoid synchronous package loads that trigger reentrant blueprint compilation
+		if (const UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.Value.FastGetAsset(false)))
 		{
 			UnsortedCategories.Emplace(Blueprint->BlueprintCategory);
+		}
+		else
+		{
+			FString Category;
+			AssetData.Value.GetTagValue(FName("BlueprintCategory"), Category);
+			if (!Category.IsEmpty())
+			{
+				UnsortedCategories.Emplace(Category);
+			}
 		}
 	}
 
@@ -448,6 +460,29 @@ void UFlowGraphSchema::GatherFlowNodes()
 	}
 
 	OnNodeListChanged.Broadcast();
+
+	// Async-load any blueprint flow nodes not yet in memory so they appear in the
+	// context menu and palette. Once all loads complete we broadcast again so the
+	// UI refreshes without ever doing a synchronous package load from palette code.
+	if (UAssetManager::IsInitialized())
+	{
+		TArray<FSoftObjectPath> PathsToLoad;
+		for (const TPair<FName, FAssetData>& Pair : BlueprintFlowNodes)
+		{
+			if (!Pair.Value.IsAssetLoaded())
+			{
+				PathsToLoad.Add(Pair.Value.ToSoftObjectPath());
+			}
+		}
+
+		if (PathsToLoad.Num() > 0)
+		{
+			UAssetManager::GetStreamableManager().RequestAsyncLoad(
+				PathsToLoad,
+				FStreamableDelegate::CreateStatic([]() { OnNodeListChanged.Broadcast(); })
+			);
+		}
+	}
 }
 
 void UFlowGraphSchema::OnHotReload(EReloadCompleteReason ReloadCompleteReason)
@@ -495,7 +530,10 @@ void UFlowGraphSchema::OnAssetRemoved(const FAssetData& AssetData)
 
 UBlueprint* UFlowGraphSchema::GetPlaceableNodeBlueprint(const FAssetData& AssetData)
 {
-	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.GetAsset());
+	// FastGetAsset(false) only returns the asset if already in memory — never triggers
+	// a synchronous package load that could cause reentrant blueprint compilation.
+	// GatherFlowNodes async-loads all blueprint nodes so they become available shortly after startup.
+	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.FastGetAsset(false));
 	if (Blueprint && IsFlowNodePlaceable(Blueprint->GeneratedClass))
 	{
 		return Blueprint;

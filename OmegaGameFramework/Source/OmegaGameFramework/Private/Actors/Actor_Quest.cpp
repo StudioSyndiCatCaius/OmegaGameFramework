@@ -83,7 +83,7 @@ void AOmegaQuestInstance::BeginPlay()
 void AOmegaQuestInstance::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	if (EndPlayReason==EEndPlayReason::Destroyed)
+	if (EndPlayReason==EEndPlayReason::Destroyed || EndPlayReason==EEndPlayReason::LevelTransition)
 	{
 		if (script_copy)
 		{
@@ -92,7 +92,7 @@ void AOmegaQuestInstance::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
-void AOmegaQuestInstance::StartQuest(bool bResumeFormSave)
+void AOmegaQuestInstance::StartQuest(bool bOverrideStartData,FOmegaQuestData data)
 {
 	if(QuestAsset)
 	{
@@ -102,9 +102,9 @@ void AOmegaQuestInstance::StartQuest(bool bResumeFormSave)
 	        script_copy->qInst=this;
 	        OGF_Subsystems::oSave(this)->ActiveSaveData->quest_data.FindOrAdd(QuestAsset).Status=QuestStatus_Active;
 	        
-	        if (bResumeFormSave)
+	        if (bOverrideStartData)
 	        {
-        		script_copy->OnLoad(this,SS_Save->ActiveSaveData->quest_data.FindOrAdd(QuestAsset));
+        		script_copy->OnLoad(this,data);
         		if (SS_World)
         		{
         			SS_World->OnQuest_Updated.Broadcast(this,QuestAsset);
@@ -166,28 +166,12 @@ TArray<UObject*> AOmegaQuestInstance::GetActiveTasks()
 	return TArray<UObject*>();
 }
 
-void AOmegaQuestInstance::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
+void AOmegaQuestInstance::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
-	IDataInterface_General::Execute_GetGeneralDataText(QuestAsset,Tag, Name, Description);
+	IDataInterface_General::Execute_GetGeneralDataText(QuestAsset, Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 }
 
-void AOmegaQuestInstance::GetGeneralAssetLabel_Implementation(FString& Label)
+void AOmegaQuestInstance::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags)
 {
-	IDataInterface_General::Execute_GetGeneralAssetLabel(QuestAsset,Label);
-}
-
-void AOmegaQuestInstance::GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture,
-	class UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	IDataInterface_General::Execute_GetGeneralDataImages(QuestAsset,Tag, Texture, Material, Brush);
-}
-
-FGameplayTag AOmegaQuestInstance::GetObjectGameplayCategory_Implementation()
-{
-	return IDataInterface_General::Execute_GetObjectGameplayCategory(QuestAsset);
-}
-
-FGameplayTagContainer AOmegaQuestInstance::GetObjectGameplayTags_Implementation()
-{
-	return IDataInterface_General::Execute_GetObjectGameplayTags(QuestAsset);
+	IDataInterface_General::Execute_GetObjectGameplayTags(QuestAsset, OutCategoryTag, OutGameplayTags);
 }

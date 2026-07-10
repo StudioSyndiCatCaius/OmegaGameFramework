@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LevelSequence.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
-#include "Styling/SlateBrush.h"
-#include "Interfaces/I_Common.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "UObject/Interface.h"
 #include "F_ScriptedAnim.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnScriptedAnimDelegate);
@@ -27,9 +27,9 @@ public:
 	
 	void Native_Begin(AActor* instigator=nullptr);
 	
-	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Script OnAnimBegin;
-	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Script OnAnimEnd;
-	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Notify OnAnimNotify;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnScriptedAnimDelegate_Script OnAnimBegin;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnScriptedAnimDelegate_Script OnAnimEnd;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnScriptedAnimDelegate_Notify OnAnimNotify;
 	
 	UFUNCTION(BlueprintPure, Category="Omega|ScriptedAnim") AActor* GetAnimationInstigator() const;
 	UFUNCTION(BlueprintCallable,Category="Omega|ScriptedAnim") void Notify(const FString& notify);
@@ -58,21 +58,22 @@ public:
 	TArray<UOmegaScriptedAnimation_Preset*> anim_preset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Effect",DisplayName="2️⃣Anim (Inline)")
 	TArray<UOmegaScriptedAnimation*> anim_inline;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effect",DisplayName="3️⃣Anim (Presets End)")
-	TArray<UOmegaScriptedAnimation_Preset*> anim_presetEnd;
-	
+
 	TArray<UOmegaScriptedAnimation*> GetAllAnimations() const;
 };
 
 
-UINTERFACE() class UDataInterface_ScriptedAnimation : public UInterface { GENERATED_BODY() };
+UINTERFACE(DisplayName="♎Data🔴 - Scripted Animation") class UDataInterface_ScriptedAnimation : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_ScriptedAnimation
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Animation") FOmegaScriptedAnimationData GetScriptedAnimation(FName name);
+	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Animation")
+	FOmegaScriptedAnimationData GetScriptedAnimation(UPARAM(meta=(Categories="ANIMATION")) FGameplayTag Tag);
 };
 
+
+class UAsyncAction_ScriptedAnimation;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaFunctions_ScriptedAnimation : public UBlueprintFunctionLibrary
@@ -80,6 +81,12 @@ class OMEGAGAMEFRAMEWORK_API UOmegaFunctions_ScriptedAnimation : public UBluepri
 	GENERATED_BODY()
 
 public:
+	static UAsyncAction_ScriptedAnimation* PlayScriptedAnimationWithCallbacks(
+		UObject* WorldContextObject,
+		AActor* Instigator,
+		FOmegaScriptedAnimationData AnimationData,
+		TFunction<void(const FString&)> OnFinish,
+		TFunction<void(const FString&)> OnNotify = nullptr);
 };
 
 
@@ -92,19 +99,22 @@ class OMEGAGAMEFRAMEWORK_API UAsyncAction_ScriptedAnimation : public UBlueprintA
 public:
 	int32 anim_index=-1;
 	
-	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Notify Finished;
-	UPROPERTY(BlueprintAssignable) FOnScriptedAnimDelegate_Notify OnNotify;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnScriptedAnimDelegate_Notify Finished;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnScriptedAnimDelegate_Notify OnNotify;
 
 	UPROPERTY() AActor* local_Instigator=nullptr;
 	UPROPERTY() FOmegaScriptedAnimationData local_animData;
 	UPROPERTY() UOmegaScriptedAnimation* current_anim=nullptr;
 	
+	TFunction<void(const FString&)> OnFinishCallback;
+	TFunction<void(const FString&)> OnNotifyCallback;
+
 	UFUNCTION() void L_Notify(const FString& Notify);
 	UFUNCTION() void Next_Anim(UOmegaScriptedAnimation* anim);
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject",
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject",
 		AdvancedDisplay=""),DisplayName="Ω🔷 Play Scripted Animation") 
 	static UAsyncAction_ScriptedAnimation* PlayScriptedAnimation(UObject* WorldContextObject, AActor* Instigator, FOmegaScriptedAnimationData AnimationData);
 

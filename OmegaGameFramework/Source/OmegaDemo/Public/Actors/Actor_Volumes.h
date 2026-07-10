@@ -9,6 +9,7 @@
 #include "Actors/Actor_GameplayCue.h"
 #include "Functions/F_Trace.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Engine/World.h"
 #include "Actor_Volumes.generated.h"
 
 class UFlowAsset;

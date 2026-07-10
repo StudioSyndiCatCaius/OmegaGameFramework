@@ -95,7 +95,8 @@ public:
 UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Omega: Platform"))
 class OMEGAGAMEFRAMEWORK_API UOmegaPlatformSettings : public UDeveloperSettings
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
+
 public:
 
 	UPROPERTY(EditAnywhere, Config, Category="Platforms")

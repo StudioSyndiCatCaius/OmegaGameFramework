@@ -11,24 +11,36 @@
 class UOmegaCondition_DataAsset;
 class UDataAssetCollectionComponent;
 
-UINTERFACE(MinimalAPI) class UDataInterface_Equipable : public UInterface { GENERATED_BODY() };
+
+USTRUCT(BlueprintType)
+struct FOmegaEquipableConfig
+{
+	GENERATED_BODY()
+	
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="🗡️Equipment") TArray<UPrimaryDataAsset*> RequiredSkills;
+};
+
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - 🗡️Equipable") class UDataInterface_Equipable : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_Equipable
 {
 	GENERATED_BODY()
 
 public:
 	
-	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Equipment",DisplayName="Equipable - Can Equip?")
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🗡️Equipment",DisplayName="🗡️Equipable - Get Config")
+	FOmegaEquipableConfig Equipable_GetConfig(UCombatantComponent* Component);
+	
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🗡️Equipment",DisplayName="🗡️Equipable - Can Equip?")
 	bool CanEquipItem(UCombatantComponent* Component,UEquipmentSlot* Slot);
 	
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_EquipmentSource : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Equipment Source") class UDataInterface_EquipmentSource : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_EquipmentSource
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Equipment",DisplayName="Equipment Source - Get Equipment")
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🗡️Equipment",DisplayName="Equipment Source - Get Equipment")
 	TMap<UEquipmentSlot*,UPrimaryDataAsset*> GetEquipment();
 };
 
@@ -39,15 +51,12 @@ class UOmegaEquipmentFunctions : public UBlueprintFunctionLibrary
 
 public:
 	
-	UFUNCTION(BlueprintPure,Category="Omega|Equipment",DisplayName="🗡️Equipment - Is Item Equippable?")
-	static bool IsItemEquippable(UPrimaryDataAsset* item, UCombatantComponent* component, UEquipmentSlot* Slot);
-
 	UFUNCTION(BlueprintPure,Category="Omega|Equipment",DisplayName="🗡️Equipment - Filter Equippables")
 	static TArray<UPrimaryDataAsset*> FilterEquippableItems(TArray<UPrimaryDataAsset*> items, UCombatantComponent* component, UEquipmentSlot* Slot);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Equipment",meta=(AdvancedDisplay="bIncludedSources"))
-	static TArray<UPrimaryDataAsset*> GetEquippableItems_FromInventory(UCombatantComponent* Equipment,UCombatantComponent* Inventory,UEquipmentSlot* Slot,bool bIncludedSources=true);
+	static TArray<UPrimaryDataAsset*> GetEquippableItems_FromInventory(UCombatantComponent* Combatant,UCombatantComponent* Inventory,UEquipmentSlot* Slot,int32 FilterMinimum=1);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Equipment")
+	UFUNCTION()
 	static TMap<UEquipmentSlot*,UPrimaryDataAsset*> GetEquipmentFromLinkedAssetList(TMap<UPrimaryDataAsset*,UPrimaryDataAsset*> list);
 };

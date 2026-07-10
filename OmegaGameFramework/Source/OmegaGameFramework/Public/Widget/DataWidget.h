@@ -7,6 +7,7 @@
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Misc/OmegaUtils_Delegates.h"
+#include "StructUtils/PropertyBag.h"
 #include "Types/Struct_WidgetOverrides.h"
 #include "Widget/OmegaUserWidget.h"
 #include "DataWidget.generated.h"
@@ -60,7 +61,7 @@ public:
 
 
 
-UCLASS(EditInlineNew,BlueprintType, Blueprintable,DefaultToInstanced)
+UCLASS(EditInlineNew,BlueprintType,Abstract, Blueprintable,DefaultToInstanced)
 class OMEGAGAMEFRAMEWORK_API UDataWidget : public UOmegaUserWidget, public IUserObjectListEntry, public IDataInterface_Traits
 {
 	GENERATED_BODY()
@@ -131,9 +132,9 @@ public:
 		return Traits;
 	};
 	
-	UPROPERTY(BlueprintAssignable) FOnSelected OnSelected;
-	UPROPERTY(BlueprintAssignable) FOnHovered OnHovered;
-	UPROPERTY(BlueprintAssignable) FOnHighlight OnHighlight;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnSelected OnSelected;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnHovered OnHovered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnHighlight OnHighlight;
 	
 	UPROPERTY() UDataList* ParentList = nullptr;
 	
@@ -146,10 +147,10 @@ public:
 	UPROPERTY(EditInstanceOnly, Category="DataWidget")
 	FString AssetLabel;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, meta=(ExposeOnSpawn = "true", DisplayName="Source Asset"), Category = "DataWidget")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, meta=(ExposeOnSpawn, DisplayName="Source Asset"), Category = "DataWidget")
 	UObject* ReferencedAsset=nullptr;
 
-	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"), Category = "DataWidget")
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn), Category = "DataWidget")
 	int32 ListIndex;
 	
 	UFUNCTION(BlueprintImplementableEvent,Category = "DataWidget")
@@ -185,7 +186,23 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Override")
 	void ApplyDefaultWidgetBinding(FName name, UWidget* widget,UOmegaSlateStyle* Asset);
-	
+
+	//---------------------------------------------------------------------------------------------//
+	//	Property Bag
+	//---------------------------------------------------------------------------------------------//
+
+	/**
+	 * Define the property schema for this widget class (set on the Class Defaults).
+	 * DataList instances will expose these properties for per-instance value editing.
+	 * To add or remove properties, edit the Class Defaults — not the list instance.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category="PropertyBag")
+	FInstancedPropertyBag WidgetPropertyBag;
+
+	/** Returns the property bag for this widget instance (Blueprint-accessible). */
+	//UFUNCTION(BlueprintPure, Category="PropertyBag")
+	const FInstancedPropertyBag& GetWidgetPropertyBag() const { return WidgetPropertyBag; }
+
 	//---------------------------------------------------------------------------------------------//
 	//	Highlight
 	//---------------------------------------------------------------------------------------------//
@@ -267,7 +284,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent,Category="Notify",DisplayName="On Widget Notify")
 	void Local_OnWidgetNotify(FName notify);
 public:
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnWidgetNotify OnWidgetNotify;
 
 	//---------------------------------------------------------------------------------------------//
@@ -328,7 +345,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|DataWidget")
 	void SetSourceAsset(UObject* Asset);
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnWidgetRefreshed OnWidgetRefreshed;
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Widget|DataWidget")
@@ -366,31 +383,25 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	UMaterialInterface* Override_IconMaterial;
 	
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - Root")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="🔗Get Widget (Panel) - Root")
 	UTextBlock* GetRootPanelWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Text) - Name")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="🔗Get Widget (Text) - Name")
 	UTextBlock* GetNameTextWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Text) - Description")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="🔗Get Widget (Text) - Description")
 	UTextBlock* GetDescriptionTextWidget();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget (Button) - Select")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="🔗Get Widget (Button) - Select")
 	UButton* GetButtonWidget();
 	
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="Get Widget (Panel) - SizeBox")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category = "Widgets", DisplayName="🔗Get Widget (Panel) - SizeBox")
 	USizeBox* GetWidget_SizeBox();
-	
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
-	UImage* GetTextureImage();
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets")
-	UImage* GetMaterialImage();
-
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget (Image) - Brush Icon")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="🔗Get Widget (Image) - Brush Icon")
 	UImage* GetBrushImage(bool& bOverrideSize, FVector2D& Size);
 
-	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="Get Widget (Image) - Icon Material")
+	UFUNCTION(BlueprintPure, BlueprintImplementableEvent, Category="Widgets", DisplayName="🔗Get Widget (Image) - Icon Material")
 	UImage* GetWidget_IconMaterial();
 	UPROPERTY(EditDefaultsOnly,Category="DataWidget",DisplayName="Icon Texture Param Name")
 	FName MaterialParamName_IconTexture=TEXT("Texture");

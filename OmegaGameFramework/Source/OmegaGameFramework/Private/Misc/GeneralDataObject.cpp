@@ -4,15 +4,12 @@
 #include "Misc/GeneralDataObject.h"
 #include "LuaBlueprintFunctionLibrary.h"
 //#include "Misc/OmegaUtils_Enums.h"
+#include "GroomVisualizationData.h"
+#include "PCGPoint.h"
 #include "Functions/F_Common.h"
 
 
 #define LUACFG() GetMutableDefault<ULuaSettings>()
-
-void UGeneralDataObject::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	Label = CustomData.Label;
-}
 
 
 UOmegaDataAsset::UOmegaDataAsset()
@@ -40,11 +37,30 @@ TArray<FName> UOmegaDataAsset::GetMetatags_Implementation()
 */
 
 
-void UOmegaDataAsset::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
-	FOmegaClassNamedLists& NamedLists)
+void UOmegaDataAsset::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
+	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
-	IDataInterface_General::GetMetaConfig_Implementation(bitflags, guid, seed, NamedLists);
-	guid=Guid;
+	Name=DisplayName;
+	Description=DisplayDescription;
+	iconBrush=Icon;
+	Color=color;
+	if (CustomLabel.IsEmpty())
+	{
+		Label=GetName();
+	}
+	else
+	{
+		Label=CustomLabel;
+	}
+	MetaConfig.guid=Guid;
+	MetaConfig.seed=Guid.A;
+}
+
+void UOmegaDataAsset::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag,
+                                                           FGameplayTagContainer& OutGameplayTags)
+{
+	OutCategoryTag=CategoryTag;
+	OutGameplayTags=GameplayTags;
 }
 
 void UOmegaDataAsset::SetValue_Implementation(FLuaValue Value, const FString& Field)
@@ -80,19 +96,18 @@ void UOmegaDataAsset::SetKey_Implementation(FLuaValue Key)
 	CustomLabel=LuaKey.ToString();
 }
 
-UPrimaryDataAsset* UOmegaDataAsset::GetDataAsset_Named_Implementation(FName name)
+void UOmegaDemoDataAsset::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
+	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
-
-	return nullptr;
+	FOmegaObjectGeneralMetaconfig _cfg;
+	Super::GetGeneralDataText_Implementation(Tag, Name, Description, iconBrush, Color, Label, _cfg);
+	_cfg.bitflags=Flags;
+	_cfg.named_lists=NamedLists;
+	_cfg.relative_assets=RelativeAssets;
+	
+	MetaConfig=_cfg;
 }
 
-void UOmegaDemoDataAsset::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
-	FOmegaClassNamedLists& named_lists)
-{
-	Super::GetMetaConfig_Implementation(bitflags, guid, seed, NamedLists);
-	bitflags=Flags;
-	named_lists=NamedLists;
-}
 
 
 bool UOmegaDataAsset::UseIconAsThumbnail_Implementation()

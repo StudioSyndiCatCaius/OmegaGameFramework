@@ -25,7 +25,7 @@ class FSlateWindowElementList;
 class UEdGraph;
 
 // This class draws the connections between nodes
-class FLOWEDITOR_API FFlowGraphConnectionDrawingPolicy : public FConnectionDrawingPolicy
+class FFlowGraphConnectionDrawingPolicy : public FConnectionDrawingPolicy
 {
 	float RecentWireDuration;
 

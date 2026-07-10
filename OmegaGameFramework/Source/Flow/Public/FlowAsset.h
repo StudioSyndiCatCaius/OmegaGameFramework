@@ -7,6 +7,7 @@
 #include "FlowTypes.h"
 #include "Misc/OmegaFlowAssetBase.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Styling/SlateBrush.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "FlowAsset.generated.h"
 
@@ -53,11 +54,10 @@ class FLOW_API UFlowAsset : public UOmegaFlowAssetBase, public IDataInterface_Ge
 	friend class FFlowAssetDetails;
 	friend class UFlowGraphSchema;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Flow Asset")
-	FOmegaClassNamedLists NamedLists;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
-	FGuid AssetGuid;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Flow Asset") FOmegaBitflagsBase Bitflags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Flow Asset") FOmegaClassNamedLists NamedLists;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset") FGuid AssetGuid;
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists);
 	
 	UPROPERTY() FOmegaCommonMeta FlowMeta;
 	UFUNCTION(BlueprintPure,Category="FlowAsset") FOmegaCommonMeta GetFlowMeta() const { return FlowMeta; }
@@ -83,7 +83,7 @@ class FLOW_API UFlowAsset : public UOmegaFlowAssetBase, public IDataInterface_Ge
 	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostDuplicate(bool bDuplicateForPIE) override;
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 	// --
 #endif
 
@@ -349,17 +349,12 @@ public:
 	UPROPERTY(EditAnywhere, Category="General") FSlateBrush Icon;
 	UPROPERTY(EditAnywhere, Category="General", AdvancedDisplay) FString CustomLabel;
 
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{
 		Name=DisplayName;
 		Description=AssetDescription;
+		iconBrush=Icon;
 	};
-	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override
-	{
-		Brush=Icon;
-	};
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
-	
 	//--------------------------------------------------------//
 	// Gameplay Tags
 	//--------------------------------------------------------//
@@ -370,9 +365,8 @@ public:
 	FGameplayTagContainer GameplayTags;
 	UPROPERTY(EditAnywhere, Category="GameplayTags",DisplayName="🏷️Message Category",AdvancedDisplay)
 	FGameplayTag MessageCategory;
-	
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override;
 	FGameplayTag GetMessageCategoryTag() const;
 	//--------------------------------------------------------//
 	// TRAITS
@@ -410,7 +404,7 @@ public:
 };
 
 
-UINTERFACE(MinimalAPI) class UDataInterface_FlowAsset : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Flow Asset") class UDataInterface_FlowAsset : public UInterface { GENERATED_BODY() };
 class FLOW_API IDataInterface_FlowAsset
 {
 	GENERATED_BODY()

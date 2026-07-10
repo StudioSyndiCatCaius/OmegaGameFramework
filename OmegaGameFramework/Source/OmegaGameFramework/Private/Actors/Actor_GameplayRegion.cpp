@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/Component_GameplayActor.h"
 #include "Functions/F_Component.h"
+#include "Components/StaticMeshComponent.h"
 
 
 AGameplay_Region::AGameplay_Region()

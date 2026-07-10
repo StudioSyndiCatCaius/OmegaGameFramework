@@ -5,10 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "JsonObjectWrapper.h"
+#include "Engine/DataAsset.h"
 #include "LuaValue.h"
+#include "Engine/DataTable.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "StructUtils/InstancedStruct.h"
 #include "Types/Struct_Bitflag.h"
+#include "Styling/SlateBrush.h"
 #include "OmegaUtils_Structs.generated.h"
 
 class UPrimaryDataAsset;
@@ -137,7 +140,7 @@ struct FOmegaList_Actors
 };
 
 USTRUCT(Blueprintable,BlueprintType)
-struct FOmegaList_DataAsset
+struct FOmegaList_DataAsset : public FTableRowBase
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<UPrimaryDataAsset*> List;
@@ -172,7 +175,7 @@ struct FOmegaList_Names
 };
 
 USTRUCT(Blueprintable,BlueprintType)
-struct FOmegaList_Montages
+struct FOmegaList_Montages : public FTableRowBase
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<UAnimMontage*> List;
@@ -180,7 +183,7 @@ struct FOmegaList_Montages
 };
 
 USTRUCT(Blueprintable,BlueprintType)
-struct FOmegaList_AnimSequences
+struct FOmegaList_AnimSequences : public FTableRowBase
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<UAnimSequence*> List;
@@ -188,7 +191,7 @@ struct FOmegaList_AnimSequences
 };
 
 USTRUCT(Blueprintable,BlueprintType)
-struct FOmegaList_LevelSequences
+struct FOmegaList_LevelSequences : public FTableRowBase
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<ULevelSequence*> List;
@@ -233,6 +236,31 @@ struct FOmegaList_DataAsset_Soft
 			}
 		}
 		return out;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FOmegaList_Level_Soft
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<TSoftObjectPtr<UWorld>> List;
+};
+
+
+USTRUCT(BlueprintType)
+struct FOmegaList_Text : public FTableRowBase
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") FText Fallback;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="List") TArray<FText> Texts;
+
+	FText GetText(int32 index) const
+	{
+		if (Texts.IsValidIndex(index))
+		{
+			return Texts[index];
+		}
+		return Fallback;
 	}
 };
 
@@ -285,7 +313,7 @@ struct FOmegaEntityID
 	 * 1 = Name
 	 * 3 = GUID
 	 **/
-    UPROPERTY() uint8 entity_type;
+    UPROPERTY() uint8 entity_type = 0;
     UPROPERTY() FString entity_string;
 };
 
@@ -304,13 +332,13 @@ struct FOmegaEntity
 {
 	GENERATED_BODY()
 	UPROPERTY() TMap<int8,int8> internal_flags;
-	UPROPERTY() FTransform Transform;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FTransform Transform;
 	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars",meta=(Bitmask)) int32 BitFlags;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars",meta=(Bitmask)) int32 BitFlags = 0;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FGameplayTagContainer Tags;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TArray<FName> Tags_Named;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") FJsonObjectWrapper JsonData;
-	
+
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UPrimaryDataAsset*,float> Attributes;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UPrimaryDataAsset*,int32> Inventory;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TArray<UPrimaryDataAsset*> Skills;
@@ -319,7 +347,7 @@ struct FOmegaEntity
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Data") TMap<UPrimaryDataAsset*,FOmegaEntity_AssetData> AssetData;
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,int32> params_int32;
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,float> params_float;
+	//UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,float> params_float;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Vars") TMap<FName,FString> params_string;
 	
 	int8 Flag_Get(int8 flag) { return internal_flags.FindOrAdd(flag); }

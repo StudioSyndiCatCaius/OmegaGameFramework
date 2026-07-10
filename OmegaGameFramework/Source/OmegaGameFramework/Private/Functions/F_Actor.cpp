@@ -2,8 +2,11 @@
 
 
 #include "Functions/F_Actor.h"
+#include "EngineUtils.h"
 
 #include "Components/ArrowComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/MeshComponent.h"
 #include "Components/Component_GameplayActor.h"
 #include "Functions/F_Math.h"
 #include "Functions/F_Utility.h"
@@ -25,6 +28,108 @@ bool UOmegaActorFunctions::UsesInterface(UObject* obj)
 		return obj->GetClass()->ImplementsInterface(UActorInterface_Interactable::StaticClass());
 	}
 	return false;
+}
+
+bool UOmegaActorFunctions::Label_Set(AActor* Actor, const FString& Label, bool RandIdRange, bool bOnlyIfDefaultName)
+{
+#if WITH_EDITOR
+	if (!Actor) { return false; }
+
+	if (bOnlyIfDefaultName)
+	{
+		// Strip _C suffix that Blueprint classes append to their internal name
+		FString ClassName = Actor->GetClass()->GetName();
+		if (ClassName.EndsWith(TEXT("_C"))) { ClassName.LeftChopInline(2); }
+
+		const FString CurrentLabel = Actor->GetActorLabel();
+
+		// Default label is exactly ClassName, ClassName_N (with underscore), or ClassNameN (no underscore)
+		bool bIsDefault = (CurrentLabel == ClassName);
+		if (!bIsDefault && CurrentLabel.StartsWith(ClassName))
+		{
+			const FString Suffix = CurrentLabel.RightChop(ClassName.Len());
+			// "_123" form
+			if (Suffix.StartsWith(TEXT("_")))
+			{
+				const FString Digits = Suffix.RightChop(1);
+				bIsDefault = !Digits.IsEmpty() && Digits.IsNumeric();
+			}
+			// "123" form (UE default when no separator)
+			else
+			{
+				bIsDefault = !Suffix.IsEmpty() && Suffix.IsNumeric();
+			}
+		}
+
+		if (!bIsDefault) { return false; }
+	}
+
+	FString FinalLabel = Label;
+
+	if (RandIdRange)
+	{
+		// Check whether any other actor in the world already uses this label
+		bool bTaken = false;
+		if (UWorld* World = Actor->GetWorld())
+		{
+			for (TActorIterator<AActor> It(World); It; ++It)
+			{
+				if (*It != Actor && (*It)->GetActorLabel() == FinalLabel)
+				{
+					bTaken = true;
+					break;
+				}
+			}
+		}
+		if (bTaken)
+		{
+			FinalLabel = FString::Printf(TEXT("%s_%d"), *Label, FMath::RandRange(1, 9999));
+		}
+	}
+
+	Actor->SetActorLabel(FinalLabel);
+	return true;
+#else
+	return false;
+#endif
+}
+
+FString UOmegaActorFunctions::Label_Get(AActor* Actor)
+{
+#if WITH_EDITOR
+	if (!Actor) { return FString(); }
+	return Actor->GetActorLabel();
+#else
+	return FString();
+#endif
+}
+
+bool UOmegaActorFunctions::TeleportActorToReferencePoint(AActor* Actor, AActor* Point, bool bLocation, bool bRotation, bool bScale, bool bKeepVelocity)
+{
+	if (!Actor || !Point) { return false; }
+
+	FVector SavedVelocity = FVector::ZeroVector;
+	if (bKeepVelocity)
+	{
+		if (UPrimitiveComponent* Root = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+		{
+			SavedVelocity = Root->GetPhysicsLinearVelocity();
+		}
+	}
+
+	if (bLocation) { Actor->SetActorLocation(Point->GetActorLocation()); }
+	if (bRotation) { Actor->SetActorRotation(Point->GetActorRotation()); }
+	if (bScale)    { Actor->SetActorScale3D(Point->GetActorScale3D()); }
+
+	if (bKeepVelocity)
+	{
+		if (UPrimitiveComponent* Root = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+		{
+			Root->SetPhysicsLinearVelocity(SavedVelocity);
+		}
+	}
+
+	return true;
 }
 
 void UOmegaActorFunctions::SnapActorToSurface(AActor* Actor, FVector Trace_Start, FVector Trace_End, TEnumAsByte<EObjectTypeQuery> CollisionType)
@@ -593,8 +698,36 @@ void UOmegaPawnFunctions::GetPawnControlVectors(APawn* Pawn, bool X, bool Y, boo
 	}
 }
 
+void UOmegaComponentFunctions::SetBoxRangeToComponentBounds(UBoxComponent* Box, USceneComponent* Reference,
+	bool bSetBoxExtent, bool bSetPosition)
+{
+	if (Box && Reference)
+	{
+		FVector pos;
+		FVector rang;
+		float radius;
+		UKismetSystemLibrary::GetComponentBounds(Reference,pos,rang,radius);
+		if (bSetBoxExtent)
+		{
+			Box->SetBoxExtent(rang);
+		}
+		if (bSetPosition)
+		{
+			Box->SetWorldLocation(pos);
+		}
+	}
+}
+
+void UOmegaComponentFunctions::ResetMeshComponentMaterials(UMeshComponent* Component)
+{
+	if (Component)
+	{
+		Component->EmptyOverrideMaterials();
+	}
+}
+
 void UOmegaComponentFunctions::InterpComponentRotation_FromVector(USceneComponent* component, FVector Vector, float InterpSpeed,
-	bool bWorldSpace)
+                                                                  bool bWorldSpace)
 {
 	if(component)
 	{

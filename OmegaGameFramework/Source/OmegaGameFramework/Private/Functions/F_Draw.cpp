@@ -7,6 +7,9 @@
 #include "GameFramework/HUD.h"
 #include "Misc/OmegaGameMode.h"
 #include "UObject/UObjectIterator.h"
+#include "Engine/Engine.h"
+#include "Engine/EngineBaseTypes.h"
+#include "Engine/World.h"
 
 
 static UCanvas* GetCanvas(const UObject* WorldContextObject, APlayerController* PC)
@@ -77,10 +80,13 @@ void UOmegaFunctions_Draw2D::DrawObjectTree(const UObject* WorldContextObject, F
     const float MaxRight   = Position.X + Size.X;
 
     // Optional: background box
+/*
     FCanvasTileItem BG(Position, GWhiteTexture, Size, FLinearColor(0.f, 0.f, 0.f, 0.45f));
+    
     BG.BlendMode = SE_BLEND_Translucent;
     Canvas->DrawItem(BG);
 
     int32 RowCount = 0;
     DrawObjectNode(Canvas, Object, Position + FVector2D(4.f, 4.f), IndentX, LineHeight, MaxRight, 0, RowCount);
+*/
 }

@@ -16,6 +16,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 
 AOmegaMinimalCharacter::AOmegaMinimalCharacter()
 {
@@ -23,12 +25,12 @@ AOmegaMinimalCharacter::AOmegaMinimalCharacter()
 	// BoundsComponent->SetupAttachment(RootComponent);
 	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
 	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
-	
+
 	StateTree=CreateDefaultSubobject<UStateTreeComponent>(TEXT("State Tree"));
 	DebugText=CreateOptionalDefaultSubobject<UComponent_DebugText>("DebugText");
 	ActorIdentity=CreateDefaultSubobject<UActorIdentityComponent>("Actor Identity");
 	DebugText->SetupAttachment(RootComponent);
-
+	
 	if(GetMesh() && GetCapsuleComponent())
 	{
 		GetMesh()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
@@ -96,7 +98,10 @@ void AOmegaMinimalCharacter::OnConstruction(const FTransform& Transform)
 	UKismetSystemLibrary::GetComponentBounds(GetMesh(),bound_origin,bound_ext,bound_rad);
 	// if(BoundsComponent) { BoundsComponent->SetBoxExtent(bound_ext); }
 	RebuildAppearance();
-	
+	if (Preset.GetObject())
+	{
+		IDataInterface_Character::Execute_Character_Construct(Preset.GetObject(),this);
+	}
 	OGF_CFG()->OverrideActorLabel(this);
 }
 
@@ -110,6 +115,10 @@ void AOmegaMinimalCharacter::BeginPlay()
 		}
 	}
 	Super::BeginPlay();
+	if (Preset.GetObject())
+	{
+		IDataInterface_Character::Execute_Character_BeginPlay(Preset.GetObject(),this);
+	}
 }
 
 
@@ -120,11 +129,22 @@ void AOmegaMinimalCharacter::RandomizeSeed()
 	RebuildAppearance();
 }
 
-void AOmegaMinimalCharacter::SetCharacterAsset(UPrimaryDataAsset* Asset)
+void AOmegaMinimalCharacter::SetCharacterPreset(TScriptInterface<IDataInterface_Character> _preset)
 {
-	UPrimaryDataAsset* old_asset=nullptr;
-	ActorIdentity->SetIdentitySourceAsset(Asset);
-	N_OnCharAssetChange(old_asset,ActorIdentity->GetIdentitySourceAsset());
+	Preset=_preset;
+	if (ActorIdentity)
+	{
+		if (UPrimaryDataAsset* da=Cast<UPrimaryDataAsset>(Preset.GetObject()))
+		{
+			UPrimaryDataAsset* old_asset=ActorIdentity->GetIdentitySourceAsset();
+			ActorIdentity->SetIdentitySourceAsset(da);
+			N_OnCharAssetChange(old_asset,ActorIdentity->GetIdentitySourceAsset());
+		}
+	}
+	if (Preset.GetObject())
+	{
+		IDataInterface_Character::Execute_Character_Init(Preset.GetObject(),this);
+	};
 }
 
 void AOmegaMinimalCharacter::SetCharacterAppearance(UOAsset_Appearance* Appearance)
@@ -142,13 +162,6 @@ void AOmegaMinimalCharacter::SetCharacterAppearance(UOAsset_Appearance* Appearan
 	}
 }
 
-void AOmegaMinimalCharacter::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	if(ActorIdentity)
-	{
-		Label=UDataInterface_General::GetObjectLabel(ActorIdentity);
-	}
-}
 
 UOAsset_Appearance* AOmegaMinimalCharacter::GetAppearanceAsset_Implementation()
 {
@@ -193,29 +206,12 @@ FString AOmegaMinimalCharacter::VoiceSource_GetID_Implementation()
 	return UOmegaGameFrameworkBPLibrary::GetObjectLabel(ActorIdentity->GetIdentitySourceAsset());
 }
 
-void AOmegaMinimalCharacter::GetGeneralDataImages_Implementation(FGameplayTag Tag,
-                                                                 UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	Execute_GetGeneralDataImages(ActorIdentity,Tag,Texture,Material,Brush);
-	IDataInterface_General::GetGeneralDataImages_Implementation(Tag, Texture, Material, Brush);
-}
-
-FGameplayTagContainer AOmegaMinimalCharacter::GetObjectGameplayTags_Implementation()
+void AOmegaMinimalCharacter::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags)
 {
 	if (ActorIdentity)
 	{
-		return Execute_GetObjectGameplayTags(ActorIdentity);
+		IDataInterface_General::Execute_GetObjectGameplayTags(ActorIdentity, OutCategoryTag, OutGameplayTags);
 	}
-	return FGameplayTagContainer();
-}
-
-FGameplayTag AOmegaMinimalCharacter::GetObjectGameplayCategory_Implementation()
-{
-	if (ActorIdentity)
-	{
-		return Execute_GetObjectGameplayCategory(ActorIdentity);
-	}
-	return FGameplayTag();
 }
 
 void AOmegaMinimalCharacter::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
@@ -227,11 +223,14 @@ void AOmegaMinimalCharacter::GetMetaConfig_Implementation(FOmegaBitflagsBase& bi
 }
 
 void AOmegaMinimalCharacter::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name,
-                                                               FText& Description)
+                                                               FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	if (ActorIdentity)
 	{
-		Execute_GetGeneralDataText(ActorIdentity,Tag,Name,Description);
+		IDataInterface_General::Execute_GetGeneralDataText(ActorIdentity, Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 	}
+	MetaConfig.bitflags=Flags;
+	MetaConfig.named_lists=NamedLists;
+	MetaConfig.seed=Seed;
 }
 

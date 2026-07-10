@@ -6,11 +6,12 @@
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "Components/BillboardComponent.h"
+#include "Functions/F_GlobalParam.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Save.h"
 
-
-const FName param_state="STATE_ACTIVE";;
+const uint8 FLAG_SAVEDSEQ_FINISHED=1;
+const FName param_state="STATE_ACTIVE";
 
 AOmegaSavedLevelSequence::AOmegaSavedLevelSequence()
 {
@@ -21,7 +22,6 @@ AOmegaSavedLevelSequence::AOmegaSavedLevelSequence()
 void AOmegaSavedLevelSequence::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	if (!GUID.IsValid()) { GUID=FGuid::NewGuid(); }
 }
 
 
@@ -58,48 +58,32 @@ void AOmegaSavedLevelSequence::Tick(float DeltaTime)
 	}
 }
 
-FOmegaEntity* AOmegaSavedLevelSequence::L_GetEntity() const
-{
-	if (GetGameInstance())
-	{
-		return &OGF_Subsystems::oSave(this)->ActiveSaveData->Entities.Entities_Guid.FindOrAdd(GUID);
-	}
-	return nullptr;
-}
-
 void AOmegaSavedLevelSequence::SetSavedState(bool bState)
 {
-	if (FOmegaEntity* e = L_GetEntity())
+	if (GetSavedState()!=bState)
 	{
-		if (GetSavedState()!=bState)
+		SetGuidflagValue(FLAG_SAVEDSEQ_FINISHED,bState);
+		OnStateChange.Broadcast(this,bState);
+		if (LevelSequenceActor)
 		{
-			e->params_int32.Add(param_state,bState);
-			OnStateChange.Broadcast(this,bState);
-			
-			if (LevelSequenceActor)
+			if (bState)
 			{
-				if (bState)
-				{
-					LevelSequenceActor->GetSequencePlayer()->Play();
-				}
-				else
-				{
-					LevelSequenceActor->GetSequencePlayer()->PlayReverse();
-				}
-				b_isPlaying=true;
-				OnPlayingStateChange.Broadcast(this,true);
+				LevelSequenceActor->GetSequencePlayer()->Play();
 			}
+			else
+			{
+				LevelSequenceActor->GetSequencePlayer()->PlayReverse();
+			}
+			b_isPlaying=true;
+			OnPlayingStateChange.Broadcast(this,true);
 		}
 	}
+	
 }
 
-bool AOmegaSavedLevelSequence::GetSavedState() const
+bool AOmegaSavedLevelSequence::GetSavedState()
 {
-	if (FOmegaEntity* e = L_GetEntity())
-	{
-		return e->params_int32.FindOrAdd(param_state)>=1;
-	}
-	return false;
+	return GetGuidflagValue(FLAG_SAVEDSEQ_FINISHED);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

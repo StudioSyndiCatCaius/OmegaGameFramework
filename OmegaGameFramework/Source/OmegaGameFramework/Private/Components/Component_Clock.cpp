@@ -2,6 +2,8 @@
 
 
 #include "Components/Component_Clock.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 
 void UOmegaClockComponent::BeginPlay()

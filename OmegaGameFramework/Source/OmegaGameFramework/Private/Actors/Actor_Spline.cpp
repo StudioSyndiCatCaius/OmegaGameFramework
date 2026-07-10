@@ -9,10 +9,13 @@
 #include "Components/SplineComponent.h"
 #include "Functions/F_DynamicMesh.h"
 #include "Functions/F_Spline.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "GeometryScript/CollisionFunctions.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/Actor.h"
+#include "UObject/ConstructorHelpers.h"
 
 void AOmegaSplineActor::L_SetupMeshComp(UInstancedStaticMeshComponent* comp)
 {
@@ -38,7 +41,7 @@ AOmegaSplineActor::AOmegaSplineActor()
     DisplayPoint->SetStaticMesh(MatRef.Object);
     static ConstructorHelpers::FObjectFinder<UStaticMesh> MatBRef(TEXT("/OmegaGameFramework/Meshes/util/OmegaMesh_Pointer.OmegaMesh_Pointer"));
     DisplayLine->SetStaticMesh(MatBRef.Object);
-    static ConstructorHelpers::FObjectFinder<UMaterial> nmat_ref(TEXT("/OmegaGameFramework/Materials/Instances/Flats/M_Flat.M_Flat"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> nmat_ref(TEXT("/OmegaGameFramework/Materials/Instances/Flats/M_Flat.M_Flat"));
     DynaMat=UKismetMaterialLibrary::CreateDynamicMaterialInstance(this,nmat_ref.Object);
     DisplayLine->bIsEditorOnly=true;
     DisplayPoint->bIsEditorOnly=true;
@@ -53,9 +56,8 @@ void AOmegaSplineActor::OnConstruction(const FTransform& Transform)
         DisplayPoint->ClearInstances();
         DisplayLine->SetMaterial(0,DynaMat);
         DisplayPoint->SetMaterial(0,DynaMat);
-        DisplayPoint->SetColorParameterValueOnMaterials("Color",PointColor);
         int32 _points=UKismetMathLibrary::FTrunc(Spline->GetSplineLength()/PointDistance);
-
+        SetSplineColor(PointColor);
         for (int i = 0; i < Spline->GetNumberOfSplinePoints(); ++i)
         {
             FTransform T;
@@ -78,15 +80,22 @@ void AOmegaSplineActor::OnConstruction(const FTransform& Transform)
     }
 }
 
+void AOmegaSplineActor::SetSplineColor(FLinearColor Color)
+{
+    PointColor=Color;
+    if (DisplayPoint)
+    {
+        DisplayPoint->SetColorParameterValueOnMaterials("Color",PointColor);
+    }
+}
+
 AOmega_DynamicMesh_SplineBlock::AOmega_DynamicMesh_SplineBlock()
 {
     bDrawPreviewPoints=false;
     DynamicMeshComponent=CreateOptionalDefaultSubobject<UDynamicMeshComponent>("DynaMesh");
     DynamicMeshComponent->SetupAttachment(RootComponent);
-    if (UMaterialInterface* umat=LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Instances/Blocking/mi_OmegaBlock_World.mi_OmegaBlock_World")))
-    {
-        MeshblockMaterial=umat;
-    }
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> SplineBlockMatFinder(TEXT("/OmegaGameFramework/Materials/Instances/Blocking/mi_OmegaBlock_World.mi_OmegaBlock_World"));
+    if (SplineBlockMatFinder.Succeeded()) MeshblockMaterial = SplineBlockMatFinder.Object;
 }
 
 void AOmega_DynamicMesh_SplineBlock::OnConstruction(const FTransform& Transform)
@@ -148,7 +157,7 @@ void AOmega_DynamicMesh_SplineBlock::RebuildMesh()
     }
     
     DynamicMeshComponent->GetDynamicMesh()->Reset();
-    UOmegaFunctions_DynamicMesh::BuildAlongSpline(DynamicMeshComponent->GetDynamicMesh(),Spline,tempTransform,MeshblockHeight,GeoOptions);
+    UOmegaFunctions_DynamicMesh::BuildDynamicMeshAlongSpline(DynamicMeshComponent->GetDynamicMesh(),Spline,tempTransform,MeshblockHeight,GeoOptions);
     
     if(Spline)
     {

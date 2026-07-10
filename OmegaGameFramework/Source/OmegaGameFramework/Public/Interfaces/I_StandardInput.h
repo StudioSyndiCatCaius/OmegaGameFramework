@@ -10,7 +10,7 @@
 #include "I_StandardInput.generated.h"
 
 
-UINTERFACE(MinimalAPI) class UDataInterface_InputAction : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Input Action") class UDataInterface_InputAction : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_InputAction
 {
 	GENERATED_BODY()
@@ -32,7 +32,7 @@ public:
 
 
 
-UINTERFACE(MinimalAPI) class UDataInterface_StandardInput : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Standard Input") class UDataInterface_StandardInput : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_StandardInput
 {
 	GENERATED_BODY()

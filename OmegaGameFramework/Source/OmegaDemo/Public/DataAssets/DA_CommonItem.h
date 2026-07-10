@@ -14,8 +14,8 @@
 #include "DA_CommonItem.generated.h"
 
 
-UCLASS(Blueprintable, BlueprintType,DisplayName="Ω-🧪 Item")
-class OMEGADEMO_API UOAsset_CommonItem : public UOAsset_CommonBattleAction, public IDataAssetCollectionInterface
+UCLASS(Blueprintable, BlueprintType,DisplayName="♎Demo - Item (Common)")
+class OMEGADEMO_API UOAsset_CommonItem : public UOAsset_CommonBattleAction, public IDataInterface_InventoryItem
 {
 	GENERATED_BODY()
 public:

@@ -1,6 +1,7 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #include "Misc/OmegaUtils_Actor.h"
+#include "Engine/World.h"
 
 
 AActor* UOmegaActorUtilFunctions::GetSelectedActor(UObject* WorldContextObject, FOmegaActorSelectorData selectorData)
@@ -18,6 +19,11 @@ AActor* UOmegaActorUtilFunctions::GetSelectedActor(UObject* WorldContextObject, 
 TArray<AActor*> UOmegaActorUtilFunctions::GetSelectedActors(UObject* WorldContextObject, FOmegaActorSelectorData selectorData)
 {
 	return selectorData.Selector->Private_GetActorList(WorldContextObject->GetWorld());
+}
+
+TArray<AActor*> UOmegaActorSelector::GetActors_Implementation(const UObject* WorldContext)
+{
+	return TArray<AActor*>();
 }
 
 AActor* UOmegaActorSelector::Private_GetActor(UWorld* WorldContext)

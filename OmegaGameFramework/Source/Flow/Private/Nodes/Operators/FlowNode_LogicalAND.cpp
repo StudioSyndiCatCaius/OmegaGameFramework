@@ -1,8 +1,9 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
 
 #include "Nodes/Operators/FlowNode_LogicalAND.h"
-
+#include "Engine/GameInstance.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Engine/World.h"
 
 UFlowNode_LogicalAND::UFlowNode_LogicalAND(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

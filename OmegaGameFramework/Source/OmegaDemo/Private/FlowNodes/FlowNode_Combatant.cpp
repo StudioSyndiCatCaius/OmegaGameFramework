@@ -81,7 +81,7 @@ FSlateBrush UFlowNode_CombatantBASE::K2_GetNodeIcon_Implementation() const
 	return Super::K2_GetNodeIcon_Implementation();
 }
 
-
+/*
 UFlowNode_Combatant_Effects::UFlowNode_Combatant_Effects()
 {
 }
@@ -414,3 +414,4 @@ bool UFlowNode_Combatant_Skills_Check::L_Condition_Check(UCombatantComponent* Co
 	}
 	return bRequireAllSkills;
 }
+*/

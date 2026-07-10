@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
+#include "Engine/DataAsset.h"
+#include "Engine/TextureDefines.h"
 #include "F_File.generated.h"
 
 

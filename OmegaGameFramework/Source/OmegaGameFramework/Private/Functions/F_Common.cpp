@@ -5,6 +5,8 @@
 //#include "OmegaGameFramework.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Components/PrimitiveComponent.h"
+#include "Engine/Engine.h"
 //#include "EngineUtils.h"
 #include "JsonBlueprintFunctionLibrary.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -24,11 +26,14 @@
 #include "OmegaSettings_Assets.h"
 #include "OmegaSettings_Slate.h"
 #include "Components/Component_AssetSquad.h"
+#include "Components/Component_Combatant.h"
 #include "Functions/F_Assets.h"
+#include "Functions/F_Constants.h"
 #include "Functions/F_File.h"
 #include "Functions/F_Text.h"
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/I_Common.h"
+#include "NiagaraSystem.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Misc/FileHelper.h"
@@ -67,6 +72,19 @@ UOmegaAssetSettings* UOmegaGameFrameworkBPLibrary::GetSettings_Asset()
 	return GetMutableDefault<UOmegaAssetSettings>();
 }
 
+AOmegaGameMode* UOmegaGameFrameworkBPLibrary::GetOmegaGameMode(UObject* WorldContextObject)
+{
+	if (WorldContextObject)
+	{
+		if (AOmegaGameMode* gm=Cast<AOmegaGameMode>(UGameplayStatics::GetGameMode(WorldContextObject)))
+		{
+			return gm;
+		}
+	}
+	OGF_Log::Error("You game mode is not a child of 'Omega Game Mode.'");
+	return nullptr;
+}
+
 AOmegaWorldManager* UOmegaGameFrameworkBPLibrary::GetOmegaWorldManager(UObject* WorldContextObject)
 {
 	if (WorldContextObject && WorldContextObject->GetWorld())
@@ -81,7 +99,7 @@ AOmegaWorldManager* UOmegaGameFrameworkBPLibrary::GetOmegaWorldManager(UObject* 
 
 UCombatantComponent* UOmegaGameFrameworkBPLibrary::GetGlobalCombatant(UObject* WorldContextObject)
 {
-	if (AOmegaWorldManager* m=GetOmegaWorldManager(WorldContextObject))
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
 	{
 		return m->Combatant;
 	}
@@ -91,7 +109,7 @@ UCombatantComponent* UOmegaGameFrameworkBPLibrary::GetGlobalCombatant(UObject* W
 AOmegaInstancedEntity* UOmegaGameFrameworkBPLibrary::GetGlobalEntityInstance(UObject* WorldContextObject,
 	UObject* ID)
 {
-	if (AOmegaWorldManager* m=GetOmegaWorldManager(WorldContextObject))
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
 	{
 		if (AOmegaInstancedEntity* e=Cast<AOmegaInstancedEntity>(m->EntityInstances->GetInstanceByContext(ID)))
 		{
@@ -101,10 +119,23 @@ AOmegaInstancedEntity* UOmegaGameFrameworkBPLibrary::GetGlobalEntityInstance(UOb
 	return nullptr;
 }
 
-void UOmegaGameFrameworkBPLibrary::GetGlobalSquad_CurrentIdentity(UObject* WorldContextObject,
-	UAssetSquadComponent*& Component, UAssetSquad_Identity*& CurrentSquad)
+UPrimaryDataAsset* UOmegaGameFrameworkBPLibrary::GetGlobalEntityEquipmentSlot(UObject* WorldContextObject, UObject* ID,
+	UEquipmentSlot* Slot, bool& Result)
 {
-	if (AOmegaWorldManager* m=GetOmegaWorldManager(WorldContextObject))
+	if (AOmegaInstancedEntity* e= GetGlobalEntityInstance(WorldContextObject,ID))
+	{
+		if (UPrimaryDataAsset* eq_item=e->Combatant->Equipment_GetInSlot(Slot,Result))
+		{
+			return eq_item;
+		}
+	}
+	return nullptr;
+}
+
+void UOmegaGameFrameworkBPLibrary::GetGlobalSquad_CurrentIdentity(UObject* WorldContextObject,
+                                                                  UAssetSquadComponent*& Component, UAssetSquad_Identity*& CurrentSquad)
+{
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
 	{
 		Component=m->AssetSquad;
 		CurrentSquad=Component->CurrentSquad_Get();
@@ -114,6 +145,31 @@ void UOmegaGameFrameworkBPLibrary::GetGlobalSquad_CurrentIdentity(UObject* World
 		Component=nullptr;
 		CurrentSquad=nullptr;
 	}
+}
+
+void UOmegaGameFrameworkBPLibrary::GetGlobalCalendar(UObject* WorldContextObject, UOmegaCalendarComponent*& Component,
+	UOAsset_Calendar*& Asset)
+{
+	Component=nullptr;
+	Asset=nullptr;
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
+	{
+		Component=m->Calendar;
+		if (Component->CalendarAsset)
+		{
+			Asset=Component->CalendarAsset;
+		}
+	}
+	
+}
+
+FRandomStream UOmegaGameFrameworkBPLibrary::GetGlobalCalendarDateSeed(UObject* WorldContextObject)
+{
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
+	{
+		return m->Calendar->GetCurrentTimeSeed(0);
+	}
+	return FRandomStream();
 }
 
 TArray<AOmegaInstancedEntity*> UOmegaGameFrameworkBPLibrary::GetGlobalEntityInstances_FromIDs(UObject* WorldContextObject,
@@ -133,7 +189,7 @@ TArray<AOmegaInstancedEntity*> UOmegaGameFrameworkBPLibrary::GetGlobalEntityInst
 TArray<AOmegaInstancedEntity*> UOmegaGameFrameworkBPLibrary::GetGlobalEntityInstances_FromSquad(UObject* WorldContextObject,UAssetSquad_Identity* Squad)
 {
 	TArray<AOmegaInstancedEntity*> out;
-	if (AOmegaWorldManager* m=GetOmegaWorldManager(WorldContextObject))
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
 	{
 		if (Squad)
 		{
@@ -150,22 +206,32 @@ TArray<AOmegaInstancedEntity*> UOmegaGameFrameworkBPLibrary::GetGlobalEntityInst
 	return out;
 }
 
-void UOmegaGameFrameworkBPLibrary::Object_TagEvent(UObject* Object, FGameplayTag Event, FOmegaCommonMeta meta)
+void UOmegaGameFrameworkBPLibrary::SplitGlobalCurrentSquadEntityInst_AtIndex(UObject* WorldContextObject,
+		TArray<AOmegaInstancedEntity*>& Before, TArray<AOmegaInstancedEntity*>& After, int32 index)
 {
-	if (Object_UsesCommonInterface(Object))
+	Before.Empty();
+	After.Empty();
+	if (AOmegaGameMode* m=GetOmegaGameMode(WorldContextObject))
 	{
-		IDataInterface_General::Execute_Tag_Event(Object, Event, meta);
+		if (UAssetSquad_Identity* Squad=m->AssetSquad->CurrentSquad_Get())
+		{
+			TArray<UPrimaryDataAsset*> members=m->AssetSquad->GetSquadMembers(Squad);
+			for (int32 i=0; i<members.Num(); i++)
+			{
+				if (auto* e=GetGlobalEntityInstance(WorldContextObject,members[i]))
+				{
+					(i < index ? Before : After).Add(e);
+				}
+			}
+		}
 	}
 }
 
-bool UOmegaGameFrameworkBPLibrary::Object_TagQuery(UObject* Object, FGameplayTag Event, FOmegaCommonMeta meta)
+void UOmegaGameFrameworkBPLibrary::SplitGlobalCurrentSquadEntityInst_AtConst(UObject* WorldContextObject, TArray<AOmegaInstancedEntity*>& Before, TArray<AOmegaInstancedEntity*>& After, FName Constant)
 {
-	if (Object_UsesCommonInterface(Object))
-	{
-		return IDataInterface_General::Execute_Tag_Query(Object,Event,meta);
-	}
-	return false;
+	SplitGlobalCurrentSquadEntityInst_AtIndex(WorldContextObject,Before, After, UOmegaFunctions_Constants::Int(Constant));
 }
+
 
 
 bool UOmegaGameFrameworkBPLibrary::HasTags_Advance(FGameplayTagContainer Tags, FGameplayTagContainer Has, bool bAll, bool bExact)
@@ -187,43 +253,33 @@ bool UOmegaGameFrameworkBPLibrary::HasTags_Advance(FGameplayTagContainer Tags, F
 
 FGameplayTagContainer UOmegaGameFrameworkBPLibrary::GetObjectGameplayTags(UObject* Object)
 {
-	FGameplayTagContainer OutTags;
-	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		OutTags = IDataInterface_General::Execute_GetObjectGameplayTags(Object);
-	}
-	return OutTags;
+	return UDataInterface_General::GetGTags(Object);
 }
 
 FGameplayTag UOmegaGameFrameworkBPLibrary::GetObjectGameplayCategory(UObject* Object)
 {
+	FGameplayTag Cat;
+	FGameplayTagContainer _tags;
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
-		return IDataInterface_General::Execute_GetObjectGameplayCategory(Object);
+		IDataInterface_General::Execute_GetObjectGameplayTags(Object, Cat, _tags);
 	}
-	return FGameplayTag();
+	return Cat;
 }
 
 bool UOmegaGameFrameworkBPLibrary::IsObjectOfGameplayCategory(UObject* Object, FGameplayTag CategoryTag, bool bExact)
 {
-	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		const FGameplayTag LocalCategory = IDataInterface_General::Execute_GetObjectGameplayCategory(Object);
-		if(bExact)
-		{
-			return LocalCategory.MatchesTagExact(CategoryTag);
-		}
-		return LocalCategory.MatchesTag(CategoryTag);
-		
-	}
-	return false;
+	const FGameplayTag LocalCat = GetObjectGameplayCategory(Object);
+	return bExact ? LocalCat.MatchesTagExact(CategoryTag) : LocalCat.MatchesTag(CategoryTag);
 }
 
 bool UOmegaGameFrameworkBPLibrary::DoesObjectHaveGameplayTag(UObject* Object, FGameplayTag GameplayTag, bool bExact)
 {
 	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
-		const FGameplayTagContainer LocalTags = IDataInterface_General::Execute_GetObjectGameplayTags(Object);
+		FGameplayTagContainer LocalTags;
+		FGameplayTag _cat;
+		IDataInterface_General::Execute_GetObjectGameplayTags(Object, _cat, LocalTags);
 		if(bExact)
 		{
 			return LocalTags.HasTagExact(GameplayTag);
@@ -261,7 +317,10 @@ bool UOmegaGameFrameworkBPLibrary::QueryObjectGameplayTags(UObject* Object, FGam
 {
 	if(Object && !Query.IsEmpty() && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
-		return Query.Matches(IDataInterface_General::Execute_GetObjectGameplayTags(Object));
+		FGameplayTagContainer LocalTags;
+		FGameplayTag _cat;
+		IDataInterface_General::Execute_GetObjectGameplayTags(Object, _cat, LocalTags);
+		return Query.Matches(LocalTags);
 	}
 	return bEmptyReturnsTrue;
 }
@@ -281,16 +340,18 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray
 		{
 			if(!CategoryTag.IsValid() || (!Class || (TempAsset->GetClass()->IsChildOf(Class))) && TempAsset->Implements<UDataInterface_General>())
 			{
-				FGameplayTag TempAssetTag = IDataInterface_General::Execute_GetObjectGameplayCategory(TempAsset);
+				FGameplayTagContainer TempAssetTags;
+				FGameplayTag _cat;
+			IDataInterface_General::Execute_GetObjectGameplayTags(TempAsset, _cat, TempAssetTags);
 				bool bLocalIsValid;
 
 				if(bExact)
 				{
-					bLocalIsValid = TempAssetTag.MatchesTagExact(CategoryTag);
+					bLocalIsValid = _cat.MatchesTagExact(CategoryTag);
 				}
 				else
 				{
-					bLocalIsValid = TempAssetTag.MatchesTag(CategoryTag);
+					bLocalIsValid = _cat.MatchesTag(CategoryTag);
 				}
 			
 				if(bLocalIsValid != bExclude)
@@ -319,7 +380,9 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByGameplayTags(TArra
 		{
 			if(GameplayTags.IsEmpty() || (!Class || (TempAsset->GetClass()->IsChildOf(Class))) && TempAsset->Implements<UDataInterface_General>())
 			{
-				FGameplayTagContainer TempAssetTag = IDataInterface_General::Execute_GetObjectGameplayTags(TempAsset);
+				FGameplayTagContainer TempAssetTag;
+				FGameplayTag _cat;
+			IDataInterface_General::Execute_GetObjectGameplayTags(TempAsset, _cat, TempAssetTag);
 				bool bLocalIsValid;
 
 				if(bExact)
@@ -418,8 +481,30 @@ void UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(const UObject* World
 	}
 }
 
+UObject* UOmegaGameFrameworkBPLibrary::GetClassDefaultObject(TSubclassOf<UObject> object)
+{
+	if (!object)
+	{
+		return nullptr;
+	}
+	return object->GetDefaultObject();
+}
+
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::GetClassDefaultObjects(TArray<TSubclassOf<UObject>> object)
+{
+	TArray<UObject*> out;
+	for (TSubclassOf<UObject> cls : object)
+	{
+		if (cls)
+		{
+			out.Add(cls->GetDefaultObject());
+		}
+	}
+	return out;
+}
+
 TArray<UObject*> UOmegaGameFrameworkBPLibrary::ResolveSoftArray_Object(TArray<TSoftObjectPtr<UObject>> List,
-	TSubclassOf<UObject> Class)
+                                                                       TSubclassOf<UObject> Class)
 {
 	TArray<UObject*> out;
 	TSubclassOf<UObject> _inclass=UObject::StaticClass();
@@ -645,10 +730,11 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 	
 	//USE = direct path load
 	FString direct_path=AssetPath;
+	direct_path=OMEGA_File::PathCorrect(direct_path);
 	if (!Directory.IsEmpty())
 	{
-		FString _asset_nam=AssetPath;
-		direct_path=Directory+_asset_nam+"."+_asset_nam;
+		FString _asset_nam = FPaths::GetBaseFilename(AssetPath);
+		direct_path = FPaths::Combine(Directory, _asset_nam) + TEXT(".") + _asset_nam;
 	}
 	if (UObject* loadedObj=LoadObject<UObject>(nullptr,*direct_path))
 	{
@@ -787,12 +873,14 @@ TArray<UObject*> FoundAssets;
     Filter.PackagePaths.Add(FName(*path));
     Filter.bRecursivePaths = bRecursive;
     
+	/*
     // If a specific class is provided, filter by class
     if (Class)
     {
         Filter.ClassPaths.Add(Class->GetClassPathName());
     }
-    
+    */
+	
     // Get asset data
     TArray<FAssetData> AssetDataArray;
     AssetRegistry.GetAssets(Filter, AssetDataArray);
@@ -805,7 +893,7 @@ TArray<UObject*> FoundAssets;
         if (LoadedAsset)
         {
             // Double-check class type if specified
-            if (!Class || LoadedAsset->IsA(Class))
+            if (!Class || LoadedAsset->GetClass()->IsChildOf(Class))
             {
                 FoundAssets.Add(LoadedAsset);
             }
@@ -1026,7 +1114,7 @@ UActorComponent* UOmegaGameFrameworkBPLibrary::GetFirstActiveGameplaySystemWithC
 			if(temp_sys)
 			{
 				bool out_result;
-				if(UActorComponent* temp_comp = TryGetFirstComponentWithTag(temp_sys,Component,RequiredTag,out_result))
+				if(UActorComponent* temp_comp = TryGetComponentFromObject(temp_sys,Component,out_result,RequiredTag))
 				{
 					Outcome=true;
 					system=temp_sys;
@@ -1301,82 +1389,61 @@ AActor* UOmegaGameFrameworkBPLibrary::TryGetActorFromObject(UObject* Object, TSu
 }
 
 UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetComponentFromObject(UObject* Object,
-                                                                         TSubclassOf<UActorComponent> Class, bool& Outcome)
+                                                                         TSubclassOf<UActorComponent> Class, bool& Outcome, FName Tag, bool bForceAdd)
 {
 	if(!Object || !Class)
 	{
 		Outcome=false;
 		return nullptr;
 	}
-	
-	if (Cast<AActor>(Object) && Cast<AActor>(Object)->GetComponentByClass(Class))
+
+	auto FindComp = [&](AActor* Actor) -> UActorComponent*
 	{
+		if (!Actor) return nullptr;
+		if (Tag.IsNone()) return Actor->GetComponentByClass(Class);
+		TArray<UActorComponent*> Comps = Actor->GetComponentsByTag(Class, Tag);
+		return Comps.IsValidIndex(0) ? Comps[0] : nullptr;
+	};
+
+	AActor* TargetActor = nullptr;
+
+	if (AActor* AsActor = Cast<AActor>(Object))
+	{
+		TargetActor = AsActor;
+		if (UActorComponent* Found = FindComp(AsActor))
+		{
+			Outcome=true;
+			return Found;
+		}
+	}
+
+	if (UActorComponent* AsComp = Cast<UActorComponent>(Object))
+	{
+		TargetActor = AsComp->GetOwner();
+		if (AsComp->GetClass()->IsChildOf(Class) && (Tag.IsNone() || AsComp->ComponentHasTag(Tag)))
+		{
+			Outcome=true;
+			return AsComp;
+		}
+		if (UActorComponent* Found = FindComp(TargetActor))
+		{
+			Outcome=true;
+			return Found;
+		}
+	}
+
+	if (bForceAdd && TargetActor)
+	{
+		UActorComponent* NewComp = NewObject<UActorComponent>(TargetActor, Class);
+		NewComp->RegisterComponent();
 		Outcome=true;
-		return Cast<AActor>(Object)->GetComponentByClass(Class);
-	}
-	
-	if (Cast<UActorComponent>(Object))
-	{
-		UActorComponent* TempComp = Cast<UActorComponent>(Object);
-		
-		if(TempComp->GetClass()->IsChildOf(Class))
-		{
-			Outcome=true;
-			return TempComp;
-		}
-		
-		if (TempComp->GetOwner()->GetComponentByClass(Class))
-		{
-			Outcome=true;
-			return TempComp->GetOwner()->GetComponentByClass(Class);
-		}
-	}
-	Outcome=false;
-	return  nullptr;
-}
-
-UActorComponent* UOmegaGameFrameworkBPLibrary::TryGetFirstComponentWithTag(UObject* Object,
-	TSubclassOf<UActorComponent> Class, FName Tag, bool& Outcome)
-{
-	if(!Object || !Class)
-	{
-		Outcome=false;
-		return nullptr;
+		return NewComp;
 	}
 
-	const AActor* TargetActor = nullptr;
-	
-	if (Cast<AActor>(Object) && Cast<AActor>(Object)->GetComponentByClass(Class))
-	{
-		TargetActor = Cast<AActor>(Object);
-	}
-	
-	if (Cast<UActorComponent>(Object))
-	{
-		TargetActor = Cast<UActorComponent>(Object)->GetOwner();
-	}
-	
-	if(TargetActor)
-	{
-		if(Tag.IsNone())
-		{
-			if(UActorComponent* out_comp= TargetActor->GetComponentByClass(Class))
-			{
-				Outcome=true;
-				return out_comp;
-			}
-		}
-		TArray<UActorComponent*> CompList = TargetActor->GetComponentsByTag(Class,Tag);
-		if(CompList.IsValidIndex(0))
-		{
-			Outcome=true;
-			return CompList[0];
-		}
-	}
-	
 	Outcome=false;
-	return  nullptr;
+	return nullptr;
 }
+
 
 TArray<AActor*> UOmegaGameFrameworkBPLibrary::FilterActorsWithTag(TArray<AActor*> Actors, FName Tag, bool bExclude,
 	TSubclassOf<AActor> Class)
@@ -1580,10 +1647,10 @@ void UOmegaGameFrameworkBPLibrary::CombineJsonObjects(const TArray<FJsonObjectWr
 
 		for (auto It = JsonObjectRoot->Values.CreateConstIterator(); It; ++It)
 		{
-			const FString& Key = It.Key();
+			//const FString& Key = It.Key();
 			const TSharedPtr<FJsonValue>& Value = It.Value();
 			
-			CombinedObject.JsonObject->SetField(Key,Value);
+			//CombinedObject.JsonObject->SetField(Key,Value);
 		}
 	}
 }
@@ -1624,16 +1691,7 @@ FText UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(UObject* Object,
 
 FString UOmegaGameFrameworkBPLibrary::GetObjectLabel(UObject* Object)
 {
-	FString OutName;
-	if(Object)
-	{
-		OutName=Object->GetName();
-	}
-	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		IDataInterface_General::Execute_GetGeneralAssetLabel(Object,OutName);
-	}
-	return OutName;
+	return UDataInterface_General::GetObjectLabel(Object);
 }
 
 FSlateBrush UOmegaGameFrameworkBPLibrary::GetObjectIcon(UObject* Object,FGameplayTag Tag)
@@ -1643,13 +1701,9 @@ FSlateBrush UOmegaGameFrameworkBPLibrary::GetObjectIcon(UObject* Object,FGamepla
 
 FLinearColor UOmegaGameFrameworkBPLibrary::GetObjectColor(UObject* Object,FGameplayTag Tag)
 {
-	FLinearColor out;
-	if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		IDataInterface_General::Execute_GetGeneralAssetColor(Object,Tag,out);
-	}
-	return out;
+	return UDataInterface_General::GetObjectColor(Object, Tag);
 }
+
 
 TArray<FString> UOmegaGameFrameworkBPLibrary::GetLabelsFromObjects(TArray<UObject*> Objects)
 {
@@ -1694,11 +1748,13 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsFromLabels(TArray<UO
 
 
 #define GENERAL_INTERFACE_GETMETA() \
-FOmegaBitflagsBase b; \
-FGuid g; \
-int32 s; \
-FOmegaClassNamedLists nl; \
-IDataInterface_General::Execute_GetMetaConfig(Object,b,g,s,nl); \
+FText _n,_d; FSlateBrush _i; FLinearColor _c; FString _l; FOmegaObjectGeneralMetaconfig _meta; \
+IDataInterface_General::Execute_GetGeneralDataText(Object,FGameplayTag(),_n,_d,_i,_c,_l,_meta); \
+FOmegaBitflagsBase& b=_meta.bitflags; \
+FGuid& g=_meta.guid; \
+int32& s=_meta.seed; \
+int32& gLvl=_meta.GenericLevel; \
+FOmegaClassNamedLists& nl=_meta.named_lists; \
 
 FGuid UOmegaGameFrameworkBPLibrary::GetObjectGUID(UObject* Object)
 {
@@ -1707,6 +1763,9 @@ FGuid UOmegaGameFrameworkBPLibrary::GetObjectGUID(UObject* Object)
 		GENERAL_INTERFACE_GETMETA()
 		return g;
 	}
+	if (AOmegaActorBASE* actor=Cast<AOmegaActorBASE>(Object)) { return actor->GameplayGuid; }
+	if (AOmegaPawnBASE* actor=Cast<AOmegaPawnBASE>(Object)) { return actor->GameplayGuid; }
+	if (AOmegaBaseCharacter* actor=Cast<AOmegaBaseCharacter>(Object)) { return actor->GameplayGuid; }
 	return  FGuid();
 }
 
@@ -1722,7 +1781,83 @@ int32 UOmegaGameFrameworkBPLibrary::GetObjectSeed(UObject* Object)
 	return 0;
 }
 
+int32 UOmegaGameFrameworkBPLibrary::GetObjectGenericLevel(UObject* Object)
+{
+	
+	if(Object_UsesCommonInterface(Object))
+	{
+		GENERAL_INTERFACE_GETMETA()
+		return gLvl;
+	}
+	return 0;
+}
+
+TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjects_ByGenericLevel(TArray<UObject*> In, int32 Level,
+	TEnumAsByte<EOmegaComparisonMethod> Method)
+{
+	TArray<UObject*> out;
+	for(auto* temp_object : In)
+	{
+		if(temp_object)
+		{
+			int32 gotLvl=GetObjectGenericLevel(temp_object);
+			bool bMatch = false;
+			switch (Method)
+			{
+			case Compare_Equal:      bMatch = gotLvl == Level; break;
+			case Compare_Great:      bMatch = gotLvl >  Level; break;
+			case Compare_Less:       bMatch = gotLvl <  Level; break;
+			case Compare_GreatEqual: bMatch = gotLvl >= Level; break;
+			case Compare_LessEqual:  bMatch = gotLvl <= Level; break;
+			default: break;
+			}
+			if (bMatch) { out.Add(temp_object); }
+		}
+	}
+	return out;
+}
+
 #undef GENERAL_INTERFACE_GETMETA
+
+float UOmegaGameFrameworkBPLibrary::GetTagParam_Float(UObject* Object, FGameplayTag Tag)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		return IDataInterface_General::Execute_Param_Float(Object, Tag);
+	}
+	return 0.0f;
+}
+
+int32 UOmegaGameFrameworkBPLibrary::GetTagParam_Int(UObject* Object, FGameplayTag Tag)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		return IDataInterface_General::Execute_Param_Int(Object, Tag);
+	}
+	return 0;
+}
+
+FString UOmegaGameFrameworkBPLibrary::GetTagParam_String(UObject* Object, FGameplayTag Tag)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		return IDataInterface_General::Execute_Param_String(Object, Tag);
+	}
+	return FString();
+}
+
+UObject* UOmegaGameFrameworkBPLibrary::GetTagParam_Object(UObject* Object, FGameplayTag Tag, TSubclassOf<UObject> Class)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		UObject* Result = IDataInterface_General::Execute_Param_Asset(Object, Tag);
+		if (Result && (!Class || Result->GetClass()->IsChildOf(Class)))
+		{
+			return Result;
+		}
+	}
+	return nullptr;
+}
 
 int32 UOmegaGameFrameworkBPLibrary::GetClosestVector2dToPoint(TArray<FVector2D> Vectors, FVector2D point,
                                                               FVector2D& out_point)
@@ -1774,7 +1909,7 @@ TMap<UOmegaAttribute*, float> UOmegaGameFrameworkBPLibrary::LuaToOmegaAttributes
 
 	for(FLuaValue temp_val : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(Value))
 	{
-		if(UOmegaAttribute* temp_att = UOmegaFunctions_Asset::GetNamed_Attribute(*temp_val.String))
+		if(UOmegaAttribute* temp_att = UOmegaFunctions_Constants::Attribute(*temp_val.String))
 		{
 			out.FindOrAdd(temp_att,ULuaBlueprintFunctionLibrary::Conv_LuaValueToFloat(Value.GetField(temp_val.String)));
 		}
@@ -1789,7 +1924,7 @@ TMap<UOmegaAttribute*, int32> UOmegaGameFrameworkBPLibrary::LuaToOmegaAttributes
 
 	for(FLuaValue temp_val : ULuaBlueprintFunctionLibrary::LuaTableGetKeys(Value))
 	{
-		if(UOmegaAttribute* temp_att = UOmegaFunctions_Asset::GetNamed_Attribute(*temp_val.String))
+		if(UOmegaAttribute* temp_att = UOmegaFunctions_Constants::Attribute(*temp_val.String))
 		{
 			out.FindOrAdd(temp_att,ULuaBlueprintFunctionLibrary::Conv_LuaValueToInt(Value.GetField(temp_val.String)));
 		}

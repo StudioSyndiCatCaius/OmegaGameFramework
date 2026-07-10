@@ -8,6 +8,7 @@
 #include "Serialization/JsonReader.h"
 #include "Dom/JsonValue.h"
 #include "GameFramework/GameSession.h"
+#include "GameFramework/Pawn.h"
 #include "UObject/UnrealType.h"
 
 void FOmegaCustomLevelWrapper::CachePackagePath()
@@ -209,10 +210,9 @@ bool FOmegaCustomLevelWrapper::DeserializeFromJson(const FString& JsonString, TA
         return false;
     }
 
-    WorldName        = Root->GetStringField("WorldName");
-    WorldPackagePath = Root->GetStringField("WorldPackagePath");
-    OutActorArray    = Root->GetArrayField("Actors");
-
+    WorldName        = Root->GetStringField(TEXT("WorldName"));
+    WorldPackagePath = Root->GetStringField(TEXT("WorldPackagePath"));
+    OutActorArray    = Root->GetArrayField(TEXT("Actors"));
     return true;
 }
 
@@ -230,8 +230,8 @@ bool FOmegaCustomLevelWrapper::SpawnActors(const TArray<TSharedPtr<FJsonValue>>&
     {
         TSharedPtr<FJsonObject> ActorObj = Val->AsObject();
 
-        FString ClassName = ActorObj->GetStringField("ActorClass");
-        TSharedPtr<FJsonObject> TransformObj = ActorObj->GetObjectField("Transform");
+        FString ClassName = ActorObj->GetStringField(TEXT("ActorClass"));
+        TSharedPtr<FJsonObject> TransformObj = ActorObj->GetObjectField(TEXT("Transform"));
 
         UClass* ActorClass = LoadObject<UClass>(nullptr, *ClassName);
         if (!ActorClass)
@@ -240,9 +240,9 @@ bool FOmegaCustomLevelWrapper::SpawnActors(const TArray<TSharedPtr<FJsonValue>>&
             continue;
         }
 
-        FVector Pos;   Pos.InitFromString(TransformObj->GetStringField("Position"));
-        FRotator Rot;  Rot.InitFromString(TransformObj->GetStringField("Rotation"));
-        FVector Scale; Scale.InitFromString(TransformObj->GetStringField("Scale"));
+        FVector Pos;   Pos.InitFromString(TransformObj->GetStringField(TEXT("Position")));
+        FRotator Rot;  Rot.InitFromString(TransformObj->GetStringField(TEXT("Rotation")));
+        FVector Scale; Scale.InitFromString(TransformObj->GetStringField(TEXT("Scale")));
 
         FActorSpawnParameters SpawnParams;
         SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -255,10 +255,10 @@ bool FOmegaCustomLevelWrapper::SpawnActors(const TArray<TSharedPtr<FJsonValue>>&
         }
 
         // Restore actor properties
-        DeserializeObjectProperties(NewActor, ActorObj->GetObjectField("Properties"));
+        DeserializeObjectProperties(NewActor, ActorObj->GetObjectField(TEXT("Properties")));
 
         // Restore component properties
-        const TSharedPtr<FJsonObject>& ComponentsObj = ActorObj->GetObjectField("Components");
+        const TSharedPtr<FJsonObject>& ComponentsObj = ActorObj->GetObjectField(TEXT("Components"));
         if (ComponentsObj.IsValid())
         {
             for (UActorComponent* Comp : NewActor->GetComponents())

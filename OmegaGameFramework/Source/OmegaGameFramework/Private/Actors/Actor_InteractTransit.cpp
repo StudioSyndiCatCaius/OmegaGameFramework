@@ -3,9 +3,14 @@
 
 #include "Actors/Actor_InteractTransit.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "Actors/Actor_Zone.h"
+#include "Components/ArrowComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "DataAssets/DA_Zone.h"
 #include "Functions/F_Common.h"
 #include "Functions/F_Component.h"
 #include "Subsystems/Subsystem_World.h"
@@ -49,10 +54,8 @@ AInteractTransit::AInteractTransit()
 	UpwardIcon->SetupAttachment(RootComponent);
 	UpwardIcon->SetRelativeLocation(FVector(0,0,3000));
 	UpwardIcon->SetRelativeScale3D(FVector(6,6,6));
-	if(UTexture2D* textr=LoadObject<UTexture2D>(this,TEXT("/OmegaGameFramework/Textures/Kenny/icons/board/exploding.exploding")))
-	{
-		UpwardIcon->SetSprite(textr);	
-	}
+	static ConstructorHelpers::FObjectFinder<UTexture2D> UpwardIconFinder(TEXT("/OmegaGameFramework/Textures/Kenny/icons/board/exploding.exploding"));
+	if (UpwardIconFinder.Succeeded()) UpwardIcon->SetSprite(UpwardIconFinder.Object);
 	
 #if WITH_EDITOR
 	bIsSpatiallyLoaded=false;
@@ -87,10 +90,10 @@ void AInteractTransit::BeginPlay()
 }
 
 void AInteractTransit::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name,
-                                                         FText& Description)
+                                                         FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	Name=L_GetName();
-	IDataInterface_General::GetGeneralDataText_Implementation(Tag, Name, Description);
+	Label=GetName();
 }
 
 bool AInteractTransit::IsInteractionBlocked_Implementation(AActor* InteractInstigator, FGameplayTag Tag,

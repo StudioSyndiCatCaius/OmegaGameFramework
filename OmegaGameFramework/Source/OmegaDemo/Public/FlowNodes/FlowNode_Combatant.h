@@ -46,7 +46,7 @@ public:
 	
 #endif
 };
-
+/*
 
 UCLASS(DisplayName="🤜 - Effects")
 class OMEGADEMO_API UFlowNode_Combatant_Effects : public UFlowNode_CombatantBASE
@@ -339,3 +339,4 @@ public:
 	//virtual FString GetNodeDescription() const override;
 #endif
 };
+*/

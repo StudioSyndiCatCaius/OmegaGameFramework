@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Subsystems/Subsystem_Save.h"
 #include "Misc/GeneralDataObject.h"
 #include "DA_Campaign.generated.h"
 
 
 
+class UOmegaSaveSubsystem;
 class UOmegaQuest;
 
 UCLASS(Blueprintable, BlueprintType,Const,Abstract,EditInlineNew,meta=(ShowWorldContextPin),CollapseCategories)

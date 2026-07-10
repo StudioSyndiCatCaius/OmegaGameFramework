@@ -6,6 +6,8 @@
 #include "Actors/Actor_AdvancedVolume.h"
 
 #include "Components/BillboardComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Components/StaticMeshComponent.h"

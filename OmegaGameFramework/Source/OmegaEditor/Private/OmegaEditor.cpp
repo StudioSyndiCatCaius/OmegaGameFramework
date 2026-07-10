@@ -16,13 +16,15 @@
 #include "OmegaEffectFactory.h"
 #include "Actors/Actor_Environment.h"
 #include "Customization_ActorRelatives.h"
+#include "Customization_OmegaEntityID.h"
 #include "Customization_ClassNamedLists.h"
 #include "Customization_CustomNamedList.h"
 #include "Customization_OmegaLinearChoices.h"
 #include "Customization_Bitflags.h"
-#include "OmegaObjectCustomization.h"
-#include "Customization_Object.h"
 #include "Customization_ODA.h"
+#include "OmegaObjectCustomization.h"
+#include "Misc/GeneralDataObject.h"
+#include "PropertyEditorModule.h"
 #include "OmegaActorDetailsCustomization.h"
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
@@ -37,6 +39,12 @@
 #include "Actors/Actor_Spawnable.h"
 #include "Actors/Actor_Zone.h"
 #include "AssetActions/OmegaAA_PAL.h"
+#include "ActorPreset/ActorPreset_ActorFactory.h"
+#include "ActorPreset/ActorPreset_ThumbnailRenderer.h"
+#include "Actors/Actor_DemoInteractable.h"
+#include "Actors/Actor_Interactable.h"
+#include "Subsystems/PlacementSubsystem.h"
+#include "Components/Component_Combatant.h"
 #include "GameAsset/GameAsset_ThumbnailRenderer.h"
 #include "GameAsset/OmegaSpawnableConfigCustomization.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -132,7 +140,7 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaLevelData,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaZoneData,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(ZoneLegendAsset,AssetCategory_Omega);
-	OMACRO_REGISTERASSETTYPE(CombatantGambitAsset,AssetCategory_Omega);
+//	OMACRO_REGISTERASSETTYPE(CombatantGambitAsset,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaQuest,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaAnimationEmote,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaStoryStateAsset,AssetCategory_Omega);
@@ -158,6 +166,32 @@ void FOmegaEditor::StartupModule()
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	TypeActions = MakeShared<FGameplayAssetTypeActions>();
 	AssetTools.RegisterAssetTypeActions(TypeActions.ToSharedRef());
+
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ACTOR PRESET
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	ActorPresetTypeActions = MakeShared<FActorPresetTypeActions>(AssetCategory_Omega);
+	AssetTools.RegisterAssetTypeActions(ActorPresetTypeActions.ToSharedRef());
+
+	// Actor Preset thumbnail renderer (3D actor preview in content browser)
+	UThumbnailManager::Get().RegisterCustomRenderer(
+		UOmegaMinimalDataAsset::StaticClass(),
+		UActorPreset_ThumbnailRenderer::StaticClass());
+
+	// OmegaEditor loads at PostEngineInit — after UPlacementSubsystem::RegisterPlacementFactories() has
+	// already run its TObjectIterator scan. Register the factory manually into both systems.
+	if (GEditor)
+	{
+		ActorPresetFactory = NewObject<UActorFactory_ActorPreset>(GetTransientPackage());
+		ActorPresetFactory->AddToRoot(); // prevent GC
+
+		GEditor->ActorFactories.Add(ActorPresetFactory);
+
+		if (UPlacementSubsystem* PS = GEditor->GetEditorSubsystem<UPlacementSubsystem>())
+		{
+			PS->RegisterAssetFactory(TScriptInterface<IAssetFactoryInterface>(ActorPresetFactory));
+		}
+	}
 
 	// Register custom node widget factory
 	NodeFactory = MakeShared<FGameplayAssetGraphNodeFactory>();
@@ -301,12 +335,18 @@ void FOmegaEditor::StartupModule()
 		FOmegaActorRelatives::StaticStruct()->GetFName(),
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCustomization_ActorRelatives::MakeInstance)
 	);
-	
-	PropertyModule.RegisterCustomClassLayout(UOmegaDataAsset::StaticClass()->GetFName(),
-		FOnGetDetailCustomizationInstance::CreateStatic(
-		&FOmegaDataAssetCustomization::MakeInstance));
-	
-	
+
+	// Register the EntityID struct customization
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FOmegaEntityID::StaticStruct()->GetFName(),
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FOmegaEntityIDCustomization::MakeInstance)
+	);
+
+	// Register the General-pinned / category-filterable layout for all Omega Minimal Data Assets
+	PropertyModule.RegisterCustomClassLayout(
+		UOmegaMinimalDataAsset::StaticClass()->GetFName(),
+		FOnGetDetailCustomizationInstance::CreateStatic(&FOmegaDataAssetCustomization::MakeInstance));
+
 	PropertyModule.NotifyCustomizationModuleChanged();
 	
 	// ===================================================================================================
@@ -336,8 +376,6 @@ void FOmegaEditor::StartupModule()
 	UThumbnailManager::Get().RegisterCustomRenderer(UOmegaSlateStyle::StaticClass(),USlateStyleThumbnailRender::StaticClass());
 }
 
-//#define OMEGAEDITOR_REGISTER_CUSTOMIZATION(class,custom) \
-//PropertyModule.RegisterCustomClassLayout(class::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&##custom::MakeInstance)); \
 
 
 void FOmegaEditor::RegisterToolbarExtension()
@@ -373,6 +411,17 @@ void FOmegaEditor::OnButtonClicked()
 
 void FOmegaEditor::ShutdownModule()
 {
+	if (GEditor && ActorPresetFactory)
+	{
+		if (UPlacementSubsystem* PS = GEditor->GetEditorSubsystem<UPlacementSubsystem>())
+		{
+			PS->UnregisterAssetFactory(TScriptInterface<IAssetFactoryInterface>(ActorPresetFactory));
+		}
+		GEditor->ActorFactories.Remove(ActorPresetFactory);
+		ActorPresetFactory->RemoveFromRoot();
+		ActorPresetFactory = nullptr;
+	}
+
 	FSlateStyleRegistry::UnRegisterSlateStyle(StyleSet->GetStyleSetName());
 
 
@@ -389,7 +438,10 @@ void FOmegaEditor::ShutdownModule()
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaCustomNamedList::StaticStruct()->GetFName());
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaClassNamedLists::StaticStruct()->GetFName());
 		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaActorRelatives::StaticStruct()->GetFName());
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FOmegaEntityID::StaticStruct()->GetFName());
 		
+		PropertyModule.UnregisterCustomClassLayout(UOmegaMinimalDataAsset::StaticClass()->GetFName());
+
 		PropertyModule.UnregisterCustomClassLayout(UObject::StaticClass()->GetFName());
 		PropertyModule.UnregisterCustomClassLayout(AActor::StaticClass()->GetFName());
 		

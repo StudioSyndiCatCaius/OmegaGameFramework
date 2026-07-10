@@ -19,9 +19,9 @@ class OMEGAFLOW_API UAsyncAction_GameplaySystem : public UBlueprintAsyncActionBa
 
 public:
 
-	UPROPERTY(BlueprintAssignable) FShutdown OnShutdown;
-	UPROPERTY(BlueprintAssignable) FSystemNotify Notify;
-	UPROPERTY(BlueprintAssignable) FOnFailedActivateSystem Failed;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FShutdown OnShutdown;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FSystemNotify Notify;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFailedActivateSystem Failed;
 	UFUNCTION() void NativeShutdown(UObject* Context, const FString Flag);
 	UFUNCTION() void Native_Notify(UObject* Context, const FString Flag);
 	
@@ -33,7 +33,7 @@ public:
 	UPROPERTY() FOmegaCommonMeta in_meta;
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),
 		DisplayName="Ω🔷 Activate Gameplay System") 
 	static UAsyncAction_GameplaySystem* ActivateGameplaySystem(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag, FOmegaCommonMeta meta);
 

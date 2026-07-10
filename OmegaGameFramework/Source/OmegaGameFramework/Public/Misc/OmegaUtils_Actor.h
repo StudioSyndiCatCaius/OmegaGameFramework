@@ -36,7 +36,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaActorSelector : public UObject
 
 public:
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Actor Selector")
+	UFUNCTION(BlueprintNativeEvent,Category="Actor Selector")
 	TArray<AActor*> GetActors(const UObject* WorldContext);
 	
 	UFUNCTION() AActor* Private_GetActor(UWorld* WorldContext);

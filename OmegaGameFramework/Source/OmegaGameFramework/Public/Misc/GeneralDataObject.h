@@ -3,26 +3,24 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/Texture2D.h"
 #include "Interfaces/I_Common.h"
 #include "GameplayTagContainer.h"
 #include "LuaCode.h"
 #include "LuaInterface.h"
 #include "Interfaces/I_ObjectTraits.h"
 #include "Functions/F_SoftProperty.h"
-#include "Interfaces/I_AssetThumbnail.h"
 #include "Interfaces/I_DataAsset.h"
+#include "Types/Struct_ActorRelatives.h"
 #include "Types/Struct_CustomNamedList.h"
 #include "GeneralDataObject.generated.h"
 
 
 #define OMACRO_ADDPARAMS_GENERAL() \
-virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override \
-{ Name=DisplayName; Description=DisplayDescription; }; \
-virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, UTexture2D*& Texture, UMaterialInterface*& Material, FSlateBrush& Brush) override \
-{ Brush=Icon; }; \
-virtual void GetGeneralAssetLabel_Implementation(FString& Label) override { if(!CustomLabel.IsEmpty()) {Label=CustomLabel; return; } Label=GetName(); return; }; \
-virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return CategoryTag; }; \
-virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return  GameplayTags; }; \
+virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override \
+{ Name=DisplayName; Description=DisplayDescription; iconBrush=Icon; Color=color; if(!CustomLabel.IsEmpty()){Label=CustomLabel;}else{Label=GetName();} MetaConfig.guid=Guid; }; \
+virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override \
+{ OutCategoryTag=CategoryTag; OutGameplayTags=GameplayTags; }; \
 
 
 USTRUCT(BlueprintType)
@@ -55,20 +53,15 @@ public:
 	UPROPERTY()
 	FCustomAssetData CustomData;
 
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{
-		Name=CustomData.DisplayName, Description=CustomData.Description;
-	};
-	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override
-	{
-		Brush.SetResourceObject(CustomData.Texture);
-	};
-	virtual void GetGeneralAssetColor_Implementation(FGameplayTag Tag, FLinearColor& Color) override
-	{
+		Name=CustomData.DisplayName;
+		Description=CustomData.Description;
+		iconBrush.SetResourceObject(CustomData.Texture);
 		Color=CustomData.Color;
+		Label=CustomData.Label;
 	};
-
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label);
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 
 };
 
@@ -88,8 +81,7 @@ public:
 };
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UOmegaMinimalDataAsset, public IDataInterface_General, public IDataInterface_AssetThumbnail,
-																			public ILuaInterface, public IDataInterface_DataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaDataAsset : public UOmegaMinimalDataAsset, public IDataInterface_General, public ILuaInterface
 {
 	GENERATED_BODY()
 public:
@@ -102,30 +94,25 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="Name") FText DisplayName;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Description") FText DisplayDescription;
-
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Color") FLinearColor color=FLinearColor::White;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="🏷️Category") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="🏷️Tags") FGameplayTagContainer GameplayTags;
 
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",AdvancedDisplay) FString CustomLabel;
-	
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="General",AdvancedDisplay) FGuid Guid;
-	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
 	
-	OMACRO_ADDPARAMS_GENERAL();
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual auto GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag,
+	                                                  FGameplayTagContainer& OutGameplayTags) -> void override;
 	
 	UFUNCTION(BlueprintNativeEvent,Category="Editor") bool UseIconAsThumbnail();
-
+	
 	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field) override;
 	virtual void SetKey_Implementation(FLuaValue Key) override;
 	virtual FLuaValue GetValue_Implementation(const FString& Field) override { return LuaData; };
 	virtual FLuaValue GetKey_Implementation() override { return FLuaValue(LuaKey.ToString()); };
 	
-	virtual FLinearColor GetThumbnailBack_Tint_Implementation() override { return FLinearColor::Gray; };
-	virtual FSlateBrush GetThumbnail_Brush_Implementation() override { return Icon;};
-	virtual FText GetThumbnail_Text_Implementation() override { return DisplayName;};
-	virtual UPrimaryDataAsset* GetDataAsset_Named_Implementation(FName name) override;
-	virtual FColor GetThumbnail_Color_Implementation() override { return asset_color; };
 };
 
 UCLASS(Abstract)
@@ -134,9 +121,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaDemoDataAsset : public UOmegaDataAsset
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Demo Meta") FOmegaClassNamedLists NamedLists;
-	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Demo Meta") FOmegaBitflagsBase Flags;
+	UPROPERTY() FOmegaClassNamedLists NamedLists;
+	UPROPERTY() FOmegaBitflagsBase Flags;
+	UPROPERTY() FOmegaActorRelatives RelativeAssets;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
 	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Demo Meta",AdvancedDisplay) FOmegaLuaCode LuaCode;
 	
 };

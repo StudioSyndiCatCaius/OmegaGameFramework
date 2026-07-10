@@ -30,7 +30,7 @@ class OMEGAGAMEFRAMEWORK_API AOmegaPlayer : public APlayerController
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:
 	//(BlueprintAssignable) FOmegaPlayerSystemStateChange OnSystemActivated;
-//	UPROPERTY(BlueprintAssignable) FOmegaPlayerSystemStateChange OnSystemShutdown;
+//	UPROPERTY(BlueprintAssignable, Category="Omega") FOmegaPlayerSystemStateChange OnSystemShutdown;
 	
 	AOmegaPlayer();
 	

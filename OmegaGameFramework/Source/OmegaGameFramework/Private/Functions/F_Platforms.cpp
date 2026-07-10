@@ -12,6 +12,24 @@ void UOmegaAchievementListener::UnlockAchievement() const
 	// unlock cod goes here
 }
 
+#define LOCAL_ADD_PLAT_SET(key,asset) \
+PlatformAssets.Add(key,TSoftObjectPtr<UOmegaPlatformAsset>(FSoftObjectPath("/OmegaGameFramework/DataAssets/Platforms/OmegaPlatform_settings_"#asset".OmegaPlatform_settings_"#asset)));
+
+UOmegaPlatformSettings::UOmegaPlatformSettings(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	DefaultPlatform=TSoftObjectPtr<UOmegaPlatformAsset>(FSoftObjectPath("/OmegaGameFramework/DataAssets/Platforms/OmegaPlatform_settings_pc.OmegaPlatform_settings_pc"));
+	
+	LOCAL_ADD_PLAT_SET("Windows",pc);
+	LOCAL_ADD_PLAT_SET("Mac",mac);
+	LOCAL_ADD_PLAT_SET("Linux",deck);
+	LOCAL_ADD_PLAT_SET("XboxOneGDK",xbox);
+	LOCAL_ADD_PLAT_SET("PS4",ps4);
+	LOCAL_ADD_PLAT_SET("PS5",ps5);
+	LOCAL_ADD_PLAT_SET("Switch",Switch);
+	
+}
+
 UOmegaPlatformAsset* UOmegaPlatformSettings::GetPlatformAsset() const
 {
 	const FString PlatformName = FPlatformMisc::GetUBTPlatform();

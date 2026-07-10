@@ -47,7 +47,7 @@ void UOmegaEntityPreset::ApplyToCombatant(UCombatantComponent* combatant, bool b
 		else if (bEvenIfSaveEntity)
 		{
 			FOmegaEntityID _id=combatant->entity_id;
-			UOmegaFunctions_Entity::SetEntity_ByID(combatant,_id,GetEntityData(),false);
+			UOmegaFunctions_Entity::SetEntity_ByID(combatant,_id,GetEntityData(),SAVE_GAME);
 		}
 	}
 }

@@ -9,28 +9,20 @@
 #include "DA_EquipSlot.generated.h"
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UEquipmentSlot : public UOmegaDataAsset, public IDataInterface_AttributeModifier
+class OMEGAGAMEFRAMEWORK_API UEquipmentSlot : public UOmegaDataAsset, public IDataInterface_Combatant
 {
 	GENERATED_BODY()
 public:
-	//UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="General")
-	//TArray<UOmegaCondition_DataAsset*> EquipConditions;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category="Equipment")
-	//TArray<UEquipmentSlotScript*> SlotScripts;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipment Slot",meta=(DeprecatedProperty),AdvancedDisplay)
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipment Slot",meta=(DeprecatedProperty))
 	FGameplayTagContainer AcceptedCategories;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipment Slot",meta=(DeprecatedProperty),AdvancedDisplay)
-	FGameplayTagContainer RequiredTags;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipment Slot",meta=(DeprecatedProperty))
+	FGameplayTagQuery TagsQuery;
 	
 	UFUNCTION(BlueprintCallable, Category="Equipment Slot")
-	bool CanSlotEquipItem(UPrimaryDataAsset* Item)
-	{
-		if(Item)
-		{
-			return true;
-		}
-		return false;
-	}
+	bool CanSlotEquipItem(UPrimaryDataAsset* Item);
+	
+	UFUNCTION(BlueprintCallable, Category="Equipment Slot")
+	bool CanSlotEquipItemOnCombatant(UCombatantComponent* Combatant, UPrimaryDataAsset* Item);
 
 };

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "Actor_Spline.generated.h"
 
 class UInstancedStaticMeshComponent;
@@ -26,7 +27,8 @@ public:
 	AOmegaSplineActor();
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	UPROPERTY(EditAnywhere,Category="Spline") FLinearColor PointColor=FLinearColor::Red;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Spline") FLinearColor PointColor=FLinearColor::Red;
+	UFUNCTION(BlueprintCallable,Category="Spline") void SetSplineColor(FLinearColor Color);
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Components") USplineComponent* Spline;
 	UPROPERTY() UInstancedStaticMeshComponent* DisplayPoint;

@@ -8,7 +8,6 @@
 #include "Functions/F_Combatant.h"
 #include "Interfaces/I_Combatant.h"
 #include "Misc/GeneralDataObject.h"
-#include "Types/Struct_CombatantSource.h"
 #include "DA_ActorIdentity.generated.h"
 
 
@@ -52,31 +51,13 @@ inline bool UOAsset_ActorIdentity::OnActorTagEvent_Implementation(AActor* Actor,
 }
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOAsset_CombatantIdentity : public UOAsset_ActorIdentity, public IDataInterface_SkillSource, public IDataInterface_AttributeModifier, public IDataInterface_DamageModifier
+class OMEGAGAMEFRAMEWORK_API UOAsset_CombatantIdentity : public UOAsset_ActorIdentity, public IDataInterface_Combatant
 {
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combat",DisplayName="Combat Sources") FOmegaCombatantSources Sources;
-	
-	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
-	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
-	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override; 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Combatant", meta=(ShowOnlyInnerProperties))
+	FOmegaScripted_CombatantModifiers Modifiers;
+	virtual FOmegaScripted_CombatantModifiers Combatant_GetScriptedModifiers_Implementation() override { return Modifiers; };
 };
 
-inline TArray<FOmegaAttributeModifier> UOAsset_CombatantIdentity::GetModifierValues_Implementation(
-	UCombatantComponent* CombatantComponent)
-{
-	return Sources.GetAttributeMods(CombatantComponent);
-}
-
-inline float UOAsset_CombatantIdentity::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-	UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
-{
-	return Sources.GetDamageMods(Attribute,Target,Instigator,BaseDamage,DamageType,Context);
-}
-
-inline TArray<UPrimaryDataAsset*> UOAsset_CombatantIdentity::GetSkills_Implementation(UCombatantComponent* Combatant)
-{
-	return Sources.GetSkills(Combatant);
-}

@@ -4,6 +4,7 @@
 #include "AsyncAction_GameplaySystem.h"
 
 #include "Subsystems/Subsystem_World.h"
+#include "Engine/World.h"
 
 
 UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
@@ -21,7 +22,6 @@ UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
 			NewSysNode->LocalContext = Context;
 		}
 	}
-
 	return NewSysNode;
 }
 
@@ -48,26 +48,16 @@ void UAsyncAction_GameplaySystem::Activate()
 		
 			if(!IsAlreadyActiveSystem)
 			{
-				AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag,in_meta);
-				NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
-				NewSystem->OnSystemNotify.AddDynamic(this, &UAsyncAction_GameplaySystem::Native_Notify);
-			}
-			else
-			{
-				Failed.Broadcast();
-				SetReadyToDestroy();
+				if (AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag,in_meta))
+				{
+					NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
+					NewSystem->OnSystemNotify.AddDynamic(this, &UAsyncAction_GameplaySystem::Native_Notify);
+					return;
+				};
 			}
 		}
-		else
-		{
-			Failed.Broadcast();
-			SetReadyToDestroy();
-		}
 	}
-	else
-	{
-		Failed.Broadcast();
-		SetReadyToDestroy();
-	}
-	
+
+	Failed.Broadcast();
+	SetReadyToDestroy();
 }

@@ -17,8 +17,8 @@ class OMEGAFLOW_API UListenFor_GameMessage : public UBlueprintAsyncActionBase
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FOnListenGMessage MessageSent;
-	UPROPERTY(BlueprintAssignable) FOnListenGMessage MessageEnd;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnListenGMessage MessageSent;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnListenGMessage MessageEnd;
 	
 	UPROPERTY() const UObject* LocalWorldContext;
 
@@ -28,7 +28,7 @@ public:
 	void N_MessageEnd(UOmegaGameplayMessage* Message, FGameplayTag MessageCategory, FOmegaGameplayMessageMeta Meta);
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Message") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Message") 
 	static UListenFor_GameMessage* ListenFor_GameMessage(const UObject* WorldContextObject);
 	
 };

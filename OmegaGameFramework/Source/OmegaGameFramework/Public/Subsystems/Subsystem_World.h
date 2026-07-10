@@ -19,6 +19,7 @@
 #include "Types/Struct_Message.h"
 #include "Subsystem_World.generated.h"
 
+class UOmegaCalendarComponent;
 class AOmegaNullActor;
 class UAudioComponent;
 class UAssetSquad_Identity;
@@ -124,10 +125,11 @@ public:
 	//In world manager start, creates and starts a new save game. (This is useful for things like a title screen level, to ensure no extra save data is carried over.)
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="🗺️World Manager") bool bStartWithNewGame;
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
+	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UGameplayActorComponent* ActorID;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UAssetSquadComponent* AssetSquad;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UInstanceActorComponent* EntityInstances;
+	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UAssetSquadComponent* AssetSquad;
+	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UInstanceActorComponent* EntityInstances;
+	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UOmegaCalendarComponent* Calendar;
 	
 	UFUNCTION(BlueprintPure, Category="WorldManager") FLuaValue GetLevelLuaTable();
 
@@ -141,7 +143,7 @@ public:
 	
 	UPROPERTY() TArray<AOmegaQuestInstance*> quest_instances;
 	
-	AOmegaQuestInstance* Quest_Start(UOmegaQuest* q, bool bResumeFormSave=false);
+	AOmegaQuestInstance* Quest_Start(UOmegaQuest* q, bool bOverrideStartData=false,FOmegaQuestData data=FOmegaQuestData());
 	bool Quest_CanStart(UOmegaQuest* q);
 	FOmegaQuestData* Quest_GetData(UOmegaQuest* q);
 	bool Quest_IsComplete(UOmegaQuest* q);
@@ -161,9 +163,11 @@ public:
 	UPROPERTY() ULevelSequencePlayer* zone_SequencePlayer=nullptr;
 	UPROPERTY() ALevelSequenceActor* zone_SequenceActor=nullptr;
 	UPROPERTY() TArray<UZoneEntityComponent*> registered_entities;
+	UPROPERTY() TArray<AOmegaZonePoint*> registered_zonepoints;
 	
 	//0=none | 1=fade_OUT | 2=transiting | 3=fade_in | 4=finishing
 	uint8 zone_TransitState=0;
+	bool zone_bSkipFade=false;
 	FName transitLevelTarget;
 	
 private:
@@ -172,13 +176,13 @@ private:
 public:
 	
 	AOmegaZonePoint* Zone_GetPointFromlevel(TSoftObjectPtr<UWorld> Level, FGameplayTag Tag) const;
-	void Zone_Transit(AOmegaZonePoint* Point,APlayerController* Player);
+	void Zone_Transit(AOmegaZonePoint* Point,APlayerController* Player, bool bSkipFade=false);
 	ULevelSequence* Zone_GetTransitSequence() const;
 	ULevelSequencePlayer* Zone_GetTransitSequencePlayer();
 
 	TArray<UOmegaZoneData*> Zone_GetLoaded();
-	void Zone_TransitToLevel(TSoftObjectPtr<UWorld> Level, FGameplayTag SpawnID);
-	void Zone_TransitToLevel_Name(FName Level, FGameplayTag SpawnID);
+	void Zone_TransitToLevel(TSoftObjectPtr<UWorld> Level, FGameplayTag SpawnID, bool bSkipFade=false);
+	void Zone_TransitToLevel_Name(FName Level, FGameplayTag SpawnID, bool bSkipFade=false);
 	UOmegaLevelData* Zone_GetLevelData(TSoftObjectPtr<UWorld> SoftLevelReference);
 	UOmegaLevelData* Zone_GetLevelData_Current();
 	TSoftObjectPtr<UWorld> GetCurrentLevelSoftReference();
@@ -187,6 +191,7 @@ public:
 	bool Zone_IsLoading() const;
 	
 	void ZoneEntity_Register(UZoneEntityComponent* entity, bool bIsEntityRegistered);
+	void ZonePoint_Register(AOmegaZonePoint* Point, bool bIsRegistered);
 	
 	TArray<UZoneEntityComponent*> ZoneEntity_GetRegistered() const;
 
@@ -196,7 +201,6 @@ public:
 	// ------------------------------------------------------------
 	// Entities
 	// ------------------------------------------------------------
-	TArray<AOmegaInstancedEntity*> GetInstanceEntities_OfSquad(UAssetSquad_Identity* Squad) const;
 	
 	UFUNCTION(BlueprintPure,Category="OmegaWorldManager") uint8 GetZoneLoadState() const{ return zone_TransitState; };
 };
@@ -213,7 +217,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_World : public UWorldSubsystem
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FOnGameplaySystemActiveStateChange OnGameplaySystemActiveStateChange;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGameplaySystemActiveStateChange OnGameplaySystemActiveStateChange;
 	
 	UPROPERTY() FOmegaBaseSystemStats SystemsData;
 	UPROPERTY() FOmegaSoftParams GlobalVars;
@@ -272,15 +276,19 @@ public:
 	UPROPERTY() TArray<FGameplayTag> ExtraBlockedSystemTags;
 private:
 	
-
 	//Refreshes system states. will shutdown any systems with blocked tags.
-	UFUNCTION()
-	void Local_RefreshSystemState();
+	UFUNCTION() void Local_RefreshSystemState();
 
 public:
-
+	
+	//will forcibly update the gameplay state & things like makeing sure appropriate systems are disabled/blocked.
+	UFUNCTION(BlueprintCallable, Category="Omega")
+	void ForceUpdateGameplayState();
+	
 	UFUNCTION()
 	void Native_RegisterCombatant(UCombatantComponent* Combatant, bool bRegistered);
+	
+
 	
 	UPROPERTY()
 	TArray<UCombatantComponent*> ActiveCombatants;
@@ -288,36 +296,33 @@ public:
 	UFUNCTION(BlueprintPure, Category="Combat")
 	TArray<UCombatantComponent*> GetAllCombatants();
 	
-	UPROPERTY(BlueprintAssignable) FOnCombatantRegisterDelegate OnCombatantRegistered;
-	UPROPERTY(BlueprintAssignable) FOnCombatantRegisterDelegate OnCombatantUnegistered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnCombatantRegisterDelegate OnCombatantRegistered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnCombatantRegisterDelegate OnCombatantUnegistered;
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnCombatantDamaged OnCombatantDamaged;
 	UFUNCTION()
 	void Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
-
-	UFUNCTION(BlueprintCallable, Category="OmegaGameplaySubsystem")
-	TArray<UCombatantComponent*> RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass, UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);
 	
 	// ────────────────────────────────────────────────────────────────────
 	// Quest
 	// ────────────────────────────────────────────────────────────────────
 	
-	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuest_Start;
-	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuest_End;
-	UPROPERTY(BlueprintAssignable) FOnOmegaQuestDelegate OnQuest_Updated;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnOmegaQuestDelegate OnQuest_Start;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnOmegaQuestDelegate OnQuest_End;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnOmegaQuestDelegate OnQuest_Updated;
 	
 	// ────────────────────────────────────────────────────────────────────
 	// ZONE
 	// ────────────────────────────────────────────────────────────────────
 	
-	UPROPERTY(BlueprintAssignable) FZonePointDelegate OnZone_PlayerSpawnAtPoint;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FZonePointDelegate OnZone_PlayerSpawnAtPoint;
 	
 	// ────────────────────────────────────────────────────────────────────
 	// Messages
 	// ────────────────────────────────────────────────────────────────────
-	UPROPERTY(BlueprintAssignable) FOnGameplayMessage OnGameplayMessage_Begin;
-	UPROPERTY(BlueprintAssignable) FOnGameplayMessage OnGameplayMessage_End;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGameplayMessage OnGameplayMessage_Begin;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGameplayMessage OnGameplayMessage_End;
 	
 	UPROPERTY() TArray<UOmegaGameplayMessage*> ActiveMessages;
 	
@@ -325,6 +330,15 @@ public:
 	bool Message_End(UOmegaGameplayMessage* Message);
 	UOmegaGameplayMessage* Message_GetFirstOfCategory(FGameplayTag CategoryTag);
 	void L_MessageDelegateEvent(UOmegaGameplayMessage* Message);
+
+	// ────────────────────────────────────────────────────────────────────
+	// Gameplay State Modifier
+	// ────────────────────────────────────────────────────────────────────
+	UPROPERTY() TArray<UObject*> GameplayModifier_Registered;
+	
+	UFUNCTION(BlueprintCallable, Category="Omega")
+	void GameplayModifier_Register(UObject* Object, bool bIsRegistered);
+	
 	
 	// ────────────────────────────────────────────────────────────────────
 	// Actor - Global Bindings
@@ -363,12 +377,12 @@ public:
 	UFUNCTION() void OnCompEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION() void LinkComponentToTagTarget(UPrimitiveComponent* Component, AActor* Actor, FGameplayTag Tag, bool bLinked);
 	
-	UPROPERTY(BlueprintAssignable) FOnActorInteraction OnActorInteraction;
-	UPROPERTY(BlueprintAssignable) FOnActorTaggedTargetChange OnActorTaggedTargetChange;
-	UPROPERTY(BlueprintAssignable) FOnActorTagEvent OnActorTagEvent;
-	UPROPERTY(BlueprintAssignable) FOnActorGroupChange OnActorGroupChange;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnActorInteraction OnActorInteraction;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnActorTaggedTargetChange OnActorTaggedTargetChange;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnActorTagEvent OnActorTagEvent;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnActorGroupChange OnActorGroupChange;
 	
-	UPROPERTY(BlueprintAssignable) FActorIdentityDelegateRegister OnActorIdentityRegistered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FActorIdentityDelegateRegister OnActorIdentityRegistered;
 	
 	void local_RegisterActorIdComp(UGameplayActorComponent* Component, bool bIsRegister);
 

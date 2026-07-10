@@ -10,7 +10,7 @@
 
 class AActor;
 
-UINTERFACE()  class UActorInterface_Interactable : public UInterface
+UINTERFACE(DisplayName="♎Actor🔵 - 👆Interactable") class UActorInterface_Interactable : public UInterface
 {
 	GENERATED_BODY()
 public:
@@ -21,12 +21,12 @@ class OMEGAGAMEFRAMEWORK_API IActorInterface_Interactable
 	GENERATED_BODY()
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Interaction")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|👆Interaction",DisplayName="👆Interaction - On Interact")
 	void OnInteraction(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context);
 	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Interaction")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|👆Interaction",DisplayName="👆Interaction - Is Blocked?")
 	bool IsInteractionBlocked(AActor* InteractInstigator, FGameplayTag Tag, FOmegaCommonMeta Context);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Interaction")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|👆Interaction",DisplayName="👆Interaction - Get Flags")
 	int32 GetInteraction_BitFlags();
 };

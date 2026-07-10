@@ -4,11 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Templates/SubclassOf.h"
+#include "UObject/Class.h"
 #include "LuaValue.h"
 #include "UObject/Object.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "Types/Struct_SortedClassPath.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Subsystem_Engine.generated.h"
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOmegaGenericEngineDelegate);
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_Engine : public UEngineSubsystem
@@ -17,6 +23,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_Engine : public UEngineSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	
+	UFUNCTION(BlueprintCallable,Category="Omega") void GlobalRefresh();
+	
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOmegaGenericEngineDelegate OnGlobalRefresh;
 	
 	// ---------------------------------------------------------------
 	// spawnables

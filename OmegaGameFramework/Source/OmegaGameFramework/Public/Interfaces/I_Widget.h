@@ -23,7 +23,11 @@ class OMEGAGAMEFRAMEWORK_API IWidgetInterface_Input
 public:
 	
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
-	void OnControlSetWidget();
+	UUserWidget* ControlWidget_Get(int32& priority);
+	
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Input")
+	void OnBecomeControlWidget();
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
 	void InputNavigate(FVector2D Axis);
 	UFUNCTION(BlueprintNativeEvent, Category="Input")
@@ -39,7 +43,7 @@ public:
 	
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_WidgetTrait : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Widget Trait") class UDataInterface_WidgetTrait : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_WidgetTrait
 {
 	GENERATED_BODY()

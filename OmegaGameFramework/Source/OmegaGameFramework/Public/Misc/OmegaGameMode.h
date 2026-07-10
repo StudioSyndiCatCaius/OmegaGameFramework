@@ -10,7 +10,11 @@
 
 #include "OmegaGameMode.generated.h"
 
+class UInstanceActorComponent;
 class AOmegaDynamicCamera;
+class UAssetSquadComponent;
+class UCombatantComponent;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOmegaGameModeDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOmegaGameModeActorListDelegate, const TArray<AActor*>&, Actors);
 
@@ -31,8 +35,14 @@ public:
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	
-	UPROPERTY(BlueprintAssignable) FOmegaGameModeDelegate OnLoadEventFinish;
-	UPROPERTY(BlueprintAssignable) FOmegaGameModeActorListDelegate OnDragSelectedEnded;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOmegaGameModeDelegate OnLoadEventFinish;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOmegaGameModeActorListDelegate OnDragSelectedEnded;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UCombatantComponent* Combatant;
+	//UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UGameplayActorComponent* ActorID;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UAssetSquadComponent* AssetSquad;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UInstanceActorComponent* EntityInstances;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Components") UOmegaCalendarComponent* Calendar;
 	
 	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems", DisplayName="⚙️ Systems (Pre-Load)")
 	TArray<TSubclassOf <AOmegaGameplaySystem>> AutoGameplaySystems;
@@ -51,9 +61,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems")
 	FGameplayTagContainer AutoBlockSystemTags;
-	
-	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems")
-	TArray<FOmegaGameplaySystemConfig> System_Config;
 	
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
 	bool bAutoActivateDynamicCamera;
@@ -84,14 +91,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Game Mode")
 	void OnDragSelectEnd(const TArray<AActor*>& actors);
 	
-#if WITH_EDITOR
-	
-	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
-#endif
-	void ValidateTemplates();
-	
+
 private:
-	UFUNCTION()
 	void Local_ActivatePersistentSystems();
 private:
 	FTimerHandle PersistentSystemsTimerHandle;

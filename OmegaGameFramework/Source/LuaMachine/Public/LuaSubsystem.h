@@ -6,6 +6,8 @@
 #include "GameplayTagContainer.h"
 #include "LuaObject.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Subsystems/EngineSubsystem.h"
+#include "Subsystems/WorldSubsystem.h"
 #include "LuaSubsystem.generated.h"
 
 class ULuaSettings;

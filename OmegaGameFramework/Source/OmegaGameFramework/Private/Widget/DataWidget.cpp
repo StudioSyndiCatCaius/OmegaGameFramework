@@ -2,7 +2,9 @@
 
 
 #include "Widget/DataWidget.h"
+#include "UObject/ConstructorHelpers.h"
 #include "CommonTextBlock.h"
+#include "Curves/CurveFloat.h"
 
 UActorComponent* UDataWidget::local_GetComponentFromObject(UObject* object, TSubclassOf<UActorComponent> Class)
 {
@@ -235,8 +237,8 @@ UOmegaSubsystem_Player* UDataWidget::GetPlayerSubsystem() const
 
 UDataWidget::UDataWidget()
 {
-	HoverBlendCurve=LoadObject<UCurveFloat>(this,TEXT("/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"));
-	HighlightBlendCurve=HoverBlendCurve;
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> HoverCurveFinder(TEXT("/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"));
+	if (HoverCurveFinder.Succeeded()) { HoverBlendCurve = HoverCurveFinder.Object; HighlightBlendCurve = HoverCurveFinder.Object; }
 }
 
 
@@ -365,8 +367,9 @@ void UDataWidget::Refresh()
 	{
 		FText LocalDesc;
 		FText LocalName;
-			
-		IDataInterface_General::Execute_GetGeneralDataText(ReferencedAsset, FGameplayTag(), LocalName, LocalDesc);
+		FSlateBrush LocalBrush;
+		FLinearColor _color; FString _label; FOmegaObjectGeneralMetaconfig _meta;
+		IDataInterface_General::Execute_GetGeneralDataText(ReferencedAsset, FGameplayTag(), LocalName, LocalDesc, LocalBrush, _color, _label, _meta);
 		if (GetNameTextWidget())
 		{
 			GetNameTextWidget()->SetText(L_FormatText(LocalName));
@@ -376,21 +379,9 @@ void UDataWidget::Refresh()
 			GetDescriptionTextWidget()->SetText(L_FormatText(LocalDesc));
 		}
 
-		//get source asset images
 		UTexture2D* LocalTexture = nullptr;
 		UMaterialInterface* LocalMat = nullptr;
-		FSlateBrush LocalBrush;
-		IDataInterface_General::Execute_GetGeneralDataImages(ReferencedAsset, FGameplayTag(), LocalTexture, LocalMat, LocalBrush);
 		
-		
-		if(GetTextureImage()&&LocalTexture)
-		{
-			GetTextureImage()->SetBrushFromTexture(LocalTexture);
-		}
-		if(GetMaterialImage()&&LocalMat)
-		{
-			GetMaterialImage()->SetBrushFromMaterial(LocalMat);
-		}
 		bool Local_OverrideSize;
 		FVector2D Local_NewSize;
 		UImage* BrushImg = GetBrushImage(Local_OverrideSize, Local_NewSize);
@@ -514,7 +505,10 @@ void UDataWidget::Native_SetHovered(bool bHovered)
 				{
 					GetPlayerSubsystem()->PlayUiSound(HoverSound);
 				}
-				GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Hover.LoadSynchronous());
+				else if (UOmegaSlateTheme* _theme=UOmegaWidgetInterface::GetTheme(this))
+				{
+					GetPlayerSubsystem()->PlayUiSound(_theme->Sound_Hover);
+				}
 	
 				if (GetHoverAnimation())
 				{
@@ -606,12 +600,7 @@ void UDataWidget::OnNewListOwner_Implementation(UObject* ListOwner)
 
 FString UDataWidget::GetAssetLabel() const
 {
-	FString OutString = "None";
-	if (ReferencedAsset && ReferencedAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		IDataInterface_General::Execute_GetGeneralAssetLabel(ReferencedAsset, OutString);
-	}
-	return OutString;
+	return UDataInterface_General::GetObjectLabel(ReferencedAsset);
 }
 
 UDataList* UDataWidget::GetOwningList() const
@@ -641,7 +630,10 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(SelectSound);
 			}
-			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Select.LoadSynchronous());
+			else if (UOmegaSlateTheme* _theme=UOmegaWidgetInterface::GetTheme(this))
+			{
+				GetPlayerSubsystem()->PlayUiSound(_theme->Sound_Select);
+			}
 		}
 	}
 	else
@@ -652,7 +644,11 @@ void UDataWidget::Select()
 			{
 				GetPlayerSubsystem()->PlayUiSound(ErrorSound);
 			}
-			GetPlayerSubsystem()->PlayUiSound(OGF_CFG_STYLE()->Sound_Error.LoadSynchronous());
+			
+			else if (UOmegaSlateTheme* _theme=UOmegaWidgetInterface::GetTheme(this))
+			{
+				GetPlayerSubsystem()->PlayUiSound(_theme->Sound_Error);
+			}
 		}
 	}
 }

@@ -4,10 +4,14 @@
 
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/SkeletalMesh.h"
 #include "Components/BoxComponent.h"
 #include "Components/Component_Saveable.h"
 #include "Components/StateTreeComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 void UOmegaProp_Preset::L_setBoundsFromComp(UBoxComponent* bounds, USceneComponent* comp,FBoxSphereBounds BoxBounds)
 {
@@ -122,48 +126,30 @@ UOAsset_Appearance* AOmegaProp::GetAppearanceAsset_Implementation()
 {
 	if(Preset)
 	{
-		return Execute_GetAppearanceAsset(Preset);
+		
 	}
 	return nullptr;
 }
 
 void AOmegaProp::OnConstruction(const FTransform& Transform)
 {
-	if(UOmegaProp_Preset* p=L_GetPreset())
-	{
-		p->Apply(this);
-	}
+	
 	Super::OnConstruction(Transform);
 }
 
 void AOmegaProp::BeginPlay()
 {
-	if(UOmegaProp_Preset* p=L_GetPreset())
-	{
-		if(!p->StaticMesh) { MeshStatic->DestroyComponent();}
-		if(!p->SkeletalMesh) { MeshSkeletal->DestroyComponent();}
-		if(!p->Audio) { Audio->DestroyComponent();}
-		if(!p->Niagara) { Niagara->DestroyComponent();}
 
-		//SetActorTickEnabled(p->bCanTick);
-	}
 	Super::BeginPlay();
 }
 
-UOmegaProp_Preset* AOmegaProp::L_GetPreset()
-{
-	if(Preset)
-	{
-		return Preset;
-	}
-	return nullptr;
-}
+
 
 AOmegaProp::AOmegaProp()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
-	
+	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
 	RangeBox=CreateOptionalDefaultSubobject<UBoxComponent>("Range");
 	MeshStatic=CreateOptionalDefaultSubobject<UStaticMeshComponent>("Mesh - Static");
 	MeshStatic->SetupAttachment(RootComponent);
@@ -194,13 +180,5 @@ AOmegaProp::AOmegaProp()
 	}
 
 	
-}
-
-void AOmegaProp::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
-	FOmegaClassNamedLists& named_lists)
-{
-	bitflags=Flags;
-	named_lists=Lists;
-	//seed=Seed;
 }
 

@@ -28,6 +28,7 @@ public class OmegaGameFramework : ModuleRules
 			{
 				"Core",
 				"CoreUObject",
+				"StructUtils",
 				"OmegaCore",
 				"CommonUI",
 				"CommonInput",
@@ -58,9 +59,10 @@ public class OmegaGameFramework : ModuleRules
 				"AudioMixer",
 				"JsonBlueprintUtilities",
 				"PCG",
-				"BinkMediaPlayer",
 				"StateTreeModule",
 				"GameplayStateTreeModule", "GameplayDebugger",
+				"AIModule",
+				"NavigationSystem",
 			}
 			);
 		
@@ -80,6 +82,11 @@ public class OmegaGameFramework : ModuleRules
 			}
 			);
 		
+		if (Target.bBuildEditor)
+		{
+			PublicDependencyModuleNames.Add("BlueprintGraph");
+		}
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{

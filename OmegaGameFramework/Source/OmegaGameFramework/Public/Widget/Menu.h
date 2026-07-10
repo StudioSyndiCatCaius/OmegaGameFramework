@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
 #include "ScreenWidget.h"
-#include "Components/WidgetSwitcher.h"
+#include "Interfaces/I_GameplayState.h"
 #include "Interfaces/I_Widget.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
@@ -19,30 +19,15 @@ class UOmegaInputMode;
 class UDataListCustomEntry;
 class UOmegaGameplayMessage;
 
-UINTERFACE(MinimalAPI) class UDataInterface_CommonMenu : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_CommonMenu
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Menu Source") class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_MenuSource
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Menu")
-	TArray<UObject*> GetDataListEntries(UMenu* Menu);
-};
-
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaCommonMenuDefinition : public UOmegaDataAsset, public IDataInterface_CommonMenu
-{
-	GENERATED_BODY()
-	
-public:UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menu")
-	TArray<UPrimaryDataAsset*> CustomEntry_Assets;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Menu")
-	TArray<UDataListCustomEntry*> CustomEntry_Objects;
-	
-	virtual TArray<UObject*> GetDataListEntries_Implementation(UMenu* Menu) override;
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|HUD")
+	TSubclassOf<UMenu> GetMenuClass(FName Name);
 };
 
 UCLASS()
@@ -54,6 +39,7 @@ public:
 	AOmegaMenuWrapperActor();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu") UCombatantComponent* Combatant;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu") UChildActorComponent* ChildActor;
 	
 };
 
@@ -62,32 +48,38 @@ public:
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tags, FString, Flag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
 
-UCLASS(HideFunctions=(Construct, RemoveFromParent))
-class OMEGAGAMEFRAMEWORK_API UMenu : public UOmegaScreenWidget, public IWidgetInterface_Input
+UCLASS(HideFunctions=(Construct, RemoveFromParent),Abstract)
+class OMEGAGAMEFRAMEWORK_API UMenu : public UOmegaScreenWidget, public IWidgetInterface_Input, public IDataInterface_GameplayModifier
 {
 	GENERATED_BODY()
 
 protected:
+	virtual void L_SetSubstate(int32 NewState) override;
+	
 	virtual void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
 	//virtual void OnAnimationFinishedPlaying(UUMGSequencePlayer& Player) override;
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual bool InputAction_Disabled_Implementation(APlayerController* Player, FGameplayTag Action) override;
+	virtual void NativeDestruct() override;
 public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
 	UDataList* GetDefaultDataList();
-	
+
 	UPROPERTY() FGameplayTagContainer TempTags;
 	//----------------------------------------------------------------------
 	// Menu
 	//----------------------------------------------------------------------
 	
 	//This Gameplay system will be activated when the menu is opened, and shutdown when it is closed.
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu")
-	FText DisplayName;
-	UPROPERTY(EditAnywhere, Category = "Menu")
-	TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
-	UPROPERTY(EditAnywhere, Category = "Menu",meta=(Categories="SYSTEM"))
-	FGameplayTagContainer BlockedSystemTags;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Menu") FText DisplayName;
+	UPROPERTY(EditAnywhere, Category = "Menu") TSubclassOf<AOmegaGameplaySystem> ParallelGameplaySystem;
+	// if valid, this child actor class will be spawned on the Menu's wrapper actor
+	UPROPERTY(EditAnywhere, Category = "Menu") TSubclassOf<AActor> WrapperChildActor;
+	//If true, this menu being open will NOT be considered for the Gameplay System blocking tags found in `Omega Settings`
+	UPROPERTY(EditAnywhere,Category="Menu") bool bExemptFromGlobalSystemBlockingTags;
+	//if substate index is set to <0, close the menu
+	UPROPERTY(EditAnywhere,Category="Menu") bool bCloseMenuOnSubstateUnderflow=true;
 	
 	UFUNCTION()
 		void OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag);
@@ -98,7 +90,8 @@ public:
 	bool CanCloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Context, Tags, Flag"))
-		void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
+	void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
+	
 private:
 	UPROPERTY() bool bIsClosing;
 	UPROPERTY() bool bIsPlayingAnimation;
@@ -118,6 +111,8 @@ public:
 	UPROPERTY() AOmegaMenuWrapperActor* WrapperActor;
 	UFUNCTION(BlueprintPure,Category="Menu|ActorWrapper") AOmegaMenuWrapperActor* GetMenuWrapperActor() const;
 	
+	UFUNCTION(BlueprintCallable,Category="Menu|ActorWrapper",meta=(DeterminesOutputType="Class")) AActor* GetMenuWrapperChildActor(TSubclassOf<AActor> Class);
+	
 	
 	//----------------------------------------------------------------------
 	// Reset
@@ -132,17 +127,26 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	UOmegaInputMode* CustomInputMode;
-
+	
 	//Prevents input when menus is opened for a set amount of time
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Input")
 	float InputBlockDelay=0.2;
 private:
+
+	FTimerHandle InputBlockTimer;
+	UFUNCTION() void InputBlockTimer_End();
+
 	UPROPERTY() float InputBlock_Remaining;
 	UPROPERTY() bool PrivateInputBlocked;
 public:
-	UFUNCTION() bool IsInputBlocked() const { return PrivateInputBlocked || bIsClosing || !bIsOpen || InputBlock_Remaining > 0.0; }
+	UFUNCTION() bool IsInputBlocked() const;
 	
 	virtual bool InputBlocked_Implementation() override;
+	
+	UFUNCTION(BlueprintNativeEvent, Category="Input",DisplayName="Substate - Get Input Target Widgets")
+	TArray<UUserWidget*> GetSubstateInputWidget();
+	
+	virtual UUserWidget* ControlWidget_Get_Implementation(int32& priority) override;
 	//----------------------------------------------------------------------
 	// ANIMATIONS
 	//----------------------------------------------------------------------
@@ -188,21 +192,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Omega|Menu") bool bIsOpen;
 
 	///DELGATES//
-	UPROPERTY(BlueprintAssignable) FOpened OnOpened;
-	UPROPERTY(BlueprintAssignable) FClosed OnClosed;
-
-
-
-
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOpened OnOpened;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FClosed OnClosed;
+	
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_MenuSource
-{
-	GENERATED_BODY()
-
-public:
-
-	UFUNCTION(BlueprintNativeEvent,Category="Omega|HUD")
-	TSubclassOf<UMenu> GetMenuClass(FName Name);
-};

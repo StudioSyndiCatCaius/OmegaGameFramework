@@ -9,6 +9,7 @@
 #include "Nodes/FlowNode.h"
 #include "FlowNode_PlayLevelSequence.generated.h"
 
+class ALevelSequenceActor;
 class UFlowLevelSequencePlayer;
 
 DECLARE_MULTICAST_DELEGATE(FFlowNodeLevelSequenceEvent);
@@ -60,9 +61,17 @@ class FLOW_API UFlowNode_PlayLevelSequence : public UFlowNode
 	UPROPERTY(EditAnywhere, Category = "Sequence")
 	bool bApplyOwnerTimeDilation;
 	
+	UPROPERTY(EditAnywhere, Category = "Bindings")
+	TMap<FName, UPrimaryDataAsset*> ActorBindings_ByAsset;
+	//UPROPERTY(EditAnywhere, Category = "Bindings")
+    TMap<FName, FName> ActorBindings_ByName;
+	
 protected:
 	UPROPERTY()
 	ULevelSequence* LoadedSequence;
+
+	UPROPERTY()
+	ALevelSequenceActor* SequenceActor;
 
 	UPROPERTY()
 	UFlowLevelSequencePlayer* SequencePlayer;

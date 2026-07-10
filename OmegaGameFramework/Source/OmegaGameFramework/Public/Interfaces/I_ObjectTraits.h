@@ -28,7 +28,7 @@ public:
 	
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_Traits : public UInterface
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Traits") class UDataInterface_Traits : public UInterface
 {
 	GENERATED_BODY()
 public:
@@ -54,6 +54,6 @@ inline TArray<UOmegaObjectTrait*> UDataInterface_Traits::GetObjectTraits(UObject
 	{
 		return IDataInterface_Traits::Execute_GetTraits(Object);
 	}
-	TArray<UOmegaObjectTrait*> nil;
-	return nil;
+	TArray<UOmegaObjectTrait*> EmptyResult;
+	return EmptyResult;
 }

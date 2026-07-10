@@ -47,11 +47,8 @@ void UOmegaScreenWidget::NativeConstruct()
 		FText _name;
 		FText _desc;
 		FSlateBrush _icon;
-		UTexture2D* _texture=nullptr;
-		UMaterialInterface* _mat=nullptr;
-		
-		IDataInterface_General::Execute_GetGeneralDataText(ContextObject,FGameplayTag(),_name,_desc);
-		IDataInterface_General::Execute_GetGeneralDataImages(ContextObject,FGameplayTag(),_texture,_mat,_icon);
+		FLinearColor _color; FString _label; FOmegaObjectGeneralMetaconfig _meta;
+		IDataInterface_General::Execute_GetGeneralDataText(ContextObject, FGameplayTag(), _name, _desc, _icon, _color, _label, _meta);
 		
 		if(UTextBlock* t = GetWidget_Text_ContextName()) { t->SetText(_name); }
 		if(UTextBlock* t = GetWidget_Text_ContextDescription()) { t->SetText(_desc); }
@@ -102,15 +99,20 @@ void UOmegaScreenWidget::SetSubstate_Name(FName State)
 	}
 }
 
-void UOmegaScreenWidget::SetSubstate_Index(int32 State)
+void UOmegaScreenWidget::L_SetSubstate(int32 NewState)
 {
-	if (State!=Substate)
+	if (NewState!=Substate)
 	{
 		int32 OldState=Substate;
-		Substate=State;
+		Substate=NewState;
 		
-		OnSubstateChange(State,GetSubstate_NameFromIndex(State),OldState,GetSubstate_NameFromIndex(OldState));
+		OnSubstateChange(NewState,GetSubstate_NameFromIndex(NewState),OldState,GetSubstate_NameFromIndex(OldState));
 	}
+}
+
+void UOmegaScreenWidget::SetSubstate_Index(int32 State)
+{
+	L_SetSubstate(State);
 }
 
 FName UOmegaScreenWidget::GetSubstate_NameFromIndex(int32 index) const

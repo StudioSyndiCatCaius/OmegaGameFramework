@@ -9,6 +9,7 @@
 #include "FlowTypes.h"
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
+#include "Engine/Blueprint.h"
 
 #include "Engine/Engine.h"
 #include "Engine/ViewportStatsSubsystem.h"
@@ -653,7 +654,7 @@ TArray<FPinRecord> UFlowNode::GetPinRecords(const FName& PinName, const EEdGraph
 {
 	switch (PinDirection)
 	{
-		case EGPD_Input:
+	case EGPD_Input:
 			return InputRecords.FindRef(PinName);
 		case EGPD_Output:
 			return OutputRecords.FindRef(PinName);
@@ -744,7 +745,7 @@ FString UFlowNode::GetProgressAsString(float Value)
 		}
 	}
 
-	TempString.RemoveAt(TrimIndex, TempString.Len() - TrimIndex, /*bAllowShrinking*/false);
+	TempString.RemoveAt(TrimIndex, TempString.Len() - TrimIndex /*bAllowShrinking*/);
 	return TempString;
 }
 

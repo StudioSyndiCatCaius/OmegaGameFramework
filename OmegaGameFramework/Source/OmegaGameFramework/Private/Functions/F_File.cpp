@@ -2,7 +2,7 @@
 
 
 #include "Functions/F_File.h"
-
+#include "Engine/World.h"
 #include "ImageUtils.h"
 #include "OmegaSettings.h"
 #include "Interfaces/IPluginManager.h"
@@ -10,6 +10,10 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Sound/SoundWaveProcedural.h"
 #include "Statics/OMEGA_File.h"
+#include "Engine/Texture2D.h"
+#include "HAL/FileManager.h"
+#include "HAL/PlatformFileManager.h"
+#include "Misc/FileHelper.h"
 
 
 UObject* UOmegaFileManagerSettings::ImportFile(const FString& path) const

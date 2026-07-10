@@ -21,7 +21,7 @@ class OMEGAFLOW_API UListenFor_ActorInteraction : public UBlueprintAsyncActionBa
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FOnListenActor_Interact OnInteraction;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnListenActor_Interact OnInteraction;
 	
 	UPROPERTY() const UObject* LocalWorldContext;
 
@@ -29,7 +29,7 @@ public:
 	void L_OnEvent(AActor* InteractInstigator, AActor* Target, FGameplayTag Tag, FOmegaCommonMeta Context);
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Actor Interaction") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Actor Interaction") 
 	static UListenFor_ActorInteraction* ListenFor_ActorInteraction(const UObject* WorldContextObject);
 	
 };
@@ -43,7 +43,7 @@ class OMEGAFLOW_API UListenFor_ActorTagTarget : public UBlueprintAsyncActionBase
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FOnListenActor_TagTarget OnTargetChange;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnListenActor_TagTarget OnTargetChange;
 	
 	UPROPERTY() const UObject* LocalWorldContext;
 
@@ -51,7 +51,7 @@ public:
 	void L_OnEvent(AActor* Instigator, FGameplayTag Tag, AActor* Target, bool bRegsitered);
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Actor Tag Target Change") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Actor Tag Target Change") 
 	static UListenFor_ActorTagTarget* ListenFor_ActorTagTarget(const UObject* WorldContextObject);
 	
 };
@@ -65,7 +65,7 @@ class OMEGAFLOW_API UListenFor_ActorTagEvent : public UBlueprintAsyncActionBase
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FOnListenActor_TagEvent OnTagEvent;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnListenActor_TagEvent OnTagEvent;
 	
 	UPROPERTY() const UObject* LocalWorldContext;
 
@@ -73,6 +73,6 @@ public:
 	void L_OnEvent(AActor* Actor, FGameplayTag Tag);
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Actor Tag Event") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Actor Tag Event") 
 	static UListenFor_ActorTagEvent* ListenFor_ActorTagEvent(const UObject* WorldContextObject);
 };

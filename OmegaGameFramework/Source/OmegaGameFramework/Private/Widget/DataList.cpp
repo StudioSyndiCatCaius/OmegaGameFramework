@@ -1,6 +1,8 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #include "Widget/DataList.h"
+
+#include "CommonUILibrary.h"
 #include "Widget/DataWidget.h"
 
 #include "Components/HorizontalBox.h"
@@ -13,6 +15,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/UniformGridSlot.h"
+#include "Engine/Engine.h"
 
 #include "Widgets/Layout/Anchors.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
@@ -21,10 +24,12 @@
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Engine/DataAsset.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "Widget/DataTooltip.h"
@@ -36,7 +41,7 @@ TSubclassOf<UMenu> UDataListCustomEntry::GetSubmenuClass_Implementation() const
 	return nullptr;
 }
 
-void UDataListCustomEntry_Common::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
+void UDataListCustomEntry_Common::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	if (Submenu && name.IsEmpty())
 	{
@@ -46,18 +51,9 @@ void UDataListCustomEntry_Common::GetGeneralDataText_Implementation(FGameplayTag
 	{
 		Name=name;
 	}
-	Description=description;
-}
-
-void UDataListCustomEntry_Common::GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture,
-	class UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	Brush=Icon;
-}
-
-void UDataListCustomEntry_Common::GetGeneralAssetLabel_Implementation(FString& Label)
-{
 	Label=label;
+	Description=description;
+	iconBrush=Icon;
 }
 
 UDataList::UDataList(const FObjectInitializer& ObjectInitializer)
@@ -65,8 +61,17 @@ UDataList::UDataList(const FObjectInitializer& ObjectInitializer)
 {
 	if(EntryTemplate && !EntryClass)
 	{
-		ValidateTemplates();	
+		
 	}
+}
+
+UMenu* UDataList::GetOwningMenu()
+{
+	if (UMenu* menu = Cast<UMenu>(UCommonUILibrary::FindParentWidgetOfType(this,UMenu::StaticClass())))
+	{
+		return menu;
+	}
+	return nullptr;
 }
 
 void UDataList::L_ApplyCurveToEntries()
@@ -74,46 +79,8 @@ void UDataList::L_ApplyCurveToEntries()
 	
 }
 
-#if WITH_EDITOR
-
-void UDataList::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeChainProperty(PropertyChangedEvent);
-
-	// Get the root property name
-	const FName PropertyName = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
-
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UDataList, EntryClass))
-	{
-		ValidateTemplates();
-	}
-}
-#endif
 
 
-void UDataList::ValidateTemplates()
-{
-	// Template exists but class changed or cleared
-	if (EntryTemplate)
-	{
-		if (!EntryClass || EntryTemplate->GetClass() != EntryClass)
-		{
-			EntryTemplate->MarkAsGarbage();
-			EntryTemplate = nullptr;
-		}
-	}
-
-	// Need new template
-	if (EntryClass && !EntryTemplate)
-	{
-		EntryTemplate = NewObject<UDataWidget>(
-			this,
-			EntryClass,
-			NAME_None,
-			  RF_Transactional 
-		);
-	}
-}
 
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
@@ -191,13 +158,6 @@ TArray<FName> UDataList::L_getOverrideNames_Bool()
 	return out;
 }
 
-void UDataList::SetNewControl(UUserWidget* NewWidget)
-{
-	if(NewWidget)
-	{
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(NewWidget);
-	}
-}
 
 void UDataList::ClearList()
 {
@@ -258,6 +218,13 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	{
 		UEngine::CopyPropertiesForUnrelatedObjects(EntryTemplate, TempEntry);
 	}
+
+	// Stamp the list's per-instance property bag values onto the new entry.
+	if (EntryPropertyBagOverrides.IsValid())
+	{
+		TempEntry->WidgetPropertyBag.MigrateToNewBagInstance(EntryPropertyBagOverrides);
+	}
+
 	TempEntry->WidgetTraits=Traits;
 	
 	if(OverrideHoverOffset_Curve)
@@ -284,7 +251,14 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 		}
 	}
 	
-
+	if(bCanOverrideBoxSize)
+	{
+		if (USizeBox* box=TempEntry->GetWidget_SizeBox())
+		{
+			box->SetMaxDesiredWidth(OverrideBoxSize.X);
+			box->SetMaxDesiredHeight(OverrideBoxSize.Y);
+		}
+	}
 	
 	// Do not add if hidden
 	if(TempEntry->IsEntityHidden(Asset))
@@ -387,7 +361,7 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 			trait->OnAddedToList(TempEntry,this,index);
 		}
 	}
-	
+	OnEntryAdded.Broadcast(TempEntry,UDataInterface_General::GetObjectLabel(Asset),Asset,index);
 	return TempEntry;
 }
 
@@ -463,7 +437,7 @@ void UDataList::HoverEntry(int32 Index,bool UseLastIndex)
 	}
 	else
 	{
-		GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
+		//GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
 	}
 	
 	
@@ -646,7 +620,7 @@ void UDataListFormat::AddDataWidget_Implementation(UDataWidget* DataWidget, UPan
 void UDataList::InputNavigate_Implementation(FVector2D Axis)
 {
 	int32 AxisDirection = 0;
-
+	
 	//----------------- Set input direction -----------------//
 		
 	// Check for horizontal direction
@@ -681,6 +655,7 @@ void UDataList::InputNavigate_Implementation(FVector2D Axis)
 			{
 				new_hover->Hover();
 			}
+			return;
 		}
 		else if(CycleEntry(int32(LocalAxis),TempOutIndex))
 		{
@@ -736,20 +711,30 @@ void UDataList::InputConfirm_Implementation()
 
 void UDataList::InputCancel_Implementation()
 {
+	if (UMenu* m=GetOwningMenu())
+	{
+		if (m->GetSubstateInputWidget().Contains(this))
+		{
+			int32 index = m->GetSubstateInputWidget().Find(this)-1;
+			m->SetSubstate_Index(index);
+			OGF_Log::Warning("Canceling Input List - Index = "+FString::FromInt(index));
+		}
+	}
 	OnInputCancel.Broadcast();
 }
 
-void UDataList::OnControlSetWidget_Implementation()
+void UDataList::OnBecomeControlWidget_Implementation()
 {
 	if(bRememberIndexOnControlSet)
 	{
-		HoverEntry(RememberedHoverIndex);
+		HoverEntry(RememberedHoverIndex,true);
 	}
 	else
 	{
 		HoverEntry(0,bRememberIndexOnControlSet);
 	}
 }
+
 
 void UDataList::SetListOwner(UObject* NewOwner)
 {
@@ -960,9 +945,14 @@ void UDataList::NativeEntityHover(UDataWidget* DataWidget, bool bIsHovered)
 			Cast<UScrollBox>(ListPanel)->ScrollWidgetIntoView(DataWidget);
 		}
 		
-		if(bAutoSetControlOnHover)
+		//if owned by menu input list, on hover change to this input index
+		if (UMenu* m=GetOwningMenu())
 		{
-			GetOwningLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->SetControlWidget(this);
+			if (m->GetSubstateInputWidget().Contains(this))
+			{
+				int32 index = m->GetSubstateInputWidget().Find(this);
+				m->SetSubstate_Index(index);
+			}
 		}
 		RememberedHoverIndex = Entries.Find(DataWidget);
 		OnEntryHovered.Broadcast(DataWidget, DataWidget->GetAssetLabel(), DataWidget->ReferencedAsset, RememberedHoverIndex);

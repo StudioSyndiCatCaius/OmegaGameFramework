@@ -2,10 +2,14 @@
 
 
 #include "Functions/F_Save.h"
-
+#include "Engine/GameInstance.h"
+#include "OmegaSettings.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "HAL/PlatformProcess.h"
+#include "Misc/App.h"
+#include "Engine/World.h"
 
 UOmegaSaveBase* _getEntitySaveObj(const UObject* context,bool bGlobal)
 {
@@ -16,6 +20,39 @@ UOmegaSaveBase* _getEntitySaveObj(const UObject* context,bool bGlobal)
 	return nullptr;
 }
 
+
+FString UOmegaSaveFunctions::GetSaveDirectoryPath(TEnumAsByte<EOmegaSaveDirectory> Directory)
+{
+	TEnumAsByte<EOmegaSaveDirectory> dir=Directory;	
+	
+#if WITH_EDITOR
+	if (GetMutableDefault<UOmegaSettings>()->EditorUseProjectSaveForUserSave)
+	{
+		dir=EOmegaSaveDirectory::OmegaSaveDir_GameData;
+	}
+#endif
+	
+	switch(dir)
+	{
+	case OmegaSaveDir_UserData:
+		
+		return FString(FPlatformProcess::UserSettingsDir()) / FApp::GetProjectName() / TEXT("Saved/SaveGames/");
+		
+	case OmegaSaveDir_GameData:
+	default:
+		return FPaths::ProjectSavedDir() / TEXT("SaveGames/");
+	}
+}
+
+FString UOmegaSaveFunctions::MakeSaveFilePath_Name(TEnumAsByte<EOmegaSaveDirectory> Directory, const FString& Name)
+{
+	return GetSaveDirectoryPath(Directory)+OGF_CFG()->SaveGamePrefex+Name+".sav";
+}
+
+FString UOmegaSaveFunctions::MakeSaveFilePath_Slot(TEnumAsByte<EOmegaSaveDirectory> Directory, int32 Slot)
+{
+	return MakeSaveFilePath_Name(Directory,FString::FromInt(Slot));
+}
 
 UOmegaSaveGame* UOmegaSaveFunctions::GetSave_Game(const UObject* WorldContextObject, TSubclassOf<UOmegaSaveGame> Class)
 {
@@ -96,44 +133,6 @@ int32 UOmegaSaveFunctions::CheckSaveParam_Tag_Int(const UObject* WorldContextObj
 	return _out;
 }
 
-FJsonObjectWrapper UOmegaSaveFunctions::DataAsset_GetJson(const UObject* WorldContextObject, UPrimaryDataAsset* Asset,
-	bool bGlobal)
-{
-	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
-	{
-		return _sav->Entities.Entities_Asset.FindOrAdd(Asset).JsonData;
-	}
-	return FJsonObjectWrapper();
-}
-
-void UOmegaSaveFunctions::DataAsset_SetJson(const UObject* WorldContextObject, UPrimaryDataAsset* Asset,
-	FJsonObjectWrapper Json, bool bGlobal)
-{
-	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
-	{
-		_sav->Entities.Entities_Asset.FindOrAdd(Asset).JsonData=Json;
-	}
-}
-
-
-
-FJsonObjectWrapper UOmegaSaveFunctions::GUID_GetJson(const UObject* WorldContextObject, FGuid Guid, bool bGlobal)
-{
-	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
-	{
-		return _sav->Entities.Entities_Guid.FindOrAdd(Guid).JsonData;
-	}
-	return FJsonObjectWrapper();
-}
-
-void UOmegaSaveFunctions::GUID_SetJson(const UObject* WorldContextObject, FGuid Guid, FJsonObjectWrapper Json,
-	bool bGlobal)
-{
-	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
- 	{
- 		_sav->Entities.Entities_Guid.FindOrAdd(Guid).JsonData=Json;
- 	}
-}
 
 UOmegaSaveGame* UOmegaSaveFunctions::CreateGame(const UObject* WorldContextObject)
 {
@@ -181,4 +180,75 @@ TArray<USaveGame*> UOmegaSaveFunctions::Custom_LoadGame_AllInPath(const FString&
 		}
 	}
 	return out;
+}
+
+TArray<UPrimaryDataAsset*> UOmegaSaveFunctions::DataList_Get(const UObject* WorldContextObject,FGameplayTag List, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		return _sav->Lists_Assets.FindOrAdd(List).List;
+	}
+	return TArray<UPrimaryDataAsset*>();
+}
+
+bool UOmegaSaveFunctions::DataList_Has(const UObject* WorldContextObject,FGameplayTag List, UPrimaryDataAsset* Asset, bool bGlobal)
+{
+	return DataList_Get(WorldContextObject,List,bGlobal).Contains(Asset);
+}
+
+void UOmegaSaveFunctions::DataList_Resize(const UObject* WorldContextObject,FGameplayTag List, int32 size, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(nullptr,bGlobal))
+	{
+		_sav->Lists_Assets.FindOrAdd(List).List.SetNum(size);
+	}
+}
+
+void UOmegaSaveFunctions::DataList_Shuffle(const UObject* WorldContextObject,FGameplayTag List, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		TArray<UPrimaryDataAsset*>& Assets = _sav->Lists_Assets.FindOrAdd(List).List;
+
+		for (int32 i = Assets.Num() - 1; i > 0; --i)
+		{
+			const int32 j = FMath::RandRange(0, i);
+			Assets.Swap(i, j);
+		}
+	}
+}
+
+void UOmegaSaveFunctions::DataList_Clear(const UObject* WorldContextObject,FGameplayTag List, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Lists_Assets.FindOrAdd(List).List.Empty();
+	}
+}
+
+void UOmegaSaveFunctions::DataList_Add(const UObject* WorldContextObject,FGameplayTag List, UPrimaryDataAsset* Asset, bool bInList, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (bInList)
+		{
+			_sav->Lists_Assets.FindOrAdd(List).List.AddUnique(Asset);
+		}
+		else
+		{
+			if (_sav->Lists_Assets.FindOrAdd(List).List.Contains(Asset))
+			{
+				_sav->Lists_Assets.FindOrAdd(List).List.Remove(Asset);
+			}
+		}
+	}
+}
+
+void UOmegaSaveFunctions::DataList_AddList(const UObject* WorldContextObject,FGameplayTag List, TArray<UPrimaryDataAsset*> Assets, bool bInList,
+	bool bGlobal)
+{
+	for (UPrimaryDataAsset* a : Assets)
+	{
+		DataList_Add(WorldContextObject,List,a,bInList,bGlobal);
+	};
 }

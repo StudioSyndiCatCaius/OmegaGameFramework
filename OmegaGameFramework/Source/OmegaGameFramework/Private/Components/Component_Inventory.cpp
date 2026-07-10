@@ -11,7 +11,7 @@
 
 bool L_AssetUsesInterface(const UPrimaryDataAsset* asset)
 {
-	if (asset && asset->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+	if (asset && asset->GetClass()->ImplementsInterface(UDataInterface_InventoryItem::StaticClass()))
 	{
 		return true;
 	}
@@ -22,7 +22,7 @@ int32 L_GetAssetSize(UPrimaryDataAsset* asset, int32 amount)
 {
 	if(L_AssetUsesInterface(asset))
 	{
-		return IDataAssetCollectionInterface::Execute_GetSizePerAmount(asset)*amount;
+		return IDataInterface_InventoryItem::Execute_GetSizePerAmount(asset)*amount;
 	}
 	return 0;
 }
@@ -105,9 +105,9 @@ int32 UDataAssetCollectionComponent::GetCurrentSize()
 		if(a)
 		{
 			int32 a_size=0;
-			if(a->GetClass()->ImplementsInterface(UDataAssetCollectionInterface::StaticClass()))
+			if(a->GetClass()->ImplementsInterface(UDataInterface_InventoryItem::StaticClass()))
 			{
-				a_size=IDataAssetCollectionInterface::Execute_GetSizePerAmount(a);
+				a_size=IDataInterface_InventoryItem::Execute_GetSizePerAmount(a);
 			}
 			out+=GetAssetNumberOfType(a)*a_size;
 		}

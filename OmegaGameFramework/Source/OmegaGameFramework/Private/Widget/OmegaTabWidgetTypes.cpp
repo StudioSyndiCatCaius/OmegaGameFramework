@@ -2,6 +2,9 @@
 
 #include "Widget/OmegaTabWidgetTypes.h"
 #include "Styling/CoreStyle.h"
+#include "Styling/SlateTypes.h"
+#include "Styling/ISlateStyle.h"
+#include "Styling/SlateWidgetStyleAsset.h"
 
 // ============================================================================
 // Style Implementation

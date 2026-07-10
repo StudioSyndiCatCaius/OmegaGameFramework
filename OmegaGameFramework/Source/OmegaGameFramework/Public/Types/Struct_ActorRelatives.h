@@ -10,15 +10,17 @@ USTRUCT(BlueprintType)
 struct FOmegaActorRelatives
 {
 	GENERATED_BODY()
-	UPROPERTY(Transient) bool override_keys;
+	UPROPERTY(Transient) bool override_keys = false;
 	UPROPERTY(Transient) TArray<FName> override_keyList;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorRelatives")
 	TMap<FName, TSoftObjectPtr<AActor>> RelativeActors;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorRelatives")
+	TMap<FName, TSoftObjectPtr<UPrimaryDataAsset>> RelativeAssets;
 	
 };
 
-UINTERFACE(MinimalAPI) class UActorInterface_Relatives : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Actor🔵 - Relatives") class UActorInterface_Relatives : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IActorInterface_Relatives
 {
 	GENERATED_BODY()

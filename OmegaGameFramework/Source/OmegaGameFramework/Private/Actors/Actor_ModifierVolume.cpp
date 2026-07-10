@@ -5,8 +5,10 @@
 
 #include "Actors/Actor_ModifierVolume.h"
 
+#include "Components/BoxComponent.h"
 #include "Condition/Condition_Actor.h"
 #include "Functions/F_Actor.h"
+#include "TimerManager.h"
 
 void AActor_ModifierVolume::L_RunModifier()
 {

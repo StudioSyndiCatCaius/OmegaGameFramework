@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Functions/F_AVContext.h"
 #include "Functions/F_Localization.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
@@ -13,7 +12,7 @@
 class UAimOffsetBlendSpace;
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_Animation : public UOmegaDataAsset, public IDataInterface_ContextAV
+class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_Animation : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 public:
@@ -79,25 +78,13 @@ public:
 	UFUNCTION(BlueprintPure,Category="AssetLibrary")
 	TArray<ULevelSequence*> GetLevelSequence_NamedList(FName Name) const;
 	
-	
-	virtual UAnimSequence* GetContextAVAnimations_Implementation(FGameplayTag ID) override
-	{
-		if(AnimSequences.Contains(ID)) { return AnimSequences[ID];} return nullptr;
-	}
-	virtual UAnimMontage* GetContextAVMontages_Implementation(FGameplayTag ID) override
-	{
-		if(Montages.Contains(ID)) { return Montages[ID];} return nullptr;
-	}
-	virtual ULevelSequence* GetContextAVSequences_Implementation(FGameplayTag ID) override
-	{
-		if(LevelSequences.Contains(ID)) { return LevelSequences[ID];} return nullptr;
-	}
+
 };
 
 
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_Sound : public UOmegaDataAsset, public IDataInterface_ContextAV, public IDataInterface_VoiceSource
+class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_Sound : public UOmegaDataAsset, public IDataInterface_VoiceSource
 {
 	GENERATED_BODY()
 public:
@@ -119,17 +106,14 @@ public:
 	UFUNCTION(BlueprintCallable,Category="AssetLibrary",meta=(ExpandBoolAsExecs="Result"))
 	USoundBase* GetSound_Named(FName Name,bool& Result,USoundBase* fall_back=nullptr);
 	
-	virtual USoundBase* GetContextAVSounds_Implementation(FGameplayTag ID) override
-	{
-		if(Sounds_Tagged.Contains(ID)) { return Sounds_Tagged[ID];} return Default_Sound;
-	}
+
 };
 
 
 
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_SlateBrush : public UOmegaDataAsset, public IDataInterface_ContextSlate
+class OMEGAGAMEFRAMEWORK_API UOmegaAssetLibrary_SlateBrush : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 public:
@@ -149,23 +133,10 @@ public:
 	UFUNCTION(BlueprintCallable,Category="AssetLibrary",meta=(ExpandBoolAsExecs="Result"))
 	FSlateBrush GetBrush_Named(FName Name,bool& Result,FSlateBrush fall_back=FSlateBrush());
 	
-	virtual FSlateBrush GetContextAV_SlateBrush_Implementation(FGameplayTag ID) override
-	{
-		if(Brushes_Tagged.Contains(ID))
-		{
-			return Brushes_Tagged[ID];
-		}
-		if(Default_Brush.GetResourceObject())
-		{
-			return Default_Brush;
-		}
-		if(FallbackToIcon) { return Icon;}
-		return FSlateBrush();
-	}
 };
 
 
-UINTERFACE(MinimalAPI) class UDataInterface_AssetLibraries : public UInterface
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Asset Libraries") class UDataInterface_AssetLibraries : public UInterface
 {
 	GENERATED_BODY()
 public:

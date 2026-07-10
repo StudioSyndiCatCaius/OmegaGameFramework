@@ -3,12 +3,14 @@
 
 #include "OmegaCharacter.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "LuaConst.h"
 #include "LuaSubsystem.h"
 #include "Components/AudioComponent.h"
 #include "Functions/F_Combatant.h"
 #include "OmegaSettings.h"
 #include "OmegaGameplayConfig.h"
+#include "Actors/Actor_Tool.h"
 #include "Actors/Actor_Zone.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BillboardComponent.h"
@@ -24,7 +26,10 @@
 #include "Interfaces/I_ObjectTraits.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DataAssets/DA_Faction.h"
+#include "DataAssets/DA_Zone.h"
 #include "Functions/F_Common.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Materials/Material.h"
 
 class ULuaWorldSubsystem;
 
@@ -33,6 +38,13 @@ void AOmegaCharacter::OnActorIdentityChanged(UPrimaryDataAsset* IdentityAsset, U
 	if(IdentityAsset)
 	{
 		Combatant->SetSourceDataAsset(IdentityAsset);
+		
+		//Fix Preset if not matching
+		if (Preset.GetObject()!=IdentityAsset && IdentityAsset->GetClass()->ImplementsInterface(UDataInterface_Character::StaticClass()))
+		{
+			SetCharacterPreset(IdentityAsset);
+		}
+		
 		//UOmegaSkinFunctions::SetSkinFromAsset(SkinComponent,IdentityAsset);
 	}
 }
@@ -89,9 +101,7 @@ AOmegaCharacter::AOmegaCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	Combatant = CreateDefaultSubobject<UCombatantComponent>(TEXT("Combatant"));
-	
-	Saveable = CreateDefaultSubobject<UOmegaSaveableComponent>(TEXT("Saveable"));
-	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
+
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
 	//LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
 	
@@ -123,10 +133,8 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	Text_Name = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Text Name"));
 	Text_Name->SetupAttachment(RootComponent);
-	if (UMaterial* _mat=LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")))
-	{
-		Text_Name->SetMaterial(0,_mat);
-	}
+	static ConstructorHelpers::FObjectFinder<UMaterial> CharTextMatFinder(TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"));
+	if (CharTextMatFinder.Succeeded()) Text_Name->SetMaterial(0, CharTextMatFinder.Object);
 	Text_Name->HorizontalAlignment=EHTA_Center;
 	Text_Name->WorldSize=40;
 	Text_Name->VerticalAlignment=EVRTA_TextBottom;
@@ -149,8 +157,11 @@ AOmegaCharacter::AOmegaCharacter()
 
 	GetCapsuleComponent()->ShapeColor=FColor::Cyan;
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MatRef(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male"));
-	GetMesh()->SetSkeletalMeshAsset(MatRef.Object);
+	
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MannequinMeshFinder(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male"));
+	if (MannequinMeshFinder.Succeeded()) GetMesh()->SetSkeletalMeshAsset(MannequinMeshFinder.Object);
+	
+	Tools=CreateOptionalDefaultSubobject<UOmegaToolComponent>(TEXT("Tools"));
 
 }
 
@@ -187,7 +198,7 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 		}
 		Text_Name->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(this,FGameplayTag()));	
 	}
-	
+	SetCharacterPreset(Preset);
 	Super::OnConstruction(Transform);
 }
 
@@ -201,10 +212,7 @@ UFlowAsset* AOmegaCharacter::GetFlowAsset_Implementation(FGameplayTag Tag)
 	return nullptr;
 }
 
-FVector AOmegaCharacter::GetAimTargetLocation_Implementation(const UAimTargetComponent* Component) const
-{
-	return GetMesh()->GetSocketLocation(LookAimSocketName);
-}
+
 
 
 
@@ -231,8 +239,7 @@ void AOmegaCharacter::Local_AddCombatantSource(UObject* Source)
 {
 	if(Source)
 	{
-		Combatant->SetAttributeModifierActive(Source,true);
-		Combatant->SetSkillSourceActive(Source, true);
+		
 	}
 }
 
@@ -275,10 +282,8 @@ AOmegaEncounterCharacter::AOmegaEncounterCharacter()
 		GetMesh()->SetSkeletalMesh(mesh);
 	}
 	
-	SaveVisibility = CreateDefaultSubobject<UOmegaSaveStateComponent>(TEXT("SaveVisibility"));
 	ZoneEntity = CreateDefaultSubobject<UZoneEntityComponent>(TEXT("ZoneEntity"));
-	LookAim = CreateDefaultSubobject<UAimTargetComponent>(TEXT("Aim Target"));
-	
+
 	OverlapRange=CreateOptionalDefaultSubobject<UBoxComponent>("Box");
 	OverlapRange->SetupAttachment(RootComponent);
 	OverlapRange->ShapeColor=FColor::Red;
@@ -332,7 +337,11 @@ AOmegaReferenceCharacter::AOmegaReferenceCharacter()
 	//bIsSpatiallyLoaded=false;
 	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
 	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
-
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->GravityScale=0;
+		GetCharacterMovement()->MovementMode=EMovementMode::MOVE_None;
+	}
 	if (USkeletalMesh* mesh=GetMutableDefault<UOmegaSettings>()->CharacterMesh_Reference.LoadSynchronous())
 	{
 		GetMesh()->SetSkeletalMesh(mesh);

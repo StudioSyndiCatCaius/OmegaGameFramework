@@ -7,6 +7,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Structs.h"
 
+#include "UObject/Interface.h"
 #include "F_Machina.generated.h"
 
 
@@ -66,7 +67,7 @@ class OMEGAGAMEFRAMEWORK_API UMachina_RunState : public UBlueprintAsyncActionBas
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FMachinaOutputDelegate Finished;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FMachinaOutputDelegate Finished;
 	
 	UPROPERTY() UObject* TargetObject;
 	UPROPERTY() FName TargetState;
@@ -76,7 +77,7 @@ public:
 	void EventFinish(UObject* _TargetObject, FName _State,FOmegaCommonMeta Meta);
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject")) 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject")) 
 	static UMachina_RunState* RunObjectMachinaState(UObject* Object,FName State, FOmegaCommonMeta meta);
 	
 };

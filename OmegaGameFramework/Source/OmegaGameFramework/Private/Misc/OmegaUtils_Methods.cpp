@@ -13,6 +13,7 @@
 #include "Misc/FileHelper.h"
 
 #include "Engine/World.h"
+#include "Engine/LevelStreaming.h"
 #include "Engine/GameInstance.h"
 #include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_World.h"
@@ -129,7 +130,7 @@ bool OGF_Load::LevelStream_IsLoading(const UWorld* World)
 
 UOmegaSubsystem_World* OGF_Subsystems::oWorld(const UObject* WorldContext)
 {
-    if (WorldContext && WorldContext->GetWorld())
+    if (WorldContext && WorldContext->GetWorld() && WorldContext->GetWorld()->IsGameWorld())
     {
         return WorldContext->GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
     }
@@ -143,7 +144,7 @@ UOmegaSubsystem_Engine* OGF_Subsystems::oEngine()
 
 UOmegaSubsystem_GameInstance* OGF_Subsystems::oGameInstance(const UObject* WorldContext)
 {
-    if (WorldContext && WorldContext->GetWorld()->GetGameInstance())
+    if (WorldContext && WorldContext->GetWorld() && WorldContext->GetWorld()->IsGameWorld() && WorldContext->GetWorld()->GetGameInstance())
     {
         return WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>();
     }
@@ -152,7 +153,7 @@ UOmegaSubsystem_GameInstance* OGF_Subsystems::oGameInstance(const UObject* World
 
 UOmegaSaveSubsystem* OGF_Subsystems::oSave(const UObject* WorldContext)
 {
-    if (WorldContext && WorldContext->GetWorld()->GetGameInstance())
+    if (WorldContext && WorldContext->GetWorld() && WorldContext->GetWorld()->IsGameWorld() && WorldContext->GetWorld()->GetGameInstance())
     {
         return WorldContext->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
     }

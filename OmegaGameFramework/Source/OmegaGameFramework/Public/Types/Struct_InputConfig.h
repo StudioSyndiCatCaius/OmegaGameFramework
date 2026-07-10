@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "InputModifiers.h"
 #include "Struct_InputConfig.generated.h"
 
@@ -11,13 +12,13 @@ struct FOmegaKeyConfig
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Input")
-	FVector Axis;
-	
+	FVector Axis = FVector::ZeroVector;
+
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Input")
-	bool Swizzle;
-	
+	bool Swizzle = false;
+
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Input",meta=(EditCondition="Swizzle"))
-	EInputAxisSwizzle SwizzleType;
+	EInputAxisSwizzle SwizzleType = EInputAxisSwizzle::YXZ;
 	
 	FVector ApplySwizzle(FVector v);
 };

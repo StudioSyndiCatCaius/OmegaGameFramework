@@ -17,8 +17,8 @@ class OMEGAFLOW_API UAsyncAction_StartFlowAsset : public UBlueprintAsyncActionBa
 
 public:
 
-	UPROPERTY(BlueprintAssignable) FOnFlowTaskFinish OnFinish;
-	UPROPERTY(BlueprintAssignable) FOnFlowTaskStart Begin;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFlowTaskFinish OnFinish;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFlowTaskStart Begin;
 
 	UPROPERTY() const UObject* LocalWorldContext;
 	UPROPERTY() FFlowAssetOverrideData Local_StartNode;
@@ -32,7 +32,7 @@ public:
 	void Native_OnFinishFlow(UFlowAsset* FlowAsset, FName Output, const FString& Flag);
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject",
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject",
 		AdvancedDisplay="bOverrideStartingNode,NewStartingNode,Input,AllowMultipleInstances"),DisplayName="Ω🔷 Start Flow Asset") 
 	static UAsyncAction_StartFlowAsset* StartFlowAsset(UObject* WorldContextObject, UFlowAsset* Asset, FFlowAssetOverrideData OverrideData, FName Input, bool AllowMultipleInstances);
 	

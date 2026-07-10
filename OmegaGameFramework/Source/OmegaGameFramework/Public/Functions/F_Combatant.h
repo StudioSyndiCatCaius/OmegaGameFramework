@@ -24,19 +24,46 @@ enum EOmegaCombatTarget
 	Target_AllTargets			UMETA(DisplayName = "All Targets"),
 };
 
-UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UCombatantFilter : public UObject
+UENUM(BlueprintType)
+enum EOmegaSkillUtilityTarget : uint8
 {
-	GENERATED_BODY()
-	
-public:
-	
-	UFUNCTION(BlueprintImplementableEvent, Category="CombatantFilter")
-	const TArray<UCombatantComponent*> FilterCombatants(UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants);
-
+	SkillUtilTarg_Multi			UMETA(DisplayName = "Mulit Target"),
+	SkillUtilTarg_SingleAverage	UMETA(DisplayName = "Single Target Average"),
 };
 
 
+
+//---------------------------------------------------------------------------------------------------------------------
+// Utility
+//---------------------------------------------------------------------------------------------------------------------
+UCLASS(Blueprintable,BlueprintType,Abstract,CollapseCategories,DefaultToInstanced,meta=(ShowWorldContextPin))
+class OMEGAGAMEFRAMEWORK_API UCombatantUtility_Script : public UObject
+{
+	GENERATED_BODY()
+public:
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Utility") bool bInvert;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Utility") float ScaleWeight=1.0;
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Utility")
+	float CheckUtility(UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets, FGameplayTag UtilityTag, FOmegaCommonMeta meta) const;
+};
+
+USTRUCT(BlueprintType)
+struct FCombatantUtility_Container
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Utility")
+	TArray<UCombatantUtility_Script*> Utilities;
+	
+	float CheckUtility(UCombatantComponent* Combatant, TArray<UCombatantComponent*> Targets, FGameplayTag UtilityTag, FOmegaCommonMeta meta);
+};
+
+
+//---------------------------------------------------------------------------------------------------------------------
+// FUNCTIONS
+//---------------------------------------------------------------------------------------------------------------------
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibrary
 {
@@ -44,15 +71,25 @@ class OMEGAGAMEFRAMEWORK_API UCombatantFunctions : public UBlueprintFunctionLibr
 
 public:
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="🤜Combatant - Set Combatant (From Source)")
+	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="🤜Combatant - Check Conditions")
 	static bool CheckCombatantConditions(UCombatantComponent* Combatant, FOmegaConditions_Combatant Conditions);
 	//-----------------------------------------------------------------------------------
 	// Get
 	//-----------------------------------------------------------------------------------
-	
+	UFUNCTION(BlueprintPure, Category="Omega|Combatant", meta = (WorldContext = "WorldContextObject")) 
+	static UCombatantComponent* GetPlayerCombatant(const UObject* WorldContextObject, int32 Index);
+
 	//Checks if the combatant has sufficient attributes to use skill
-	UFUNCTION(BlueprintPure, Category="Omega|Attributes",DisplayName="🤜Combatant - Can Combatant Use Skill?")
-	static bool CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject);
+	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Can Combatant Use Skill?")
+	static bool CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject, bool bCheckAttributeCost=true);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Get Skill Utility Score")
+	static void GetSkillUtilityScore(UCombatantComponent* Combatant, UPrimaryDataAsset* Skill, TArray<UCombatantComponent*> Targets,
+		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, float& SingleScore,float& SingleScoreAverage,float& MultiScore);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Select Skill by Utility")
+	static UPrimaryDataAsset* SelectSkillByUtility(UCombatantComponent* Combatant, TArray<UPrimaryDataAsset*> Skills, TArray<UCombatantComponent*> Targets,
+		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, TEnumAsByte<EOmegaSkillUtilityTarget> UtilityTarget, float RandomOffsetRange);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Combatant", DisplayName="🤜Combatant - Select Combatant (Highest Attribute Value)")
 	static UCombatantComponent* GetCombatantWithHighestAttributeValue(TArray<UCombatantComponent*> Combatants, UOmegaAttribute* Attribute, bool bUseCurrentValue);
@@ -60,11 +97,10 @@ public:
 	UFUNCTION(BlueprintPure, Category="Omega|Combatant", DisplayName="🤜Combatant - Get Combatants (From Target Selection)")
 	static TArray<UCombatantComponent*> GetCombatantFromTargetSelection(UCombatantComponent* Instigator, EOmegaCombatTarget Selection);
 	
-	//Trys Getting First Combatant With a DataAsset
-	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"),DisplayName="🤜Combatant - Get All with Data Asset")
 	static TArray<UCombatantComponent*> GetAllCombatantsWithDataAsset(UObject* WorldContextObject, UPrimaryDataAsset* Asset);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Combatant")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Get Data Assets from Combatants")
 	static TArray<UPrimaryDataAsset*> GetDataAssetsFromCombatants(TArray<UCombatantComponent*> Combatants);
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(WorldContext="WorldContextObject",ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Get First Combatant /w Data Asset")
@@ -72,6 +108,25 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"))
 	static TArray<UCombatantComponent*> GetAllCombatants_OfFaction(UObject* WorldContextObject, UOmegaFaction* Faction);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="🤜Combatant - Check Attribute",meta=(ExpandBoolAsExecs = "Outcome"))
+    static float CheckAttributeValue(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float Value,
+    	EOmegaAttributeValueType ValueType,TEnumAsByte<EOmegaComparisonMethod> Method, bool& Outcome);
+	
+	//-----------------------------------------------------------------------------------
+	// Copy
+	//-----------------------------------------------------------------------------------
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current Attributes")
+	static void CopyCurrentAttributes(UCombatantComponent* From, UCombatantComponent* To);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current XP")
+	static void CopyCurrentXP(UCombatantComponent* From, UCombatantComponent* To);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current Inventory")
+	static void CopyCurrentInventory(UCombatantComponent* From, UCombatantComponent* To);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Copy Current Equipment")
+	static void CopyCurrentEquipment(UCombatantComponent* From, UCombatantComponent* To);
 	
 	//-----------------------------------------------------------------------------------
 	// Filter
@@ -86,30 +141,27 @@ public:
 	// Effects
 	//-----------------------------------------------------------------------------------
 
-	UFUNCTION(BlueprintCallable, Category="Combat",meta=(DeterminesOutputType="EffectClass", ExpandBoolAsExecs="Result"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Effects",meta=(DeterminesOutputType="EffectClass", ExpandBoolAsExecs="Result"),DisplayName="🤜Gameplay Effects - Get First w/ Context")
 	static AOmegaGameplayEffect* SelectFirstEffectWithContext(TArray<AOmegaGameplayEffect*> Effects, UObject* Context, bool& Result);
 
-	UFUNCTION(BlueprintCallable, Category="Combat")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Effects",DisplayName="🤜Gameplay Effects - Remove (All w/ Context)")
 	static void RemoveGameplayEffects_WithContext(UCombatantComponent* Combatant, UObject* Context);
 	
-	UFUNCTION(BlueprintCallable, Category="Combat")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Effects",DisplayName="🤜Gameplay Effects - Remove (All from Class)")
 	static void RemoveGameplayEffects_OfClass(UCombatantComponent* Combatant, TSubclassOf<AOmegaGameplayEffect> EffectClass, bool bIncludeChildTypes);
 	
 	// Applies an Effect From a Container struct
-	UFUNCTION(BlueprintCallable, Category="Combat", meta=(AdvancedDisplay = "Context"),DisplayName="🤜Combatant - Apply Gameplay Effects (from Container)")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Effects", meta=(AdvancedDisplay = "Context"),DisplayName="🤜Gameplay Effects - Apply (from Container)")
 	static void ApplyEffectFromContainer(UCombatantComponent* Combatant, UCombatantComponent* Instigator, FOmegaEffectContainer Effect, UObject* Context);
-
-	UFUNCTION(BlueprintPure, Category="Combat", meta = (WorldContext = "WorldContextObject")) 
-	static UCombatantComponent* GetPlayerCombatant(const UObject* WorldContextObject, int32 Index);
-
+	
 	//-----------------------------------------------------------------------------------
 	// Notify
 	//-----------------------------------------------------------------------------------
 	
-	UFUNCTION(BlueprintCallable, Category="Combat", meta = (WorldContext = "WorldContextObject"),DisplayName="🤜Combatant - Notify All (Of Faction Tag)")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Notify", meta = (WorldContext = "WorldContextObject"),DisplayName="🤜Combatant - Notify All (Of Faction Tag)")
 	static void NotifyCombatantFaction(const UObject* WorldContextObject, FGameplayTag Faction, FName Notify);
 
-	UFUNCTION(BlueprintCallable, Category="Combat", meta = (WorldContext = "WorldContextObject"),DisplayName="🤜Combatant - Notify All (Of Faction)")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant|Notify", meta = (WorldContext = "WorldContextObject"),DisplayName="🤜Combatant - Notify All (Of Faction)")
 	static void NotifyCombatant_FactionOfTag(const UObject* WorldContextObject, FGameplayTag Tag, FName Notify);
 
 	//-----------------------------------------------------------------------------------
@@ -129,11 +181,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attributes Mods - Combine")
 	static TArray<FOmegaAttributeModifier> AttributeMods_Combine(TArray<FOmegaAttributeModifier> A,TArray<FOmegaAttributeModifier> B,bool Flatten=true);
 	
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attribute Mods - Get Single Values")
+	static void AttributeMods_GetSingleValue(TArray<FOmegaAttributeModifier> mods, UOmegaAttribute* Attribute,float& Increment,float& Multiplier);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attribute Mods - Get Attribute List")
+	static TArray<UOmegaAttribute*> AttributeMods_GetAttributeList(TArray<FOmegaAttributeModifier> mods);
+	
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attributes Mods - Compare Single Modifiers")
 	static void CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue);
-
 	
-
 	//Consume the amount of attributes required for this skill. Returns FALSE of insufficient.
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="🤜Combatant - Consume Skill Attirbute Cost")
 	static bool ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject);
@@ -142,33 +198,30 @@ public:
 	// Targets
 	//-----------------------------------------------------------------------------------
 
-	UFUNCTION(BlueprintPure, Category="Omega|Combat|Targeting",DisplayName="🤜Combatant - Get Distance (Combatant to Active Target)")
+	UFUNCTION(BlueprintPure, Category="Omega|Combatant|Targeting",DisplayName="🤜Combatant - Get Distance (Combatant to Active Target)")
 	static float GetCombatantDistantToActiveTarget(UCombatantComponent* Combatant);
 
-	UFUNCTION(BlueprintPure, Category="Omega|Combat|Targeting", DisplayName="🤜Combatant - Is Active Target in Range?")
+	UFUNCTION(BlueprintPure, Category="Omega|Combatant|Targeting", DisplayName="🤜Combatant - Is Active Target in Range?")
 	static bool IsCombatantActiveTargetInRange(UCombatantComponent* Combatant, float Range);
 
 	//-----------------------------------------------------------------------------------
 	// Branches
 	//-----------------------------------------------------------------------------------
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Is Combatant Of Faction")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Is Combatant Of Faction")
 	static void IsCombatantOfFaction(UCombatantComponent* Combatant, UOmegaFaction* Faction, bool& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Select First Combatant (/w Data Asset)")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Select First Combatant (/w Data Asset)")
 	static UCombatantComponent* SelectFirstCombatantWithDataAsset(TArray<UCombatantComponent*> Combatants,UPrimaryDataAsset* Asset,  bool& Outcome);
 
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Select First Combatant (/w Tag)")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Select First Combatant (/w Tag)")
 	static UCombatantComponent* SelectFirstCombatant_WithTag(TArray<UCombatantComponent*> Combatants, FGameplayTag Tag, bool& Outcome);
 	
-	//Checks if the Attribute is at 100%.
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Does Combatant Have Tag")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Does Combatant Have Tag")
 	static void DoesCombatantHaveTag(UCombatantComponent* Combatant, FGameplayTag Tag, bool& Outcome);
 	
-	//Checks if the Attribute is at 100%.
-	UFUNCTION(BlueprintCallable, Category="Omega|Actors", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Does Combatant Have Effect With Tag")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(DeterminesOutputType="Class", ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Does Combatant Have Effect With Tag")
 	static void DoesCombatantHaveEffectWithTag(UCombatantComponent* Combatant, UPARAM(meta=(Categories="EFFECT")) FGameplayTagContainer Tags, bool& Outcome);
-
 
 };
 

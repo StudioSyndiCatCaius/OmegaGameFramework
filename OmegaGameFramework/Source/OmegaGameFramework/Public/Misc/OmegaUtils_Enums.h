@@ -8,10 +8,10 @@
 UENUM(Blueprintable,BlueprintType)
 enum EOmegaGlobalParamTarget
 {
-	WORLD			UMETA(DisplayName = "🌎 World"),
-	GAME_INSTANCE	UMETA(DisplayName = "🎮 Game Instance"),
-	SAVE_GAME		UMETA(DisplayName = "💾 Save (Game)"),
-	SAVE_GLOBAL		UMETA(DisplayName = "💾 Save (Global)"),
+	WORLD			UMETA(DisplayName = "🌎World"),
+	GAME_INSTANCE	UMETA(DisplayName = "🎮Game Instance"),
+	SAVE_GAME		UMETA(DisplayName = "💾Save"),
+	SAVE_GLOBAL		UMETA(DisplayName = "💾Global"),
 };
 
 
@@ -51,6 +51,14 @@ enum EOmegaComparisonMethodSimple
 	IsGreater		UMETA(DisplayName = ">"),
 	IsEqual			UMETA(DisplayName = "="),
 	IsLess			UMETA(DisplayName = "<"),
+};
+
+UENUM(BlueprintType)
+enum class EOmegaAttributeValueType : uint8
+{
+	AttValue_Current		UMETA(DisplayName = "Current"),
+	AttValue_Max			UMETA(DisplayName = "Max"),
+	AttValue_Percent		UMETA(DisplayName = "Percent"),
 };
 
 UENUM(BlueprintType)

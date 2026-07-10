@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_World.h"
 
@@ -84,6 +85,12 @@ FTransform AOmegaDynamicCamera::L_Average_Transform(TArray<FTransform> inputs, F
 void AOmegaDynamicCamera::DynaCam_GetComponents_Implementation(USpringArmComponent*& spring_arm, UCameraComponent*& camera)
 {
 	spring_arm=comp_spring; camera=comp_camera;
+}
+
+void AOmegaDynamicCamera::SourceTick_Implementation(float deltaTime, APlayerController* SourcePlayer,
+	UOmegaSubsystem_Player* Subsystem)
+{
+	
 }
 
 

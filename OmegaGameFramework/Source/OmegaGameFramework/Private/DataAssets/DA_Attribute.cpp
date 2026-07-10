@@ -2,6 +2,7 @@
 
 
 #include "DataAssets/DA_Attribute.h"
+#include "Interfaces/I_Combatant.h"
 #include "Curves/CurveFloat.h"
 #include "Kismet/KismetTextLibrary.h"
 
@@ -37,7 +38,7 @@ float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGame
 
 //Tags
 
-int32 UOmegaAttribute::LocalFloor(float Number, int32 Decimals)
+float UOmegaAttribute::LocalFloor(float Number, int32 Decimals)
 {
 	if (Number == 0)
 	{
@@ -105,6 +106,23 @@ TArray<UOmegaAttribute*> UOmegaAttributeSet::GetStaticAttributes()
 	return Local_GetAtt(true);
 }
 
+float UOmegaAttributeSet::GetAttributeValue(UOmegaAttribute* Attribute, int32 level, int32 attLevel,FGameplayTag ValueCat)
+{
+	if (Attribute)
+	{
+		if (Attributes.Contains(Attribute))
+		{
+			FOmegaAttributeSetOverride f= Attributes.FindOrAdd(Attribute);
+			if (f.OverrideProgressionCurve)
+			{
+				return f.OverrideProgressionCurve->GetFloatValue(level)*f.ValueScale;
+			}
+		}
+		return Attribute->GetAttributeValue(level, attLevel, ValueCat);
+	}
+	return 0.0;
+}
+
 float UOmegaAttributeSet::GetAttributeMax(UOmegaAttribute* Attribute)
 {
 	if (GetAllAttributes().Contains(Attribute))
@@ -146,6 +164,16 @@ TArray<UOmegaAttribute*> UOmegaAttributeSet::Local_GetAtt(bool bStatic)
 		}
 	}
 	return OutAtts;
+}
+
+
+TArray<FOmegaAttributeModifier> UDataInterface_Combatant::GetObjectModifiers(UCombatantComponent* Combatant, UObject* object)
+{
+	if (object && object->GetClass()->ImplementsInterface(StaticClass()))
+	{
+		return IDataInterface_Combatant::Execute_GetModifierValues(object, Combatant);
+	}
+	return {};
 }
 
 

@@ -17,7 +17,7 @@ class OMEGAFLOW_API UAsyncAction_WaitForGlobalEvent : public UBlueprintAsyncActi
 
 public:
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnReceiveEvent OnReceiveEvent;
 
 	UPROPERTY()
@@ -31,7 +31,7 @@ public:
 	void Native_OnEvent(FName Event, UObject* Context,FOmegaCommonMeta _meta);
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),DisplayName="Ω🔷 Wait for Global Event (Named)") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject"),DisplayName="Ω🔷 Wait for Global Event (Named)") 
 	static UAsyncAction_WaitForGlobalEvent* WaitForGlobalEvent(const UObject* WorldContextObject, FName Event);
 	
 };
@@ -45,7 +45,7 @@ class OMEGAFLOW_API UAsyncAction_WaitForTaggedGlobalEvent : public UBlueprintAsy
 
 public:
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnReceiveTaggedEvent OnReceiveEvent;
 
 	UPROPERTY()
@@ -58,7 +58,7 @@ public:
 	UFUNCTION() void Native_OnEvent(FGameplayTag Event, UObject* Context,FOmegaCommonMeta _meta);
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject"),DisplayName="Ω🔷 Wait for Global Event (Tagged)") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|GameplayTasks", meta = (WorldContext = "WorldContextObject"),DisplayName="Ω🔷 Wait for Global Event (Tagged)") 
 	static UAsyncAction_WaitForTaggedGlobalEvent* WaitForTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event);
 	
 };

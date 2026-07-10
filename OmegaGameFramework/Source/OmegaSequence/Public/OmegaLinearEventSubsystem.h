@@ -90,9 +90,9 @@ public:
 		return TempEvents;
 	}
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnLinearEventBegin OnLinearEventBegin;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnLinearEventSequenceEnd OnLinearEventSequenceEnd;
 	
 	// ============================================================================================================

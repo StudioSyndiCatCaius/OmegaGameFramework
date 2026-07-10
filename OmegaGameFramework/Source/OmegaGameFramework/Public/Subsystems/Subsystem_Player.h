@@ -92,6 +92,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_Player : public ULocalPlayerSubsyst
 	void Input_OnKeyEvent(uint8 event,FKey key, float dt, bool bAxisKey);
 	
 public:
+	UPROPERTY() UObject* ObjectHoggingInput;
 	FInputKeyBinding KeyBind_Start;
 	FInputKeyBinding KeyBind_Stop;
 	
@@ -125,25 +126,20 @@ public:
 
 	UFUNCTION()
 	void CloseAllMenus(AActor* DestroyedActor);
-
-	//Which Menu is this player current inputing into.
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
-	void SetControlWidget(UUserWidget* Widget);
-
-	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu")
-	void ClearControlWidget();
-
+	
+	UPROPERTY() UWidget* LastTopWidget=nullptr;
+	UPROPERTY() TArray<UWidget*> ControlWidget_Targets;
+	UFUNCTION() void ControlWidget_Register(UWidget* Widget, bool bRegister);
+	UFUNCTION() UWidget* ControlWidget_GetTop();
+	
 	UFUNCTION()
 	void RemoveMenuFromActiveList(UMenu* Menu);
 
 	UPROPERTY()
 	TArray<class UMenu*> OpenMenus;
-
-	UPROPERTY(BlueprintReadOnly, Category="Widget", meta=(DisplayName="Control Widget"))
-	class UUserWidget* FocusMenu;
-
-	UPROPERTY(BlueprintAssignable) FMenuOpened OnMenuOpened;
-	UPROPERTY(BlueprintAssignable) FMenuClosed OnMenuClosed;
+	
+	UPROPERTY(BlueprintAssignable, Category="Omega") FMenuOpened OnMenuOpened;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FMenuClosed OnMenuClosed;
 
 	//SOUND
 	UPROPERTY()
@@ -174,9 +170,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Input")
 	void InputTag(FGameplayTag Tag);
-
-	UFUNCTION()
-	bool CanInterfaceInput() const;
 	
 	// -- HUD -- //
 	
@@ -229,7 +222,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Input")
 	void SetCustomInputMode(UOmegaInputMode* InputMode);
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnInputModeChanged OnInputModeChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="Omega|Input")

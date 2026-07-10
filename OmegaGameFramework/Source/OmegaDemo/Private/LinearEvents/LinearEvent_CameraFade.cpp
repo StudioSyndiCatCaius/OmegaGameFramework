@@ -4,6 +4,7 @@
 #include "LinearEvents/LinearEvent_CameraFade.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 
 void ULinearEvent_CameraFade::Native_Begin(const FString& Flag)
 {

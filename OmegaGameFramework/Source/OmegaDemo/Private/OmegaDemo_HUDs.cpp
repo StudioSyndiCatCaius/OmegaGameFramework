@@ -8,6 +8,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
+#include "TimerManager.h"
 
 
 void UHudBase_Dialogue::NativeConstruct()

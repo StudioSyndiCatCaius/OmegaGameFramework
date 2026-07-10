@@ -1,6 +1,7 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #include "Types/Struct_SortedClassPath.h"
+#include "Templates/SubclassOf.h"
 
 
 UObject* FOmegaSortedClassPathData::getAssetFromPath(const FString& AssetPath, TSubclassOf<UObject> Class)

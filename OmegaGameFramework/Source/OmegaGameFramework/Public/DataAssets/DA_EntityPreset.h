@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/I_Combatant.h"
 #include "Interfaces/I_Skill.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
@@ -14,7 +15,7 @@ class UEquipmentSlot;
 class UOmegaLevelingAsset;
 
 UCLASS(Blueprintable, BlueprintType)
-class OMEGAGAMEFRAMEWORK_API UOmegaEntityPreset : public UOmegaDemoDataAsset, public IDataInterface_SkillSource
+class OMEGAGAMEFRAMEWORK_API UOmegaEntityPreset : public UOmegaDemoDataAsset, public IDataInterface_Combatant
 {
 	GENERATED_BODY()
 public:

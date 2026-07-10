@@ -4,6 +4,8 @@
 #include "Functions/F_Math.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 
 
 

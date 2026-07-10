@@ -71,18 +71,7 @@ void UCombatantExtensionComponent::SetCombatant(UCombatantComponent* Combatant)
 		Combatant->OnDamaged.AddDynamic(this, &UCombatantExtensionComponent::OnAttributeDamaged);
 		Combatant->OnCombatantNotify.AddDynamic(this, &UCombatantExtensionComponent::OnCombatantNotify);
 		
-		if(bIsAttributeModifier)
-		{
-			CombatantRef->SetAttributeModifierActive(this,true);
-		}
-		if(bIsDamageModifier)
-		{
-			CombatantRef->SetDamageModifierActive(this, true);
-		}
-		if(bIsSkillSource)
-		{
-			CombatantRef->SetSkillSourceActive(this, true);
-		}
+		CombatantRef->SetMasterDataSourceActive(this,true);
 
 		OnCombatantSetup(Combatant);
 	}
@@ -92,18 +81,7 @@ void UCombatantExtensionComponent::ClearCombatant()
 {
 	if(CombatantRef)
 	{
-		if(bIsAttributeModifier)
-		{
-			CombatantRef->SetAttributeModifierActive(this,false);
-		}
-		if(bIsDamageModifier)
-		{
-			CombatantRef->SetDamageModifierActive(this, false);
-		}
-		if(bIsSkillSource)
-		{
-			CombatantRef->SetSkillSourceActive(this, false);
-		}
+		CombatantRef->SetMasterDataSourceActive(this,false);
 		CombatantRef=nullptr;
 	}
 }

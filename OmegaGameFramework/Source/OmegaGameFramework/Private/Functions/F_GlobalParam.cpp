@@ -12,6 +12,13 @@
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_World.h"
 
+TArray<FName> UOmegaFunctions_GlobalVars::opts_global_bool()    { return GetMutableDefault<UOmegaSettings>()->GlobalParams_bool; }
+TArray<FName> UOmegaFunctions_GlobalVars::opts_global_int32()   { return GetMutableDefault<UOmegaSettings>()->GlobalParams_int32; }
+TArray<FName> UOmegaFunctions_GlobalVars::opts_global_float()   { return GetMutableDefault<UOmegaSettings>()->GlobalParams_float; }
+TArray<FName> UOmegaFunctions_GlobalVars::opts_global_string()  { return GetMutableDefault<UOmegaSettings>()->GlobalParams_string; }
+TArray<FName> UOmegaFunctions_GlobalVars::opts_global_vector()  { return GetMutableDefault<UOmegaSettings>()->GlobalParams_vector; }
+TArray<FName> UOmegaFunctions_GlobalVars::opts_global_rotator() { return GetMutableDefault<UOmegaSettings>()->GlobalParams_rotator; }
+TArray<FName> UOmegaFunctions_GlobalVars::opts_global_asset()   { return GetMutableDefault<UOmegaSettings>()->GlobalParams_asset; }
 
 void UOmegaFunctions_GlobalVars::L_CallParamUpdateDel(UObject* WorldContextObject, FName param,
 	EOmegaGlobalParamTarget target, int32 valueInt,int32 OldValue)
@@ -85,7 +92,21 @@ bool UOmegaFunctions_GlobalVars::GetGlobalVariable_Bool(UObject* WorldContextObj
 	{
 		return p->params_bool.FindOrAdd(Variable);
 	}
-	return false; 
+	return false;
+}
+
+bool UOmegaFunctions_GlobalVars::ToggleGlobalVariable_Bool(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
+	FName Variable)
+{
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		bool _oldVal = p->params_bool.FindOrAdd(Variable);
+		bool _newVal = !_oldVal;
+		p->params_bool.Add(Variable, _newVal);
+		L_CallParamUpdateDel(WorldContextObject, Variable, Target, _newVal, _oldVal);
+		return _newVal;
+	}
+	return false;
 }
 
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_Int32(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
@@ -104,10 +125,21 @@ int32 UOmegaFunctions_GlobalVars::GetGlobalVariable_Int32(UObject* WorldContextO
 {
 	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
 	{
-		int32 _oldVal=p->params_int.FindOrAdd(Variable);
 		return p->params_int.FindOrAdd(Variable);
 	}
-	return 0; 
+	return 0;
+}
+
+void UOmegaFunctions_GlobalVars::AddGlobalVariable_Int32(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
+	FName Variable, int32 Value)
+{
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		int32 _oldVal = p->params_int.FindOrAdd(Variable);
+		int32 _newVal = _oldVal + Value;
+		p->params_int.Add(Variable, _newVal);
+		L_CallParamUpdateDel(WorldContextObject, Variable, Target, _newVal, _oldVal);
+	}
 }
 
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_Float(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
@@ -128,7 +160,19 @@ float UOmegaFunctions_GlobalVars::GetGlobalVariable_Float(UObject* WorldContextO
 	{
 		return p->params_float.FindOrAdd(Variable);
 	}
-	return 0; 
+	return 0;
+}
+
+void UOmegaFunctions_GlobalVars::AddGlobalVariable_Float(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
+	FName Variable, float Value)
+{
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		float _oldVal = p->params_float.FindOrAdd(Variable);
+		float _newVal = _oldVal + Value;
+		p->params_float.Add(Variable, _newVal);
+		L_CallParamUpdateDel(WorldContextObject, Variable, Target, FMath::RoundToInt(_newVal), FMath::RoundToInt(_oldVal));
+	}
 }
 
 void UOmegaFunctions_GlobalVars::SetGlobalVariable_String(UObject* WorldContextObject, EOmegaGlobalParamTarget Target,
@@ -198,11 +242,17 @@ void UOmegaFunctions_GlobalVars::SetGlobalVariable_DataAsset(UObject* WorldConte
 }
 
 UPrimaryDataAsset* UOmegaFunctions_GlobalVars::GetGlobalVariable_DataAsset(UObject* WorldContextObject,
-	EOmegaGlobalParamTarget Target, FName Variable)
+                                                                           EOmegaGlobalParamTarget Target, FName Variable, TSubclassOf<UPrimaryDataAsset> Class)
 {
 	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
 	{
-		return p->params_DataAsset.FindOrAdd(Variable);
+		if (UPrimaryDataAsset* da=p->params_DataAsset.FindOrAdd(Variable))
+		{
+			if (!Class || da->GetClass()->IsChildOf(Class))
+			{
+				return da;
+			}
+		}
 	}
 	return nullptr;
 }
@@ -276,5 +326,61 @@ bool UOmegaFunctions_GlobalVars::Bitflag_HasAny(UObject* WorldContextObject, EOm
 		return Bitfield && (*Bitfield != 0);
 	}
 	return false;
+}
+
+void UOmegaFunctions_GlobalVars::Guidflag_Set(UObject* WorldContextObject, FGuid Guid, uint8 Flag, bool bValue, EOmegaGlobalParamTarget Target)
+{
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		if (Flag >= 64)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Guidflag_Set: Flag %d out of range (max 63)"), Flag);
+			return;
+		}
+
+		int64& Bitfield = p->guidflags.FindOrAdd(Guid);
+
+		if (bValue)
+		{
+			Bitfield |= (int64(1) << Flag);
+		}
+		else
+		{
+			Bitfield &= ~(int64(1) << Flag);
+		}
+
+		if (Bitfield == 0)
+		{
+			p->guidflags.Remove(Guid);
+		}
+	}
+}
+
+bool UOmegaFunctions_GlobalVars::Guidflag_Get(UObject* WorldContextObject, FGuid Guid, uint8 Flag, EOmegaGlobalParamTarget Target)
+{
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		if (Flag >= 64)
+		{
+			return false;
+		}
+
+		const int64* Bitfield = p->guidflags.Find(Guid);
+		if (!Bitfield)
+		{
+			return false;
+		}
+
+		return (*Bitfield & (int64(1) << Flag)) != 0;
+	}
+	return false;
+}
+
+void UOmegaFunctions_GlobalVars::Guidflag_Clear(UObject* WorldContextObject, FGuid Guid, EOmegaGlobalParamTarget Target)
+{
+	if (FOmegaSoftParams* p=GetParamStruct(WorldContextObject,Target))
+	{
+		p->guidflags.Remove(Guid);
+	}
 }
 

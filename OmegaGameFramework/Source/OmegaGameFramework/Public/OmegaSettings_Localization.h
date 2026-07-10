@@ -7,7 +7,12 @@
 #include "UObject/Object.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/GeneralDataObject.h"
+#include "Engine/DeveloperSettings.h"
+#include "Sound/SoundBase.h"
+#include "Subsystems/GameInstanceSubsystem.h"
 #include "OmegaSettings_Localization.generated.h"
+
+class UOAsset_Localization;
 
 
 

@@ -32,7 +32,7 @@ public:
 	UPROPERTY()
 	FOmegaLinearChoices ChoiceData;
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnChoiceSelected OnChoiceSelected;
 	
 	UFUNCTION(BlueprintCallable, Category="LinearChoice")
@@ -41,5 +41,5 @@ public:
 	UFUNCTION(BlueprintPure, Category="LinearChoice")
 	TArray<UOmegaLinearChoice*> GetChoices();
 	
-	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
 };

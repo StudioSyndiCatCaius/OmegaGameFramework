@@ -11,7 +11,7 @@ class AOmegaDynamicCamera;
 class UCameraComponent;
 
 UCLASS()
-class UOmegaCameraFunctions : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOmegaCameraFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

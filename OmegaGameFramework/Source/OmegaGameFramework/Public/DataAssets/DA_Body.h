@@ -17,9 +17,9 @@ struct FOmegaBodyOptionValue
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(BlueprintReadOnly,Category="Body") float value_float;
-	UPROPERTY(BlueprintReadOnly,Category="Body") FLinearColor value_color;
-	UPROPERTY(BlueprintReadOnly,Category="Body") FVector value_vector;
+	UPROPERTY(BlueprintReadOnly,Category="Body") float value_float = 0.0f;
+	UPROPERTY(BlueprintReadOnly,Category="Body") FLinearColor value_color = FLinearColor::White;
+	UPROPERTY(BlueprintReadOnly,Category="Body") FVector value_vector = FVector::ZeroVector;
 
 	static FOmegaBodyOptionValue FromBodyData(FOmegaBodyAppearanceData data,FName s);
 	
@@ -102,25 +102,25 @@ class OMEGAGAMEFRAMEWORK_API UOmegaBodySlotScript : public UOmegaInstancableObje
 	GENERATED_BODY()
 public:
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	USkeletalMesh* GetMeshFromIndex(FOmegaBodyOptionValue OptionValue) const;
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	bool PostMeshCreationEdit(USkeletalMesh* Mesh, FOmegaBodyOptionValue OptionValue) const;
 
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	bool PostMaterialSlotEdit(USkeletalMesh* Mesh,int32 slotIndex, FName SlotName, UMaterialInterface* Material, FOmegaBodyOptionValue OptionValue) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	EOmegaBodySlotType GetScriptSlotType() const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	void OnApplied_ToSkin(AOmegaSkin* Skin, FOmegaBodyOptionValue OptionValue) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	void OnApplied_ToMeshComponent(USkeletalMeshComponent* Component, FOmegaBodyOptionValue OptionValue) const;
 	
-	UFUNCTION(BlueprintImplementableEvent,Category="Body Option")
+	UFUNCTION(BlueprintNativeEvent,Category="Body Option")
 	FVector GetMaxValue() const;
 };
 

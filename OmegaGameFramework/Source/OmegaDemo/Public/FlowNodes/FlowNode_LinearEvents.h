@@ -31,13 +31,12 @@ public:
 	UPROPERTY(EditAnywhere,Category="General") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,Category="General") FGameplayTagContainer GameplayTags;
 
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{
 		Name=NodeName;
 		Description=NodeDescription;
 	};
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override {return CategoryTag;};
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override {return GameplayTags;};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override { OutCategoryTag=CategoryTag; OutGameplayTags=GameplayTags; };
 	
 	UPROPERTY(EditAnywhere, Category="Events")
 	FLinearEventSequence Events;

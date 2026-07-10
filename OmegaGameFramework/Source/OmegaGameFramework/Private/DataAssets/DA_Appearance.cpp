@@ -3,6 +3,7 @@
 
 #include "DataAssets/DA_Appearance.h"
 
+#include "GameFramework/Character.h"
 #include "Misc/OmegaUtils_Methods.h"
 
 void UOAsset_Appearance::Apply(ACharacter* c) const

@@ -1,5 +1,8 @@
 ﻿#include "Functions/F_Import.h"
 #include "Misc/FileHelper.h"
+#include "Sound/SoundWave.h"
+#include "UObject/Package.h"           // GetTransientPackage()
+#include "UObject/UObjectGlobals.h"    // NewObject
 #include "HAL/FileManager.h"
 
 USoundWave* UOmegaFunctions_Import::MP3(const FString& FilePath)
@@ -20,15 +23,20 @@ USoundWave* UOmegaFunctions_Import::MP3(const FString& FilePath)
 	}
 
 	// Create a transient SoundWave
-	USoundWave* SoundWave = NewObject<USoundWave>(GetTransientPackage(), NAME_None, RF_Transient);
+	USoundWave* SoundWave = NewObject<USoundWave>(
+		GetTransientPackage(),           // UE handles the conversion internally in many cases
+		USoundWave::StaticClass(),       // Explicit class (good practice)
+		NAME_None,
+		RF_Transient | RF_Public         // Often useful for transient sounds
+	);
 	if (!SoundWave)
 	{
 		return nullptr;
 	}
 
-	// Feed the raw compressed audio data
+	// Feed the raw compressed audio data (editor-only; RawData is not available in non-editor builds)
+#if WITH_EDITORONLY_DATA
 	SoundWave->RawData.UpdatePayload(FSharedBuffer::Clone(RawFileData.GetData(), RawFileData.Num()));
-
 	// MP3 is a compressed format - tell the engine not to decompress upfront
 	SoundWave->DecompressionType = DTYPE_Streaming;
 	SoundWave->SoundGroup = ESoundGroup::SOUNDGROUP_Default;
@@ -40,4 +48,9 @@ USoundWave* UOmegaFunctions_Import::MP3(const FString& FilePath)
 	SoundWave->SetSampleRate(44100);
 
 	return SoundWave;
+#else
+	return nullptr;
+#endif
+
+
 }

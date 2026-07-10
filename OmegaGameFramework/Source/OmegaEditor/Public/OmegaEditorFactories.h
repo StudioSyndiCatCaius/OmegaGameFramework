@@ -16,7 +16,6 @@
 #include "DataAssets/DA_CommonItem.h"
 #include "DataAssets/DA_CommonSkill.h"
 #include "DataAssets/DA_CommonInteractable.h"
-#include "DataAssets/DA_CombatantGambits.h"
 #include "DataAssets/DA_CommonEquipment.h"
 #include "DataAssets/DA_Common_EquipType.h"
 #include "DataAssets/DA_CommonRace.h"
@@ -37,26 +36,27 @@
 #include "Functions/F_Combatant.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Subsystems/Subsystem_World.h"
+#include "Widget/HUDLayer.h"
 #include "Widget/Menu.h"
 #include "OmegaEditorFactories.generated.h"
 
 #define OMACRO_ASSETTYPE_HEADERFIELD(AssetName, DisplayName, AssetDescription, AssetColor, AssetCategory) \
 inline UObject* U##AssetName##_Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) \
 { \
-    check(Class->IsChildOf(U##AssetName##::StaticClass())); \
-    return NewObject<U##AssetName##>(InParent, Class, Name, Flags | RF_Transactional); \
+    check(Class->IsChildOf(U##AssetName::StaticClass())); \
+    return NewObject<U##AssetName>(InParent, Class, Name, Flags | RF_Transactional); \
 } \
 inline bool U##AssetName##_Factory::ShouldShowInNewMenu() const \
 { \
     return false; \
 } \
 inline U##AssetName##_Factory::U##AssetName##_Factory(const class FObjectInitializer& OBJ) : Super(OBJ) { \
-    SupportedClass = U##AssetName##::StaticClass(); bEditAfterNew = true; bCreateNew = true; \
+    SupportedClass = U##AssetName::StaticClass(); bEditAfterNew = true; bCreateNew = true; \
 } \
 class FAssetTypeActions_##AssetName: public FAssetTypeActions_Base \
 { \
 public: \
-FAssetTypeActions_##AssetName##(EAssetTypeCategories::Type InAssetCategory) : OmegaAssetCategory(InAssetCategory){}; \
+FAssetTypeActions_##AssetName(EAssetTypeCategories::Type InAssetCategory) : OmegaAssetCategory(InAssetCategory){}; \
 virtual FText GetName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_"#AssetName"Desc", DisplayName); } \
 virtual uint32 GetCategories() override { return OmegaAssetCategory; } \
 virtual FColor GetTypeColor() const override { return AssetColor; } \
@@ -102,14 +102,6 @@ UCLASS() class OMEGAEDITOR_API UOmegaDamageType_Factory : public UFactory
 };
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaDamageType,"Damage Type", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
-//Combatant Gambit
-UCLASS() class OMEGAEDITOR_API UCombatantGambitAsset_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
-	virtual bool ShouldShowInNewMenu() const override;
-};
-OMACRO_ASSETTYPE_HEADERFIELD(CombatantGambitAsset,"Combat Gambit", "Asset Desc here", FColor(201, 29, 85),"Gameplay")
 
 //Quest
 UCLASS() class OMEGAEDITOR_API UOmegaQuest_Factory : public UFactory

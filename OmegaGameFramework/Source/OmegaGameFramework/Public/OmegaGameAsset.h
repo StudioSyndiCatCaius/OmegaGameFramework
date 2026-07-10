@@ -145,6 +145,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="Name") FText DisplayName;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Icon") FSlateBrush Icon;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Description") FText DisplayDescription;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",meta=(MultiLine),DisplayName="Description") FLinearColor color=FLinearColor::White;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="🏷️Category") FGameplayTag CategoryTag;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="General",DisplayName="🏷️Tags") FGameplayTagContainer GameplayTags;
@@ -166,10 +167,10 @@ public:
 
     // ── Delegates ─────────────────────────────────────────────────────────────
 
-    UPROPERTY(BlueprintAssignable) FGameplayAssetDelegate         OnInstanceCreated;
-    UPROPERTY(BlueprintAssignable) FGameplayAssetDelegate         OnInstanceDestroyed;
-    UPROPERTY(BlueprintAssignable) FGameplayAssetNodePinDelegate  OnInputInput;
-    UPROPERTY(BlueprintAssignable) FGameplayAssetNodePinDelegate  OnInputOutput;
+    UPROPERTY(BlueprintAssignable, Category="Omega") FGameplayAssetDelegate         OnInstanceCreated;
+    UPROPERTY(BlueprintAssignable, Category="Omega") FGameplayAssetDelegate         OnInstanceDestroyed;
+    UPROPERTY(BlueprintAssignable, Category="Omega") FGameplayAssetNodePinDelegate  OnInputInput;
+    UPROPERTY(BlueprintAssignable, Category="Omega") FGameplayAssetNodePinDelegate  OnInputOutput;
 
     // ── Runtime instance ──────────────────────────────────────────────────────
 

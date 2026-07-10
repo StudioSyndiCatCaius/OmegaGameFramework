@@ -8,6 +8,7 @@
 #include "Runtime/SlateCore/Public/Styling/SlateStyleRegistry.h"
 #include "LuaCodeCustomization.h"
 #include "LuaValueCustomization.h"
+#include "OmegaLuaCodeCustomization.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructure.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "Runtime/Slate/Public/Widgets/Text/STextBlock.h"

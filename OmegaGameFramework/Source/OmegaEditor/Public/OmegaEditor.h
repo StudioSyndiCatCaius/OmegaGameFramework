@@ -12,6 +12,8 @@
 #include "UnrealEd.h"
 #include "GameAsset/GameAsset_FlowGraph.h"
 #include "GameAsset/GameAsset_TypeActions.h"
+#include "ActorPreset/ActorPreset_TypeActions.h"
+#include "ActorPreset/ActorPreset_ActorFactory.h"
 #include "Styling/SlateStyle.h"
 
 
@@ -31,9 +33,13 @@ public:
 	EAssetTypeCategories::Type AssetCategory_OmegaDemo;
 	FConfigFile ConfigFile;
 	
-	//Omega Game Asset
+	// Omega Game Asset
 	TSharedPtr<FGameplayAssetTypeActions>      TypeActions;
 	TSharedPtr<FGameplayAssetGraphNodeFactory> NodeFactory;
+
+	// Actor Preset
+	TSharedPtr<FActorPresetTypeActions>        ActorPresetTypeActions;
+	TObjectPtr<UActorFactory_ActorPreset>      ActorPresetFactory;
 	
 	FString GetPluginFilePath(const FString& RelativePath);
 	

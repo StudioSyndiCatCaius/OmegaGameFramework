@@ -4,7 +4,9 @@
 #include "FlowNodes/FlowNode_Actors.h"
 
 #include "FlowAsset.h"
+#include "Engine/World.h"
 #include "Functions/F_Actor.h"
+#include "Functions/F_ScriptedAnim.h"
 #include "GameFramework/Character.h"
 
 
@@ -15,13 +17,6 @@ AActor* UFlowNode_ActorBase::GetNodeInstigator()
 
 AActor* UFlowNode_ActorBase::GetActor() const
 {
-	if(Actor && GetWorld())
-	{
-		if(AActor* a = Actor->Private_GetActor(GetWorld()))
-		{
-			return a;
-		}
-	}
 	if(Actor_Identity)
 	{
 		if(AActor* a=GetFlowAsset()->GetActorByBinding_Asset(Actor_Identity,true))
@@ -35,10 +30,7 @@ AActor* UFlowNode_ActorBase::GetActor() const
 TArray<AActor*> UFlowNode_ActorBase::GetActors() const
 {
 	TArray<AActor*> out;
-	if(Actor && GetWorld())
-	{
-		out.Append(Actor->GetActors(GetWorld()));
-	}
+
 	
 	if(Actor_Identity)
 	{
@@ -106,6 +98,29 @@ void UFlowNode_Actor_Condition::ExecuteInput(const FName& PinName)
 		TriggerOutput(TEXT("false"));	
 	}
 }
+void UFlowNode_ScriptedAnim::ExecuteInput(const FName& PinName)
+{
+	Super::ExecuteInput(PinName);
+
+	if (AActor* InstigatorActor = GetActor())
+	{
+		UOmegaFunctions_ScriptedAnimation::PlayScriptedAnimationWithCallbacks(
+		this,
+		InstigatorActor,
+		AnimData,
+		[this](const FString&)
+		{
+			TriggerFirstOutput(true);
+		}
+	);
+	}
+	else
+	{
+		TriggerFirstOutput(true);
+	}
+	
+}
+
 /*
 UFlowNode_Actor_Montage::UFlowNode_Actor_Montage()
 {

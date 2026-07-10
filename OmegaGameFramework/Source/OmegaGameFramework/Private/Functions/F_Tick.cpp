@@ -3,6 +3,7 @@
 
 #include "Functions/F_Tick.h"
 
+#include "Actors/Actor_DynamicCamera.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SplineComponent.h"
 #include "GameFramework/Character.h"
@@ -46,23 +47,44 @@ void UOmegaFunctions_Tick::RotateComponent_RotationRelative(float DeltaTime, USc
 }
 
 void UOmegaFunctions_Tick::RotateComponent_TowardsTarget(float DeltaTime, USceneComponent* Component,
-                                                         FVector TargetLocation, float RotationSpeed)
+                                                         FVector TargetLocation, float RotationSpeed, bool X, bool Y, bool Z)
 {
-	if (!Component)
-	{
-		return;
-	}
+	if (!Component) { return; }
 
-	FVector Direction = TargetLocation - Component->GetComponentLocation();
-	FRotator TargetRotation = Direction.Rotation();
-	FRotator NewRotation = FMath::RInterpTo(
-		Component->GetComponentRotation(),
-		TargetRotation,
-		DeltaTime,
-		RotationSpeed
-	);
+	FRotator Current = Component->GetComponentRotation();
+	FRotator TargetRotation = (TargetLocation - Component->GetComponentLocation()).Rotation();
+	if (!X) TargetRotation.Roll  = Current.Roll;
+	if (!Y) TargetRotation.Pitch = Current.Pitch;
+	if (!Z) TargetRotation.Yaw   = Current.Yaw;
 
-	Component->SetWorldRotation(NewRotation);
+	Component->SetWorldRotation(UKismetMathLibrary::RInterpTo(Current, TargetRotation, DeltaTime, RotationSpeed));
+}
+
+void UOmegaFunctions_Tick::RotateComponent_ToRotation(float DeltaTime, USceneComponent* Component,
+	FRotator TargetRotation, float RotationSpeed, bool X, bool Y, bool Z)
+{
+	if (!Component) { return; }
+
+	FRotator Current = Component->GetComponentRotation();
+	if (!X) TargetRotation.Roll  = Current.Roll;
+	if (!Y) TargetRotation.Pitch = Current.Pitch;
+	if (!Z) TargetRotation.Yaw   = Current.Yaw;
+
+	Component->SetWorldRotation(UKismetMathLibrary::RInterpTo(Current, TargetRotation, DeltaTime, RotationSpeed));
+}
+
+void UOmegaFunctions_Tick::MoveComponent_TowardsTarget(float DeltaTime, USceneComponent* Component,
+	FVector TargetLocation, float InterpSpeed, bool X, bool Y, bool Z)
+{
+	if (!Component) { return; }
+
+	FVector Current = Component->GetComponentLocation();
+	FVector Final = TargetLocation;
+	if (!X) Final.X = Current.X;
+	if (!Y) Final.Y = Current.Y;
+	if (!Z) Final.Z = Current.Z;
+
+	Component->SetWorldLocation(UKismetMathLibrary::VInterpTo(Current, Final, DeltaTime, InterpSpeed));
 }
 
 void UOmegaFunctions_Tick::MoveComponent_ToMouse(float DeltaTime, USceneComponent* Component, APlayerController* Player,
@@ -270,6 +292,110 @@ void UOmegaFunctions_Tick::Interp_Camera(float DeltaTime, UCameraComponent* Sour
         {
             Source->SetFieldOfView(UKismetMathLibrary::FInterpTo(Source->FieldOfView,To->FieldOfView,DeltaTime,Speed));
         }
+    }
+}
+
+void UOmegaFunctions_Tick::BlendDynamicCameras(float DeltaTime, FVector TargetLocation,
+    AOmegaDynamicCamera* Source, TArray<AOmegaDynamicCamera*> Cameras, float Speed,
+    bool bLocation, bool bRotation, bool bSpringArm, bool bCamera)
+{
+    if (!Source)
+    {
+        return;
+    }
+
+    // Filter valid cameras with components
+    TArray<AOmegaDynamicCamera*> Valid;
+    for (AOmegaDynamicCamera* Cam : Cameras)
+    {
+        if (Cam && Cam->comp_spring && Cam->comp_camera)
+        {
+            Valid.Add(Cam);
+        }
+    }
+    if (Valid.IsEmpty())
+    {
+        return;
+    }
+
+    // Compute inverse-distance weights (closer camera = higher weight)
+    TArray<float> Weights;
+    float TotalWeight = 0.0f;
+    for (AOmegaDynamicCamera* Cam : Valid)
+    {
+        float W = 1.0f / FMath::Max(FVector::Dist(TargetLocation, Cam->GetActorLocation()), 1.0f);
+        Weights.Add(W);
+        TotalWeight += W;
+    }
+    for (float& W : Weights) { W /= TotalWeight; }
+
+    // Helper: weighted average quaternion (additive then normalize)
+    auto BlendQuats = [&](TFunctionRef<FQuat(int32)> GetQuat) -> FQuat
+    {
+        FQuat Accum = FQuat::Identity;
+        bool bFirst = true;
+        for (int32 i = 0; i < Valid.Num(); i++)
+        {
+            FQuat Q = GetQuat(i);
+            if (bFirst) { Accum = Q; bFirst = false; continue; }
+            // Keep same hemisphere as accumulator for shortest-path blending
+            if ((Accum | Q) < 0.f) { Q = FQuat(-Q.X, -Q.Y, -Q.Z, -Q.W); }
+            Accum.X += Q.X * Weights[i];
+            Accum.Y += Q.Y * Weights[i];
+            Accum.Z += Q.Z * Weights[i];
+            Accum.W += Q.W * Weights[i];
+        }
+        Accum.Normalize();
+        return Accum;
+    };
+
+    // Blend spring arm properties
+    if (bSpringArm && Source->comp_spring)
+    {
+        if (bLocation)
+        {
+            FVector BlendedLoc = FVector::ZeroVector;
+            for (int32 i = 0; i < Valid.Num(); i++) { BlendedLoc += Valid[i]->comp_spring->GetComponentLocation() * Weights[i]; }
+            Source->comp_spring->SetWorldLocation(UKismetMathLibrary::VInterpTo(Source->comp_spring->GetComponentLocation(), BlendedLoc, DeltaTime, Speed));
+        }
+        if (bRotation)
+        {
+            FQuat BlendedRot = BlendQuats([&](int32 i){ return Valid[i]->comp_spring->GetComponentRotation().Quaternion(); });
+            Source->comp_spring->SetWorldRotation(UKismetMathLibrary::RInterpTo(Source->comp_spring->GetComponentRotation(), BlendedRot.Rotator(), DeltaTime, Speed));
+        }
+
+        float BlendedArmLength = 0.f;
+        FVector BlendedSocketOffset = FVector::ZeroVector;
+        FVector BlendedTargetOffset = FVector::ZeroVector;
+        for (int32 i = 0; i < Valid.Num(); i++)
+        {
+            BlendedArmLength     += Valid[i]->comp_spring->TargetArmLength * Weights[i];
+            BlendedSocketOffset  += Valid[i]->comp_spring->SocketOffset    * Weights[i];
+            BlendedTargetOffset  += Valid[i]->comp_spring->TargetOffset    * Weights[i];
+        }
+        Source->comp_spring->TargetArmLength = UKismetMathLibrary::FInterpTo(Source->comp_spring->TargetArmLength, BlendedArmLength,    DeltaTime, Speed);
+        Source->comp_spring->SocketOffset    = UKismetMathLibrary::VInterpTo(Source->comp_spring->SocketOffset,    BlendedSocketOffset, DeltaTime, Speed);
+        Source->comp_spring->TargetOffset    = UKismetMathLibrary::VInterpTo(Source->comp_spring->TargetOffset,    BlendedTargetOffset, DeltaTime, Speed);
+    }
+
+    // Blend camera properties
+    if (bCamera && Source->comp_camera)
+    {
+        if (bLocation)
+        {
+            FVector BlendedLoc = FVector::ZeroVector;
+            for (int32 i = 0; i < Valid.Num(); i++) { BlendedLoc += Valid[i]->comp_camera->GetComponentLocation() * Weights[i]; }
+            Source->comp_camera->SetWorldLocation(UKismetMathLibrary::VInterpTo(Source->comp_camera->GetComponentLocation(), BlendedLoc, DeltaTime, Speed));
+        }
+        if (bRotation)
+        {
+            FQuat BlendedRot = BlendQuats([&](int32 i){ return Valid[i]->comp_camera->GetComponentRotation().Quaternion(); });
+            Source->comp_camera->SetWorldRotation(UKismetMathLibrary::RInterpTo(Source->comp_camera->GetComponentRotation(), BlendedRot.Rotator(), DeltaTime, Speed));
+        }
+
+        float BlendedFOV = 0.f;
+        for (int32 i = 0; i < Valid.Num(); i++) { BlendedFOV += Valid[i]->comp_camera->FieldOfView * Weights[i]; }
+        Source->comp_camera->SetFieldOfView(UKismetMathLibrary::FInterpTo(Source->comp_camera->FieldOfView, BlendedFOV, DeltaTime, Speed));
     }
 }
 

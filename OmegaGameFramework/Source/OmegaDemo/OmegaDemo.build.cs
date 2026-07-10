@@ -6,12 +6,12 @@ public class OmegaDemo : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         
-		PublicDependencyModuleNames.AddRange(new string[] { 
-			"Core", 
-			"CoreUObject", 
+		PublicDependencyModuleNames.AddRange(new string[] {
+			"Core",
+			"CoreUObject",
 			"LuaMachine",
-			"Engine", 
-			"GameplayTags", 
+			"Engine",
+			"GameplayTags",
 			"UMG",
 			"Slate",
 			"SlateCore",
@@ -24,13 +24,21 @@ public class OmegaDemo : ModuleRules
 			"AssetRegistry",
 			"AnimGraphRuntime",
 			"OmegaCore",
+			"DeveloperSettings",
 			"OmegaGameFramework",
 			"SequencerScripting",
 			"MovieScene",
 			"OmegaSequence",
 			"Flow",
 			"GameplayStateTreeModule",
+			"NavigationSystem",
+			"AIModule",
 		});
+
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.Add("UnrealEd");
+		}
  
 		PublicIncludePaths.AddRange(new string[] {});
 		PrivateIncludePaths.AddRange(new string[] {});

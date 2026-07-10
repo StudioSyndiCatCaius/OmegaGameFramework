@@ -4,6 +4,7 @@
 #include "DataAssets/DA_Body.h"
 #include "Engine/SkeletalMesh.h"
 #include "SkeletalMergingLibrary.h"
+#include "Components/SkeletalMeshComponent.h"
 
 FOmegaBodyOptionValue FOmegaBodyOptionValue::FromBodyData(FOmegaBodyAppearanceData data,FName s)
 {
@@ -185,6 +186,42 @@ bool UOmegaBodySlot::PostComponentEdit(USkeletalMeshComponent* Mesh, FOmegaBodyO
 		return true;
 	}
 	return false;
+}
+
+void UOmegaBodySlotScript::OnApplied_ToMeshComponent_Implementation(USkeletalMeshComponent* Component,
+	FOmegaBodyOptionValue OptionValue) const
+{
+}
+
+void UOmegaBodySlotScript::OnApplied_ToSkin_Implementation(AOmegaSkin* Skin, FOmegaBodyOptionValue OptionValue) const
+{
+}
+
+EOmegaBodySlotType UOmegaBodySlotScript::GetScriptSlotType_Implementation() const
+{
+	return EOmegaBodySlotType::BODYSLOT_BOOL;
+}
+
+bool UOmegaBodySlotScript::PostMaterialSlotEdit_Implementation(USkeletalMesh* Mesh, int32 slotIndex, FName SlotName,
+                                                               UMaterialInterface* Material, FOmegaBodyOptionValue OptionValue) const
+{
+	return false;
+}
+
+bool UOmegaBodySlotScript::PostMeshCreationEdit_Implementation(USkeletalMesh* Mesh,
+                                                               FOmegaBodyOptionValue OptionValue) const
+{
+	return false;
+}
+
+USkeletalMesh* UOmegaBodySlotScript::GetMeshFromIndex_Implementation(FOmegaBodyOptionValue OptionValue) const
+{
+	return nullptr;
+}
+
+FVector UOmegaBodySlotScript::GetMaxValue_Implementation() const
+{
+	return FVector();
 }
 
 void UOmegaBodyFunctions::SetBodyDataParam_Int(FOmegaBodyAppearanceData& data, FName param, int32 Value)

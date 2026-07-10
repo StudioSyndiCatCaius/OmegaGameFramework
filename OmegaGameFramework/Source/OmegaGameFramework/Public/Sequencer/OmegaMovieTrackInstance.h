@@ -6,6 +6,7 @@
 #include "MovieSceneNameableTrack.h"
 #include "MovieSceneSection.h"
 #include "EntitySystem/TrackInstance/MovieSceneTrackInstance.h"
+#include "Styling/SlateBrush.h"
 #include "OmegaMovieTrackInstance.generated.h"
 
 

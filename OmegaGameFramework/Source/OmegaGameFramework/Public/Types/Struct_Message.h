@@ -29,7 +29,7 @@ struct FOmegaGameplayMessageMeta
 // ===================================================================================================================
 // INTERFACES
 // ===================================================================================================================
-UINTERFACE(MinimalAPI) class UDataInterface_MessageInstigator : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, BlueprintType, DisplayName="♎Data🔴 - Message Instigator") class UDataInterface_MessageInstigator : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageInstigator
 {
 	GENERATED_BODY()
@@ -39,7 +39,7 @@ public:
 	FSlateBrush GetMessageBrush(UOmegaGameplayMessage* Message);
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_MessageContext : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI,BlueprintType, DisplayName="♎Data🔴 - Message Context") class UDataInterface_MessageContext : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageContext
 {
 	GENERATED_BODY()
@@ -78,8 +78,8 @@ public:
 	
 	UPROPERTY() FGameplayTag Temp_Tag;
 	
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override { return Temp_Tag; };
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return meta.Tags;};
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override {};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override { OutGameplayTags = meta.Tags; };
 	
 	//UFUNCTION(BlueprintCallable,Category="Message") void Send();
 	UFUNCTION(BlueprintCallable,Category="Message") bool End();

@@ -4,6 +4,7 @@
 
 #include "GameplayTagContainer.h"
 #include "Engine/DeveloperSettings.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Templates/SubclassOf.h"
 #include "FlowSettings.generated.h"
 

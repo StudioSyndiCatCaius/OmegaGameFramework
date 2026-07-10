@@ -21,20 +21,12 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Developer")
 	FGameplayTagContainer Tags;
 
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{
 		Name=DisplayName;
 	};
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override
 	{
-		Label=GetName();
-	};
-	virtual void GetGeneralAssetColor_Implementation(FGameplayTag Tag,FLinearColor& Color) override
-	{
-		Color=DevColor;
-	};
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override
-	{
-		return Tags;
+		OutGameplayTags=Tags;
 	};
 };

@@ -22,7 +22,7 @@ class OMEGAGAMEFRAMEWORK_API UDataAssetCollectionComponent : public UOmegaGamepl
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UDataAssetCollectionComponent();
 
@@ -36,10 +36,10 @@ public:
 	TMap<UPrimaryDataAsset*, int32> InventoryAssets;
 	//Assets can have a per-count size. This is the max total size for all assets. If <1, you have infinite size.
 	UPROPERTY(EditAnywhere,Category="Inventory") int32 MaxSize=-1;
-	
+
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Inventory",meta=(MustImplement="DataInterface_InventorySource"))
 	TArray<UObject*> InventorySources;
-	
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -48,7 +48,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Omega|Inventory",DisplayName="Add Asset (Map)")
 	void AddAssets(TMap<UPrimaryDataAsset*, int32> Assets,bool bInvertAmount=false);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Omega|Inventory")
 	void RemoveAsset(UPrimaryDataAsset* Asset, int32 Amount=1);
 
@@ -57,7 +57,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Omega|Inventory")
 	int32 GetAssetNumberTotal();
-	
+
 	UFUNCTION(BlueprintPure, Category = "Omega|Inventory")
 	int32 GetCurrentSize();
 
@@ -66,11 +66,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Omega|Inventory")
 	void SetCollectionMap(TMap<UPrimaryDataAsset*, int32> Map);
-	
+
 	UFUNCTION(BlueprintPure, Category = "Omega|Inventory", DisplayName="Get Asset Collection Map")
 	TMap<UPrimaryDataAsset*, int32> GetCollectionMap(int32 Min=1,bool IncludeSources=true);
 
-	UPROPERTY(BlueprintAssignable) FOnAssetAdded OnAssetAdded;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnAssetAdded OnAssetAdded;
 
 	//TRANSFEr
 	UFUNCTION(BlueprintCallable, Category="Omega|Inventory|Transfer")
@@ -86,36 +86,43 @@ public:
 
 */
 
-UINTERFACE(MinimalAPI)class UDataAssetCollectionInterface : public UInterface { GENERATED_BODY()};
-class OMEGAGAMEFRAMEWORK_API IDataAssetCollectionInterface
+// Implement on data assets to define per-item inventory rules such as stack limits and trade costs.
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Inventory Item") class UDataInterface_InventoryItem : public UInterface { GENERATED_BODY()};
+class OMEGAGAMEFRAMEWORK_API IDataInterface_InventoryItem
 {
 	GENERATED_BODY()
 public:
-	
-	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Inventory",DisplayName="Inventory Item - Get Max Amount")
+
+	// Returns the maximum number of this item that can exist in a single stack/slot.
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🧪Inventory",DisplayName="🧪Inventory Item - Get Max Amount")
 	int32 GetMaxCollectionNumber();
 
-	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Inventory",DisplayName="Inventory Item - Get Size Per Max")
+	// Returns the inventory "size" cost of a single unit of this item.
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🧪Inventory",DisplayName="🧪Inventory Item - Get Size Per Max")
 	int32 GetSizePerAmount();
-	
-	UFUNCTION(BlueprintNativeEvent,Category="ΩI|Inventory",DisplayName="Inventory Item - Get Trade Requirements")
+
+	// Returns the assets and quantities required to trade for this item under the given trade tag.
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🧪Inventory",DisplayName="🧪Inventory Item - Get Trade Requirements")
 	TMap<UPrimaryDataAsset*, int32> GetTradeAssetRequirements(FGameplayTag TradeTag);
 };
 
 
-UINTERFACE(MinimalAPI)class UDataInterface_InventorySource : public UInterface { GENERATED_BODY()};
+// Implement on any object that can supply a pre-defined inventory map (e.g. loot tables, shop presets).
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Inventory Source") class UDataInterface_InventorySource : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_InventorySource
 {
 	GENERATED_BODY()
 public:
-	
-	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="ΩI|Inventory",DisplayName="Inventory Source - Get Items")
+
+	// Returns the item-to-quantity map this object provides as an inventory source.
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="♎I|Inventory",DisplayName="Inventory Source - Get Items")
 	TMap<UPrimaryDataAsset*,int32> GetInventory();
 };
 
 
 
 
+// A data asset that defines a preset inventory (item/quantity map) for use as an inventory source.
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaCommonInventory : public UOmegaDataAsset, public IDataInterface_InventorySource
 {
@@ -123,6 +130,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaCommonInventory : public UOmegaDataAsset, pub
 
 	public:
 
+	// The items and their default quantities contained in this preset inventory.
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Inventory")
 	TMap<UPrimaryDataAsset*, int32> Inventory;
 

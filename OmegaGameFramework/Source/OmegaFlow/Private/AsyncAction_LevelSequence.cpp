@@ -4,6 +4,7 @@
 #include "ExtensionLibraries/MovieSceneSequenceExtensions.h"
 #include "MovieSceneSequence.h"
 #include "Runtime/LevelSequence/Public/DefaultLevelSequenceInstanceData.h"
+#include "TimerManager.h"
 
 
 void UAsyncAction_LevelSequence::Tick(float DeltaTime)
@@ -68,14 +69,14 @@ void UAsyncAction_LevelSequence::L_Kill()
 			// OnFinished/OnStop crashes because StopInternal() is still on the callstack
 			// holding a reference to the SequenceTickManager, which the actor owns.
 			// Destroying it immediately nulls the TickManager, causing an ensure failure.
-			ALevelSequenceActor* ActorToDestroy = LocalSeqActor;
-			if (UWorld* World = ActorToDestroy->GetWorld())
+			TWeakObjectPtr<ALevelSequenceActor> WeakActor(LocalSeqActor);
+			if (UWorld* World = LocalSeqActor->GetWorld())
 			{
-				World->GetTimerManager().SetTimerForNextTick([ActorToDestroy]()
+				World->GetTimerManager().SetTimerForNextTick([WeakActor]()
 				{
-					if (IsValid(ActorToDestroy))
+					if (ALevelSequenceActor* Actor = WeakActor.Get())
 					{
-						ActorToDestroy->K2_DestroyActor();
+						Actor->K2_DestroyActor();
 					}
 				});
 			}
@@ -150,7 +151,14 @@ UAsyncAction_LevelSequence* UAsyncAction_LevelSequence::PlayLevelSequence(UObjec
 	NewSeq->L_config=Config;
 	if (LevelSequence)
 	{
-		if (Config.bDuplicateSequence)
+		// Sequences with a Blueprint Director cannot be safely duplicated at runtime.
+		// DuplicateObject on a Blueprint triggers CDO registration which conflicts with
+		// any REINST_ stub left from a prior compilation cycle, causing a fatal crash.
+		// DirectorBlueprint is protected, so check via property reflection.
+		static FObjectPropertyBase* DirectorProp = CastField<FObjectPropertyBase>(
+			FindFProperty<FProperty>(ULevelSequence::StaticClass(), TEXT("DirectorBlueprint")));
+		const bool bHasDirectorBP = DirectorProp && DirectorProp->GetObjectPropertyValue_InContainer(LevelSequence) != nullptr;
+		if (Config.bDuplicateSequence && !bHasDirectorBP)
 		{
 			NewSeq->LocalLevelSequence = DuplicateObject(LevelSequence,NewSeq);
 		}

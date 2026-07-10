@@ -60,14 +60,14 @@ public:
 	// FTickableGameObject End
 
 		
-	UPROPERTY(BlueprintAssignable) FOnPlaySequence Play;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnPlaySequence Play;
 	UFUNCTION() void Local_Play();
-	UPROPERTY(BlueprintAssignable) FOnAsyncLevelSequenceDelegate Finished;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnAsyncLevelSequenceDelegate Finished;
 	UFUNCTION() void Local_Finish();
-	UPROPERTY(BlueprintAssignable) FOnAsyncLevelSequenceDelegate Stopped;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnAsyncLevelSequenceDelegate Stopped;
 	UFUNCTION() void Local_Stop();
-	UPROPERTY(BlueprintAssignable) FOnAsyncLevelSequenceDelegate OnFailed;
-	UPROPERTY(BlueprintAssignable) FOnMarkedFrame OnMark;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnAsyncLevelSequenceDelegate OnFailed;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnMarkedFrame OnMark;
 	
 	void L_Kill();
 	bool b_killing=false;
@@ -82,7 +82,7 @@ public:
 	UPROPERTY() FOmegaLevelSequenceConfig L_config;
 	
 	virtual void Activate() override;
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="bOverrideInstanceData, OriginActor, OriginTransform"),
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|AsyncGameplayTasks", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="bOverrideInstanceData, OriginActor, OriginTransform"),
 		DisplayName="Ω🔷 Play Level Sequence") 
 	static UAsyncAction_LevelSequence* PlayLevelSequence(UObject* WorldContextObject, ULevelSequence* LevelSequence, FMovieSceneSequencePlaybackSettings Settings, FOmegaLevelSequenceConfig Config);
 };

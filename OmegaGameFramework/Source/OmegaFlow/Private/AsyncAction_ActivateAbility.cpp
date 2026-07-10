@@ -33,7 +33,7 @@ void UAsyncAction_ActivateAbility::Activate()
 			IsSuccess=false;
 			if(LocalAbility->CanActivate(LocalContext))
 			{
-				CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext, IsSuccess);
+				CombatantRef->ExecuteAbility(LocalAbilityClass, LocalContext,LocalMeta, IsSuccess);
 				LocalAbility->OnAbilityFinished.AddDynamic(this, &UAsyncAction_ActivateAbility::NativeShutdown);
 				return;
 			}
@@ -49,7 +49,7 @@ void UAsyncAction_ActivateAbility::Activate()
 }
 
 UAsyncAction_ActivateAbility* UAsyncAction_ActivateAbility::ActivateAbility(UCombatantComponent* Combatant,
-                                                                            const TSubclassOf<AOmegaAbility> Ability, UObject* Context, bool bForceGrant)
+                                                                            const TSubclassOf<AOmegaAbility> Ability, UObject* Context, FOmegaCombatantEventMeta meta, bool bForceGrant)
 {
 	UAsyncAction_ActivateAbility* NewAbility = NewObject<UAsyncAction_ActivateAbility>();
 
@@ -57,5 +57,6 @@ UAsyncAction_ActivateAbility* UAsyncAction_ActivateAbility::ActivateAbility(UCom
 	NewAbility->LocalAbilityClass = Ability;
 	NewAbility->LocalContext = Context;
 	NewAbility->b_autoGrant=bForceGrant;
+	NewAbility->LocalMeta=meta;
 	return NewAbility;
 }

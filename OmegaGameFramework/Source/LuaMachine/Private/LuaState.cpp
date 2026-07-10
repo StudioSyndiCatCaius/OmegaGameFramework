@@ -6,6 +6,7 @@
 #include "LuaMachine.h"
 #include "LuaBlueprintPackage.h"
 #include "LuaBlueprintFunctionLibrary.h"
+//#include "Misc/EngineVersionComparison.h"
 #if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 0
 #include "AssetRegistry/AssetRegistryModule.h"
 #else
@@ -1108,7 +1109,7 @@ int ULuaState::MetaTableFunction__call(lua_State* L)
 				{
 					LuaState->LogError(Error);
 				}
-				LuaComponent->OnLuaError.Broadcast(Error);
+				//LuaComponent->OnLuaError.Broadcast(Error);
 			}
 			else
 			{
@@ -1304,7 +1305,7 @@ int ULuaState::MetaTableFunction__rawcall(lua_State * L)
 				{
 					LuaState->LogError(Error);
 				}
-				LuaComponent->OnLuaError.Broadcast(Error);
+				//LuaComponent->OnLuaError.Broadcast(Error);
 			}
 			else
 			{
@@ -1400,7 +1401,11 @@ int ULuaState::MetaTableFunction__rawbroadcast(lua_State * L)
 	}
 
 	LuaState->InceptionLevel++;
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 7
+	LuaCallContext->MulticastScriptDelegate->ProcessDelegate<UObject>(Parameters);
+#else
 	LuaCallContext->MulticastScriptDelegate->ProcessMulticastDelegate<UObject>(Parameters);
+#endif
 	check(LuaState->InceptionLevel > 0);
 	LuaState->InceptionLevel--;
 

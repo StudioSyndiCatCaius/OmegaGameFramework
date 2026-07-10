@@ -70,19 +70,25 @@ void UFlowNode_LinearChoice::LocalChoiceSelect(UOmegaLinearChoice* Choice, int32
 	{
 		GetFlowAsset()->SetLocalParam_Int(LocalParamToSet,Index);
 	}
-	FString OutputLocalName = FString::FromInt(Index);
-	
-	int32 inner_choice_len=OutputLocalName.Len();
-	if (Index<=inner_choice_len)
+	int32 local_count = Choices.Choices.Num();
+	if (Index < local_count)
 	{
-		TriggerOutput(FName(OutputLocalName));	
+		TriggerOutput(FName(FString::FromInt(Index)));
 	}
 	else
 	{
-		int32 linked_index=Index-inner_choice_len-1;
-		FName link_id=LinkedChoiceNodes[linked_index];
-		UFlowNode_LinkedChoice* c=GetLinkedChoice_ByID(link_id);
-		c->TriggerFirstOutput(true);
+		int32 linked_index = Index - local_count;
+		if (!LinkedChoiceNodes.IsValidIndex(linked_index))
+		{
+			Finish();
+			return;
+		}
+		FName link_id = LinkedChoiceNodes[linked_index];
+		UFlowNode_LinkedChoice* c = GetLinkedChoice_ByID(link_id);
+		if (c)
+		{
+			c->TriggerFirstOutput(true);
+		}
 		Finish();
 	}
 }
@@ -115,7 +121,7 @@ void UFlowNode_LinearChoice::ExecuteInput(const FName&PinName)
 	{
 		for (auto* n : cached_linkNodes)
 		{
-			if (n->LinkID == link_id)
+			if (n->LinkID == link_id && UOmegaFunctions_GlobalScripting::RunGlobalConditions(this,n->Conditions))
 			{
 				LinkedChoices.Add(n->Choice);
 			}
@@ -172,12 +178,12 @@ void UFlowNode_LinearChoice::SubscribeToAssetChanges()
 	}
 }
 
+#endif
+
 UFlowNode_LinkedChoice::UFlowNode_LinkedChoice()
 {
 	InputPins.Empty();
 }
-
-#endif
 
 void UFlowNode_LinkedChoice::ExecuteInput(const FName& PinName)
 {

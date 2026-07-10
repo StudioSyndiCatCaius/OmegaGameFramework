@@ -6,6 +6,7 @@
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_World.h"
 #include "Camera/CameraComponent.h"
+#include "SceneView.h"
 
 
 APlayerController* _TryGetPlayer(UObject* Context, APlayerController* lit) 

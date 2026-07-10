@@ -7,11 +7,13 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Enums.h"
-#include "Widget/DataWidget.h"
+#include "Components/Widget.h"
 #include "Widget/HUDLayer.h"
 #include "F_Widget.generated.h"
 
-
+class UWidget;
+class UDataWidget;
+class UHUDLayer;
 
 UCLASS()
 class UOmegaWidgetFunctions : public UBlueprintFunctionLibrary
@@ -21,12 +23,8 @@ class UOmegaWidgetFunctions : public UBlueprintFunctionLibrary
 public:
 	static APlayerController* PlayerFromWorldContext(UObject* Context, APlayerController* Fallback);
 	
-	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI", meta=(AdvancedDisplay="Player", WorldContext="WorldContextObject"),DisplayName="🎮Control Widget - Set")
-	static void ControlWidget_Set(UObject* WorldContextObject, UUserWidget* Widget, APlayerController* Player);
-	UFUNCTION(BlueprintPure,Category="Omega|Slate UI", meta=(AdvancedDisplay="Player", WorldContext="WorldContextObject"),DisplayName="🎮Control Widget - Get")
-	static  UUserWidget* ControlWidget_Get(UObject* WorldContextObject, UUserWidget* Widget, APlayerController* Player);
-	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI", meta=(AdvancedDisplay="Player", WorldContext="WorldContextObject"),DisplayName="🎮Control Widget - Clear")
-	static  void ControlWidget_Clear(UObject* WorldContextObject, APlayerController* Player);
+	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI")
+	static TArray<UWidget*> GetChildrenWidgets(UWidget* Parent, TSubclassOf<UWidget> FilterClass, bool bRecursive);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Slate UI", meta=(AdvancedDisplay="Context, Flag, Player", WorldContext="WorldContextObject"))
 	static void SetHUDLayerActive(UObject* WorldContextObject, TSubclassOf<UHUDLayer> HUD, bool bActive, UObject* Context, const FString& Flag, APlayerController* Player);
@@ -42,8 +40,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",ExpandBoolAsExecs = "Outcome",AdvancedDisplay="Player"),DisplayName="Ω🔴 Try Get Data Widget (from slot)")
 	static UDataWidget* TryGetDataWidget_FromSlot(const UObject* WorldContextObject, FGameplayTag SlotID, APlayerController* Player, bool& Outcome);
 	
+	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",AdvancedDisplay="Player"),DisplayName="Data Widget - Get First from Source")
+	static UDataWidget* DataWidgets_GetFirstFromSource(const UObject* WorldContextObject,APlayerController* Player, UObject* Source, TSubclassOf<UDataWidget> Class);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",AdvancedDisplay="Player"),DisplayName="Data Widget - Get All from Sources")
+	static TArray<UDataWidget*> DataWidgets_GetFromSources(const UObject* WorldContextObject,APlayerController* Player, TArray<UObject*> Sources, TSubclassOf<UDataWidget> Class);
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|DataList",meta=(DeterminesOutputType="ObjectClass"))
 	static TArray<UObject*> GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass);
+	
+	// Walks up the widget hierarchy (starting from Widget itself) and returns the first valid SlateTheme found.
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Omega Slate Theme", meta=(DefaultToSelf="Widget"))
+	static UOmegaSlateTheme* GetWidgetSlateTheme(UWidget* Widget);
 	
 	/**
 	 * Gets the true screen position of a UMG widget.

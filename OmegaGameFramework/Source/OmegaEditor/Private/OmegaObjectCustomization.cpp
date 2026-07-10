@@ -80,7 +80,7 @@ void FOmegaObjectCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
                     {
                         if (UObject* Obj = WeakObj.Get())
                         {
-                            GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_RunClassCommand(Obj, CommandIndex);
+                            //GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_RunClassCommand(Obj, CommandIndex);
                            // Settings->FireCommandEvent(Obj, CommandIndex);
                         }
                     }

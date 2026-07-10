@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LevelSequence.h"
 #include "Misc/GeneralDataObject.h"
 #include "Selector_LevelSequence.generated.h"
 
+
+class ULevelSequence;
 
 USTRUCT(BlueprintType)
 struct FOmegaSelect_LevelSequence

@@ -10,8 +10,8 @@ struct FOmegaActorLink
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) AActor* A;
-	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) AActor* B;
+	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) AActor* A = nullptr;
+	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) AActor* B = nullptr;
 	
 	bool Has(const AActor* actor) const;
 };

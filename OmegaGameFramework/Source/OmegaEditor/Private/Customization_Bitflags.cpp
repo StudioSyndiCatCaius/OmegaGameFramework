@@ -350,42 +350,30 @@ void FOmegaBitflagsCustomization::SetBitEnumValue(int32 BitIndex, int32 NewValue
 
 FText FOmegaBitflagsCustomization::GetBitEnumDisplayText(int32 BitIndex) const
 {
-    const UOmegaSettings* Settings = GetDefault<UOmegaSettings>();
-    if (!Settings || !CachedOwnerClass)
+    int32 Value = GetBitEnumValue(BitIndex);
+
+    if (cachedEditorData.BitEnums.IsValidIndex(BitIndex))
     {
-        return FText::FromString("0");
+        const FOmegaBitmaskEditorEnumData& EnumData = cachedEditorData.BitEnums[BitIndex];
+        if (EnumData.Options.IsValidIndex(Value) && !EnumData.Options[Value].Title.IsEmpty())
+        {
+            return FText::FromString(FString::Printf(TEXT("[%d] %s"), Value, *EnumData.Options[Value].Title.ToString()));
+        }
     }
 
-    int32 Value = GetBitEnumValue(BitIndex);
-    FText OptionName = Settings->GetBitEnumOptionName(CachedOwnerClass, BitIndex, Value);
-    
-    // Always show [index] name format
-    if (OptionName.IsEmpty() || OptionName.ToString().TrimStartAndEnd().IsEmpty())
-    {
-        return FText::FromString(FString::Printf(TEXT("[%d]"), Value));
-    }
-    
-    return FText::FromString(FString::Printf(TEXT("[%d] %s"), Value, *OptionName.ToString()));
+    return FText::FromString(FString::Printf(TEXT("[%d]"), Value));
 }
 
 TSharedRef<SWidget> FOmegaBitflagsCustomization::GenerateEnumComboContent(int32 BitIndex)
 {
     FMenuBuilder MenuBuilder(true, nullptr);
 
-    const UOmegaSettings* Settings = GetDefault<UOmegaSettings>();
-    if (!Settings || !CachedOwnerClass)
+    if (!cachedEditorData.BitEnums.IsValidIndex(BitIndex))
     {
         return MenuBuilder.MakeWidget();
     }
 
-    const FOmegaBitmaskEditorData* EditorData = Settings->GetEditorDataForClass(CachedOwnerClass);
-    
-    if (!EditorData || !EditorData->BitEnums.IsValidIndex(BitIndex))
-    {
-        return MenuBuilder.MakeWidget();
-    }
-
-    const FOmegaBitmaskEditorEnumData& EnumData = EditorData->BitEnums[BitIndex];
+    const FOmegaBitmaskEditorEnumData& EnumData = cachedEditorData.BitEnums[BitIndex];
     
     // Show options from the enum data, or default to 0-15 if no options defined
     int32 NumOptions = EnumData.Options.Num() > 0 ? FMath::Min(EnumData.Options.Num(), 16) : 16;

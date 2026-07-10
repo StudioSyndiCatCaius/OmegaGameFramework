@@ -3,9 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataAsset.h"
-#include "Functions/F_AVContext.h"
-#include "Interfaces/I_Combatant.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Misc/GeneralDataObject.h"
 #include "DA_DamageType.generated.h"

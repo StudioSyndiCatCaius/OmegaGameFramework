@@ -5,7 +5,6 @@
 
 #include "Functions/F_TagEvent.h"
 
-#include "InterchangeTranslatorBase.h"
 #include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -117,7 +116,9 @@ void ATagEventDisperser::OnTagEvent_Implementation(FGameplayTag Event)
 	UActorTagEventFunctions::FireTagEventOnActors(TargetActors,Event);
 }
 
-void UAnimNotify_TagEvent::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+void UAnimNotify_TagEvent::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	const FAnimNotifyEventReference& EventReference)
 {
 	UActorTagEventFunctions::FireTagEventsOnActor(MeshComp->GetOwner(),Events);
 }
+

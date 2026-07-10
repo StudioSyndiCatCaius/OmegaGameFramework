@@ -3,13 +3,16 @@
 
 #include "FlowNodes/FlowNode_Save.h"
 
+#include "Engine/GameInstance.h"
+#include "Functions/F_GlobalParam.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Engine/World.h"
 
 
 
 UFlowNode_SaveOnce::UFlowNode_SaveOnce()
 {
-	SaveParam=TEXT("flow_once");
 	InputPins.Empty();
 	InputPins.Add(FFlowPin(TEXT("In")));
 	InputPins.Add(FFlowPin(TEXT("Reset")));
@@ -20,33 +23,79 @@ UFlowNode_SaveOnce::UFlowNode_SaveOnce()
 
 void UFlowNode_SaveOnce::ExecuteInput(const FName& PinName)
 {
-	UOmegaSaveSubsystem* sub=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
-	if(sub)
+	FString SaveParam=NodeGuid.ToString();
+	
+	if (PinName.ToString()=="Reset")
 	{
-		if(UOmegaSaveBase* sav=sub->GetSaveObject(bGlobal))
+		UOmegaFunctions_GlobalVars::SetGlobalVariable_Bool(this,Target,*SaveParam,false);
+	}
+	else
+	{
+		if (UOmegaFunctions_GlobalVars::GetGlobalVariable_Bool(this,Target,*SaveParam))
 		{
-			FOmegaEntity e=sav->Entities.Entities_Guid.FindOrAdd(GetGuid());
-			if(e.params_int32.FindOrAdd(SaveParam)==0)
-			{
-				if(PinName.ToString()=="In")
-				{
-					e.params_int32.Add(SaveParam,1);
-					sav->Entities.Entities_Guid.Add(GetGuid(),e);
-					TriggerOutput(TEXT("First"),true);
-					return;
-				}
-			}
-			else
-			{
-				if(PinName.ToString()=="Reset")
-				{
-					e.params_int32.Add(SaveParam,0);
-					sav->Entities.Entities_Guid.Add(GetGuid(),e);
-					return;
-				}
-			}
+			TriggerOutput(TEXT("Then"),true);
+		}
+		else
+		{
+			UOmegaFunctions_GlobalVars::SetGlobalVariable_Bool(this,Target,*SaveParam,true);
+			TriggerOutput(TEXT("First"),true);
 		}
 	}
 	
-	TriggerOutput(TEXT("Then"),true);
 }
+
+
+UFlowNode_TagsEdit::UFlowNode_TagsEdit()
+{
+	InputPins.Empty();
+	InputPins.Add(FFlowPin(TEXT("In")));
+	OutputPins.Empty();
+	OutputPins.Add(FFlowPin(TEXT("Out")));
+}
+
+void UFlowNode_TagsEdit::ExecuteInput(const FName& PinName)
+{
+	if(UOmegaSaveSubsystem* sub=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>())
+	{
+		sub->AddStoryTags(TagsAdded, bGlobal);
+		sub->RemoveStoryTags(TagsRemoved, bGlobal);
+	}
+	TriggerOutput(TEXT("Out"), true);
+}
+
+#if WITH_EDITOR
+FString UFlowNode_TagsEdit::GetNodeDescription() const
+{
+	return FString::Printf(TEXT("Add: %s\nRemove: %s"),
+		*UKismetStringLibrary::Replace(TagsAdded.ToString(),",","\n  "),
+		*UKismetStringLibrary::Replace(TagsRemoved.ToString(),",","\n  "));
+}
+#endif
+
+
+UFlowNode_TagsCheck::UFlowNode_TagsCheck()
+{
+	InputPins.Empty();
+	InputPins.Add(FFlowPin(TEXT("In")));
+	OutputPins.Empty();
+	OutputPins.Add(FFlowPin(TEXT("True")));
+	OutputPins.Add(FFlowPin(TEXT("False")));
+}
+
+void UFlowNode_TagsCheck::ExecuteInput(const FName& PinName)
+{
+	bool bResult = false;
+	if(UOmegaSaveSubsystem* sub=GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>())
+	{
+		const FGameplayTagContainer SaveTags = sub->GetStoryTags(bGlobal);
+		bResult = bExact ? SaveTags.HasAllExact(HasTags) : SaveTags.HasAll(HasTags);
+	}
+	TriggerOutput(bResult ? TEXT("True") : TEXT("False"), true);
+}
+
+#if WITH_EDITOR
+FString UFlowNode_TagsCheck::GetNodeDescription() const
+{
+	return FString::Printf(TEXT("Has: %s\nExact: %s"), *HasTags.ToString(), bExact ? TEXT("true") : TEXT("false"));
+}
+#endif

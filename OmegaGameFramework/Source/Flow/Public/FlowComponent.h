@@ -93,9 +93,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void RemoveIdentityTags(FGameplayTagContainer Tags, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
-	UPROPERTY(BlueprintAssignable) FOnFlowFinish OnFlowFinish;
-	UPROPERTY(BlueprintAssignable) FOnNodeEntered OnNodeEntered;
-	UPROPERTY(BlueprintAssignable) FFlowComponentSignal OnFlowSignal;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFlowFinish OnFlowFinish;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnNodeEntered OnNodeEntered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FFlowComponentSignal OnFlowSignal;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Flow") FFlowComponentTagsReplicated OnIdentityTagsAdded;
 	UPROPERTY(BlueprintAssignable, Category = "Flow") FFlowComponentTagsReplicated OnIdentityTagsRemoved;

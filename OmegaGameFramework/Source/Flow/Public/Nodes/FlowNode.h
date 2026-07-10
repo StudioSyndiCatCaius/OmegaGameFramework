@@ -123,7 +123,7 @@ public:
 	void SetGuid(const FGuid NewGuid) { NodeGuid = NewGuid; }
 	UFUNCTION(BlueprintPure, Category="Flow Node")
 	FGuid GetGuid() const { return NodeGuid; }
-	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists) override;
+	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists);
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowAsset* GetFlowAsset() const;
 
@@ -242,9 +242,9 @@ protected:
 	UPROPERTY(SaveGame)
 	EFlowNodeState ActivationState;
 
-public:	
+public:
 	EFlowNodeState GetActivationState() const { return ActivationState; }
-	
+
 #if !UE_BUILD_SHIPPING
 private:
 	TMap<FName, TArray<FPinRecord>> InputRecords;

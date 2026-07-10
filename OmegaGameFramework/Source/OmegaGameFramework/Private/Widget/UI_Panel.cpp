@@ -1,47 +1,54 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
-
 #include "Widget/UI_Panel.h"
 
 #include "Components/Border.h"
 #include "Components/TextBlock.h"
-#include "Widget/UI_Widgets.h"
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Style resolution
+// ---------------------------------------------------------------------------------------------------------------------
+
+UOmegaSlateStyle_Panel* UOmegaUI_Panel::L_GetStyle() const
+{
+	if (!UseStyle) { return nullptr; }
+	if (OverrideStyle) { return OverrideStyle; }
+	if (UOmegaSlateTheme* Theme = UOmegaWidgetInterface::GetTheme(const_cast<UOmegaUI_Panel*>(this)))
+	{
+		return Theme->GetStyle_Panel(StyleTag);
+	}
+	return nullptr;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Lifecycle
+// ---------------------------------------------------------------------------------------------------------------------
 
 void UOmegaUI_Panel::NativePreConstruct()
 {
-	if(UBorder* _b = GetWidget_Border_Title())
-	{
-		if(TitleBorder_Style)
-		{
-			TitleBorder_Style->Apply(_b);
-		}
-		
-	}
-	if(UBorder* _b = GetWidget_Border_Body())
-	{
-		if(BodyBorder_Style)
-		{
-			BodyBorder_Style->Apply(_b);
-		}
-		
-	}
-	if(UTextBlock* _t = GetWidget_Text_Title())
-	{
-		SetTitle(Title);
-		if(TitleText_Style)
-		{
-			TitleText_Style->Apply(_t);
-		}
-	}
+	SetTitle(Title);
+	SetStyleAsset(L_GetStyle());
 	Super::NativePreConstruct();
 }
 
+void UOmegaUI_Panel::NativeConstruct()
+{
+	SetStyleAsset(L_GetStyle());
+	Super::NativeConstruct();
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------------------------------------------------
+
 void UOmegaUI_Panel::SetTitle(FText NewTitle)
 {
-	Title=NewTitle;
-	if(GetWidget_Text_Title())
-	{
-		GetWidget_Text_Title()->SetText(NewTitle);
-	}
+	Title = NewTitle;
+	if (UTextBlock* _t = GetWidget_Text_Title()) { _t->SetText(NewTitle); }
+}
+
+void UOmegaUI_Panel::SetStyleAsset(UOmegaSlateStyle_Panel* InStyle)
+{
+	if (InStyle) { OverrideStyle = InStyle; }
+	if (UOmegaSlateStyle_Panel* Resolved = L_GetStyle()) { Resolved->Apply(this); }
 }

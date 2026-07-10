@@ -80,7 +80,7 @@ public:
 
 #if WITH_EDITORONLY_DATA
 	virtual void PostInitProperties() override;
-	virtual void GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const override;
+	virtual void GetAssetRegistryTags(FAssetRegistryTagsContext Context) const override;
 
 	UPROPERTY(VisibleAnywhere, Instanced, Category = Reimport)
 	class UAssetImportData* AssetImportData;

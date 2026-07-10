@@ -19,10 +19,10 @@ class OMEGAFLOW_API UListenFor_TurnManager : public UBlueprintAsyncActionBase
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FOListenTurnManagerDelegate TurnStart;
-	UPROPERTY(BlueprintAssignable) FOListenTurnManagerDelegate TurnEnd;
-	UPROPERTY(BlueprintAssignable) FOListenTurnManagerDelegate TurnFail;
-	UPROPERTY(BlueprintAssignable) FOListenTurnManagerDelegate TurnOrderGenerated;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOListenTurnManagerDelegate TurnStart;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOListenTurnManagerDelegate TurnEnd;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOListenTurnManagerDelegate TurnFail;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOListenTurnManagerDelegate TurnOrderGenerated;
 	
 	UPROPERTY() UTurnBasedManagerComponent* TurnManager;
 
@@ -33,7 +33,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Turn Manager") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Turn Manager") 
 	static UListenFor_TurnManager* ListenFor_TurnManager(UTurnBasedManagerComponent* Component);
 	
 };

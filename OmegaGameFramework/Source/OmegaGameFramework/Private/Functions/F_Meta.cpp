@@ -4,6 +4,28 @@
 #include "Functions/F_Meta.h"
 
 #include "Functions/F_CommandLine.h"
+#include "Templates/SubclassOf.h"
+
+UObject* UOmegaFunctions_Meta::GetFirstObjectOfClass(FOmegaCommonMeta source, TSubclassOf<UObject> Class,
+	bool bIncludeContext)
+{
+	if (!Class) return nullptr;
+
+	if (bIncludeContext && source.Context && source.Context->IsA(Class))
+	{
+		return source.Context;
+	}
+
+	for (auto& Pair : source.objects)
+	{
+		if (Pair.Value && Pair.Value->IsA(Class))
+		{
+			return Pair.Value.Get();
+		}
+	}
+
+	return nullptr;
+}
 
 FString UOmegaFunctions_Meta::Parse_String(FOmegaCommonMeta source, const FString& param, const FString& Fallback,bool& bValid,
                                            TEnumAsByte<EOmegaCommonMetaParamParseOrder> parseOrder)

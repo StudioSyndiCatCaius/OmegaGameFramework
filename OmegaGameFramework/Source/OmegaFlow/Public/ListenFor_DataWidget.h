@@ -18,9 +18,9 @@ class OMEGAFLOW_API UListenFor_DataWidget : public UBlueprintAsyncActionBase
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(BlueprintAssignable) FListenDataWidgetDelegate Selected;
-	UPROPERTY(BlueprintAssignable) FListenDataWidgetDelegate Hover;
-	UPROPERTY(BlueprintAssignable) FListenDataWidgetDelegate Unhover;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FListenDataWidgetDelegate Selected;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FListenDataWidgetDelegate Hover;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FListenDataWidgetDelegate Unhover;
 	UPROPERTY() const APlayerController* local_player;
 
 	UFUNCTION()
@@ -30,7 +30,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Task")
 	void KillTask();
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true"), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Data Widget") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Data Widget") 
 	static UListenFor_DataWidget* ListenFor_DataWidget(const APlayerController* Player);
 	
 };

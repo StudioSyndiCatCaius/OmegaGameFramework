@@ -13,6 +13,8 @@
 #include "Functions/F_Config.h"
 #include "Functions/F_File.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
+#include "Sound/SoundWave.h"
 #include "Kismet/KismetInternationalizationLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -143,7 +145,7 @@ USoundBase* UOmegaLocalizationFunctions::GetVoiceSoundByPath(UObject* WorldConte
 			search_dir=OMEGA_File::PathCorrect(search_dir);
 			UE_LOG(LogTemp,Log,TEXT("LOCALIZATION:	Trying load INTERNAL voice clip : %s"),*search_dir);
 			FOmegaAssetSearchConfig search_config;
-			search_config.bLogProcess=true;
+			search_config.bLogProcess=false;
 			if (USoundBase* b=Cast<USoundBase>(UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(file,USoundBase::StaticClass(),_result,search_dir,search_config)))
 			{
 				return b;

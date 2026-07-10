@@ -18,16 +18,16 @@ class UOmegaGamePatch : public UObject
 public:
 	UOmegaGamePatch();
 	
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly) FGuid GUID;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Patch") FGuid GUID;
 
 	//Fired when this patch is first applied to a save game. This works for any new or loaded save games that don't have the patch GUID logged.
-	UFUNCTION(BlueprintNativeEvent,Category="Achievements") void OnFirstApplied(UGameInstance* GameInstance,UOmegaSaveGame* Save);
-	UFUNCTION(BlueprintNativeEvent,Category="Achievements") void OnGame_Start(UGameInstance* GameInstance);
-	UFUNCTION(BlueprintNativeEvent,Category="Achievements") void OnGame_End(UGameInstance* GameInstance);
-	UFUNCTION(BlueprintNativeEvent,Category="Achievements") void OnLevel_Start(UGameInstance* GameInstance);
-	UFUNCTION(BlueprintNativeEvent,Category="Achievements") void OnLevel_End(UGameInstance* GameInstance);
-	UFUNCTION(BlueprintNativeEvent,Category="Achievements") void OnSave_Created(UGameInstance* GameInstance,UOmegaSaveGame* Save);
-	UFUNCTION(BlueprintNativeEvent,Category="Achievements") void OnSave_Started(UGameInstance* GameInstance,UOmegaSaveGame* Save);
+	UFUNCTION(BlueprintNativeEvent,Category="Patch") void OnFirstApplied(UGameInstance* GameInstance,UOmegaSaveGame* Save);
+	UFUNCTION(BlueprintNativeEvent,Category="Patch") void OnGame_Start(UGameInstance* GameInstance);
+	UFUNCTION(BlueprintNativeEvent,Category="Patch") void OnGame_End(UGameInstance* GameInstance);
+	UFUNCTION(BlueprintNativeEvent,Category="Patch") void OnLevel_Start(UGameInstance* GameInstance);
+	UFUNCTION(BlueprintNativeEvent,Category="Patch") void OnLevel_End(UGameInstance* GameInstance);
+	UFUNCTION(BlueprintNativeEvent,Category="Patch") void OnSave_Created(UGameInstance* GameInstance,UOmegaSaveGame* Save);
+	UFUNCTION(BlueprintNativeEvent,Category="Patch") void OnSave_Started(UGameInstance* GameInstance,UOmegaSaveGame* Save);
 	
 };
 

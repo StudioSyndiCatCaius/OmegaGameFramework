@@ -5,59 +5,110 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "DataAssets/DA_Attribute.h"
+#include "Types/Struct_Combatant.h"
 #include "I_Combatant.generated.h"
 
+class UOmegaDamageType;
 class UCombatantComponent;
 class UCombatantFilter;
 
 
-
-UINTERFACE() class UDataInterface_DamageModifier : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_DamageModifier
+USTRUCT(BlueprintType)
+struct FOmegaCombatantSourceConfig
 {
 	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+	
 public:
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ΩI|Combatant",DisplayName="Damage Modifier - Apply")
-	float ModifyDamage(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context);
-};
-
-
-// ===================================================================================================================
-// Damage Modifier
-// ===================================================================================================================
-
-UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const,Abstract)
-class UOmegaScripted_DamageModifier : public UObject, public IDataInterface_DamageModifier
-{
-	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Combatant") bool bUseDamageModifier = false;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Combatant") bool bWhenASkillUseAsModifier = false;
 };
 
 USTRUCT(BlueprintType)
-struct FOmegaScripted_DamageModifiers
+struct FOmegaScripted_CombatantModifiers
 {
 	GENERATED_BODY()
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="DamageModifiers")
-	TArray<UOmegaScripted_DamageModifier*> Modifiers;
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Combatant")
+	TArray<UOmegaScripted_CombatantModifier*> Modifiers;
 
-	float ApplyMod(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
-	{
-		if(Modifiers.IsEmpty())
-		{
-			return BaseDamage;
-		}
-		float out=0.0;
-		for(auto* i : Modifiers)
-		{
-			if(i)
-			{
-				out=IDataInterface_DamageModifier::Execute_ModifyDamage(i,Attribute,Target,Instigator,BaseDamage,DamageType,Context);
-			}
-		}
-		return out;
-	}
+	TArray<FOmegaAttributeModifier> GatherAttributeModifiers(UCombatantComponent* CombatantComponent) const;
+	float ApplyDamageMod(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context);
+};
+
+
+
+
+UINTERFACE(DisplayName="♎Data🔴 - Combatant") class UDataInterface_Combatant : public UInterface
+{
+	GENERATED_BODY()
+public:
+	static TArray<FOmegaAttributeModifier> GetObjectModifiers(UCombatantComponent* Combatant, UObject* object);
+};
+class OMEGAGAMEFRAMEWORK_API IDataInterface_Combatant
+{
+	GENERATED_BODY()
+
+public:
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|💪Combatant",DisplayName="💪Combatant - Get Config")
+	FOmegaCombatantSourceConfig Combatant_GetConfig();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|💪Combatant",DisplayName="💪Combatant - Scripted Modifiers")
+	FOmegaScripted_CombatantModifiers Combatant_GetScriptedModifiers();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|💪Combatant",DisplayName="💪Combatant - Modify Attirbutes")
+	TArray<FOmegaAttributeModifier> GetModifierValues(UCombatantComponent* CombatantComponent);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|💪Combatant",DisplayName="💪Combatant - Modify Damage")
+	float ModifyDamage(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, 
+		UObject* Context);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|💪Combatant",DisplayName="💪Combatant - Get Skills")
+	TArray<UPrimaryDataAsset*> GetSkills(UCombatantComponent* Combatant);
+	
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - On Event")
+	int32 Combatant_OnEvent(UCombatantComponent* Combatant, FGameplayTag Event, FOmegaCombatantEventMeta meta);
+	
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Append Tags")
+	FGameplayTagContainer Combatant_AppendTags(UCombatantComponent* Combatant);
+	
+	
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Damage Type Weight")
+    UPrimaryDataAsset* GetDamageType_Weight(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, float& weight, int32& priority);
+
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Modify Dynamic (Scalar)")
+	float Combatant_ModDynamicScalar(UCombatantComponent* Combatant, FGameplayTag Tag, UObject* Context, int32& priority,bool& bValidConsider);
+	
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Modify Dynamic (Asset)")
+	UPrimaryDataAsset* Combatant_ModDynamicAsset(UCombatantComponent* Combatant, FGameplayTag Tag, UObject* Context, int32& priority,bool& bValidConsider);
+	
+	UFUNCTION(BlueprintNativeEvent, Category="♎I|💪Combatant",DisplayName="💪Combatant - Modify Dynamic (Tags)")
+	FGameplayTagContainer Combatant_ModDynamicTags(UCombatantComponent* Combatant, FGameplayTag Tag, UObject* Context, bool& bValidConsider);
+};
+
+
+UCLASS(Blueprintable,BlueprintType,EditInlineNew,CollapseCategories,Const,Abstract)
+class OMEGAGAMEFRAMEWORK_API UOmegaScripted_CombatantModifier : public UObject, public IDataInterface_Combatant
+{
+	GENERATED_BODY()
+
+public:
+
+	
+};
+
+
+
+
+UCLASS(EditInlineNew, Blueprintable, BlueprintType, CollapseCategories)
+class OMEGAGAMEFRAMEWORK_API UAttributeModifierContainer : public UObject, public IDataInterface_Combatant
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attribute") UOmegaAttribute* Attribute = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attribute") float IncValue = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Attribute") float MultiValue = 0.f;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
 };
 
 

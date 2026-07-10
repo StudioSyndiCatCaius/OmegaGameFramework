@@ -5,17 +5,17 @@
 #include "CoreMinimal.h"
 #include "DA_AssetLib.h"
 #include "Functions/F_Component.h"
-#include "GameFramework/Character.h"
 #include "Misc/GeneralDataObject.h"
 #include "DA_Appearance.generated.h"
 
+
+class ACharacter;
 
 UCLASS(Blueprintable, BlueprintType)
 class OMEGAGAMEFRAMEWORK_API UOAsset_Appearance : public UOmegaDataAsset
 {
 	GENERATED_BODY()
 public:
-	virtual FLinearColor GetThumbnailBack_Tint_Implementation() override { return FLinearColor(FColor::Magenta); };
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Appearance")
 	TSoftClassPtr<AActor> ActorClass;
 	
@@ -33,7 +33,7 @@ public:
 	void Apply(ACharacter* c) const;
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_AppearanceSource : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Appearance Source") class UDataInterface_AppearanceSource : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_AppearanceSource
 {
 	GENERATED_BODY()

@@ -26,7 +26,7 @@ public:
 	virtual bool IsTickableWhenPaused() const { return true; }
 	virtual bool IsTickableInEditor() const { return false; }
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnAsyncGlobalFlagReached Finished;
 	
 	bool b_killing=false;
@@ -35,7 +35,7 @@ public:
 	UPROPERTY() FGameplayTag target_flag;
 	UPROPERTY() bool target_state;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject"), Category="Omega|Global|Bitflags",DisplayName="🚩 Await Global Bitflag State")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly, WorldContext="WorldContextObject"), Category="Omega|Global|Bitflags",DisplayName="🚩 Await Global Bitflag State")
 	static UAsyncAction_AwaitGlobalFlag* AwaitGlobalFlag(UObject* WorldContextObject, UPARAM(meta=(Categories="BITFLAG")) FGameplayTag Flag, TEnumAsByte<EOmegaGlobalParamTarget> Target, bool bDesiredState);
 	
 };

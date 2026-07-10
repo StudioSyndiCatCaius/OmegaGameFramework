@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Engine/DataAsset.h"
 #include "F_GlobalScripting.generated.h"
 
 
@@ -18,8 +19,8 @@ public:
 	FString GetFunctionCall_Description() const;
 	
 	
-	UFUNCTION(BlueprintImplementableEvent) void LuaInterpret(const TArray<FLuaValue>& args);
-	UFUNCTION(BlueprintImplementableEvent) void GetEditorDescription(TArray<FString>& param_desc, FString& Override) const;
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega") void LuaInterpret(const TArray<FLuaValue>& args);
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega") void GetEditorDescription(TArray<FString>& param_desc, FString& Override) const;
 };
 
 UCLASS(Abstract)
@@ -29,7 +30,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGlobalScript : public UOmegaGlobalScriptBASE
 
 public:
 	UFUNCTION() FLuaValue LuaCall(const TArray<FLuaValue>& args);
-	UFUNCTION(BlueprintImplementableEvent) int32 Run(UGameInstance* GameInstance) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Omega") int32 Run(UGameInstance* GameInstance) const;
 	
 };
 
@@ -40,7 +41,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGlobalCondition : public UOmegaGlobalScriptBA
 
 public:
 	UFUNCTION() FLuaValue LuaCall(const TArray<FLuaValue>& args);
-	UFUNCTION(BlueprintImplementableEvent) bool Check(UGameInstance* GameInstance) const;
+	UFUNCTION(BlueprintNativeEvent, Category="Omega") bool Check(UGameInstance* GameInstance) const;
 	
 };
 
@@ -71,5 +72,60 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|GlobalScripting",meta=(WorldContext="WorldContextObject"))
 	static bool RunGlobalConditions(const UObject* WorldContextObject, FOmegaGlobalConditions scripts);
+	
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Iterations
+// ---------------------------------------------------------------------------------------------------------------------
+
+UCLASS()
+class UOmegaGlobalScriptsPreset : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GlobalScripting",meta=(ShowOnlyInnerProperties))
+	FOmegaGlobalScripts Scripts;
+	
+};
+
+UCLASS(DisplayName="* DO PRESET")
+class UOmegaGlobalScript_DoPreset : public UOmegaGlobalScript
+{
+	GENERATED_BODY()
+
+public:
+	virtual int32 Run_Implementation(UGameInstance* GameInstance) const override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GlobalScripting")
+	TArray<UOmegaGlobalScriptsPreset*> Presets;
+	
+};
+
+
+UCLASS()
+class UOmegaGlobalConditionsPreset : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GlobalScripting",meta=(ShowOnlyInnerProperties))
+	FOmegaGlobalConditions Conditions;
+	
+};
+
+UCLASS(DisplayName="* CHECK PRESET")
+class UOmegaGlobalCondition_DoPreset : public UOmegaGlobalCondition
+{
+	GENERATED_BODY()
+
+public:
+	virtual bool Check_Implementation(UGameInstance* GameInstance) const override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GlobalScripting")
+	TArray<UOmegaGlobalConditionsPreset*> Presets;
 	
 };

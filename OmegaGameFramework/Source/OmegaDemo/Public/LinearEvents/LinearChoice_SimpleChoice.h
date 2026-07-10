@@ -24,11 +24,13 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
 	FOmegaBitflagsBase Flags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice",meta=(ShowOnlyInnerProperties))
+	FGameplayTagQuery SaveTagsQuery;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice",meta=(ShowOnlyInnerProperties))
 	FOmegaGlobalConditions Conditions;
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{
 		Name=ChoiceText;
 	};
 	virtual bool IsChoiceAvailable_Implementation() const override;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override {return Tags;};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override { OutGameplayTags=Tags; };
 };

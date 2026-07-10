@@ -4,6 +4,7 @@
 #include "FlowNodes/FlowNode_Param.h"
 
 #include "FlowMacros.h"
+#include "Engine/World.h"
 #include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "Functions/F_GlobalParam.h"
@@ -13,7 +14,8 @@
 
 TArray<FName> UFlowNode_ParamBASE::L_GetParams() const
 {
-	return OGF_GAME_CORE()->L_GetGlobalParamKeys(SourceTarget,ParamType);
+	return TArray<FName>();
+	//return OGF_GAME_CORE()->L_GetGlobalParamKeys(SourceTarget,ParamType);
 }
 
 // ========================================================================================================

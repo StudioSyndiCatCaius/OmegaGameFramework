@@ -27,39 +27,26 @@ UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
     
     CombatantConfig_Default.AttributeSet=TSoftObjectPtr<UOmegaAttributeSet>(FSoftObjectPath(TEXT("/OmegaGameFramework/DEMO/Attributes/AttSet_OMEGA_Demo.AttSet_OMEGA_Demo")));
     
-    System_FlowAsset=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
-    System_Interaction=TSoftClassPtr<AOmegaGameplaySystem>(FSoftClassPath(TEXT("/OmegaGameFramework/DEMO/Systems/sys_OMEGA_E_Dialog.sys_OMEGA_E_Dialog")));
-    
+    BlockedSystemsWhenMenusOpen.AddTag(FGameplayTag::RequestGameplayTag("SYSTEM.Exploration"));
+    BlockedSystemsWhenMenusOpen.AddTag(FGameplayTag::RequestGameplayTag("SYSTEM.SubExplore"));
 }
 
 
 TSubclassOf<AOmegaGameplaySystem> UOmegaSettings::CorrectClass_System(TSubclassOf<AOmegaGameplaySystem> Class) const
 {
-    TMap<TSoftClassPtr<AOmegaGameplaySystem>,TSoftClassPtr<AOmegaGameplaySystem>> _rep=Replacement_Systems;
-    if (TSubclassOf<AOmegaGameplaySystem> _NewVal=_rep.FindOrAdd(TSoftClassPtr<AOmegaGameplaySystem>(Class)).LoadSynchronous())
-    {
-        return _NewVal;
-    }
+    
     return Class;
 }
 
 TSubclassOf<UMenu> UOmegaSettings::CorrectClass_Menu(TSubclassOf<UMenu> Class) const
 {
-    TMap<TSoftClassPtr<UMenu>,TSoftClassPtr<UMenu>> _rep=Replacement_Menus;
-    if (TSubclassOf<UMenu> _NewVal=_rep.FindOrAdd(TSoftClassPtr<UMenu>(Class)).LoadSynchronous())
-    {
-        return _NewVal;
-    }
+    
     return Class;
 }
 
 TSubclassOf<UHUDLayer> UOmegaSettings::CorrectClass_HUD(TSubclassOf<UHUDLayer> Class) const
 {
-    TMap<TSoftClassPtr<UHUDLayer>,TSoftClassPtr<UHUDLayer>> _rep=Replacement_HUDLayers;
-    if (TSubclassOf<UHUDLayer> _NewVal=_rep.FindOrAdd(TSoftClassPtr<UHUDLayer>(Class)).LoadSynchronous())
-    {
-        return _NewVal;
-    }
+    
     return Class;
 }
 
@@ -76,32 +63,6 @@ TArray<TSubclassOf<UOmegaGameplayModule>> UOmegaSettings::GetGameplayModuleClass
 	return ModuleClasses;
 }
 
-TSubclassOf<AOmegaGameplaySystem> UOmegaSettings::GetSystem_FlowAsset() const
-{
-    if(TSubclassOf<AOmegaGameplaySystem> a=System_FlowAsset.LoadSynchronous())
-    {
-        return a;
-    }
-    return nullptr;
-}
-
-TSubclassOf<AOmegaGameplaySystem> UOmegaSettings::GetSystem_Encounter() const
-{
-    if(TSubclassOf<AOmegaGameplaySystem> a=System_FlowEncounter.LoadSynchronous())
-    {
-        return a;
-    }
-    return nullptr;
-}
-
-TSubclassOf<AOmegaGameplaySystem> UOmegaSettings::GetSystem_Interact() const
-{
-    if(TSubclassOf<AOmegaGameplaySystem> a=System_Interaction.LoadSynchronous())
-    {
-        return a;
-    }
-    return nullptr;
-}
 
 UClass* UOmegaSettings::GetOmegaGameSaveClass() const
 {
@@ -146,11 +107,6 @@ UOmegaGameManager* UOmegaSettings::GetGameCore() const
 	return GetMutableDefault<UOmegaGameManager>();
 }
 
-UOmegaFileManagerSettings* UOmegaSettings::GetSettings_File() const
-{
-    
-    return nullptr;
-}
 
 TMap<FGameplayTag, FOmegaInputConfig> UOmegaSettings::GetAllInputActionConfigs() const
 {
@@ -285,8 +241,9 @@ const FOmegaBitmaskEditorData* UOmegaSettings::GetEditorDataForClass(UClass* Cla
         ParentClass = ParentClass->GetSuperClass();
     }
 
-    const FOmegaBitmaskEditorData output=GetGameCore()->Bitflags_GetByObject(Class);
-    return &output;
+    auto& mutableMap = const_cast<TMap<TSoftClassPtr<UObject>, FOmegaBitmaskEditorData>&>(ClassBitflagData);
+    mutableMap.Add(TSoftClassPtr<UObject>(Class), GetGameCore()->Bitflags_GetByObject(Class));
+    return mutableMap.Find(TSoftClassPtr<UObject>(Class));
 }
 
 FText UOmegaSettings::GetBitflagName(UClass* Class, int32 BitIndex) const

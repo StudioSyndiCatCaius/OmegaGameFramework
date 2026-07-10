@@ -5,6 +5,8 @@
 #include "FlowAssetTrait.h"
 #include "FlowSettings.h"
 #include "FlowSubsystem.h"
+#include "EdGraph/EdGraph.h"
+#include "EdGraph/EdGraphPin.h"
 
 #include "Nodes/FlowNode.h"
 #include "Nodes/Route/FlowNode_CustomInput.h"
@@ -39,6 +41,14 @@ UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	}
 }
 
+
+void UFlowAsset::GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed,
+	FOmegaClassNamedLists& named_lists)
+{
+	named_lists=NamedLists;
+	bitflags=Bitflags;
+	guid=AssetGuid;
+}
 
 void UFlowAsset::SetLocalParam_Bool(FName Param, bool val)
 {
@@ -98,24 +108,26 @@ void UFlowAsset::PostDuplicate(bool bDuplicateForPIE)
 	}
 }
 
-EDataValidationResult UFlowAsset::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UFlowAsset::IsDataValid(class FDataValidationContext& Context) const
 {
 	for (const TPair<FGuid, UFlowNode*>& Node : Nodes)
-	{
-		if (Node.Value == nullptr || Node.Value->IsDataValid(ValidationErrors) == EDataValidationResult::Invalid)
-		{
-			// refresh data if Node is missing, i.e. its class has been deleted
-			if (Node.Value == nullptr)
-			{
-				HarvestNodeConnections();
-			}
-
-			return EDataValidationResult::Invalid;
-		}
-	}
-
-	return EDataValidationResult::Valid;
+    	{
+			
+    		if (Node.Value == nullptr || Node.Value->IsDataValid(Context) == EDataValidationResult::Invalid)
+    		{
+    			// refresh data if Node is missing, i.e. its class has been deleted
+    			if (Node.Value == nullptr)
+    			{
+    				//HarvestNodeConnections();
+    			}
+    
+    			return EDataValidationResult::Invalid;
+    		}
+    	}
+    
+    	return EDataValidationResult::Valid;
 }
+
 
 TSharedPtr<IFlowGraphInterface> UFlowAsset::FlowGraphInterface = nullptr;
 
@@ -475,7 +487,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 	{
 		StartNode->TriggerFirstOutput(true);
 	}
-	
+
 }
 
 void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance /*= true*/)
@@ -710,26 +722,10 @@ bool UFlowAsset::IsBoundToWorld_Implementation()
 //######################################################################################################
 
 
-void UFlowAsset::GetGeneralAssetLabel_Implementation(FString& Label)
+void UFlowAsset::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags)
 {
-	if(CustomLabel.IsEmpty())
-	{
-		Label = this->GetDisplayName().ToString();
-	}
-	else
-	{
-		Label = CustomLabel;
-	}
-}
-
-FGameplayTag UFlowAsset::GetObjectGameplayCategory_Implementation()
-{
-	return GameplayCategory;
-}
-
-FGameplayTagContainer UFlowAsset::GetObjectGameplayTags_Implementation()
-{
-	return GameplayTags;
+	OutCategoryTag = GameplayCategory;
+	OutGameplayTags = GameplayTags;
 }
 
 FGameplayTag UFlowAsset::GetMessageCategoryTag() const

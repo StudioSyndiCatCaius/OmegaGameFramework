@@ -15,7 +15,7 @@ class UOmegaQuest;
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaQuest : public UOmegaDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaQuest : public UOmegaDemoDataAsset
 {
 	GENERATED_BODY()
 
@@ -72,15 +72,12 @@ public:
 	UPROPERTY(VisibleAnywhere,Category="Quest") UOmegaQuest* QuestAsset;
 	bool b_ended=false;
 	
-	void StartQuest(bool bResumeFormSave);
+	void StartQuest(bool bOverrideStartData, FOmegaQuestData data);
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Quest") void TriggerQuestUpdate();
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Quest") void StopQuest(bool bFailed);
 	
 	UFUNCTION(BlueprintPure,Category="Quest") TArray<UObject*> GetActiveTasks();
 
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
-	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override;
 };

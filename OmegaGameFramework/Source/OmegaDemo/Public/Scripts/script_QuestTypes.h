@@ -20,6 +20,7 @@ public:
 	
 	virtual void OnQuestStart_Implementation(AOmegaQuestInstance* Instance) const override;
 	virtual void OnLoad_Implementation(AOmegaQuestInstance* Instance, FOmegaQuestData data) const override;
+	virtual void OnEndPlay_Implementation(AOmegaQuestInstance* Instance) const override;
 	virtual TArray<UObject*> GetActiveTasks_Implementation(AOmegaQuestInstance* Instance) const override;
 	UFUNCTION() void L_OnFlowNodeEnter(UFlowAsset* FlowAsset, UFlowNode* Node, FName Input);
 	UFUNCTION() void L_OnFlowFinish(UFlowAsset* FlowAsset, FName Output, const FString& Flag);

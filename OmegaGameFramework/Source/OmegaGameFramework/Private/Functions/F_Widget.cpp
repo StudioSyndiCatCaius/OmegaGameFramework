@@ -3,11 +3,14 @@
 
 #include "Functions/F_Widget.h"
 
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Player.h"
+#include "Widget/DataWidget.h"
+#include "Widget/UI_Widgets.h"
 
 APlayerController* UOmegaWidgetFunctions::PlayerFromWorldContext(UObject* Context, APlayerController* Fallback)
 {
@@ -29,36 +32,34 @@ APlayerController* UOmegaWidgetFunctions::PlayerFromWorldContext(UObject* Contex
 	return nullptr;
 }
 
-void UOmegaWidgetFunctions::ControlWidget_Set(UObject* WorldContextObject, UUserWidget* Widget,
-	APlayerController* Player)
+TArray<UWidget*> UOmegaWidgetFunctions::GetChildrenWidgets(UWidget* Parent, TSubclassOf<UWidget> FilterClass,
+	bool bRecursive)
 {
-	if (!Widget) { return; }
-	if (APlayerController* p=PlayerFromWorldContext(WorldContextObject,Player))
+	TArray<UWidget*> Result;
+	if (!Parent) return Result;
+
+	UPanelWidget* Panel = Cast<UPanelWidget>(Parent);
+	if (!Panel) return Result;
+
+	for (int32 i = 0; i < Panel->GetChildrenCount(); i++)
 	{
-		UOmegaSubsystem_Player* SS_player=OGF_Subsystems::oPlayer(p);
-		SS_player->SetControlWidget(Widget);
+		UWidget* Child = Panel->GetChildAt(i);
+		if (!Child) continue;
+
+		if (!FilterClass || Child->IsA(FilterClass))
+		{
+			Result.Add(Child);
+		}
+
+		if (bRecursive)
+		{
+			Result.Append(GetChildrenWidgets(Child, FilterClass, true));
+		}
 	}
+
+	return Result;
 }
 
-UUserWidget* UOmegaWidgetFunctions::ControlWidget_Get(UObject* WorldContextObject, UUserWidget* Widget,
-	APlayerController* Player)
-{
-	if (APlayerController* p=PlayerFromWorldContext(WorldContextObject,Player))
-	{
-		UOmegaSubsystem_Player* SS_player=OGF_Subsystems::oPlayer(p);
-		return  SS_player->FocusMenu;
-	}
-	return nullptr;
-}
-
-void UOmegaWidgetFunctions::ControlWidget_Clear(UObject* WorldContextObject, APlayerController* Player)
-{
-	if (APlayerController* p=PlayerFromWorldContext(WorldContextObject,Player))
-	{
-		UOmegaSubsystem_Player* SS_player=OGF_Subsystems::oPlayer(p);
-		return  SS_player->ClearControlWidget();
-	}
-}
 
 void UOmegaWidgetFunctions::SetHUDLayerActive(UObject* WorldContextObject, TSubclassOf<UHUDLayer> HUD, bool bActive, UObject* Context, const FString& Flag,
                                               APlayerController* Player)
@@ -116,6 +117,38 @@ UDataWidget* UOmegaWidgetFunctions::TryGetDataWidget_FromSlot(const UObject* Wor
 	return nullptr;
 }
 
+UDataWidget* UOmegaWidgetFunctions::DataWidgets_GetFirstFromSource(const UObject* WorldContextObject,
+	APlayerController* Player, UObject* Source, TSubclassOf<UDataWidget> Class)
+{
+	TArray<UDataWidget*> temp=DataWidgets_GetFromSources(WorldContextObject,Player,{Source},Class);
+	if(temp.Num()>0) { return temp[0];}
+	return nullptr;
+}
+
+TArray<UDataWidget*> UOmegaWidgetFunctions::DataWidgets_GetFromSources(const UObject* WorldContextObject,
+                                                                       APlayerController* Player, TArray<UObject*> Sources, TSubclassOf<UDataWidget> Class)
+{
+	APlayerController* in_player=WorldContextObject->GetWorld()->GetFirstPlayerController();
+	if(Player) { in_player=Player;}
+	
+	TArray<UUserWidget*> temp;
+	TSubclassOf<UUserWidget> temp_class=UUserWidget::StaticClass();
+	if (Class) { temp_class=Class;}
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(in_player,temp,temp_class,false);
+	
+	TArray<UDataWidget*> out;
+	for(UUserWidget* temp_widget : temp)
+	{
+		UDataWidget* data_widget=Cast<UDataWidget>(temp_widget);
+		if(data_widget && Sources.Contains(data_widget->ReferencedAsset))
+		{
+			out.Add(data_widget);
+		}
+	}
+	
+	return out;
+}
+
 TArray<UObject*> UOmegaWidgetFunctions::GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass)
 {
 	TArray<UObject*> out;
@@ -124,6 +157,15 @@ TArray<UObject*> UOmegaWidgetFunctions::GetSourceAssetsFromDataWidgets(TArray<UD
 		if(temp_widget && (!ObjectClass || temp_widget->GetClass()->IsChildOf(ObjectClass))) { out.Add(temp_widget->ReferencedAsset);}
 	}
 	return out;
+}
+
+UOmegaSlateTheme* UOmegaWidgetFunctions::GetWidgetSlateTheme(UWidget* Widget)
+{
+	if (Widget)
+	{
+		return UOmegaWidgetInterface::GetTheme(Widget);
+	}
+	return nullptr;
 }
 
 bool UOmegaWidgetFunctions::GetWidgetScreenPosition(const UWidget* Widget, FVector2D& OutPosition, bool bGetCenter)

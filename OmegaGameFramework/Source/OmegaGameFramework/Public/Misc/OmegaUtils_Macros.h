@@ -15,7 +15,7 @@
 
 #define OGF_NAMED_ASSET_LIST(PropertyName) \
 TArray<FName> out; \
-GetMutableDefault<UOmegaAssetSettings>()->PropertyName.GetKeys(out); \
+GetMutableDefault<UOmegaSettings_Constants>()->PropertyName.GetKeys(out); \
 return out;
 
 
@@ -33,3 +33,5 @@ return out;
 
 
 #define UFUNC_C 	UFUNCTION(BlueprintCallable, Category="Equipment",DisplayName="")
+
+#define OGF_GLOBALREFRESH() GEngine->GetEngineSubsystem<UOmegaSubsystem_Engine>()->GlobalRefresh()

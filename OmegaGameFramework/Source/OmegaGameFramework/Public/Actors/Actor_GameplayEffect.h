@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interfaces/I_Combatant.h"
 #include "Interfaces/I_Common.h"
-#include "Blueprint/UserWidget.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Misc/OmegaUtils_Volume.h"
 #include "Actor_GameplayEffect.generated.h"
@@ -31,7 +31,7 @@ enum class EEffectLifetime : uint8
 };
 
 UCLASS(hideCategories = (Input, HLOD, WorldPartition, Physics, Collision, Volume, Replication, Rendering))
-class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IDataInterface_General
+class OMEGAGAMEFRAMEWORK_API AOmegaGameplayEffect : public AActor, public IDataInterface_General, public IDataInterface_Combatant
 {
 	GENERATED_BODY()
 	
@@ -42,7 +42,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
-	UPROPERTY(BlueprintAssignable) FOnEffectTriggered OnEffectTriggered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnEffectTriggered OnEffectTriggered;
 
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
@@ -58,7 +58,8 @@ public:
 	void TriggerEffect();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Gameplay|Effects")
-	bool EffectCanApply(UCombatantComponent* EffectInstigator, UObject* Context, FOmegaCommonMeta Meta);
+	bool EffectCanApply(UCombatantComponent* EffectInstigator,UCombatantComponent* EffectTarget, UObject* Context, FOmegaCommonMeta Meta
+		,FOmegaCommonMeta& OutMeta);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
 	void EffectBeginPlay(UObject* Context, FOmegaCommonMeta Meta);
@@ -88,10 +89,7 @@ public:
 	//####################################//####################################//####################################
 	//-----Generals
 	//####################################//####################################//####################################
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;\
-	virtual void GetGeneralAssetColor_Implementation(FGameplayTag Tag, FLinearColor& Color) override;
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
-	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
 	//####################################//####################################//####################################
 	//-----Tags-----//
 	//####################################//####################################//####################################
@@ -108,14 +106,13 @@ public:
 
 	void Local_RemoveEffects(FGameplayTagContainer Effects);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
-	FGameplayTag GetObjectGameplayCategory();
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "GameplayTags")
-	FGameplayTagContainer GetObjectGameplayTags();
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation();
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override;
 	
+	bool L_ContextUsesInterface() const;
+	
+	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
+	virtual TArray<FOmegaAttributeModifier> GetModifierValues_Implementation(UCombatantComponent* CombatantComponent) override;
+	virtual UPrimaryDataAsset* GetDamageType_Weight_Implementation(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, float& weight, int32& priority) override;
 };
 
 

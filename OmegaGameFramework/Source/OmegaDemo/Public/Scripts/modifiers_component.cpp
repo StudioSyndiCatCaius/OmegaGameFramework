@@ -1,23 +1,33 @@
 // Copyright Studio Syndicat 2026. All Rights Reserved.
 
 #include "modifiers_component.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "DataAssets/DA_Body.h"
+#include "Materials/MaterialInterface.h"
+#include "Engine/SkeletalMesh.h"
+#include "Engine/SkinnedAssetCommon.h"
+#include "Functions/F_Common.h"
 
 
 bool USkelMeshMod_Mesh::OnAppliedToComponent_Implementation(USkeletalMeshComponent* Component) const
 {
 	if (Component)
 	{
-		if (SkeletalMesh)
+		if (USkeletalMesh* skMesh=SkeletalMesh)
 		{
-			Component->SetSkeletalMesh(SkeletalMesh);
+			Component->SetSkeletalMesh(skMesh);
 			
-			for (auto* m : Materials)
+			const TArray<FSkeletalMaterial>& MeshMaterials = SkeletalMesh->GetMaterials();
+			for (int32 _ind = 0; _ind < MeshMaterials.Num(); _ind++)
 			{
-				if (m)
+				UMaterialInterface* inMat = MeshMaterials[_ind].MaterialInterface;
+				if (Materials.IsValidIndex(_ind) && Materials[_ind])
 				{
-					Component->SetMaterial(Materials.Find(m),m);
+					inMat = Materials[_ind];
 				}
+				Component->SetMaterial(_ind, inMat);
 			}
+			
 			TArray<FName> slot_list=Component->GetMaterialSlotNames();
 			for (FName n : slot_list)
 			{
@@ -38,6 +48,23 @@ bool USkelMeshMod_Mesh::OnAppliedToComponent_Implementation(USkeletalMeshCompone
 			{
 				Component->SetRelativeScale3D(Scale);
 			}
+		}
+	}
+	return true;
+}
+
+bool USkelMeshMod_BodyTypeGenerate::OnAppliedToComponent_Implementation(USkeletalMeshComponent* Component) const
+{
+	if (Component)
+	{
+		if (UOmegaBodyType* bodyTyp=BodyType.LoadSynchronous())
+		{
+			int32 inSeed=Seed;
+			if (UseActorSeed)
+			{
+				inSeed=UOmegaGameFrameworkBPLibrary::GetObjectSeed(Component->GetOwner());
+			}
+			BodyType->GenerateOnComponent_FromSeed(Component,inSeed);
 		}
 	}
 	return true;

@@ -37,7 +37,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="HUD")
 	void RemoveHUDLayer();
 
-	//UFUNCTION(BlueprintImplementableEvent)
+	//UFUNCTION(BlueprintImplementableEvent, Category="Omega")
 	//void LayerRemoved();
 
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
@@ -46,8 +46,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	bool bReverseCloseAnim=true;
 
-	UFUNCTION(BlueprintImplementableEvent) UWidgetAnimation* GetAppearAnimation();
-	UFUNCTION(BlueprintImplementableEvent) UWidgetAnimation* GetRemovedAnimation();
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega") UWidgetAnimation* GetAppearAnimation();
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega") UWidgetAnimation* GetRemovedAnimation();
 
 private:
 
@@ -57,7 +57,7 @@ private:
 
 };
 
-UINTERFACE(MinimalAPI) class UDataInterface_HUDSource : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - HUD Source") class UDataInterface_HUDSource : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_HUDSource
 {
 	GENERATED_BODY()

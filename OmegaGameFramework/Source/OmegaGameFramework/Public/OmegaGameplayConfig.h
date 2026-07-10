@@ -6,8 +6,8 @@
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "UObject/Object.h"
-#include "Misc/OmegaGameplayModule.h"
 #include "NiagaraSystem.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Types/Struct_InputConfig.h"
 #include "Types/Struct_SortedClassPath.h"
 #include "OmegaGameplayConfig.generated.h"
@@ -28,6 +28,7 @@ class AOmegaActorProcessor;
 class UOmegaTextFormater_Collection;
 class AOmegaActor_ChoiceBASE;
 class UOmegaGameplayModule;
+class UOmegaGameplayModuleSet;
 class AOmegaGameplaySystem;
 class UOmegaFileImportScript;
 

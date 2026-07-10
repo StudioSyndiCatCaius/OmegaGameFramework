@@ -2,6 +2,7 @@
 
 
 #include "LinearEvents/LinearEvent_ActorBase.h"
+#include "Engine/HitResult.h"
 
 
 

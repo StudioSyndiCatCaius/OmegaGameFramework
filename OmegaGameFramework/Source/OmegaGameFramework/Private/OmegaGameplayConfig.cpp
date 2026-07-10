@@ -7,7 +7,7 @@
 #include "OmegaGameManager.h"
 #include "Subsystems/Subsystem_World.h"
 #include "OmegaSettings.h"
-
+#include "Misc/OmegaGameplayModule.h"
 
 
 UOmegaGameplayConfig::UOmegaGameplayConfig()

@@ -10,5 +10,5 @@
 void UOmegaEditorSettings::GetHiddenVariables(UObject* Object, TArray<FName>& HiddenProperties,
                                               TArray<FName>& HiddenCategories)
 {
-	OGF_GAME_CORE()->Object_EditorHideVariables(Object,HiddenProperties,HiddenCategories);
+	//OGF_GAME_CORE()->Object_EditorHideVariables(Object,HiddenProperties,HiddenCategories);
 }

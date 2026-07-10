@@ -144,41 +144,6 @@ FSlateBrush UOmegaGameManager::Message_GetPortrait_Implementation(UObject* World
 	return FSlateBrush();
 }
 
-bool UOmegaGameManager::ActorGroup_AllowActor_Implementation(AActor* Actor, FGameplayTag GroupTag) const
-{
-	return true;
-}
-
-TArray<AActor*> UOmegaGameManager::ActorGroup_Filter_Implementation(const UObject* WorldContext,FGameplayTag GroupTag, const TArray<AActor*>& InitialGroupActors) const
-{
-	return InitialGroupActors;
-}
-
-bool UOmegaGameManager::Actor_CanSetTagTarget_Implementation(AActor* Instigator, AActor* Target, FGameplayTag Tag) const
-{
-	return true;
-}
-
-
-TArray<FName> UOmegaGameManager::L_GetGlobalParamKeys(EOmegaGlobalParamTarget Target, uint8 type) const
-{
-	TArray<FName> out_bools, out_ints, out_da;
-	Globals_GetParamKeys(Target,out_bools,out_ints,out_da);
-	if (type==0) { return out_bools; }
-	if (type==1) { return out_ints; }
-	if (type==2) {return out_da; }
-	return TArray<FName>();
-}
-
-TArray<FName> UOmegaGameManager::L_GetCombatantParamKeys(UCombatantComponent* Target, uint8 type) const
-{
-	
-	TArray<FName> out_bools, out_ints;
-	Combatant_GetParamKeys(Target,out_bools,out_ints);
-	if (type==0) { return out_bools; }
-	if (type==1) { return out_ints; }
-	return TArray<FName>();
-}
 
 USoundBase* UOmegaGameManager::Localization_GetClipFromPath_Implementation(UObject* WorldContext, const FString& subpath,
 	const FString& file) const
@@ -186,21 +151,6 @@ USoundBase* UOmegaGameManager::Localization_GetClipFromPath_Implementation(UObje
 	return nullptr;
 }
 
-
-/*
-void UOmegaGameCore::GetActorInstanceMetaParams_Implementation(AActor* Actor, TArray<FName>& OutBoolParams,
-                                                               TArray<FName>& OutIntParams, TArray<FName>& OutFloatParams, TArray<FName>& OutStringParams,
-                                                               TArray<FName>& OutDataAssetParams, TArray<FName>& OutActorParams) const
-{
-}
-*/
-
-
-float UOmegaGameManager::Attribute_GetMaxValue_Implementation(UCombatantComponent* Combatant,
-                                                           UOmegaAttribute* Attribute, int32 AttributeRank, float BaseValue) const
-{
-	return BaseValue;
-}
 
 
 FText UOmegaGameManager::Text_PostGameplayFormat_Implementation(const FText& Text, FGameplayTag Tag,

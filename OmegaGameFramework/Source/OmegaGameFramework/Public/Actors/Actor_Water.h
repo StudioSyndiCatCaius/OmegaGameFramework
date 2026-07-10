@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/Component_Combatant.h"
 #include "Components/PostProcessComponent.h"
 #include "Functions/F_Component.h"
 #include "Functions/F_ScriptedEffects.h"

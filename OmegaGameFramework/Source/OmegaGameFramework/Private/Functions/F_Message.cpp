@@ -5,6 +5,7 @@
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/Subsystem_World.h"
+#include "Engine/World.h"
 
 
 UOmegaSubsystem_World* L_GetWorldSub(UObject* WorldContext)

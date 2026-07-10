@@ -1,0 +1,36 @@
+Omega TO-DO
+__________________
+
+
+struct/struct container & instance object that defines a generic animation with an instigating actor
+
+
+
+BOP
+
+BOP.Set(FLAG,VAL)
+
+
+-- Add DefaultActorBindings for flow assets in GameCore
+
+
+BOP = //new whatever BOP type is
+
+bool val_b;
+BOP.Set('someBool',val_b)
+FVector out_v=BOP.Get<bool>('someBool')
+
+FVector val_v;
+BOP.Set('someVector',val_v)
+FVector out_v=BOP.Get<FVector>('someVector')
+
+
+
+--- GAME CORE ---
+
+To Add:
+	int32 Asset_OverrideInventoryMax(UPrimaryDataAsset* Asset, bool& bOverride)
+	
+
+Add components to World Manager
+* squad

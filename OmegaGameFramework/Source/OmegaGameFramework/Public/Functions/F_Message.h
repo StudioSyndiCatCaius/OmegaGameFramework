@@ -6,8 +6,10 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Subsystems/Subsystem_World.h"
+#include "Types/Struct_Message.h"
 #include "F_Message.generated.h"
+
+class UOmegaGameplayMessage;
 
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaFunctions_Message : public UBlueprintFunctionLibrary

@@ -2,7 +2,7 @@
 
 
 #include "Subsystems/Subsystem_Save.h"
-
+#include "Engine/GameViewportClient.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_World.h"
 #include "UnrealClient.h"
@@ -16,15 +16,16 @@
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
 #include "Engine/GameInstance.h"
+#include "Engine/Engine.h"
 #include "Misc/OmegaGameplayModule.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "ImageUtils.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "Misc/FileHelper.h"
-#include "Microsoft/AllowMicrosoftPlatformTypes.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Engine.h"
 
 
 // ====================================================================================================
@@ -33,6 +34,13 @@
 
 void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
+	// UOmegaSubsystem_GameInstance::Initialize calls LoadSynchronous extensively,
+	// which flushes the async loader and guarantees all Blueprint classes
+	// (including LuaState_Default_C and save game classes) are in memory.
+	// Without this ordering, LoadGameFromSlot on second launch tries to
+	// deserialize a Lua table using the default Lua state Blueprint while
+	// it is still being async-loaded, deadlocking both threads.
+	Colection.InitializeDependency<UOmegaSubsystem_GameInstance>();
 	Setup();
 }
 
@@ -60,6 +68,8 @@ FString UOmegaSaveSubsystem::GetSavePlaytimeString(bool bGlobal, bool bIncludeMi
 {
 	return GetSaveObject(bGlobal)->GetPlaytimeString(bIncludeMilliseconds);
 }
+
+
 
 
 void UOmegaSaveSubsystem::Deinitialize()
@@ -93,6 +103,7 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success, const F
 {
 	FString SlotName;
 	GetSaveSlotName(Slot, SlotName);
+	OGF_GLOBALREFRESH();
 	return LoadGame_Named(SlotName,Success,alt_path);
 }
 
@@ -121,6 +132,7 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame_Named(FString Slot, bool& Success,
 			return sav_gam;
 		}
 	}
+	OGF_GLOBALREFRESH();
 	return nullptr;
 }
 
@@ -158,16 +170,9 @@ void UOmegaSaveSubsystem::SaveActiveGame_Named(FString Slot, FGameplayTag SaveCa
 }
 
 
-bool UOmegaSaveSubsystem::SaveGameUnique(EUniqueSaveFormats Format)
+void UOmegaSaveSubsystem::WriteSaveDataToActive()
 {
-	return false;
-}
-
-
-
-bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory, const FString& alt_path)
-{
-	//LocalActiveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
+		//LocalActiveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
 	OGF_GAME_CORE()->OnSave_Saved(ActiveSaveData,GetGameInstance());
 	TArray<AActor*> ActorsForSaving;
 	UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UOmegaSaveInterface::StaticClass(), ActorsForSaving);
@@ -196,7 +201,6 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory,
 	ActiveSaveData->ActiveZone = GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_GetFirstLoaded();
 	ActiveSaveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
 	ActiveSaveData->SaveDate = UKismetMathLibrary::Now();
-	ActiveSaveData->SaveCategory=SaveCategory;
 
 	//Save lua table
 	ActiveSaveData->Lua_SaveTable(this,
@@ -205,10 +209,10 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory,
 	
 	// Capture screenshot synchronously from the current viewport so the file is guaranteed
 	// to exist on disk before the .sav is written (FScreenshotRequest is async and unreliable
-	// in packaged builds).
-	const FString fileName = Local_GetScreenshotPath(SlotName);
-	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+	// in packaged builds). FilePath must be set on ActiveSaveData before this is called.
+	if (!ActiveSaveData->FilePath.IsEmpty() && GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
 	{
+		const FString ScreenshotPath = FPaths::ChangeExtension(ActiveSaveData->FilePath, TEXT("png"));
 		FViewport* Viewport = GEngine->GameViewport->Viewport;
 		TArray<FColor> Bitmap;
 		const FIntPoint Size = Viewport->GetSizeXY();
@@ -221,11 +225,27 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory,
 				const TArray64<uint8>& CompressedData = ImageWrapper->GetCompressed();
 				FFileHelper::SaveArrayToFile(
 					TArrayView<const uint8>(CompressedData.GetData(), (int32)CompressedData.Num()),
-					*fileName);
+					*ScreenshotPath);
 			}
 		}
 	}
+}
 
+bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory, const FString& alt_path)
+{
+	// Set FilePath on the active save before WriteSaveDataToActive so the screenshot
+	// is written to the correct path alongside the .sav file.
+	if (alt_path.IsEmpty())
+	{
+		ActiveSaveData->FilePath = FPaths::ProjectSavedDir() / TEXT("SaveGames") / SlotName + TEXT(".sav");
+	}
+	else
+	{
+		ActiveSaveData->FilePath = alt_path + SlotName + TEXT(".sav");
+	}
+
+	WriteSaveDataToActive();
+	OGF_GLOBALREFRESH();
 	// WRITE TO DISK
 	if(alt_path.IsEmpty())
 	{
@@ -235,6 +255,7 @@ bool UOmegaSaveSubsystem::L_SaveGame(FString SlotName,FGameplayTag SaveCategory,
 	{
 		return OGF_Save::SaveGame(ActiveSaveData,alt_path,SlotName);
 	}
+
 	
 }
 
@@ -250,6 +271,7 @@ UOmegaSaveGame* UOmegaSaveSubsystem::CreateNewGame()
 	CreatedGame->OnSaveCreated(GetWorld()->GetGameInstance());
 	OGF_GAME_CORE()->OnSave_Created(CreatedGame,GetGameInstance());
 	OGF_Subsystems::oGameInstance(this)->Patch_Event(4,CreatedGame);
+	OGF_GLOBALREFRESH();
 	return CreatedGame;
 }
 
@@ -288,6 +310,7 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 	ULuaBlueprintFunctionLibrary::LuaSetGlobal(this,nullptr,GetMutableDefault<ULuaSettings>()->GameSave_Table,ActiveSaveData->Lua_LoadTable(this));
 	OGF_GAME_CORE()->OnSave_Started(GameData,GetGameInstance());
 	OGF_Subsystems::oGameInstance(this)->Patch_Event(5,GameData);
+	OGF_GLOBALREFRESH();
 	//LASTLY, Try and load saved level if chosen
 	if(LoadSavedLevel)
 	{
@@ -296,6 +319,8 @@ void UOmegaSaveSubsystem::StartGame(class UOmegaSaveGame* GameData, bool LoadSav
 		GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_TransitToLevel_Name(*ActiveSaveData->ActiveLevelName,EmptyPoint);
 	}
 	OnNewGameStarted.Broadcast(GameData,Tags);
+	//finally set as initialized
+	GameData->Initialised=true;
 }
 
 void UOmegaSaveSubsystem::Local_InitializeSaveObjects()
@@ -370,6 +395,7 @@ void UOmegaSaveSubsystem::SaveGlobalGame()
 		ULuaBlueprintFunctionLibrary::LuaGetGlobal(this,nullptr,GetMutableDefault<ULuaSettings>()->GlobalSave_Table));
 	const FString LocalGlSaveName = GetMutableDefault<UOmegaSettings>()->GlobalSaveName;
 	UGameplayStatics::SaveGameToSlot(GlobalSaveData, LocalGlSaveName, 0);
+	OGF_GLOBALREFRESH();
 }
 /*
 bool UOmegaSaveSubsystem::SetJsonSaveProperty(const FString& Property, const int32& Value, bool Global)
@@ -412,7 +438,10 @@ FGameplayTagContainer UOmegaSaveSubsystem::GetStoryTags(bool Global)
 {
 	FGameplayTagContainer FinalTags = GetSaveObject(Global)->SaveTags;
 
-	FinalTags.AppendTags(IDataInterface_General::Execute_GetObjectGameplayTags(ActiveSaveData));
+	FGameplayTagContainer SaveTags;
+	FGameplayTag _cat;
+	IDataInterface_General::Execute_GetObjectGameplayTags(ActiveSaveData, _cat, SaveTags);
+	FinalTags.AppendTags(SaveTags);
 
 	return FinalTags;
 	
@@ -542,15 +571,21 @@ void UOmegaSaveSubsystem::SetStoryStateActive(UOmegaStoryStateAsset* State, bool
 				//Check if the state can be activated
 				for(auto* TempScript : State->Scripts)
 				{
-					if(!TempScript->CanActivateState(this,State))
+					if(TempScript)
 					{
-						return;
+						if(!TempScript->CanActivateState(this,State))
+						{
+							return;
+						}
 					}
 				}
 				GetSaveObject(bGlobalSave)->ActiveStoryStates.AddUnique(State);
 				for(auto* TempScript : State->Scripts)
 				{
-					TempScript->OnStateBegin(this,State);
+					if (TempScript)
+					{
+						TempScript->OnStateBegin(this,State);	
+					}
 				}
 			}
 			else
@@ -558,7 +593,10 @@ void UOmegaSaveSubsystem::SetStoryStateActive(UOmegaStoryStateAsset* State, bool
 				GetSaveObject(bGlobalSave)->ActiveStoryStates.Remove(State);
 				for(auto* TempScript : State->Scripts)
 				{
-					TempScript->OnStateEnd(this,State);
+					if(TempScript)
+					{
+						TempScript->OnStateEnd(this,State);
+					}
 				}
 			}
 		}
@@ -647,49 +685,6 @@ void UOmegaSaveBase::Lua_SaveTable(UObject* context, FLuaValue LuaValue)
 	LuaSavedTable.JsonObjectFromString(l);
 }
 
-
-//#############################################################################################################################################
-// SAVE STATE COMPONENT
-//#############################################################################################################################################
-
-void UOmegaSaveStateComponent::BeginPlay()
-{
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnSaveStateChanged.AddDynamic(this, &UOmegaSaveStateComponent::LocalStateChanged);
-	GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->OnSaveTagsEdited.AddDynamic(this, &UOmegaSaveStateComponent::LocalTagsEdited);
-	Refresh();
-	Super::BeginPlay();
-}
-
-void UOmegaSaveStateComponent::LocalStateChanged(FGameplayTag TagState, bool bGlobal)
-{
-	
-}
-
-void UOmegaSaveStateComponent::LocalTagsEdited(FGameplayTagContainer Tags, bool Added, bool bGlobal)
-{
-	if(bGlobalSave == bGlobal)
-	{
-		UOmegaSaveSubsystem* SaveSubsystemRef = GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>();
-		if(bGlobalSave == bGlobal)
-		{
-			if(!(VisibleOnSaveQuery.IsEmpty() || SaveSubsystemRef->SaveTagsMatchQuery(VisibleOnSaveQuery,bGlobalSave))	//If visible query is not empty & is valid
-				|| (!HiddenOnSaveQuery.IsEmpty() && SaveSubsystemRef->SaveTagsMatchQuery(HiddenOnSaveQuery,bGlobalSave)))	//OR if hidden is valid...
-			{
-				UOmegaGameFrameworkBPLibrary::SetActorActive(GetOwner(),false);	//...this hide this actor
-			}
-			else
-			{
-				UOmegaGameFrameworkBPLibrary::SetActorActive(GetOwner(),true);
-			}
-		}
-	}
-}
-
-void UOmegaSaveStateComponent::Refresh()
-{
-	LocalStateChanged(GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->GetSaveState(bGlobalSave),bGlobalSave);
-	LocalTagsEdited(FGameplayTagContainer(),false,bGlobalSave);
-}
 
 // ##############################################################################################################################
 // State Asset

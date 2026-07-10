@@ -16,6 +16,7 @@ void UFlowNode_GlobalScript::ExecuteInput(const FName& PinName)
 	TriggerFirstOutput(true);
 }
 
+#if WITH_EDITOR
 FString UFlowNode_GlobalScript::GetNodeDescription() const
 {
 	TArray<FString> out;
@@ -28,6 +29,7 @@ FString UFlowNode_GlobalScript::GetNodeDescription() const
 	}
 	return UKismetStringLibrary::JoinStringArray(out,"\n");
 }
+#endif
 
 UFlowNode_GlobalCondition::UFlowNode_GlobalCondition()
 {
@@ -49,7 +51,7 @@ void UFlowNode_GlobalCondition::ExecuteInput(const FName& PinName)
 		TriggerOutput(TEXT("false"),true);
 	}
 }
-
+#if WITH_EDITOR
 FString UFlowNode_GlobalCondition::GetNodeDescription() const
 {
 	TArray<FString> out;
@@ -62,3 +64,4 @@ FString UFlowNode_GlobalCondition::GetNodeDescription() const
 	}
 	return UKismetStringLibrary::JoinStringArray(out,"\n");
 }
+#endif

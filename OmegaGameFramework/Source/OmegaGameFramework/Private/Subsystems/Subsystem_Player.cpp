@@ -27,8 +27,11 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "OmegaGameFramework/OmegaCommons.h"
+#include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Widget/DataWidget.h"
+#include "Engine/Engine.h"
 
 
 // ================================================================================================================
@@ -77,13 +80,15 @@ void UOmegaSubsystem_Player::PlayerControllerChanged(APlayerController* NewPlaye
 		REF_Controller=NewPlayerController;
 		REF_Controller->OnPossessedPawnChanged.AddDynamic(this,&UOmegaSubsystem_Player::L_PlayerPawnChanged);
 		REF_Controller->SetTickableWhenPaused(true);
-		REF_Controller->InputComponent->SetTickableWhenPaused(true);
-		//REF_Controller->InputComponent->KeyBindings.Remove(KeyBind_Start);
-		//REF_Controller->InputComponent->KeyBindings.Remove(KeyBind_Stop);
+		if (REF_Controller->InputComponent)
+		{
+			REF_Controller->InputComponent->SetTickableWhenPaused(true);
 		
-		// Binding
-		KeyBind_Start=REF_Controller->InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &UOmegaSubsystem_Player::Input_OnKeyStart);
-		KeyBind_Stop=REF_Controller->InputComponent->BindKey(EKeys::AnyKey, IE_Released, this, &UOmegaSubsystem_Player::Input_OnKeyEnd);
+			// Binding
+			KeyBind_Start=REF_Controller->InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &UOmegaSubsystem_Player::Input_OnKeyStart);
+			KeyBind_Stop=REF_Controller->InputComponent->BindKey(EKeys::AnyKey, IE_Released, this, &UOmegaSubsystem_Player::Input_OnKeyEnd);	
+		}
+		
 		KeyBind_Start.bExecuteWhenPaused=true;
 		KeyBind_Start.bConsumeInput=false;
 		KeyBind_Stop.bExecuteWhenPaused=true;
@@ -107,7 +112,15 @@ void UOmegaSubsystem_Player::PlayerControllerChanged(APlayerController* NewPlaye
 		{
 			SS_GI=REF_Controller->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSubsystem_GameInstance>();
 		}
+		
+		//main hud
+		if (TSubclassOf<UHUDLayer> HudClass=OGF_CFG_STYLE()->MainPlayerHUD.LoadSynchronous())
+		{
+			RemoveHUDLayer(HudClass,"");
+			AddHUDLayer(HudClass,this,true);
+		}
 	}
+	OGF_GLOBALREFRESH();
 }
 
 void UOmegaSubsystem_Player::Input_OnKeyStart(FKey Key)
@@ -152,8 +165,20 @@ void UOmegaSubsystem_Player::Input_OnKeyEvent(uint8 event, FKey key, float dt, b
 			FOmegaInputKeyCacheData _InputKeyCacheData=SS_GI->InputKeyCacheData[key];
 			TArray<FGameplayTag> _actionList;
 			_InputKeyCacheData.KeyInputs.GetKeys(_actionList);
-			TArray<TWeakObjectPtr<UObject>> _targets=InputTargets;
-			
+			TArray<TWeakObjectPtr<UObject>> _targets;
+			if (ObjectHoggingInput)
+			{
+				_targets.Add(ObjectHoggingInput);
+			}
+			else
+			{
+				_targets=InputTargets;
+			}
+
+			// Snapshot the top control widget before any actions fire, so that
+			// a menu opened mid-loop doesn't immediately receive its own cancel/confirm.
+			UWidget* PreActionControlWidget = (event == 0) ? ControlWidget_GetTop() : nullptr;
+
 			for (TWeakObjectPtr<UObject> _targetRef : _targets)
 			{
 				if (UObject* _target=_targetRef.Get())
@@ -167,14 +192,19 @@ void UOmegaSubsystem_Player::Input_OnKeyEvent(uint8 event, FKey key, float dt, b
 							{
 							case 0:  // INPUT - Start
 								IDataInterface_InputAction::Execute_OnInputAction_Begin(_target, REF_Controller,_actionTag,_foundAxis);
-							
+
 								if (_actionTag==OGF_CFG()->InputAction_UI_Confirm)
 								{
-									InputConfirm();
+									if (PreActionControlWidget) { IWidgetInterface_Input::Execute_InputConfirm(PreActionControlWidget); }
 								}
 								else if (_actionTag==OGF_CFG()->InputAction_UI_Cancel)
 								{
-									InputCancel();
+									if (PreActionControlWidget) { IWidgetInterface_Input::Execute_InputCancel(PreActionControlWidget); }
+								}
+								//navigate on AXIS
+								else if (_actionTag==OGF_CFG()->InputAction_UI_Navigate)
+								{
+									//InputNavigate(FVector2D(_foundAxis));
 								}
 							
 								break;
@@ -189,6 +219,7 @@ void UOmegaSubsystem_Player::Input_OnKeyEvent(uint8 event, FKey key, float dt, b
 							case 2:  // INPUT - Tick
 								IDataInterface_InputAction::Execute_OnInputAction_Update(_target, REF_Controller,_actionTag,dt,_foundAxis);
 							
+								//navigate on AXIS
 								if (_actionTag==OGF_CFG()->InputAction_UI_Navigate && f_UiNavCooldown<=0.0)
 								{
 									f_UiNavCooldown=OGF_CFG()->InputAction_UI_Navigate_Cooldown;
@@ -272,11 +303,7 @@ UMenu* UOmegaSubsystem_Player::OpenMenu(class TSubclassOf<UMenu> MenuClass, UObj
 			LocalMenu->OpenMenu(Tags, Context, REF_Controller, Flag);	//Set Menu Context, Tags, and Player Controller
 			bool MultiMenu = OpenMenus.IsValidIndex(1);
 			OnMenuOpened.Broadcast(LocalMenu, Tags, MultiMenu);
-
-			if (AutoFocus)
-			{
-				SetControlWidget(LocalMenu);
-			}
+			
 			return LocalMenu;
 		}
 	}
@@ -324,21 +351,53 @@ UMenu* UOmegaSubsystem_Player::GetMenu(TSubclassOf<UMenu> MenuClass, bool& bIsVa
 	{return nullptr;}
 }
 
-void UOmegaSubsystem_Player::SetControlWidget(UUserWidget* Widget)
+
+void UOmegaSubsystem_Player::ControlWidget_Register(UWidget* Widget, bool bRegister)
 {
-	if (Widget && Widget != FocusMenu)
+	if (Widget && Widget->GetClass()->ImplementsInterface(UWidgetInterface_Input::StaticClass()))
 	{
-		FocusMenu = Widget;
-		if(FocusMenu->GetClass()->ImplementsInterface(UWidgetInterface_Input::StaticClass()))
+		if (bRegister && !ControlWidget_Targets.Contains(Widget))
 		{
-			IWidgetInterface_Input::Execute_OnControlSetWidget(FocusMenu);
+			ControlWidget_Targets.Add(Widget);	
+		}
+		else if (!bRegister && ControlWidget_Targets.Contains(Widget))
+		{
+			ControlWidget_Targets.Remove(Widget);
 		}
 	}
+	ControlWidget_GetTop();
 }
 
-void UOmegaSubsystem_Player::ClearControlWidget()
+UWidget* UOmegaSubsystem_Player::ControlWidget_GetTop()
 {
-	FocusMenu = nullptr;
+	UWidget* TopWidget=nullptr;
+	int32 TopPriority=0;
+	for (UWidget* TempWidget : ControlWidget_Targets)
+	{
+		if (TempWidget)
+		{
+			int32 tempProir;
+			UWidget* gotWidget=IWidgetInterface_Input::Execute_ControlWidget_Get(TempWidget,tempProir);
+			if (gotWidget && gotWidget->IsRendered() && (TopPriority<tempProir))
+			{
+				TopWidget=gotWidget;
+				TopPriority=tempProir;
+			}
+		}
+	}
+	if(TopWidget)
+	{
+		if (IWidgetInterface_Input::Execute_InputBlocked(TopWidget))
+		{
+			return nullptr;
+		}
+		if (LastTopWidget!=TopWidget)
+		{
+			LastTopWidget=TopWidget;
+			IWidgetInterface_Input::Execute_OnBecomeControlWidget(LastTopWidget);
+		}
+	}
+	return TopWidget;
 }
 
 void UOmegaSubsystem_Player::RemoveMenuFromActiveList(UMenu* Menu)
@@ -370,33 +429,26 @@ void UOmegaSubsystem_Player::PlayUiSound(USoundBase* Sound)
 ////INPUT HANDLING
 void UOmegaSubsystem_Player::InputConfirm()												
 {
-	if (CanInterfaceInput()) {IWidgetInterface_Input::Execute_InputConfirm(FocusMenu);}			//Input Confirm
+	if (UWidget* FocusMenu=ControlWidget_GetTop()) {IWidgetInterface_Input::Execute_InputConfirm(FocusMenu);}			//Input Confirm
 }
 void UOmegaSubsystem_Player::InputCancel()												
 {
-	if (CanInterfaceInput()) {IWidgetInterface_Input::Execute_InputCancel(FocusMenu);}			//Input Cancel
+	if (UWidget* FocusMenu=ControlWidget_GetTop()) {IWidgetInterface_Input::Execute_InputCancel(FocusMenu);}			//Input Cancel
 }
 void UOmegaSubsystem_Player::InputNavigate(FVector2D Axis)										
 {
-	if (CanInterfaceInput()) {IWidgetInterface_Input::Execute_InputNavigate(FocusMenu, Axis);}	//Input Navigate
+	if (UWidget* FocusMenu=ControlWidget_GetTop()) {IWidgetInterface_Input::Execute_InputNavigate(FocusMenu, Axis);}	//Input Navigate
 }
 void UOmegaSubsystem_Player::InputPage(float Axis)											
 {
-	if (CanInterfaceInput()) {IWidgetInterface_Input::Execute_InputPage(FocusMenu, Axis); }		//Input Page
+	if (UWidget* FocusMenu=ControlWidget_GetTop()) {IWidgetInterface_Input::Execute_InputPage(FocusMenu, Axis); }		//Input Page
 }
 
 void UOmegaSubsystem_Player::InputTag(FGameplayTag Tag)
 {
-	if (CanInterfaceInput()) {IWidgetInterface_Input::Execute_InputTag(FocusMenu, Tag);}
+	if (UWidget* FocusMenu=ControlWidget_GetTop()) {IWidgetInterface_Input::Execute_InputTag(FocusMenu, Tag);}
 }
 
-bool UOmegaSubsystem_Player::CanInterfaceInput() const
-{
-	if(!FocusMenu) { return false; }
-	if(!FocusMenu->IsRendered()) { return false; }
-	if(IWidgetInterface_Input::Execute_InputBlocked(FocusMenu)) { return false; }
-	return true;
-}
 
 
 /// HUDS////
@@ -546,7 +598,10 @@ UOmegaHoverCursor* UOmegaSubsystem_Player::GetHoverCursor()
 	if(const TSubclassOf<UOmegaHoverCursor> incoming_class = OGF_CFG_STYLE()->HoverCursorClass.LoadSynchronous())
 	{
 		hover_cursor = Cast<UOmegaHoverCursor>(CreateWidget(GetWorld(), incoming_class));
-		hover_cursor->subsystem_ref=this;
+		if (hover_cursor)
+		{
+			hover_cursor->subsystem_ref=this;
+		}
 		return hover_cursor;
 	}
 	return nullptr;

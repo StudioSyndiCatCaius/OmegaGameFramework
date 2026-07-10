@@ -7,12 +7,13 @@
 #include "AssetTypeCategories.h"
 #include "CanvasItem.h"
 #include "ThumbnailRendering/ThumbnailManager.h"
+#include "Interfaces/I_Common.h"
 #include "CanvasTypes.h"
 #include "TextureResource.h"
 #include "GlobalRenderResources.h"
 #include "Engine/Texture2D.h"
 #include "UnrealClient.h"
-#include "Interfaces/I_AssetThumbnail.h"
+#include "Functions/F_Common.h"
 #include "Misc/GeneralDataObject.h"
 #include "Widget/UI_Widgets.h"
 
@@ -23,13 +24,9 @@ UDataItemThumbnailRender::UDataItemThumbnailRender(const FObjectInitializer& Obj
 
 FSlateBrush local_GetIcon(UObject* object)
 {
-	if(!FUObjectThreadContext::Get().IsRoutingPostLoad)
+	if(object)
 	{
-		if(object && !object->HasAllFlags(RF_NeedPostLoadSubobjects) &&  object->GetClass()->ImplementsInterface(UDataInterface_AssetThumbnail::StaticClass()))
-		{
-		
-			return IDataInterface_AssetThumbnail::Execute_GetThumbnail_Brush(object);
-		}
+		return UOmegaGameFrameworkBPLibrary::GetObjectIcon(object,FGameplayTag());
 	}
 	return FSlateBrush();
 }
@@ -37,9 +34,9 @@ FSlateBrush local_GetIcon(UObject* object)
 
 FText local_GetText(UObject* object)
 {
-	if(object && object->GetClass()->ImplementsInterface(UDataInterface_AssetThumbnail::StaticClass()))
+	if(object)
 	{
-		return IDataInterface_AssetThumbnail::Execute_GetThumbnail_Text(object);
+		return UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(object,FGameplayTag());
 	}
 	return FText();
 }
@@ -59,15 +56,7 @@ void UDataItemThumbnailRender::Draw(UObject* Object, int32 X, int32 Y, uint32 Wi
 			if (bUseTranslucentBlend)
 			{
 				static UTexture2D* GridTexture = nullptr;
-				FLinearColor bkg_tint=FLinearColor::White;
-				if(!FUObjectThreadContext::Get().IsRoutingPostLoad)
-				{
-					if(Object && Object->GetClass()->ImplementsInterface(UDataInterface_AssetThumbnail::StaticClass()))
-					{
-						GridTexture=IDataInterface_AssetThumbnail::Execute_GetThumbnailBack_Texture(Object);
-						bkg_tint=IDataInterface_AssetThumbnail::Execute_GetThumbnailBack_Tint(Object);
-					}
-				}
+				FLinearColor bkg_tint=UOmegaGameFrameworkBPLibrary::GetObjectColor(Object,FGameplayTag());
 				if (GridTexture == nullptr)
 				{
 					GridTexture = LoadObject<UTexture2D>(nullptr, TEXT("/OmegaGameFramework/Textures/ui/T_UI_Omega_IconBack1.T_UI_Omega_IconBack1"), nullptr, LOAD_None, nullptr);
@@ -143,7 +132,7 @@ void UDataItemThumbnailRender::Draw(UObject* Object, int32 X, int32 Y, uint32 Wi
 					TileSheetTexture->GetResource(),
 					bUseTranslucentBlend);
 					
-				Canvas->DrawShadowedText(5,5,local_GetText(Object),GEngine->GetMediumFont(),FLinearColor::White);
+				Canvas->DrawShadowedText(5,5,local_GetText(Object),GEngine->GetLargeFont(),FLinearColor::White);
 			
 				return;
 			// Draw a label overlay

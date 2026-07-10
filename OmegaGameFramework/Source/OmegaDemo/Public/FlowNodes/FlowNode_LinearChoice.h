@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Choice/OmegaLinearChoiceInstance.h"
+#include "Functions/F_GlobalScripting.h"
 #include "Nodes/FlowNode.h"
 #include "FlowNode_LinearChoice.generated.h"
 
@@ -69,6 +70,7 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, Category="LinearEvents", EditAnywhere) FName LinkID;
 	UPROPERTY(BlueprintReadOnly, Category="LinearEvents", instanced, EditAnywhere) UOmegaLinearChoice* Choice;
+	UPROPERTY(BlueprintReadOnly, Category="LinearEvents", EditAnywhere) FOmegaGlobalConditions Conditions;
 	
 	virtual void ExecuteInput(const FName& PinName) override;
 #if WITH_EDITOR

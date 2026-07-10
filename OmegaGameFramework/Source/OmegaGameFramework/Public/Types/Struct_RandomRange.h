@@ -10,8 +10,8 @@ struct FOmegaRandomRangeFloat
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Range") float Base;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Range") float Variation;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Range") float Base = 0.0f;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Range") float Variation = 0.0f;
 
 	float GetValue() const
 	{

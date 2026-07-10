@@ -91,15 +91,7 @@ void FOmegaActorDetailsCustomization::SetupMetadataCategory(IDetailLayoutBuilder
     
     try
     {
-        GameCore->GetActorInstanceMetaParams(
-            SelectedActor.Get(),
-            BoolParams,
-            IntParams,
-            FloatParams,
-            StringParams,
-            DataAssetParams,
-            ActorParams
-        );
+        
     }
     catch (...)
     {

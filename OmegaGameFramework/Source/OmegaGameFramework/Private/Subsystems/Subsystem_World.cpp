@@ -21,14 +21,16 @@
 #include "Engine/World.h"
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
+#include "OmegaSettings_Slate.h"
 #include "Actors/Actor_Null.h"
 #include "Actors/Actor_Quest.h"
 #include "Actors/Actor_Zone.h"
-#include "Components/AudioComponent.h"
+#include "Components/Component_Calendar.h"
 #include "Components/Component_GameplayActor.h"
 #include "Components/Component_AssetSquad.h"
 #include "Components/Component_Combatant.h"
 #include "DataAssets/DA_BGM.h"
+#include "DataAssets/DA_Calendar.h"
 #include "Functions/F_Combatant.h"
 #include "Functions/F_Common.h"
 #include "Functions/F_Entity.h"
@@ -36,11 +38,18 @@
 #include "Functions/F_Level.h"
 #include "Functions/F_Save.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/OmegaGameplayModule.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_GameManager.h"
+#include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "Types/OmegaActorInstanceMetadata.h"
+#include "Widget/HUDLayer.h"
+#include "Components/PrimitiveComponent.h"
+#include "TimerManager.h"
+#include "Interfaces/I_GameplayState.h"
+#include "Widget/Menu.h"
 
 
 void UOmegaSubsystem_World::Initialize(FSubsystemCollectionBase& Colection)
@@ -80,12 +89,31 @@ void UOmegaSubsystem_World::OnWorldBeginPlay(UWorld& InWorld)
 		}
 	}
 	
-	
-	for(auto* TempState : _sys->GetActiveStoryStates())
+	if (_sys)
 	{
-		for(auto* TempScript : TempState->Scripts)
+		for(auto* TempState : _sys->GetActiveStoryStates())
 		{
-			TempScript->OnLevelChange(_sys, TempState,level_name);
+			if (TempState)
+			{
+				for(auto* TempScript : TempState->Scripts)
+				{
+					if (TempScript)
+					{
+						TempScript->OnLevelChange(_sys, TempState,level_name);
+					}
+				}	
+			}
+		
+		}
+	}
+	
+	//main hud
+	if (TSubclassOf<UHUDLayer> HudClass=OGF_CFG_STYLE()->MainGlobalHUD.LoadSynchronous())
+	{
+		if (APlayerController* player0=UGameplayStatics::GetPlayerController(this,0))
+		{
+			OGF_Subsystems::oPlayer(player0)->RemoveHUDLayer(HudClass,"");	
+			OGF_Subsystems::oPlayer(player0)->AddHUDLayer(HudClass,this,false);
 		}
 	}
 	
@@ -94,12 +122,16 @@ void UOmegaSubsystem_World::OnWorldBeginPlay(UWorld& InWorld)
 
 AOmegaGameplaySystem* UOmegaSubsystem_World::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag,FOmegaCommonMeta meta)
 {
-	if (Class)
+	if (Class && !GetBlockedSystemTags().HasAnyExact(Class->GetDefaultObject<AOmegaGameplaySystem>()->SystemTags))
 	{
-		TSubclassOf<AOmegaGameplaySystem> _InClass=GetMutableDefault<UOmegaSettings>()->CorrectClass_System(Class);
-		
-		if(AOmegaGameplaySystem* DummySystem=Cast<AOmegaGameplaySystem>(SystemsData.Activate(_InClass,Context,Flag,this,nullptr,meta)))
+		if(AOmegaGameplaySystem* DummySystem=Cast<AOmegaGameplaySystem>(SystemsData.Activate(Class,Context,Flag,this,nullptr,meta)))
 		{
+			// Re-check with the actual spawned instance's tags — CDO tags may differ if tags are set dynamically
+			if(GetBlockedSystemTags().HasAnyExact(DummySystem->SystemTags))
+			{
+				DummySystem->Shutdown(this, "Blocked");
+				return nullptr;
+			}
 			OnGameplaySystemActiveStateChange.Broadcast(DummySystem,Context,Flag,true);
 			return DummySystem;
 		}
@@ -174,6 +206,31 @@ FGameplayTagContainer UOmegaSubsystem_World::GetBlockedSystemTags()
 	for(const auto* TempSys : GetActiveGameplaySystems(true))
 	{
 		out.AppendTags(TempSys->BlockSystemTags);
+	}
+	for (auto* tempMod : GameplayModifier_Registered)
+	{
+		if (tempMod)
+		{
+			out.AppendTags(IDataInterface_GameplayModifier::Execute_GameplayModifier_BlockedSystemTags(tempMod));
+		}
+	}
+	bool menusOpen = false;
+	
+	
+	if (UOmegaSubsystem_Player* SS_P=OGF_Subsystems::oPlayer(UGameplayStatics::GetPlayerController(GetWorld(),0)))
+	{
+		for (UMenu* m : SS_P->OpenMenus)
+		{
+			if (m && !m->bExemptFromGlobalSystemBlockingTags)
+			{
+				menusOpen=true;
+				break;
+			}
+		}
+	}
+	if (menusOpen)
+	{
+		out.AppendTags(GetMutableDefault<UOmegaSettings>()->BlockedSystemsWhenMenusOpen);
 	}
 	return out;
 }
@@ -252,8 +309,13 @@ void UOmegaSubsystem_World::Native_RegisterCombatant(UCombatantComponent* Combat
 		
 }
 
+void UOmegaSubsystem_World::ForceUpdateGameplayState()
+{
+	Local_RefreshSystemState();
+}
+
 void UOmegaSubsystem_World::Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-	float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
+                                             float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
 {
 	OnCombatantDamaged.Broadcast(Combatant, Attribute, FinalDamage, Instigator, DamageType, Hit);
 }
@@ -271,18 +333,6 @@ TArray<UCombatantComponent*> UOmegaSubsystem_World::GetAllCombatants()
 	return OutCombatants;
 }
 
-
-TArray<UCombatantComponent*> UOmegaSubsystem_World::RunCustomCombatantFilter(TSubclassOf<UCombatantFilter> FilterClass,
-	UCombatantComponent* Instigator, const TArray<UCombatantComponent*>& Combatants)
-{
-	TArray<UCombatantComponent*> OutCombatants;
-	if(FilterClass)
-	{
-		
-		OutCombatants = NewObject<UCombatantFilter>(this, FilterClass)->FilterCombatants(Instigator, Combatants);
-	}
-	return OutCombatants;
-}
 
 UOmegaGameplayMessage* UOmegaSubsystem_World::Message_Send(UObject* Instigator, FText Text, FGameplayTag CategoryTag,
 	FOmegaGameplayMessageMeta meta)
@@ -327,6 +377,21 @@ UOmegaGameplayMessage* UOmegaSubsystem_World::Message_GetFirstOfCategory(FGamepl
 
 void UOmegaSubsystem_World::L_MessageDelegateEvent(UOmegaGameplayMessage* Message)
 {
+}
+
+void UOmegaSubsystem_World::GameplayModifier_Register(UObject* Object, bool bIsRegistered)
+{
+	if (Object && Object->GetClass()->ImplementsInterface(UDataInterface_GameplayModifier::StaticClass()))
+	{
+		if (bIsRegistered && !GameplayModifier_Registered.Contains(Object))
+		{
+			GameplayModifier_Registered.Add(Object);
+		}
+		else if (!bIsRegistered && GameplayModifier_Registered.Contains(Object))
+		{
+			GameplayModifier_Registered.Remove(Object);
+		}
+	}
 }
 
 void UOmegaSubsystem_World::SetGlobalActorBinding(FName Binding, AActor* Actor)
@@ -539,10 +604,6 @@ void UOmegaSubsystem_World::SetActorRegisteredToGroup(FGameplayTag GroupTag, AAc
 	
 	if (registered)
 	{
-		if (!OGF_GAME_CORE()->ActorGroup_AllowActor(Actor,GroupTag))
-		{
-			return;
-		}
 		// Make sure the group exists in the map
 		if (!actorGroups.Contains(GroupTag))
 		{
@@ -587,7 +648,7 @@ TArray<AActor*> UOmegaSubsystem_World::GetActorsInGroup(FGameplayTag GroupTag) c
 	{
 		ac=actorGroups[GroupTag].Actors;
 	}
-	ac=OGF_GAME_CORE()->ActorGroup_Filter(this,GroupTag,ac);
+	//ac=OGF_GAME_CORE()->ActorGroup_Filter(this,GroupTag,ac);
 	for (auto* m : OGF_Subsystems::oGameInstance(this)->ActiveModules)
 	{
 		if (m)
@@ -610,11 +671,8 @@ void UOmegaSubsystem_World::SetActorTaggedTarget(AActor* Instigator, FGameplayTa
 		}
 		if(Target)
 		{
-			if (OGF_GAME_CORE()->Actor_CanSetTagTarget(Instigator,Target,Tag))
-			{
-				OnActorTaggedTargetChange.Broadcast(Instigator,Tag,Target,true);
-				temp_meta.TaggedTargets.Add(Tag,Target);
-			}
+			OnActorTaggedTargetChange.Broadcast(Instigator,Tag,Target,true);
+			temp_meta.TaggedTargets.Add(Tag,Target);
 		}
 		actors_meta.Add(Instigator,temp_meta);
 	}
@@ -657,18 +715,7 @@ AOmegaWorldManager::AOmegaWorldManager()
 	bNetLoadOnClient = false;
 	
 	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
-	Combatant=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
-	//Combatant_B=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant 2");
-	//Combatant_C=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant 3");
 	ActorID=CreateOptionalDefaultSubobject<UGameplayActorComponent>("ActorID");
-	AssetSquad=CreateOptionalDefaultSubobject<UAssetSquadComponent>("AssetSquad");
-	EntityInstances=CreateOptionalDefaultSubobject<UInstanceActorComponent>("Entity Instances");
-	
-	EntityInstances->Instance_NamePrefex="E__";
-	EntityInstances->InstancedActorClass=AOmegaInstancedEntity::StaticClass();
-	
-	AssetSquad->SaveBinding="_Global";
-	AssetSquad->bBindToSave=true;
 }
 
 void AOmegaInstancedEntity::PreBeginPlay()
@@ -704,6 +751,14 @@ FLuaValue AOmegaWorldManager::GetLevelLuaTable()
 
 void AOmegaWorldManager::BeginPlay()
 {
+	// Only the world manager placed/spawned in the top persistent level should run.
+	// Any copy found in a streamed sublevel destroys itself immediately.
+	if (GetLevel() != GetWorld()->PersistentLevel)
+	{
+		Destroy();
+		return;
+	}
+
 	Super::BeginPlay();
 	SS_GI->L_InitBgmComponent();
 	
@@ -722,22 +777,13 @@ void AOmegaWorldManager::BeginPlay()
 		SS_Save->StartGame(SS_Save->CreateNewGame(),false,FGameplayTagContainer());
 	}
 	
-	//Resume saved quests
-	for (auto* q : Quest_GetActive())
-	{
-		if (q)
-		{
-			OGF_Log::LogInfo("Attempting to resume: "+q->GetName());
-			Quest_Start(q,true);
-		}
-	}
-	
 	//lua autoload
 	if (OGF_CFG_LUA()->Level_AutoloadLuaTable)
 	{
 	//	GetLevelLuaTable();
 	}
 	uint8 _zoneTransitState=SS_GI->Zone_ZoneTransitState;
+	OGF_Log::LogInfo("ZONE_SPAWN_DBG: BeginPlay captured ZoneTransitState = " + FString::FromInt(_zoneTransitState));
 	SS_GI->Zone_ZoneTransitState=0;
 
 	//Do initial Load
@@ -749,37 +795,72 @@ void AOmegaWorldManager::BeginPlay()
 			switch (_zoneTransitState)
 			{
 			case OGF_ZONE_TANSITSTATE_FROMLEVEL: // LEVEL TRANSIT
-				
-				if (SS_GI->Zone_LevelTransitingFrom.IsValid())
+				OGF_Log::LogInfo("ZONE_SPAWN_DBG: Timer fired. Transit state = FROMLEVEL");
+				OGF_Log::LogInfo("ZONE_SPAWN_DBG: Zone_LevelTransitingFrom = " + SS_GI->Zone_LevelTransitingFrom.ToString());
+				OGF_Log::LogInfo("ZONE_SPAWN_DBG: Zone_LevelTransitingTag = " + SS_GI->Zone_LevelTransitingTag.ToString());
+				OGF_Log::LogInfo("ZONE_SPAWN_DBG: Zone_LevelTransitingFrom.IsNull() = " + FString(SS_GI->Zone_LevelTransitingFrom.IsNull() ? "TRUE" : "FALSE"));
+
+				if (!SS_GI->Zone_LevelTransitingFrom.IsNull())
 				{
 					if (AOmegaZonePoint* p=Zone_GetPointFromlevel(SS_GI->Zone_LevelTransitingFrom,SS_GI->Zone_LevelTransitingTag))
 					{
+						OGF_Log::LogInfo("ZONE_SPAWN_DBG: Spawn point FOUND: " + p->GetName() + " at " + p->GetActorLocation().ToString());
 						OGF_Log::Info("WORLD MANAGER: - Finishing Level Load: FROM: "+SS_GI->Zone_LevelTransitingFrom.ToString());
-						Zone_Transit(p,UGameplayStatics::GetPlayerController(this,0));
+						APlayerController* PC = UGameplayStatics::GetPlayerController(this,0);
+						OGF_Log::LogInfo("ZONE_SPAWN_DBG: PlayerController valid = " + FString(PC ? "TRUE" : "FALSE"));
+						Zone_Transit(p, PC);
 					}
 					else
 					{
+						OGF_Log::Warning("ZONE_SPAWN_DBG: Zone_GetPointFromlevel returned NULL - no matching spawn found");
 						OGF_Log::Warning("WORLD MANAGER: -		FAILED to find target spawn point for level transit");
 					}
 				}
-				
+				else
+				{
+					OGF_Log::Warning("ZONE_SPAWN_DBG: Zone_LevelTransitingFrom is NOT valid - skipping spawn search entirely");
+				}
+
 				break;
 			case OGF_ZONE_TANSITSTATE_FROMSAVE: // game load
-					
+
 				dummy_point=GetWorld()->SpawnActorDeferred<AOmegaZonePoint>(AOmegaZonePoint::StaticClass(),FTransform());
 				if (dummy_point)
 				{
-					dummy_point->SetLifeSpan(0.5);
+					// Increase lifespan: state 1 (fade-out) is skipped, but state 2 still needs the point alive
+					dummy_point->SetLifeSpan(2.0);
 					dummy_point->FinishSpawning(UOmegaSaveFunctions::GetSave_Game(this)->SavedPlayerTransform);
-					Zone_Transit(dummy_point,UGameplayStatics::GetPlayerController(this,0));
+					// The old level already ran state 1 (fade-out) before OpenLevel.
+					// Bypass Zone_Transit (which would restart from state 1) and jump directly to
+					// state 2 (teleport player) so the new level only needs to fade IN.
+					zone_targetSpawn = dummy_point;
+					zone_playerInTransit = UGameplayStatics::GetPlayerController(this, 0);
+					if (zone_playerInTransit)
+					{
+						L_SetTransitState(2);
+					}
+					else
+					{
+						OGF_Log::Warning("WORLD MANAGER: -		Could not start transit from save: Player invalid");
+					}
 				}
 				else
 				{
 					OGF_Log::Warning("WORLD MANAGER: -		Could not spawn dummy_point for game load");
 				}
-					
+
 				break;
 			default: ;
+		}
+
+		//Resume saved quests after player has been placed
+		for (auto* q : Quest_GetActive())
+		{
+			if (q)
+			{
+				OGF_Log::LogInfo("Attempting to resume: "+q->GetName());
+				Quest_Start(q,true,SS_Save->ActiveSaveData->quest_data.FindOrAdd(q));
+			}
 		}
 	}), OGF_CFG()->SpawnAtFirstPointDelay, false);
 	
@@ -818,13 +899,15 @@ void AOmegaWorldManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 // ------------------------------------------------------------
 // Quest
 // ------------------------------------------------------------
-AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bResumeFormSave)
+AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bOverrideStartData,
+	FOmegaQuestData data)
 {
-	if (Quest_CanStart(q) || bResumeFormSave)
+	if (Quest_CanStart(q) || bOverrideStartData)
 	{
 		if (AOmegaQuestInstance* new_inst=GetWorld()->SpawnActorDeferred<AOmegaQuestInstance>(AOmegaQuestInstance::StaticClass(),FTransform()))
 		{
 			new_inst->QuestAsset=q;
+			new_inst->WM=this;
 #if WITH_EDITOR
 			new_inst->SetActorLabel("QuestInst__"+q->GetName());
 #endif
@@ -832,7 +915,7 @@ AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bResum
 			new_inst->FinishSpawning(FTransform());
 			quest_instances.Add(new_inst);
 			new_inst->AttachToActor(NullActor_Quests,FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-			new_inst->StartQuest(bResumeFormSave);
+			new_inst->StartQuest(bOverrideStartData, data);
 			
 			return new_inst;
 		}
@@ -988,19 +1071,48 @@ TArray<AOmegaQuestInstance*> AOmegaWorldManager::Quest_GetInstancesFromQuests(TA
 
 AOmegaZonePoint* AOmegaWorldManager::Zone_GetPointFromlevel(TSoftObjectPtr<UWorld> Level, FGameplayTag Tag) const
 {
-	TArray<AActor*> ZonePoints;
-	UGameplayStatics::GetAllActorsOfClass(this,AOmegaZonePoint::StaticClass(),ZonePoints);
-	for (auto* a : ZonePoints)
+	// Strip PIE prefix so editor play matches asset references set in editor
+	FString NormalizedPath = Level.ToSoftObjectPath().ToString();
+	NormalizedPath.ReplaceInline(TEXT("UEDPIE_0_"), TEXT(""));
+	const FSoftObjectPath NormalizedLevelPath(NormalizedPath);
+
+	OGF_Log::LogInfo("ZONE_SPAWN_DBG: Zone_GetPointFromlevel called. Searching for Level='" + NormalizedPath + "' Tag='" + Tag.ToString() + "'");
+	OGF_Log::LogInfo("ZONE_SPAWN_DBG: Total registered ZonePoints: " + FString::FromInt(registered_zonepoints.Num()));
+
+	AOmegaZonePoint* LevelOnlyMatch = nullptr;
+	for (AOmegaZonePoint* p : registered_zonepoints)
 	{
-		if (AOmegaZonePoint* p=Cast<AOmegaZonePoint>(a))
+		if (!p) { continue; }
+		FString NormalizedFromLevel = p->FromLevel.ToSoftObjectPath().ToString();
+		NormalizedFromLevel.ReplaceInline(TEXT("UEDPIE_0_"), TEXT(""));
+		const FSoftObjectPath NormalizedFromLevelPath(NormalizedFromLevel);
+		OGF_Log::LogInfo("ZONE_SPAWN_DBG:   Checking point '" + p->GetName() + "' | FromLevel='" + NormalizedFromLevel + "' | ZonePointID='" + p->ZonePointID.ToString() + "' | LevelMatch=" + FString(NormalizedFromLevelPath==NormalizedLevelPath ? "YES" : "NO"));
+		if (NormalizedFromLevelPath==NormalizedLevelPath)
 		{
-			if (p->FromLevel==Level && (!Tag.IsValid() || p->ZonePointID==Tag))
+			// Best match: level + tag
+			if (Tag.IsValid() && p->ZonePointID==Tag)
 			{
+				OGF_Log::LogInfo("ZONE_SPAWN_DBG:   --> MATCHED level + tag. Returning this point.");
 				return p;
+			}
+			// Fallback: first point matching level only
+			if (!LevelOnlyMatch)
+			{
+				OGF_Log::LogInfo("ZONE_SPAWN_DBG:   --> Level-only match stored as fallback.");
+				LevelOnlyMatch = p;
 			}
 		}
 	}
-	return nullptr;
+
+	if (LevelOnlyMatch)
+	{
+		OGF_Log::LogInfo("ZONE_SPAWN_DBG: Returning level-only fallback: '" + LevelOnlyMatch->GetName() + "'");
+	}
+	else
+	{
+		OGF_Log::Warning("ZONE_SPAWN_DBG: No matching ZonePoint found at all. Returning NULL.");
+	}
+	return LevelOnlyMatch;
 }
 
 
@@ -1020,9 +1132,10 @@ void AOmegaWorldManager::L_SetTransitState(uint8 TransitState)
 		switch (zone_TransitState)
 		{
 			// none ----------------------------------------------------------------------
-		case 0: 
+		case 0:
 			OGF_Log::LogInfo("ZONE -	TRANSIT STATE = 0	:	NONE ");
 			_SetTransitSystemActive(false);
+			zone_bSkipFade=false;
 			break;
 			// Fade OUT ----------------------------------------------------------------------
 		case 1:
@@ -1036,7 +1149,7 @@ void AOmegaWorldManager::L_SetTransitState(uint8 TransitState)
 			OGF_Log::LogInfo("ZONE -	TRANSIT STATE = 2	:	TRANSITING ");
 			L_SetLoadStateSting("Loading Zone - Transiting");
 			
-			if (SS_GI->Zone_ZoneTransitState==1)
+			if (SS_GI->Zone_ZoneTransitState==1 || SS_GI->Zone_ZoneTransitState==2)
 			{
 				OGF_Log::LogInfo("ZONE -	TRANSIT STATE = 2.5	:	TO NEW LEVEL : ");
 				UGameplayStatics::OpenLevel(this,transitLevelTarget);
@@ -1049,12 +1162,17 @@ void AOmegaWorldManager::L_SetTransitState(uint8 TransitState)
 					zone_playerInTransit->SetControlRotation(zone_targetSpawn->GetActorRotation());
 					SS_World->OnZone_PlayerSpawnAtPoint.Broadcast(zone_playerInTransit,zone_targetSpawn);
 				}
-				
-				GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()
+
+				const uint8 _afterTransitState = zone_bSkipFade ? 4 : 3;
+				f_zoneTransitAnimTime = OGF_CFG()->SpawnAtFirstPointDelay;
+				if (f_zoneTransitAnimTime <= 0.0f)
 				{
-					L_SetTransitState(3);
-				
-				}), OGF_CFG()->SpawnAtFirstPointDelay, false);
+					L_SetTransitState(_afterTransitState);
+				}
+				else
+				{
+					i_zoneTransitNextState = _afterTransitState;
+				}
 			}
 			break;
 			// Fade IN ----------------------------------------------------------------------
@@ -1119,8 +1237,9 @@ void AOmegaWorldManager::TickActor(float DeltaTime, enum ELevelTick TickType, FA
 		if (f_zoneTransitAnimTime<=0.0)
 		{
 			OGF_Log::Warning("ZONE -		Transit Sequence -	 Timer END.");
-			L_SetTransitState(i_zoneTransitNextState);
-			i_zoneTransitNextState=-1;
+			const int8 _nextState = i_zoneTransitNextState;
+			i_zoneTransitNextState = -1;  // reset BEFORE calling, so the next state can set its own countdown
+			L_SetTransitState(_nextState);
 		}
 	}
 	if (SS_World)
@@ -1138,7 +1257,7 @@ void AOmegaWorldManager::TickActor(float DeltaTime, enum ELevelTick TickType, FA
 }	
 
 
-void AOmegaWorldManager::Zone_Transit(AOmegaZonePoint* Point, APlayerController* Player)
+void AOmegaWorldManager::Zone_Transit(AOmegaZonePoint* Point, APlayerController* Player, bool bSkipFade)
 {
 	if (Point && Player)
 	{
@@ -1148,7 +1267,8 @@ void AOmegaWorldManager::Zone_Transit(AOmegaZonePoint* Point, APlayerController*
 		{
 			OGF_Log::LogInfo("ZONE - Begining ZONE Transit ");
 			SS_GI->Zone_ZoneTransitState=0;
-			L_SetTransitState(1);
+			zone_bSkipFade=bSkipFade;
+			L_SetTransitState(bSkipFade ? 2 : 1);
 		}
 	}
 	else
@@ -1174,10 +1294,24 @@ ULevelSequencePlayer* AOmegaWorldManager::Zone_GetTransitSequencePlayer()
 		{
 			FMovieSceneSequencePlaybackSettings set;
 			set.bAutoPlay=false;
+			set.FinishCompletionStateOverride=EMovieSceneCompletionModeOverride::ForceKeepState;
 			zone_SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(),s,set,zone_SequenceActor);
 		}
 	}
 	return zone_SequencePlayer;
+}
+
+void AOmegaWorldManager::ZonePoint_Register(AOmegaZonePoint* Point, bool bIsRegistered)
+{
+	if (!Point) { return; }
+	if (bIsRegistered)
+	{
+		registered_zonepoints.AddUnique(Point);
+	}
+	else
+	{
+		registered_zonepoints.Remove(Point);
+	}
 }
 
 void AOmegaWorldManager::ZoneEntity_Register(UZoneEntityComponent* entity, bool bIsEntityRegistered)
@@ -1289,28 +1423,36 @@ bool AOmegaWorldManager::Zone_IsLoading() const
 	return zone_TransitState!=0;
 }
 
-void AOmegaWorldManager::Zone_TransitToLevel(TSoftObjectPtr<UWorld> Level, FGameplayTag SpawnID)
+void AOmegaWorldManager::Zone_TransitToLevel(TSoftObjectPtr<UWorld> Level, FGameplayTag SpawnID, bool bSkipFade)
 {
 	const FString StartPath = Level.ToString();
 	FString EmptyPath;
 	FString targetLevel;
 	StartPath.Split(TEXT("."),&EmptyPath,&targetLevel, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
 	OGF_Log::Info("Try Transit to soft level: "+targetLevel);
-	Zone_TransitToLevel_Name(FName(targetLevel),SpawnID);
+	Zone_TransitToLevel_Name(FName(targetLevel),SpawnID,bSkipFade);
 }
 
-void AOmegaWorldManager::Zone_TransitToLevel_Name(FName Level, FGameplayTag SpawnID)
+void AOmegaWorldManager::Zone_TransitToLevel_Name(FName Level, FGameplayTag SpawnID, bool bSkipFade)
 {
 	OGF_Log::LogInfo("ZONE - Begining LEVEL Transit ");
-	SS_GI->Zone_ZoneTransitState=1;
+	//if transit state not aleady set, set state as LevelTransit
+	if (SS_GI->Zone_ZoneTransitState==0)
+	{
+		SS_GI->Zone_ZoneTransitState=1;
+	}
 	const UWorld* CurrentWorld = GetWorld();
 	const ULevel* CurrentLevel = CurrentWorld->GetCurrentLevel();
 	const TSoftObjectPtr<UWorld> LevelAssetPtr(CurrentLevel->GetOuter());
 	SS_GI->Zone_LevelTransitingFrom=LevelAssetPtr;
 	SS_GI->Zone_LevelTransitingTag=SpawnID;
 	transitLevelTarget=Level;
-	
-	L_SetTransitState(1);
+	zone_bSkipFade=bSkipFade;
+	if (OGF_CFG()->FadeBGMOnLevelTransit)
+	{
+		SS_GI->BGM_Stop(true);
+	}
+	L_SetTransitState(bSkipFade ? 2 : 1);
 }
 
 
@@ -1340,39 +1482,12 @@ TArray<UZoneEntityComponent*> AOmegaWorldManager::GetRegisteredZoneEntities_OfLe
 	return out;
 }
 
-TArray<AOmegaInstancedEntity*> AOmegaWorldManager::GetInstanceEntities_OfSquad(UAssetSquad_Identity* Squad) const
-{
-	TArray<AOmegaInstancedEntity*> out;
-	if (Squad)
-	{
-		TArray<UPrimaryDataAsset*> as=AssetSquad->GetSquadMembers(Squad);
-		for (auto* a :as)
-		{
-			if (a)
-			{
-				
-			}
-		}
-	}
-	return out;
-}
 
 
 void AOmegaWorldManager::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	if (UPrimaryDataAsset* da=OGF_CFG()->GlobalEntityIdentity.LoadSynchronous())
-	{
-		if (Combatant)
-		{
-			Combatant->entity_id=UOmegaFunctions_Entity::Conv_DataAsset_2_EntityID(da);
-			Combatant->use_entity_id=true;
-		}
-		if (ActorID)
-		{
-			ActorID->SetIdentitySourceAsset(da);
-		}
-	}
+	
 }
 
 FOmegaActorInstanceMetadata AOmegaWorldManager::GetActorMetadata(AActor* Actor) const

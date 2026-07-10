@@ -6,16 +6,6 @@
 #include "DataAssets/DA_Common_EquipType.h"
 
 
-FOmegaCombatantSources UOAsset_CommonEquipment::L_GetCombatMods() const
-{
-	FOmegaCombatantSources base=CombatModifiers;
-	if(Type)
-	{
-		base.Append(Type->Sources,UseType_AttributeMods,UseType_DamageMods,UseType_Skills);
-	}
-	return base;
-}
-
 bool UOAsset_CommonEquipment::CanEquipItem_Implementation(UCombatantComponent* Component,UEquipmentSlot* Slot)
 {
 	
@@ -42,7 +32,7 @@ bool UOAsset_CommonEquipment::CanEquipItem_Implementation(UCombatantComponent* C
 TArray<FOmegaAttributeModifier> UOAsset_CommonEquipment::GetModifierValues_Implementation(
 	UCombatantComponent* CombatantComponent)
 {
-	TArray<FOmegaAttributeModifier> g=L_GetCombatMods().GetAttributeMods(CombatantComponent);
+	TArray<FOmegaAttributeModifier> g;
 	for(auto& p : Attributes)
 	{
 		if(p.Key)
@@ -63,16 +53,6 @@ TArray<FOmegaAttributeModifier> UOAsset_CommonEquipment::GetModifierValues_Imple
 	return FOmegaAttributeModifier::Simplify(g);
 }
 
-float UOAsset_CommonEquipment::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
-	UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
-{
-	return L_GetCombatMods().GetDamageMods(Attribute,Target,Instigator,BaseDamage,DamageType,Context);
-}
-
-TArray<UPrimaryDataAsset*> UOAsset_CommonEquipment::GetSkills_Implementation(UCombatantComponent* Combatant)
-{
-	return L_GetCombatMods().GetSkills(Combatant);
-}
 
 UOAsset_Appearance* UOAsset_CommonEquipment::GetAppearanceAsset_Implementation()
 {

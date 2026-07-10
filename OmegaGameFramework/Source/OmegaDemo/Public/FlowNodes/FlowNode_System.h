@@ -11,6 +11,7 @@
 #include "Widget/Menu.h"
 #include "FlowNode_System.generated.h"
 
+class IDataInterface_CombatEncounter;
 class AOmegaQuestInstance;
 class UOmegaEncounter_Asset;
 class UOmegaQuestComponent;
@@ -82,10 +83,12 @@ public:
 
 	UFUNCTION() TArray<FName> L_GetConstants() const;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️System (Constant)",meta=(GetOptions="L_GetConstants")) FName Constant;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️System") TSubclassOf<AOmegaGameplaySystem> System;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="🔷Context")
-	UObject* Context;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️System (Constant)",meta=(EditCondition="!bUseLiteralSystem",GetOptions="L_GetConstants"))
+	FName Constant;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️System (Literal)",meta=(EditCondition="bUseLiteralSystem"))
+	TSubclassOf<AOmegaGameplaySystem> System;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game") bool bUseLiteralSystem;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="🔷Context") UObject* Context;
 };
 
 UCLASS(DisplayName="⚔️System - Combat Encounter",Category="Game")
@@ -104,7 +107,7 @@ public:
 	virtual UObject* L_GetContext() const override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
-	TSoftObjectPtr<UOmegaEncounter_Asset> Encounter;
+	TScriptInterface<IDataInterface_CombatEncounter> Encounter;
 };
 
 UCLASS(DisplayName="💬System - Flow Asset",Category="Game")
@@ -161,10 +164,11 @@ public:
 	
 	UFUNCTION() TArray<FName> L_GetConstants() const;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️Menu (Constant)",meta=(GetOptions="L_GetConstants"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️Menu (Constant)",meta=(EditCondition="!bUseLiteralMenu",GetOptions="L_GetConstants"))
 	FName Constant;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️Menu")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙️Menu",meta=(EditCondition="bUseLiteralMenu"))
 	TSubclassOf<UMenu> Menu;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game") bool bUseLiteralMenu;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
 	UObject* Context;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
@@ -199,6 +203,8 @@ public:
 	bool TransitIfNotOnLevel;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flow")
 	FGameplayTag SpawnID;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flow",AdvancedDisplay)
+	bool bSkipFade;
 };
 
 

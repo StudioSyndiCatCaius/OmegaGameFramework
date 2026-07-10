@@ -7,23 +7,59 @@
 #include "GameFramework/Actor.h"
 #include "Actor_Spawnable.generated.h"
 
+class UOmegaFlowAssetBase;
+class UOmegaZoneData;
+
 USTRUCT(BlueprintType)
 struct FOmegaSpawnableConfig
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable",meta=(GetOptions="L_getSpawnables"))
-	FName NamedSpawnable;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable",meta=(MustImplement="/Script/OmegaGameFramework.ActorInterface_Spawnable"))
-	TSubclassOf<AActor> SpawnableClass;
+	TSubclassOf<AActor> Class;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
 	TObjectPtr<UPrimaryDataAsset> Identity;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	TSoftObjectPtr<UOmegaFlowAssetBase> Flow;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	TObjectPtr<UOmegaZoneData> Zone;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
+	TArray<FName> Tags;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaBitflagsBase Bitflags;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaClassNamedLists Lists;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable") FOmegaActorRelatives Relatives;
+	UPROPERTY() FOmegaBitflagsBase Bitflags;
+	UPROPERTY() FOmegaClassNamedLists Lists;
+	UPROPERTY() FOmegaActorRelatives Relatives;
 	
 };
+
+
+USTRUCT(BlueprintType)
+struct FOmegaSpawnableSpawnConfig
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) bool bAutospawn=true;
+	
+	
+	//implement later. This means, if Zone is used, this actor will  spawned on zone load and despawned on zone exit
+	UPROPERTY() bool bConsineToZone=true;
+};
+
+
+
+USTRUCT(BlueprintType)
+struct FOmegaSpawnablePreviewConfig
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) FString Label;
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) FLinearColor Color=FLinearColor::White;
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) FVector RangeOffset = FVector::ZeroVector;
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) FVector RangeSize=FVector(50,50,95);
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) float LineThickness=1;
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) TObjectPtr<UTexture2D> Icon;
+	UPROPERTY(BlueprintReadWrite, Category="Spawnable", EditAnywhere) float IconSize=2;
+	
+};
+
 
 
 class UArrowComponent;
@@ -32,16 +68,16 @@ class UTextRenderComponent;
 // ===================================================================================================================
 // IntState
 // ===================================================================================================================
-UINTERFACE(MinimalAPI) class UActorInterface_Spawnable : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Actor🔵 - Spawnable") class UActorInterface_Spawnable : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IActorInterface_Spawnable
 {
 	GENERATED_BODY()
 
 public:
 	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - On Spawn")
-	void OnSpawnableSpawn(AOmegaActorSpawnable* Spawner, const FString& Flag);
+	void OnSpawnableSpawn(AOmegaActorSpawnable* Spawner);
 	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - Get Preview Config")
-	void GetSpawnablePreviewConfig(UTexture2D*& Icon, FVector& RootOffset, FText& Name,FColor& Color,float& IconScale,FVector& BoxExtent,float& BoxThickness);
+	FOmegaSpawnablePreviewConfig GetSpawnablePreviewConfig();
 	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - Get Spawn Config")
 	void GetSpawnableSpawnConfig(bool& bAutospawn);
 	UFUNCTION(BlueprintNativeEvent, Category="ΩI|Spawnable",DisplayName="Spawnable - Get Actor Label")
@@ -49,17 +85,15 @@ public:
 };
 
 
-UCLASS()
+UCLASS(HideCategories=(Replication,Collision,HLOD,Physics,Networking,Input,Rendering,LevelInstance,Cooking,WorldPartition,DataLayers))
 class OMEGAGAMEFRAMEWORK_API AOmegaActorSpawnable : public AActor
 {
 	GENERATED_BODY()
 
 	UPROPERTY() AActor* REF_linkedActor=nullptr;
 	UPROPERTY() AActor* REF_Default=nullptr;
-	TSubclassOf<AActor> GetSpawnableClass();
-	bool L_ClassUsesInterface();
+	bool L_ClassUsesInterface() const;
 public:
-	UFUNCTION() TArray<FName> L_getSpawnables() const;
 	AOmegaActorSpawnable();
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
@@ -79,8 +113,6 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable", meta=(ShowOnlyInnerProperties))
 	FOmegaSpawnableConfig Config;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
-	FString Flag;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Spawnable")
 	int32 id;
 };

@@ -11,10 +11,19 @@
 #include "Sound/SoundClass.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Engine/Engine.h"
+#include "Misc/CommandLine.h"
 
 #include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Engine.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+
+void UOmegaUtilityFunctions::GlobalRefresh()
+{
+	OGF_GLOBALREFRESH();
+}
 
 bool UOmegaUtilityFunctions::AreStreamedLevelsLoading(UObject* WorldContextObject)
 {

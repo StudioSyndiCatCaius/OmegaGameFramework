@@ -16,7 +16,7 @@ class UCombatantComponent;
 class UOmegaAttribute;
 class UOmegaDamageType;
 
-UCLASS(BlueprintType, Blueprintable, EditInlineNew,HideCategories=("Private"))
+UCLASS(BlueprintType, Blueprintable, EditInlineNew,HideCategories=("Private"),Abstract)
 class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject
 {
 	GENERATED_BODY()
@@ -26,6 +26,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGameplayModule : public UObject
 	UPROPERTY() UOmegaSubsystem_GameInstance* REF_OwningManager;
 	UPROPERTY() UGameInstance* Ref_GamInst=nullptr;
 	UPROPERTY() TArray<UGameplayActorComponent*> registered_GameplayActors;
+	UPROPERTY() TArray<AActor*> registered_GameplayActorOwners;
 
 	UFUNCTION() void L_OnGameSystemChange(AOmegaGameplaySystem* system, UObject* context, const FString& flag, bool bActive);
 
@@ -79,7 +80,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Event")
 	void OnTaggedGlobalEvent(FGameplayTag Event, UObject* Instigator,FOmegaCommonMeta meta);
 	
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega")
 	void OnLevelOpened(const FString& LevelName, AOmegaGameMode* GameMode);
 	
 	//---------------------------------------------------------------------

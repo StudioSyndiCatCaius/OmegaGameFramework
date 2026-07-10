@@ -7,6 +7,8 @@
 #include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "OmegaGameplayConfig.h"
+#include "OmegaSettings_Constants.h"
+#include "OmegaSettings_Demo.h"
 #include "Components/Component_CombatEncounter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/OmegaUtils_Macros.h"
@@ -14,6 +16,7 @@
 #include "Subsystems/Subsystem_World.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_GameManager.h"
+#include "TimerManager.h"
 
 UFlowNode_GameplaySystemBASE::UFlowNode_GameplaySystemBASE()
 {
@@ -39,7 +42,8 @@ FOmegaCommonMeta UFlowNode_SystemClassBASE::L_GetMeta() const
 
 TArray<FString> UFlowNode_SystemClassBASE::L_GetFlags()
 {
-	return OGF_GAME_CORE()->Object_GetDefaultFlags(this);
+	return TArray<FString>();
+	//return OGF_GAME_CORE()->Object_GetDefaultFlags(this);
 }
 
 TSubclassOf<UObject> UFlowNode_GameplaySystemBASE::L_GetFlagClass() const
@@ -82,15 +86,15 @@ void UFlowNode_GameplaySystemBASE::ExecuteInput(const FName& PinName)
 TArray<FName> UFlowNode_GameplaySystem::L_GetConstants() const
 {
 	TArray<FName> out;
-	OGF_CFG()->Constant_Systems.GetKeys(out);
+	GetMutableDefault<UOmegaSettings_Constants>()->Constant_Systems.GetKeys(out);
 	return out;
 }
 
 TSubclassOf<AOmegaGameplaySystem> UFlowNode_GameplaySystem::L_GetSystem() const
 {
-	if (!Constant.IsNone())
+	if (!bUseLiteralSystem)
 	{
-		if (TSubclassOf<AOmegaGameplaySystem> m=OGF_CFG()->Constant_Systems.FindOrAdd(Constant).LoadSynchronous())
+		if (TSubclassOf<AOmegaGameplaySystem> m=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Systems.FindOrAdd(Constant).LoadSynchronous())
 		{
 			return m;
 		}
@@ -123,13 +127,18 @@ FString UFlowNode_GameplaySystem::GetNodeDescription() const
 #if WITH_EDITOR
 FString UFlowNode_System_Encounter::GetNodeDescription() const
 {
-	return "BATTLE: "+Encounter.GetAssetName()+"\n("+L_GetFlag()+")";
+	FString apnd;
+	if (Encounter.GetObject())
+	{
+		apnd=Encounter.GetObject()->GetName();
+	}
+	return "BATTLE: "+apnd+"\n("+L_GetFlag()+")";
 }
 #endif
 
 TSubclassOf<AOmegaGameplaySystem> UFlowNode_System_Encounter::L_GetSystem() const
 {
-	if(TSubclassOf<AOmegaGameplaySystem> _class=GetMutableDefault<UOmegaSettings>()->System_FlowEncounter.LoadSynchronous())
+	if(TSubclassOf<AOmegaGameplaySystem> _class=GetMutableDefault<UOmegaSettings_Demo>()->System_Encounter.LoadSynchronous())
 	{
 		return _class;
 	}
@@ -139,9 +148,9 @@ TSubclassOf<AOmegaGameplaySystem> UFlowNode_System_Encounter::L_GetSystem() cons
 
 UObject* UFlowNode_System_Encounter::L_GetContext() const
 {
-	if(!Encounter.IsNull())
+	if(Encounter.GetObject())
 	{
-		return Encounter.LoadSynchronous(); 
+		return Encounter.GetObject(); 
 	}
 	return nullptr;
 }
@@ -168,7 +177,7 @@ FString UFlowNode_System_DlgFlow::GetNodeDescription() const
 
 TSubclassOf<AOmegaGameplaySystem> UFlowNode_System_DlgFlow::L_GetSystem() const
 {
-	if(TSubclassOf<AOmegaGameplaySystem> _class=GetMutableDefault<UOmegaSettings>()->System_FlowAsset.LoadSynchronous())
+	if(TSubclassOf<AOmegaGameplaySystem> _class=GetMutableDefault<UOmegaSettings_Demo>()->System_DialogueFlow.LoadSynchronous())
 	{
 		return _class;
 	}
@@ -203,9 +212,9 @@ TSubclassOf<UObject> UFlowNode_Menu::L_GetFlagClass() const
 
 TSubclassOf<UMenu> UFlowNode_Menu::L_GetMenuClass() const
 {
-	if (!Constant.IsNone())
+	if (!bUseLiteralMenu)
 	{
-		if (TSubclassOf<UMenu> m=OGF_CFG()->Constant_Menus.FindOrAdd(Constant).LoadSynchronous())
+		if (TSubclassOf<UMenu> m=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Menus.FindOrAdd(Constant).LoadSynchronous())
 		{
 			return m;
 		}
@@ -236,7 +245,7 @@ void UFlowNode_Menu::ExecuteInput(const FName& PinName)
 	{
 		if(APlayerController* player=GetWorld()->GetFirstPlayerController())
 		{
-			if(UMenu* menu=player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->OpenMenu(L_GetMenuClass(),L_GetContext(),Tags,Flag))
+			if(UMenu* menu=player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->OpenMenu(L_GetMenuClass(),L_GetContext(),Tags,Flag+Flag_Append))
 			{
 				l_menu=menu;
 				l_menu->OnClosed.AddDynamic(this,&UFlowNode_Menu::L_End);
@@ -256,7 +265,7 @@ void UFlowNode_Menu::ExecuteInput(const FName& PinName)
 TArray<FName> UFlowNode_Menu::L_GetConstants() const
 {
 	TArray<FName> out;
-	OGF_CFG()->Constant_Menus.GetKeys(out);
+	GetMutableDefault<UOmegaSettings_Constants>()->Constant_Menus.GetKeys(out);
 	return out;
 }
 
@@ -285,17 +294,33 @@ UFlowNode_LevelTransitCheck::UFlowNode_LevelTransitCheck()
 
 void UFlowNode_LevelTransitCheck::ExecuteInput(const FName& PinName)
 {
-	if(Level.GetAssetName()==UGameplayStatics::GetCurrentLevelName(GetWorld()))
+	UWorld* W = GetWorld();
+	const FString TargetLevel = Level.GetAssetName();
+	const FString CurrentLevel = W ? UGameplayStatics::GetCurrentLevelName(W, true) : TEXT("NULL");
+	OGF_Log::LogInfo(FString::Printf(TEXT("LevelTransitCheck: Target='%s' | Current='%s' | Match=%s"),
+		*TargetLevel, *CurrentLevel, TargetLevel == CurrentLevel ? TEXT("YES") : TEXT("NO")));
+
+	if(W)
 	{
-		TriggerOutput(TEXT("true"),true);
-	}
-	else
-	{
-		if(TransitIfNotOnLevel)
+		FTimerHandle TimerHandle;
+		W->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this, W, TargetLevel]()
 		{
-			GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_TransitToLevel(Level,SpawnID);
-		}
-		TriggerOutput(TEXT("false"),true);
+			const FString CurrentLevelDelayed = UGameplayStatics::GetCurrentLevelName(W, true);
+			if(TargetLevel == CurrentLevelDelayed)
+			{
+				OGF_Log::LogInfo("di em GOOD");
+				TriggerOutput(TEXT("true"), true);
+			}
+			else
+			{
+				OGF_Log::LogInfo("di em BAD");
+				if(TransitIfNotOnLevel)
+				{
+					W->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_TransitToLevel(Level, SpawnID,bSkipFade);
+				}
+				TriggerOutput(TEXT("false"), true);
+			}
+		}), 0.1f, false);
 	}
 	Super::ExecuteInput(PinName);
 }

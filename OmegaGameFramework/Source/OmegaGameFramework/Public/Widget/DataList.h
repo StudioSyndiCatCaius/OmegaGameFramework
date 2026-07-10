@@ -12,6 +12,7 @@
 #include "Widget/DataWidget.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Delegates.h"
+#include "StructUtils/PropertyBag.h"
 #include "DataList.generated.h"
 
 class UMenu;
@@ -22,6 +23,9 @@ class SConstraintCanvas;
 class UPanelWidget;
 class UPrimaryDataAsset;
 class UDataWidget;
+class UDataTooltip;
+class UDataWidgetTraits;
+class UOmegaSlateStyle;
 class UCanvasPanel;
 class UWidgetSwitcher;
 
@@ -66,10 +70,8 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") TSubclassOf<UMenu> Submenu;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Entry") FGameplayTagContainer Tags;
 	virtual TSubclassOf<UMenu> GetSubmenuClass_Implementation() const override { return Submenu; };
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
-	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override { return Tags; };
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override { OutGameplayTags = Tags; };
 };
 
 
@@ -81,17 +83,20 @@ class OMEGAGAMEFRAMEWORK_API UDataList : public UUserWidget, public IWidgetInter
 
 public:
     UDataList(const FObjectInitializer& ObjectInitializer);
+	
+	UMenu* GetOwningMenu();
 
 	UPROPERTY() UDataTooltip* override_tooltip;
 	
-	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntrySelected;
-	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntryHovered;
-	UPROPERTY(BlueprintAssignable) FOnEntryDelegate OnEntryUnhovered;
-	UPROPERTY(BlueprintAssignable) FOnEntryHighlighted OnEntryHighlighted;
-	UPROPERTY(BlueprintAssignable) FOnDataListInputAxis OnNavigationOverflow;
-	UPROPERTY(BlueprintAssignable) FOnListDelegate OnInputCancel;
-	UPROPERTY(BlueprintAssignable) FOnDataListInputAxis OnInputNavigate;
-	UPROPERTY(BlueprintAssignable) FOnDataListInputPage OnInputPage;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnEntryDelegate OnEntrySelected;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnEntryDelegate OnEntryHovered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnEntryDelegate OnEntryUnhovered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnEntryDelegate OnEntryAdded;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnEntryHighlighted OnEntryHighlighted;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnDataListInputAxis OnNavigationOverflow;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnListDelegate OnInputCancel;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnDataListInputAxis OnInputNavigate;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnDataListInputPage OnInputPage;
 	
 	// ============================================================================================================
 	// UPROPERTIES
@@ -136,10 +141,7 @@ public:
 	// ---------------------------------------------------------------
 	// Entry
 	// ---------------------------------------------------------------
-#if WITH_EDITOR
-	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
-#endif
-	void ValidateTemplates();
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",DisplayName="💜Entry Class")
 	TSubclassOf<UDataWidget> EntryClass;
@@ -179,7 +181,7 @@ public:
 	UFUNCTION()
 	void Native_WidgetNotify(UDataWidget* Widget, FName Notify);
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnWidgetNotify OnEntryNotifed;
 
 	UFUNCTION(BlueprintCallable, Category="Entry")
@@ -199,15 +201,16 @@ public:
 	TMap<FName,UOmegaSlateStyle*> WidgetOverride_Styles;
 	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_float")) TMap<FName,float> WidgetOverride_Floats;
 	UPROPERTY(EditAnywhere, Category="StyleOverrides",meta=(GetOptions="L_getOverrideNames_Bool")) TMap<FName,bool> WidgetOverride_Bools;
-	
-	UPROPERTY(EditAnywhere,Category="EntryOverrides")
-	bool bCanOverrideSize;
-	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideSize"))
-	FVector2D OverrideSize;
-	UPROPERTY(EditAnywhere,Category="EntryOverrides")
+
+	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(InlineEditConditionToggle))
 	bool bCanOverrideIconSize;
 	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideIconSize"))
 	FVector2D OverrideIconSize;
+	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(InlineEditConditionToggle))
+	bool bCanOverrideBoxSize;
+	UPROPERTY(EditAnywhere,Category="EntryOverrides",meta=(EditCondition="bCanOverrideBoxSize"))
+	FVector2D OverrideBoxSize;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Overrides")
 	UMaterialInterface* Override_IconMaterial;
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
@@ -218,10 +221,19 @@ public:
 	UPROPERTY(EditAnywhere, Category="EntryOverrides")
 	TSubclassOf<UDataTooltip> Override_TooltipClass;
 
-	
-private:
-	UFUNCTION()
-	void SetNewControl(UUserWidget* NewWidget);
+	// ---------------------------------------------------------------
+	// Property Bag
+	// ---------------------------------------------------------------
+
+	/**
+	 * Per-instance property value overrides for entries.
+	 * The schema (property names/types) is driven by the EntryClass's WidgetPropertyBag — set there, not here.
+	 * Values edited here are stamped onto each new entry widget when it is added to the list.
+	 */
+	UPROPERTY(EditInstanceOnly, Category="PropertyBag")
+	FInstancedPropertyBag EntryPropertyBagOverrides;
+
+
 public:
 	//###########################################
 	// Entires - Read Only
@@ -316,7 +328,7 @@ public:
 	virtual void InputPage_Implementation(float Axis ) override;
 	virtual void InputConfirm_Implementation() override;
 	virtual void InputCancel_Implementation() override;
-	virtual void OnControlSetWidget_Implementation() override;
+	virtual void OnBecomeControlWidget_Implementation() override;
 
 	//Automatically sets control to this list upon hovering an entry.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="Input")
@@ -341,6 +353,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="DataList")
 	UObject* ListOwner;
 
+	UPROPERTY(BlueprintReadOnly, Category="🔍Preview") bool bPreviewHover;
+	UPROPERTY(BlueprintReadOnly, Category="🔍Preview") int32 PreviewHoverIndex;
 	
 protected:
 

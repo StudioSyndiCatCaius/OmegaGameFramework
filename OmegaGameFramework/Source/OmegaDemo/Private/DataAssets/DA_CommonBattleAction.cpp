@@ -4,30 +4,31 @@
 
 #include "Components/Component_Combatant.h"
 
-FOmegaScriptedAnimationData UOAsset_CommonBattleAction::GetScriptedAnimation_Implementation(FName name)
+
+
+FOmegaScriptedAnimationData UOAsset_CommonBattleAction::GetScriptedAnimation_Implementation(FGameplayTag Tag)
 {
-	if (!name.IsNone())
+	if (Tag.IsValid())
 	{
-		if (Animation_Named.Contains(name))
+		if (Animation_Named.Contains(Tag))
 		{
-			return Animation_Named[name];
+			return Animation_Named[Tag];
 		}
 		return FOmegaScriptedAnimationData();
 	}
 	return Animation;
 }
 
-FOmegaCustomScriptedEffects UOAsset_CommonBattleAction::GetScriptedEffects_Implementation(FName Name)
+FOmegaCustomScriptedEffects UOAsset_CommonBattleAction::GetScriptedEffects_Implementation(FGameplayTag Tag)
 {
-	if(!Name.IsNone())
+	if(Tag.IsValid())
 	{
-		if(Effects_Named.Contains(Name))
+		if(Effects_Named.Contains(Tag))
 		{
-			return Effects_Named[Name];
+			return Effects_Named[Tag];
 		}
 		return FOmegaCustomScriptedEffects();
 	}
-	FOmegaCustomScriptedEffects ef;
-	ef.CustomEffects=Effects;
-	return ef;
+	return Effects;
 }
+

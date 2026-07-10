@@ -82,9 +82,9 @@ public:
 
 	//------END
 
-	UPROPERTY(BlueprintAssignable) FOnFlowEventFinish OnFlowEventFinish;
-	UPROPERTY(BlueprintAssignable) FOnFlowNodeEntered OnFlowNodeEntered;
-	UPROPERTY(BlueprintAssignable) FOnFlowSignal OnFlowSignal;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFlowEventFinish OnFlowEventFinish;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFlowNodeEntered OnFlowNodeEntered;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnFlowSignal OnFlowSignal;
 
 	void Native_EndFlow(UFlowAsset* Asset, FName Output, const FString& Flag);
 	

@@ -7,6 +7,7 @@
 #include "Components/Component_Combatant.h"
 #include "Components/Component_Inventory.h"
 #include "Condition/Condition_DataAsset.h"
+#include "DataAssets/DA_EquipSlot.h"
 #include "Engine/DataAsset.h"
 #include "Engine/GameInstance.h"
 #include "Functions/F_Common.h"
@@ -60,43 +61,33 @@ void UEquipmentComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 */
 
-bool UOmegaEquipmentFunctions::IsItemEquippable(UPrimaryDataAsset* item, UCombatantComponent* component,
-	UEquipmentSlot* Slot)
-{
-	if (item)
-	{
-		if (item->GetClass()->ImplementsInterface(UDataInterface_Equipable::StaticClass()))
-		{
-			return IDataInterface_Equipable::Execute_CanEquipItem(item,component,Slot);
-		}
-		return true;
-	}
-	return false;
-}
 
 TArray<UPrimaryDataAsset*> UOmegaEquipmentFunctions::FilterEquippableItems(TArray<UPrimaryDataAsset*> items,
 	UCombatantComponent* component, UEquipmentSlot* Slot)
 {
 	TArray<UPrimaryDataAsset*>  out;
-	for(auto* p : items)
+	if (component && Slot)
 	{
-		if (p && IsItemEquippable(p,component,Slot))
+		for(auto* p : items)
 		{
-			out.Add(p);	
+			if (p && Slot->CanSlotEquipItemOnCombatant(component,p))
+			{
+				out.Add(p);	
+			}
 		}
 	}
 	return out;
 }
 
-TArray<UPrimaryDataAsset*> UOmegaEquipmentFunctions::GetEquippableItems_FromInventory(UCombatantComponent* Equipment,
-	UCombatantComponent* Inventory, UEquipmentSlot* Slot,bool bIncludedSources)
+TArray<UPrimaryDataAsset*> UOmegaEquipmentFunctions::GetEquippableItems_FromInventory(UCombatantComponent* Combatant,
+	UCombatantComponent* Inventory, UEquipmentSlot* Slot, int32 FilterMinimum)
 {
 	TArray<UPrimaryDataAsset*>  out;
-	if(Equipment && Inventory)
+	if(Combatant && Inventory)
 	{
 		TArray<UPrimaryDataAsset*>  i;
-		Inventory->Inventory_Get(1).GetKeys(i);
-		//return Equipment->FilterEquippableItems(i,Slot);
+		Inventory->Inventory_Get(FilterMinimum).GetKeys(i);
+		return FilterEquippableItems(i,Combatant,Slot);
 	}
 	return  out;
 		

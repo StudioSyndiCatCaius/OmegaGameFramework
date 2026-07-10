@@ -36,7 +36,7 @@ public:
 	}
 	// FTickableGameObject End
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnAsyncFadeCamReached Finished;
 
 	UPROPERTY() bool ending;
@@ -51,6 +51,6 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",DisplayName="Ω🔷 Fade Camera")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly, WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",DisplayName="Ω🔷 Fade Camera")
 	static UAsyncAction_FadeCamera* FadeCameraAsync(UObject* WorldContextObject, APlayerController* Player, float TargetAlpha, float Duration, FLinearColor FadeColor, bool FadeAudio, bool HoldWhenFinished = true);
 };

@@ -4,14 +4,17 @@
 #include "Widget/Menu.h"
 
 #include "OmegaSettings_Slate.h"
+#include "TimerManager.h"
 #include "Components/Component_Combatant.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_World.h"
 #include "Subsystems/Subsystem_Player.h"
+#include "Engine/Engine.h"
 #include "Widget/DataList.h"
 
 void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerController* PlayerRef, const FString& Flag)
@@ -19,10 +22,6 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	if(Context) { ContextObject=Context;}
 	AddToPlayerScreen(SlateLayerIndex);
 	
-	if(GetDefaultDataList() && ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_CommonMenu::StaticClass()))
-	{
-		GetDefaultDataList()->AddAssetsToList(IDataInterface_CommonMenu::Execute_GetDataListEntries(ContextObject,this),"");
-	}
 	SetOwningPlayer(PlayerRef);
 	if (!bIsOpen)
 	{
@@ -31,22 +30,36 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 		Reset();
 		
 		WrapperActor=Cast<AOmegaMenuWrapperActor>(GetWorld()->SpawnActor(AOmegaMenuWrapperActor::StaticClass()));
+		if (WrapperChildActor)
+		{
+			WrapperActor->ChildActor->SetChildActorClass(WrapperChildActor);
+		}
 		
 		TempTags = Tags;
 		PrivateInputBlocked = true;
-		InputBlock_Remaining=InputBlockDelay;
+		InputBlock_Remaining = InputBlockDelay;
+		if (InputBlockDelay > 0.0f)
+		{
+			GetWorld()->GetTimerManager().SetTimer(InputBlockTimer, this, &UMenu::InputBlockTimer_End, InputBlockDelay, false);
+		}
+		else
+		{
+			InputBlock_Remaining = 0.0f;
+		}
 		SetIsEnabled(true);
 		SetVisibility(VisibilityOnOpen);
-		
+		SetSubstate_Index(0);
 		OnOpened.Broadcast(Tags, Flag);
 		MenuOpened(Tags, Context, Flag);
 		
 		if (SS_Player)
 		{
+			SS_Player->OpenMenus.AddUnique(this);
 			if(CustomInputMode)
 			{
 				SS_Player->SetCustomInputMode(CustomInputMode);
-			}	
+			}
+			SS_Player->ControlWidget_Register(this,true);
 		}
 
 		if (SS_World)
@@ -54,20 +67,18 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 			if(ParallelGameplaySystem)
 			{
 				SS_World->ActivateGameplaySystem(ParallelGameplaySystem, this);
-				
-				TArray<FGameplayTag> _tags;
-				BlockedSystemTags.GetGameplayTagArray(_tags);
-				SS_World->ExtraBlockedSystemTags.Append(_tags);
 			}	
+			SS_World->GameplayModifier_Register(this,true);
+			SS_World->ForceUpdateGameplayState();
 		}
 		
 		if(OpenSound)
 		{
 			PlaySound(OpenSound);
 		}
-		else if(DefaultToStyleSounds && !OGF_CFG_STYLE()->Sound_Menu_Open.IsNull())
+		else if (UOmegaSlateTheme* _theme=UOmegaWidgetInterface::GetTheme(this))
 		{
-			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Open.LoadSynchronous());
+			PlaySound(_theme->Sound_Menu_Open);
 		}
 		
 		if(GetOpenAnimation())
@@ -87,12 +98,14 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 			Native_CompleteOpen();
 		}
 	}
+	OGF_GLOBALREFRESH();
 }
 
 void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
 {
-	if (bIsOpen && CanCloseMenu(Tags,Context,Flag))
+	if (bIsOpen && InputBlock_Remaining <= 0.0f && CanCloseMenu(Tags,Context,Flag))
 	{
+		GetWorld()->GetTimerManager().ClearTimer(InputBlockTimer);
 		bIsOpen = false;
 		PrivateInputBlocked = true;
 		
@@ -110,31 +123,16 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		SubsystemRef->RemoveMenuFromActiveList(this);
 		const bool LastMenu = !SubsystemRef->OpenMenus.IsValidIndex(0);
 		SubsystemRef->OnMenuClosed.Broadcast(this, TempTags, LastMenu);
-
-		if(SubsystemRef->FocusMenu && SubsystemRef->FocusMenu==this)
-		{
-			SubsystemRef->ClearControlWidget();
-		}
 		
-		TArray<FGameplayTag> _tags;
-		BlockedSystemTags.GetGameplayTagArray(_tags);
-		for (FGameplayTag Tag : _tags)
-		{
-			if (SS_World->ExtraBlockedSystemTags.Contains(Tag))
-			{
-				SS_World->ExtraBlockedSystemTags.RemoveSingle(Tag);	
-			}
-		}
-
 		SetVisibility(ESlateVisibility::HitTestInvisible);
 
 		if(CloseSound)
 		{
 			PlaySound(CloseSound);
 		}
-		else if(DefaultToStyleSounds && OGF_CFG_STYLE()->Sound_Menu_Close)
+		else if (UOmegaSlateTheme* _theme=UOmegaWidgetInterface::GetTheme(this))
 		{
-			PlaySound(OGF_CFG_STYLE()->Sound_Menu_Close.LoadSynchronous());
+			PlaySound(_theme->Sound_Menu_Close);
 		}
 		
 		//ANIMATION
@@ -155,22 +153,32 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 			Native_CompleteClose();
 		}
 		
+		
 		bIsClosing = true;
 	}
+	OGF_GLOBALREFRESH();
 }
 
-TArray<UObject*> UOmegaCommonMenuDefinition::GetDataListEntries_Implementation(UMenu* Menu)
-{
-	TArray<UObject*> out;
-	for(auto* i : CustomEntry_Assets) { if(i){ out.Add(i);} }
-	for(auto* i : CustomEntry_Objects) { if(i){ out.Add(i);} }
-	return out;
-}
 
 AOmegaMenuWrapperActor::AOmegaMenuWrapperActor()
 {
 	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
 	Combatant=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
+	ChildActor=CreateOptionalDefaultSubobject<UChildActorComponent>("ChildActor");
+}
+
+void UMenu::L_SetSubstate(int32 NewState)
+{
+	Super::L_SetSubstate(NewState);
+	if (SS_Player)
+	{
+		//refresh top widget
+		SS_Player->ControlWidget_GetTop();
+	}
+	if (bCloseMenuOnSubstateUnderflow && NewState<0)
+	{
+		CloseMenu(FGameplayTagContainer(),nullptr,"");
+	}
 }
 
 void UMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* MovieSceneBlends)
@@ -196,11 +204,6 @@ void UMenu::NativeConstruct()
 
 void UMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	if(InputBlock_Remaining > 0.0)
-	{
-		InputBlock_Remaining=InputBlock_Remaining-InDeltaTime;
-	}
-	
 	float target_val=0.0;
 	if(bIsOpen) { target_val=1.0; }
 	if(target_val != OpenCloseInterp_Value)
@@ -223,6 +226,28 @@ void UMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	}
 	
 	Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
+bool UMenu::InputAction_Disabled_Implementation(APlayerController* Player, FGameplayTag Action)
+{
+	return IsInputBlocked();
+}
+
+void UMenu::NativeDestruct()
+{
+	if (SS_Player)
+	{
+		if (SS_Player->OpenMenus.Contains(this))
+		{
+			SS_Player->OpenMenus.Remove(this);
+		}
+		SS_Player->ControlWidget_Register(this,false);
+	}
+	if (SS_World)
+	{
+		SS_World->GameplayModifier_Register(this,false);
+	}
+	Super::NativeDestruct();
 }
 
 
@@ -261,16 +286,61 @@ AOmegaMenuWrapperActor* UMenu::GetMenuWrapperActor() const
 	if (WrapperActor) { return WrapperActor; } return nullptr;
 }
 
+AActor* UMenu::GetMenuWrapperChildActor(TSubclassOf<AActor> Class)
+{
+	if (WrapperActor)
+	{
+		if (AActor* out=WrapperActor->ChildActor->GetChildActor())
+		{
+			if (!Class || out->GetClass()->IsChildOf(Class))
+			{
+				return out;
+			}
+		}
+	}
+	return nullptr;
+}
+
 void UMenu::MenuClosed_Implementation(FGameplayTagContainer Tags, const FString& Flag)
 {
 }
 
 void UMenu::MenuOpened_Implementation(FGameplayTagContainer Tags, UObject* Context, const FString& Flag)
 {
+	
+}
+
+void UMenu::InputBlockTimer_End()
+{
+	InputBlock_Remaining = 0.0f;
+}
+
+bool UMenu::IsInputBlocked() const
+{
+	return PrivateInputBlocked || bIsClosing || !bIsOpen || InputBlock_Remaining > 0.0;
 }
 
 bool UMenu::InputBlocked_Implementation()
 {
 	return IsInputBlocked();
+}
+
+UUserWidget* UMenu::ControlWidget_Get_Implementation(int32& priority)
+{
+	priority=Priority;
+	if (GetSubstateInputWidget().IsValidIndex(Substate))
+	{
+		if (UUserWidget* gotWidget=GetSubstateInputWidget()[Substate])
+		{
+			priority=Priority+1;
+			return gotWidget;
+		}
+	}
+	return this;
+}
+
+TArray<UUserWidget*> UMenu::GetSubstateInputWidget_Implementation()
+{
+	return TArray<UUserWidget*>();
 }
 

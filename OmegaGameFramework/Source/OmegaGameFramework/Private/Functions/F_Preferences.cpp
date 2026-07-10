@@ -100,13 +100,12 @@ void UOmegaFunctions_Preferences::String_Set(const UObject* WorldContextObject, 
 
 bool UOmegaFunctions_Preferences::Check_Bool(const UObject* WorldContextObject, UGamePreference* Preference, bool& Outcome)
 {
+	Outcome=false;
 	if(WorldContextObject && Preference)
 	{
-		Outcome=true;
-		return Bool_Get(WorldContextObject,Preference);
+		Outcome=Bool_Get(WorldContextObject,Preference);
 	}
-	Outcome=false;
-	return false;
+	return Outcome;
 }
 
 int32 UOmegaFunctions_Preferences::Check_Int(const UObject* WorldContextObject,

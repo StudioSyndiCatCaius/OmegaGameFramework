@@ -85,33 +85,11 @@ void AOmegaGameplayEffect::LifetimeEnd()
 //####################################//####################################//####################################
 //-----Generals
 //####################################//####################################//####################################
-void AOmegaGameplayEffect::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	Label = UOmegaGameFrameworkBPLibrary::GetObjectLabel(EffectContext);
-}
-
-void AOmegaGameplayEffect::GetGeneralAssetColor_Implementation(FGameplayTag Tag, FLinearColor& Color)
+void AOmegaGameplayEffect::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
 	{
-		Execute_GetGeneralAssetColor(EffectContext,Tag,Color);
-	}
-}
-
-void AOmegaGameplayEffect::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
-{
-	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		Execute_GetGeneralDataText(EffectContext,Tag,Name,Description);
-	}
-}
-
-void AOmegaGameplayEffect::GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture,
-	class UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	if(EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))
-	{
-		Execute_GetGeneralDataImages(EffectContext,Tag,Texture,Material,Brush);
+		IDataInterface_General::Execute_GetGeneralDataText(EffectContext, Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 	}
 }
 
@@ -139,10 +117,13 @@ void AOmegaGameplayEffect::TriggerEffect()
 	
 }
 
-bool AOmegaGameplayEffect::EffectCanApply_Implementation(UCombatantComponent* EffectInstigator, UObject* Context, FOmegaCommonMeta Meta)
+bool AOmegaGameplayEffect::EffectCanApply_Implementation(UCombatantComponent* EffectInstigator,
+	UCombatantComponent* EffectTarget, UObject* Context, FOmegaCommonMeta Meta,FOmegaCommonMeta& OutMeta)
 {
+	OutMeta=Meta;
 	return true;
 }
+
 
 UOmegaDamageType* AOmegaGameplayEffect::GetDamageType_Implementation(UObject* Context)
 {
@@ -165,13 +146,50 @@ void AOmegaGameplayEffect::Local_RemoveEffects(FGameplayTagContainer Effects)
 }
 
 //Tags
-FGameplayTag AOmegaGameplayEffect::GetObjectGameplayCategory_Implementation()
+void AOmegaGameplayEffect::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags)
 {
-	return EffectCategory;
+	OutCategoryTag = EffectCategory;
+	OutGameplayTags = EffectTags;
 }
 
-FGameplayTagContainer AOmegaGameplayEffect::GetObjectGameplayTags_Implementation()
+bool AOmegaGameplayEffect::L_ContextUsesInterface() const
 {
-	return EffectTags;
+	if (EffectContext && EffectContext->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+	{
+		return true;
+	}
+	return false;
+}
+
+float AOmegaGameplayEffect::ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target,
+                                                        UCombatantComponent* instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context)
+{
+	if (L_ContextUsesInterface())
+	{
+		return IDataInterface_Combatant::Execute_ModifyDamage(EffectContext,Attribute, Target, instigator, BaseDamage, DamageType,
+																	 Context);		
+	}
+	return IDataInterface_Combatant::ModifyDamage_Implementation(Attribute, Target, instigator, BaseDamage, DamageType,
+	                                                             Context);
+}
+
+TArray<FOmegaAttributeModifier> AOmegaGameplayEffect::GetModifierValues_Implementation(
+	UCombatantComponent* CombatantComponent)
+{
+	if (L_ContextUsesInterface())
+	{
+		return IDataInterface_Combatant::Execute_GetModifierValues(EffectContext,CombatantComponent);
+	}
+	return IDataInterface_Combatant::GetModifierValues_Implementation(CombatantComponent);
+}
+
+UPrimaryDataAsset* AOmegaGameplayEffect::GetDamageType_Weight_Implementation(UCombatantComponent* Combatant,
+	UOmegaDamageType* DamageType, float& weight, int32& priority)
+{
+	if (L_ContextUsesInterface())
+	{
+		return IDataInterface_Combatant::Execute_GetDamageType_Weight(EffectContext,Combatant, DamageType, weight, priority);
+	}
+	return IDataInterface_Combatant::GetDamageType_Weight_Implementation(Combatant, DamageType, weight, priority);
 }
 

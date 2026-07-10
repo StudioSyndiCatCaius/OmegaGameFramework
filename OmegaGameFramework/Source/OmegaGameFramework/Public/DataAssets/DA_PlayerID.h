@@ -14,5 +14,6 @@ class OMEGAGAMEFRAMEWORK_API UOAsset_PlayerID : public UOmegaDataAsset
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Player") int32 DefaultIndex=-1;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Player") FLinearColor PlayerColor;
-	virtual void GetGeneralAssetColor_Implementation(FGameplayTag Tag,FLinearColor& Color) override { Color = PlayerColor; };
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override {};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 };

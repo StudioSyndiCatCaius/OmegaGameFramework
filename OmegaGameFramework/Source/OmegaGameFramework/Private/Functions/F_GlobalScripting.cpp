@@ -4,7 +4,10 @@
 #include "Functions/F_GlobalScripting.h"
 
 #include "Kismet/KismetStringLibrary.h"
+#include "Misc/OmegaUtils_Macros.h"
+#include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_GameManager.h"
+#include "Engine/Engine.h"
 
 FString UOmegaGlobalScriptBASE::GetFunctionCall_Name() const
 {
@@ -32,6 +35,11 @@ FLuaValue UOmegaGlobalScript::LuaCall(const TArray<FLuaValue>& args)
 	return FLuaValue();
 }
 
+int32 UOmegaGlobalScript::Run_Implementation(UGameInstance* GameInstance) const
+{
+	return 0;
+}
+
 FLuaValue UOmegaGlobalCondition::LuaCall(const TArray<FLuaValue>& args)
 {
 	LuaInterpret(args);
@@ -40,6 +48,11 @@ FLuaValue UOmegaGlobalCondition::LuaCall(const TArray<FLuaValue>& args)
 		return FLuaValue(Check(s->GetGameInstance()));
 	}
 	return FLuaValue();
+}
+
+bool UOmegaGlobalCondition::Check_Implementation(UGameInstance* GameInstance) const
+{
+	return 0;
 }
 
 void UOmegaFunctions_GlobalScripting::RunGlobalScripts(UObject* WorldContextObject, FOmegaGlobalScripts scripts)
@@ -54,6 +67,7 @@ void UOmegaFunctions_GlobalScripting::RunGlobalScripts(UObject* WorldContextObje
 			}
 		}
 	}
+	OGF_GLOBALREFRESH();
 }
 
 bool UOmegaFunctions_GlobalScripting::RunGlobalConditions(const UObject* WorldContextObject, FOmegaGlobalConditions scripts)
@@ -73,4 +87,28 @@ bool UOmegaFunctions_GlobalScripting::RunGlobalConditions(const UObject* WorldCo
 		return true;
 	}
 	return false;
+}
+
+int32 UOmegaGlobalScript_DoPreset::Run_Implementation(UGameInstance* GameInstance) const
+{
+	for (auto* p : Presets)
+	{
+		if (p)
+		{
+			UOmegaFunctions_GlobalScripting::RunGlobalScripts(GameInstance,p->Scripts);
+		}
+	}
+	return 1;
+}
+
+bool UOmegaGlobalCondition_DoPreset::Check_Implementation(UGameInstance* GameInstance) const
+{
+	for (auto* p : Presets)
+	{
+		if (p && !UOmegaFunctions_GlobalScripting::RunGlobalConditions(GameInstance,p->Conditions))
+		{
+			return false;
+		}
+	}
+	return true;
 }

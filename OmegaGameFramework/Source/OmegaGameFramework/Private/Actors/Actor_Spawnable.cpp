@@ -3,12 +3,13 @@
 
 #include "Actors/Actor_Spawnable.h"
 
+#include "Misc/OmegaFlowAssetBase.h"
 #include "LuaBlueprintFunctionLibrary.h"
-#include "OmegaGameManager.h"
 #include "OmegaSettings.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/Component_GameplayActor.h"
 #include "Components/SphereComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Functions/F_Common.h"
@@ -16,40 +17,19 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Engine.h"
+#include "Materials/Material.h"
 
 
-TSubclassOf<AActor> AOmegaActorSpawnable::GetSpawnableClass()
+bool AOmegaActorSpawnable::L_ClassUsesInterface() const
 {
-	FLuaValue devConfigData=OGF_Subsystems::oEngine()->Spawnable_GetData(Config.NamedSpawnable);
-	FLuaValue lua_uclass=devConfigData.GetField("UCLASS");
-	if (TSubclassOf<AActor> class_ref=TSoftClassPtr<AActor>(lua_uclass.ToString()).LoadSynchronous())
-	{
-		return class_ref;
-	}
-	if (Config.SpawnableClass)
-	{
-		return Config.SpawnableClass;
-	}
-	return nullptr;
-}
-
-bool AOmegaActorSpawnable::L_ClassUsesInterface()
-{
-	if (GetSpawnableClass() && GetSpawnableClass()->ImplementsInterface(UActorInterface_Spawnable::StaticClass()))
+	if (Config.Class && Config.Class->ImplementsInterface(UActorInterface_Spawnable::StaticClass()))
 	{
 		return true;
 	}
 	return false;
 }
 
-TArray<FName> AOmegaActorSpawnable::L_getSpawnables() const
-{
-	TArray<FName> out;
-	OGF_GAME_CORE()->Spawnable_GetNamed().GetKeys(out);
-	out.Append(OGF_Subsystems::oEngine()->keys_spawnables);
-	
-	return out;
-}
+
 
 AOmegaActorSpawnable::AOmegaActorSpawnable()
 {
@@ -82,112 +62,65 @@ void AOmegaActorSpawnable::OnConstruction(const FTransform& Transform)
 	DisplayRoot->ShapeColor=FColor(100,100,100);
 	DisplayRoot->SetLineThickness(2);
 	DisplayRoot->SetRelativeLocation(FVector());
+	DisplayRoot->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	DisplayRoot->SetCollisionResponseToAllChannels(ECR_Ignore);
 	
-	FLuaValue devConfigData=OGF_Subsystems::oEngine()->Spawnable_GetData(Config.NamedSpawnable);
-	FColor _color;
-	FText _disName;
-	FVector _rootOffset;
-	UTexture2D* _icon=nullptr;
-	FVector _boxExt;
-	float _iconScale;
-	float _boxThick;
-		
-	Config.Bitflags.override_config=false;
-	Config.Lists.override_keys=false;
-	Config.Lists.override_keyList.Empty();
-	Config.Relatives.override_keys=false;
-	Config.Relatives.override_keyList.Empty();
+	FOmegaSpawnablePreviewConfig PreviewConfig;
 	
+	UPrimaryDataAsset* _effectiveIdentity = Config.Identity;
+
 	bool b_validSpawnable=false;
-	if (Config.SpawnableClass && Config.SpawnableClass->ImplementsInterface(UActorInterface_Spawnable::StaticClass()))
+	if (L_ClassUsesInterface())
 	{
-		if (AActor* _tempDef=GetMutableDefault<AActor>(Config.SpawnableClass))
+		if (AActor* _tempDef=GetMutableDefault<AActor>(Config.Class))
 		{
 			b_validSpawnable=true;
-			IActorInterface_Spawnable::Execute_GetSpawnablePreviewConfig(_tempDef,_icon,_rootOffset,_disName,_color,_iconScale,_boxExt,_boxThick);
+			PreviewConfig=IActorInterface_Spawnable::Execute_GetSpawnablePreviewConfig(_tempDef);
 			OGF_CFG()->OverrideActorLabel(this,IActorInterface_Spawnable::Execute_GetSpawnable_ActorLabel(_tempDef));
 		}
-		
 	}
-	else if (!devConfigData.IsNil())
+
+#if WITH_EDITOR
+	if (GetActorLabel().Contains("OmegaActorSpawnable"))
 	{
-		Config.Bitflags.override_config=true;
-		Config.Lists.override_keys=true;
-		Config.Relatives.override_keys=true;
-		FOmegaBitmaskEditorData BitflagEditData;
-		
-		TArray<FLuaValue> keys_bitflags=ULuaBlueprintFunctionLibrary::LuaTableGetValues(devConfigData.GetField("bitflags"));
-		for (FLuaValue key : keys_bitflags)
+		if (Config.Identity)
 		{
-			FOmegaBitmaskEditorEntry entry;
-			entry.Title=FText::FromString(key.ToString());
-			BitflagEditData.Bitflags.Add(entry);
+			SetActorLabel(PreviewConfig.Label+"_"+Config.Identity.GetName());
 		}
-		TArray<FLuaValue> keys_bitenums=ULuaBlueprintFunctionLibrary::LuaTableGetValues(devConfigData.GetField("bitenums"));
-		for (FLuaValue key : keys_bitenums)
+		else
 		{
-			FOmegaBitmaskEditorEnumData entry;
-			entry.Title=FText::FromString(key.GetField("name").ToString());
-			TArray<FLuaValue> opts=ULuaBlueprintFunctionLibrary::LuaTableGetValues(key.GetField("options"));
-			for (FLuaValue opt : opts)
-			{
-				FOmegaBitmaskEditorEntry optData;
-				optData.Title=FText::FromString(key.ToString());
-				entry.Options.Add(optData);
-			}
-			BitflagEditData.BitEnums.Add(entry);
+			SetActorLabel(PreviewConfig.Label+"_"+FString::FromInt(UKismetMathLibrary::RandomIntegerInRange(0,99999)));
 		}
-		
-		TArray<FLuaValue> keys_lists=ULuaBlueprintFunctionLibrary::LuaTableGetValues(devConfigData.GetField("lists"));
-		for (FLuaValue key : keys_lists)
-		{
-			Config.Lists.override_keyList.Add(key.ToName());
-		}
-		
-		TArray<FLuaValue> keys_relatives=ULuaBlueprintFunctionLibrary::LuaTableGetValues(devConfigData.GetField("relatives"));
-		for (FLuaValue key : keys_relatives)
-		{
-			Config.Relatives.override_keyList.Add(key.ToName());
-		}
-		
-		Config.Bitflags.override_configData=BitflagEditData;
-		
-		b_validSpawnable=true;
-		
-		_disName=FText::FromString(Config.NamedSpawnable.ToString());
-		FVector _ColorVec=ULuaBlueprintFunctionLibrary::Conv_LuaValueToFVector(devConfigData.GetField("Color"),FVector());
-		_color=UKismetMathLibrary::Conv_VectorToLinearColor(_ColorVec).ToFColor(true);
-		_color.A=255;
-		_rootOffset=ULuaBlueprintFunctionLibrary::Conv_LuaValueToFVector(devConfigData.GetField("BoundsOffset"),FVector());
-		_boxExt=ULuaBlueprintFunctionLibrary::Conv_LuaValueToFVector(devConfigData.GetField("BoundsSize"),FVector());
-		_boxThick=devConfigData.GetField("BoundsThickness").ToFloat();
-		bool iconFound;
-		if (UTexture2D* _foundTxt=Cast<UTexture2D>(UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(devConfigData.GetField("Icon").ToString(),UTexture2D::StaticClass(),iconFound)))
-		{
-			_icon=_foundTxt;
-		}
-		_iconScale=devConfigData.GetField("IconSize").ToFloat();
 	}
+#endif
 	
 	if (b_validSpawnable)
 	{
 		if (DisplayRoot)
 		{
-			if (_icon)
+			if (PreviewConfig.Icon)
 			{
-				BillboardComponent->SetSprite(_icon);
+				BillboardComponent->SetSprite(PreviewConfig.Icon);
 			}
-			BillboardComponent->SetWorldScale3D(FVector(_iconScale));
-			DisplayRoot->ShapeColor=_color;
-			ArrowComponent->SetArrowColor(_color);
-			DisplayRoot->SetRelativeLocation(_rootOffset);
+			BillboardComponent->SetWorldScale3D(FVector(PreviewConfig.IconSize));
+			DisplayRoot->ShapeColor=PreviewConfig.Color.ToFColor(true);
+			ArrowComponent->SetArrowColor(PreviewConfig.Color);
+			DisplayRoot->SetRelativeLocation(PreviewConfig.RangeOffset);
 			DisplayRoot->SetLineThickness(1);
-			DisplayRoot->SetBoxExtent(_boxExt);
-			DisplayRoot->SetLineThickness(_boxThick);
-			TextRenderComponent->SetText(_disName);
+			DisplayRoot->SetBoxExtent(PreviewConfig.RangeSize);
+			DisplayRoot->SetLineThickness(PreviewConfig.LineThickness);
+			if (_effectiveIdentity)
+			{
+				FString _st=PreviewConfig.Label+": \n"+_effectiveIdentity->GetName();
+				TextRenderComponent->SetText(FText::FromString(_st));
+			}
+			else
+			{
+				TextRenderComponent->SetText(FText::FromString(PreviewConfig.Label));
+			}
 			TextRenderComponent->SetHiddenInGame(true);
-			TextRenderComponent->SetTextRenderColor(_color);
-			TextRenderComponent->SetWorldLocation(GetActorLocation()+FVector(0,0,(_boxExt.Z*2)+10));
+			TextRenderComponent->SetTextRenderColor(PreviewConfig.Color.ToFColor(true));
+			TextRenderComponent->SetWorldLocation(GetActorLocation()+FVector(0,0,PreviewConfig.RangeSize.Z+PreviewConfig.RangeOffset.Z+10));
 		}
 	}
 	
@@ -196,23 +129,29 @@ void AOmegaActorSpawnable::OnConstruction(const FTransform& Transform)
 void AOmegaActorSpawnable::BeginPlay()
 {
 	Super::BeginPlay();
-	if (TSubclassOf<AActor> refClass=GetSpawnableClass())
+	if (L_ClassUsesInterface())
 	{
-		if (AActor* _tempDef=GetMutableDefault<AActor>(refClass))
+		if (AActor* _tempDef=GetMutableDefault<AActor>(Config.Class))
 		{
 			bool bAutospawn = false;
 			if (L_ClassUsesInterface())
 			{
 				IActorInterface_Spawnable::Execute_GetSpawnableSpawnConfig(_tempDef,bAutospawn);	
+				if (bAutospawn)
+				{
+					Spawnable_Spawn(true);
+				}
 			}
-			
-			if (bAutospawn)
+			else
 			{
 				Spawnable_Spawn(true);
 			}
+			
 		}
 	}
 }
+
+
 
 bool AOmegaActorSpawnable::Spawnable_IsAlive() const
 {
@@ -225,7 +164,7 @@ bool AOmegaActorSpawnable::Spawnable_IsAlive() const
 
 void AOmegaActorSpawnable::Spawnable_Spawn(bool bForceRespawn)
 {
-	if (TSubclassOf<AActor> refClass= GetSpawnableClass())
+	if (L_ClassUsesInterface())
 	{
 		if (Spawnable_IsAlive())
 		{
@@ -236,12 +175,35 @@ void AOmegaActorSpawnable::Spawnable_Spawn(bool bForceRespawn)
 			Spawnable_Destroy();
 		}
 	
-		AActor* _tempActor=GetWorld()->SpawnActorDeferred<AActor>(refClass,FTransform());
+		AActor* _tempActor=GetWorld()->SpawnActorDeferred<AActor>(Config.Class,FTransform(),this,nullptr,ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+		_tempActor->Tags.Append(Config.Tags);
+		if (UActorComponent* com=_tempActor->GetComponentByClass(UGameplayActorComponent::StaticClass()))
+		{
+			UGameplayActorComponent* c=Cast<UGameplayActorComponent>(com);
+			if (Config.Identity)
+			{
+				c->SetIdentitySourceAsset(Config.Identity);
+			}
+			if (Config.Flow.IsValid())
+			{
+				c->DefaultFlow=Config.Flow;	
+			}
+			if (Config.Zone)
+			{
+				c->Zone=Config.Zone;	
+			}
+		}
+		
 		_tempActor->FinishSpawning(GetActorTransform());
 		REF_linkedActor=_tempActor;
+		
+#if WITH_EDITOR
+		REF_linkedActor->SetActorLabel(GetActorLabel()+"_SPAWNED");
+#endif
+		
 		if (L_ClassUsesInterface())
 		{
-			IActorInterface_Spawnable::Execute_OnSpawnableSpawn(_tempActor,this,Flag);
+			IActorInterface_Spawnable::Execute_OnSpawnableSpawn(_tempActor,this);
 		}
 	}
 }

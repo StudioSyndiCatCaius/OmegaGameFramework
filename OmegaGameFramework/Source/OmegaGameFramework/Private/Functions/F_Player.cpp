@@ -11,6 +11,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "OmegaSettings.h"
+#include "Actors/Actor_Player.h"
+#include "TimerManager.h"
+#include "Interfaces/I_StandardInput.h"
+#include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_Player.h"
 
 FVector UOmegaPlayerFunctions::OffsetScreenPositionToWorld(APlayerController* Player, FVector2D ScreenPosition,
@@ -169,6 +174,37 @@ FVector2D UOmegaPlayerFunctions::Mouse_GetNormalizedPosition(APlayerController* 
 	return NormalizedPos;
 }
 
+bool UOmegaPlayerFunctions::WasKeyJustPressed(UObject* WorldContextObject, FKey Key, bool& bResult, APlayerController* Player)
+{
+	if (!Player)
+	{
+		Player = UGameplayStatics::GetPlayerController(WorldContextObject, 0);
+	}
+	bResult = Player && Player->WasInputKeyJustPressed(Key);
+	return bResult;
+}
+
+bool UOmegaPlayerFunctions::WasInputActionJustPressed(UObject* WorldContextObject, FGameplayTag Input, bool& bResult, APlayerController* Player)
+{
+	if (!Player)
+	{
+		Player = UGameplayStatics::GetPlayerController(WorldContextObject, 0);
+	}
+	bResult = false;
+	if (Player)
+	{
+		for (const FKey& Key : GetKeysFromInputAction(WorldContextObject, Input))
+		{
+			if (Player->WasInputKeyJustPressed(Key))
+			{
+				bResult = true;
+				break;
+			}
+		}
+	}
+	return bResult;
+}
+
 float UOmegaPlayerFunctions::Keys_CombinePressedWeights(TMap<FKey, float> Keys, bool b1Clamped,
 	APlayerController* PlayerController)
 {
@@ -218,22 +254,135 @@ void UOmegaPlayerFunctions::SetInputActionTargetActive(APlayerController* Player
 bool UOmegaPlayerFunctions::GetKeyAxis(APlayerController* Player, FKey Key, FVector& OutAxis, float Deadzone)
 {
 	OutAxis = FVector::ZeroVector;
-    
+
 	if (!Player || !Player->PlayerInput)
 	{
 		return false;
 	}
-    
+
 	if (!Key.IsAxis2D() && !Key.IsAxis3D())
 	{
 		return false;
 	}
-    
+
 	OutAxis = Player->GetInputVectorKeyState(Key);
 	if (OutAxis.Length()>Deadzone)
 	{
-		return true;	
+		return true;
 	}
 	return false;
+}
+
+TArray<FKey> UOmegaPlayerFunctions::GetKeysFromInputAction(UObject* WorldContextObject, FGameplayTag InputAction)
+{
+	TArray<FKey> OutKeys;
+	if (UOmegaSubsystem_GameInstance* gi = OGF_Subsystems::oGameInstance(WorldContextObject))
+	{
+		// Runtime: collect all keys whose cache entry maps to this action tag
+		for (auto& pair : gi->InputKeyCacheData)
+		{
+			if (pair.Value.KeyInputs.Contains(InputAction))
+			{
+				OutKeys.Add(pair.Key);
+			}
+		}
+	}
+	else
+	{
+		// Non-runtime: read directly from OmegaSettings and imported GameplayConfig assets
+		UOmegaSettings* settings = GetMutableDefault<UOmegaSettings>();
+		TMap<FGameplayTag, FOmegaInputConfig> all_configs = settings->GetAllInputActionConfigs();
+		all_configs.Append(settings->InputActionConfigs);
+		if (FOmegaInputConfig* config = all_configs.Find(InputAction))
+		{
+			config->KeyInputs.GetKeys(OutKeys);
+		}
+	}
+	return OutKeys;
+}
+
+FKey UOmegaPlayerFunctions::GetFirstDeviceKeyFromInputAction(UObject* WorldContextObject, FGameplayTag InputAction, bool bGamepad)
+{
+	for (const FKey& key : GetKeysFromInputAction(WorldContextObject, InputAction))
+	{
+		if (key.IsGamepadKey() == bGamepad)
+		{
+			return key;
+		}
+	}
+	return FKey();
+}
+
+FOmegaInputConfig UOmegaPlayerFunctions::GetInputActionConfig(UObject* WorldContextObject, FGameplayTag InputAction)
+{
+	if (UOmegaSubsystem_GameInstance* gi = OGF_Subsystems::oGameInstance(WorldContextObject))
+	{
+		// Runtime: reconstruct config from cache
+		FOmegaInputConfig out;
+		for (auto& pair : gi->InputKeyCacheData)
+		{
+			if (const FOmegaKeyConfig* key_cfg = pair.Value.KeyInputs.Find(InputAction))
+			{
+				out.KeyInputs.Add(pair.Key, *key_cfg);
+			}
+		}
+		return out;
+	}
+	// Non-runtime: read directly from OmegaSettings and imported GameplayConfig assets
+	UOmegaSettings* settings = GetMutableDefault<UOmegaSettings>();
+	TMap<FGameplayTag, FOmegaInputConfig> all_configs = settings->GetAllInputActionConfigs();
+	all_configs.Append(settings->InputActionConfigs);
+	if (FOmegaInputConfig* config = all_configs.Find(InputAction))
+	{
+		return *config;
+	}
+	return FOmegaInputConfig();
+}
+
+bool UOmegaPlayerFunctions::SimulateInputAction(APlayerController* Player, FGameplayTag InputAction, float Duration)
+{
+	if (!Player) return false;
+
+	TArray<FKey> Keys = GetKeysFromInputAction(Player, InputAction);
+	if (Keys.IsEmpty()) return false;
+
+	const FKey Key = Keys[0];
+	Player->InputKey(FInputKeyParams(Key, IE_Pressed, 1.0, Key.IsGamepadKey()));
+
+	TWeakObjectPtr<APlayerController> WeakPlayer(Player);
+	FTimerHandle TimerHandle;
+	Player->GetWorldTimerManager().SetTimer(TimerHandle,
+		FTimerDelegate::CreateLambda([WeakPlayer, Key]()
+		{
+			if (APlayerController* PC = WeakPlayer.Get())
+			{
+				PC->InputKey(FInputKeyParams(Key, IE_Released, 0.0, Key.IsGamepadKey()));
+			}
+		}),
+		Duration, false);
+
+	return true;
+}
+
+void UOmegaPlayerFunctions::ObjectHogInput_Set(UObject* Object, APlayerController* player)
+{
+	if (player && Object)
+	{
+		if (UOmegaSubsystem_Player* p=OGF_Subsystems::oPlayer(player))
+		{
+			p->ObjectHoggingInput=Object;
+		}
+	}
+}
+
+void UOmegaPlayerFunctions::ObjectHogInput_Clear(APlayerController* player)
+{
+	if (player)
+	{
+		if (UOmegaSubsystem_Player* p=OGF_Subsystems::oPlayer(player))
+		{
+			p->ObjectHoggingInput=nullptr;
+		}
+	}
 }
 

@@ -6,9 +6,10 @@
 #include "Engine/StaticMeshActor.h"
 #include "Interfaces/I_Common.h"
 #include "Subsystems/Subsystem_World.h"
-#include "DataAssets/DA_Zone.h"
 #include "Actor_Zone.generated.h"
 
+class UOmegaZoneData;
+class UZoneLegendAsset;
 class UZoneEntityComponent;
 class USpringArmComponent;
 class UCameraComponent;
@@ -88,10 +89,8 @@ public:
 	UFUNCTION(BlueprintPure,Category="Zone Entity")
 	float GetRotation2D();
 	
-	virtual auto GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) -> void override;
-	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override;
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override;
-	virtual FGameplayTagContainer GetObjectGameplayTags_Implementation() override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override;
 };
 
 UCLASS(Abstract)
@@ -264,5 +263,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zone")
 	UOmegaZoneData* ZoneToLoad;
 
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 };

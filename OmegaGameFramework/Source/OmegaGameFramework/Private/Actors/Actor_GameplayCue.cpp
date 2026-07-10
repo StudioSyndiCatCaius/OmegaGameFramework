@@ -10,6 +10,7 @@
 #include "Camera/CameraShakeSourceComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/OmegaUtils_Methods.h"
 
 AOmegaGameplayCue::AOmegaGameplayCue()
 {
@@ -80,29 +81,52 @@ void AOmegaGameplayCue::Tick(float DeltaTime)
 	
 }
 
-void UOmegaGameplayCueFunctions::PlayGameplayCue(UObject* WorldContextObject, TSubclassOf<AOmegaGameplayCue> Cue,
-                                                 FTransform Origin, FHitResult Hit, AActor* ActorOrigin)
+AOmegaGameplayCue* UOmegaGameplayCueFunctions::PlayGameplayCue(UObject* WorldContextObject, TSubclassOf<AOmegaGameplayCue> Cue,
+                                                               FTransform Origin, FHitResult Hit, USceneComponent* AttachComponent, EAttachmentRule AttachRules)
 {
-	if(!WorldContextObject->GetWorld())
+	if (!WorldContextObject || !WorldContextObject->GetWorld()) { return nullptr; }
+	if (Cue)
 	{
-		return;
-	}
-	WorldContextObject->GetWorld()->GetSubsystem<UOmegaGameplayCueSubsystem>()->PlayGameplayCue(Cue,Origin,Hit,ActorOrigin);
-}
-
-AOmegaGameplayCue* UOmegaGameplayCueSubsystem::PlayGameplayCue(TSubclassOf<AOmegaGameplayCue> Cue,
-	FTransform Origin, FHitResult Hit, AActor* ActorOrigin)
-{
-	if(Cue)
-	{
-		AOmegaGameplayCue* CueRef = GetWorld()->SpawnActorDeferred<AOmegaGameplayCue>(Cue, Origin, nullptr);
+		AOmegaGameplayCue* CueRef = WorldContextObject->GetWorld()->SpawnActorDeferred<AOmegaGameplayCue>(Cue, Origin, nullptr);
 		CueRef->HitData=Hit;
 		UGameplayStatics::FinishSpawningActor(CueRef,Origin);
-		if(ActorOrigin)
+		if(AttachComponent)
 		{
-			CueRef->AttachToActor(ActorOrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+			CueRef->AttachToComponent(AttachComponent, FAttachmentTransformRules(AttachRules, false));
 		}
 		return CueRef;
 	}
+	OGF_Log::LogWarning("Failed to spawn cue. No valid class");
 	return nullptr;
 }
+
+AOmegaGameplayCue* UOmegaGameplayCueFunctions::PlayGameplayCue_FromConfig(UObject* WorldContextObject, FOmegaGameplayCueConfig Config,
+	FTransform Origin, FHitResult Hit, USceneComponent* AttachComponent, EAttachmentRule AttachRules)
+{
+	if (!WorldContextObject || !WorldContextObject->GetWorld()) { return nullptr; }
+	if (!Config.CueClass)
+	{
+		OGF_Log::LogWarning("Failed to spawn cue from config. No valid class");
+		return nullptr;
+	}
+	AOmegaGameplayCue* CueRef = WorldContextObject->GetWorld()->SpawnActorDeferred<AOmegaGameplayCue>(Config.CueClass, Origin, nullptr);
+	CueRef->HitData = Hit;
+	if (Config.OverrideSound)
+	{
+		CueRef->Sounds.Empty();
+		CueRef->Sounds.Add(Config.OverrideSound);
+	}
+	if (Config.OverrideNiagara)
+	{
+		CueRef->NiagaraParticles.Empty();
+		CueRef->NiagaraParticles.Add(Config.OverrideNiagara);
+	}
+	UGameplayStatics::FinishSpawningActor(CueRef, Origin);
+	if (AttachComponent)
+	{
+		CueRef->AttachToComponent(AttachComponent, FAttachmentTransformRules(AttachRules, false));
+	}
+	return CueRef;
+}
+
+

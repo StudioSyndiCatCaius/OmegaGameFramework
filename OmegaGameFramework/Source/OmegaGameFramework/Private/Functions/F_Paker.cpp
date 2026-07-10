@@ -3,6 +3,9 @@
 
 #include "Functions/F_Paker.h"
 #include "IPlatformFilePak.h"
+#include "HAL/PlatformFileManager.h"
+#include "Misc/PackageName.h"
+#include "Misc/EngineVersionComparison.h"
 
 bool UOmegaPakFunctions::MountPakFile(const FString& PakFilePath, const FString& PakMountPoint)
 {
@@ -82,7 +85,7 @@ TArray<FString> UOmegaPakFunctions::GetPakContent(const FString& PakFilePath, bo
 		FString MountPoint = GetPakMountPoint(PakFilePath);
 		MountPoint.Split("/Content/", &ContentPath, &PakAppendPath);
 		
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
+#if UE_VERSION_OLDER_THAN(5, 6, 0)
 		TArray<FPakFile::FFilenameIterator> Records;
 		for (FPakFile::FFilenameIterator It(*Pak, false); It; ++It)
 		{

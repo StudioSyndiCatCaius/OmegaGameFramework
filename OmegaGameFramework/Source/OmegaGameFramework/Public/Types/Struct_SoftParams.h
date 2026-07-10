@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "Struct_SoftParams.generated.h"
 
 class UPrimaryDataAsset;
@@ -16,6 +17,8 @@ struct FOmegaSoftParams
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FName, float> params_float;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FName, FString> params_string;
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FName, UPrimaryDataAsset*> params_DataAsset;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FName, FOmegaList_DataAsset> params_DataAssetList;
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params") TMap<FGameplayTag,int32> bitflags;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Params",meta=(Bitmask)) TMap<FGuid,int64> guidflags;
 };

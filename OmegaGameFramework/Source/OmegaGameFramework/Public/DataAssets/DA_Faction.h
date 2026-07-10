@@ -31,20 +31,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Tag")
 	TMap<FGameplayTag, TEnumAsByte<EFactionAffinity>> FactionAffinities;
 
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override
 	{
 		Name=FactionName;
-	};
-	virtual void GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture, class UMaterialInterface*& Material, FSlateBrush& Brush) override
-	{
-		Brush=FactionIcon;
-	};
-	virtual void GetGeneralAssetColor_Implementation(FGameplayTag Tag, FLinearColor& Color) override
-	{
+		iconBrush=FactionIcon;
 		Color=FactionColor;
 	};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	
-private:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Faction")
+	TObjectPtr<UMaterialInterface> Utility_Material;
 	
 };
 

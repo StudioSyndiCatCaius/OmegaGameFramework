@@ -31,6 +31,7 @@
 #include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_Engine.h"
 #include "Subsystems/Subsystem_World.h"
+#include "TimerManager.h"
 
 
 UOmegaSaveBase* UOmegaSubsystem_GameInstance::L_GetSaveObject(bool bGlobal) const
@@ -90,7 +91,9 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 	
 	OGF_GAME_CORE()->OnGame_PreBegin(GetGameInstance());
 	
+#if !UE_BUILD_SHIPPING
 	IAssetRegistry::Get()->ScanPathsSynchronous(OGF_CFG()->AutoscanPaths);
+#endif
 	
 	OGF_LUA_DOCODE(OGF_CFG_LUA()->Code_Init)
 	// -----------------------------------------------------------------------------------------------------------------
@@ -124,13 +127,15 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 	// -----------------------------------------------------------------------------------------------------------------
 	if (OGF_CFG_LUA()->bAutobindGlobalScriptsAsFunctions)
 	{
-		//load assets in paths
+		//load assets in paths — editor-only: in shipping the AR is pre-populated from AssetRegistry.bin
+#if !UE_BUILD_SHIPPING
 		IAssetRegistry::Get()->ScanPathsSynchronous(OGF_CFG_LUA()->GlobalScriptBindPaths);
 		for (FString st : OGF_CFG_LUA()->GlobalScriptBindPaths)
 		{
 			UOmegaFunctions_Asset::GetAllClassesInPath(st,UOmegaGlobalScript::StaticClass(),true);
 			UOmegaFunctions_Asset::GetAllClassesInPath(st,UOmegaGlobalCondition::StaticClass(),true);
 		}
+#endif
 		
 		TArray<TSubclassOf<UObject>> script_classes=UOmegaFunctions_Asset::GetAllChildClasses(UOmegaGlobalScript::StaticClass(),true);
 		TArray<TSubclassOf<UObject>> condition_classes=UOmegaFunctions_Asset::GetAllChildClasses(UOmegaGlobalCondition::StaticClass(),true);
@@ -382,6 +387,7 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 	settings_omega->GetGameCore()->OnGame_Begin(GetWorld()->GetGameInstance());
 	
 	Patch_Event(0,nullptr);
+	OGF_GLOBALREFRESH();
 }
 
 void UOmegaSubsystem_GameInstance::Deinitialize()
@@ -492,6 +498,11 @@ void UOmegaSubsystem_GameInstance::Patch_Event(uint8 event, UOmegaSaveGame* _sav
 void UOmegaSubsystem_GameInstance::GameData_Init(FString Directory)
 {
 	FString inDir=OMEGA_File::PathCorrect(Directory);
+	if (!FPaths::DirectoryExists(inDir))
+	{
+		UE_LOG(LogInit, Log, TEXT("GAME DATA: Directory does not exist, skipping: %s"), *inDir);
+		return;
+	}
 	UE_LOG(LogInit, Log, TEXT("GAME DATA:	📁 IMPORTING DIRECTORY:  %s"), *Directory);
 	for (FString path : OMEGA_File::ListFilesInDirectory(inDir,true))
 	{
@@ -513,18 +524,18 @@ void UOmegaSubsystem_GameInstance::GameData_Init(FString Directory)
 				}
 			}
 		}
-		
-		//autorun lua files
-		TArray<FString> lua_files=OMEGA_File::ListFilesInDirectory(inDir+OGF_CFG()->GameData_LuaAutorun_Directory,true);
-		lua_files.Sort();
-		for (FString lua_file : lua_files)
+	}
+
+	//autorun lua files (once per GameData_Init call, not once per file)
+	TArray<FString> lua_files=OMEGA_File::ListFilesInDirectory(inDir+OGF_CFG()->GameData_LuaAutorun_Directory,true);
+	lua_files.Sort();
+	for (FString lua_file : lua_files)
+	{
+		FString lPath=OMEGA_File::PathCorrect(lua_file);
+		if (FPaths::GetExtension(lua_file)=="lua")
 		{
-			FString lPath=OMEGA_File::PathCorrect(lua_file);
-			if (FPaths::GetExtension(lua_file)=="lua")
-			{
-				SetLoadStateString("Run GameData lua file: "+lPath);
-				ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(this,nullptr,lPath,true);	
-			}
+			SetLoadStateString("Run GameData lua file: "+lPath);
+			ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(this,nullptr,lPath,true);
 		}
 	}
 }
@@ -749,7 +760,7 @@ UOmegaMod::UOmegaMod()
 {
 }
 
-void UOmegaMod::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
+void UOmegaMod::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	Name=LuaValue.GetField("name").ToText();
 	Description=LuaValue.GetField("description").ToText();

@@ -11,7 +11,7 @@
 // ===================================================================================================================
 // IntState
 // ===================================================================================================================
-UINTERFACE(MinimalAPI) class UDataInterface_IntState : public UInterface { GENERATED_BODY() };
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Int State") class UDataInterface_IntState : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_IntState
 {
 	GENERATED_BODY()

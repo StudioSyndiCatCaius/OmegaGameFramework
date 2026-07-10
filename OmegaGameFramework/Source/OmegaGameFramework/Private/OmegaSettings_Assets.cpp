@@ -6,6 +6,7 @@
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Engine.h"
+#include "Engine/Engine.h"
 
 
 UOmegaAssetSettings::UOmegaAssetSettings(const FObjectInitializer& ObjectInitializer)

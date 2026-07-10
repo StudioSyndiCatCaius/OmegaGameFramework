@@ -3,6 +3,7 @@
 
 #include "Actors/Actor_Zone.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
 #include "OmegaSettings.h"
@@ -14,14 +15,17 @@
 #include "Components/Component_UtilMesh.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/TextRenderComponent.h"
+#include "DataAssets/DA_Zone.h"
 #include "Functions/F_Common.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Engine/World.h"
 
 
 UZoneEntityComponent::UZoneEntityComponent()
 {
-	LegendAsset=LoadObject<UZoneLegendAsset>(nullptr, TEXT("/OmegaGameFramework/DEMO/Zone/Legend/Legend_SpawnPoint.Legend_SpawnPoint"));
+	static ConstructorHelpers::FObjectFinder<UZoneLegendAsset> LegendFinder(TEXT("/OmegaGameFramework/DEMO/Zone/Legend/Legend_SpawnPoint.Legend_SpawnPoint"));
+	if (LegendFinder.Succeeded()) LegendAsset = LegendFinder.Object;
 }
 
 void UZoneEntityComponent::BeginPlay()
@@ -97,39 +101,21 @@ float UZoneEntityComponent::GetRotation2D()
 	return GetOwner()->GetActorRotation().Yaw;
 }
 
-void UZoneEntityComponent::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
+void UZoneEntityComponent::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	Name=DisplayName;
 	Description=DisplayDescription;
-}
-
-void UZoneEntityComponent::GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture,
-	class UMaterialInterface*& Material, FSlateBrush& Brush)
-{
 	if(LegendAsset)
 	{
-		Brush=LegendAsset->Icon;
+		iconBrush=LegendAsset->Icon;
 	}
 }
 
-
-FGameplayTag UZoneEntityComponent::GetObjectGameplayCategory_Implementation()
+void UZoneEntityComponent::GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags)
 {
-	if(LegendAsset)
-	{
-		return LegendAsset->CategoryTag;
-	}
-	return FGameplayTag();
-}
-
-FGameplayTagContainer UZoneEntityComponent::GetObjectGameplayTags_Implementation()
-{
-	FGameplayTagContainer outTags=ExtraTags;
-	if(LegendAsset)
-	{
-		outTags.AppendTags(LegendAsset->GameplayTags);
-	}
-	return outTags;
+	if(LegendAsset) { OutCategoryTag=LegendAsset->CategoryTag; }
+	OutGameplayTags=ExtraTags;
+	if(LegendAsset) { OutGameplayTags.AppendTags(LegendAsset->GameplayTags); }
 }
 
 AZoneEntityViewCamera::AZoneEntityViewCamera()
@@ -263,7 +249,8 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComponent"));
 	if(TextComponent)
 	{
-		TextComponent->SetMaterial(0,LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")));
+		static ConstructorHelpers::FObjectFinder<UMaterialInterface> ZoneTextMatFinder(TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"));
+		if (ZoneTextMatFinder.Succeeded()) TextComponent->SetMaterial(0, ZoneTextMatFinder.Object);
 		TextComponent->SetupAttachment(RootRef);
 		TextComponent->SetHorizontalAlignment(EHTA_Center);
 		TextComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
@@ -510,13 +497,19 @@ void AOmegaZonePoint::BeginPlay()
 {
 	const FVector TempVec = GetActorLocation()+FVector(0,0,1);
 	SetActorLocation(TempVec);
-	//GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->L_ZonePointEvent(this,0,true);
 	Super::BeginPlay();
+	if (AOmegaWorldManager* wm = UOmegaGameFrameworkBPLibrary::GetOmegaWorldManager(this))
+	{
+		wm->ZonePoint_Register(this, true);
+	}
 }
 
 void AOmegaZonePoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	//GetWorld()->GetSubsystem<UOmegaZoneSubsystem>()->L_ZonePointEvent(this,0,false);
+	if (AOmegaWorldManager* wm = UOmegaGameFrameworkBPLibrary::GetOmegaWorldManager(this))
+	{
+		wm->ZonePoint_Register(this, false);
+	}
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -539,7 +532,7 @@ AOmegaZonePoint::AOmegaZonePoint()
 	
 }
 
-void AOmegaZonePoint::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
+void AOmegaZonePoint::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	Name = PointName;
 }

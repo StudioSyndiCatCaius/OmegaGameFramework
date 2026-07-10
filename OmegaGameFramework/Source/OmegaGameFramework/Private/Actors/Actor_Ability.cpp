@@ -5,7 +5,6 @@
 #include "InputAction.h"
 #include "GameFramework/Character.h"
 #include "Components/Component_Combatant.h"
-#include "Components/Component_InputReceiver.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Subsystems/Subsystem_GameManager.h"
@@ -146,8 +145,9 @@ void AOmegaAbility::Local_SetInputEnabled(bool Enabled)
 	}
 }
 
-void AOmegaAbility::Native_AbilityActivated(UObject* Context)
+void AOmegaAbility::Native_AbilityActivated(UObject* Context, FOmegaCombatantEventMeta meta)
 {
+	f_activeTickAccumulator = ActiveTickFrequency;
 	if(Config)
 	{
 		Config->L_OnActivate(this,Context);
@@ -162,7 +162,7 @@ void AOmegaAbility::Native_AbilityActivated(UObject* Context)
 	{
 		EnableInput(GetAbilityOwnerPlayer());
 	}
-	AbilityActivated(Context);
+	AbilityActivated(Context,meta);
 }
 
 void AOmegaAbility::Native_AbilityFinished(bool Cancelled)
@@ -203,6 +203,7 @@ bool AOmegaAbility::Native_CanActivate(UObject* Context)
 	*/
 	if(CombatantOwner)
 	{
+		if (CombatantOwner->bAbilitiesDisabled) { return false; }
 		// is in cooldown
 		if(IsAbilityInCooldown())
 		{
@@ -245,9 +246,22 @@ bool AOmegaAbility::Native_CanActivate(UObject* Context)
 void AOmegaAbility::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if(bIsActive)
+	if (bIsActive)
 	{
-		Native_ActivatedTick(DeltaTime);
+		if (ActiveTickFrequency <= 0.f)
+		{
+			Native_ActivatedTick(DeltaTime);
+		}
+		else
+		{
+			f_activeTickAccumulator += DeltaTime;
+			if (f_activeTickAccumulator >= ActiveTickFrequency)
+			{
+				const float ThrottledDelta = f_activeTickAccumulator;
+				f_activeTickAccumulator = 0.f;
+				Native_ActivatedTick(ThrottledDelta);
+			}
+		}
 	}
 	
 	//COOLDOWN TICk
@@ -259,7 +273,7 @@ void AOmegaAbility::Tick(float DeltaTime)
 
 void AOmegaAbility::L_OnInput_Start(FVector Value)
 {
-	Execute(nullptr);
+	Execute(nullptr,LastMeta);
 }
 
 void AOmegaAbility::L_OnInput_End(FVector Value)
@@ -267,14 +281,24 @@ void AOmegaAbility::L_OnInput_End(FVector Value)
 	CompleteAbility();
 }
 
-bool AOmegaAbility::Execute(UObject* Context)
+
+
+float AOmegaAbility::UtilityCheck_Implementation(const UCombatantComponent* Combatant, UObject*& ExecuteContext,
+	FOmegaCombatantEventMeta& meta, int32& Priority)
+{
+	ExecuteContext = nullptr;
+	Priority = 0;
+	return 0.f;
+}
+
+bool AOmegaAbility::Execute(UObject* Context, FOmegaCombatantEventMeta meta)
 {
 	// Success if:
 	if(Native_CanActivate(Context))
 	{
 		CombatantOwner->CancelAbilitiesWithTags(CancelAbilities);
 		CombatantOwner->CancelAbilitiesWithTags(BlockAbilities);
-		
+		CombatantOwner->SetCombatantTagsActive(OwnerTagsWhileActive,true);
 		ContextObject=Context;
 		if(!Context)
 		{
@@ -287,7 +311,7 @@ bool AOmegaAbility::Execute(UObject* Context)
 		{
 			GetAbilityActivationTimeline()->Play();
 		}
-		Native_AbilityActivated(Context);
+		Native_AbilityActivated(Context, meta);
 		return true;
 	}
 	return false;
@@ -295,7 +319,7 @@ bool AOmegaAbility::Execute(UObject* Context)
 
 bool AOmegaAbility::Native_Execute() 
 {
-	return Execute(ContextObject);
+	return Execute(ContextObject,LastMeta);
 }
 
 void AOmegaAbility::Native_Start()
@@ -315,7 +339,7 @@ void AOmegaAbility::Native_Start()
 
 ////Local Activate / Deactivate
 
-bool AOmegaAbility::CanActivate_Implementation(const UObject* Context)
+bool AOmegaAbility::CanActivate_Implementation(UObject* Context)
 {
 	return true;
 }
@@ -384,6 +408,34 @@ UCharacterMovementComponent* AOmegaAbility::GetAbilityOwnerCharacterMoveComponen
 	
 }
 
+bool AOmegaAbility::IsOwner_Falling(bool& bResult)
+{
+	bResult = false;
+	if (UPawnMovementComponent* comp=GetAbilityOwnerCharacterMoveComponent())
+	{
+		bResult = comp->IsFalling();
+		return bResult;
+	}
+	return false;
+}
+
+UPrimaryDataAsset* AOmegaAbility::GetEquipmentInOwnerSlot(UEquipmentSlot* Slot, TSubclassOf<UPrimaryDataAsset> Class,
+	bool& bResult)
+{
+	bResult = false;
+	if (Slot && CombatantOwner)
+	{
+		if (UPrimaryDataAsset* itm=CombatantOwner->Equipment_GetInSlot(Slot,bResult))
+		{
+			if (itm->GetClass()->IsChildOf(Class))
+			{
+				return itm;
+			}
+		}
+	}
+	return nullptr;
+}
+
 USkeletalMeshComponent* AOmegaAbility::GetAbilityOwnerMesh() const
 {
 	if (CombatantOwner->Override_AbilitySkelMesh)
@@ -426,6 +478,7 @@ void AOmegaAbility::RecieveFinish(bool bCancel)
 		bIsActive = false;
 		Native_AbilityFinished(bCancel);
 		OnAbilityFinished.Broadcast(bCancel);
+		CombatantOwner->SetCombatantTagsActive(OwnerTagsWhileActive,false);
 		
 		// TIMLEINE
 		if(GetAbilityActivationTimeline())
@@ -462,6 +515,19 @@ FName AOmegaAbility::GetSubstate_NameFromIndex(int32 index) const
 	}
 	return FName();
 }
+
+void AOmegaAbility::AbilityActivated_Implementation(UObject* Context, FOmegaCombatantEventMeta meta)
+{
+}
+
+void AOmegaAbility::ActivatedTick_Implementation(float DeltaTime)
+{
+}
+
+void AOmegaAbility::AbilityFinished_Implementation(bool Cancelled)
+{
+}
+
 
 
 void AOmegaAbility::Local_TriggerEvents(TArray<FName> Events)

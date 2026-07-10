@@ -23,6 +23,10 @@ class UOmegaFunctions_Meta : public UBlueprintFunctionLibrary
 
 public:
 
+	UFUNCTION(BlueprintPure,Category="Omega|CommonMeta",DisplayName="Meta - Get First Object (of Class)",meta=(DeterminesOutputType="Class"))
+	static UObject* GetFirstObjectOfClass(FOmegaCommonMeta source, TSubclassOf<UObject> Class,bool bIncludeContext=true);
+	
+
 	UFUNCTION(BlueprintPure,Category="Omega|CommonMeta",DisplayName="Meta - Parse (String)",meta=(AdvancedDisplay="parseOrder"))
 	static FString Parse_String(FOmegaCommonMeta source, const FString& param, const FString& Fallback, bool& bValid,TEnumAsByte<EOmegaCommonMetaParamParseOrder> parseOrder);
 	

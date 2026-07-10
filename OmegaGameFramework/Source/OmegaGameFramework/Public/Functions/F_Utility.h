@@ -8,6 +8,7 @@
 #include "Math/Vector2D.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "GameplayTagContainer.h"
+#include "Sound/SoundWave.h"
 #include "F_Utility.generated.h"
 
 UCLASS()
@@ -15,6 +16,8 @@ class UOmegaUtilityFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
+	
+	UFUNCTION(BlueprintCallable,Category="Omega") static void GlobalRefresh();
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Load", meta=(Keywords="if, is",WorldContext="WorldContextObject"))
 	static bool AreStreamedLevelsLoading(UObject* WorldContextObject);

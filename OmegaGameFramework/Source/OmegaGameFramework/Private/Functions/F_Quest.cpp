@@ -16,17 +16,21 @@ TArray<AOmegaQuestInstance*> UOmegaFunctions_Quest::GetAllActiveInstances(UObjec
 	return out;
 }
 
-AOmegaQuestInstance* UOmegaFunctions_Quest::Start(UObject* WorldContext, UOmegaQuest* quest)
+AOmegaQuestInstance* UOmegaFunctions_Quest::Start(UObject* WorldContext, UOmegaQuest* quest, bool bOverrideStartData,
+	FOmegaQuestData data)
 {
 	if (UOmegaSubsystem_World* w=OGF_Subsystems::oWorld(WorldContext))
 	{
 		if (AOmegaWorldManager* wm=w->WorldManager.Get())
 		{
-			return wm->Quest_Start(quest);	
+			return wm->Quest_Start(quest,bOverrideStartData,data);	
 		}
 	}
 	return nullptr;
 }
+
+
+
 
 
 bool UOmegaFunctions_Quest::End(UObject* WorldContext, UOmegaQuest* quest, bool bComplete)

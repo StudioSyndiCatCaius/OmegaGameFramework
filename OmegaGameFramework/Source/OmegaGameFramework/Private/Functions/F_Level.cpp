@@ -11,6 +11,10 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_GameManager.h"
+#include "Engine/Engine.h"
+#include "Engine/EngineBaseTypes.h"
+#include "Engine/LevelStreaming.h"
+#include "TimerManager.h"
 
 
 
@@ -119,6 +123,18 @@ TSoftObjectPtr<UWorld> UOmegaLevelFunctions::GetPersistentWorldAssetSoft(const U
 	return TSoftObjectPtr<UWorld>(FSoftObjectPath(FullPath));
 }
 
+TArray<FName> UOmegaLevelFunctions::Conv_WorldToNames(TArray<TSoftObjectPtr<UWorld>> Worlds)
+{
+	TArray<FName> Result;
+	for (const TSoftObjectPtr<UWorld>& World : Worlds)
+	{
+		if (!World.IsNull())
+		{
+			Result.Add(FName(*World.GetAssetName()));
+		}
+	}
+	return Result;
+}
 FOmegaCustomLevelWrapper UOmegaLevelFunctions::DuplicateCurrentLevelAsCustom(UObject* WorldContextObject, bool& bSuccess)
 {
     FOmegaCustomLevelWrapper Wrapper;

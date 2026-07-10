@@ -4,12 +4,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Misc/Paths.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Interfaces/I_Common.h"
 #include "JsonObjectWrapper.h"
 #include "LuaValue.h"
 #include "Components/Component_AssetSquad.h"
+#include "Components/Component_Calendar.h"
 #include "Misc/Timespan.h"
 #include "GameFramework/SaveGame.h"
 #include "Misc/GeneralDataObject.h"
@@ -36,6 +38,7 @@ class UGamePreference;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewGameStarted, UOmegaSaveGame*, NewGame, FGameplayTagContainer, Tags);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSaveStateChanged, FGameplayTag, NewState, bool, bGlobal);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSaveTagsEdited, FGameplayTagContainer, EditedTags, bool, Added, bool, bGlobal);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSaveBoolDelegate, UOmegaSaveBase*, Save, bool, State);
 
 UCLASS(DisplayName = "Omega Subsystem: Save")
 class OMEGAGAMEFRAMEWORK_API UOmegaSaveSubsystem : public UGameInstanceSubsystem
@@ -78,9 +81,8 @@ public:
 	//###############################################################################################
 	// SAVING
 	//###############################################################################################
-	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem", DisplayName="Save Game (Unique Format)")
-	bool SaveGameUnique(EUniqueSaveFormats Format);
-	
+	void WriteSaveDataToActive();
+
 	UFUNCTION(BlueprintCallable, Category = "Omega|SaveSubsystem",DisplayName="Save Active Game (To Slot)",meta=(AdvancedDisplay="AlternatePath"))
 	void SaveActiveGame(int32 Slot,FGameplayTag SaveCategory, bool& Success, const FString& AlternatePath="");
 
@@ -111,10 +113,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem")
 	void SaveGlobalGame();
-
-	UPROPERTY(BlueprintAssignable) FOnSaveStateChanged OnSaveStateChanged;
-	UPROPERTY(BlueprintAssignable) FOnSaveTagsEdited OnSaveTagsEdited;
-	UPROPERTY(BlueprintAssignable) FOnNewGameStarted OnNewGameStarted;
+	
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnSaveStateChanged OnSaveStateChanged;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnSaveTagsEdited OnSaveTagsEdited;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnNewGameStarted OnNewGameStarted;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnSaveBoolDelegate OnAsyncSaveStateChange;
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|SaveSubsystem|Tags", DisplayName="Set Save State Tag")
 	void SetStoryState(FGameplayTag StateTag, bool Global);
@@ -197,43 +200,6 @@ public:
 };
 
 
-UCLASS( ClassGroup=("Omega Game Framework"), DisplayName="Visibility On Save", meta=(BlueprintSpawnableComponent) )
-class OMEGAGAMEFRAMEWORK_API UOmegaSaveStateComponent : public UActorComponent
-{
-	GENERATED_BODY()
-
-public:
-
-	virtual void BeginPlay() override;
-
-private:
-	UFUNCTION()
-	void LocalStateChanged(FGameplayTag TagState, bool bGlobal);
-	UFUNCTION()
-	void LocalTagsEdited(FGameplayTagContainer Tags,  bool Added, bool bGlobal);
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags")
-	bool bGlobalSave;
-
-	UFUNCTION()
-	void Refresh();
-
-	//Displays this actor only if the save state is one of the given tags.
-	UPROPERTY()
-	FGameplayTagContainer VisibleOnStateTags;
-	
-	UPROPERTY()
-	FGameplayTagContainer HiddenOnStateTags;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags", DisplayName="Visible (On Save Query)")
-	FGameplayTagQuery VisibleOnSaveQuery;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tags", DisplayName="Hidden (On Save Query)")
-	FGameplayTagQuery HiddenOnSaveQuery;
-	
-};
-
 // ====================================================================================================
 // Save Object
 // ====================================================================================================
@@ -246,6 +212,10 @@ public:
 	
 	UFUNCTION() void Local_OnLoaded();
 	
+	//tempory loaded path to where this file was saved to/loaded from
+	UPROPERTY(BlueprintReadOnly,Transient,Category="File") FString FilePath;
+	UPROPERTY(BlueprintReadOnly,Transient, Category="Save") UTexture2D* SaveScreenshot;
+	
 	FLuaValue Lua_LoadTable(UObject* context) const;
 	void Lua_SaveTable(UObject* context, FLuaValue LuaValue);
 	
@@ -255,6 +225,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") FOmegaEntitySet Entities;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Save") FOmegaSoftParams GlobalVars;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<FName,FOmegaAssetSquad_Data> SquadData;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<FName,FOmegaCalendarData> CalendarData;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
 
@@ -281,7 +252,8 @@ public:
 	UFUNCTION(BlueprintPure, Category="Playtime")
 	FString GetPlaytimeString(bool bIncludeMilliseconds);
 
-	virtual FGameplayTag GetObjectGameplayCategory_Implementation() override {return SaveCategory;};
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override {};
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Save")
 	void OnSaveCreated(UGameInstance* GameInstance);
@@ -317,11 +289,11 @@ public:
 	UPROPERTY() FString ActiveLevelName;
 	UPROPERTY() FTransform SavedPlayerTransform;
 	UPROPERTY() UOmegaZoneData* ActiveZone;
+	UPROPERTY(BlueprintReadOnly,Category="Save") bool Initialised=false;
 	
 	UPROPERTY(BlueprintReadOnly, Category="Save") FDateTime SaveDate;
 	UPROPERTY(BlueprintReadWrite, Category="Tags") TMap<TSoftObjectPtr<AActor>, FGameplayTag> ActorStates;
 	UPROPERTY(BlueprintReadWrite, Category="Tags") TMap<TSoftObjectPtr<AActor>, FGameplayTagContainer> ActorTags;
-	UPROPERTY(BlueprintReadOnly, Category="Save") UTexture2D* SaveScreenshot;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Save") TMap<FGameplayTag,UOmegaBGM*> BgmOverrides;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Save") void OnGameStarted(FGameplayTagContainer Tags);

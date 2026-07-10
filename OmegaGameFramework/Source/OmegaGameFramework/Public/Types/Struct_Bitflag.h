@@ -53,6 +53,11 @@ struct FOmegaBitmaskEditorData
 	// BitEnums section (up to 16 entries, each with up to 16 options)
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
 	TArray<FOmegaBitmaskEditorEnumData> BitEnums;
+	
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	TArray<FName> Relative_Actors;
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Omega")
+	TArray<FName> Relative_Assets;
 };
 
 USTRUCT(BlueprintType)
@@ -62,7 +67,7 @@ struct FOmegaBitflagsBase
 	
 	FOmegaBitmaskEditorData GetConfig(UClass* OuterObject);
 	
-	UPROPERTY(Transient) bool override_config;
+	UPROPERTY(Transient) bool override_config = false;
 	UPROPERTY(Transient) FOmegaBitmaskEditorData override_configData;
 	UPROPERTY(Transient) TWeakObjectPtr<UObject> override_source;
 	

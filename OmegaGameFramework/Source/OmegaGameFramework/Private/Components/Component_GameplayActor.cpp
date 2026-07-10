@@ -6,11 +6,14 @@
 #include "LuaBlueprintFunctionLibrary.h"
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
+#include "Functions/F_Common.h"
 #include "Functions/F_Component.h"
 #include "Functions/F_Lua.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Macros.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
+#include "TimerManager.h"
 
 const uint8 SUBSCRIPT_EVENT_BEGINPLAY=0;
 const uint8 SUBSCRIPT_EVENT_ENDPLAY=1;
@@ -68,7 +71,7 @@ void UGameplayActorComponent::L_Init()
 	{
 		if(Local_IsSourceAssetValid())
 		{
-			OGF_GAME_CORE()->ActorID_IdentityInit(GetOwner(),this,IdentitySource);
+			//OGF_GAME_CORE()->ActorID_IdentityInit(GetOwner(),this,IdentitySource);
 			IDataInterface_ActorIdentitySource::Execute_OnIdentityInit(IdentitySource,GetOwner(),this);
 		}
 	}
@@ -170,11 +173,12 @@ TArray<UActorIdentityScript*> UGameplayActorComponent::Local_GetScripts() const
 
 UOmegaActorConfig* UGameplayActorComponent::L_GetConfig()
 {
+	/*
 	if (UOmegaActorConfig* _Newconfig= GetMutableDefault<UOmegaSettings>()->ActorConfig_PerClass
 		.FindOrAdd(TSoftClassPtr<AActor>(GetOwner()->GetClass())).LoadSynchronous())
 	{
 		return _Newconfig;
-	}
+	}*/
 	return DefaultConfig;
 }
 
@@ -189,13 +193,26 @@ UGameplayActorComponent::UGameplayActorComponent()
 	PrimaryComponentTick.bCanEverTick=true;
 }
 
+void UGameplayActorComponent::L_UpdateVisibility()
+{
+	UOmegaGameFrameworkBPLibrary::SetActorActive(GetOwner(),IsVisible());
+}
+
+bool UGameplayActorComponent::IsVisible() const
+{
+	FGameplayTagContainer SaveTags=OGF_Subsystems::oSave(this)->GetSaveObject(bGlobalSave)->SaveTags;
+	if (!VisibleOnSaveQuery.IsEmpty() && !VisibleOnSaveQuery.Matches(SaveTags)) return false;
+	if (!HiddenOnSaveQuery.IsEmpty() && HiddenOnSaveQuery.Matches(SaveTags)) return false;
+	return true;
+}
+
 void UGameplayActorComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAsset)
 {
 	if(IdentitySource)
 	{
 		if(Local_IsSourceAssetValid())
 		{
-			OGF_GAME_CORE()->ActorID_IdentityUninit(GetOwner(),this,IdentitySource);
+			//OGF_GAME_CORE()->ActorID_IdentityUninit(GetOwner(),this,IdentitySource);
 			IDataInterface_ActorIdentitySource::Execute_OnIdentityUninit(IdentitySource,GetOwner(),this);
 		}
 	}
@@ -214,32 +231,15 @@ void UGameplayActorComponent::SetIdentitySourceAsset(UPrimaryDataAsset* SourceAs
 	}
 }
 
-void UGameplayActorComponent::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description)
+void UGameplayActorComponent::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
 	if (L_SourceUsesGeneralInterface())
 	{
-		Execute_GetGeneralDataText(IdentitySource,Tag,Name,Description);
+		IDataInterface_General::Execute_GetGeneralDataText(IdentitySource, Tag, Name, Description, iconBrush, Color, Label, MetaConfig);
 	}
 	if (!OverrideName.IsEmpty())
 	{
 		Name=OverrideName;
-	}
-}
-
-void UGameplayActorComponent::GetGeneralDataImages_Implementation(FGameplayTag Tag, class UTexture2D*& Texture,
-	class UMaterialInterface*& Material, FSlateBrush& Brush)
-{
-	if (L_SourceUsesGeneralInterface())
-	{
-		Execute_GetGeneralDataImages(IdentitySource,Tag,Texture,Material,Brush);
-	}
-}
-
-void UGameplayActorComponent::GetGeneralAssetLabel_Implementation(FString& Label)
-{
-	if (L_SourceUsesGeneralInterface())
-	{
-		Execute_GetGeneralAssetLabel(IdentitySource,Label);
 	}
 }
 
@@ -282,7 +282,14 @@ void UGameplayActorComponent::PostEditChangeProperty(FPropertyChangedEvent& Prop
 	}
 	//Super::PostEditChangeProperty(PropertyChangedEvent);
 }
+
+
 #endif
+
+void UGameplayActorComponent::L_SaveTagsUpdate(FGameplayTagContainer EditedTags, bool bAdded, bool bGlobal)
+{
+	L_UpdateVisibility();
+}
 
 void UGameplayActorComponent::BeginPlay()
 {
@@ -294,7 +301,8 @@ void UGameplayActorComponent::BeginPlay()
 	GetOwner()->OnActorBeginOverlap.AddDynamic(this, &UGameplayActorComponent::OnActorBeginOverlap);
 	GetOwner()->OnActorEndOverlap.AddDynamic(this, &UGameplayActorComponent::OnActorEndOverlap);
 	GetOwner()->OnActorHit.AddDynamic(this, &UGameplayActorComponent::OnActorHit);
-	OGF_GAME_CORE()->ActorID_OnBeginPlay(GetOwner(),this);
+	OGF_Subsystems::oSave(this)->OnSaveTagsEdited.AddDynamic(this, &UGameplayActorComponent::L_SaveTagsUpdate);
+	//OGF_GAME_CORE()->ActorID_OnBeginPlay(GetOwner(),this);
 	if(Local_IsSourceAssetValid())
 	{
 		L_Init();

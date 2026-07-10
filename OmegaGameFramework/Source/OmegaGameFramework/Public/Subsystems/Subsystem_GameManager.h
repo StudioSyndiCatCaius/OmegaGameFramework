@@ -60,7 +60,7 @@ struct FOmegaBGM_SlotData
 	GENERATED_BODY()
 
 	UPROPERTY() float SavedPlaybackPosition=0.0f;
-	UPROPERTY() UOmegaBGM* lastBgm;
+	UPROPERTY() UOmegaBGM* lastBgm = nullptr;
 
 };
 
@@ -113,6 +113,7 @@ public:
 	TArray<FKey> cachedAxisKeys;
 	TMap<FKey,FOmegaInputKeyCacheData> InputKeyCacheData;
 
+	
 	// ------------------------------
 	// patches
 	
@@ -140,9 +141,10 @@ public:
 	UPROPERTY() TArray<UOmegaGameplayModule*> ActiveModules;
 	UPROPERTY() TArray<UOmegaMod*> ModList;
 	UPROPERTY() FOmegaSoftParams GlobalVars;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") FOmegaEntitySet Entities;
 	class TSubclassOf<UOmegaGameSettings> LocalSettingsClass;
 	
-	UPROPERTY(BlueprintAssignable) FOmegaGlobalParamDelegate OnGlobalParamEdit;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOmegaGlobalParamDelegate OnGlobalParamEdit;
 	
 	// ------------------------------------------------------
 	// Blueprint VISIBLE
@@ -154,7 +156,7 @@ public:
 	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle="Gameplay Modules", DeterminesOutputType="Module"), Category="Omega|Game Manager")
 	TArray<UOmegaGameplayModule*> GetGameplayModules();
 		
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnNewLevel OnNewLevel;
 	
 	// ────────────────────────────────────────────────────────────────────
@@ -201,7 +203,7 @@ public:
 	// Preferences
 	//################################################################
 	
-	UPROPERTY(BlueprintAssignable) FOnPreferenceValueUpdated OnPreferenceValueUpdated;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnPreferenceValueUpdated OnPreferenceValueUpdated;
 	
 	FVector Pref_Get(UGamePreference* pref) const;
 	void Pref_Set(UGamePreference* pref, FVector Value) const;
@@ -209,8 +211,8 @@ public:
 	//################################################################
 	// Global Event
 	//################################################################
-	UPROPERTY(BlueprintAssignable) FOnGlobalEvent OnGlobalEvent;
-	UPROPERTY(BlueprintAssignable) FOnTaggedGlobalEvent OnTaggedGlobalEvent;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGlobalEvent OnGlobalEvent;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnTaggedGlobalEvent OnTaggedGlobalEvent;
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"),DisplayName="Fire Global Event (Name)")
 	void FireGlobalEvent(FName Event, UObject* Context, FOmegaCommonMeta meta);
@@ -248,6 +250,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Mods")
 	bool OnModInitialized();
 	
-	virtual void GetGeneralAssetLabel_Implementation(FString& Label) override { Label = ModLabel; };
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 };

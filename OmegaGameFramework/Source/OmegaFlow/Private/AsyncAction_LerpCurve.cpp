@@ -3,6 +3,7 @@
 
 #include "AsyncAction_LerpCurve.h"
 #include "Engine/World.h"
+#include "Curves/CurveFloat.h"
 
 
 void UAsyncAction_LerpCurve::Tick(float DeltaTime)

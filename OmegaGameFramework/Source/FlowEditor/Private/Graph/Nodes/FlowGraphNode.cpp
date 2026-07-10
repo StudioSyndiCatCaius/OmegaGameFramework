@@ -420,7 +420,7 @@ void UFlowGraphNode::RewireOldPinsToNewPins(TArray<UEdGraphPin*>& InOldPins)
 			OldPin->bOrphanedPin = true;
 			OldPin->bNotConnectable = true;
 			OrphanedOldPins.Add(OldPin);
-			InOldPins.RemoveAt(OldPinIndex, 1, false);
+			InOldPins.RemoveAt(OldPinIndex, 1);
 		}
 	}
 

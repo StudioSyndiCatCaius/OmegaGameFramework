@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Functions/F_Component.h"
+#include "Functions/F_ScriptedAnim.h"
 #include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
 #include "FlowNode_Actors.generated.h"
@@ -24,10 +25,8 @@ public:
 	UFUNCTION(BlueprintPure,Category="Flow")
 	TArray<AActor*> GetActors() const; 
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,DisplayName="Actor (ID)",Category="Actor")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,DisplayName="Actor Identity",Category="Actor")
 	UPrimaryDataAsset* Actor_Identity;
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,DisplayName="Actor (Ref)",Category="Actor")
-	UOmegaActorSelector* Actor;
 };
 
 	
@@ -72,17 +71,15 @@ public:
 	TArray<UOmegaCondition_Actor*> Conditions;
 
 };
-/*
-UCLASS(DisplayName="Character - Montage",Category="Actor")
-class OMEGADEMO_API UFlowNode_Actor_Montage : public UFlowNode_ActorBase
+
+
+UCLASS(DisplayName="Actor - Play Scripted Anim",Category="Actor")
+class OMEGADEMO_API UFlowNode_ScriptedAnim : public UFlowNode_ActorBase
 {
 	GENERATED_BODY()
 
 public:
-	UFlowNode_Actor_Montage();
-
-	UFUNCTION() void OnMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted);
-	UFUNCTION() void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	//UFlowNode_Actor_Modify();
 
 	virtual void ExecuteInput(const FName& PinName) override;
 
@@ -91,11 +88,7 @@ public:
 	virtual FString GetNodeCategory() const override { return "Actor"; };
 #endif
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Actor")
-	UAnimMontage* Montage;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Actor")
-	float PlayRate=1.0;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Actor")
-	float StartingPosition;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Actor",meta=(ShowOnlyInnerProperties))
+	FOmegaScriptedAnimationData AnimData;
+
 };
-*/

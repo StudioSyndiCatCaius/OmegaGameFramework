@@ -23,8 +23,8 @@ struct FSlateBrush;
 DECLARE_DELEGATE_OneParam(FOnPositionChanged, FVector2D)
 
 // Used for some of the Color wheels UFUNCTIONS to specify the target brush.
-UENUM()
-enum EWheelBrushTarget
+UENUM(BlueprintType)
+enum class EWheelBrushTarget : uint8
 {
     // Apply brush to pin and wheel
     All,
@@ -94,7 +94,7 @@ public:
     void Construct(const FArguments& InArgs);
 	
     /** See the ColorAndOpacity attribute */
-    void SetColorAndOpacity(FLinearColor InColorAndOpacity, TEnumAsByte<EWheelBrushTarget> TargetBrush);
+    void SetColorAndOpacity(FLinearColor InColorAndOpacity, EWheelBrushTarget TargetBrush);
     
 #pragma region Overrides
     

@@ -24,9 +24,9 @@ public:
 	virtual bool IsTickableInEditor() const { return false; }
 	// FTickableGameObject End
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnLerpCurveUpdate Updated;
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnLerpCurveFinished Finished;
 
 	UPROPERTY() bool local_playing;
@@ -40,7 +40,7 @@ public:
 	
 	virtual void Activate() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly, WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",
 		DisplayName="Ω🔷 Lerp Along Curve")
 	static UAsyncAction_LerpCurve* LerpAlongCurve(UObject* WorldContextObject, UCurveFloat* Curve, float PlayRate=1.0, bool bReverse=false);
 

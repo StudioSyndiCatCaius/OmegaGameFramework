@@ -1,7 +1,7 @@
 // Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #pragma once
-#include "Functions/OmegaFunctions_CombatantFilter.h"
+#include "Functions/F_CombatantFilter.h"
 
 #include "script_CombatantFilter.generated.h"
 

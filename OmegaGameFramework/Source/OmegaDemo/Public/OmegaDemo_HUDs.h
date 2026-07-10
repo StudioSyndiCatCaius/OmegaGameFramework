@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/WidgetSwitcher.h"
+#include "Types/Struct_Message.h"
 #include "Widget/DataWidget.h"
 #include "Widget/HUDLayer.h"
 #include "OmegaDemo_HUDs.generated.h"

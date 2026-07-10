@@ -171,7 +171,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString& FailRe
 	if(GetActiveTurnMember() != nullptr)		//If active turn member is valid
 	{
 		OnTurnEnd.Broadcast(this,GetActiveTurnMember());
-		OGF_GAME_CORE()->TurnManager_TurnEnd(this,GetActiveTurnMember());
+		//OGF_GAME_CORE()->TurnManager_TurnEnd(this,GetActiveTurnMember());
 		RemoveFromTurnOrder(GetActiveTurnMember());
 //		GetActiveTurnMember()->TriggerEffectsWithTags(TriggeredEffectsOnTurnEnd);
 		UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnEnd);
@@ -192,7 +192,7 @@ bool UTurnBasedManagerComponent::NextTurn(bool bGenerateIfEmpty, FString& FailRe
 		if(false)	//When Failed to Start Turn
 		{
 			OnTurnFail.Broadcast(FailReason);
-			OGF_GAME_CORE()->TurnManager_TurnFail(this,FailReason);
+			//OGF_GAME_CORE()->TurnManager_TurnFail(this,FailReason);
 			return false;
 		}
 		FailReason = "";
@@ -221,11 +221,11 @@ void UTurnBasedManagerComponent::BeginTurn(UCombatantComponent* Combatant)
 	OnTurnStart.Broadcast(this,Combatant);
 	bool LocalSuccess;
 	Combatant->SetAbilityGranted(Local_GetTurnAbility(),true);
-	OGF_GAME_CORE()->TurnManager_TurnStart(this,Combatant);
+	//OGF_GAME_CORE()->TurnManager_TurnStart(this,Combatant);
 	
 	// TAG EVENTS
 	UActorTagEventFunctions::FireTagEventsOnActor(GetActiveTurnMember()->GetOwner(),TagEventsOnTurnBegin);
-	LocalTurnAbility = Combatant->ExecuteAbility(Local_GetTurnAbility(), this,LocalSuccess);
+	LocalTurnAbility = Combatant->ExecuteAbility(Local_GetTurnAbility(), this,FOmegaCombatantEventMeta(),LocalSuccess);
 	
 	if(LocalSuccess && LocalTurnAbility)
 	{

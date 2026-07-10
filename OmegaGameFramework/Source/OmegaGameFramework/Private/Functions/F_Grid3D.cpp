@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "DrawDebugHelpers.h"
 
 UOmegaGrid3D_Map::UOmegaGrid3D_Map()
 {

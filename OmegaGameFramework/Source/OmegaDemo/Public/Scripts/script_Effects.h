@@ -18,6 +18,7 @@ class OMEGADEMO_API UEffectScript_FlipTargets : public UOmegaScriptedEffect
 	GENERATED_BODY()
 public:
 	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
+	virtual float GetEffectUtilityScore_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override { return 0.5f; };
 
 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="Effects")
 	TArray<UOmegaScriptedEffect*> Effects;
@@ -30,6 +31,9 @@ class OMEGADEMO_API UEffectScript_EffectActorAdd : public UOmegaScriptedEffect
 public:
 	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
 
+	//higher score the more damage it does (flipped if friendly target)
+	virtual float GetEffectUtilityScore_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects")
 	TSubclassOf<AOmegaGameplayEffect> Class;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects")
@@ -38,6 +42,8 @@ public:
 	float Power=1.0;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects")
 	FGameplayTagContainer Tags;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects")
+	TEnumAsByte<EFactionAffinity> Utility_Target;
 	
 };
 
@@ -48,11 +54,15 @@ class OMEGADEMO_API UEffectScript_EffectActorRemove : public UOmegaScriptedEffec
 public:
 	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
 
+	//higher score the more damage it does (flipped if friendly target)
+	virtual float GetEffectUtilityScore_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects")
 	TArray<TSubclassOf<AOmegaGameplayEffect>> Classes_Removed;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects")
 	FGameplayTagContainer Tags_Removed;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effects")
+	TEnumAsByte<EFactionAffinity> Utility_Target;
 };
 
 
@@ -63,15 +73,19 @@ class OMEGADEMO_API UEffectScript_DamageFlat : public UOmegaScriptedEffect
 	GENERATED_BODY()
 public:
 	virtual bool OnEffectApplied_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
-	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description) override;
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
+	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	//higher score the more damage it does (flipped if friendly target)
+	virtual float GetEffectUtilityScore_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	UOmegaAttribute* DamagedAttribute;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	float Amount;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	bool bIsPercentage;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	UOmegaDamageType* DamageType;
 };
 
@@ -85,7 +99,9 @@ class OMEGADEMO_API UEffectScriptBASE_DamagePercent : public UOmegaScriptedEffec
 
 	
 public:
-
+	//higher score the more damage it does (flipped if friendly target)
+	virtual float GetEffectUtilityScore_Implementation(UCombatantComponent* Target, UCombatantComponent* Instigator) override;
+	
 	UFUNCTION(BlueprintNativeEvent,Category="Effect")
 	void GetEffectParameters(UOmegaAttribute*& _DamagedAttribute,UOmegaDamageType*& _DamageType,float& _Variance,float& _MinDamage,float& _MaxDamage,
 		UOmegaAttribute*& _Instigator_Attribute, float& _Instigator_Power, UOmegaAttribute*& _Target_Attribute, float& _Target_Power);
@@ -98,26 +114,26 @@ class OMEGADEMO_API UEffectScript_DamagePercent : public UEffectScriptBASE_Damag
 public:
 	virtual void GetEffectParameters_Implementation(UOmegaAttribute*& _DamagedAttribute, UOmegaDamageType*& _DamageType, float& _Variance, float& _MinDamage, float& _MaxDamage, UOmegaAttribute*& _Instigator_Attribute, float& Instigator_Power, UOmegaAttribute*& _Target_Attribute, float& _Target_Power) override;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	UOmegaAttribute* DamagedAttribute;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	UOmegaDamageType* DamageType;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	float Variance=0.05;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	float MinDamage=0.0;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	float MaxDamage=99999.0;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	UOmegaAttribute* Instigator_Attribute;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	float Instigator_Power=1.0;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	UOmegaAttribute* Target_Attribute;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Effect",meta=(ExposeOnSpawn=true))
 	float Target_Power=0.5;
 };
 

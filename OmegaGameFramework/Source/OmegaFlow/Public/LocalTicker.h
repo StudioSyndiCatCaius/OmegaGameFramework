@@ -19,12 +19,12 @@ class OMEGAFLOW_API ULocalTicker : public UBlueprintAsyncActionBase, public FTic
 public:
 
 	// ── Output pin ────────────────────────────────────────────────────────────
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnLocalTickerTick OnTick;
 
 	// ── Async-action factory node ─────────────────────────────────────────────
 	UFUNCTION(BlueprintCallable,
-		meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"),
+		meta = (BlueprintInternalUseOnly, WorldContext = "WorldContextObject"),
 		Category = "Utilities|Tick")
 	static ULocalTicker* LocalTicker(UObject* WorldContextObject);
 

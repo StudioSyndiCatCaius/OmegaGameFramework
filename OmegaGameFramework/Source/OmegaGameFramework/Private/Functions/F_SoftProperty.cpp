@@ -12,11 +12,8 @@
 //#####################################################################################################
 FString UOmegaFunctions_SoftProperty::GetSoftProperty_String(UObject* Object, FName PropertyName)
 {
-	FString temp_val=GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_OverrideSoftProperty(Object, PropertyName);
-	if (!temp_val.IsEmpty())
-	{
-		return temp_val;
-	}
+	//FString temp_val=GetMutableDefault<UOmegaSettings>()->GetGameCore()->Object_OverrideSoftProperty(Object, PropertyName);
+
 
 	FString OutVal;
 	

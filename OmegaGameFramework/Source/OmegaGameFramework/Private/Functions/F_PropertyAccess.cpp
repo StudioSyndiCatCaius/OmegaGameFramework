@@ -6,7 +6,7 @@
 #include "LuaValue.h"
 #include "Functions/F_Lua.h"
 #include "Misc/OmegaUtils_Macros.h"
-
+/*
 FLuaValue L_TryGetLuaValue(UObject* Object, const FString& Property)
 {
 	if (OGF_CFG_LUA()->bPropertyAccessFromObjectLuaValue)
@@ -81,3 +81,4 @@ UObject* UOmegaFunctions_PropertyAccess::Get_Object(UObject* Object, const FStri
 	}
 	return Fallback;
 }
+*/

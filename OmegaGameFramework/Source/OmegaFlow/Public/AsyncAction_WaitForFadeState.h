@@ -37,7 +37,7 @@ public:
 	}
 	// FTickableGameObject End
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnAsyncFadeStateReached Finished;
 	
 	UPROPERTY()
@@ -47,7 +47,7 @@ public:
 	UPROPERTY()
 	float TargetFadeState;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",DisplayName="Ω🔷 Wait Camera Fade State")
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly, WorldContext="WorldContextObject", AdvancedDisplay="Player"), Category="Omega|AsyncGameplayTasks",DisplayName="Ω🔷 Wait Camera Fade State")
 	static UAsyncAction_WaitForFadeState* WaitForFadeState(UObject* WorldContextObject, APlayerController* Player, float FadeState);
 
 	

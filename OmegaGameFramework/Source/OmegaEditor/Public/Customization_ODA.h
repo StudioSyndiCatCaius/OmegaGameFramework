@@ -5,21 +5,9 @@
 
 class IDetailLayoutBuilder;
 class IPropertyHandle;
+class IPropertyUtilities;
 
-/**
- * Custom Details Customization for UOmegaDataAsset.
- *
- * Layout:
- *   ┌────────────────────────────────────────────┐
- *   │  [General Category — normal detail rows]   │
- *   ├───────────────────┬────────────────────────┤
- *   │  Left Column      │  Right Column          │
- *   │  ─ CategoryA      │  ─ CategoryB           │
- *   │    prop / value   │    prop / value        │
- *   │  ─ CategoryC      │  ─ CategoryD           │
- *   │    ...            │    ...                 │
- *   └───────────────────┴────────────────────────┘
- */
+
 class FOmegaDataAssetCustomization : public IDetailCustomization
 {
 public:
@@ -32,6 +20,14 @@ private:
     /** Normalises a raw category metadata string to its leaf name.
      *  e.g. "OmegaDataAsset|Combat|Advanced" → "Advanced" */
     static FString NormaliseCategory(const FString& RawCategory);
+
+    /** Builds the top-most filter tab bar: "ALL" + one button per category. */
+    TSharedRef<SWidget> BuildCategoryTabBar(
+        const TArray<FString>& Categories,
+        TWeakObjectPtr<UObject> ObjectKey);
+
+    /** Used to force the details panel to rebuild when a filter tab is clicked. */
+    TWeakPtr<IPropertyUtilities> CachedPropertyUtilities;
 
     /** Builds the full two-column Slate widget for all non-General categories. */
     TSharedRef<SWidget> BuildTwoColumnWidget(

@@ -28,13 +28,6 @@ TArray<UOmegaScriptedAnimation*> FOmegaScriptedAnimationData::GetAllAnimations()
 		}
 	}
 	out.Append(anim_inline);
-	for (auto* a : anim_presetEnd)
-	{
-		if (a)
-		{
-			out.Append(a->Animations);
-		}
-	}
 	return out;
 }
 
@@ -51,6 +44,7 @@ void UOmegaScriptedAnimation::Notify(const FString& notify)
 void UAsyncAction_ScriptedAnimation::L_Notify(const FString& Notify)
 {
 	OnNotify.Broadcast(Notify);
+	if (OnNotifyCallback) OnNotifyCallback(Notify);
 }
 
 void UAsyncAction_ScriptedAnimation::Next_Anim(UOmegaScriptedAnimation* anim)
@@ -73,6 +67,7 @@ void UAsyncAction_ScriptedAnimation::Next_Anim(UOmegaScriptedAnimation* anim)
 	else
 	{
 		Finished.Broadcast("");
+		if (OnFinishCallback) OnFinishCallback("");
 		SetReadyToDestroy();
 	}
 }
@@ -97,4 +92,19 @@ void UOmegaScriptedAnimation::OnEnd_Implementation()
 
 void UOmegaScriptedAnimation::OnBegin_Implementation()
 {
+}
+
+UAsyncAction_ScriptedAnimation* UOmegaFunctions_ScriptedAnimation::PlayScriptedAnimationWithCallbacks(
+	UObject* WorldContextObject,
+	AActor* Instigator,
+	FOmegaScriptedAnimationData AnimationData,
+	TFunction<void(const FString&)> OnFinish,
+	TFunction<void(const FString&)> OnNotify)
+{
+	UAsyncAction_ScriptedAnimation* Node = UAsyncAction_ScriptedAnimation::PlayScriptedAnimation(WorldContextObject, Instigator, AnimationData);
+	Node->OnFinishCallback = OnFinish;
+	Node->OnNotifyCallback = OnNotify;
+	Node->RegisterWithGameInstance(WorldContextObject);
+	Node->Activate();
+	return Node;
 }

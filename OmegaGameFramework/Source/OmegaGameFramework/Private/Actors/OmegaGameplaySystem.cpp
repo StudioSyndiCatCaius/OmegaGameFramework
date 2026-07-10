@@ -3,6 +3,7 @@
 
 #include "Actors/OmegaGameplaySystem.h"
 #include "Engine/GameInstance.h"
+#include "Engine/Engine.h"
 #include "Functions/F_Common.h"
 #include "Subsystems/Subsystem_World.h"
 #include "Subsystems/Subsystem_GameManager.h"
@@ -18,6 +19,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/OmegaGameMode.h"
+#include "Subsystems/Subsystem_Engine.h"
+#include "Widget/HUDLayer.h"
 
 
 TArray<APlayerController*> AOmegaGameplaySystem::L_GetPlayers()
@@ -83,27 +86,29 @@ void AOmegaGameplaySystem::BeginPlay()
 	{
 		if (P)
 		{
-			if (UOmegaSubsystem_Player* LocalSystem = P->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>())
+			if (ULocalPlayer* LP=P->GetLocalPlayer())
 			{
-				//Add New Widgets To Player Screen
-				for (const TSubclassOf <UHUDLayer>& TempWidgetClass : local_GetAllHudClasses())
+				if (UOmegaSubsystem_Player* LocalSystem = LP->GetSubsystem<UOmegaSubsystem_Player>())
 				{
-					UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this,WidgetsOnPlayerScreen);
-					ActivePlayerWidgets.Add(CreatedLayer);
-				}
-				//Set Input Mode
-				if(PlayerInputMode)
-				{
-					LocalSystem->SetCustomInputMode(PlayerInputMode);
-				}
-				// Add New Mapping Context
-				for(UInputMappingContext* TempMap : AddPlayerInputMapping)
-				{
-					Cast<APlayerController>(P)->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(TempMap, InputPriority);
+					//Add New Widgets To Player Screen
+					for (const TSubclassOf <UHUDLayer>& TempWidgetClass : local_GetAllHudClasses())
+					{
+						UHUDLayer* CreatedLayer = LocalSystem->AddHUDLayer(TempWidgetClass, this,WidgetsOnPlayerScreen);
+						ActivePlayerWidgets.Add(CreatedLayer);
+					}
+					//Set Input Mode
+					if(PlayerInputMode)
+					{
+						LocalSystem->SetCustomInputMode(PlayerInputMode);
+					}
+					// Add New Mapping Context
+					for(UInputMappingContext* TempMap : AddPlayerInputMapping)
+					{
+						Cast<APlayerController>(P)->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(TempMap, InputPriority);
+					}
 				}
 			}
 		}
-		
 	}
 	
 	//GRANT ABILITIES
@@ -136,13 +141,6 @@ void AOmegaGameplaySystem::Local_SetFlagsActive(bool State)
 
 AOmegaGameplaySystem* L_GetFirstTemplateSystem(UObject* outer, TSubclassOf<AOmegaGameplaySystem> sys)
 {
-	if (AOmegaGameMode* gm=Cast<AOmegaGameMode>(UGameplayStatics::GetGameMode(outer)))
-	{
-		if (AOmegaGameplaySystem* s =FOmegaGameplaySystemConfig::GetConfigTemplate_System(gm->System_Config,sys))
-		{
-			return s;
-		}
-	}
 	if (AOmegaGameplaySystem* s=FOmegaGameplaySystemConfig::GetConfigTemplate_System(OGF_GAME_CORE()->System_Config,sys))
 	{
 		return s;			
@@ -154,7 +152,6 @@ AOmegaGameplaySystem* L_GetFirstTemplateSystem(UObject* outer, TSubclassOf<AOmeg
 AOmegaGameplaySystem* FOmegaBaseSystemStats::Activate(TSubclassOf<AOmegaGameplaySystem> sys, UObject* Context,
 	const FString& Flag, UObject* WorldC, AActor* owner, FOmegaCommonMeta meta)
 {
-	
 	if(!WorldC || !sys)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Failed to active system: World or SystemClass invalid"));
@@ -219,7 +216,6 @@ void AOmegaGameplaySystem::L_CleanupStateChange(bool state)
 		{
 			SubsysRef->OnGameplaySystemActiveStateChange.Broadcast(this,Shutdown_Context,Shutdown_Flag,false);
 		}
-		
 	}
 }
 
@@ -287,7 +283,7 @@ void AOmegaGameplaySystem::Shutdown(UObject* Context, FString Flag)
 	
 	bIsInShutdown = true;
 	OnBeginShutdown(Shutdown_Context, Shutdown_Flag);
-	
+	OGF_GLOBALREFRESH();
 }
 
 void AOmegaGameplaySystem::OnBeginShutdown_Implementation(UObject* Context, const FString& Flag)
@@ -332,6 +328,11 @@ void AOmegaGameplaySystem::CompleteShutdown()
 		//FLAGS
 		Local_SetFlagsActive(false);
 		
+		local_globalEventTags(GlobalEvents_OnShutdown);
+		GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnGameplaySystem_Shutdown(this);
+		
+		OGF_GLOBALREFRESH();
+		
 		if(local_InRestart)
 		{
 			GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->ActivateGameplaySystem(GetClass(), ContextObject, ActivationFlag);
@@ -340,9 +341,7 @@ void AOmegaGameplaySystem::CompleteShutdown()
 		{
 			
 		}
-		local_globalEventTags(GlobalEvents_OnShutdown);
-		GetMutableDefault<UOmegaSettings>()->GetGameCore()->OnGameplaySystem_Shutdown(this);
-		
+
 		K2_DestroyActor();
 	}
 }

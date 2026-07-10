@@ -3,64 +3,88 @@
 
 #include "Functions/F_Entity.h"
 
+#include "OmegaSettings.h"
+#include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_Save.h"
+#include "Subsystems/Subsystem_World.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/IAssetRegistry.h"
 
-
-FOmegaEntity* UOmegaFunctions_Entity::getEntityRefById(const UObject* WorldContextObject, FOmegaEntityID ID, bool bGlobal)
+TArray<FName> UOmegaFunctions_Entity::opts_entity_int32()
 {
-	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	return GetMutableDefault<UOmegaSettings>()->EntityParams_int32;
+}
+
+TArray<FName> UOmegaFunctions_Entity::opts_entity_string()
+{
+	return GetMutableDefault<UOmegaSettings>()->EntityParams_string;
+}
+
+
+FOmegaEntity* UOmegaFunctions_Entity::getEntityRefById(const UObject* WorldContextObject, FOmegaEntityID ID, EOmegaGlobalParamTarget Target)
+{
+	if (FOmegaEntitySet* _set = _getEntitySaveObj(WorldContextObject, Target))
 	{
 		switch (ID.entity_type)
 		{
-		case 0:
-			return  &_sav->Entities.Entities_Asset.FindOrAdd(Conv_EntityID_2_DataAsset(ID));
-			;
-		case 1:
-			return &_sav->Entities.Entities_Named.FindOrAdd(Conv_EntityID_2_Name(ID));
-			;
-		case 2:
-			return &_sav->Entities.Entities_Guid.FindOrAdd(Conv_EntityID_2_GUID(ID));
-			;
+		case 0: return &_set->Entities_Asset.FindOrAdd(Conv_EntityID_2_DataAsset(ID));
+		case 1: return &_set->Entities_Named.FindOrAdd(Conv_EntityID_2_Name(ID));
+		case 2: return &_set->Entities_Guid.FindOrAdd(Conv_EntityID_2_GUID(ID));
 		default: ;
 		}
 	}
 	return nullptr;
 }
 
-UOmegaSaveBase* UOmegaFunctions_Entity:: _getEntitySaveObj(const UObject* context,bool bGlobal)
+FOmegaEntitySet* UOmegaFunctions_Entity::_getEntitySaveObj(const UObject* context, EOmegaGlobalParamTarget Target)
 {
-	if(context && context->GetWorld()->GetGameInstance()) 
+	if (!context) { return nullptr; }
+	UWorld* World = context->GetWorld();
+	if (!World) { return nullptr; }
+	switch (Target)
 	{
-		return context->GetWorld()->GetGameInstance()->GetSubsystem<UOmegaSaveSubsystem>()->GetSaveObject(bGlobal);
+	case WORLD:
+		if (UOmegaSubsystem_World* ws = World->GetSubsystem<UOmegaSubsystem_World>())
+			return &ws->Entities;
+		return nullptr;
+	case GAME_INSTANCE:
+		if (UGameInstance* GI = World->GetGameInstance())
+			if (UOmegaSubsystem_GameInstance* gi = GI->GetSubsystem<UOmegaSubsystem_GameInstance>())
+				return &gi->Entities;
+		return nullptr;
+	case SAVE_GAME:
+		if (UGameInstance* GI = World->GetGameInstance())
+			if (UOmegaSaveBase* sav = GI->GetSubsystem<UOmegaSaveSubsystem>()->GetSaveObject(false))
+				return &sav->Entities;
+		return nullptr;
+	case SAVE_GLOBAL:
+		if (UGameInstance* GI = World->GetGameInstance())
+			if (UOmegaSaveBase* sav = GI->GetSubsystem<UOmegaSaveSubsystem>()->GetSaveObject(true))
+				return &sav->Entities;
+		return nullptr;
 	}
 	return nullptr;
 }
 
 
 void UOmegaFunctions_Entity::SetEntity_ByID(const UObject* WorldContextObject, FOmegaEntityID ID, FOmegaEntity Entity,
-	bool bGlobal)
+	EOmegaGlobalParamTarget Target)
 {
-	if(UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	if (FOmegaEntitySet* _set = _getEntitySaveObj(WorldContextObject, Target))
 	{
 		switch (ID.entity_type)
 		{
-			case 0:
-				_sav->Entities.Entities_Asset.Add(Conv_EntityID_2_DataAsset(ID),Entity);
-			;
-			case 1:
-				_sav->Entities.Entities_Named.Add(Conv_EntityID_2_Name(ID),Entity);
-			;
-			case 2:
-				_sav->Entities.Entities_Guid.Add(Conv_EntityID_2_GUID(ID),Entity);
-			;
+		case 0: _set->Entities_Asset.Add(Conv_EntityID_2_DataAsset(ID), Entity); break;
+		case 1: _set->Entities_Named.Add(Conv_EntityID_2_Name(ID), Entity);      break;
+		case 2: _set->Entities_Guid.Add(Conv_EntityID_2_GUID(ID), Entity);       break;
 		default: ;
 		}
 	}
 }
 
-FOmegaEntity UOmegaFunctions_Entity::GetEntity_ByID(const UObject* WorldContextObject, FOmegaEntityID ID, bool bGlobal)
-{ 
-	if(FOmegaEntity* _entity=getEntityRefById(WorldContextObject,ID,bGlobal))
+FOmegaEntity UOmegaFunctions_Entity::GetEntity_ByID(const UObject* WorldContextObject, FOmegaEntityID ID, EOmegaGlobalParamTarget Target)
+{
+	if(FOmegaEntity* _entity = getEntityRefById(WorldContextObject, ID, Target))
 	{
 		return *_entity;
 	}
@@ -95,6 +119,23 @@ FOmegaEntityID UOmegaFunctions_Entity::Conv_GUID_2_EntityID(FGuid Key)
 }
 
 
+TArray<FOmegaEntityID> UOmegaFunctions_Entity::GetAllEntityIDs_FromDataAssetClass(TSubclassOf<UPrimaryDataAsset> Class)
+{
+	TArray<FOmegaEntityID> out;
+	if (!Class) return out;
+	const IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+	TArray<FAssetData> AssetList;
+	AssetRegistry.GetAssetsByClass(Class->GetClassPathName(), AssetList, true);
+	for (const FAssetData& Asset : AssetList)
+	{
+		if (UPrimaryDataAsset* loaded = Cast<UPrimaryDataAsset>(Asset.GetAsset()))
+		{
+			out.Add(Conv_DataAsset_2_EntityID(loaded));
+		}
+	}
+	return out;
+}
+
 UPrimaryDataAsset* UOmegaFunctions_Entity::Conv_EntityID_2_DataAsset(FOmegaEntityID Key)
 {
 	if (Key.entity_type == 0)
@@ -118,44 +159,64 @@ FGuid UOmegaFunctions_Entity::Conv_EntityID_2_GUID(FOmegaEntityID Key)
 	return FGuid(Key.entity_string);
 }
 
-int32 UOmegaFunctions_Entity::GetSaveEntity_Param(UObject* WorldContextObject, FOmegaEntityID ID, FName param,
-	bool bGlobalSave)
+FTransform UOmegaFunctions_Entity::GetTransform(UObject* WorldContextObject, FOmegaEntityID ID, EOmegaGlobalParamTarget Target)
 {
-	return GetEntity_ByID(WorldContextObject,ID,bGlobalSave).params_int32.FindOrAdd(param);
+	return GetEntity_ByID(WorldContextObject, ID, Target).Transform;
+}
+
+void UOmegaFunctions_Entity::SetTransform(UObject* WorldContextObject, FOmegaEntityID ID, FTransform Value,
+	EOmegaGlobalParamTarget Target)
+{
+	FOmegaEntity E = GetEntity_ByID(WorldContextObject, ID, Target);
+	E.Transform = Value;
+	SetEntity_ByID(WorldContextObject, ID, E, Target);
+}
+
+int32 UOmegaFunctions_Entity::GetSaveEntity_Param(UObject* WorldContextObject, FOmegaEntityID ID, FName param,
+	EOmegaGlobalParamTarget Target)
+{
+	return GetEntity_ByID(WorldContextObject, ID, Target).params_int32.FindOrAdd(param);
 }
 
 void UOmegaFunctions_Entity::SetSaveEntity_Param(UObject* WorldContextObject, FOmegaEntityID ID, FName param,
-	int32 Value, bool bAdded, bool bGlobalSave)
+	int32 Value, bool bAdded, EOmegaGlobalParamTarget Target)
 {
-	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
-	int32 base_int=0;
+	FOmegaEntity E = GetEntity_ByID(WorldContextObject, ID, Target);
+	int32 base_int = 0;
 	if (bAdded)
 	{
-		base_int=E.params_int32.FindOrAdd(param);
+		base_int = E.params_int32.FindOrAdd(param);
 	}
-	E.params_int32.Add(param,Value+base_int);
-	SetEntity_ByID(WorldContextObject,ID,E,bGlobalSave);
+	E.params_int32.Add(param, Value + base_int);
+	SetEntity_ByID(WorldContextObject, ID, E, Target);
+}
+
+void UOmegaFunctions_Entity::AddSaveEntity_Param(UObject* WorldContextObject, FOmegaEntityID ID, FName param,
+	int32 Value, EOmegaGlobalParamTarget Target)
+{
+	FOmegaEntity E = GetEntity_ByID(WorldContextObject, ID, Target);
+	E.params_int32.Add(param, E.params_int32.FindOrAdd(param) + Value);
+	SetEntity_ByID(WorldContextObject, ID, E, Target);
 }
 
 FString UOmegaFunctions_Entity::GetSaveEntity_ParamString(UObject* WorldContextObject, FOmegaEntityID ID, FName param,
-	bool bGlobalSave)
+	EOmegaGlobalParamTarget Target)
 {
-	return GetEntity_ByID(WorldContextObject,ID,bGlobalSave).params_string.FindOrAdd(param);
+	return GetEntity_ByID(WorldContextObject, ID, Target).params_string.FindOrAdd(param);
 }
 
 void UOmegaFunctions_Entity::SetSaveEntity_ParamString(UObject* WorldContextObject, FOmegaEntityID ID, FName param,
-	FString Value, bool bGlobalSave)
+	FString Value, EOmegaGlobalParamTarget Target)
 {
-	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
-	E.params_string.Add(param,Value);
-	SetEntity_ByID(WorldContextObject,ID,E,bGlobalSave);
+	FOmegaEntity E = GetEntity_ByID(WorldContextObject, ID, Target);
+	E.params_string.Add(param, Value);
+	SetEntity_ByID(WorldContextObject, ID, E, Target);
 }
 
 void UOmegaFunctions_Entity::SetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID,
-	FGameplayTagContainer tags, bool bActive, bool bGlobalSave)
+	FGameplayTagContainer tags, bool bActive, EOmegaGlobalParamTarget Target)
 {
-	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
-	
+	FOmegaEntity E = GetEntity_ByID(WorldContextObject, ID, Target);
 	if (bActive)
 	{
 		E.Tags.AppendTags(tags);
@@ -164,41 +225,34 @@ void UOmegaFunctions_Entity::SetSaveEntity_Tags(UObject* WorldContextObject, FOm
 	{
 		E.Tags.RemoveTags(tags);
 	}
-	
-	SetEntity_ByID(WorldContextObject,ID,E,bGlobalSave);
+	SetEntity_ByID(WorldContextObject, ID, E, Target);
 }
 
-
-
-
 FGameplayTagContainer UOmegaFunctions_Entity::GetSaveEntity_Tags(UObject* WorldContextObject, FOmegaEntityID ID,
-	bool bGlobalSave)
+	EOmegaGlobalParamTarget Target)
 {
-	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
-	
-	return E.Tags;
+	return GetEntity_ByID(WorldContextObject, ID, Target).Tags;
 }
 
 bool UOmegaFunctions_Entity::SaveEntity_HasTags(UObject* WorldContextObject, FOmegaEntityID ID,
-	FGameplayTagContainer tag, bool bGlobalSave)
+	FGameplayTagContainer tag, EOmegaGlobalParamTarget Target)
 {
-	FOmegaEntity E=GetEntity_ByID(WorldContextObject,ID,bGlobalSave);
-	return E.Tags.HasAll(tag);
+	return GetEntity_ByID(WorldContextObject, ID, Target).Tags.HasAll(tag);
 }
 
 bool UOmegaFunctions_Entity::SaveEntity_CheckTag(UObject* WorldContextObject, FOmegaEntityID ID,
-	FGameplayTagContainer tag, bool bGlobalSave, bool& Result, bool AddIfFalse)
+	FGameplayTagContainer tag, EOmegaGlobalParamTarget Target, bool& Result, bool AddIfFalse)
 {
-	if (SaveEntity_HasTags(WorldContextObject,ID,tag,bGlobalSave))
+	if (SaveEntity_HasTags(WorldContextObject, ID, tag, Target))
 	{
-		Result=true;
+		Result = true;
 		return true;
 	}
 	if (AddIfFalse)
 	{
-		SetSaveEntity_Tags(WorldContextObject,ID,tag,true,bGlobalSave);
+		SetSaveEntity_Tags(WorldContextObject, ID, tag, true, Target);
 	}
-	Result=false;
+	Result = false;
 	return false;
 }
 

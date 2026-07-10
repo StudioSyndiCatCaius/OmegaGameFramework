@@ -12,7 +12,7 @@ class UOmegaBGM;
 class AZoneEntityDisplayActor;
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaLevelData : public UOmegaDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaLevelData : public UOmegaDemoDataAsset
 {
 	GENERATED_BODY()
 
@@ -32,10 +32,12 @@ public:
 		return nullptr;
 	}
 	
+	UFUNCTION(BlueprintPure,Category="Level") TSoftObjectPtr<UWorld> GetLevel() const;
+	
 };
 
 UCLASS(EditInlineNew)
-class OMEGAGAMEFRAMEWORK_API UOmegaZoneData : public UOmegaDataAsset
+class OMEGAGAMEFRAMEWORK_API UOmegaZoneData : public UOmegaDemoDataAsset
 {
 	GENERATED_BODY()
 
@@ -58,7 +60,7 @@ public:
 
 
 UCLASS()
-class OMEGAGAMEFRAMEWORK_API UZoneLegendAsset : public UOmegaDataAsset
+class OMEGAGAMEFRAMEWORK_API UZoneLegendAsset : public UOmegaDemoDataAsset
 {
 	GENERATED_BODY()
 

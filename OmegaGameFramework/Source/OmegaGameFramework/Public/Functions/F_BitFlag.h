@@ -54,11 +54,12 @@ inline bool obj_usesInterface(UObject* obj)
 }
 
 #define GENERAL_INTERFACE_GETMETA() \
-FOmegaBitflagsBase b; \
-FGuid g; \
-int32 s; \
-FOmegaClassNamedLists nl; \
-IDataInterface_General::Execute_GetMetaConfig(object,b,g,s,nl); \
+FText _n,_d; FSlateBrush _i; FLinearColor _c; FString _l; FOmegaObjectGeneralMetaconfig _meta; \
+IDataInterface_General::Execute_GetGeneralDataText(object,FGameplayTag(),_n,_d,_i,_c,_l,_meta); \
+FOmegaBitflagsBase& b=_meta.bitflags; \
+FGuid& g=_meta.guid; \
+int32& s=_meta.seed; \
+FOmegaClassNamedLists& nl=_meta.named_lists; \
 
 inline bool UOmegaBitFlagFunctions::GetObjectBitflag(UObject* object, int32 flag)
 {

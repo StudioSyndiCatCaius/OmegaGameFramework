@@ -38,9 +38,10 @@ public:
 	}
 	
 	UFUNCTION(BlueprintPure,Category="Calendar")
-	UOAsset_Weekday* GetWeekday_FromDayIndex(int32 day, int32 offset) const
+	UOAsset_Weekday* GetWeekday_FromDayIndex(int32 day) const
 	{
-		int32 _in=UKismetMathLibrary::Wrap(day+offset,0,Weekdays.Num()-1);
+		int32 raw=day % Weekdays.Num();
+		int32 _in=raw < 0 ? raw + Weekdays.Num() : raw;
 		if(Weekdays.IsValidIndex(_in)) { return Weekdays[_in];}
 		return nullptr;
 	}
