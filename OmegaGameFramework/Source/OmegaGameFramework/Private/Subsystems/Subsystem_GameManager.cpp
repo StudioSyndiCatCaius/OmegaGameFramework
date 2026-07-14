@@ -91,7 +91,9 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 	
 	OGF_GAME_CORE()->OnGame_PreBegin(GetGameInstance());
 	
+#if !UE_BUILD_SHIPPING
 	IAssetRegistry::Get()->ScanPathsSynchronous(OGF_CFG()->AutoscanPaths);
+#endif
 	
 	OGF_LUA_DOCODE(OGF_CFG_LUA()->Code_Init)
 	// -----------------------------------------------------------------------------------------------------------------
@@ -125,13 +127,15 @@ void UOmegaSubsystem_GameInstance::Initialize(FSubsystemCollectionBase& Colectio
 	// -----------------------------------------------------------------------------------------------------------------
 	if (OGF_CFG_LUA()->bAutobindGlobalScriptsAsFunctions)
 	{
-		//load assets in paths
+		//load assets in paths — editor-only: in shipping the AR is pre-populated from AssetRegistry.bin
+#if !UE_BUILD_SHIPPING
 		IAssetRegistry::Get()->ScanPathsSynchronous(OGF_CFG_LUA()->GlobalScriptBindPaths);
 		for (FString st : OGF_CFG_LUA()->GlobalScriptBindPaths)
 		{
 			UOmegaFunctions_Asset::GetAllClassesInPath(st,UOmegaGlobalScript::StaticClass(),true);
 			UOmegaFunctions_Asset::GetAllClassesInPath(st,UOmegaGlobalCondition::StaticClass(),true);
 		}
+#endif
 		
 		TArray<TSubclassOf<UObject>> script_classes=UOmegaFunctions_Asset::GetAllChildClasses(UOmegaGlobalScript::StaticClass(),true);
 		TArray<TSubclassOf<UObject>> condition_classes=UOmegaFunctions_Asset::GetAllChildClasses(UOmegaGlobalCondition::StaticClass(),true);
@@ -494,6 +498,11 @@ void UOmegaSubsystem_GameInstance::Patch_Event(uint8 event, UOmegaSaveGame* _sav
 void UOmegaSubsystem_GameInstance::GameData_Init(FString Directory)
 {
 	FString inDir=OMEGA_File::PathCorrect(Directory);
+	if (!FPaths::DirectoryExists(inDir))
+	{
+		UE_LOG(LogInit, Log, TEXT("GAME DATA: Directory does not exist, skipping: %s"), *inDir);
+		return;
+	}
 	UE_LOG(LogInit, Log, TEXT("GAME DATA:	📁 IMPORTING DIRECTORY:  %s"), *Directory);
 	for (FString path : OMEGA_File::ListFilesInDirectory(inDir,true))
 	{

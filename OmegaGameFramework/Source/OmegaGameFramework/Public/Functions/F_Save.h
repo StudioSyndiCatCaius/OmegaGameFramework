@@ -81,5 +81,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Omega|Save|Custom",DisplayName="💾Save - Load All Games in path")
 	static TArray<USaveGame*> Custom_LoadGame_AllInPath(const FString& path);
 	
+	UFUNCTION(BlueprintPure, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Get",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static TArray<UPrimaryDataAsset*> DataList_Get(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List, bool bGlobal);
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Has?",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static bool DataList_Has(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List,UPrimaryDataAsset* Asset, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Resize",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+    static void DataList_Resize(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List,int32 size, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Shuffle",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static void DataList_Shuffle(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Clear",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static void DataList_Clear(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Add Asset",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static void DataList_Add(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List,UPrimaryDataAsset* Asset, bool bInList, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Add Assets",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static void DataList_AddList(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List,TArray<UPrimaryDataAsset*> Assets, bool bInList, bool bGlobal);
+	
 };
 

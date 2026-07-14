@@ -72,7 +72,7 @@ public:
 	UPROPERTY(VisibleAnywhere,Category="Quest") UOmegaQuest* QuestAsset;
 	bool b_ended=false;
 	
-	void StartQuest(bool bResumeFormSave);
+	void StartQuest(bool bOverrideStartData, FOmegaQuestData data);
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Quest") void TriggerQuestUpdate();
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="Quest") void StopQuest(bool bFailed);
 	

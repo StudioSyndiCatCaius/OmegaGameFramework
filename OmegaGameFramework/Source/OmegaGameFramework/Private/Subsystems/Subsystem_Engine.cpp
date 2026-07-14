@@ -96,15 +96,49 @@ FLuaValue UOmegaSubsystem_Engine::Spawnable_GetData(FName key)
 	return devconfig_table.GetField("spawnables").GetField(key.ToString());
 }
 
+FOmegaObjectNameParseCache UOmegaSubsystem_Engine::GetObjectNameParamCache(UObject* Object)
+{
+	if (cache_objectNameParams.Contains(Object))
+	{
+		return cache_objectNameParams[Object];
+	}
+	FOmegaObjectNameParseCache out;
+	if (Object && Object->GetClass()->IsChildOf(UDataAsset::StaticClass()))
+	{
+		TArray<FString> _vars;
+		Object->GetName().ParseIntoArray(_vars,TEXT("_"),false);
+		for (FString _var : _vars)
+		{
+			FOmegaObjectNameParseParam parm;
+			parm.param_str=_var;
+			parm.param_int=FCString::Atoi(*_var);
+			out.params.Add(parm);
+		}
+		cache_objectNameParams.Add(Object,out);
+	}
+	return out;
+}
+
+FOmegaObjectNameParseParam UOmegaSubsystem_Engine::GetObjectNameParam(UObject* Object, uint32 param_index)
+{
+	FOmegaObjectNameParseCache _cache=GetObjectNameParamCache(Object);
+	if (_cache.params.IsValidIndex(param_index))
+	{
+		return _cache.params[param_index];
+	}
+	return FOmegaObjectNameParseParam();
+}
+
 void UOmegaSubsystem_Engine::OnGameInitialized()
 {
-	//cass class paths from config
-	cached_ClassPaths.Empty();
+	//clear caches (typically used for PIE, since packaged game destructs engine along side game instance)
+	cache_ClassPaths.Empty();
+	cache_objectNameParams.Empty();
 	for (TSoftObjectPtr<UOmegaGameplayConfig> cfg : OGF_CFG()->Imported_GameplaySettings)
 	{
 		if (UOmegaGameplayConfig* _cfg=cfg.LoadSynchronous())
 		{
-			cached_ClassPaths.Append(_cfg->ClassPaths);
+			cache_ClassPaths.Append(_cfg->ClassPaths);
 		}
 	}
 }

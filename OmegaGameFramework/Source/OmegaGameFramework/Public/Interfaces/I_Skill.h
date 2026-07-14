@@ -32,10 +32,13 @@ struct FOmegaSkillConfig
 	TSubclassOf<UCombatantSelector> TargetSelector;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config")
 	TArray<UPrimaryDataAsset*> UseRequiredSkills;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config",AdvancedDisplay)
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config",AdvancedDisplay,DisplayName="*Meta - Grid3DPathfind")
 	TScriptInterface<IDataInterface_Grid3DPathfind> Grid3DPathfind;
-	UPROPERTY() UOmegaDamageType* DamageType;
-	UPROPERTY() UOmegaAttribute* Attribute;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config",DisplayName="*Meta - DamageType")
+	UOmegaDamageType* Meta_DamageType = nullptr;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Skill Config",DisplayName="*Meta - Attribute")
+	UOmegaAttribute* Meta_Attribute = nullptr;
 	
 };
 

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Actors/Actor_Tool.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/SkeletalMesh.h"
 #include "Animation/AnimInstance.h"
@@ -346,10 +347,8 @@ AOmegaToolActor_FirstPerson::AOmegaToolActor_FirstPerson()
 {
 	ArmsMesh=CreateOptionalDefaultSubobject<USkeletalMeshComponent>("ArmsMesh");
 	ArmsMesh->SetupAttachment(RootComponent);
-	if (USkeletalMesh* _sk=LoadObject<USkeletalMesh>(nullptr,TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/arms/SK_Mannequin_DEMO_Arms.SK_Mannequin_DEMO_Arms")))
-	{
-		ArmsMesh->SetSkeletalMesh(_sk);
-	}
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> ArmsMeshFinder(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/arms/SK_Mannequin_DEMO_Arms.SK_Mannequin_DEMO_Arms"));
+	if (ArmsMeshFinder.Succeeded()) ArmsMesh->SetSkeletalMesh(ArmsMeshFinder.Object);
 	GripRoot=CreateOptionalDefaultSubobject<USceneComponent>("GripRoot");
 	GripRoot->SetupAttachment(ArmsMesh,"Slot_HandR");
 }

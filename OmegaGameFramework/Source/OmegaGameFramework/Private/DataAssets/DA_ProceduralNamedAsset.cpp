@@ -33,7 +33,7 @@ FString UOmegaProceduralNamedAsset::GetNameProceduralValue(int32 index) const
 	return "";
 }
 
-// ── IDataInterface_General ────────────────────────────────────────────────────
+// -- IDataInterface_General ----------------------------------------------------
 
 void UOmegaProceduralNamedAsset::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
 {
@@ -83,7 +83,7 @@ FOmegaBitmaskEditorData UOmegaProceduralNamedAsset::Bitflags_Override_Implementa
 	return FOmegaBitmaskEditorData{};
 }
 
-// ── IDataInterface_Skill ──────────────────────────────────────────────────────
+// -- IDataInterface_Skill ------------------------------------------------------
 
 int32 UOmegaProceduralNamedAsset::Skill_OnActorEvent_Implementation(UCombatantComponent* Combatant, FGameplayTag EventTag)
 {
@@ -148,7 +148,7 @@ UAnimMontage* UOmegaProceduralNamedAsset::GetSkill_Montage_Implementation(UComba
 	return nullptr;
 }
 
-// ── IDataInterface_InventoryItem ──────────────────────────────────────────────
+// -- IDataInterface_InventoryItem ----------------------------------------------
 
 int32 UOmegaProceduralNamedAsset::GetMaxCollectionNumber_Implementation()
 {
@@ -171,7 +171,7 @@ TMap<UPrimaryDataAsset*, int32> UOmegaProceduralNamedAsset::GetTradeAssetRequire
 	return {};
 }
 
-// ── IDataInterface_Equipable ──────────────────────────────────────────────────
+// -- IDataInterface_Equipable --------------------------------------------------
 
 bool UOmegaProceduralNamedAsset::CanEquipItem_Implementation(UCombatantComponent* Component, UEquipmentSlot* Slot)
 {
@@ -180,7 +180,7 @@ bool UOmegaProceduralNamedAsset::CanEquipItem_Implementation(UCombatantComponent
 	return false;
 }
 
-// ── IDataInterface_Combatant ──────────────────────────────────────────────────
+// -- IDataInterface_Combatant --------------------------------------------------
 
 int32 UOmegaProceduralNamedAsset::Combatant_OnEvent_Implementation(UCombatantComponent* Combatant, FGameplayTag Event, FOmegaCombatantEventMeta meta)
 {
@@ -231,23 +231,8 @@ UPrimaryDataAsset* UOmegaProceduralNamedAsset::GetDamageType_Weight_Implementati
 	return nullptr;
 }
 
-UPrimaryDataAsset* UOmegaProceduralNamedAsset::Combatant_ModDynamicAsset_Implementation(UCombatantComponent* Combatant,
-	FGameplayTag Tag, UObject* Context, int32& priority, bool bValidConsider)
-{
-	if (UOmegaProceduralNamedAssetBuilder* b = GetBuilder())
-		return b->Build_Combatant_ModDynamicAsset(this, Combatant, Tag, Context, priority, bValidConsider);
-	return nullptr;
-}
 
-float UOmegaProceduralNamedAsset::Combatant_ModDynamicScalar_Implementation(UCombatantComponent* Combatant,
-	FGameplayTag Tag, UObject* Context, int32& priority, bool bValidConsider)
-{
-	if (UOmegaProceduralNamedAssetBuilder* b = GetBuilder())
-		return b->Build_Combatant_ModDynamicScalar(this, Combatant, Tag, Context, priority, bValidConsider);
-	return 0.0;
-}
-
-// ── IDataInterface_ScriptedEffects ────────────────────────────────────────────
+// -- IDataInterface_ScriptedEffects --------------------------------------------
 
 FOmegaCustomScriptedEffects UOmegaProceduralNamedAsset::GetScriptedEffects_Implementation(FGameplayTag Tag)
 {

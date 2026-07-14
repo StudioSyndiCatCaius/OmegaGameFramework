@@ -176,4 +176,22 @@ private:
 	UFUNCTION(BlueprintPure,Category="Omega|Meta",meta=(WorldContext="WorldContextObject"),DisplayName="Object Meta - Get (Float)")
 	static float Meta_GetFloat(UObject* WorldContextObject, UPARAM(ref) FOmegaObjectMeta& Meta,UObject* Object, FName param, float Fallback=0);
 
+public:
+	
+	// ----------------------------------------------------------------------------------------------
+	// ParamFromName
+	// ---------------------------------------------------------------------------------------------
+	
+	/* Gets a string value from the _ parsed name of the object. (E.G. - 'skill_fire_3' with param 1 returns 'fire')
+	 *
+	 * NOTE: Object name params are cached in the Omega Engine subsystem for performance. Thus in editor, you will need
+	 * to restart PIE in order for name changes to take effect
+	 */
+	UFUNCTION(BlueprintPure, Category = "Omega|NameParam",DisplayName="Name Param - Get (String)")
+	static FString GetNameParam_String(UObject* Object, uint8 param);
+	
+	// Gets an int value from the _ parsed name of the object. (E.G. - 'skill_fire_3' with param 2 returns '3')
+	UFUNCTION(BlueprintPure, Category = "Omega|NameParam",DisplayName="Name Param - Get (Int)")
+	static int32 GetNameParam_Int(UObject* Object, uint8 param);
+	
 };

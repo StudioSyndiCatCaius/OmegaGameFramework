@@ -487,7 +487,7 @@ void UFlowAsset::StartFlow(UGameInstance* GameInstance, FFlowAssetOverrideData O
 	{
 		StartNode->TriggerFirstOutput(true);
 	}
-	
+
 }
 
 void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance /*= true*/)

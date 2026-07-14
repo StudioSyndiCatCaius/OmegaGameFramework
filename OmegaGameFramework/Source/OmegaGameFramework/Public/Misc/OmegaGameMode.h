@@ -62,9 +62,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems")
 	FGameplayTagContainer AutoBlockSystemTags;
 	
-	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems")
-	TArray<FOmegaGameplaySystemConfig> System_Config;
-	
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
 	bool bAutoActivateDynamicCamera;
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
@@ -94,14 +91,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Game Mode")
 	void OnDragSelectEnd(const TArray<AActor*>& actors);
 	
-#if WITH_EDITOR
-	
-	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
-#endif
-	void ValidateTemplates();
-	
+
 private:
-	UFUNCTION()
 	void Local_ActivatePersistentSystems();
 private:
 	FTimerHandle PersistentSystemsTimerHandle;

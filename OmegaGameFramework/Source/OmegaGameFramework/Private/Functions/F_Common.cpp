@@ -347,11 +347,11 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjectsByCategoryTag(TArray
 
 				if(bExact)
 				{
-					bLocalIsValid = TempAssetTags.HasTagExact(CategoryTag);
+					bLocalIsValid = _cat.MatchesTagExact(CategoryTag);
 				}
 				else
 				{
-					bLocalIsValid = TempAssetTags.HasTag(CategoryTag);
+					bLocalIsValid = _cat.MatchesTag(CategoryTag);
 				}
 			
 				if(bLocalIsValid != bExclude)
@@ -813,9 +813,9 @@ UObject* UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(const FString& AssetPat
 		// USE = cached class data from game config
 		if(config.bClassGameplayConfig)
 		{
-			if(sub_ah->cached_ClassPaths.Contains(Class))
+			if(sub_ah->cache_ClassPaths.Contains(Class))
 			{
-				FOmegaSortedClassPathData path_data=sub_ah->cached_ClassPaths[Class];
+				FOmegaSortedClassPathData path_data=sub_ah->cache_ClassPaths[Class];
 				
 				if (UObject* got_obj=path_data.getAssetFromPath(AssetPath,Class))
 				{
@@ -1818,6 +1818,46 @@ TArray<UObject*> UOmegaGameFrameworkBPLibrary::FilterObjects_ByGenericLevel(TArr
 }
 
 #undef GENERAL_INTERFACE_GETMETA
+
+float UOmegaGameFrameworkBPLibrary::GetTagParam_Float(UObject* Object, FGameplayTag Tag)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		return IDataInterface_General::Execute_Param_Float(Object, Tag);
+	}
+	return 0.0f;
+}
+
+int32 UOmegaGameFrameworkBPLibrary::GetTagParam_Int(UObject* Object, FGameplayTag Tag)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		return IDataInterface_General::Execute_Param_Int(Object, Tag);
+	}
+	return 0;
+}
+
+FString UOmegaGameFrameworkBPLibrary::GetTagParam_String(UObject* Object, FGameplayTag Tag)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		return IDataInterface_General::Execute_Param_String(Object, Tag);
+	}
+	return FString();
+}
+
+UObject* UOmegaGameFrameworkBPLibrary::GetTagParam_Object(UObject* Object, FGameplayTag Tag, TSubclassOf<UObject> Class)
+{
+	if (Object_UsesCommonInterface(Object))
+	{
+		UObject* Result = IDataInterface_General::Execute_Param_Asset(Object, Tag);
+		if (Result && (!Class || Result->GetClass()->IsChildOf(Class)))
+		{
+			return Result;
+		}
+	}
+	return nullptr;
+}
 
 int32 UOmegaGameFrameworkBPLibrary::GetClosestVector2dToPoint(TArray<FVector2D> Vectors, FVector2D point,
                                                               FVector2D& out_point)

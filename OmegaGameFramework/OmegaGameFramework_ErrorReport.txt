@@ -1,0 +1,1713 @@
+OMEGAGAMEFRAMEWORK — FAB BUILD ERROR REPORT
+UE 5.5  |  RunUAT BuildPlugin -Rocket  |  ExitCode 6 (UnrealBuildTool failed)
+==============================================================================
+
+WHY THIS FAILS ON FAB BUT NOT LOCALLY
+------------------------------------------------------------------------------
+Your Rider 'Development Editor' build uses shared/monolithic PCHs that pull in
+nearly every engine header automatically. Fab builds with -Rocket against an
+INSTALLED engine, enforcing strict Include-What-You-Use. Every type you rely on
+implicitly must now be #included explicitly. That's the cause of essentially all
+~900 errors below: missing includes and a handful of undeclared members — not
+logic bugs.
+
+FASTEST PATH: work the table below top-down. Fixing the top ~10 symbols
+(UWorld, USkeletalMeshComponent, GEngine, UStaticMeshComponent, UPrimaryDataAsset,
+FHitResult, FTimerManager, FPaths...) clears the large majority of errors, because
+each missing base type cascades into dozens of downstream syntax errors like
+"syntax error ')'", "'Super' is not a base", "missing ';'" — those vanish once the
+real include is added. Don't chase the syntax errors directly.
+
+==============================================================================
+FIX TABLE 1 — MISSING ENGINE INCLUDES (actionable)
+==============================================================================
+COUNT  MISSING TYPE                        ADD THIS INCLUDE
+------------------------------------------------------------------------------
+   54  USkeletalMeshComponent              #include "Components/SkeletalMeshComponent.h"
+   52  UWorld                              #include "Engine/World.h"
+   26  GEngine                             #include "Engine/Engine.h"
+   13  UStaticMeshComponent                #include "Components/StaticMeshComponent.h"
+   12  UPrimaryDataAsset                   #include "Engine/DataAsset.h"
+   12  FPaths                              #include "Misc/Paths.h"
+   10  FHitResult                          #include "Engine/HitResult.h"
+   10  FTimerManager                       #include "TimerManager.h"
+    9  TSubclassOf<UObject>                #include "Templates/SubclassOf.h" + full header of the class used
+    8  UPrimitiveComponent                 #include "Components/PrimitiveComponent.h"
+    8  FConfigCacheIni                     #include "Misc/ConfigCacheIni.h"
+    7  USceneComponent                     #include "Components/SceneComponent.h"
+    6  UAnimInstance                       #include "Animation/AnimInstance.h"
+    6  EGetWorldErrorMode                  #include "Engine/EngineBaseTypes.h"
+    6  FPlatformFileManager                #include "HAL/PlatformFileManager.h"
+    6  ULevelStreaming                     #include "Engine/LevelStreaming.h"
+    5  FSlateBrush                         #include "Styling/SlateBrush.h" + "SlateCore" in Build.cs
+    5  UBlueprintFunctionLibrary           #include "Kismet/BlueprintFunctionLibrary.h"
+    5  ConstructorHelpers                  #include "UObject/ConstructorHelpers.h" (constructor-only!)
+    5  FTimerDelegate                      #include "TimerManager.h"
+    5  UCurveFloat                         #include "Curves/CurveFloat.h"
+    5  APawn                               #include "GameFramework/Pawn.h"
+    4  UDeveloperSettings                  #include "Engine/DeveloperSettings.h" + "DeveloperSettings" in Build.cs
+    4  APlayerController                   #include "GameFramework/PlayerController.h"
+    4  UInterface                          #include "UObject/Interface.h"
+    4  UMaterialInterface                  #include "Materials/MaterialInterface.h"
+    4  IFileManager                        #include "HAL/FileManager.h"
+    4  FileManager                         #include "HAL/FileManager.h"
+    4  UTexture2D                          #include "Engine/Texture2D.h"
+    3  UGameInstance                       #include "Engine/GameInstance.h"
+    3  UMaterial                           #include "Materials/Material.h"
+    3  CreateOptionalDefaultSubobject      #include "GameFramework/Actor.h"
+    3  UEngine                             #include "Engine/Engine.h"
+    3  CopyPropertiesForUnrelatedObjects   #include "Engine/Engine.h"
+    3  EAttachmentRule                     #include "Engine/EngineTypes.h"
+    3  UBlueprint                          #include "Engine/Blueprint.h" (guard WITH_EDITOR)
+    3  DrawDebugDirectionalArrow           #include "DrawDebugHelpers.h"
+    3  FTexture2DMipMap                    #include "Engine/Texture2D.h"
+    3  FPackageName                        #include "Misc/PackageName.h"
+    2  UMaterialInstanceDynamic            #include "Materials/MaterialInstanceDynamic.h"
+    2  FFloatCurve                         #include "Animation/AnimCurveTypes.h"
+    2  AActor                              #include "GameFramework/Actor.h"
+    2  RootComponent                       #include "GameFramework/Actor.h"
+    2  SetActorHiddenInGame                #include "GameFramework/Actor.h"
+    2  DrawDebugSphere                     #include "DrawDebugHelpers.h"
+    2  DrawDebugBox                        #include "DrawDebugHelpers.h"
+    2  FFileHelper                         #include "Misc/FileHelper.h"
+    2  LoadFileToArray                     #include "Misc/FileHelper.h"
+    2  USkeleton                           #include "Animation/Skeleton.h"
+    2  FButtonStyle                        #include "Styling/SlateTypes.h"
+    2  FTextBlockStyle                     #include "Styling/SlateTypes.h"
+    1  ACharacter                          #include "GameFramework/Character.h"
+    1  FRuntimeFloatCurve                  #include "Curves/CurveFloat.h"
+    1  AController                         #include "GameFramework/Controller.h"
+    1  TSubclassOf<UPrimaryDataAsset>      #include "Engine/DataAsset.h" (complete the class type)
+    1  EObjectTypeQuery                    #include "Engine/EngineTypes.h"
+    1  FSceneView                          #include "SceneView.h" + "RenderCore"
+    1  TJsonReaderFactory                  #include "Serialization/JsonReader.h" + "Json"
+    1  FJsonSerializer                     #include "Serialization/JsonSerializer.h" + "Json"
+    1  DrawDebugPoint                      #include "DrawDebugHelpers.h"
+    1  DrawDebugLine                       #include "DrawDebugHelpers.h"
+    1  TextureMipGenSettings               #include "Engine/TextureDefines.h"
+    1  USoundBase                          #include "Sound/SoundBase.h"
+    1  TSubclassOf<UOmegaSaveGame>         include the full UOmegaSaveGame header
+    1  TSubclassOf<UOmegaSaveGlobal>       include the full UOmegaSaveGlobal header
+    1  FCommandLine                        #include "Misc/CommandLine.h"
+    1  SBox                                #include "Widgets/Layout/SBox.h" + "Slate"
+    1  USlateWidgetStyleAsset              #include "Styling/SlateWidgetStyleAsset.h"
+    1  ISlateStyle                         #include "Styling/ISlateStyle.h" + "SlateCore"
+    1  TSubclassOf<AOmegaAbility>          include the full AOmegaAbility header
+
+==============================================================================
+FIX TABLE 2 — LIKELY YOUR OWN UNDECLARED MEMBERS / LOCALS
+==============================================================================
+These are not engine types. They read like class members or local variables that
+aren't declared (or were renamed). Declare the UPROPERTY/variable in the header, or
+fix the name. Verify each against the owning class.
+------------------------------------------------------------------------------
+   14  AudioComponent
+   10  ReferenceMesh
+    5  animInst
+    3  SkeletalMesh
+    3  inMat
+    3  BlendOutDelegate
+    2  MatRef
+    2  CaptureComponent
+    2  DynaMat
+    2  ValueCurve
+    2  TabButtonStyle
+    2  ActiveTabButtonStyle
+    1  timer_starProf
+    1  VoiceComponent
+    1  AnimationBlueprint
+    1  AnimationSingleNode
+    1  AlwaysTickPose
+    1  MatBRef
+    1  nmat_ref
+    1  TabTextStyle
+    1  ActiveTabTextStyle
+
+==============================================================================
+FIX TABLE 3 — OTHER IDENTIFIERS TO INVESTIGATE
+==============================================================================
+    9  Get
+    5  CreateLambda
+    4  LogAndReturnNull
+    3  SnapToTarget
+    2  Super
+    2  ProjectDir
+    2  NormalizeFilename
+    2  EAnimationMode
+    2  _mat
+    2  ReturnNull
+    2  GetWorld
+
+==============================================================================
+MODULE / BUILD.CS + .UPLUGIN CHANGES
+==============================================================================
+Add to PublicDependencyModuleNames (per the includes above): SlateCore, Slate,
+Json, DeveloperSettings, RenderCore (and UMG if widgets need it).
+Add to the .uplugin Plugins list (log explicitly warned these are unlisted deps):
+  StructUtils, OnlineSubsystem, OnlineSubsystemUtils
+
+SPECIAL CASES:
+  * ConstructorHelpers::FObjectFinder only works inside a constructor. Lines using
+    it outside one will fail even with the include — move asset loading to the ctor
+    or use LoadObject/StaticLoadObject at runtime.
+  * APawn -> AActor 'cannot convert' errors: include the pawn header so the compiler
+    sees the inheritance; an incomplete type can't be implicitly upcast.
+  * 'illegal member initialization: Super is not a base': the parent class header
+    isn't included. Fix the base #include; these clear automatically.
+  * Several deprecation warnings (C4996) will become errors in future UE versions
+    (Conv_FloatToText, ANY_PACKAGE, RemoveAt(bool), AddReferencedObject(UObject*)...).
+    Not blocking now, but worth fixing before resubmission.
+
+==============================================================================
+FULL ERROR LIST BY FILE (plugin source; .gen.cpp + engine cascades omitted)
+==============================================================================
+
+D:\Games\EpicGames\UE_5.5\Engine\Source\Runtime\CoreUObject\Public\Templates\Casts.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L96    C2027: use of undefined type 'UPrimaryDataAsset'
+    L96    C2338: static assertion failed: 'Attempting to cast between incomplete types'
+    L158   C2139: 'UPrimaryDataAsset': an undefined class is not allowed as an argument to compiler intrinsic type trait '__is_base_of'
+
+D:\Games\EpicGames\UE_5.5\Engine\Source\Runtime\CoreUObject\Public\UObject\Field.h
+  --------------------------------------------------------------------------
+    L968   C2440: 'static_cast': cannot convert from 'const FField *' to 'const FTextProperty *'
+
+D:\Games\EpicGames\UE_5.5\Engine\Source\Runtime\Core\Public\Containers\Map.h
+  --------------------------------------------------------------------------
+    L118   C2665: 'GetTypeHash': no overloaded function could convert all the argument types
+
+D:\Games\EpicGames\UE_5.5\Engine\Source\Runtime\Core\Public\Templates\IsPODType.h
+  --------------------------------------------------------------------------
+    L13    C2139: 'TSubclassOf<UObject>': an undefined class is not allowed as an argument to compiler intrinsic type trait '__is_pod'
+
+D:\Games\EpicGames\UE_5.5\Engine\Source\Runtime\Core\Public\Templates\Tuple.h
+  >> add: #include "Templates/SubclassOf.h"
+  --------------------------------------------------------------------------
+    L105   C2139: 'TSubclassOf<UObject>': an undefined class is not allowed as an argument to compiler intrinsic type trait '__is_constructible'
+    L116   C2079: 'UE::Core::Private::Tuple::TTupleBaseElement<KeyType,0,2>::Key' uses undefined class 'TSubclassOf<UObject>'
+
+D:\Games\EpicGames\UE_5.5\Engine\Source\Runtime\Core\Public\Templates\UnrealTypeTraits.h
+  >> add: #include "Templates/SubclassOf.h"
+  --------------------------------------------------------------------------
+    L308   C2027: use of undefined type 'TSubclassOf<UObject>'
+
+D:\Games\EpicGames\UE_5.5\Engine\Source\Runtime\Core\Public\UObject\WeakObjectPtrTemplates.h
+  --------------------------------------------------------------------------
+    L58    C2338: static assertion failed: 'TWeakObjectPtr can only be constructed with UObject types'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\Flow\Private\Nodes\Operators\FlowNode_LogicalAND.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L29    C2027: use of undefined type 'UWorld'
+    L29    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\Flow\Private\Nodes\World\FlowNode_NotifyActor.cpp
+  >> add: #include "Engine/GameInstance.h"
+  --------------------------------------------------------------------------
+    L36    C2027: use of undefined type 'UGameInstance'
+    L36    C2059: syntax error: ')'
+    L37    C2143: syntax error: missing ';' before '{'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\LuaMachine\Private\LuaSubsystem.cpp
+  >> add: #include "Misc/Paths.h"
+  --------------------------------------------------------------------------
+    L112   C2653: 'Super': is not a class or namespace name
+    L119   C2664: 'FLuaValue ULuaBlueprintFunctionLibrary::LuaGetGlobal(UObject *,TSubclassOf<ULuaState>,const FString &)': cannot convert argument 1 from 'ULuaWorldSubsystem *' to 'UObject *'
+    L138   C2653: 'FPaths': is not a class or namespace name
+    L138   C3861: 'ProjectDir': identifier not found
+    L147   C2664: 'FLuaValue ULuaBlueprintFunctionLibrary::LuaRunNonContentFile(UObject *,TSubclassOf<ULuaState>,const FString &,const bool)': cannot convert argument 1 from 'ULuaWorldSubsystem *' to 'UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\LuaMachine\Public\LuaSubsystem.h
+  --------------------------------------------------------------------------
+    L57    C2504: 'UWorldSubsystem': base class undefined
+    L59    C2440: 'return': cannot convert from 'ULuaWorldSubsystem *' to 'UObject *'
+    L59    C3646: 'Super': unknown override specifier
+    L59    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L61    C3668: 'ULuaWorldSubsystem::Initialize': method with override specifier 'override' did not override any base class methods
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaCore\Private\Statics\OMEGA_File.cpp
+  >> add: #include "Misc/Paths.h"
+  --------------------------------------------------------------------------
+    L17    C2593: 'operator =' is ambiguous
+    L17    C2653: 'FPaths': is not a class or namespace name
+    L17    C3861: 'ProjectDir': identifier not found
+    L18    C2593: 'operator =' is ambiguous
+    L18    C2653: 'FPaths': is not a class or namespace name
+    L18    C3861: 'ProjectContentDir': identifier not found
+    L19    C2593: 'operator =' is ambiguous
+    L19    C2653: 'FPaths': is not a class or namespace name
+    L19    C3861: 'ProjectModsDir': identifier not found
+    L20    C2593: 'operator =' is ambiguous
+    L20    C2653: 'FPaths': is not a class or namespace name
+    L20    C3861: 'GameAgnosticSavedDir': identifier not found
+    L24    C2653: 'FPaths': is not a class or namespace name
+    L24    C3861: 'NormalizeFilename': identifier not found
+    L104   C2653: 'FPaths': is not a class or namespace name
+    L104   C3861: 'ConvertRelativePathToFull': identifier not found
+    L105   C2653: 'FPaths': is not a class or namespace name
+    L105   C3861: 'NormalizeFilename': identifier not found
+    L107   C2653: 'FPaths': is not a class or namespace name
+    L107   C3861: 'FileExists': identifier not found
+    L113   C2653: 'FPaths': is not a class or namespace name
+    L113   C3861: 'GetPath': identifier not found
+    L114   C2653: 'FPaths': is not a class or namespace name
+    L114   C3861: 'GetBaseFilename': identifier not found
+    L167   C2653: 'FPaths': is not a class or namespace name
+    L167   C3861: 'ProjectSavedDir': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDebug\Private\Actors\Actor_DebugNote.cpp
+  >> add: #include "Materials/Material.h"
+  --------------------------------------------------------------------------
+    L30    C2065: 'UMaterial': undeclared identifier
+    L30    C2660: 'UTextRenderComponent::SetMaterial': function does not take 1 arguments
+    L30    C2672: 'LoadObject': no matching overloaded function found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDebug\Private\OmegaDebug_Functions.cpp
+  >> add: #include "Engine/GameInstance.h"  #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L10    C2614: 'UOmegaDebugDevSettings': illegal member initialization: 'Super' is not a base or member
+    L41    C2027: use of undefined type 'UWorld'
+    L41    C2065: 'timer_starProf': undeclared identifier
+    L57    C2027: use of undefined type 'UGameInstance'
+    L57    C2059: syntax error: ')'
+    L61    C2027: use of undefined type 'UGameInstance'
+    L61    C2059: syntax error: ')'
+    L76    C2664: 'AOmegaQuestInstance *UOmegaFunctions_Quest::Start(UObject *,UOmegaQuest *)': cannot convert argument 1 from 'UGameInstance *' to 'UObject *'
+    L80    C2027: use of undefined type 'UWorld'
+    L80    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDebug\Public\OmegaDebug_Functions.h
+  >> add: #include "Engine/DataAsset.h"  #include "Engine/DeveloperSettings.h"
+  --------------------------------------------------------------------------
+    L36    C2504: 'UPrimaryDataAsset': base class undefined
+    L38    C2440: 'return': cannot convert from 'UOmegaDebugProfile *' to 'UObject *'
+    L38    C3646: 'Super': unknown override specifier
+    L38    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L64    C2504: 'UPrimaryDataAsset': base class undefined
+    L66    C2440: 'return': cannot convert from 'UOmegaSettings_Debug *' to 'UObject *'
+    L66    C3646: 'Super': unknown override specifier
+    L66    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L82    C2504: 'UDeveloperSettings': base class undefined
+    L84    C2440: 'return': cannot convert from 'UOmegaDebugDevSettings *' to 'UObject *'
+    L84    C3646: 'Super': unknown override specifier
+    L84    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L95    C2440: 'initializing': cannot convert from 'T *' to 'UObject *'
+    L112   C3646: 'timer_starProf': unknown override specifier
+    L112   C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\Actors\Actor_DemoInteractable.cpp
+  >> add: #include "Materials/MaterialInstanceDynamic.h"  #include "UObject/ConstructorHelpers.h"
+  --------------------------------------------------------------------------
+    L87    C2062: type '<error>' unexpected
+    L87    C2653: 'ConstructorHelpers': is not a class or namespace name
+    L87    C7568: argument list missing after assumed function template 'FObjectFinder'
+    L243   C2027: use of undefined type 'UMaterialInstanceDynamic'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\Actors\Actor_DynamicCameras.cpp
+  >> add: #include "GameFramework/PlayerController.h"
+  --------------------------------------------------------------------------
+    L34    C2027: use of undefined type 'APlayerController'
+    L34    C2660: 'UKismetMathLibrary::FindLookAtRotation': function does not take 1 arguments
+    L37    C2027: use of undefined type 'APlayerController'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\DataAssets\DA_CommonPickup.cpp
+  --------------------------------------------------------------------------
+    L10    C2664: 'bool FOmegaConditions_Actor::CheckConditions(AActor *) const': cannot convert argument 1 from 'APawn *' to 'AActor *'
+    L19    C2664: 'void FActorModifiers::ApplyMods(AActor *)': cannot convert argument 1 from 'APawn *' to 'AActor *'
+    L20    C2664: 'void UOmegaFunctions_GlobalScripting::RunGlobalScripts(UObject *,FOmegaGlobalScripts)': cannot convert argument 1 from 'APawn *' to 'UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\DataWidgets\DW_Attribute.cpp
+  >> add: #include "Engine/HitResult.h"
+  --------------------------------------------------------------------------
+    L60    C2027: use of undefined type 'FHitResult'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\FlowNodes\FlowNode_Actors.cpp
+  --------------------------------------------------------------------------
+    L40    C2664: 'TArray<AActor *,FDefaultAllocator> UOmegaActorSelector::GetActors(const UObject *)': cannot convert argument 1 from 'UWorld *' to 'const UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\FlowNodes\FlowNode_Camera.cpp
+  >> add: #include "Engine/World.h"  #include "GameFramework/PlayerController.h"
+  --------------------------------------------------------------------------
+    L25    C2027: use of undefined type 'UWorld'
+    L27    C2027: use of undefined type 'APlayerController'
+    L30    C2027: use of undefined type 'UWorld'
+    L42    C2512: 'TEnumAsByte': no appropriate default constructor available
+    L59    C2027: use of undefined type 'UWorld'
+    L66    C2664: 'TArray<AActor *,FDefaultAllocator> UOmegaActorSelector::GetActors(const UObject *)': cannot convert argument 1 from 'UWorld *' to 'const UObject *'
+    L68    C2088: built-in operator '[' cannot be applied to an operand of type 'TArray<AActor *,FDefaultAllocator>'
+    L68    C2664: 'TArray<AActor *,FDefaultAllocator> UOmegaActorSelector::GetActors(const UObject *)': cannot convert argument 1 from 'UWorld *' to 'const UObject *'
+    L78    C2027: use of undefined type 'APlayerController'
+    L81    C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\FlowNodes\FlowNode_Flow.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L34    C2027: use of undefined type 'UWorld'
+    L34    C2059: syntax error: ')'
+    L35    C2143: syntax error: missing ';' before '{'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\FlowNodes\FlowNode_LinearEvents.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L22    C2027: use of undefined type 'UWorld'
+    L22    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\FlowNodes\FlowNode_Param.cpp
+  --------------------------------------------------------------------------
+    L31    C2664: 'void UOmegaFunctions_GlobalVars::SetGlobalVariable_Bool(UObject *,EOmegaGlobalParamTarget,FName,bool)': cannot convert argument 1 from 'UWorld *' to 'UObject *'
+    L51    C2664: 'bool UOmegaFunctions_GlobalVars::GetGlobalVariable_Bool(UObject *,EOmegaGlobalParamTarget,FName)': cannot convert argument 1 from 'UWorld *' to 'UObject *'
+    L81    C2664: 'int32 UOmegaFunctions_GlobalVars::GetGlobalVariable_Int32(UObject *,EOmegaGlobalParamTarget,FName)': cannot convert argument 1 from 'UWorld *' to 'UObject *'
+    L83    C2664: 'void UOmegaFunctions_GlobalVars::SetGlobalVariable_Int32(UObject *,EOmegaGlobalParamTarget,FName,int32)': cannot convert argument 1 from 'UWorld *' to 'UObject *'
+    L107   C2664: 'int32 UOmegaFunctions_GlobalVars::GetGlobalVariable_Int32(UObject *,EOmegaGlobalParamTarget,FName)': cannot convert argument 1 from 'UWorld *' to 'UObject *'
+    L150   C2664: 'void UOmegaFunctions_GlobalVars::SetGlobalVariable_DataAsset(UObject *,EOmegaGlobalParamTarget,FName,UPrimaryDataAsset *)': cannot convert argument 1 from 'UWorld *' to 'UObject *'
+    L175   C2664: 'UPrimaryDataAsset *UOmegaFunctions_GlobalVars::GetGlobalVariable_DataAsset(UObject *,EOmegaGlobalParamTarget,FName,TSubclassOf<UPrimaryDataAsset>)': cannot convert argument 1 from 'UWorld *' to 'UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\FlowNodes\FlowNode_Save.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L56    C2027: use of undefined type 'UWorld'
+    L56    C2059: syntax error: ')'
+    L57    C2143: syntax error: missing ';' before '{'
+    L86    C2027: use of undefined type 'UWorld'
+    L86    C2059: syntax error: ')'
+    L87    C2143: syntax error: missing ';' before '{'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\FlowNodes\FlowNode_System.cpp
+  >> add: #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L305   C2027: use of undefined type 'FTimerManager'
+    L305   C2653: 'FTimerDelegate': is not a class or namespace name
+    L305   C3861: 'CreateLambda': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\LinearEvents\LinearEvent_ActorBase.cpp
+  >> add: #include "Engine/HitResult.h"
+  --------------------------------------------------------------------------
+    L32    C2079: 'dumphit' uses undefined struct 'FHitResult'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\LinearEvents\LinearEvent_CameraFade.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L11    C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\LinearEvents\LinearEvent_Delay.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L8     C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\LinearEvents\LinearEvent_EditSaveTags.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L14    C2027: use of undefined type 'UWorld'
+    L14    C2059: syntax error: ')'
+    L17    C2027: use of undefined type 'UWorld'
+    L17    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\LinearEvents\LinearEvent_SimpleMessage.cpp
+  --------------------------------------------------------------------------
+    L160   C2664: 'void FSlateBrush::SetResourceObject(UObject *)': cannot convert argument 1 from 'UMaterialInterface *' to 'UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\OmegaCharacter.cpp
+  >> add: #include "Components/SkeletalMeshComponent.h"  #include "UObject/ConstructorHelpers.h"
+  --------------------------------------------------------------------------
+    L119   C2664: 'void USceneComponent::SetupAttachment(USceneComponent *,FName)': cannot convert argument 1 from 'USkeletalMeshComponent *' to 'USceneComponent *'
+    L122   C2664: 'void USceneComponent::SetupAttachment(USceneComponent *,FName)': cannot convert argument 1 from 'USkeletalMeshComponent *' to 'USceneComponent *'
+    L124   C2027: use of undefined type 'USkeletalMeshComponent'
+    L125   C2027: use of undefined type 'USkeletalMeshComponent'
+    L135   C2664: 'void UTextRenderComponent::SetMaterial(int32,UMaterialInterface *)': cannot convert argument 2 from 'UMaterial *' to 'UMaterialInterface *'
+    L149   C2027: use of undefined type 'USkeletalMeshComponent'
+    L159   C2062: type '<error>' unexpected
+    L159   C2653: 'ConstructorHelpers': is not a class or namespace name
+    L159   C7568: argument list missing after assumed function template 'FObjectFinder'
+    L160   C2027: use of undefined type 'USkeletalMeshComponent'
+    L160   C2065: 'MatRef': undeclared identifier
+    L280   C2027: use of undefined type 'USkeletalMeshComponent'
+    L309   C2664: 'void UUtilMeshComponent::SetBoundsZ(USceneComponent *,float)': cannot convert argument 1 from 'USkeletalMeshComponent *' to 'USceneComponent *'
+    L313   C2027: use of undefined type 'USkeletalMeshComponent'
+    L336   C2027: use of undefined type 'USkeletalMeshComponent'
+    L337   C2027: use of undefined type 'USkeletalMeshComponent'
+    L345   C2027: use of undefined type 'USkeletalMeshComponent'
+    L357   C2027: use of undefined type 'USkeletalMeshComponent'
+    L358   C2027: use of undefined type 'USkeletalMeshComponent'
+    L361   C2027: use of undefined type 'USkeletalMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\OmegaDemo_HUDs.cpp
+  >> add: #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L66    C2027: use of undefined type 'FTimerManager'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Private\Systems\sys_dialogue.cpp
+  >> add: #include "Materials/MaterialInstanceDynamic.h"
+  --------------------------------------------------------------------------
+    L14    C2065: 'CaptureComponent': undeclared identifier
+    L15    C2065: 'CaptureComponent': undeclared identifier
+    L17    C2065: 'VoiceComponent': undeclared identifier
+    L51    C2039: 'L_GetDynaMat': is not a member of 'AInstanceActor_Image'
+    L53    C2065: 'DynaMat': undeclared identifier
+    L62    C2027: use of undefined type 'UMaterialInstanceDynamic'
+    L68    C2039: 'L_GetDynaMat': is not a member of 'AInstanceActor_Speaker'
+    L68    C2084: function 'UMaterialInstanceDynamic *L_GetDynaMat(void)' already has a body
+    L70    C2065: 'DynaMat': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\Actors\Actor_Volumes.h
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L49    C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\FlowNodes\FlowNode_Camera.h
+  --------------------------------------------------------------------------
+    L64    C2065: 'EViewTargetBlendFunction': undeclared identifier
+    L64    C2923: 'TEnumAsByte': 'EViewTargetBlendFunction' is not a valid template type argument for parameter 'InEnumType'
+    L64    C2955: 'TEnumAsByte': use of class template requires template argument list
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\OmegaDemo_Functions.h
+  >> add: #include "Kismet/BlueprintFunctionLibrary.h"
+  --------------------------------------------------------------------------
+    L9     C2504: 'UBlueprintFunctionLibrary': base class undefined
+    L11    C2440: 'return': cannot convert from 'UOmegaDemoFunctions *' to 'UObject *'
+    L11    C3646: 'Super': unknown override specifier
+    L11    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\Scripts\modifiers_component.cpp
+  >> add: #include "Components/SkeletalMeshComponent.h"  #include "Materials/MaterialInterface.h"
+  --------------------------------------------------------------------------
+    L11    C2065: 'SkeletalMesh': undeclared identifier
+    L13    C2027: use of undefined type 'USkeletalMeshComponent'
+    L13    C2065: 'SkeletalMesh': undeclared identifier
+    L15    C2065: 'FSkeletalMaterial': undeclared identifier
+    L15    C2065: 'SkeletalMesh': undeclared identifier
+    L15    C2530: 'MeshMaterials': references must be initialized
+    L15    C2923: 'TArray': 'FSkeletalMaterial' is not a valid template type argument for parameter 'InElementType'
+    L15    C2955: 'TArray': use of class template requires template argument list
+    L15    C2976: 'TArray': too few template arguments
+    L16    C2662: 'InAllocatorType::SizeType TArray<InElementType,InAllocatorType>::Num(void) const': cannot convert 'this' pointer from 'const TArray' to 'const TArray<InElementType,InAllocatorType> &'
+    L18    C2065: 'UMaterialInterface': undeclared identifier
+    L18    C2065: 'inMat': undeclared identifier
+    L18    C2678: binary '[': no operator found which takes a left-hand operand of type 'const TArray' (or there is no acceptable conversion)
+    L21    C2065: 'inMat': undeclared identifier
+    L23    C2027: use of undefined type 'USkeletalMeshComponent'
+    L23    C2065: 'inMat': undeclared identifier
+    L26    C2027: use of undefined type 'USkeletalMeshComponent'
+    L31    C2027: use of undefined type 'USkeletalMeshComponent'
+    L31    C2677: binary '[': no global operator found which takes type 'FName' (or there is no acceptable conversion)
+    L36    C2027: use of undefined type 'USkeletalMeshComponent'
+    L40    C2027: use of undefined type 'USkeletalMeshComponent'
+    L44    C2027: use of undefined type 'USkeletalMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\Scripts\modifiers_component.h
+  >> add: #include "Materials/MaterialInterface.h"
+  --------------------------------------------------------------------------
+    L15    C2143: syntax error: missing ';' before '*'
+    L15    C2238: unexpected token(s) preceding ';'
+    L15    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L16    C2059: syntax error: '>'
+    L16    C2065: 'UMaterialInterface': undeclared identifier
+    L17    C2059: syntax error: '>'
+    L17    C2065: 'UMaterialInterface': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\Scripts\script_Effects.cpp
+  >> add: #include "Engine/HitResult.h"
+  --------------------------------------------------------------------------
+    L9     C2027: use of undefined type 'FHitResult'
+    L9     C2079: 'l_CalcHit' uses undefined struct 'FHitResult'
+    L13    C2079: 'hit' uses undefined struct 'FHitResult'
+    L17    C2027: use of undefined type 'FHitResult'
+    L93    C2027: use of undefined type 'FHitResult'
+    L93    C2664: 'float UCombatantComponent::ApplyAttributeDamage(UOmegaAttribute *,float,UCombatantComponent *,UObject *,UOmegaDamageType *,FHitResult)': cannot convert argument 6 from 'FHitResult' to 'FHitResult'
+    L128   C2027: use of undefined type 'FHitResult'
+    L128   C2664: 'float UCombatantComponent::ApplyAttributeDamage(UOmegaAttribute *,float,UCombatantComponent *,UObject *,UOmegaDamageType *,FHitResult)': cannot convert argument 6 from 'FHitResult' to 'FHitResult'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\Scripts\script_EventTrigger.cpp
+  >> add: #include "Engine/World.h"  #include "GameFramework/Controller.h"
+  --------------------------------------------------------------------------
+    L20    C2027: use of undefined type 'AController'
+    L20    C2672: 'TArray<TSubclassOf<AActor>,FDefaultAllocator>::Contains': no matching overloaded function found
+    L42    C2027: use of undefined type 'UWorld'
+    L54    C2027: use of undefined type 'UWorld'
+    L54    C2059: syntax error: ')'
+    L59    C2027: use of undefined type 'UWorld'
+    L59    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\Scripts\script_QuestTypes.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L14    C2027: use of undefined type 'UWorld'
+    L14    C2059: syntax error: ')'
+    L15    C2143: syntax error: missing ';' before '{'
+    L100   C2027: use of undefined type 'UWorld'
+    L100   C2059: syntax error: ')'
+    L101   C2143: syntax error: missing ';' before '{'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaDemo\Public\Systems\sys_dialogue.h
+  --------------------------------------------------------------------------
+    L28    C2143: syntax error: missing ';' before '*'
+    L28    C2238: unexpected token(s) preceding ';'
+    L28    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L29    C2143: syntax error: missing ';' before '*'
+    L29    C2238: unexpected token(s) preceding ';'
+    L29    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L46    C2143: syntax error: missing ';' before '*'
+    L46    C2238: unexpected token(s) preceding ';'
+    L46    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L47    C2143: syntax error: missing ';' before '*'
+    L47    C2238: unexpected token(s) preceding ';'
+    L47    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L62    C2143: syntax error: missing ';' before '*'
+    L62    C2238: unexpected token(s) preceding ';'
+    L62    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L63    C2143: syntax error: missing ';' before '*'
+    L63    C2238: unexpected token(s) preceding ';'
+    L63    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaFlow\Private\AsyncAction_GameplaySystem.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L46    C2027: use of undefined type 'UWorld'
+    L46    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaFlow\Private\AsyncAction_LerpCurve.cpp
+  >> add: #include "Curves/CurveFloat.h"
+  --------------------------------------------------------------------------
+    L16    C2027: use of undefined type 'UCurveFloat'
+    L39    C2027: use of undefined type 'UCurveFloat'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaFlow\Private\AsyncAction_LevelSequence.cpp
+  >> add: #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L74    C2027: use of undefined type 'FTimerManager'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Bullet.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L42    C2664: 'void UPrimitiveComponent::IgnoreActorWhenMoving(AActor *,bool)': cannot convert argument 1 from 'APawn *' to 'AActor *'
+    L111   C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Character.cpp
+  >> add: #include "Components/SkeletalMeshComponent.h"
+  --------------------------------------------------------------------------
+    L24    C2027: use of undefined type 'USkeletalMeshComponent'
+    L25    C2027: use of undefined type 'USkeletalMeshComponent'
+    L34    C2027: use of undefined type 'USkeletalMeshComponent'
+    L36    C2027: use of undefined type 'USkeletalMeshComponent'
+    L96    C2664: 'void UKismetSystemLibrary::GetComponentBounds(const USceneComponent *,FVector &,FVector &,float &)': cannot convert argument 1 from 'USkeletalMeshComponent *' to 'const USceneComponent *'
+    L110   C2027: use of undefined type 'USkeletalMeshComponent'
+    L110   C2065: 'AnimationBlueprint': undeclared identifier
+    L110   C2653: 'EAnimationMode': is not a class or namespace name
+    L112   C2027: use of undefined type 'USkeletalMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Environment.cpp
+  >> add: #include "Components/StaticMeshComponent.h"  #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L81    C2027: use of undefined type 'UStaticMeshComponent'
+    L94    C2027: use of undefined type 'UStaticMeshComponent'
+    L95    C2027: use of undefined type 'UStaticMeshComponent'
+    L98    C2027: use of undefined type 'UStaticMeshComponent'
+    L100   C2065: 'UMaterialInstance': undeclared identifier
+    L100   C2065: '_mat': undeclared identifier
+    L100   C2672: 'LoadObject': no matching overloaded function found
+    L102   C2027: use of undefined type 'UStaticMeshComponent'
+    L102   C2065: '_mat': undeclared identifier
+    L104   C2027: use of undefined type 'UStaticMeshComponent'
+    L105   C2027: use of undefined type 'UStaticMeshComponent'
+    L165   C2027: use of undefined type 'FTimerManager'
+    L165   C2653: 'FTimerDelegate': is not a class or namespace name
+    L165   C3861: 'CreateLambda': identifier not found
+    L201   C2664: 'void L_SetCompValid(USceneComponent *,bool)': cannot convert argument 1 from 'UStaticMeshComponent *' to 'USceneComponent *'
+    L208   C2664: 'void L_SetCompValid(USceneComponent *,bool)': cannot convert argument 1 from 'UStaticMeshComponent *' to 'USceneComponent *'
+    L267   C2664: 'void UOmegaEnvironmentPreset::L_SetCompVis(USceneComponent *,bool)': cannot convert argument 1 from 'UStaticMeshComponent *' to 'USceneComponent *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_GameplayRegion.cpp
+  >> add: #include "Components/StaticMeshComponent.h"
+  --------------------------------------------------------------------------
+    L26    C2027: use of undefined type 'UStaticMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_MeshDynaMat.cpp
+  >> add: #include "Components/StaticMeshComponent.h"
+  --------------------------------------------------------------------------
+    L9     C2027: use of undefined type 'UStaticMeshComponent'
+    L23    C2027: use of undefined type 'UStaticMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_ModifierVolume.cpp
+  >> add: #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L71    C2027: use of undefined type 'FTimerManager'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Openable.cpp
+  >> add: #include "Components/SkeletalMeshComponent.h"  #include "GameFramework/Pawn.h"
+  --------------------------------------------------------------------------
+    L21    C2027: use of undefined type 'USkeletalMeshComponent'
+    L41    C2027: use of undefined type 'APawn'
+    L58    C2027: use of undefined type 'USkeletalMeshComponent'
+    L59    C2027: use of undefined type 'USkeletalMeshComponent'
+    L60    C2027: use of undefined type 'USkeletalMeshComponent'
+    L107   C2027: use of undefined type 'USkeletalMeshComponent'
+    L107   C2065: 'AnimationSingleNode': undeclared identifier
+    L107   C2653: 'EAnimationMode': is not a class or namespace name
+    L108   C2027: use of undefined type 'USkeletalMeshComponent'
+    L109   C2027: use of undefined type 'USkeletalMeshComponent'
+    L163   C2027: use of undefined type 'USkeletalMeshComponent'
+    L165   C2027: use of undefined type 'USkeletalMeshComponent'
+    L166   C2027: use of undefined type 'USkeletalMeshComponent'
+    L167   C2027: use of undefined type 'USkeletalMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Pickup.cpp
+  >> add: #include "Engine/World.h"  #include "GameFramework/Pawn.h"
+  --------------------------------------------------------------------------
+    L94    C2027: use of undefined type 'APawn'
+    L94    C2660: 'UKismetMathLibrary::VLerp': function does not take 2 arguments
+    L112   C2027: use of undefined type 'APawn'
+    L112   C2672: 'Cast': no matching overloaded function found
+    L192   C2065: 'ReferenceMesh': undeclared identifier
+    L193   C2065: 'ReferenceMesh': undeclared identifier
+    L194   C2065: 'ReferenceMesh': undeclared identifier
+    L195   C2065: 'ReferenceMesh': undeclared identifier
+    L198   C2065: 'ReferenceMesh': undeclared identifier
+    L208   C2065: 'ReferenceMesh': undeclared identifier
+    L209   C2065: 'ReferenceMesh': undeclared identifier
+    L214   C2065: 'ReferenceMesh': undeclared identifier
+    L221   C2065: 'ReferenceMesh': undeclared identifier
+    L223   C2065: 'ReferenceMesh': undeclared identifier
+    L231   C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Player.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L14    C2065: 'GEngine': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Prop.cpp
+  >> add: #include "Components/SkeletalMeshComponent.h"  #include "Components/StaticMeshComponent.h"
+  --------------------------------------------------------------------------
+    L57    C2440: '=': cannot convert from 'UStaticMeshComponent *' to 'USceneComponent *'
+    L58    C2027: use of undefined type 'UStaticMeshComponent'
+    L60    C2027: use of undefined type 'UStaticMesh'
+    L60    C2660: 'UOmegaProp_Preset::L_setBoundsFromComp': function does not take 2 arguments
+    L68    C2440: '=': cannot convert from 'USkeletalMeshComponent *' to 'USceneComponent *'
+    L69    C2027: use of undefined type 'USkeletalMeshComponent'
+    L71    C2027: use of undefined type 'USkeletalMesh'
+    L71    C2660: 'UOmegaProp_Preset::L_setBoundsFromComp': function does not take 2 arguments
+    L151   C2027: use of undefined type 'UStaticMeshComponent'
+    L152   C2027: use of undefined type 'UStaticMeshComponent'
+    L154   C2027: use of undefined type 'USkeletalMeshComponent'
+    L155   C2027: use of undefined type 'USkeletalMeshComponent'
+    L155   C2065: 'AlwaysTickPose': undeclared identifier
+    L155   C2653: 'EVisibilityBasedAnimTickOption': is not a class or namespace name
+    L158   C2027: use of undefined type 'USkeletalMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Spawnable.cpp
+  >> add: #include "Materials/Material.h"
+  --------------------------------------------------------------------------
+    L81    C2065: 'UMaterial': undeclared identifier
+    L81    C2660: 'UTextRenderComponent::SetMaterial': function does not take 1 arguments
+    L81    C2672: 'LoadObject': no matching overloaded function found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Spline.cpp
+  >> add: #include "GameFramework/Actor.h"  #include "UObject/ConstructorHelpers.h"
+  --------------------------------------------------------------------------
+    L30    C3861: 'CreateDefaultSubobject': identifier not found
+    L31    C2065: 'RootComponent': undeclared identifier
+    L32    C3861: 'CreateOptionalDefaultSubobject': identifier not found
+    L34    C3861: 'CreateOptionalDefaultSubobject': identifier not found
+    L37    C2062: type '<error>' unexpected
+    L37    C2653: 'ConstructorHelpers': is not a class or namespace name
+    L37    C7568: argument list missing after assumed function template 'FObjectFinder'
+    L38    C2065: 'MatRef': undeclared identifier
+    L39    C2062: type '<error>' unexpected
+    L39    C2653: 'ConstructorHelpers': is not a class or namespace name
+    L39    C7568: argument list missing after assumed function template 'FObjectFinder'
+    L40    C2065: 'MatBRef': undeclared identifier
+    L41    C2062: type '<error>' unexpected
+    L41    C2653: 'ConstructorHelpers': is not a class or namespace name
+    L41    C7568: argument list missing after assumed function template 'FObjectFinder'
+    L42    C2065: 'nmat_ref': undeclared identifier
+    L42    C2660: 'UKismetMaterialLibrary::CreateDynamicMaterialInstance': function does not take 1 arguments
+    L49    C2352: 'AActor::OnConstruction': a call of a non-static member function requires an object
+    L54    C2664: 'void UMeshComponent::SetMaterial(int32,UMaterialInterface *)': cannot convert argument 2 from 'UMaterialInstanceDynamic *' to 'UMaterialInterface *'
+    L55    C2664: 'void UMeshComponent::SetMaterial(int32,UMaterialInterface *)': cannot convert argument 2 from 'UMaterialInstanceDynamic *' to 'UMaterialInterface *'
+    L92    C3861: 'CreateOptionalDefaultSubobject': identifier not found
+    L93    C2065: 'RootComponent': undeclared identifier
+    L94    C2672: 'LoadObject': no matching overloaded function found
+    L110   C2039: 'BeginPlay': is not a member of 'AOmegaSplineActor'
+    L139   C3861: 'SetActorHiddenInGame': identifier not found
+    L141   C2672: 'LoadObject': no matching overloaded function found
+    L148   C3861: 'SetActorHiddenInGame': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Timer.cpp
+  --------------------------------------------------------------------------
+    L15    C2065: 'AudioComponent': undeclared identifier
+    L16    C2065: 'AudioComponent': undeclared identifier
+    L17    C2065: 'AudioComponent': undeclared identifier
+    L40    C2065: 'AudioComponent': undeclared identifier
+    L77    C2065: 'AudioComponent': undeclared identifier
+    L79    C2065: 'AudioComponent': undeclared identifier
+    L80    C2065: 'AudioComponent': undeclared identifier
+    L119   C2065: 'AudioComponent': undeclared identifier
+    L121   C2065: 'AudioComponent': undeclared identifier
+    L141   C2065: 'AudioComponent': undeclared identifier
+    L147   C2065: 'AudioComponent': undeclared identifier
+    L180   C2065: 'AudioComponent': undeclared identifier
+    L181   C2065: 'AudioComponent': undeclared identifier
+    L185   C2065: 'AudioComponent': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Tool.cpp
+  >> add: #include "Animation/AnimInstance.h"  #include "Components/SkeletalMeshComponent.h"
+  --------------------------------------------------------------------------
+    L80    C2027: use of undefined type 'USkeletalMeshComponent'
+    L80    C2143: syntax error: missing ';' before ')'
+    L80    C2143: syntax error: missing ';' before ':'
+    L80    C2451: a conditional expression of type 'TArray<UActorComponent *,FDefaultAllocator>' is not valid
+    L193   C2027: use of undefined type 'USkeletalMeshComponent'
+    L193   C2065: 'UAnimInstance': undeclared identifier
+    L193   C2065: 'animInst': undeclared identifier
+    L195   C2065: 'animInst': undeclared identifier
+    L215   C2027: use of undefined type 'USkeletalMeshComponent'
+    L215   C2065: 'UAnimInstance': undeclared identifier
+    L215   C2065: 'animInst': undeclared identifier
+    L217   C2065: 'animInst': undeclared identifier
+    L218   C2065: 'BlendOutDelegate': undeclared identifier
+    L218   C2065: 'FOnMontageBlendingOutStarted': undeclared identifier
+    L218   C2146: syntax error: missing ';' before identifier 'BlendOutDelegate'
+    L219   C2065: 'BlendOutDelegate': undeclared identifier
+    L223   C2065: 'BlendOutDelegate': undeclared identifier
+    L223   C2065: 'animInst': undeclared identifier
+    L290   C2760: syntax error: ')' was unexpected here; expected ';'
+    L290   C2760: syntax error: '->' was unexpected here; expected 'statement'
+    L290   C3878: syntax error: unexpected token ')' following 'expression-statement'
+    L290   C3878: syntax error: unexpected token ')' following 'selection-statement'
+    L290   C3878: syntax error: unexpected token ')' following 'statement'
+    L290   C3878: syntax error: unexpected token '*' following 'expression'
+    L290   C3878: syntax error: unexpected token '*' following 'simple-type-specifier'
+    L313   C2059: syntax error: ')'
+    L345   C2027: use of undefined type 'USkeletalMeshComponent'
+    L348   C2027: use of undefined type 'USkeletalMeshComponent'
+    L351   C2664: 'void USceneComponent::SetupAttachment(USceneComponent *,FName)': cannot convert argument 1 from 'USkeletalMeshComponent *' to 'USceneComponent *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\Actor_Zone.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L48    C2027: use of undefined type 'UWorld'
+    L288   C2027: use of undefined type 'UWorld'
+    L288   C2059: syntax error: ')'
+    L300   C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Actors\OmegaGameplaySystem.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L292   C2059: syntax error: ')'
+    L292   C2065: 'GEngine': undeclared identifier
+    L340   C2059: syntax error: ')'
+    L340   C2065: 'GEngine': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_AssetSquad.cpp
+  --------------------------------------------------------------------------
+    L217   C2664: 'void FOnAssetSquadMembersSwapped::Broadcast(UAssetSquadComponent *,UPrimaryDataAsset *,UPrimaryDataAsset *) const': cannot convert argument 2 from 'UAssetSquad_Identity *' to 'UPrimaryDataAsset *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_Clock.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L23    C2027: use of undefined type 'UWorld'
+    L28    C2027: use of undefined type 'UWorld'
+    L36    C2027: use of undefined type 'UWorld'
+    L50    C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_Combatant.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L102   C2027: use of undefined type 'UWorld'
+    L102   C2059: syntax error: ')'
+    L103   C3536: 'WorldSubsystem': cannot be used before it is initialized
+    L119   C2027: use of undefined type 'UWorld'
+    L119   C2059: syntax error: ')'
+    L120   C2143: syntax error: missing ';' before '{'
+    L360   C2027: use of undefined type 'UWorld'
+    L1178  C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_CursorEvents.cpp
+  --------------------------------------------------------------------------
+    L129   C2440: '=': cannot convert from 'UPrimitiveComponent *' to 'USceneComponent *'
+    L134   C2440: 'initializing': cannot convert from 'UPrimitiveComponent *' to 'USceneComponent *'
+    L201   C2440: 'return': cannot convert from 'UPrimitiveComponent *' to 'USceneComponent *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_GameplayActor.cpp
+  >> add: #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L111   C2027: use of undefined type 'FTimerManager'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_Leveling.cpp
+  --------------------------------------------------------------------------
+    L39    C2065: 'ValueCurve': undeclared identifier
+    L40    C2065: 'ValueCurve': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_Saveable.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L31    C2027: use of undefined type 'UWorld'
+    L33    C2027: use of undefined type 'UWorld'
+    L33    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Components\Component_Skin.cpp
+  --------------------------------------------------------------------------
+    L303   C2512: 'TSubclassOf': no appropriate default constructor available
+    L319   C2679: binary '&&': no operator found which takes a right-hand operand of type 'TSubclassOf' (or there is no acceptable conversion)
+    L321   C2664: 'void USkeletalMeshComponent::SetAnimInstanceClass(UClass *)': cannot convert argument 1 from 'TSubclassOf' to 'UClass *'
+    L443   C2679: binary '&&': no operator found which takes a right-hand operand of type 'TSubclassOf' (or there is no acceptable conversion)
+    L445   C2664: 'void USkeletalMeshComponent::SetAnimInstanceClass(UClass *)': cannot convert argument 1 from 'TSubclassOf' to 'UClass *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\DataAssets\DA_Body.cpp
+  >> add: #include "Components/SkeletalMeshComponent.h"
+  --------------------------------------------------------------------------
+    L21    C2027: use of undefined type 'USkeletalMeshComponent'
+    L25    C2027: use of undefined type 'USkeletalMeshComponent'
+    L121   C2027: use of undefined type 'USkeletalMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Actor.cpp
+  --------------------------------------------------------------------------
+    L135   C2511: 'void UOmegaActorFunctions::SnapActorToSurface(AActor *,FVector,FVector,TEnumAsByte<EObjectTypeQuery>)': overloaded member function not found in 'UOmegaActorFunctions'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Animation.cpp
+  >> add: #include "Animation/AnimInstance.h"  #include "Components/SkeletalMeshComponent.h"
+  --------------------------------------------------------------------------
+    L26    C2027: use of undefined type 'USkeletalMeshComponent'
+    L28    C2027: use of undefined type 'UAnimInstance'
+    L33    C2027: use of undefined type 'UAnimInstance'
+    L67    C2027: use of undefined type 'USkeletalMeshComponent'
+    L69    C2027: use of undefined type 'UAnimInstance'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Assets.cpp
+  >> add: #include "Engine/Blueprint.h"
+  --------------------------------------------------------------------------
+    L71    C7568: argument list missing after assumed function template 'TObjectIterator'
+    L125   C7568: argument list missing after assumed function template 'TObjectIterator'
+    L172   C2027: use of undefined type 'UBlueprint'
+    L185   C2027: use of undefined type 'UBlueprint'
+    L187   C2027: use of undefined type 'UBlueprint'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Camera.cpp
+  >> add: #include "SceneView.h"
+  --------------------------------------------------------------------------
+    L49    C2027: use of undefined type 'FSceneView'
+    L49    C3861: 'ProjectWorldToScreen': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Combatant.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L206   C2027: use of undefined type 'UWorld'
+    L206   C2059: syntax error: ')'
+    L220   C2027: use of undefined type 'UWorld'
+    L220   C2059: syntax error: ')'
+    L585   C2027: use of undefined type 'UWorld'
+    L585   C2059: syntax error: '<type-template-argument>'
+    L585   C2143: syntax error: missing ';' before ':'
+    L585   C3531: 'c': a symbol whose type contains 'auto' must have an initializer
+    L586   C2143: syntax error: missing ';' before '{'
+    L628   C2027: use of undefined type 'UWorld'
+    L628   C2059: syntax error: '<type-template-argument>'
+    L628   C2143: syntax error: missing ';' before ':'
+    L628   C3531: 'c': a symbol whose type contains 'auto' must have an initializer
+    L629   C2143: syntax error: missing ';' before '{'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Common.cpp
+  >> add: #include "Components/PrimitiveComponent.h"  #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L736   C2059: syntax error: ')'
+    L736   C2065: 'GEngine': undeclared identifier
+    L1296  C2027: use of undefined type 'UPrimitiveComponent'
+    L1298  C2027: use of undefined type 'UPrimitiveComponent'
+    L1298  C2660: 'UOmegaGameFrameworkBPLibrary::GetClosestActorToPoint': function does not take 1 arguments
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Component.cpp
+  >> add: #include "Materials/Material.h"
+  --------------------------------------------------------------------------
+    L113   C2065: 'UMaterial': undeclared identifier
+    L113   C2660: 'UTextRenderComponent::SetMaterial': function does not take 1 arguments
+    L113   C2672: 'LoadObject': no matching overloaded function found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Config.cpp
+  >> add: #include "Serialization/JsonReader.h"  #include "Serialization/JsonSerializer.h"
+  --------------------------------------------------------------------------
+    L20    C2641: cannot deduce template arguments for 'TSharedRef'
+    L20    C2653: 'TJsonReaderFactory': is not a class or namespace name
+    L20    C2903: 'TJsonReaderFactory': symbol is neither a class template nor a function template
+    L20    C2976: 'TSharedRef': too few template arguments
+    L20    C3861: 'Create': identifier not found
+    L20    C7568: argument list missing after assumed function template 'TJsonReader'
+    L21    C2653: 'FJsonSerializer': is not a class or namespace name
+    L21    C3861: 'Deserialize': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Debug.cpp
+  >> add: #include "Components/SceneComponent.h"  #include "DrawDebugHelpers.h"
+  --------------------------------------------------------------------------
+    L15    C2027: use of undefined type 'USceneComponent'
+    L21    C2027: use of undefined type 'USceneComponent'
+    L22    C2027: use of undefined type 'USceneComponent'
+    L30    C3861: 'DrawDebugSphere': identifier not found
+    L44    C3861: 'DrawDebugPoint': identifier not found
+    L66    C3861: 'DrawDebugDirectionalArrow': identifier not found
+    L79    C3861: 'DrawDebugDirectionalArrow': identifier not found
+    L92    C3861: 'DrawDebugDirectionalArrow': identifier not found
+    L108   C2027: use of undefined type 'USceneComponent'
+    L114   C3861: 'DrawDebugBox': identifier not found
+    L126   C3861: 'DrawDebugSphere': identifier not found
+    L149   C2027: use of undefined type 'USceneComponent'
+    L155   C3861: 'DrawDebugLine': identifier not found
+    L157   C2027: use of undefined type 'USceneComponent'
+    L158   C2027: use of undefined type 'USceneComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Draw.cpp
+  >> add: #include "Engine/Engine.h"  #include "Engine/EngineBaseTypes.h"  #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L16    C2065: 'GEngine': undeclared identifier
+    L16    C2065: 'ReturnNull': undeclared identifier
+    L16    C2653: 'EGetWorldErrorMode': is not a class or namespace name
+    L18    C2027: use of undefined type 'UWorld'
+    L51    C2661: 'FCanvasTextItem::FCanvasTextItem': no overloaded function takes 3 arguments
+    L54    C2065: 'GEngine': undeclared identifier
+    L80    C2065: 'GWhiteTexture': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_DynamicMesh.cpp
+  >> add: #include "Engine/Engine.h"  #include "Engine/EngineBaseTypes.h"  #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L777   C2065: 'GEngine': undeclared identifier
+    L777   C2065: 'LogAndReturnNull': undeclared identifier
+    L777   C2653: 'EGetWorldErrorMode': is not a class or namespace name
+    L795   C2027: use of undefined type 'UWorld'
+    L836   C2065: 'GEngine': undeclared identifier
+    L836   C2065: 'LogAndReturnNull': undeclared identifier
+    L836   C2653: 'EGetWorldErrorMode': is not a class or namespace name
+    L850   C2027: use of undefined type 'UWorld'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_File.cpp
+  >> add: #include "Engine/Texture2D.h"  #include "HAL/FileManager.h"  #include "HAL/PlatformFileManager.h"  #include "Misc/FileHelper.h"
+  --------------------------------------------------------------------------
+    L24    C3861: 'GetWorld': identifier not found
+    L26    C3861: 'GetWorld': identifier not found
+    L101   C2065: 'FileManager': undeclared identifier
+    L101   C2065: 'IFileManager': undeclared identifier
+    L101   C2653: 'IFileManager': is not a class or namespace name
+    L101   C3861: 'Get': identifier not found
+    L102   C2065: 'FileManager': undeclared identifier
+    L123   C2065: 'FileManager': undeclared identifier
+    L123   C2065: 'IFileManager': undeclared identifier
+    L123   C2653: 'IFileManager': is not a class or namespace name
+    L123   C3861: 'Get': identifier not found
+    L124   C2065: 'FileManager': undeclared identifier
+    L144   C2511: 'UTexture2D *UOmegaFileFunctions::OmegaImport_Texture2D(const FString &,TEnumAsByte<TextureMipGenSettings>)': overloaded member function not found in 'UOmegaFileFunctions'
+    L150   C2027: use of undefined type 'UTexture2D'
+    L151   C2027: use of undefined type 'UTexture2D'
+    L178   C2653: 'FPlatformFileManager': is not a class or namespace name
+    L178   C3861: 'Get': identifier not found
+    L187   C2653: 'FFileHelper': is not a class or namespace name
+    L187   C3861: 'LoadFileToArray': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_GlobalScripting.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L69    C2059: syntax error: ')'
+    L69    C2065: 'GEngine': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Graphics.cpp
+  >> add: #include "Misc/ConfigCacheIni.h"
+  --------------------------------------------------------------------------
+    L24    C2027: use of undefined type 'FConfigCacheIni'
+    L30    C2027: use of undefined type 'FConfigCacheIni'
+    L31    C2027: use of undefined type 'FConfigCacheIni'
+    L39    C2027: use of undefined type 'FConfigCacheIni'
+    L40    C2027: use of undefined type 'FConfigCacheIni'
+    L48    C2027: use of undefined type 'FConfigCacheIni'
+    L49    C2027: use of undefined type 'FConfigCacheIni'
+    L63    C2027: use of undefined type 'FConfigCacheIni'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Grid3D.cpp
+  >> add: #include "DrawDebugHelpers.h"
+  --------------------------------------------------------------------------
+    L54    C3861: 'DrawDebugBox': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Import.cpp
+  --------------------------------------------------------------------------
+    L23    C2672: 'NewObject': no matching overloaded function found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Level.cpp
+  >> add: #include "Engine/Engine.h"  #include "Engine/EngineBaseTypes.h"  #include "Engine/LevelStreaming.h"  #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L103   C2065: 'GEngine': undeclared identifier
+    L103   C2065: 'ReturnNull': undeclared identifier
+    L103   C2653: 'EGetWorldErrorMode': is not a class or namespace name
+    L201   C2027: use of undefined type 'FTimerManager'
+    L212   C2065: 'GEngine': undeclared identifier
+    L212   C2065: 'LogAndReturnNull': undeclared identifier
+    L212   C2653: 'EGetWorldErrorMode': is not a class or namespace name
+    L227   C2027: use of undefined type 'ULevelStreaming'
+    L238   C2065: 'GEngine': undeclared identifier
+    L238   C2065: 'LogAndReturnNull': undeclared identifier
+    L238   C2653: 'EGetWorldErrorMode': is not a class or namespace name
+    L253   C2027: use of undefined type 'ULevelStreaming'
+    L254   C2027: use of undefined type 'ULevelStreaming'
+    L258   C2027: use of undefined type 'ULevelStreaming'
+    L259   C2027: use of undefined type 'ULevelStreaming'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Localization.cpp
+  >> add: #include "Sound/SoundBase.h"
+  --------------------------------------------------------------------------
+    L125   C2440: 'initializing': cannot convert from 'USoundWave *' to 'USoundBase *'
+    L147   C2027: use of undefined type 'USoundBase'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Materials.cpp
+  >> add: #include "Components/PrimitiveComponent.h"  #include "Engine/Texture2D.h"
+  --------------------------------------------------------------------------
+    L18    C2027: use of undefined type 'UPrimitiveComponent'
+    L20    C2027: use of undefined type 'UPrimitiveComponent'
+    L59    C2027: use of undefined type 'FTexture2DMipMap'
+    L77    C2027: use of undefined type 'FTexture2DMipMap'
+    L77    C2737: 'Width': const object must be initialized
+    L78    C2027: use of undefined type 'FTexture2DMipMap'
+    L78    C2737: 'Height': const object must be initialized
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Math.cpp
+  >> add: #include "GameFramework/Actor.h"  #include "GameFramework/Pawn.h"
+  --------------------------------------------------------------------------
+    L98    C2027: use of undefined type 'AActor'
+    L98    C2660: 'UOmegaMathFunctions::Offset_Vector': function does not take 2 arguments
+    L107   C2027: use of undefined type 'APawn'
+    L107   C2660: 'UOmegaMathFunctions::Offset_Vector': function does not take 2 arguments
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Mesh.cpp
+  >> add: #include "Animation/Skeleton.h"
+  --------------------------------------------------------------------------
+    L18    C2027: use of undefined type 'USkeleton'
+    L20    C2027: use of undefined type 'USkeleton'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Message.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L14    C2027: use of undefined type 'UWorld'
+    L14    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Meta.cpp
+  >> add: #include "Templates/SubclassOf.h"
+  --------------------------------------------------------------------------
+    L8     C2027: use of undefined type 'TSubclassOf<UObject>'
+    L11    C2088: built-in operator '!' cannot be applied to an operand of type 'TSubclassOf<UObject>'
+    L11    C2678: binary '!': no operator found which takes a left-hand operand of type 'TSubclassOf<UObject>' (or there is no acceptable conversion)
+    L13    C2664: 'bool UObjectBaseUtility::IsA<TSubclassOf<UObject>>(OtherClassType) const': cannot convert argument 1 from 'TSubclassOf<UObject>' to 'OtherClassType'
+    L20    C2088: built-in operator '&&' cannot be applied to an operand of type 'T'
+    L20    C2664: 'bool UObjectBaseUtility::IsA<TSubclassOf<UObject>>(OtherClassType) const': cannot convert argument 1 from 'TSubclassOf<UObject>' to 'OtherClassType'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Midi.cpp
+  >> add: #include "Misc/FileHelper.h"
+  --------------------------------------------------------------------------
+    L37    C2653: 'FFileHelper': is not a class or namespace name
+    L37    C3861: 'LoadFileToArray': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Paker.cpp
+  >> add: #include "HAL/PlatformFileManager.h"  #include "Misc/PackageName.h"
+  --------------------------------------------------------------------------
+    L22    C2653: 'FPlatformFileManager': is not a class or namespace name
+    L22    C3861: 'Get': identifier not found
+    L41    C2653: 'FPlatformFileManager': is not a class or namespace name
+    L41    C3861: 'Get': identifier not found
+    L52    C2653: 'FPackageName': is not a class or namespace name
+    L57    C2653: 'FPackageName': is not a class or namespace name
+    L63    C2653: 'FPlatformFileManager': is not a class or namespace name
+    L63    C2661: 'FPakFile::FPakFile': no overloaded function takes 2 arguments
+    L63    C3861: 'Get': identifier not found
+    L75    C2653: 'FPlatformFileManager': is not a class or namespace name
+    L75    C2661: 'FPakFile::FPakFile': no overloaded function takes 2 arguments
+    L75    C3861: 'Get': identifier not found
+    L85    C4668: 'ENGINE_MAJOR_VERSION' is not defined as a preprocessor macro, replacing with '0' for '#if/#elif'
+    L164   C2593: 'operator +' is ambiguous
+    L164   C2653: 'FPackageName': is not a class or namespace name
+    L164   C3861: 'GetShortName': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Physics.cpp
+  >> add: #include "Components/SkeletalMeshComponent.h"
+  --------------------------------------------------------------------------
+    L24    C2511: 'void UOmegaAnimNotify_PhysicsEvent::Notify(USkeletalMeshComponent *,UAnimSequenceBase *,const FAnimNotifyEventReference &)': overloaded member function not found in 'UOmegaAnimNotify_PhysicsEvent'
+    L29    C2027: use of undefined type 'USkeletalMeshComponent'
+    L31    C2027: use of undefined type 'USkeletalMeshComponent'
+    L36    C2653: 'Super': is not a class or namespace name
+    L36    C2660: 'UOmegaAnimNotify_PhysicsEvent::Notify': function does not take 3 arguments
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Player.cpp
+  >> add: #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L66    C2511: 'FHitResult UOmegaPlayerFunctions::MouseHitForSceneCapture(APlayerController *,USceneCaptureComponent2D *,ETraceTypeQuery,bool,bool,float)': overloaded member function not found in 'UOmegaPlayerFunctions'
+    L353   C2027: use of undefined type 'FTimerManager'
+    L354   C2653: 'FTimerDelegate': is not a class or namespace name
+    L354   C3861: 'CreateLambda': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Save.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L17    C2027: use of undefined type 'UWorld'
+    L17    C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_TagProperty.cpp
+  >> add: #include "Templates/SubclassOf.h"
+  --------------------------------------------------------------------------
+    L75    C2027: use of undefined type 'TSubclassOf<UObject>'
+    L82    C2088: built-in operator '!' cannot be applied to an operand of type 'TSubclassOf<UObject>'
+    L82    C2664: 'bool UStruct::IsChildOf(const UStruct *) const': cannot convert argument 1 from 'TSubclassOf<UObject>' to 'const UStruct *'
+    L82    C2678: binary '!': no operator found which takes a left-hand operand of type 'TSubclassOf<UObject>' (or there is no acceptable conversion)
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Trace.cpp
+  --------------------------------------------------------------------------
+    L50    C2664: 'bool UKismetSystemLibrary::LineTraceSingle(const UObject *,const FVector,const FVector,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,FHitResult &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+    L60    C2664: 'bool UKismetSystemLibrary::LineTraceMulti(const UObject *,const FVector,const FVector,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,TArray<FHitResult,FDefaultAllocator> &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+    L74    C2664: 'bool UKismetSystemLibrary::SphereTraceSingle(const UObject *,const FVector,const FVector,float,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,FHitResult &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+    L84    C2664: 'bool UKismetSystemLibrary::SphereTraceMulti(const UObject *,const FVector,const FVector,float,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,TArray<FHitResult,FDefaultAllocator> &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+    L98    C2664: 'bool UKismetSystemLibrary::BoxTraceSingle(const UObject *,const FVector,const FVector,const FVector,const FRotator,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,FHitResult &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+    L108   C2664: 'bool UKismetSystemLibrary::BoxTraceMulti(const UObject *,const FVector,const FVector,FVector,const FRotator,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,TArray<FHitResult,FDefaultAllocator> &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+    L122   C2664: 'bool UKismetSystemLibrary::CapsuleTraceSingle(const UObject *,const FVector,const FVector,float,float,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,FHitResult &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+    L132   C2664: 'bool UKismetSystemLibrary::CapsuleTraceMulti(const UObject *,const FVector,const FVector,float,float,ETraceTypeQuery,bool,const TArray<AActor *,FDefaultAllocator> &,EDrawDebugTrace::Type,TArray<FHitResult,FDefaultAllocator> &,bool,FLinearColor,FLinearColor,float)': cannot convert argument 1 from 'AActor *' to 'const UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Utility.cpp
+  >> add: #include "Engine/Engine.h"  #include "Misc/CommandLine.h"
+  --------------------------------------------------------------------------
+    L23    C2059: syntax error: ')'
+    L23    C2065: 'GEngine': undeclared identifier
+    L246   C2653: 'FCommandLine': is not a class or namespace name
+    L246   C3861: 'Get': identifier not found
+    L246   C3861: 'Parse': identifier not found
+    L327   C2065: 'GEngine': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Functions\F_Zone.cpp
+  >> add: #include "Engine/World.h"
+  --------------------------------------------------------------------------
+    L43    C2027: use of undefined type 'UWorld'
+    L43    C2059: syntax error: ')'
+    L67    C2027: use of undefined type 'UWorld'
+    L67    C2059: syntax error: ')'
+    L77    C2027: use of undefined type 'UWorld'
+    L77    C2059: syntax error: ')'
+    L77    C2143: syntax error: missing ';' before ':'
+    L77    C3531: 'i': a symbol whose type contains 'auto' must have an initializer
+    L78    C2143: syntax error: missing ';' before '{'
+    L92    C2027: use of undefined type 'UWorld'
+    L92    C2059: syntax error: ')'
+    L100   C2027: use of undefined type 'UWorld'
+    L100   C2059: syntax error: ')'
+    L108   C2027: use of undefined type 'UWorld'
+    L108   C2059: syntax error: ')'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Misc\OmegaUtils_Actor.cpp
+  --------------------------------------------------------------------------
+    L36    C2664: 'TArray<AActor *,FDefaultAllocator> UOmegaActorSelector::GetActors(const UObject *)': cannot convert argument 1 from 'UWorld *' to 'const UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Misc\OmegaUtils_Methods.cpp
+  >> add: #include "Engine/LevelStreaming.h"
+  --------------------------------------------------------------------------
+    L121   C2027: use of undefined type 'ULevelStreaming'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\OmegaGameFramework.cpp
+  >> add: #include "HAL/PlatformFileManager.h"
+  --------------------------------------------------------------------------
+    L17    C2530: 'PlatformFile': references must be initialized
+    L17    C2653: 'FPlatformFileManager': is not a class or namespace name
+    L17    C3861: 'Get': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\OmegaSettings.cpp
+  --------------------------------------------------------------------------
+    L25    C2512: 'TSoftClassPtr': no appropriate default constructor available
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\OmegaSettings_Assets.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L12    C2614: 'UOmegaAssetSettings': illegal member initialization: 'Super' is not a base or member
+    L21    C2665: 'TMapBase<KeyType,ValueType,SetAllocator,KeyFuncs>::Add': no overloaded function could convert all the argument types
+    L22    C2665: 'TMapBase<KeyType,ValueType,SetAllocator,KeyFuncs>::Add': no overloaded function could convert all the argument types
+    L27    C2059: syntax error: ')'
+    L27    C2065: 'GEngine': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\OmegaSettings_Constants.cpp
+  --------------------------------------------------------------------------
+    L12    C2614: 'UOmegaSettings_Constants': illegal member initialization: 'Super' is not a base or member
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\OmegaSettings_Localization.cpp
+  --------------------------------------------------------------------------
+    L16    C2614: 'UOmegaSettings_Localization': illegal member initialization: 'Super' is not a base or member
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\StateTree\ST_Task_UseAbility.cpp
+  --------------------------------------------------------------------------
+    L55    C2664: 'bool UCombatantComponent::IsAbilityActive(TSubclassOf<AOmegaAbility>)': cannot convert argument 1 from 'const <error type>' to 'TSubclassOf<AOmegaAbility>'
+    L77    C2664: 'bool UCombatantComponent::IsAbilityActive(TSubclassOf<AOmegaAbility>)': cannot convert argument 1 from 'const <error type>' to 'TSubclassOf<AOmegaAbility>'
+    L79    C2664: 'bool UCombatantComponent::StopAbility(TSubclassOf<AOmegaAbility>,bool)': cannot convert argument 1 from 'const <error type>' to 'TSubclassOf<AOmegaAbility>'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Subsystems\Subsystem_Engine.cpp
+  --------------------------------------------------------------------------
+    L107   C2672: 'TMap<TSubclassOf<UObject>,FOmegaSortedClassPathData,FDefaultSetAllocator,TDefaultMapHashableKeyFuncs<InKeyType,InValueType,false>>::Append': no matching overloaded function found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Subsystems\Subsystem_GameManager.cpp
+  >> add: #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L672   C2027: use of undefined type 'FTimerManager'
+    L672   C2653: 'FTimerDelegate': is not a class or namespace name
+    L672   C3861: 'CreateLambda': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Subsystems\Subsystem_Player.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L122   C2059: syntax error: ')'
+    L122   C2065: 'GEngine': undeclared identifier
+    L290   C2027: use of undefined type 'UEngine'
+    L290   C3861: 'CopyPropertiesForUnrelatedObjects': identifier not found
+    L441   C2027: use of undefined type 'UEngine'
+    L441   C3861: 'CopyPropertiesForUnrelatedObjects': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Subsystems\Subsystem_Save.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L98    C2059: syntax error: ')'
+    L98    C2065: 'GEngine': undeclared identifier
+    L127   C2059: syntax error: ')'
+    L127   C2065: 'GEngine': undeclared identifier
+    L205   C2065: 'GEngine': undeclared identifier
+    L208   C2065: 'GEngine': undeclared identifier
+    L240   C2059: syntax error: ')'
+    L240   C2065: 'GEngine': undeclared identifier
+    L266   C2059: syntax error: ')'
+    L266   C2065: 'GEngine': undeclared identifier
+    L305   C2059: syntax error: ')'
+    L305   C2065: 'GEngine': undeclared identifier
+    L390   C2059: syntax error: ')'
+    L390   C2065: 'GEngine': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Subsystems\Subsystem_World.cpp
+  >> add: #include "Components/PrimitiveComponent.h"  #include "TimerManager.h"
+  --------------------------------------------------------------------------
+    L451   C2027: use of undefined type 'UPrimitiveComponent'
+    L452   C2027: use of undefined type 'UPrimitiveComponent'
+    L456   C2027: use of undefined type 'UPrimitiveComponent'
+    L457   C2027: use of undefined type 'UPrimitiveComponent'
+    L741   C2027: use of undefined type 'FTimerManager'
+    L741   C2653: 'FTimerDelegate': is not a class or namespace name
+    L741   C3861: 'CreateLambda': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Types\Struct_SortedClassPath.cpp
+  >> add: #include "Templates/SubclassOf.h"
+  --------------------------------------------------------------------------
+    L6     C2027: use of undefined type 'TSubclassOf<UObject>'
+    L13    C2664: 'UObject *UOmegaPathAssetScript::OnGetAssetByPath(const FString &,TSubclassOf<UObject>) const': cannot convert argument 2 from 'TSubclassOf<UObject>' to 'TSubclassOf<UObject>'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Types\Struct_SpawnableTypeConfig.cpp
+  --------------------------------------------------------------------------
+    L55    C2582: 'operator =' function is unavailable in 'TSoftObjectPtr'
+    L55    C2678: binary '=': no operator found which takes a left-hand operand of type 'TSoftObjectPtr' (or there is no acceptable conversion)
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Widget\DataList.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L266   C2027: use of undefined type 'UEngine'
+    L266   C3861: 'CopyPropertiesForUnrelatedObjects': identifier not found
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Widget\DataWidget.cpp
+  >> add: #include "Curves/CurveFloat.h"
+  --------------------------------------------------------------------------
+    L168   C2027: use of undefined type 'UCurveFloat'
+    L540   C2027: use of undefined type 'UCurveFloat'
+    L541   C2027: use of undefined type 'UCurveFloat'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Widget\Menu.cpp
+  >> add: #include "Engine/Engine.h"
+  --------------------------------------------------------------------------
+    L95    C2059: syntax error: ')'
+    L95    C2065: 'GEngine': undeclared identifier
+    L166   C2059: syntax error: ')'
+    L166   C2065: 'GEngine': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Widget\OmegaTabWidgetTypes.cpp
+  >> add: #include "Styling/SlateTypes.h"
+  --------------------------------------------------------------------------
+    L15    C2614: 'FOmegaTabWidgetStyle': illegal member initialization: 'TabPadding' is not a base or member
+    L18    C2065: 'FButtonStyle': undeclared identifier
+    L18    C2065: 'TabButtonStyle': undeclared identifier
+    L18    C2672: 'ISlateStyle::GetWidgetStyle': no matching overloaded function found
+    L19    C2065: 'ActiveTabButtonStyle': undeclared identifier
+    L19    C2065: 'FButtonStyle': undeclared identifier
+    L19    C2672: 'ISlateStyle::GetWidgetStyle': no matching overloaded function found
+    L20    C2065: 'FTextBlockStyle': undeclared identifier
+    L20    C2065: 'TabTextStyle': undeclared identifier
+    L20    C2672: 'ISlateStyle::GetWidgetStyle': no matching overloaded function found
+    L21    C2065: 'ActiveTabTextStyle': undeclared identifier
+    L21    C2065: 'FTextBlockStyle': undeclared identifier
+    L21    C2672: 'ISlateStyle::GetWidgetStyle': no matching overloaded function found
+    L26    C2065: 'TabButtonStyle': undeclared identifier
+    L27    C2065: 'ActiveTabButtonStyle': undeclared identifier
+    L28    C2665: 'TArray<const FSlateBrush *,FDefaultAllocator>::Add': no overloaded function could convert all the argument types
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Private\Widget\SOmegaTabWidget.cpp
+  --------------------------------------------------------------------------
+    L20    C2512: 'TSharedPtr': no appropriate default constructor available
+    L38    C2679: binary '[': no operator found which takes a right-hand operand of type 'int' (or there is no acceptable conversion)
+    L42    C2679: binary '[': no operator found which takes a right-hand operand of type 'int' (or there is no acceptable conversion)
+    L44    C2672: 'TSlateDecl<SBox,RequiredArgs::T0RequiredArgs>::Expose': no matching overloaded function found
+    L45    C7732: expected an expression before ']'
+    L46    C7732: expected an expression before ']'
+    L90    C2662: 'const bool TSharedPtr<ObjectType,InMode>::IsValid(void) const': cannot convert 'this' pointer from 'TSharedPtr' to 'const TSharedPtr<ObjectType,InMode> &'
+    L103   C2039: 'SetContent': is not a member of 'TSharedPtr'
+    L103   C2678: binary '->': no operator found which takes a left-hand operand of type 'TSharedPtr' (or there is no acceptable conversion)
+    L127   C2039: 'SetContent': is not a member of 'TSharedPtr'
+    L127   C2678: binary '->': no operator found which takes a left-hand operand of type 'TSharedPtr' (or there is no acceptable conversion)
+    L153   C2039: 'ActiveTabButtonStyle': is not a member of 'FOmegaTabWidgetStyle'
+    L153   C2039: 'TabButtonStyle': is not a member of 'FOmegaTabWidgetStyle'
+    L153   C2530: 'ButtonStyle': references must be initialized
+    L154   C2039: 'ActiveTabTextStyle': is not a member of 'FOmegaTabWidgetStyle'
+    L154   C2039: 'TabTextStyle': is not a member of 'FOmegaTabWidgetStyle'
+    L154   C2530: 'TextStyle': references must be initialized
+    L157   C2737: 'bHasIcon': const object must be initialized
+    L164   C2039: 'TabPadding': is not a member of 'FOmegaTabWidgetStyle'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Actors\Actor_Openable.h
+  >> add: #include "Components/SkeletalMeshComponent.h"
+  --------------------------------------------------------------------------
+    L50    C2027: use of undefined type 'USkeletalMeshComponent'
+    L52    C2027: use of undefined type 'USkeletalMeshComponent'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Actors\Actor_Pickup.h
+  --------------------------------------------------------------------------
+    L155   C2143: syntax error: missing ';' before '*'
+    L155   C2238: unexpected token(s) preceding ';'
+    L155   C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Actors\Actor_Spline.h
+  >> add: #include "GameFramework/Actor.h"
+  --------------------------------------------------------------------------
+    L15    C2504: 'AActor': base class undefined
+    L17    C2440: 'return': cannot convert from 'AOmegaSplineActor *' to 'UObject *'
+    L27    C3668: 'AOmegaSplineActor::OnConstruction': method with override specifier 'override' did not override any base class methods
+    L42    C2440: 'return': cannot convert from 'AOmega_DynamicMesh_SplineBlock *' to 'UObject *'
+    L48    C3668: 'AOmega_DynamicMesh_SplineBlock::BeginPlay': method with override specifier 'override' did not override any base class methods
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Actors\Actor_Timer.h
+  --------------------------------------------------------------------------
+    L88    C2143: syntax error: missing ';' before '*'
+    L88    C2238: unexpected token(s) preceding ';'
+    L88    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Components\Component_AssetSquad.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L12    C2504: 'UPrimaryDataAsset': base class undefined
+    L14    C2440: 'return': cannot convert from 'UAssetSquad_Identity *' to 'UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Components\Component_Calendar.h
+  >> add: #include "Kismet/BlueprintFunctionLibrary.h"
+  --------------------------------------------------------------------------
+    L109   C2504: 'UBlueprintFunctionLibrary': base class undefined
+    L111   C2440: 'return': cannot convert from 'UOmegaCalendar_Functions *' to 'UObject *'
+    L111   C3646: 'Super': unknown override specifier
+    L111   C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Components\Component_Combatant.h
+  >> add: #include "Engine/HitResult.h"
+  --------------------------------------------------------------------------
+    L43    C2027: use of undefined type 'FHitResult'
+    L43    C2664: 'void FOnDamaged_DelegateWrapper(const FMulticastScriptDelegate &,UCombatantComponent *,UOmegaAttribute *,float,UCombatantComponent *,UOmegaDamageType *,FHitResult)': cannot convert argument 7 from 'FHitResult' to 'FHitResult'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Components\Component_GameplayActor.h
+  >> add: #include "Engine/HitResult.h"
+  --------------------------------------------------------------------------
+    L141   C2027: use of undefined type 'FHitResult'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Components\Component_Leveling.h
+  >> add: #include "Curves/CurveFloat.h"
+  --------------------------------------------------------------------------
+    L126   C2079: 'UOmegaLevelingAsset::ValueCurve' uses undefined struct 'FRuntimeFloatCurve'
+    L126   C3646: 'ValueCurve': unknown override specifier
+    L126   C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Components\Component_Skin.h
+  >> add: #include "Animation/AnimInstance.h"
+  --------------------------------------------------------------------------
+    L200   C2065: 'UAnimInstance': undeclared identifier
+    L200   C2923: 'TSubclassOf': 'UAnimInstance' is not a valid template type argument for parameter 'T'
+    L200   C2955: 'TSubclassOf': use of class template requires template argument list
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Condition\Condition_Combatant.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L29    C2504: 'UPrimaryDataAsset': base class undefined
+    L31    C2440: 'return': cannot convert from 'UOmegaCondition_Combatant_Preset *' to 'UObject *'
+    L31    C3646: 'Super': unknown override specifier
+    L31    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Actor.h
+  >> add: #include "Engine/EngineTypes.h"
+  --------------------------------------------------------------------------
+    L48    C2065: 'EObjectTypeQuery': undeclared identifier
+    L48    C2923: 'TEnumAsByte': 'EObjectTypeQuery' is not a valid template type argument for parameter 'InEnumType'
+    L48    C2955: 'TEnumAsByte': use of class template requires template argument list
+    L69    C2027: use of undefined type 'EAttachmentRule'
+    L69    C2065: 'SnapToTarget': undeclared identifier
+    L70    C2027: use of undefined type 'EAttachmentRule'
+    L70    C2065: 'SnapToTarget': undeclared identifier
+    L71    C2027: use of undefined type 'EAttachmentRule'
+    L71    C2065: 'SnapToTarget': undeclared identifier
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Assets.h
+  >> add: #include "Templates/SubclassOf.h"
+  --------------------------------------------------------------------------
+    L67    C2027: use of undefined type 'TSubclassOf<UObject>'
+    L88    C2027: use of undefined type 'TSubclassOf<UObject>'
+    L91    C2027: use of undefined type 'TSubclassOf<UObject>'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_DataAsset.h
+  >> add: #include "UObject/Interface.h"
+  --------------------------------------------------------------------------
+    L9     C2440: 'return': cannot convert from 'UDataInterface_SourceDataAsset *' to 'UObject *'
+    L9     C2504: 'UInterface': base class undefined
+    L9     C3646: 'Super': unknown override specifier
+    L9     C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_File.h
+  >> add: #include "Engine/DataAsset.h"  #include "Engine/TextureDefines.h"
+  --------------------------------------------------------------------------
+    L30    C2504: 'UPrimaryDataAsset': base class undefined
+    L32    C2440: 'return': cannot convert from 'UOmegaFileManagerSettings *' to 'UObject *'
+    L32    C3646: 'Super': unknown override specifier
+    L32    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L65    C2065: 'TextureMipGenSettings': undeclared identifier
+    L65    C2923: 'TEnumAsByte': 'TextureMipGenSettings' is not a valid template type argument for parameter 'InEnumType'
+    L65    C2955: 'TEnumAsByte': use of class template requires template argument list
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Gambit.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L71    C2504: 'UPrimaryDataAsset': base class undefined
+    L73    C2440: 'return': cannot convert from 'UOmegaGambit_Asset *' to 'UObject *'
+    L73    C3646: 'Super': unknown override specifier
+    L73    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_GlobalParam.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L74    C2027: use of undefined type 'TSubclassOf<UPrimaryDataAsset>'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_GlobalScripting.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L82    C2504: 'UPrimaryDataAsset': base class undefined
+    L84    C2440: 'return': cannot convert from 'UOmegaGlobalScriptsPreset *' to 'UObject *'
+    L84    C3646: 'Super': unknown override specifier
+    L84    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L108   C2504: 'UPrimaryDataAsset': base class undefined
+    L110   C2440: 'return': cannot convert from 'UOmegaGlobalConditionsPreset *' to 'UObject *'
+    L110   C3646: 'Super': unknown override specifier
+    L110   C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Inventory.h
+  >> add: #include "Kismet/BlueprintFunctionLibrary.h"
+  --------------------------------------------------------------------------
+    L12    C2504: 'UBlueprintFunctionLibrary': base class undefined
+    L14    C2440: 'return': cannot convert from 'UDataAssetCollectionFunctions *' to 'UObject *'
+    L14    C3646: 'Super': unknown override specifier
+    L14    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Localization.h
+  >> add: #include "UObject/Interface.h"
+  --------------------------------------------------------------------------
+    L12    C2504: 'UInterface': base class undefined
+    L14    C2440: 'return': cannot convert from 'UDataInterface_VoiceSource *' to 'UObject *'
+    L14    C3646: 'Super': unknown override specifier
+    L14    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Machina.h
+  >> add: #include "UObject/Interface.h"
+  --------------------------------------------------------------------------
+    L16    C2440: 'return': cannot convert from 'UObjectInterface_Machina *' to 'UObject *'
+    L16    C2504: 'UInterface': base class undefined
+    L16    C3646: 'Super': unknown override specifier
+    L16    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Math.h
+  >> add: #include "Animation/AnimCurveTypes.h"
+  --------------------------------------------------------------------------
+    L69    C2027: use of undefined type 'FFloatCurve'
+    L71    C2027: use of undefined type 'FFloatCurve'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Midi.h
+  >> add: #include "Kismet/BlueprintFunctionLibrary.h"
+  --------------------------------------------------------------------------
+    L93    C2504: 'UBlueprintFunctionLibrary': base class undefined
+    L95    C2440: 'return': cannot convert from 'UOmegaFunctions_MIDI *' to 'UObject *'
+    L95    C3646: 'Super': unknown override specifier
+    L95    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Physics.h
+  --------------------------------------------------------------------------
+    L53    C2504: 'UAnimNotify': base class undefined
+    L55    C2440: 'return': cannot convert from 'UOmegaAnimNotify_PhysicsEvent *' to 'UObject *'
+    L55    C3646: 'Super': unknown override specifier
+    L55    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L58    C2061: syntax error: identifier 'UAnimSequenceBase'
+    L58    C3668: 'UOmegaAnimNotify_PhysicsEvent::Notify': method with override specifier 'override' did not override any base class methods
+    L59    C3668: 'UOmegaAnimNotify_PhysicsEvent::GetNotifyName_Implementation': method with override specifier 'override' did not override any base class methods
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Player.h
+  --------------------------------------------------------------------------
+    L44    C2061: syntax error: identifier 'ETraceTypeQuery'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_Save.h
+  >> add: include the full UOmegaSaveGame header  include the full UOmegaSaveGlobal header
+  --------------------------------------------------------------------------
+    L45    C2027: use of undefined type 'TSubclassOf<UOmegaSaveGame>'
+    L48    C2027: use of undefined type 'TSubclassOf<UOmegaSaveGlobal>'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_ScriptedAnim.h
+  >> add: #include "UObject/Interface.h"
+  --------------------------------------------------------------------------
+    L67    C2440: 'return': cannot convert from 'UDataInterface_ScriptedAnimation *' to 'UObject *'
+    L67    C2504: 'UInterface': base class undefined
+    L67    C3646: 'Super': unknown override specifier
+    L67    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Functions\F_SoftCondition.h
+  >> add: #include "Templates/SubclassOf.h"
+  --------------------------------------------------------------------------
+    L53    C2027: use of undefined type 'TSubclassOf<UObject>'
+    L59    C2088: built-in operator '!' cannot be applied to an operand of type 'TSubclassOf<UObject>'
+    L59    C2664: 'bool UStruct::IsChildOf(const UStruct *) const': cannot convert argument 1 from 'TSubclassOf<UObject>' to 'const UStruct *'
+    L59    C2678: binary '!': no operator found which takes a left-hand operand of type 'TSubclassOf<UObject>' (or there is no acceptable conversion)
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Misc\OmegaUtils_Structs.h
+  >> add: #include "Styling/SlateBrush.h"
+  --------------------------------------------------------------------------
+    L84    C2079: 'FOmegaCustomObjectData::Icon' uses undefined struct 'FSlateBrush'
+    L84    C3646: 'Icon': unknown override specifier
+    L84    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\OmegaSettings.h
+  >> add: #include "GameFramework/Character.h"
+  --------------------------------------------------------------------------
+    L215   C2065: 'ACharacter': undeclared identifier
+    L215   C2923: 'TSoftClassPtr': 'ACharacter' is not a valid template type argument for parameter 'TClass'
+    L215   C2955: 'TSoftClassPtr': use of class template requires template argument list
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\OmegaSettings_Assets.h
+  >> add: #include "Engine/DeveloperSettings.h"  #include "Engine/Texture2D.h"  #include "Materials/MaterialInterface.h"
+  --------------------------------------------------------------------------
+    L28    C2504: 'UDeveloperSettings': base class undefined
+    L30    C2440: 'return': cannot convert from 'UOmegaAssetSettings *' to 'UObject *'
+    L30    C3646: 'Super': unknown override specifier
+    L30    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L62    C2065: 'UTexture2D': undeclared identifier
+    L62    C2923: 'TSoftObjectPtr': 'UTexture2D' is not a valid template type argument for parameter 'T'
+    L62    C3203: 'TSoftObjectPtr': unspecialized class template can't be used as a template argument for template parameter 'InValueType', expected a real type
+    L63    C2065: 'UMaterialInterface': undeclared identifier
+    L63    C2923: 'TSoftObjectPtr': 'UMaterialInterface' is not a valid template type argument for parameter 'T'
+    L63    C3203: 'TSoftObjectPtr': unspecialized class template can't be used as a template argument for template parameter 'InValueType', expected a real type
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\OmegaSettings_Constants.h
+  >> add: #include "Engine/DeveloperSettings.h"
+  --------------------------------------------------------------------------
+    L21    C2504: 'UDeveloperSettings': base class undefined
+    L23    C2440: 'return': cannot convert from 'UOmegaSettings_Constants *' to 'UObject *'
+    L23    C3646: 'Super': unknown override specifier
+    L23    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\OmegaSettings_Localization.h
+  >> add: #include "Engine/DeveloperSettings.h"
+  --------------------------------------------------------------------------
+    L38    C2504: 'UDeveloperSettings': base class undefined
+    L40    C2440: 'return': cannot convert from 'UOmegaSettings_Localization *' to 'UObject *'
+    L40    C3646: 'Super': unknown override specifier
+    L40    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L92    C2504: 'UGameInstanceSubsystem': base class undefined
+    L94    C2440: 'return': cannot convert from 'UOmegaSubsystem_Localization *' to 'UObject *'
+    L94    C3646: 'Super': unknown override specifier
+    L94    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Sequencer\OmegaMovieTrackInstance.h
+  >> add: #include "Styling/SlateBrush.h"
+  --------------------------------------------------------------------------
+    L98    C2079: 'UOmegaSequencerTrack::Icon' uses undefined struct 'FSlateBrush'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\StateTree\ST_Task_UseAbility.h
+  >> add: include the full AOmegaAbility header
+  --------------------------------------------------------------------------
+    L30    C2079: 'FST_Task_UseAbility_InstData::AbilityClass' uses undefined class 'TSubclassOf<AOmegaAbility>'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Subsystems\Subsystem_Engine.h
+  >> add: #include "Kismet/BlueprintFunctionLibrary.h"
+  --------------------------------------------------------------------------
+    L51    C2504: 'UBlueprintFunctionLibrary': base class undefined
+    L53    C2440: 'return': cannot convert from 'UOmegaFunctions_Engine *' to 'UObject *'
+    L53    C3646: 'Super': unknown override specifier
+    L53    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Types\Struct_CustomLevel.cpp
+  >> add: #include "GameFramework/Pawn.h"
+  --------------------------------------------------------------------------
+    L293   C2027: use of undefined type 'APawn'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Types\Struct_SpawnableTypeConfig.h
+  >> add: #include "Engine/Texture2D.h"
+  --------------------------------------------------------------------------
+    L22    C2065: 'UTexture2D': undeclared identifier
+    L22    C2923: 'TSoftObjectPtr': 'UTexture2D' is not a valid template type argument for parameter 'T'
+    L22    C2955: 'TSoftObjectPtr': use of class template requires template argument list
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Widget\OmegaTabWidgetTypes.h
+  >> add: #include "Styling/SlateBrush.h"
+  --------------------------------------------------------------------------
+    L26    C2079: 'FOmegaTabConfig::TabIcon' uses undefined struct 'FSlateBrush'
+    L30    C2439: 'FOmegaTabConfig::TabIcon': member could not be initialized
+    L34    C2027: use of undefined type 'FSlateBrush'
+    L36    C2439: 'FOmegaTabConfig::TabIcon': member could not be initialized
+    L61    C3646: 'TabButtonStyle': unknown override specifier
+    L61    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L65    C3646: 'ActiveTabButtonStyle': unknown override specifier
+    L65    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L69    C3646: 'TabTextStyle': unknown override specifier
+    L69    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L73    C3646: 'ActiveTabTextStyle': unknown override specifier
+    L73    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L85    C3646: 'TabPadding': unknown override specifier
+    L85    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L89    C2079: 'FOmegaTabWidgetStyle::TabBarBackground' uses undefined struct 'FSlateBrush'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Widget\SOmegaTabWidget.h
+  >> add: #include "Styling/ISlateStyle.h"  #include "Styling/SlateWidgetStyleAsset.h"  #include "Widgets/Layout/SBox.h"
+  --------------------------------------------------------------------------
+    L25    C2027: use of undefined type 'ISlateStyle'
+    L25    C2027: use of undefined type 'USlateWidgetStyleAsset'
+    L25    C2039: 'GetWidgetStyle': is not a member of 'TSharedPtr<const ISlateStyle,ESPMode::ThreadSafe>'
+    L25    C2059: syntax error: ')'
+    L87    C2065: 'SBox': undeclared identifier
+    L87    C2923: 'TSharedPtr': 'SBox' is not a valid template type argument for parameter 'ObjectType'
+    L87    C2955: 'TSharedPtr': use of class template requires template argument list
+    L87    C2976: 'TSharedPtr': too few template arguments
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Widget\UI_Background.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L39    C2504: 'UPrimaryDataAsset': base class undefined
+    L41    C2440: 'return': cannot convert from 'UOmegaUIStyle_Background *' to 'UObject *'
+    L41    C3646: 'Super': unknown override specifier
+    L41    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L60    C2440: 'return': cannot convert from 'UOmegaUIStyle_Background_3Part *' to 'UObject *'
+
+D:\UnrealEngine\_EXTRA PLUGINS\5_5\Plugins\_syndicat\OmegaGameFramework\BuildOutput\HostProject\Plugins\OmegaGameFramework\Source\OmegaGameFramework\Public\Widget\UI_Widgets.h
+  >> add: #include "Engine/DataAsset.h"
+  --------------------------------------------------------------------------
+    L34    C2504: 'UPrimaryDataAsset': base class undefined
+    L36    C2440: 'return': cannot convert from 'UOmegaSlateStyle *' to 'UObject *'
+    L36    C3646: 'Super': unknown override specifier
+    L36    C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+    L55    C2440: 'return': cannot convert from 'UOmegaSlateStyle_Button *' to 'UObject *'
+    L73    C2440: 'return': cannot convert from 'UOmegaSlateStyle_Slider *' to 'UObject *'
+    L87    C2440: 'return': cannot convert from 'UOmegaSlateStyle_ProgressBar *' to 'UObject *'
+    L101   C2440: 'return': cannot convert from 'UOmegaSlateStyle_CheckBox *' to 'UObject *'
+    L116   C2440: 'return': cannot convert from 'UOmegaSlateStyle_ComboBox *' to 'UObject *'
+    L135   C2440: 'return': cannot convert from 'UOmegaSlateStyle_Border *' to 'UObject *'
+    L151   C2440: 'return': cannot convert from 'UOmegaSlateStyle_Text *' to 'UObject *'
+    L172   C2440: 'return': cannot convert from 'UOmegaSlateStyle_RichText *' to 'UObject *'
+    L181   C2440: 'return': cannot convert from 'UOmegaSlateStyle_ExpandableArea *' to 'UObject *'
+    L195   C2440: 'return': cannot convert from 'UOmegaSlateStyle_ScrollBox *' to 'UObject *'
+    L217   C2440: 'return': cannot convert from 'UOmegaSlateStyle_Panel *' to 'UObject *'
+    L237   C2504: 'UPrimaryDataAsset': base class undefined
+    L239   C2440: 'return': cannot convert from 'UOmegaSlateTheme *' to 'UObject *'
+    L239   C3646: 'Super': unknown override specifier
+    L239   C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+
+==============================================================================
+TOTAL: 917 unique error lines across 165 plugin source files
+==============================================================================

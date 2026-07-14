@@ -5,6 +5,7 @@
 #include "Components/BillboardComponent.h"
 #include "Sound/SoundBase.h"
 #include "Functions/F_TagEvent.h"
+#include "UObject/ConstructorHelpers.h"
 
 AOmegaTimerActor::AOmegaTimerActor()
 {
@@ -18,11 +19,10 @@ AOmegaTimerActor::AOmegaTimerActor()
 	AudioComponent->bAutoActivate = false;
 	//AudioComponent->SetWorldScale3D(FVector::Zero());
 	
-	Sound_Default=LoadObject<USoundBase>(nullptr,TEXT("/OmegaGameFramework/audio/ui/wav_ui_tick_001.wav_ui_tick_001"));
-	if (USoundBase* sb=LoadObject<USoundBase>(nullptr,TEXT("/OmegaGameFramework/audio/ui/wav_ui_tick_003.wav_ui_tick_003")))
-	{
-		Sound_AtPercent.Add(sb,0.3);
-	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> DefaultTickFinder(TEXT("/OmegaGameFramework/audio/ui/wav_ui_tick_001.wav_ui_tick_001"));
+	if (DefaultTickFinder.Succeeded()) Sound_Default = DefaultTickFinder.Object;
+	static ConstructorHelpers::FObjectFinder<USoundBase> AtPercentTickFinder(TEXT("/OmegaGameFramework/audio/ui/wav_ui_tick_003.wav_ui_tick_003"));
+	if (AtPercentTickFinder.Succeeded()) Sound_AtPercent.Add(AtPercentTickFinder.Object, 0.3f);
 
 #if WITH_EDITORONLY_DATA
 	if (SpriteComponent)

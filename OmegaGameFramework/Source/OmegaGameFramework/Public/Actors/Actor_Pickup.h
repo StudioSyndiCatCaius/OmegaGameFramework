@@ -22,9 +22,9 @@ struct FOmegaPickupConfig
 {
 	GENERATED_BODY()
 	// When true, the screen briefly flashes the pickup's color when it is collected.
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") bool bFlashScreen;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") bool bFlashScreen = false;
 	// When true, the pickup slides toward the collecting pawn before being removed.
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") bool MoveToActorOnPickup;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") bool MoveToActorOnPickup = false;
 	// Duration in seconds for the slide-to-actor movement.
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") float MoveToActorDuration=0.2;
 	// Starting opacity for the screen flash effect.
@@ -34,11 +34,11 @@ struct FOmegaPickupConfig
 	// Tint color used for the screen flash.
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") FLinearColor Color=FLinearColor::White;
 	// Niagara particle effect played at the pickup point when collected.
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") UNiagaraSystem* NiagaraSystem;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") UNiagaraSystem* NiagaraSystem = nullptr;
 	// Mesh passed to the Niagara system as a particle mesh parameter.
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") UStaticMesh* NiagaraMesh;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") UStaticMesh* NiagaraMesh = nullptr;
 	// Sound played when the pickup is collected.
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") USoundBase* PickupSound;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup") USoundBase* PickupSound = nullptr;
 	// Gameplay cue spawned at the pickup location when collected.
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Pickup")
 	FOmegaGameplayCueConfig PickupCue;

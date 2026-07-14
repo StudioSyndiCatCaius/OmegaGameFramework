@@ -67,7 +67,7 @@ struct FOmegaBitflagsBase
 	
 	FOmegaBitmaskEditorData GetConfig(UClass* OuterObject);
 	
-	UPROPERTY(Transient) bool override_config;
+	UPROPERTY(Transient) bool override_config = false;
 	UPROPERTY(Transient) FOmegaBitmaskEditorData override_configData;
 	UPROPERTY(Transient) TWeakObjectPtr<UObject> override_source;
 	

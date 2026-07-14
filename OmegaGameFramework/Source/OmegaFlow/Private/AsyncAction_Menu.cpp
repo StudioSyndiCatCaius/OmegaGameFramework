@@ -4,6 +4,7 @@
 #include "AsyncAction_Menu.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Player.h"
 
 void UAsyncAction_Menu::NativeShutdown(FGameplayTagContainer CloseTags, UObject* Context, const FString OutFlag)
@@ -23,9 +24,9 @@ void UAsyncAction_Menu::Activate()
 	SubsystemRef->GetMenu(MenuRef, IsMenuOpen);
 	if(!IsMenuOpen)
 	{
-		UMenu* LocalMenu = SubsystemRef->OpenMenu(MenuRef, ContextRef, TagsRef, FlagRef,true,in_meta);
-		if(LocalMenu)
+		if(UMenu* LocalMenu = SubsystemRef->OpenMenu(MenuRef, ContextRef, TagsRef, FlagRef,true,in_meta))
 		{
+			
 			if (SubmenuMetaRef.ParentMenu)
 			{
 				SubmenuMetaRef.ParentMenu->SetSubstate_Index(SubmenuMetaRef.ParentSubstate_OnOpen);
@@ -35,18 +36,18 @@ void UAsyncAction_Menu::Activate()
 			{
 				LocalMenu->Priority += SubmenuMetaRef.OffsetPriorityFromParent;
 			}
-			LocalMenu->OnClosed.AddDynamic(this, &UAsyncAction_Menu::UAsyncAction_Menu::NativeShutdown);
+			LocalMenu->OnClosed.AddDynamic(this, &UAsyncAction_Menu::NativeShutdown);
 		}
 		else
 		{
-			Failed.Broadcast();
+			Failed.Broadcast(FGameplayTagContainer(), nullptr, "");
 			SetReadyToDestroy();
 		}
 
 	}
 	else
 	{
-		Failed.Broadcast();
+		Failed.Broadcast(FGameplayTagContainer(), nullptr, "");
 		SetReadyToDestroy();
 	}
 }
@@ -65,6 +66,7 @@ UAsyncAction_Menu* UAsyncAction_Menu::OpenMenu(UObject* WorldContextObject, APla
 	}
 
 	UAsyncAction_Menu* NewMenuNode = NewObject<UAsyncAction_Menu>();
+	NewMenuNode->RegisterWithGameInstance(WorldContextObject);
 	NewMenuNode->MenuRef = MenuClass;
 	NewMenuNode->in_meta = meta;
 	NewMenuNode->SubmenuMetaRef = SubmenuConfig;

@@ -8,7 +8,7 @@
 
 
 UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
-	(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag, FOmegaCommonMeta meta)
+	(const UObject* WorldContextObject, const TSubclassOf<AOmegaGameplaySystem> SystemClass, UObject* Context, const FString Flag, FOmegaCommonMeta meta, bool ForceRestart)
 {
 	UAsyncAction_GameplaySystem* NewSysNode = NewObject<UAsyncAction_GameplaySystem>();
 	if(SystemClass)
@@ -17,12 +17,12 @@ UAsyncAction_GameplaySystem* UAsyncAction_GameplaySystem::ActivateGameplaySystem
 		NewSysNode->LocalOpenFlag = Flag;
 		NewSysNode->Local_WorldContext = WorldContextObject;
 		NewSysNode->in_meta = meta;
+		NewSysNode->bForceRestart = ForceRestart;
 		if(Context)
 		{
 			NewSysNode->LocalContext = Context;
 		}
 	}
-
 	return NewSysNode;
 }
 
@@ -46,29 +46,25 @@ void UAsyncAction_GameplaySystem::Activate()
 			bool IsAlreadyActiveSystem;
 			SubSysRef = Local_WorldContext->GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 			SubSysRef->GetGameplaySystem(LocalSystemClass, IsAlreadyActiveSystem);
-		
+
+			if(IsAlreadyActiveSystem && bForceRestart)
+			{
+				SubSysRef->ShutdownGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag);
+				IsAlreadyActiveSystem = false;
+			}
+
 			if(!IsAlreadyActiveSystem)
 			{
-				AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag,in_meta);
-				NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
-				NewSystem->OnSystemNotify.AddDynamic(this, &UAsyncAction_GameplaySystem::Native_Notify);
-			}
-			else
-			{
-				Failed.Broadcast();
-				SetReadyToDestroy();
+				if (AOmegaGameplaySystem* NewSystem = SubSysRef->ActivateGameplaySystem(LocalSystemClass, LocalContext, LocalOpenFlag,in_meta))
+				{
+					NewSystem->OnSystemShutdown.AddDynamic(this, &UAsyncAction_GameplaySystem::NativeShutdown);
+					NewSystem->OnSystemNotify.AddDynamic(this, &UAsyncAction_GameplaySystem::Native_Notify);
+					return;
+				};
 			}
 		}
-		else
-		{
-			Failed.Broadcast();
-			SetReadyToDestroy();
-		}
 	}
-	else
-	{
-		Failed.Broadcast();
-		SetReadyToDestroy();
-	}
-	
+
+	Failed.Broadcast();
+	SetReadyToDestroy();
 }

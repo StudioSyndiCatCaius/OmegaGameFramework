@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "Engine/EngineTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "F_Trace.generated.h"
 
 UCLASS(Blueprintable,BlueprintType,EditInlineNew,meta=(ShowWorldContextPin),Abstract,CollapseCategories)
@@ -30,12 +31,29 @@ public:
 	UOmegaScriptedTraceLogic* Logic=nullptr;
 };
 
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FOmegaTraceQueryCheck, FHitResult, Hit);
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTraceFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
 public:
+	UFUNCTION(BlueprintCallable, Category="Omega",DisplayName="Trace by Query - Line",meta=(WorldContext="WorldContextObject",AutoCreateRefTerm="ActorsToIgnore"))
+	static bool Query_Line(UObject* WorldContextObject,FVector Start,FVector End, FOmegaTraceQueryCheck Query,
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes,bool TraceComplex,
+		const TArray<AActor*>& ActorsToIgnore,EDrawDebugTrace::Type DrawDebugType,FHitResult& OutHit);
+
+	UFUNCTION(BlueprintCallable, Category="Omega",DisplayName="Trace by Query - Sphere",meta=(WorldContext="WorldContextObject",AutoCreateRefTerm="ActorsToIgnore"))
+	static bool Query_Sphere(UObject* WorldContextObject,FVector Start,FVector End,float Radius, FOmegaTraceQueryCheck Query,
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes,bool TraceComplex,
+		const TArray<AActor*>& ActorsToIgnore,EDrawDebugTrace::Type DrawDebugType,FHitResult& OutHit);
+
+	UFUNCTION(BlueprintCallable, Category="Omega",DisplayName="Trace by Query - Box",meta=(WorldContext="WorldContextObject",AutoCreateRefTerm="ActorsToIgnore"))
+	static bool Query_Box(UObject* WorldContextObject,FVector Start,FVector End,FVector HalfSize,FRotator Orientation, FOmegaTraceQueryCheck Query,
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes,bool TraceComplex,
+		const TArray<AActor*>& ActorsToIgnore,EDrawDebugTrace::Type DrawDebugType,FHitResult& OutHit);
+
 	
 	UFUNCTION(BlueprintCallable, Category="Omega")
 	static FHitResult ScriptedTrace_Single(AActor* Instigator, FOmegaScriptedTrace Trace,bool& Success);

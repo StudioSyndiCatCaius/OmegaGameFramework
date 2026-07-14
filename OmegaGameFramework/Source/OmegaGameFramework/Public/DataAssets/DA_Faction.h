@@ -39,7 +39,8 @@ public:
 	};
 	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	
-private:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Faction")
+	TObjectPtr<UMaterialInterface> Utility_Material;
 	
 };
 

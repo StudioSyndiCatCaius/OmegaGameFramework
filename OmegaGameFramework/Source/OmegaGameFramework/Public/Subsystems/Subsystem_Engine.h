@@ -16,6 +16,26 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOmegaGenericEngineDelegate);
 
+
+USTRUCT()
+struct FOmegaObjectNameParseParam
+{
+	GENERATED_BODY()
+	
+	UPROPERTY() FString param_str;
+	UPROPERTY() int32 param_int;
+};
+
+USTRUCT()
+struct FOmegaObjectNameParseCache
+{
+	GENERATED_BODY()
+	
+	UPROPERTY() TArray<FOmegaObjectNameParseParam> params;
+};
+
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_Engine : public UEngineSubsystem
 {
@@ -38,9 +58,15 @@ public:
 	
 	TArray<FName> keys_spawnables;
 	UPROPERTY(BlueprintReadWrite,Category="Engine") FLuaValue devconfig_table;
-	UPROPERTY() TMap<TSubclassOf<UObject>, FOmegaSortedClassPathData> cached_ClassPaths;
+	UPROPERTY() TMap<TSubclassOf<UObject>, FOmegaSortedClassPathData> cache_ClassPaths;
 	
 	UPROPERTY() TMap<FString, UObject*> SortedAssets;
+	//cache of params parsed from an object name (only works for Data assets currently)
+	
+	FOmegaObjectNameParseCache GetObjectNameParamCache(UObject* Object);
+	FOmegaObjectNameParseParam GetObjectNameParam(UObject* Object, uint32 param_index);
+	
+	UPROPERTY() TMap<UObject*,FOmegaObjectNameParseCache> cache_objectNameParams;
 	
 	UFUNCTION() void OnGameInitialized();
 	

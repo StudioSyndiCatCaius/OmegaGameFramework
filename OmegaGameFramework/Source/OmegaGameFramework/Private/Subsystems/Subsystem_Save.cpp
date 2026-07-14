@@ -34,6 +34,13 @@
 
 void UOmegaSaveSubsystem::Initialize(FSubsystemCollectionBase& Colection)
 {
+	// UOmegaSubsystem_GameInstance::Initialize calls LoadSynchronous extensively,
+	// which flushes the async loader and guarantees all Blueprint classes
+	// (including LuaState_Default_C and save game classes) are in memory.
+	// Without this ordering, LoadGameFromSlot on second launch tries to
+	// deserialize a Lua table using the default Lua state Blueprint while
+	// it is still being async-loaded, deadlocking both threads.
+	Colection.InitializeDependency<UOmegaSubsystem_GameInstance>();
 	Setup();
 }
 

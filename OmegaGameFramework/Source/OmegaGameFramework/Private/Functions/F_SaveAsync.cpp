@@ -93,7 +93,7 @@ void UAsyncAction_SaveGameToPath::Activate()
 
 	TWeakObjectPtr<UAsyncAction_SaveGameToPath> WeakThis(this);
 	FString PathCopy = LocalFilePath;
-	
+
 	SaveSS->OnAsyncSaveStateChange.Broadcast(LocalSaveGame,true);
 
 	AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [WeakThis, SaveData, PathCopy]()
@@ -106,7 +106,7 @@ void UAsyncAction_SaveGameToPath::Activate()
 			{
 				if (bSaved) { WeakThis->OnSuccess.Broadcast(true); }
 				else        { WeakThis->OnFail.Broadcast(false); }
-				
+
 				if (UOmegaSaveSubsystem* SaveSS = OGF_Subsystems::oSave(WeakThis.Get()))
 				{
 					SaveSS->OnAsyncSaveStateChange.Broadcast(SaveSS->ActiveSaveData,false);

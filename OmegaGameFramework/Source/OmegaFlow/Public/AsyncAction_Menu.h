@@ -9,7 +9,6 @@
 #include "AsyncAction_Menu.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnMenuClosed, FGameplayTagContainer, CloseTags, UObject*, CloseContext, FString, CloseFlag);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMenuFailed);
 
 USTRUCT(BlueprintType)
 struct FOmegaAsyncSubmenuConfig
@@ -18,7 +17,7 @@ struct FOmegaAsyncSubmenuConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega") UMenu* ParentMenu=nullptr;
 	//Offsets the new menus input priority based on the parent menu. if no parent just set directly
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega") int32 OffsetPriorityFromParent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega") int32 OffsetPriorityFromParent = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega") int32 ParentSubstate_OnOpen=1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega") int32 ParentSubstate_OnClose=0;
 	
@@ -34,7 +33,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnMenuClosed Closed;
 	UPROPERTY(BlueprintAssignable, Category="Omega")
-	FOnMenuFailed Failed;
+	FOnMenuClosed Failed;
 	
 	UPROPERTY() APlayerController* PlayerRef;
 	UPROPERTY() TSubclassOf<UMenu> MenuRef;

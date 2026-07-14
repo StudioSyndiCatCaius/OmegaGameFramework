@@ -17,9 +17,9 @@ struct FOmegaBodyOptionValue
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(BlueprintReadOnly,Category="Body") float value_float;
-	UPROPERTY(BlueprintReadOnly,Category="Body") FLinearColor value_color;
-	UPROPERTY(BlueprintReadOnly,Category="Body") FVector value_vector;
+	UPROPERTY(BlueprintReadOnly,Category="Body") float value_float = 0.0f;
+	UPROPERTY(BlueprintReadOnly,Category="Body") FLinearColor value_color = FLinearColor::White;
+	UPROPERTY(BlueprintReadOnly,Category="Body") FVector value_vector = FVector::ZeroVector;
 
 	static FOmegaBodyOptionValue FromBodyData(FOmegaBodyAppearanceData data,FName s);
 	

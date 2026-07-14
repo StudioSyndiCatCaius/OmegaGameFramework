@@ -143,7 +143,7 @@ public:
 	
 	UPROPERTY() TArray<AOmegaQuestInstance*> quest_instances;
 	
-	AOmegaQuestInstance* Quest_Start(UOmegaQuest* q, bool bResumeFormSave=false);
+	AOmegaQuestInstance* Quest_Start(UOmegaQuest* q, bool bOverrideStartData=false,FOmegaQuestData data=FOmegaQuestData());
 	bool Quest_CanStart(UOmegaQuest* q);
 	FOmegaQuestData* Quest_GetData(UOmegaQuest* q);
 	bool Quest_IsComplete(UOmegaQuest* q);

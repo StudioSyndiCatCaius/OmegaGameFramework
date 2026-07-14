@@ -38,7 +38,7 @@ float UOmegaAttribute::GetAttributeValue(int32 Level, int32 AttributeRank, FGame
 
 //Tags
 
-int32 UOmegaAttribute::LocalFloor(float Number, int32 Decimals)
+float UOmegaAttribute::LocalFloor(float Number, int32 Decimals)
 {
 	if (Number == 0)
 	{
@@ -104,6 +104,32 @@ TArray<UOmegaAttribute*> UOmegaAttributeSet::GetMetricAttributes()
 TArray<UOmegaAttribute*> UOmegaAttributeSet::GetStaticAttributes()
 {
 	return Local_GetAtt(true);
+}
+
+float UOmegaAttributeSet::GetAttributeValue(UOmegaAttribute* Attribute, int32 level, int32 attLevel,FGameplayTag ValueCat)
+{
+	float out=0.0f;
+	bool b_noScale=false;
+	if (Attribute)
+	{
+		out=Attribute->GetAttributeValue(level, attLevel, ValueCat);
+		
+		if (Attributes.Contains(Attribute))
+		{
+			FOmegaAttributeSetOverride f= Attributes.FindOrAdd(Attribute);
+			if (f.OverrideProgressionCurve)
+			{
+				out=f.OverrideProgressionCurve->GetFloatValue(level)*f.ValueScale;
+				b_noScale=f.bIgnoreMasterAttributeLevelScaler;
+			}
+		}
+		
+		if (!b_noScale && MasterAttributeLevelScaler)
+		{
+			out=MasterAttributeLevelScaler->GetFloatValue(level)*out;
+		}
+	}
+	return out;
 }
 
 float UOmegaAttributeSet::GetAttributeMax(UOmegaAttribute* Attribute)

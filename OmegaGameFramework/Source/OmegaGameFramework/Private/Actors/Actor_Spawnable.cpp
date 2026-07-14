@@ -17,52 +17,19 @@
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Engine.h"
-#include "Types/Struct_SpawnableTypeConfig.h"
 #include "Materials/Material.h"
 
 
-TSubclassOf<AActor> AOmegaActorSpawnable::GetSpawnableClass()
+bool AOmegaActorSpawnable::L_ClassUsesInterface() const
 {
-	bool val=false;
-	return GetSpawnableTypeConfig(val).Class.LoadSynchronous();
-}
-
-FOmegaSpawnableTypeConfig AOmegaActorSpawnable::GetSpawnableTypeConfig(bool& valid)
-{
-	FOmegaSpawnableTypeConfig typeConifg;
-	
-	FLuaValue devConfigData=OGF_Subsystems::oEngine()->Spawnable_GetData(Config.SpawnableID);
-	
-	if (!devConfigData.IsNil())
-	{
-		typeConifg.SetFromLua(devConfigData);
-		valid=true;
-	}
-	else if (OGF_CFG()->SpawnableDefinitions.Contains(Config.SpawnableID))
-	{
-		typeConifg=OGF_CFG()->SpawnableDefinitions[Config.SpawnableID];
-		valid=true;
-	}
-	return typeConifg;
-}
-
-bool AOmegaActorSpawnable::L_ClassUsesInterface()
-{
-	if (GetSpawnableClass() && GetSpawnableClass()->ImplementsInterface(UActorInterface_Spawnable::StaticClass()))
+	if (Config.Class && Config.Class->ImplementsInterface(UActorInterface_Spawnable::StaticClass()))
 	{
 		return true;
 	}
 	return false;
 }
 
-TArray<FName> AOmegaActorSpawnable::L_getSpawnables() const
-{
-	TArray<FName> out;
-	OGF_CFG()->SpawnableDefinitions.GetKeys(out);
-	//out.Append(OGF_Subsystems::oEngine()->keys_spawnables);
-	
-	return out;
-}
+
 
 AOmegaActorSpawnable::AOmegaActorSpawnable()
 {
@@ -97,98 +64,63 @@ void AOmegaActorSpawnable::OnConstruction(const FTransform& Transform)
 	DisplayRoot->SetRelativeLocation(FVector());
 	DisplayRoot->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	DisplayRoot->SetCollisionResponseToAllChannels(ECR_Ignore);
-	FColor _color;
-	FText _disName;
-	FVector _rootOffset;
-	UTexture2D* _icon=nullptr;
-	FVector _boxExt;
-	float _iconScale;
-	float _boxThick;
-		
-	Config.Bitflags.override_config=false;
-	Config.Lists.override_keys=false;
-	Config.Lists.override_keyList.Empty();
-	Config.Relatives.override_keys=false;
-	Config.Relatives.override_keyList.Empty();
 	
-	bool typeConfig_valid=false;
-	FOmegaSpawnableTypeConfig typeConifg;
+	FOmegaSpawnablePreviewConfig PreviewConfig;
 	
-	TSubclassOf<AActor> _resolvedClass = GetSpawnableClass();
 	UPrimaryDataAsset* _effectiveIdentity = Config.Identity;
 
 	bool b_validSpawnable=false;
-	if (_resolvedClass && _resolvedClass->ImplementsInterface(UActorInterface_Spawnable::StaticClass()))
+	if (L_ClassUsesInterface())
 	{
-		if (AActor* _tempDef=GetMutableDefault<AActor>(_resolvedClass))
+		if (AActor* _tempDef=GetMutableDefault<AActor>(Config.Class))
 		{
 			b_validSpawnable=true;
-			IActorInterface_Spawnable::Execute_GetSpawnablePreviewConfig(_tempDef,_icon,_rootOffset,_disName,_color,_iconScale,_boxExt,_boxThick);
+			PreviewConfig=IActorInterface_Spawnable::Execute_GetSpawnablePreviewConfig(_tempDef);
 			OGF_CFG()->OverrideActorLabel(this,IActorInterface_Spawnable::Execute_GetSpawnable_ActorLabel(_tempDef));
 		}
 	}
-	else
-	{
-		typeConifg=GetSpawnableTypeConfig(typeConfig_valid);
-	}
-	
-	if (typeConfig_valid)
-	{
-		Config.Bitflags.override_config=true;
-		Config.Lists.override_keys=true;
-		Config.Relatives.override_keys=true;
-		Config.Bitflags.override_configData=typeConifg.Bitmask_Config;
-		Config.Lists.override_keyList=typeConifg.NamedLists;
-		Config.Relatives.override_keyList=typeConifg.ActorRelatives;
-		b_validSpawnable=true;
-		
-		_color=typeConifg.Color.ToFColor(true);
-		_disName=FText::FromName(Config.SpawnableID);
-		_rootOffset=typeConifg.RangeOffset;
-		if (UTexture2D* icoRef=typeConifg.Icon.LoadSynchronous())
-		{
-			_icon=icoRef;
-		}
-		_boxExt=typeConifg.RangeSize;
-		_iconScale=typeConifg.IconSize;
-		_boxThick=typeConifg.LineThickness;
-		
+
 #if WITH_EDITOR
-		if (GetActorLabel().Contains("OmegaActorSpawnable"))
+	if (GetActorLabel().Contains("OmegaActorSpawnable"))
+	{
+		if (Config.Identity)
 		{
-			UpdateWorldLabel();
+			SetActorLabel(PreviewConfig.Label+"_"+Config.Identity.GetName());
 		}
-#endif
-		
+		else
+		{
+			SetActorLabel(PreviewConfig.Label+"_"+FString::FromInt(UKismetMathLibrary::RandomIntegerInRange(0,99999)));
+		}
 	}
+#endif
 	
 	if (b_validSpawnable)
 	{
 		if (DisplayRoot)
 		{
-			if (_icon)
+			if (PreviewConfig.Icon)
 			{
-				BillboardComponent->SetSprite(_icon);
+				BillboardComponent->SetSprite(PreviewConfig.Icon);
 			}
-			BillboardComponent->SetWorldScale3D(FVector(_iconScale));
-			DisplayRoot->ShapeColor=_color;
-			ArrowComponent->SetArrowColor(_color);
-			DisplayRoot->SetRelativeLocation(_rootOffset);
+			BillboardComponent->SetWorldScale3D(FVector(PreviewConfig.IconSize));
+			DisplayRoot->ShapeColor=PreviewConfig.Color.ToFColor(true);
+			ArrowComponent->SetArrowColor(PreviewConfig.Color);
+			DisplayRoot->SetRelativeLocation(PreviewConfig.RangeOffset);
 			DisplayRoot->SetLineThickness(1);
-			DisplayRoot->SetBoxExtent(_boxExt);
-			DisplayRoot->SetLineThickness(_boxThick);
+			DisplayRoot->SetBoxExtent(PreviewConfig.RangeSize);
+			DisplayRoot->SetLineThickness(PreviewConfig.LineThickness);
 			if (_effectiveIdentity)
 			{
-				FString _st=_disName.ToString()+": \n"+_effectiveIdentity->GetName();
+				FString _st=PreviewConfig.Label+": \n"+_effectiveIdentity->GetName();
 				TextRenderComponent->SetText(FText::FromString(_st));
 			}
 			else
 			{
-				TextRenderComponent->SetText(_disName);
+				TextRenderComponent->SetText(FText::FromString(PreviewConfig.Label));
 			}
 			TextRenderComponent->SetHiddenInGame(true);
-			TextRenderComponent->SetTextRenderColor(_color);
-			TextRenderComponent->SetWorldLocation(GetActorLocation()+FVector(0,0,_boxExt.Z+_rootOffset.Z+10));
+			TextRenderComponent->SetTextRenderColor(PreviewConfig.Color.ToFColor(true));
+			TextRenderComponent->SetWorldLocation(GetActorLocation()+FVector(0,0,PreviewConfig.RangeSize.Z+PreviewConfig.RangeOffset.Z+10));
 		}
 	}
 	
@@ -197,9 +129,9 @@ void AOmegaActorSpawnable::OnConstruction(const FTransform& Transform)
 void AOmegaActorSpawnable::BeginPlay()
 {
 	Super::BeginPlay();
-	if (TSubclassOf<AActor> refClass=GetSpawnableClass())
+	if (L_ClassUsesInterface())
 	{
-		if (AActor* _tempDef=GetMutableDefault<AActor>(refClass))
+		if (AActor* _tempDef=GetMutableDefault<AActor>(Config.Class))
 		{
 			bool bAutospawn = false;
 			if (L_ClassUsesInterface())
@@ -219,23 +151,7 @@ void AOmegaActorSpawnable::BeginPlay()
 	}
 }
 
-void AOmegaActorSpawnable::UpdateWorldLabel()
-{
-	if (Config.Identity)
-	{
-#if WITH_EDITOR
-		SetActorLabel(Config.SpawnableID.ToString()+"_"+Config.Identity.GetName());
-#endif
-		
-	}
-	else
-	{
-#if WITH_EDITOR
-		SetActorLabel(Config.SpawnableID.ToString()+"_"+FString::FromInt(UKismetMathLibrary::RandomIntegerInRange(0,99999)));
-#endif
-		
-	}
-}
+
 
 bool AOmegaActorSpawnable::Spawnable_IsAlive() const
 {
@@ -248,7 +164,7 @@ bool AOmegaActorSpawnable::Spawnable_IsAlive() const
 
 void AOmegaActorSpawnable::Spawnable_Spawn(bool bForceRespawn)
 {
-	if (TSubclassOf<AActor> refClass= GetSpawnableClass())
+	if (L_ClassUsesInterface())
 	{
 		if (Spawnable_IsAlive())
 		{
@@ -259,7 +175,8 @@ void AOmegaActorSpawnable::Spawnable_Spawn(bool bForceRespawn)
 			Spawnable_Destroy();
 		}
 	
-		AActor* _tempActor=GetWorld()->SpawnActorDeferred<AActor>(refClass,FTransform(),this,nullptr,ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+		AActor* _tempActor=GetWorld()->SpawnActorDeferred<AActor>(Config.Class,FTransform(),this,nullptr,ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+		_tempActor->Tags.Append(Config.Tags);
 		if (UActorComponent* com=_tempActor->GetComponentByClass(UGameplayActorComponent::StaticClass()))
 		{
 			UGameplayActorComponent* c=Cast<UGameplayActorComponent>(com);
@@ -286,7 +203,7 @@ void AOmegaActorSpawnable::Spawnable_Spawn(bool bForceRespawn)
 		
 		if (L_ClassUsesInterface())
 		{
-			IActorInterface_Spawnable::Execute_OnSpawnableSpawn(_tempActor,this,Flag);
+			IActorInterface_Spawnable::Execute_OnSpawnableSpawn(_tempActor,this);
 		}
 	}
 }

@@ -14,6 +14,6 @@ struct FOmegaAbilityInputConfig
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Ability") TSubclassOf<AOmegaAbility> Ability;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Ability") bool CancelOnRelease;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Ability") bool CancelOnRelease = false;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Ability") TArray<FKey> TriggerKeys;
 };

@@ -117,6 +117,7 @@ void UCombatantComponent::BeginPlay()
 	
 	OGF_CFG()->L_GetCombatantConfigFromActor(GetOwner()).Apply(this);
     
+    
 	auto* WorldSubsystem = GetWorld()->GetSubsystem<UOmegaSubsystem_World>();
 	if (WorldSubsystem)
 	{
@@ -264,7 +265,15 @@ void UCombatantComponent::ChangeAttributeSet(UOmegaAttributeSet* NewSet, bool Re
 
 FGameplayTagContainer UCombatantComponent::GetCombatantTags()
 {
-	return CombatantTags;
+	FGameplayTagContainer out=CombatantTags;
+	for (auto* m : GetAllModifiers())
+	{
+		if (m)
+		{
+			out.AppendTags(IDataInterface_Combatant::Execute_Combatant_AppendTags(m,this));
+		}
+	}
+	return out;
 }
 
 bool UCombatantComponent::CombatantHasTag(FGameplayTag Tag) const
@@ -700,10 +709,11 @@ void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill, bool Added)
 		bool has_interface=Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass());
 		if(Added)
 		{
-			L_GetEntityData()->Skills.Add(Skill);
+			L_GetEntityData()->Skills.AddUnique(Skill);
 			if(has_interface)
 			{
 				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,true);
+				OnSkillsEdited.Broadcast(this,Skill,true);
 			}
 		}
 		else
@@ -712,6 +722,7 @@ void UCombatantComponent::AddSkill(UPrimaryDataAsset* Skill, bool Added)
 			if(has_interface)
 			{
 				IDataInterface_Skill::Execute_OnSkillAddedToCombatant(Skill,this,false);
+				OnSkillsEdited.Broadcast(this,Skill,false);
 			}
 		}
 	}
@@ -749,9 +760,10 @@ void UCombatantComponent::SetTagsActive(FGameplayTagContainer GameplayTags, bool
 	}
 }
 
-
-
-
+FGameplayTagContainer UCombatantComponent::GetTagsActive()
+{
+	return L_GetEntityData()->Tags;
+}
 
 
 TArray<UObject*> UCombatantComponent::GetDamageModifiers()
@@ -783,7 +795,7 @@ void UCombatantComponent::SetEffectsDisabled(bool bDisabled)
 }
 
 bool UCombatantComponent::CanApplyEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, UCombatantComponent* Instigator,
-                                         UObject* Context, FOmegaCommonMeta _meta)
+                                         UObject* Context, FOmegaCommonMeta _meta, FOmegaCommonMeta& MetaOut)
 {
 	if (EffectClass && !bEffectsDisabled)
 	{
@@ -796,7 +808,7 @@ bool UCombatantComponent::CanApplyEffect(TSubclassOf<AOmegaGameplayEffect> Effec
 			}
 		}
 		
-		if (EffectClass->GetDefaultObject<AOmegaGameplayEffect>()->EffectCanApply(Instigator,this,Context,_meta))
+		if (EffectClass->GetDefaultObject<AOmegaGameplayEffect>()->EffectCanApply(Instigator,this,Context,_meta,MetaOut))
 		{
 			return true;
 		}
@@ -845,9 +857,11 @@ void UCombatantComponent::GetAttributeValue(UOmegaAttribute* Attribute, float& C
 float UCombatantComponent::GetAttributeBaseValue(UOmegaAttribute* Attribute)
 {
 	int32 attribute_rank=GetAttributeLevel(Attribute);
-	float _baseVal=Attribute->GetAttributeValue(Level, attribute_rank, AttributeValueCategory);
-	//_baseVal=OGF_GAME_CORE()->Attribute_GetMaxValue(this,Attribute,attribute_rank,_baseVal);
-	return _baseVal;
+	if (AttributeSet)
+	{
+		return AttributeSet->GetAttributeValue(Attribute,Level,attribute_rank,AttributeValueCategory);
+	}
+	return Attribute->GetAttributeValue(Level, attribute_rank, AttributeValueCategory);
 }
 
 bool UCombatantComponent::IsAbilityTagBlocked(FGameplayTagContainer Tags)
@@ -1172,7 +1186,7 @@ AOmegaGameplayEffect* UCombatantComponent::GetEffectOfContext(UObject* Context,
 {
 	for(auto* TempEffect : GetAllEffects())
 	{
-		if(TempEffect && (!EffectClass || TempEffect->GetClass()) && TempEffect->EffectContext==Context)
+		if(TempEffect && (!EffectClass || TempEffect->GetClass()->IsChildOf(EffectClass)) && TempEffect->EffectContext==Context)
 		{
 			return TempEffect;
 		}
@@ -1186,7 +1200,8 @@ class AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmega
 {
 	if (EffectClass)
 	{
-		if (CanApplyEffect(EffectClass,Instigator,Context, meta))
+		FOmegaCommonMeta in_meta=meta;
+		if (CanApplyEffect(EffectClass,Instigator,Context, in_meta, in_meta))
 		{
 			const FTransform SpawnWorldPoint = GetOwner()->GetActorTransform();
 		
@@ -1200,7 +1215,7 @@ class AOmegaGameplayEffect* UCombatantComponent::CreateEffect(TSubclassOf<AOmega
 				UGameplayStatics::FinishSpawningActor(LocalEffect, SpawnWorldPoint);
 	
 				LocalEffect->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-				LocalEffect->EffectBeginPlay(Context,meta);
+				LocalEffect->EffectBeginPlay(Context,in_meta);
 				Update();
 				return LocalEffect;
 			}
@@ -1614,6 +1629,17 @@ FOmegaEntity UCombatantComponent::GetEntityData()
 	return entity_data;
 }
 
+bool UCombatantComponent::SetEntityOverrideSource(UCombatantComponent* ComponentSource)
+{
+	if (ComponentSource && ComponentSource!=EntityOverrideSource)
+	{
+		EntityOverrideSource=ComponentSource;
+		Update();
+		return true;
+	}
+	return false;
+}
+
 FOmegaEntity* UCombatantComponent::L_GetEntityData()
 {
 	if (use_entity_id)
@@ -1622,6 +1648,10 @@ FOmegaEntity* UCombatantComponent::L_GetEntityData()
 		{
 			return EntityData;
 		}
+	}
+	if (EntityOverrideSource)
+	{
+		return EntityOverrideSource->L_GetEntityData();
 	}
 	return &entity_data;
 }
@@ -2181,14 +2211,19 @@ void UCombatantComponent::GetDynamic_ScalarValue(FGameplayTag Tag, UObject* Cont
 		if (mod && mod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
 			int32 priority = 0;
-			float value = IDataInterface_Combatant::Execute_Combatant_ModDynamicScalar(mod, this, Tag, Context, priority, true);
-			sourceCount++;
-			Total += value;
-			if (priority >= lastPriority)
+			bool _valid;
+			float value = IDataInterface_Combatant::Execute_Combatant_ModDynamicScalar(mod, this, Tag, Context, priority, _valid);
+			if (_valid)
 			{
-				lastPriority = priority;
-				Top = value;
+				sourceCount++;
+				Total += value;
+				if (priority >= lastPriority)
+				{
+					lastPriority = priority;
+					Top = value;
+				}
 			}
+			
 		}
 	}
 
@@ -2205,8 +2240,9 @@ UPrimaryDataAsset* UCombatantComponent::GetDynamic_AssetValue(FGameplayTag Tag, 
 		if (mod && mod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
 		{
 			int32 priority = 0;
-			UPrimaryDataAsset* asset = IDataInterface_Combatant::Execute_Combatant_ModDynamicAsset(mod, this, Tag, Context, priority, true);
-			if (asset && priority >= lastPriority)
+			bool _valid;
+			UPrimaryDataAsset* asset = IDataInterface_Combatant::Execute_Combatant_ModDynamicAsset(mod, this, Tag, Context, priority, _valid);
+			if (asset && priority >= lastPriority && _valid)
 			{
 				lastPriority = priority;
 				result = asset;
@@ -2214,6 +2250,24 @@ UPrimaryDataAsset* UCombatantComponent::GetDynamic_AssetValue(FGameplayTag Tag, 
 		}
 	}
 
+	return result;
+}
+
+FGameplayTagContainer UCombatantComponent::GetDynamic_TagsValue(FGameplayTag Tag, UObject* Context)
+{
+	FGameplayTagContainer result;
+	for (auto* mod : GetAllModifiers())
+	{
+		if (mod && mod->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+		{
+			bool _valid;
+			FGameplayTagContainer t= IDataInterface_Combatant::Execute_Combatant_ModDynamicTags(mod, this, Tag, Context, _valid);
+			if (_valid)
+			{
+				result.AppendTags(t);
+			}
+		}
+	}
 	return result;
 }
 

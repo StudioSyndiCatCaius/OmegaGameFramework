@@ -14,6 +14,8 @@
 #include "UObject/Object.h"
 #include "LinearEvent_SimpleMessage.generated.h"
 
+class UOmegaGlobalCondition;
+class UOmegaGlobalScript;
 class UOmegaSelector_LevelSequence;
 class UOmegaSelector_Montage;
 class UOmegaMessageTrait;
@@ -93,9 +95,14 @@ public:
 	TMap<FName,FString> ExtraParams;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node",AdvancedDisplay,DisplayName="🗒️Direction Notes") FString Direction;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Lua",meta=(MultiLine))
+	UPROPERTY(EditInstanceOnly, Instanced, BlueprintReadWrite, Category="Script")
+    TArray<UOmegaGlobalScript*> Scripts;
+	//If conditions are not met, this line and its script calls will be skipped.
+	UPROPERTY(EditInstanceOnly, Instanced, BlueprintReadWrite, Category="Script")
+	TArray<UOmegaGlobalCondition*> Conditions;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Script",meta=(MultiLine),AdvancedDisplay)
 	FOmegaLuaCode LuaScript;
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Lua",meta=(MultiLine))
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Script",meta=(MultiLine),AdvancedDisplay)
 	FOmegaLuaCode LuaCondition;
 	
 	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category="Actor")

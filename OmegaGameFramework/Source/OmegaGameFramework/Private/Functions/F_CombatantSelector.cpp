@@ -10,6 +10,14 @@ void UCombatantSelector::L_UpdateTargets()
 	OnSelector_TargetsUpdated.Broadcast(this);
 }
 
+void UCombatantSelector::GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description,
+	FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig)
+{
+	Name=SelectorName;
+	Description=SelectorDescription;
+	iconBrush=SelectorIcon;
+}
+
 void UCombatantSelector::SetSelectorTargetActive(UCombatantComponent* Target, bool bActive)
 {
 	if (Target)
@@ -45,15 +53,17 @@ void UCombatantSelector::SetSelectorTargetsActive(TArray<UCombatantComponent*> T
 
 void UCombatantSelector::Refresh()
 {
+	TArray<UCombatantComponent*> ToRemove;
 	for (auto* a : ActiveTargets)
 	{
-		if (a)
+		if (a && !IsTargetValid(a))
 		{
-			if (!IsTargetValid(a))
-			{
-				SetSelectorTargetActive(a, false);
-			}
+			ToRemove.Add(a);
 		}
+	}
+	for (auto* a : ToRemove)
+	{
+		SetSelectorTargetActive(a, false);
 	}
 }
 
@@ -127,6 +137,8 @@ void UOmegaCombatantSelectorAsync::Activate()
 		LocalSelector->OnSelector_Finalized.AddDynamic(this, &UOmegaCombatantSelectorAsync::Local_Finalized);
 		LocalSelector->OnSelector_Cancelled.AddDynamic(this, &UOmegaCombatantSelectorAsync::Local_Cancelled);
 		LocalSelector->OnSelectorBegin();
+		LocalSelector->Refresh();
+		LocalSelector->L_UpdateTargets();
 	}
 	else
 	{

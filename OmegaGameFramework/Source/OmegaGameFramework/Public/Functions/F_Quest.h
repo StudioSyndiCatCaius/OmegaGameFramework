@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Misc/OmegaUtils_Structs.h"
 #include "F_Quest.generated.h"
 
 
@@ -31,8 +32,8 @@ public:
 	static TArray<AOmegaQuestInstance*> GetAllActiveInstances(UObject* WorldContext);
 
 	/** Starts the given quest and returns its new instance. Returns null if the quest cannot be started. */
-	UFUNCTION(BlueprintCallable,Category="Omega|Quest",DisplayName="📜Quest - Start",meta=(WorldContext="WorldContext"))
-	static AOmegaQuestInstance* Start(UObject* WorldContext, UOmegaQuest* quest);
+	UFUNCTION(BlueprintCallable,Category="Omega|Quest",DisplayName="📜Quest - Start",meta=(WorldContext="WorldContext",AdvancedDisplay="bOverrideStartData,data"))
+	static AOmegaQuestInstance* Start(UObject* WorldContext, UOmegaQuest* quest, bool bOverrideStartData=false,FOmegaQuestData data=FOmegaQuestData());
 
 	/** Ends the given quest. bComplete: true = mark as completed, false = abandon/fail. Returns true on success. */
 	UFUNCTION(BlueprintCallable,Category="Omega|Quest",DisplayName="📜Quest - End",meta=(WorldContext="WorldContext"))

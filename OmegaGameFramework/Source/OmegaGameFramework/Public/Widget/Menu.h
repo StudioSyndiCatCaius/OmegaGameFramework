@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameplayTagContainer.h"
 #include "ScreenWidget.h"
+#include "Interfaces/I_GameplayState.h"
 #include "Interfaces/I_Widget.h"
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Structs.h"
@@ -18,30 +19,15 @@ class UOmegaInputMode;
 class UDataListCustomEntry;
 class UOmegaGameplayMessage;
 
-UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Common Menu") class UDataInterface_CommonMenu : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_CommonMenu
+UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Menu Source") class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IDataInterface_MenuSource
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Menu")
-	TArray<UObject*> GetDataListEntries(UMenu* Menu);
-};
-
-
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaCommonMenuDefinition : public UOmegaDataAsset, public IDataInterface_CommonMenu
-{
-	GENERATED_BODY()
-	
-public:UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menu")
-	TArray<UPrimaryDataAsset*> CustomEntry_Assets;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Menu")
-	TArray<UDataListCustomEntry*> CustomEntry_Objects;
-	
-	virtual TArray<UObject*> GetDataListEntries_Implementation(UMenu* Menu) override;
+	UFUNCTION(BlueprintNativeEvent,Category="Omega|HUD")
+	TSubclassOf<UMenu> GetMenuClass(FName Name);
 };
 
 UCLASS()
@@ -63,7 +49,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOpened, FGameplayTagContainer, Tag
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FClosed, FGameplayTagContainer, Tags, UObject*, Context, FString, Flag);
 
 UCLASS(HideFunctions=(Construct, RemoveFromParent),Abstract)
-class OMEGAGAMEFRAMEWORK_API UMenu : public UOmegaScreenWidget, public IWidgetInterface_Input
+class OMEGAGAMEFRAMEWORK_API UMenu : public UOmegaScreenWidget, public IWidgetInterface_Input, public IDataInterface_GameplayModifier
 {
 	GENERATED_BODY()
 
@@ -75,6 +61,7 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual bool InputAction_Disabled_Implementation(APlayerController* Player, FGameplayTag Action) override;
+	virtual void NativeDestruct() override;
 public:
 	UFUNCTION(BlueprintImplementableEvent,Category="Menu")
 	UDataList* GetDefaultDataList();
@@ -103,7 +90,8 @@ public:
 	bool CanCloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta=(AdvancedDisplay="Context, Tags, Flag"))
-		void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
+	void CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FString& Flag);
+	
 private:
 	UPROPERTY() bool bIsClosing;
 	UPROPERTY() bool bIsPlayingAnimation;
@@ -206,19 +194,6 @@ public:
 	///DELGATES//
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOpened OnOpened;
 	UPROPERTY(BlueprintAssignable, Category="Omega") FClosed OnClosed;
-
-
-
-
+	
 };
 
-UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - Menu Source") class UDataInterface_MenuSource : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_MenuSource
-{
-	GENERATED_BODY()
-
-public:
-
-	UFUNCTION(BlueprintNativeEvent,Category="Omega|HUD")
-	TSubclassOf<UMenu> GetMenuClass(FName Name);
-};

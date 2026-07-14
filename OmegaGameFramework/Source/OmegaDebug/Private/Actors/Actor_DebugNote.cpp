@@ -2,6 +2,7 @@
 
 #include "Actors/Actor_DebugNote.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "OmegaSettings.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BillboardComponent.h"
@@ -23,7 +24,8 @@ AOmegaDebugNote::AOmegaDebugNote()
 {
 	SetActorHiddenInGame(true);
 	RootComponent=CreateDefaultSubobject<UBillboardComponent>("ROOT");
-	Cast<UBillboardComponent>(RootComponent)->SetSprite(LoadObject<UTexture2D>(this, TEXT("/Engine/EditorResources/S_Note.S_Note")));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> NoteSpriteFinder(TEXT("/Engine/EditorResources/S_Note.S_Note"));
+	if (NoteSpriteFinder.Succeeded()) Cast<UBillboardComponent>(RootComponent)->SetSprite(NoteSpriteFinder.Object);
 	Arrow=CreateOptionalDefaultSubobject<UArrowComponent>("Arrow");
 	Arrow->SetupAttachment(RootComponent);
 	Arrow->ArrowSize=2;

@@ -92,6 +92,16 @@ void UDataWidgetBase_Attribute::Native_OnListOwnerChanged(UObject* ListOwner)
 
 void UDataWidgetBase_Attribute::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
 {
+	// Entries created after the list owner was set never receive Native_OnListOwnerChanged,
+	// so resolve the combatant from the ListOwner passed with every refresh.
+	if(UActorComponent* ref_comp = local_GetComponentFromObject(ListOwner,UCombatantComponent::StaticClass()))
+	{
+		UCombatantComponent* list_combatant=Cast<UCombatantComponent>(ref_comp);
+		if(list_combatant!=REF_Combatant)
+		{
+			SetCombatant(list_combatant);
+		}
+	}
 	local_Update();
 	Super::Native_OnRefreshed(SourceAsset, ListOwner);
 }
@@ -104,18 +114,19 @@ void UDataWidgetBase_Attribute::NativePreConstruct()
 
 void UDataWidgetBase_Attribute::SetCombatant(UCombatantComponent* Combatant)
 {
+	const bool bChanged = REF_Combatant!=Combatant;
+	if(REF_Combatant)
+	{
+		REF_Combatant->OnDamaged.RemoveDynamic(this,&UDataWidgetBase_Attribute::local_OnAttributeDamaged);
+	}
+	REF_Combatant=Combatant;
 	if(Combatant)
 	{
-		if(REF_Combatant)
-		{
-			Combatant->OnDamaged.RemoveDynamic(this,&UDataWidgetBase_Attribute::local_OnAttributeDamaged);
-		}
-		REF_Combatant=Combatant;
 		Combatant->OnDamaged.AddDynamic(this, &UDataWidgetBase_Attribute::local_OnAttributeDamaged);
 	}
-	else
+	if(bChanged)
 	{
-		REF_Combatant=nullptr;
+		local_Update();
 	}
 }
 

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Widget/WG_DynamicProgressBar.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Engine/World.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "TimerManager.h"
@@ -144,10 +145,8 @@ void UDynamicProgressBar::TickGhostInterp()
 
 UDynamicProgressBar::UDynamicProgressBar()
 {
-	if (UMaterialInterface* _mat=LoadObject<UMaterialInterface>(nullptr,TEXT("/OmegaGameFramework/Materials/UI/M_OMEGA_ui_DynamicMater_Radial.M_OMEGA_ui_DynamicMater_Radial")))
-	{
-		Material=_mat;
-	}
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> RadialMatFinder(TEXT("/OmegaGameFramework/Materials/UI/M_OMEGA_ui_DynamicMater_Radial.M_OMEGA_ui_DynamicMater_Radial"));
+	if (RadialMatFinder.Succeeded()) Material = RadialMatFinder.Object;
 }
 
 // ---------------------------------------------------------------------------

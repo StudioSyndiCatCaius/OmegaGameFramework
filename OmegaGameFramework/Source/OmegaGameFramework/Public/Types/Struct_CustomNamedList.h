@@ -22,7 +22,7 @@ struct FOmegaClassNamedLists
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(Transient) bool override_keys;
+	UPROPERTY(Transient) bool override_keys = false;
 	UPROPERTY(Transient) TArray<FName> override_keyList;
     
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Metaconfig")

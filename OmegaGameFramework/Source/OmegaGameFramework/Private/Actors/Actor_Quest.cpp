@@ -92,7 +92,7 @@ void AOmegaQuestInstance::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
-void AOmegaQuestInstance::StartQuest(bool bResumeFormSave)
+void AOmegaQuestInstance::StartQuest(bool bOverrideStartData,FOmegaQuestData data)
 {
 	if(QuestAsset)
 	{
@@ -102,9 +102,9 @@ void AOmegaQuestInstance::StartQuest(bool bResumeFormSave)
 	        script_copy->qInst=this;
 	        OGF_Subsystems::oSave(this)->ActiveSaveData->quest_data.FindOrAdd(QuestAsset).Status=QuestStatus_Active;
 	        
-	        if (bResumeFormSave)
+	        if (bOverrideStartData)
 	        {
-        		script_copy->OnLoad(this,SS_Save->ActiveSaveData->quest_data.FindOrAdd(QuestAsset));
+        		script_copy->OnLoad(this,data);
         		if (SS_World)
         		{
         			SS_World->OnQuest_Updated.Broadcast(this,QuestAsset);

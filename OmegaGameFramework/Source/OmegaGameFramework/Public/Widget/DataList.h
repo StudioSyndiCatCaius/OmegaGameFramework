@@ -141,10 +141,7 @@ public:
 	// ---------------------------------------------------------------
 	// Entry
 	// ---------------------------------------------------------------
-#if WITH_EDITOR
-	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
-#endif
-	void ValidateTemplates();
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entry",DisplayName="💜Entry Class")
 	TSubclassOf<UDataWidget> EntryClass;
@@ -243,6 +240,19 @@ public:
 	//###########################################
 	UPROPERTY()
 	TArray<UDataWidget*> Entries;
+
+	// ---------------------------------------------------------------
+	// Widget Pool
+	// ---------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pooling")
+	bool bEnableWidgetPooling = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pooling", meta=(EditCondition="bEnableWidgetPooling", ClampMin=1))
+	int32 PoolMaxSize = 10;
+
+	UPROPERTY()
+	TArray<UDataWidget*> EntryPool;
 	
 	//Clears all ENTRIES from the list
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Widget|DataList")

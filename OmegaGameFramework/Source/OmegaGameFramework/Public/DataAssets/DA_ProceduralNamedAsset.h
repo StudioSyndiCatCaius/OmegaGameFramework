@@ -66,8 +66,7 @@ public:
 	virtual float ModifyDamage_Implementation(UOmegaAttribute* Attribute, UCombatantComponent* Target, UCombatantComponent* Instigator, float BaseDamage, UOmegaDamageType* DamageType, UObject* Context) override;
 	virtual TArray<UPrimaryDataAsset*> GetSkills_Implementation(UCombatantComponent* Combatant) override;
 	virtual UPrimaryDataAsset* GetDamageType_Weight_Implementation(UCombatantComponent* Combatant, UOmegaDamageType* DamageType, float& weight, int32& priority) override;
-	virtual UPrimaryDataAsset* Combatant_ModDynamicAsset_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag, UObject* Context, int32& priority, bool bValidConsider) override;
-	virtual float Combatant_ModDynamicScalar_Implementation(UCombatantComponent* Combatant, FGameplayTag Tag, UObject* Context, int32& priority, bool bValidConsider) override;
+	
 	
 	// IDataInterface_ScriptedEffects
 	virtual FOmegaCustomScriptedEffects GetScriptedEffects_Implementation(FGameplayTag Tag) override;

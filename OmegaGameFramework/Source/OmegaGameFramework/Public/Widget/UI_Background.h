@@ -29,7 +29,7 @@ struct FOmegaUI_SectionInfo
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="UI") FSlateBrush Brush;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="UI") FMargin OuterMargins;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="UI") FMargin InnerMargins;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="UI") FVector2D BoxSize;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="UI") FVector2D BoxSize = FVector2D::ZeroVector;
 };
 
 // ---------------------------------------------------------------------------------------------------------------------

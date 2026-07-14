@@ -4,6 +4,7 @@
 #include "Widget/Menu.h"
 
 #include "OmegaSettings_Slate.h"
+#include "TimerManager.h"
 #include "Components/Component_Combatant.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -21,10 +22,6 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 	if(Context) { ContextObject=Context;}
 	AddToPlayerScreen(SlateLayerIndex);
 	
-	if(GetDefaultDataList() && ContextObject && ContextObject->GetClass()->ImplementsInterface(UDataInterface_CommonMenu::StaticClass()))
-	{
-		GetDefaultDataList()->AddAssetsToList(IDataInterface_CommonMenu::Execute_GetDataListEntries(ContextObject,this),"");
-	}
 	SetOwningPlayer(PlayerRef);
 	if (!bIsOpen)
 	{
@@ -70,10 +67,9 @@ void UMenu::OpenMenu(FGameplayTagContainer Tags, UObject* Context, APlayerContro
 			if(ParallelGameplaySystem)
 			{
 				SS_World->ActivateGameplaySystem(ParallelGameplaySystem, this);
-				SS_World->GameplayModifier_Register(this,true);
-				
-				SS_World->ForceUpdateGameplayState();
 			}	
+			SS_World->GameplayModifier_Register(this,true);
+			SS_World->ForceUpdateGameplayState();
 		}
 		
 		if(OpenSound)
@@ -128,8 +124,6 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		const bool LastMenu = !SubsystemRef->OpenMenus.IsValidIndex(0);
 		SubsystemRef->OnMenuClosed.Broadcast(this, TempTags, LastMenu);
 		
-		
-
 		SetVisibility(ESlateVisibility::HitTestInvisible);
 
 		if(CloseSound)
@@ -158,31 +152,13 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		{
 			Native_CompleteClose();
 		}
-		if (SS_Player)
-		{
-			if (SS_Player->OpenMenus.Contains(this))
-			{
-				SS_Player->OpenMenus.Remove(this);
-			}
-			SS_Player->ControlWidget_Register(this,false);
-		}
-		if (SS_World)
-		{
-			SS_World->GameplayModifier_Register(this,false);
-		}
+		
 		
 		bIsClosing = true;
 	}
 	OGF_GLOBALREFRESH();
 }
 
-TArray<UObject*> UOmegaCommonMenuDefinition::GetDataListEntries_Implementation(UMenu* Menu)
-{
-	TArray<UObject*> out;
-	for(auto* i : CustomEntry_Assets) { if(i){ out.Add(i);} }
-	for(auto* i : CustomEntry_Objects) { if(i){ out.Add(i);} }
-	return out;
-}
 
 AOmegaMenuWrapperActor::AOmegaMenuWrapperActor()
 {
@@ -255,6 +231,23 @@ void UMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 bool UMenu::InputAction_Disabled_Implementation(APlayerController* Player, FGameplayTag Action)
 {
 	return IsInputBlocked();
+}
+
+void UMenu::NativeDestruct()
+{
+	if (SS_Player)
+	{
+		if (SS_Player->OpenMenus.Contains(this))
+		{
+			SS_Player->OpenMenus.Remove(this);
+		}
+		SS_Player->ControlWidget_Register(this,false);
+	}
+	if (SS_World)
+	{
+		SS_World->GameplayModifier_Register(this,false);
+	}
+	Super::NativeDestruct();
 }
 
 

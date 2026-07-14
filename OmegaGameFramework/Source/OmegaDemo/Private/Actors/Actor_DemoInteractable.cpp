@@ -71,10 +71,8 @@ AOmegaInteractable::AOmegaInteractable()
 		NiagaraComponent->SetupAttachment(RootComponent);
 		
 		NameText=CreateOptionalDefaultSubobject<UTextRenderComponent>("Text");
-		if (UMaterialInterface* _mat=LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")))
-		{
-			NameText->SetMaterial(0,_mat);	
-		}
+		static ConstructorHelpers::FObjectFinder<UMaterialInterface> TextOutlineMatFinder(TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"));
+		if (TextOutlineMatFinder.Succeeded()) NameText->SetMaterial(0, TextOutlineMatFinder.Object);
 		NameText->SetTextRenderColor(FColor::Blue);
 		NameText->bHiddenInGame=true;
 		NameText->HorizontalAlignment=EHTA_Center;

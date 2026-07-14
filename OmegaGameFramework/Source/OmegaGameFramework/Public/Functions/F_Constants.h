@@ -12,6 +12,9 @@ class UOmegaDamageType;
 class UOmegaLevelingAsset;
 class UOmegaAttribute;
 class UEquipmentSlot;
+class UTexture;
+class ULevelSequence;
+class USoundBase;
 class AOmegaGameplaySystem;
 class UMenu;
 class UHUDLayer;
@@ -27,6 +30,10 @@ public:
 	UFUNCTION() static TArray<FName> opts_system();
 	UFUNCTION() static TArray<FName> opts_menu();
 	UFUNCTION() static TArray<FName> opts_hud();
+	
+	UFUNCTION() static TArray<FName> opts_texture();
+	UFUNCTION() static TArray<FName> opts_sequence();
+	UFUNCTION() static TArray<FName> opts_sound();
 	
 	UFUNCTION() static TArray<FName> opts_int();
 	UFUNCTION() static TArray<FName> opts_byte();
@@ -49,6 +56,16 @@ public:
 	UFUNCTION() static TArray<FName> opts_curve_float();
 	UFUNCTION() static TArray<FName> opts_curve_vector();
 	UFUNCTION() static TArray<FName> opts_curve_color();
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Texture")
+	static UTexture* Texture(UPARAM(meta = (GetOptions = "opts_texture")) FName Name);
+		
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Level Sequence")
+	static ULevelSequence* LevelSequence(UPARAM(meta = (GetOptions = "opts_sequence")) FName Name);
+	
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Sound")
+	static USoundBase* Sound(UPARAM(meta = (GetOptions = "opts_sound")) FName Name);
+	
 	
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - 💜Data Asset Class")
 	static TSubclassOf<UPrimaryDataAsset> Class_DataAsset(UPARAM(meta = (GetOptions = "opts_dataasset")) FName Name);

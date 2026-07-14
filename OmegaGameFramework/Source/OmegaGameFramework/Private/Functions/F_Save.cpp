@@ -181,3 +181,74 @@ TArray<USaveGame*> UOmegaSaveFunctions::Custom_LoadGame_AllInPath(const FString&
 	}
 	return out;
 }
+
+TArray<UPrimaryDataAsset*> UOmegaSaveFunctions::DataList_Get(const UObject* WorldContextObject,FGameplayTag List, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		return _sav->Lists_Assets.FindOrAdd(List).List;
+	}
+	return TArray<UPrimaryDataAsset*>();
+}
+
+bool UOmegaSaveFunctions::DataList_Has(const UObject* WorldContextObject,FGameplayTag List, UPrimaryDataAsset* Asset, bool bGlobal)
+{
+	return DataList_Get(WorldContextObject,List,bGlobal).Contains(Asset);
+}
+
+void UOmegaSaveFunctions::DataList_Resize(const UObject* WorldContextObject,FGameplayTag List, int32 size, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(nullptr,bGlobal))
+	{
+		_sav->Lists_Assets.FindOrAdd(List).List.SetNum(size);
+	}
+}
+
+void UOmegaSaveFunctions::DataList_Shuffle(const UObject* WorldContextObject,FGameplayTag List, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		TArray<UPrimaryDataAsset*>& Assets = _sav->Lists_Assets.FindOrAdd(List).List;
+
+		for (int32 i = Assets.Num() - 1; i > 0; --i)
+		{
+			const int32 j = FMath::RandRange(0, i);
+			Assets.Swap(i, j);
+		}
+	}
+}
+
+void UOmegaSaveFunctions::DataList_Clear(const UObject* WorldContextObject,FGameplayTag List, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		_sav->Lists_Assets.FindOrAdd(List).List.Empty();
+	}
+}
+
+void UOmegaSaveFunctions::DataList_Add(const UObject* WorldContextObject,FGameplayTag List, UPrimaryDataAsset* Asset, bool bInList, bool bGlobal)
+{
+	if (UOmegaSaveBase* _sav = _getEntitySaveObj(WorldContextObject,bGlobal))
+	{
+		if (bInList)
+		{
+			_sav->Lists_Assets.FindOrAdd(List).List.AddUnique(Asset);
+		}
+		else
+		{
+			if (_sav->Lists_Assets.FindOrAdd(List).List.Contains(Asset))
+			{
+				_sav->Lists_Assets.FindOrAdd(List).List.Remove(Asset);
+			}
+		}
+	}
+}
+
+void UOmegaSaveFunctions::DataList_AddList(const UObject* WorldContextObject,FGameplayTag List, TArray<UPrimaryDataAsset*> Assets, bool bInList,
+	bool bGlobal)
+{
+	for (UPrimaryDataAsset* a : Assets)
+	{
+		DataList_Add(WorldContextObject,List,a,bInList,bGlobal);
+	};
+}

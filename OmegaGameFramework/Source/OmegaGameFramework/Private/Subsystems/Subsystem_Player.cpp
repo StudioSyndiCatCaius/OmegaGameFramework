@@ -387,14 +387,17 @@ UWidget* UOmegaSubsystem_Player::ControlWidget_GetTop()
 	}
 	if(TopWidget)
 	{
-		if (IWidgetInterface_Input::Execute_InputBlocked(TopWidget))
+		if (TopWidget->Implements<UWidgetInterface_Input>() && IWidgetInterface_Input::Execute_InputBlocked(TopWidget))
 		{
 			return nullptr;
 		}
 		if (LastTopWidget!=TopWidget)
 		{
 			LastTopWidget=TopWidget;
-			IWidgetInterface_Input::Execute_OnBecomeControlWidget(LastTopWidget);
+			if (LastTopWidget->Implements<UWidgetInterface_Input>())
+			{
+				IWidgetInterface_Input::Execute_OnBecomeControlWidget(LastTopWidget);
+			}
 		}
 	}
 	return TopWidget;
@@ -598,7 +601,10 @@ UOmegaHoverCursor* UOmegaSubsystem_Player::GetHoverCursor()
 	if(const TSubclassOf<UOmegaHoverCursor> incoming_class = OGF_CFG_STYLE()->HoverCursorClass.LoadSynchronous())
 	{
 		hover_cursor = Cast<UOmegaHoverCursor>(CreateWidget(GetWorld(), incoming_class));
-		hover_cursor->subsystem_ref=this;
+		if (hover_cursor)
+		{
+			hover_cursor->subsystem_ref=this;
+		}
 		return hover_cursor;
 	}
 	return nullptr;

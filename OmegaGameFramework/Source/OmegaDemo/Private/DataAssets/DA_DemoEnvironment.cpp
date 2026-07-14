@@ -3,6 +3,7 @@
 
 #include "DataAssets/DA_DemoEnvironment.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/SkyLightComponent.h"
@@ -10,10 +11,8 @@
 
 UOAsset_EasyEnvironment::UOAsset_EasyEnvironment()
 {
-	if (UStaticMesh* Mesh = LoadObject<UStaticMesh>(this, TEXT("/OmegaGameFramework/Meshes/nature/sm_omega_Skybox_Cube.sm_omega_Skybox_Cube")))
-	{
-		SkyMesh=Mesh;
-	}
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SkyboxMeshFinder(TEXT("/OmegaGameFramework/Meshes/nature/sm_omega_Skybox_Cube.sm_omega_Skybox_Cube"));
+	if (SkyboxMeshFinder.Succeeded()) SkyMesh = SkyboxMeshFinder.Object;
 }
 
 FOmegaEnvironmentConfig UOAsset_EasyEnvironment::Environment_GetConfig_Implementation(AOmegaActorEnvironment* Actor)

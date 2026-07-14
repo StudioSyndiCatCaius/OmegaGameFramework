@@ -115,7 +115,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
 	bool bAllowModifiers = true;
 
-	int32 LocalFloor(float Number, int32 Decimals);
+	float LocalFloor(float Number, int32 Decimals);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value", AdvancedDisplay)
 	int32 MaxDecimals = 2;
@@ -161,8 +161,11 @@ struct FOmegaAttributeSetOverride
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute") bool bOverrideMax;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute",meta=(EditCondition="bOverrideMax")) float MaxOverride;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute",meta=(InlineEditConditionToggle)) bool bOverrideMax = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute",meta=(EditCondition="bOverrideMax")) float MaxOverride = 0.0f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") float ValueScale=1.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute") TSoftObjectPtr<UCurveFloat> OverrideProgressionCurve;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mod") bool bIgnoreMasterAttributeLevelScaler;
 	
 };
 
@@ -175,6 +178,8 @@ class OMEGAGAMEFRAMEWORK_API UOmegaAttributeSet : public UDataAsset
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 	TArray<UOmegaAttributeSet*> InheritedSets;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Attribute")
+	TObjectPtr<UCurveFloat> MasterAttributeLevelScaler;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 	TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> Attributes;
@@ -186,6 +191,7 @@ public:
 	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetMetricAttributes();
 	UFUNCTION(BlueprintPure, Category="Attributes") TArray<UOmegaAttribute*> GetStaticAttributes();
 	
+	UFUNCTION() float GetAttributeValue(UOmegaAttribute* Attribute, int32 level, int32 attLevel, FGameplayTag ValueCat);
 	UFUNCTION() float GetAttributeMax(UOmegaAttribute* Attribute);
 	UFUNCTION() TMap<UOmegaAttribute*,FOmegaAttributeSetOverride> GetAttributeConfigs();
 	UFUNCTION() TArray<UOmegaAttribute*> Local_GetAtt(bool bStatic);

@@ -2,6 +2,12 @@
 
 
 #include "LinearEvents/LinearEvent_SimpleMessage.h"
+
+#if WITH_EDITOR
+#include "Editor.h"
+#endif
+
+
 #include "Materials/MaterialInterface.h"
 #include "Sound/SoundBase.h"
 #include "Components/AudioComponent.h"
@@ -16,6 +22,7 @@
 #include "GameFramework/Character.h"
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Functions/F_Component.h"
+#include "Functions/F_GlobalScripting.h"
 #include "Functions/F_Localization.h"
 #include "Functions/F_Message.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -70,7 +77,10 @@ void ULinearEvent_SimpleMessage::Native_MessageEnd(UOmegaGameplayMessage* Messag
 
 bool UFlowNode_SimpleMessage::CanPlayMessage()
 {
-	if (Text.IsEmpty()) { return false; }
+	//if (Text.IsEmpty()) { return false; }
+	FOmegaGlobalConditions cond;
+	cond.Conditions=Conditions;
+	if (!UOmegaFunctions_GlobalScripting::RunGlobalConditions(this,cond)) { return false; }
 	FLuaValue _luaVal=ULuaBlueprintFunctionLibrary::LuaRunString(this,nullptr,LuaCondition.LuaCode);
 	if (_luaVal.Type==ELuaValueType::Bool)
 	{
@@ -153,42 +163,56 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 			LocalMessage->Instigator_Asset= pda;
 		}	
 	}
-	
-	LocalMessage->Text = Text;
-	LocalMessage->Message_Category=GetFlowAsset()->GetMessageCategoryTag();
-	FOmegaGameplayMessageMeta msg_meta;
-	msg_meta.CommonMeta.Context=this;
-	msg_meta.Brush.SetResourceObject(Portrait);
-	msg_meta.Tags=Tags;
-	msg_meta.key=MessageKey;
-	msg_meta.Flags=Flags;
-	LocalMessage->meta=msg_meta;
-	LocalMessage->Native_Begin("");
 
-	if(AActor* a=local_GetInstigatorActor())
+	if (CanPlayMessage())
 	{
-		if(ACharacter* c=Cast<ACharacter>(a))
-		{
-			if(Montage)
-			{
-				c->PlayAnimMontage(Montage);
-			}
-			if(Sequence)
-			{
-				FMovieSceneSequencePlaybackSettings seqSettings;
-				ALevelSequenceActor* seActor;
-				ULevelSequencePlayer* seqPlayer=ULevelSequencePlayer::CreateLevelSequencePlayer(this,Sequence,seqSettings,seActor);
-				seActor->AddBindingByTag(TEXT("Instigator"),c);
-				seqPlayer->Play();
-			}
-		}
-
-		// Aim Targeting
+		FOmegaGlobalScripts sc;
+		sc.Scripts=Scripts;
+		UOmegaFunctions_GlobalScripting::RunGlobalScripts(this,sc);
+	
+		LocalMessage->Text = Text;
+		LocalMessage->Message_Category=GetFlowAsset()->GetMessageCategoryTag();
+		FOmegaGameplayMessageMeta msg_meta;
+		msg_meta.CommonMeta.Context=this;
+		msg_meta.Brush.SetResourceObject(Portrait);
+		msg_meta.Tags=Tags;
+		msg_meta.key=MessageKey;
+		msg_meta.Flags=Flags;
+		LocalMessage->meta=msg_meta;
+	
 		
-		// needs reimpement
+		LocalMessage->Native_Begin("");
+
+		if(AActor* a=local_GetInstigatorActor())
+		{
+			if(ACharacter* c=Cast<ACharacter>(a))
+			{
+				if(Montage)
+				{
+					c->PlayAnimMontage(Montage);
+				}
+				if(Sequence)
+				{
+					FMovieSceneSequencePlaybackSettings seqSettings;
+					ALevelSequenceActor* seActor;
+					ULevelSequencePlayer* seqPlayer=ULevelSequencePlayer::CreateLevelSequencePlayer(this,Sequence,seqSettings,seActor);
+					seActor->AddBindingByTag(TEXT("Instigator"),c);
+					seqPlayer->Play();
+				}
+			}
+
+			// Aim Targeting
+		
+			// needs reimpement
+		}
+		ULuaBlueprintFunctionLibrary::LuaRunString(this,nullptr,LuaScript.LuaCode);
+		TriggerOutput("Begin", false,  EFlowPinActivationType::Default);
 	}
-	ULuaBlueprintFunctionLibrary::LuaRunString(this,nullptr,LuaScript.LuaCode);
-	TriggerOutput("Begin", false,  EFlowPinActivationType::Default);
+	else
+	{
+		LocalFinish(nullptr,"");
+	}
+	
 }
 
 #if WITH_EDITOR

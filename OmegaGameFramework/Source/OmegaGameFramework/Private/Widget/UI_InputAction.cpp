@@ -49,7 +49,10 @@ void UOmegaUI_InputAction::NativePreConstruct()
 	}
 	if (_button)
 	{
-		_button->OnPressed.AddDynamic(this,&UOmegaUI_InputAction::L_Trigger);
+		if (!_button->OnPressed.IsAlreadyBound(this, &UOmegaUI_InputAction::L_Trigger))
+		{
+			_button->OnPressed.AddDynamic(this, &UOmegaUI_InputAction::L_Trigger);
+		}
 	}
 	
 }

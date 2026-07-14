@@ -41,8 +41,8 @@ struct OMEGAGAMEFRAMEWORK_API FOmegaObjectGeneralMetaconfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") int32 seed = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") FOmegaClassNamedLists named_lists;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") FOmegaActorRelatives relative_assets;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") int32 GenericLevel;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") TEnumAsByte<EOmegaStarRank> StarRank;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") int32 GenericLevel = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Meta") TEnumAsByte<EOmegaStarRank> StarRank = TEnumAsByte<EOmegaStarRank>(0);
 };
 
 
@@ -75,7 +75,12 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Tag - Event") void Tag_Event(FGameplayTag Event, FOmegaCommonMeta meta);
 	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Tag - Query") bool Tag_Query(FGameplayTag Query, FOmegaCommonMeta meta);
-	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Tag - Query") float Tag_Utility(FGameplayTag Query, FOmegaCommonMeta meta);
+	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Tag - Utility") float Tag_Utility(FGameplayTag Query, FOmegaCommonMeta meta);
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Param - Float") float Param_Float(FGameplayTag Param);
+	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Param - Int") int32 Param_Int(FGameplayTag Param);
+	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Param - String") FString Param_String(FGameplayTag Param);
+	UFUNCTION(BlueprintNativeEvent, Category = "♎I|General", DisplayName="Param - Object") UObject* Param_Asset(FGameplayTag Param);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="♎I|General") FOmegaBitmaskEditorData Bitflags_Override(bool& bOverride);
 };

@@ -190,6 +190,7 @@ public:
 	/** Returns the last segment of a gameplay tag's dot-delimited name (e.g. "Category.Sub.Leaf" → "Leaf"). */
 	UFUNCTION(BlueprintPure, Category="Omega|GameplayTags")
 	static FString GetLastGameplayTagString(const FGameplayTag& GameplayTag);
+	
 
 	//###############################################################################
 	// System
@@ -264,6 +265,15 @@ public:
 	
 	UFUNCTION(BlueprintPure,Category="Omega|Object")
 	static TArray<UObject*> FilterObjects_ByGenericLevel(TArray<UObject*> In, int32 Level, TEnumAsByte<EOmegaComparisonMethod> Method);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Object")
+	static float GetTagParam_Float(UObject* Object,UPARAM(meta=(Categories="PARAM")) FGameplayTag Tag);
+	UFUNCTION(BlueprintPure,Category="Omega|Object")
+	static int32 GetTagParam_Int(UObject* Object,UPARAM(meta=(Categories="PARAM")) FGameplayTag Tag);
+	UFUNCTION(BlueprintPure,Category="Omega|Object")
+	static FString GetTagParam_String(UObject* Object,UPARAM(meta=(Categories="PARAM")) FGameplayTag Tag);
+	UFUNCTION(BlueprintPure,Category="Omega|Object",meta=(DeterminesOutputType="Class"))
+	static UObject* GetTagParam_Object(UObject* Object,UPARAM(meta=(Categories="PARAM")) FGameplayTag Tag,TSubclassOf<UObject> Class);
 	
 	//###############################################################################
 	// Asset Getter

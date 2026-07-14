@@ -116,6 +116,36 @@ void UOmegaComponentModifierFunctions::SetTextComponentType_Util(UTextRenderComp
 		Component->WorldSize=50;
 		Component->VerticalAlignment=EVRTA_TextBottom;
 		Component->bHiddenInGame=true;
-	
+
 	}
+}
+
+void UOmegaComponentModifierFunctions::SnapLocalToCenterOfBounds(USceneComponent* Component)
+{
+	if(!Component) { return; }
+	Component->UpdateBounds();
+
+	// The point the component is *supposed* to appear at: its attach point (relative location zero).
+	// A root/unattached component has no fixed attach point to snap against.
+	const USceneComponent* Parent = Component->GetAttachParent();
+	if(!Parent) { return; }
+	const FVector TargetLocation = Parent->GetSocketTransform(Component->GetAttachSocketName()).GetLocation();
+
+	// Shift the component so its bounds origin lands on that point, making an off-center
+	// pivot appear as though it sits at the center of the bounds. Idempotent: once the
+	// bounds origin is on the attach point, the offset is zero.
+	Component->AddWorldOffset(TargetLocation - Component->Bounds.Origin);
+}
+
+void UOmegaComponentModifierFunctions::ScaleAbsoluteByBounds(USceneComponent* Component, float Size)
+{
+	if(!Component || Size <= 0.f) { return; }
+	Component->UpdateBounds();
+
+	// Largest world-space dimension of the current bounds; scaling by Size/CurrentSize makes
+	// that dimension equal Size, so differently-sized assets appear identical for the same Size.
+	const float CurrentSize = Component->Bounds.BoxExtent.GetMax() * 2.f;
+	if(CurrentSize <= UE_KINDA_SMALL_NUMBER) { return; }
+
+	Component->SetWorldScale3D(Component->GetComponentScale() * (Size / CurrentSize));
 }

@@ -16,7 +16,6 @@
 #include "Types/Struct_Bitflag.h"
 #include "Types/Struct_CombatantConfig.h"
 #include "Types/Struct_InputConfig.h"
-#include "Types/Struct_SpawnableTypeConfig.h"
 #include "GameFramework/Character.h"
 #include "OmegaSettings.generated.h"
 
@@ -220,13 +219,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, config, Category = "Assets")
 	TMap<TSoftClassPtr<AOmegaBaseCharacter>, TSoftClassPtr<UAnimInstance>> AnimBlueprint_PerClass;
-	
-	// ---------------------------------------------------------------------------
-	// Spwanables
-	// ---------------------------------------------------------------------------
-	//Gives unique IDs to Attributes for quick access
-	UPROPERTY(EditAnywhere, config, BlueprintReadOnly, Category = "Spwanables")
-	TMap<FName,FOmegaSpawnableTypeConfig> SpawnableDefinitions;
 	
 	// ---------------------------------------------------------------------------
 	// Zones

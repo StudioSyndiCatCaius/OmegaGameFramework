@@ -2,6 +2,7 @@
 
 
 #include "Widget/DataWidget.h"
+#include "UObject/ConstructorHelpers.h"
 #include "CommonTextBlock.h"
 #include "Curves/CurveFloat.h"
 
@@ -236,8 +237,8 @@ UOmegaSubsystem_Player* UDataWidget::GetPlayerSubsystem() const
 
 UDataWidget::UDataWidget()
 {
-	HoverBlendCurve=LoadObject<UCurveFloat>(this,TEXT("/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"));
-	HighlightBlendCurve=HoverBlendCurve;
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> HoverCurveFinder(TEXT("/OmegaGameFramework/DEMO/Curves/DemoCurve_0-1sec.DemoCurve_0-1sec"));
+	if (HoverCurveFinder.Succeeded()) { HoverBlendCurve = HoverCurveFinder.Object; HighlightBlendCurve = HoverCurveFinder.Object; }
 }
 
 
@@ -364,11 +365,11 @@ void UDataWidget::Refresh()
 {
 	if (ReferencedAsset && ReferencedAsset->GetClass()->ImplementsInterface(UDataInterface_General::StaticClass()))		//Only run if asset uses Data interface
 	{
-		FText LocalDesc;
-		FText LocalName;
-		FSlateBrush LocalBrush;
-		FLinearColor _color; FString _label; FOmegaObjectGeneralMetaconfig _meta;
-		IDataInterface_General::Execute_GetGeneralDataText(ReferencedAsset, FGameplayTag(), LocalName, LocalDesc, LocalBrush, _color, _label, _meta);
+		FText LocalDesc=UDataInterface_General::GetObjectDesc(ReferencedAsset);
+		FText LocalName=UDataInterface_General::GetObjectName(ReferencedAsset);
+		FSlateBrush LocalBrush=UDataInterface_General::GetObjectIcon(ReferencedAsset);
+		
+		
 		if (GetNameTextWidget())
 		{
 			GetNameTextWidget()->SetText(L_FormatText(LocalName));
@@ -543,7 +544,9 @@ void UDataWidget::NativeConstruct()
 	
 	if (GetButtonWidget())
 	{
+		GetButtonWidget()->OnClicked.RemoveDynamic(this, &UDataWidget::Select);
 		GetButtonWidget()->OnClicked.AddDynamic(this, &UDataWidget::Select);
+		GetButtonWidget()->OnHovered.RemoveDynamic(this, &UDataWidget::Hover);
 		GetButtonWidget()->OnHovered.AddDynamic(this, &UDataWidget::Hover);
 	}
 
@@ -565,6 +568,7 @@ void UDataWidget::NativeConstruct()
 		if(UDataWidget* _parentDW= Cast<UDataWidget>(UCommonUILibrary::FindParentWidgetOfType(this, UDataWidget::StaticClass())))
 		{
 			OwnerDataWidget = _parentDW;
+			OwnerDataWidget->OnWidgetRefreshed.RemoveDynamic(this, &UDataWidget::private_refresh);
 			OwnerDataWidget->OnWidgetRefreshed.AddDynamic(this, &UDataWidget::private_refresh);
 			SetSourceAsset(OwnerDataWidget->ReferencedAsset);
 		}

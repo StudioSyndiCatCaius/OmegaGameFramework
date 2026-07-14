@@ -94,10 +94,8 @@ AOmega_DynamicMesh_SplineBlock::AOmega_DynamicMesh_SplineBlock()
     bDrawPreviewPoints=false;
     DynamicMeshComponent=CreateOptionalDefaultSubobject<UDynamicMeshComponent>("DynaMesh");
     DynamicMeshComponent->SetupAttachment(RootComponent);
-    if (UMaterialInterface* umat=LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Instances/Blocking/mi_OmegaBlock_World.mi_OmegaBlock_World")))
-    {
-        MeshblockMaterial=umat;
-    }
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> SplineBlockMatFinder(TEXT("/OmegaGameFramework/Materials/Instances/Blocking/mi_OmegaBlock_World.mi_OmegaBlock_World"));
+    if (SplineBlockMatFinder.Succeeded()) MeshblockMaterial = SplineBlockMatFinder.Object;
 }
 
 void AOmega_DynamicMesh_SplineBlock::OnConstruction(const FTransform& Transform)

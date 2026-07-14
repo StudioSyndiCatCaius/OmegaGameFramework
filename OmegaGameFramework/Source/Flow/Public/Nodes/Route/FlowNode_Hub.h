@@ -15,7 +15,7 @@ class FLOW_API UFlowNode_Hub : public UFlowNode
 public:
 	virtual void ExecuteInput(const FName& PinName) override;
 	
-	UPROPERTY(EditAnywhere, Category="Default")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Default")
 	FName HubName;
 	
 #if WITH_EDITOR

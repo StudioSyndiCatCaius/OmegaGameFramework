@@ -2,6 +2,7 @@
 
 
 #include "Components/Component_DebugText.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInterface.h"
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
@@ -17,7 +18,8 @@ void UComponent_DebugText::UpdateText()
 UComponent_DebugText::UComponent_DebugText()
 {
 	bHiddenInGame=true;
-	TextMaterial=LoadObject<UMaterialInterface>(nullptr,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DebugTextMatFinder(TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"));
+	if (DebugTextMatFinder.Succeeded()) TextMaterial = DebugTextMatFinder.Object;
 	SetRelativeLocation(FVector(0,-100,0));
 	FText txt_in=FText::FromString("");
 	SetText(txt_in);

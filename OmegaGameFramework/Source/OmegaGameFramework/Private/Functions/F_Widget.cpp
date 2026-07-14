@@ -3,6 +3,7 @@
 
 #include "Functions/F_Widget.h"
 
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/OmegaUtils_Enums.h"
@@ -114,6 +115,38 @@ UDataWidget* UOmegaWidgetFunctions::TryGetDataWidget_FromSlot(const UObject* Wor
 	}
 	Outcome=false;
 	return nullptr;
+}
+
+UDataWidget* UOmegaWidgetFunctions::DataWidgets_GetFirstFromSource(const UObject* WorldContextObject,
+	APlayerController* Player, UObject* Source, TSubclassOf<UDataWidget> Class)
+{
+	TArray<UDataWidget*> temp=DataWidgets_GetFromSources(WorldContextObject,Player,{Source},Class);
+	if(temp.Num()>0) { return temp[0];}
+	return nullptr;
+}
+
+TArray<UDataWidget*> UOmegaWidgetFunctions::DataWidgets_GetFromSources(const UObject* WorldContextObject,
+                                                                       APlayerController* Player, TArray<UObject*> Sources, TSubclassOf<UDataWidget> Class)
+{
+	APlayerController* in_player=WorldContextObject->GetWorld()->GetFirstPlayerController();
+	if(Player) { in_player=Player;}
+	
+	TArray<UUserWidget*> temp;
+	TSubclassOf<UUserWidget> temp_class=UUserWidget::StaticClass();
+	if (Class) { temp_class=Class;}
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(in_player,temp,temp_class,false);
+	
+	TArray<UDataWidget*> out;
+	for(UUserWidget* temp_widget : temp)
+	{
+		UDataWidget* data_widget=Cast<UDataWidget>(temp_widget);
+		if(data_widget && Sources.Contains(data_widget->ReferencedAsset))
+		{
+			out.Add(data_widget);
+		}
+	}
+	
+	return out;
 }
 
 TArray<UObject*> UOmegaWidgetFunctions::GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass)

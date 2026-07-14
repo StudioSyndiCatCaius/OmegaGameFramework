@@ -3,6 +3,7 @@
 
 #include "OmegaCharacter.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "LuaConst.h"
 #include "LuaSubsystem.h"
 #include "Components/AudioComponent.h"
@@ -132,10 +133,8 @@ AOmegaCharacter::AOmegaCharacter()
 	
 	Text_Name = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Text Name"));
 	Text_Name->SetupAttachment(RootComponent);
-	if (UMaterial* _mat=LoadObject<UMaterial>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")))
-	{
-		Text_Name->SetMaterial(0,_mat);
-	}
+	static ConstructorHelpers::FObjectFinder<UMaterial> CharTextMatFinder(TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"));
+	if (CharTextMatFinder.Succeeded()) Text_Name->SetMaterial(0, CharTextMatFinder.Object);
 	Text_Name->HorizontalAlignment=EHTA_Center;
 	Text_Name->WorldSize=40;
 	Text_Name->VerticalAlignment=EVRTA_TextBottom;
@@ -159,10 +158,8 @@ AOmegaCharacter::AOmegaCharacter()
 	GetCapsuleComponent()->ShapeColor=FColor::Cyan;
 
 	
-	if (USkeletalMesh* _mesh=LoadObject<USkeletalMesh>(nullptr,TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male")))
-	{
-		GetMesh()->SetSkeletalMeshAsset(_mesh);	
-	}
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MannequinMeshFinder(TEXT("/OmegaGameFramework/DEMO/Mannequin/Mesh/SK_MannequinDemo_Male.SK_MannequinDemo_Male"));
+	if (MannequinMeshFinder.Succeeded()) GetMesh()->SetSkeletalMeshAsset(MannequinMeshFinder.Object);
 	
 	Tools=CreateOptionalDefaultSubobject<UOmegaToolComponent>(TEXT("Tools"));
 

@@ -31,11 +31,11 @@ struct FOmegaDestructibleConfig
 	GENERATED_BODY()
 
 	// When true, the actor triggers its death sequence when the HealthAttribute reaches zero.
-	UPROPERTY(BlueprintReadWrite,Category="Destructible") bool bDeathOnHealth0;
+	UPROPERTY(BlueprintReadWrite,Category="Destructible") bool bDeathOnHealth0 = false;
 	// When true, the range box's size is automatically set to match the mesh's world bounds.
-	UPROPERTY(BlueprintReadWrite,Category="Destructible") bool bSizeRangeToMeshBounds;
+	UPROPERTY(BlueprintReadWrite,Category="Destructible") bool bSizeRangeToMeshBounds = false;
 	// Seconds to wait after the death condition is met before the actor is destroyed.
-	UPROPERTY(BlueprintReadWrite,Category="Destructible") float DeathDelay;
+	UPROPERTY(BlueprintReadWrite,Category="Destructible") float DeathDelay = 0.0f;
 	// The attribute whose depletion to zero triggers the death sequence.
 	UPROPERTY(BlueprintReadWrite,Category="Destructible") UOmegaAttribute* HealthAttribute=nullptr;
 };

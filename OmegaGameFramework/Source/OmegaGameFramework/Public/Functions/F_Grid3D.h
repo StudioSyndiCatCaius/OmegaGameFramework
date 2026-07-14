@@ -66,6 +66,7 @@ public:
 // ===============================================================================================================================
 
 class UOmegaGrid3D_Occupant;
+class UInstancedStaticMeshComponent;
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Map : public USceneComponent
@@ -75,6 +76,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Map : public USceneComponent
 	UOmegaGrid3D_Map();
 
 	UPROPERTY() TArray<AOmegaGrid3D_Tile*> REF_Tiles;
+	// Coordinates appended by (now destroyed) addon gridmaps. Included whenever tiles are (re)generated.
+	UPROPERTY() TArray<FIntVector> REF_AddonCoordinates;
+	UPROPERTY() UOmegaGrid3D_Map* REF_HostGridmap;
 
 protected:
 	virtual void BeginPlay() override;
@@ -83,9 +87,7 @@ protected:
 
 public:
 
-	// Draws the grid of debug boxes
-	void DrawDebugGrid() const;
-	
+
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
 	void DestroyTiles();
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
@@ -101,11 +103,19 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3D")
 	TSubclassOf<AOmegaGrid3D_Tile> TileClass;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid3d|Preview")
-	FColor PreviewBoxColor = FColor::Cyan;  // Color of the debug box
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid3d|Preview")
-	float PreviewBoxThickness = 1.0; 
-	
+	/*
+	 * if true, this will not be its own gridmap, but rather, will be an addon to another Gridmap.
+	 */
+	UPROPERTY(EditAnywhere,Category="Grid3D")
+	bool bIsAddon;
+	//Gridmap this will act as an addon to. if NONE set but bIsAddon is true, then jist find and like to the first found Gridmap actor.
+	UPROPERTY(EditAnywhere,Category="Grid3D")
+	AOmegaGridmap3D* AddonLinkedGridmap;
+
+	// The gridmap this map contributes its tiles to: itself normally, or the linked host map if this is an addon.
+	UFUNCTION(BlueprintPure,Category="Grid3D")
+	UOmegaGrid3D_Map* GetHostGridmap();
+
 	// Get Coordinate & Vector
 	UFUNCTION(BlueprintPure,Category="Grid3D")
 	FIntVector GetCoordinateFromVector(FVector Vector);
@@ -139,29 +149,42 @@ class OMEGAGAMEFRAMEWORK_API AOmegaGridmap3D : public AActor
 	virtual void OnConstruction(const FTransform& Transform) override;
 public:
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Gridmap3D")
+	//mesh used to display preview points for where the tiles will spawn
+	UPROPERTY() UInstancedStaticMeshComponent* PreviewMesh;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Gridmap3D")
 	UOmegaGrid3D_Map* GridmapComponent;
 };
-
-inline AOmegaGridmap3D::AOmegaGridmap3D()
-{
-	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
-	GridmapComponent=CreateDefaultSubobject<UOmegaGrid3D_Map>(TEXT("Gridmap"));
-	GridmapComponent->SetupAttachment(GetRootComponent());
-}
 
 // =====================================================================================================
 // Tile Occupant Component
 // =====================================================================================================
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrid3DOccupantDelegate, UOmegaGrid3D_Occupant*, Occupant);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DOccupantMotionDelegate, UOmegaGrid3D_Occupant*, Occupant, bool, Rotation);
+
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FOnGrid3DOccupantTileQuery, UOmegaGrid3D_Occupant*, Occupant,AOmegaGrid3D_Tile*, Tile);
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Occupant : public UActorComponent
 {
 	GENERATED_BODY()
 
+	UPROPERTY() AOmegaGrid3D_Tile* REF_MoveTargetTile=nullptr;
+	FVector move_origin;
+	FVector move_from;
+	FVector move_target;
+	FRotator rotate_origin;
+	FRotator rotate_target;
+	float motion_alpha=0;
+	float cooldown_remaining=0;
+	bool bBumping=false;
+	bool bBumpReturning=false;
 
 public:
+	UOmegaGrid3D_Occupant();
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant")
 	FVector TileOffset;
@@ -171,12 +194,50 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant")
 	float AutoSnapDistance=200;
 	UFUNCTION(BlueprintCallable,Category="Gird3D Occupant")
-	void SnapToNearestTile();
+	bool SnapToNearestTile();
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
 	void SetTile(AOmegaGrid3D_Tile* Tile, bool bClearPrevious=true, bool bSnap=true);
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
 	AOmegaGrid3D_Tile* GetTile();
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3D")
+	AOmegaGrid3D_Tile* GetTileAtOffset(FIntVector Offset, bool RotationRelative);
+	
+	//Movement -------------
+	
+	bool bMoving=false;
+	bool bRotating=false;
+	
+	UPROPERTY(BlueprintAssignable) FOnGrid3DOccupantMotionDelegate OnOccupantMotionBegin;
+	UPROPERTY(BlueprintAssignable) FOnGrid3DOccupantMotionDelegate OnOccupantMotionEnd;
+	UPROPERTY(BlueprintAssignable) FOnGrid3DOccupantDelegate OnOccupantMovementBump;
+	UPROPERTY(BlueprintReadWrite,Category="Grid3d Occupant|Mover") FOnGrid3DOccupantTileQuery Query_CanMoveToTile;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant|Mover")
+	float MoveDuration=0.2;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant|Mover")
+	float RotateDuration=0.2;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant|Mover")
+	float MotionCooldownDuration=0.3f;
+	
+	/*
+	 * If true, when tring to move to a tile queried as FALSE for valid move, move halfway, then return to original point.
+	 * That halfway point broadcasts `OnOccupantMovementBump`
+	*/
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant|Mover")
+	bool BumpOnInvalidMove;
+	
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3d Occupant|Mover")
+	bool Input_Move(FIntVector Direction, bool RotationRelative);
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3d Occupant|Mover")
+	bool Input_Rotate(FIntVector Amount, bool RotationRelative);
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3d Occupant|Mover")
+	bool IsMovingOrRotating(bool& Moving,bool& Rotating);
+	
 };
 
 // =====================================================================================================
@@ -216,65 +277,6 @@ public:
 	void ClearRegisteredTiles();
 };
 
-// =====================================================================================================
-// Mover
-// =====================================================================================================
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DMover_StateChange_Move, UOmegaGrid3D_Mover*, Component, bool, Moving);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DMover_StateChange_Rotate, UOmegaGrid3D_Mover*, Component, bool, Moving);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DMover_MoveUpdate, UOmegaGrid3D_Mover*, Component,float, DeltaTime);
-
-UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
-class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Mover : public UActorComponent
-{
-	GENERATED_BODY()
-
-	UPROPERTY() float InputRange=90.0f;
-	UPROPERTY() UOmegaGrid3D_Occupant* REF_occupant;
-
-	UPROPERTY() int32 move_state=0;
-	UPROPERTY() float move_alpha;
-	
-	UPROPERTY() FVector target_loc;
-	UPROPERTY() FRotator target_rot;
-	UPROPERTY() FVector origin_loc;
-	UPROPERTY() FRotator origin_rot;
-	
-public:
-	UOmegaGrid3D_Mover();
-
-	virtual void BeginPlay() override;
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
-	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DMover_StateChange_Move OnGrid3DMover_StateChange_Move;
-	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DMover_StateChange_Rotate OnGrid3DMover_StateChange_Rotate;
-	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DMover_MoveUpdate OnGrid3DMover_MoveUpdate;
-	
-	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover")
-	void SetLinkedOccupant(UOmegaGrid3D_Occupant* Occupant);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover")
-	bool IsMoving() const;
-
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
-	float MoveTime=0.5f;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
-	float MoveDistance=100;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
-	bool bShouldTraceToBlockMovement;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mover")
-	TEnumAsByte<ETraceTypeQuery> BlockMovement_TraceChanel;
-	
-	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover",meta=(AdvancedDisplay="bOverrideDirection,DirectionOverride"))
-	void AddInput_Movement(int32 X, int32 Y, int32 Z, FRotator DirectionOverride);
-
-	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D|Mover")
-	void AddInput_Rotation(int32 X, int32 Y, int32 Z);
-};
-
 
 
 // =====================================================================================================
@@ -294,7 +296,9 @@ public:
 // Tile Actor
 // =====================================================================================================
 
-UCLASS(Abstract)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnGrid3DTileTagEdit, AOmegaGrid3D_Tile*, Tile, FGameplayTag, Tag, bool, bActive);
+
+UCLASS()
 class OMEGAGAMEFRAMEWORK_API AOmegaGrid3D_Tile : public AActor
 {
 	GENERATED_BODY()
@@ -302,6 +306,8 @@ class OMEGAGAMEFRAMEWORK_API AOmegaGrid3D_Tile : public AActor
 public:
 	UPROPERTY() FIntVector grid_coordinate;
 	UPROPERTY() UOmegaGrid3D_Map* Owning_Gridmap;
+	
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DTileTagEdit OnTileTagChanged;
 	
 	UPROPERTY(EditAnywhere,Category="Grid3D Tile")
 	UOmegaGrid3DTileType* TileType;
@@ -311,10 +317,25 @@ public:
 	
 	UFUNCTION(BlueprintPure,Category="Grid3D Tile")
 	UOmegaGrid3DTileType* GetTileType() const;
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Grid3D Tile")
+	TMap<FGameplayTag,USceneComponent*> LinkTileTagVisibilityComponents();
 
+private:
+	
+	USceneComponent* L_GetTagVisComp(FGameplayTag Tag);
+	
+public:
+	
 	//Occupant
 	UPROPERTY(VisibleAnywhere,Category="Grid3D Tile")
 	TArray<UOmegaGrid3D_Occupant*> Occupants;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Grid3D Tile",meta=(Categories="GRID3D.Tile"))
+	FGameplayTagContainer TileTags;
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",DisplayName="Tile - Set Tag Active",meta=(Categories="GRID3D.Tile"))
+	void Tag_SetActive(FGameplayTagContainer Tile_Tags, bool bActive);
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",meta=(AdvancedDisplay="bSnap"))
 	void SetOccupantOnTile(UOmegaGrid3D_Occupant* Occupant, bool bIsOnTile, bool bClearPrevious, bool bSnap=true);
@@ -359,6 +380,20 @@ public:
 // Functions
 // =====================================================================================================
 
+USTRUCT(BlueprintType)
+struct FOmegaGrid3DPathfindQueryResult
+{
+	GENERATED_BODY()
+	
+	// if true, stops the pathfinding after this coord (bot doesn't necessarily exclude this coord itself)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3D Pathfind") bool BlockTrace=false;
+	// if true, excludes this tile from the path (but doesn't necessarily block the trace)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3D Pathfind") bool BlockAdd=false;
+};
+
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(FOmegaGrid3DPathfindQueryResult, FGrid3DPathfindQuery, FIntVector, Coord,FOmegaGrid3DPathfindMeta,Meta);
+
+
 UCLASS()
 class OMEGAGAMEFRAMEWORK_API UOmegaGrid3DFunctions : public UBlueprintFunctionLibrary
 {
@@ -371,16 +406,16 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(AdvancedDisplay="x,y,z"))
 	TArray<FIntVector> GetCoordinatesInDistance(FIntVector in, int32 distance);
 
-	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(AdvancedDisplay="metadata, Modifier, x,y,z"))
+	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(AdvancedDisplay="metadata, x,y,z"))
 	static FOmegaGrid3DPathfindResult Pathfind3D_AllPossiblePaths(
 		const FIntVector& StartPoint,
 		int32 MaxDistance,
-		UObject* Modifier,
+		FGrid3DPathfindQuery Query,
 		FOmegaGrid3DPathfindMeta metadata,
 		bool x=true,bool y=true,bool z=false);
 
 	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D")
-	static TArray<FIntVector> GetCoordinatesFromPathfindResult(FOmegaGrid3DPathfindResult in);
+	static TArray<FIntVector> GetCoordinatesFromPathfindResult(FOmegaGrid3DPathfindResult in, bool bOnlyLastPoints=false);
 
 	//Will attempt to get the tile info and possible occupant, from an actor if need be
 	UFUNCTION(BlueprintCallable,Category="Omega|Grid3D",meta=(DeterminesOutputType="TileClass",ExpandBoolAsExecs="result"))

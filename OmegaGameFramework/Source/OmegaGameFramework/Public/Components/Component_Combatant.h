@@ -48,7 +48,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTargetAdded, UCombatantCompone
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAddedAsTarget, UCombatantComponent*, component, UCombatantComponent*, Instigator, bool, bAdded);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActiveTargetChanged, UCombatantComponent*, ActiveTarget, bool, Valid);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatantNotify, UCombatantComponent*, Combatant, FName, Notify, const FString&, Flag);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FCombatantSkillEdit, UCombatantComponent*, Combatant, UPrimaryDataAsset*, Skill, bool, bAdded);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatant_InventoryEdit, UCombatantComponent*, Combatant, UPrimaryDataAsset*, Item, int32, AmountChanged);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatant_EquipChange, UCombatantComponent*, Combatant, UEquipmentSlot*, Slot, UPrimaryDataAsset*, Item);
@@ -192,6 +192,11 @@ public:
 	UFUNCTION(BlueprintCallable,Category="💪Combatant") void ForceSetEntityData(FOmegaEntity data);
 	// Returns the active entity data for this combatant (from inline data or the entity ID lookup).
 	UFUNCTION(BlueprintPure,Category="💪Combatant") FOmegaEntity GetEntityData();
+	
+	UFUNCTION(BlueprintCallable,Category="💪Combatant") bool SetEntityOverrideSource(UCombatantComponent* ComponentSource);
+	
+	UPROPERTY(VisibleAnywhere,Category="💪Combatant - Data",meta=(EditCondition="!use_entity_id")) UCombatantComponent* EntityOverrideSource;
+	
 	// Inline entity data used when use_entity_id is false.
 	UPROPERTY(EditAnywhere,Category="💪Combatant - Data",meta=(EditCondition="!use_entity_id")) FOmegaEntity entity_data;
 	// When true, entity data is loaded from the save system via entity_id instead of using inline data.
@@ -353,6 +358,8 @@ public:
 	// ------------------------------------------------------------------------------------------
 	// SKILLS
 	// ------------------------------------------------------------------------------------------
+	UPROPERTY(BlueprintAssignable, Category="Omega") FCombatantSkillEdit OnSkillsEdited;
+	
 	TArray<UPrimaryDataAsset*> GetSkills_FromSourceList(TArray<UObject*> SourceList);
 	// Returns true if Skill is in this combatant's active skill list.
 	UFUNCTION(BlueprintPure, Category="Skills",DisplayName="Skills - Owned?") bool HasSkill(UPrimaryDataAsset* Skill);
@@ -371,6 +378,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combatant|Tags") void SetCombatantTagsActive(FGameplayTagContainer GameplayTags,bool TagsActive);
 	// Adds or removes tags from the combatant's entity data tag container (saved to entity).
 	UFUNCTION(BlueprintCallable, Category = "Combatant|Tags",DisplayName="Entity - Set Tags Active") void SetTagsActive(FGameplayTagContainer GameplayTags,bool TagsActive);
+	UFUNCTION(BlueprintPure, Category = "Combatant|Tags",DisplayName="Entity - Get Tags Active") FGameplayTagContainer GetTagsActive();
 
 	// Returns the full gameplay tag container on this combatant.
 	UFUNCTION(BlueprintPure, Category = "Combatant|Tags") FGameplayTagContainer GetCombatantTags();
@@ -443,7 +451,8 @@ public:
 	void SetEffectsDisabled(bool bDisabled);
 
 	UFUNCTION()
-	bool CanApplyEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass,UCombatantComponent* Instigator,UObject* Context,FOmegaCommonMeta _meta);
+	bool CanApplyEffect(TSubclassOf<AOmegaGameplayEffect> EffectClass, UCombatantComponent* Instigator, UObject* Context, FOmegaCommonMeta
+	                    _meta, FOmegaCommonMeta& MetaOut);
 
 	// Returns the active effect instance that was created with the given Context object, cast to EffectClass.
 	UFUNCTION(BlueprintPure, Category="Effects", meta=(DeterminesOutputType="EffectClass"))
@@ -683,12 +692,15 @@ public:
 	// ------------------------------------------------------------------------------------------
 	// Dynamic Vars
 	// ------------------------------------------------------------------------------------------
-	UFUNCTION(BlueprintPure, Category="Combatant|DynamicVar")
-	void GetDynamic_ScalarValue(UPARAM(meta=(Categories="Combat.Dynamic.Scalar")) FGameplayTag Tag,UObject* Context, 
+	UFUNCTION(BlueprintPure, Category="Combatant|DynamicVar",DisplayName="Get Dynamic Param - Float")
+	void GetDynamic_ScalarValue(UPARAM(meta=(Categories="Combat.Dynamic")) FGameplayTag Tag,UObject* Context, 
 		float& Top,float& Total,float& Average);
 	
-	UFUNCTION(BlueprintPure, Category="Combatant|DynamicVar")
-	UPrimaryDataAsset* GetDynamic_AssetValue(UPARAM(meta=(Categories="Combat.Dynamic.Asset"))FGameplayTag Tag,UObject* Context);
+	UFUNCTION(BlueprintPure, Category="Combatant|DynamicVar",DisplayName="Get Dynamic Param - Data Asset")
+	UPrimaryDataAsset* GetDynamic_AssetValue(UPARAM(meta=(Categories="Combat.Dynamic"))FGameplayTag Tag,UObject* Context);
+	
+	UFUNCTION(BlueprintPure, Category="Combatant|DynamicVar",DisplayName="Get Dynamic Param - Tags")
+	FGameplayTagContainer GetDynamic_TagsValue(UPARAM(meta=(Categories="Combat.Dynamic"))FGameplayTag Tag,UObject* Context);
 	// ------------------------------------------------------------------------------------------
 	// PARAM
 	// ------------------------------------------------------------------------------------------

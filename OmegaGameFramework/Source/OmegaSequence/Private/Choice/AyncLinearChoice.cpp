@@ -47,7 +47,7 @@ void UAyncLinearChoice::Activate()
 {
 	AOmegaLinearChoiceInstance* LocalInst;
 	LocalInst = SubsystemRef->PlayLinearChoice(ChoiceData, InstanceClassRef);
-	LocalInst->OnChoiceSelected.AddDynamic(this, &UAyncLinearChoice::UAyncLinearChoice::LocalChoiceSelected);
+	LocalInst->OnChoiceSelected.AddDynamic(this, &UAyncLinearChoice::LocalChoiceSelected);
 
 	Super::Activate();
 }

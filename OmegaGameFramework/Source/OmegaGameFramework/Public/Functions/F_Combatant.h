@@ -103,10 +103,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",DisplayName="🤜Combatant - Get Data Assets from Combatants")
 	static TArray<UPrimaryDataAsset*> GetDataAssetsFromCombatants(TArray<UCombatantComponent*> Combatants);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(WorldContext="WorldContextObject",ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Get First Combatant /w Data Asset")
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant", meta=(WorldContext="WorldContextObject",ExpandBoolAsExecs = "Outcome"),DisplayName="🤜Combatant - 🔴 Get First /w Data Asset")
 	static UCombatantComponent* GetFirstCombatantWithDataAsset(UObject* WorldContextObject,UPrimaryDataAsset* Asset,  bool& Outcome);
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category="Omega|Combatant",meta=(WorldContext="WorldContextObject"),DisplayName="🤜Combatant - Get All of Faction")
 	static TArray<UCombatantComponent*> GetAllCombatants_OfFaction(UObject* WorldContextObject, UOmegaFaction* Faction);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|Combatant",DisplayName="🤜Combatant - Check Attribute",meta=(ExpandBoolAsExecs = "Outcome"))

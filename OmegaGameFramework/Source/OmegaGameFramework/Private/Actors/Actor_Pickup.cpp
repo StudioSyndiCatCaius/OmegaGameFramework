@@ -3,6 +3,7 @@
 
 #include "Actors/Actor_Pickup.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 #include "Engine/HitResult.h"
@@ -196,10 +197,8 @@ AOmegaPickupTrail::AOmegaPickupTrail()
 	ReferenceMesh->SetupAttachment(SplineComponent);
 	ReferenceMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ReferenceMesh->SetHiddenInGame(true);
-	if (UStaticMesh* msh=LoadObject<UStaticMesh>(nullptr,TEXT("/OmegaGameFramework/Meshes/util/sm_UTIL_DriverReference.sm_UTIL_DriverReference")))
-	{
-		ReferenceMesh->SetStaticMesh(msh);
-	}
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> PickupRefMeshFinder(TEXT("/OmegaGameFramework/Meshes/util/sm_UTIL_DriverReference.sm_UTIL_DriverReference"));
+	if (PickupRefMeshFinder.Succeeded()) ReferenceMesh->SetStaticMesh(PickupRefMeshFinder.Object);
 }
 
 void AOmegaPickupTrail::SetPreset(TScriptInterface<IDataInterface_Pickup> preset)

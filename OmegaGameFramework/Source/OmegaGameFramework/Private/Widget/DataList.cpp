@@ -61,7 +61,7 @@ UDataList::UDataList(const FObjectInitializer& ObjectInitializer)
 {
 	if(EntryTemplate && !EntryClass)
 	{
-		ValidateTemplates();	
+		
 	}
 }
 
@@ -79,60 +79,8 @@ void UDataList::L_ApplyCurveToEntries()
 	
 }
 
-#if WITH_EDITOR
-
-void UDataList::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeChainProperty(PropertyChangedEvent);
-
-	// Get the root property name
-	const FName PropertyName = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
-
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UDataList, EntryClass))
-	{
-		ValidateTemplates();
-	}
-}
-#endif
 
 
-void UDataList::ValidateTemplates()
-{
-	// Template exists but class changed or cleared
-	if (EntryTemplate)
-	{
-		if (!EntryClass || EntryTemplate->GetClass() != EntryClass)
-		{
-			EntryTemplate->MarkAsGarbage();
-			EntryTemplate = nullptr;
-		}
-	}
-
-	// Need new template
-	if (EntryClass && !EntryTemplate)
-	{
-		EntryTemplate = NewObject<UDataWidget>(
-			this,
-			EntryClass,
-			NAME_None,
-			  RF_Transactional 
-		);
-	}
-
-	// Sync EntryPropertyBagOverrides schema from the EntryClass default bag.
-	// This lets the DataList instance edit values for properties defined on the widget class,
-	// without being able to add or remove properties (schema is owned by the class).
-	if (EntryClass)
-	{
-		if (const UDataWidget* ClassDefault = GetDefault<UDataWidget>(EntryClass))
-		{
-			if (ClassDefault->WidgetPropertyBag.IsValid())
-			{
-				EntryPropertyBagOverrides.MigrateToNewBagInstance(ClassDefault->WidgetPropertyBag);
-			}
-		}
-	}
-}
 
 void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntries)
 {
@@ -148,6 +96,7 @@ void UDataList::SetEntryClass(TSubclassOf<UDataWidget> NewClass, bool KeepEntrie
 			}
 		}
 		ClearList();
+		EntryPool.Empty();
 		for(auto* Asset : SavedAssets)
 		{
 			AddAssetToList(Asset, "NewEntryClass");
@@ -217,6 +166,22 @@ void UDataList::ClearList()
 	{
 		ListPanel->ClearChildren();
 	}
+	if (bEnableWidgetPooling)
+	{
+		for (UDataWidget* Widget : Entries)
+		{
+			if (Widget && EntryPool.Num() < PoolMaxSize)
+			{
+				if (Widget->OwnerDataWidget)
+				{
+					Widget->OwnerDataWidget->OnWidgetRefreshed.RemoveAll(Widget);
+					Widget->OwnerDataWidget = nullptr;
+				}
+				EntryPool.Add(Widget);
+			}
+		}
+	}
+	HoveredEntry = nullptr;
 	Entries.Empty();
 	CurrentA = 0;
 	CurrentB = 0;
@@ -224,10 +189,21 @@ void UDataList::ClearList()
 
 void UDataList::RemoveEntryFromList(int32 Index)
 {
-	if(Entries.IsValidIndex(Index))		//check is valid index
+	if(Entries.IsValidIndex(Index))
 	{
-		Entries[Index]->RemoveFromParent();		//Remove from viewport
-		Entries.RemoveAt(Index);				//Remove from array of entries
+		UDataWidget* Widget = Entries[Index];
+		Widget->RemoveFromParent();
+		if (Widget == HoveredEntry) { HoveredEntry = nullptr; }
+		Entries.RemoveAt(Index);
+		if (bEnableWidgetPooling && EntryPool.Num() < PoolMaxSize)
+		{
+			if (Widget->OwnerDataWidget)
+			{
+				Widget->OwnerDataWidget->OnWidgetRefreshed.RemoveAll(Widget);
+				Widget->OwnerDataWidget = nullptr;
+			}
+			EntryPool.Add(Widget);
+		}
 	}
 }
 
@@ -265,7 +241,25 @@ UDataWidget* UDataList::AddAssetToList(UObject* Asset, FString Flag)
 	}
 	
 	//Create Entry Widget
-	UDataWidget* TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
+	UWorld* World = GetWorld();
+	if (!World || World->bIsTearingDown)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DataList: Skipping AddAssetToList — world is tearing down."));
+		return nullptr;
+	}
+	UDataWidget* TempEntry = nullptr;
+	if (bEnableWidgetPooling && EntryPool.Num() > 0)
+	{
+		TempEntry = EntryPool.Pop();
+		TempEntry->OnSelected.RemoveAll(this);
+		TempEntry->OnHovered.RemoveAll(this);
+		TempEntry->OnHighlight.RemoveAll(this);
+		TempEntry->OnWidgetNotify.RemoveAll(this);
+	}
+	else
+	{
+		TempEntry = CreateWidget<UDataWidget>(this, EntryClass);
+	}
 	if (EntryTemplate)
 	{
 		UEngine::CopyPropertiesForUnrelatedObjects(EntryTemplate, TempEntry);

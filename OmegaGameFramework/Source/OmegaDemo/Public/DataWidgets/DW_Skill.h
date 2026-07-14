@@ -21,5 +21,11 @@ public:
 	void GetDataWidgetBindings(
 		UDataList*& List_AttributeCosts,
 		UImage*& imgIcon_DamageType,
-		UImage*& imgIcon_Attribute);
+		UTextBlock*& txtName_DamageType,
+		UImage*& imgIcon_Attribute,
+		UTextBlock*& txtName_Attribute,
+		UImage*& imgIcon_CombatantFilter,
+		UTextBlock*& txtName_CombatantFilter,
+		UImage*& imgIcon_CombatantSelector,
+		UTextBlock*& txtName_CombatantSelector);
 };

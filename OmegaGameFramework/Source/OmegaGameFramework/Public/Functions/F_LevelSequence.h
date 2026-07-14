@@ -21,9 +21,11 @@ class OMEGAGAMEFRAMEWORK_API UOmegaLevelSequenceFunctions : public UBlueprintFun
 
 public:
 	
-	//UFUNCTION(BlueprintPure,Category="Omega|Animation")
-	//static FMovieSceneMarkedFrame SelectFrameByName(ULevelSequence* LevelSequence, FString MarkName);
-
+	
 	UFUNCTION(BlueprintCallable,Category="Omega|LevelSequence",meta=(ExpandBoolAsExecs="result"),DisplayName="Sequence - Has Mark?")
 	static FMovieSceneMarkedFrame DoesSequenceHaveMark(ULevelSequence* Sequence, const FString& Mark, bool& result);
+	
+	//Get the marked frame (by label) time in the sequence (offset from the start) (search starting from the StartTime)
+	UFUNCTION(BlueprintCallable,Category="Omega|LevelSequence",DisplayName="Sequence - Get Marked Frame Time")
+	static float GetMarkedFrameTime(ULevelSequence* Sequence, const FString& Mark, float StartTime=0.0);
 };

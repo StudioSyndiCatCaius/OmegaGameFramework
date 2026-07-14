@@ -12,6 +12,7 @@
 #include "DataAssets/DA_DamageType.h"
 #include "Curves/CurveFloat.h"
 #include "Curves/CurveVector.h"
+#include "LevelSequence.h"
 #include "Curves/CurveLinearColor.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -33,6 +34,11 @@ TArray<FName> UOmegaFunctions_Constants::opts_dataasset(){ LOCAL_GETKEYS(Constan
 TArray<FName> UOmegaFunctions_Constants::opts_system(){ LOCAL_GETKEYS(Constant_Systems)}
 TArray<FName> UOmegaFunctions_Constants::opts_menu(){ LOCAL_GETKEYS(Constant_Menus)}
 TArray<FName> UOmegaFunctions_Constants::opts_hud(){ LOCAL_GETKEYS(Constant_Huds)}
+
+TArray<FName> UOmegaFunctions_Constants::opts_texture(){LOCAL_GETKEYS(Constant_Textures)}
+TArray<FName> UOmegaFunctions_Constants::opts_sequence(){LOCAL_GETKEYS(Constant_Sequences)}
+TArray<FName> UOmegaFunctions_Constants::opts_sound(){LOCAL_GETKEYS(Constant_Sounds)}
+
 TArray<FName> UOmegaFunctions_Constants::opts_int(){ LOCAL_GETKEYS(Constant_int)}
 TArray<FName> UOmegaFunctions_Constants::opts_byte(){ LOCAL_GETKEYS(Constant_byte)}
 TArray<FName> UOmegaFunctions_Constants::opts_float(){ LOCAL_GETKEYS(Constant_float)}
@@ -50,6 +56,7 @@ TArray<FName> UOmegaFunctions_Constants::opts_damageType(){LOCAL_GETKEYS(Constan
 TArray<FName> UOmegaFunctions_Constants::opts_curve_float(){LOCAL_GETKEYS(Constant_FloatCurve)}
 TArray<FName> UOmegaFunctions_Constants::opts_curve_vector(){LOCAL_GETKEYS(Constant_VectorCurve)}
 TArray<FName> UOmegaFunctions_Constants::opts_curve_color(){LOCAL_GETKEYS(Constant_ColorCurve)}
+
 
 
 TSubclassOf<UPrimaryDataAsset> UOmegaFunctions_Constants::Class_DataAsset(FName Name)
@@ -130,6 +137,35 @@ TArray<UPrimaryDataAsset*> UOmegaFunctions_Constants::DataAssetList(FName Name, 
 	}
 	return out;
 }
+
+UTexture* UOmegaFunctions_Constants::Texture(FName Name)
+{
+	if (UTexture* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Textures.FindOrAdd(Name).LoadSynchronous())
+	{
+		return da;
+	}
+	return nullptr;
+}
+
+ULevelSequence* UOmegaFunctions_Constants::LevelSequence(FName Name)
+{
+	if (ULevelSequence* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Sequences.FindOrAdd(Name).LoadSynchronous())
+	{
+		return da;
+	}
+	return nullptr;
+}
+
+USoundBase* UOmegaFunctions_Constants::Sound(FName Name)
+{
+	if (USoundBase* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Sounds.FindOrAdd(Name).LoadSynchronous())
+	{
+		return da;
+	}
+	return nullptr;
+}
+
+
 
 UOmegaAttribute* UOmegaFunctions_Constants::Attribute(FName Name)
 {

@@ -60,7 +60,7 @@ struct FOmegaBGM_SlotData
 	GENERATED_BODY()
 
 	UPROPERTY() float SavedPlaybackPosition=0.0f;
-	UPROPERTY() UOmegaBGM* lastBgm;
+	UPROPERTY() UOmegaBGM* lastBgm = nullptr;
 
 };
 

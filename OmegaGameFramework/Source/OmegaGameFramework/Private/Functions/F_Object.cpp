@@ -5,6 +5,8 @@
 
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Functions/F_Common.h"
+#include "Misc/OmegaUtils_Methods.h"
+#include "Subsystems/Subsystem_Engine.h"
 
 
 FLuaValue* FOmegaObjectMeta::ValidateMeta(UObject* WorldContext, UObject* TargetObject)
@@ -338,4 +340,24 @@ float UOmegaObjectFunctions::Meta_GetFloat(UObject* WorldContextObject, FOmegaOb
 		return l.ToFloat();
 	}
 	return Fallback;
+}
+
+FString UOmegaObjectFunctions::GetNameParam_String(UObject* Object, uint8 param)
+{
+	if (!Object) return "";
+	if (UOmegaSubsystem_Engine* ss=OGF_Subsystems::oEngine())
+	{
+		return ss->GetObjectNameParam(Object,param).param_str;
+	}
+	return "";
+}
+
+int32 UOmegaObjectFunctions::GetNameParam_Int(UObject* Object, uint8 param)
+{
+	if (!Object) return 0;
+	if (UOmegaSubsystem_Engine* ss=OGF_Subsystems::oEngine())
+	{
+		return ss->GetObjectNameParam(Object,param).param_int;
+	}
+	return 0;
 }

@@ -118,8 +118,9 @@ void AOmegaGameplayEffect::TriggerEffect()
 }
 
 bool AOmegaGameplayEffect::EffectCanApply_Implementation(UCombatantComponent* EffectInstigator,
-	UCombatantComponent* EffectTarget, UObject* Context, FOmegaCommonMeta Meta)
+	UCombatantComponent* EffectTarget, UObject* Context, FOmegaCommonMeta Meta,FOmegaCommonMeta& OutMeta)
 {
+	OutMeta=Meta;
 	return true;
 }
 

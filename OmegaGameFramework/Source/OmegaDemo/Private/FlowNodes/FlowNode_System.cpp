@@ -245,7 +245,7 @@ void UFlowNode_Menu::ExecuteInput(const FName& PinName)
 	{
 		if(APlayerController* player=GetWorld()->GetFirstPlayerController())
 		{
-			if(UMenu* menu=player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->OpenMenu(L_GetMenuClass(),L_GetContext(),Tags,Flag))
+			if(UMenu* menu=player->GetLocalPlayer()->GetSubsystem<UOmegaSubsystem_Player>()->OpenMenu(L_GetMenuClass(),L_GetContext(),Tags,Flag+Flag_Append))
 			{
 				l_menu=menu;
 				l_menu->OnClosed.AddDynamic(this,&UFlowNode_Menu::L_End);

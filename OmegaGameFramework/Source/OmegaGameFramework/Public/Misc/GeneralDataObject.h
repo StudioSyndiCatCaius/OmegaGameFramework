@@ -121,9 +121,9 @@ class OMEGAGAMEFRAMEWORK_API UOmegaDemoDataAsset : public UOmegaDataAsset
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Metaconfig") FOmegaClassNamedLists NamedLists;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Metaconfig") FOmegaBitflagsBase Flags;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Metaconfig") FOmegaActorRelatives RelativeAssets;
+	UPROPERTY() FOmegaClassNamedLists NamedLists;
+	UPROPERTY() FOmegaBitflagsBase Flags;
+	UPROPERTY() FOmegaActorRelatives RelativeAssets;
 	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
 	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Demo Meta",AdvancedDisplay) FOmegaLuaCode LuaCode;
 	

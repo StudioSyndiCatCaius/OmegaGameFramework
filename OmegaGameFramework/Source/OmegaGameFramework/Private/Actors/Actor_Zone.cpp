@@ -3,6 +3,7 @@
 
 #include "Actors/Actor_Zone.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
 #include "OmegaSettings.h"
@@ -23,7 +24,8 @@
 
 UZoneEntityComponent::UZoneEntityComponent()
 {
-	LegendAsset=LoadObject<UZoneLegendAsset>(nullptr, TEXT("/OmegaGameFramework/DEMO/Zone/Legend/Legend_SpawnPoint.Legend_SpawnPoint"));
+	static ConstructorHelpers::FObjectFinder<UZoneLegendAsset> LegendFinder(TEXT("/OmegaGameFramework/DEMO/Zone/Legend/Legend_SpawnPoint.Legend_SpawnPoint"));
+	if (LegendFinder.Succeeded()) LegendAsset = LegendFinder.Object;
 }
 
 void UZoneEntityComponent::BeginPlay()
@@ -247,7 +249,8 @@ AOmegaZoneTransit::AOmegaZoneTransit()
 	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComponent"));
 	if(TextComponent)
 	{
-		TextComponent->SetMaterial(0,LoadObject<UMaterialInterface>(this,TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline")));
+		static ConstructorHelpers::FObjectFinder<UMaterialInterface> ZoneTextMatFinder(TEXT("/OmegaGameFramework/Materials/Shaders/Util/m_UTIL_TextOutline.m_UTIL_TextOutline"));
+		if (ZoneTextMatFinder.Succeeded()) TextComponent->SetMaterial(0, ZoneTextMatFinder.Object);
 		TextComponent->SetupAttachment(RootRef);
 		TextComponent->SetHorizontalAlignment(EHTA_Center);
 		TextComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));

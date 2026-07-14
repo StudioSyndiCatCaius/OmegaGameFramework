@@ -122,12 +122,16 @@ void UOmegaSubsystem_World::OnWorldBeginPlay(UWorld& InWorld)
 
 AOmegaGameplaySystem* UOmegaSubsystem_World::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag,FOmegaCommonMeta meta)
 {
-	if (Class)
+	if (Class && !GetBlockedSystemTags().HasAnyExact(Class->GetDefaultObject<AOmegaGameplaySystem>()->SystemTags))
 	{
-		TSubclassOf<AOmegaGameplaySystem> _InClass=GetMutableDefault<UOmegaSettings>()->CorrectClass_System(Class);
-		
-		if(AOmegaGameplaySystem* DummySystem=Cast<AOmegaGameplaySystem>(SystemsData.Activate(_InClass,Context,Flag,this,nullptr,meta)))
+		if(AOmegaGameplaySystem* DummySystem=Cast<AOmegaGameplaySystem>(SystemsData.Activate(Class,Context,Flag,this,nullptr,meta)))
 		{
+			// Re-check with the actual spawned instance's tags — CDO tags may differ if tags are set dynamically
+			if(GetBlockedSystemTags().HasAnyExact(DummySystem->SystemTags))
+			{
+				DummySystem->Shutdown(this, "Blocked");
+				return nullptr;
+			}
 			OnGameplaySystemActiveStateChange.Broadcast(DummySystem,Context,Flag,true);
 			return DummySystem;
 		}
@@ -212,10 +216,7 @@ FGameplayTagContainer UOmegaSubsystem_World::GetBlockedSystemTags()
 	}
 	bool menusOpen = false;
 	
-	/*
-	 * THIS IS BAD, right now it only checks player one. considering moving functionality for gameplay systems
-	 * Into player subsystem long term
-	 */
+	
 	if (UOmegaSubsystem_Player* SS_P=OGF_Subsystems::oPlayer(UGameplayStatics::GetPlayerController(GetWorld(),0)))
 	{
 		for (UMenu* m : SS_P->OpenMenus)
@@ -758,6 +759,23 @@ void AOmegaWorldManager::BeginPlay()
 		return;
 	}
 
+	// If the world subsystem already registered a *different* WorldManager (e.g. a placed
+	// Blueprint WM found by GetActorOfClass while a C++ WM was also spawned, or vice versa),
+	// this instance is the unwanted duplicate.  Destroy before calling Super::BeginPlay so
+	// SS_Save is never set on the duplicate and it cannot run any quest logic.
+	if (UOmegaSubsystem_World* wSS = GetWorld()->GetSubsystem<UOmegaSubsystem_World>())
+	{
+		if (AOmegaWorldManager* registeredWM = wSS->WorldManager.Get())
+		{
+			if (registeredWM != this)
+			{
+				OGF_Log::LogWarning("WorldManager: subsystem already registered a different instance — destroying self to prevent double quest resume.");
+				Destroy();
+				return;
+			}
+		}
+	}
+
 	Super::BeginPlay();
 	SS_GI->L_InitBgmComponent();
 	
@@ -858,7 +876,7 @@ void AOmegaWorldManager::BeginPlay()
 			if (q)
 			{
 				OGF_Log::LogInfo("Attempting to resume: "+q->GetName());
-				Quest_Start(q,true);
+				Quest_Start(q,true,SS_Save->ActiveSaveData->quest_data.FindOrAdd(q));
 			}
 		}
 	}), OGF_CFG()->SpawnAtFirstPointDelay, false);
@@ -898,9 +916,17 @@ void AOmegaWorldManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 // ------------------------------------------------------------
 // Quest
 // ------------------------------------------------------------
-AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bResumeFormSave)
+AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bOverrideStartData,
+	FOmegaQuestData data)
 {
-	if (Quest_CanStart(q) || bResumeFormSave)
+	// Instance-existence check must run unconditionally — bOverrideStartData only bypasses
+	// the status/completion guards, not the duplicate-instance guard.
+	if (Quest_GetInstance(q))
+	{
+		OGF_Log::LogWarning("QUEST: Refused to start quest — instance already exists: " + (q ? q->GetName() : TEXT("null")));
+		return nullptr;
+	}
+	if (Quest_CanStart(q) || bOverrideStartData)
 	{
 		if (AOmegaQuestInstance* new_inst=GetWorld()->SpawnActorDeferred<AOmegaQuestInstance>(AOmegaQuestInstance::StaticClass(),FTransform()))
 		{
@@ -913,7 +939,7 @@ AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bResum
 			new_inst->FinishSpawning(FTransform());
 			quest_instances.Add(new_inst);
 			new_inst->AttachToActor(NullActor_Quests,FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-			new_inst->StartQuest(bResumeFormSave);
+			new_inst->StartQuest(bOverrideStartData, data);
 			
 			return new_inst;
 		}

@@ -233,4 +233,10 @@ public:
 
 	/** Internal utility to configure a TextRenderComponent's type settings. */
 	static void SetTextComponentType_Util(UTextRenderComponent* Component);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
+	static void SnapLocalToCenterOfBounds(USceneComponent* Component);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Component|Modifier")
+	static void ScaleAbsoluteByBounds(USceneComponent* Component, float Size=100.0f);
 };

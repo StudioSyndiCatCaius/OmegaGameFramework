@@ -58,10 +58,14 @@ public:
 	void TriggerEffect();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Gameplay|Effects")
-	bool EffectCanApply(UCombatantComponent* EffectInstigator,UCombatantComponent* EffectTarget, UObject* Context, FOmegaCommonMeta Meta);
+	bool EffectCanApply(UCombatantComponent* EffectInstigator,UCombatantComponent* EffectTarget, UObject* Context, FOmegaCommonMeta Meta
+		,FOmegaCommonMeta& OutMeta);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
 	void EffectBeginPlay(UObject* Context, FOmegaCommonMeta Meta);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
+	void Refresh();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Ω|Gameplay|Effects")
 	UOmegaDamageType* GetDamageType(UObject* Context);

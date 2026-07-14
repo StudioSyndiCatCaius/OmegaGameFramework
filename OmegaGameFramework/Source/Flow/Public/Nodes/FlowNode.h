@@ -242,9 +242,9 @@ protected:
 	UPROPERTY(SaveGame)
 	EFlowNodeState ActivationState;
 
-public:	
+public:
 	EFlowNodeState GetActivationState() const { return ActivationState; }
-	
+
 #if !UE_BUILD_SHIPPING
 private:
 	TMap<FName, TArray<FPinRecord>> InputRecords;

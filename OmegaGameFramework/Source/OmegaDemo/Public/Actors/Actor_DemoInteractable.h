@@ -29,7 +29,7 @@ struct FOmegaInteractableConfig
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable") UStaticMesh* StaticMesh=nullptr;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable") FComponentMod_StaticMesh MeshModifiers;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable") FTransform MeshTransform;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable") bool SizeBoxToMeshBounds;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable") bool SizeBoxToMeshBounds = false;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable") UNiagaraSystem* NiagaraSystem=nullptr;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Interactable") FColor Color=FColor::Blue;
 	

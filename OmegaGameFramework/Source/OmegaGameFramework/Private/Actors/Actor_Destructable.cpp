@@ -2,6 +2,7 @@
 
 #include "Actors/Actor_Destructable.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "NiagaraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
@@ -113,10 +114,8 @@ AOmegaDestructible::AOmegaDestructible()
 	NiagaraComponent->SetupAttachment(RootComponent);
 	
 	CombatantComponent=CreateOptionalDefaultSubobject<UCombatantComponent>("Combatant");
-	if (UOmegaFaction* faction=LoadObject<UOmegaFaction>(nullptr,TEXT("/OmegaGameFramework/DEMO/Factions/Faction_Neutral.Faction_Neutral")))
-	{
-		CombatantComponent->FactionDataAsset=faction;	
-	}
+	static ConstructorHelpers::FObjectFinder<UOmegaFaction> NeutralFactionFinder(TEXT("/OmegaGameFramework/DEMO/Factions/Faction_Neutral.Faction_Neutral"));
+	if (NeutralFactionFinder.Succeeded()) CombatantComponent->FactionDataAsset = NeutralFactionFinder.Object;
 }
 
 void AOmegaDestructible::SetPreset(TScriptInterface<IDataInterface_Destructible> preset)

@@ -11,7 +11,6 @@
 #include "Widget/HUDLayer.h"
 #include "F_Widget.generated.h"
 
-
 class UWidget;
 class UDataWidget;
 class UHUDLayer;
@@ -40,6 +39,12 @@ public:
 	//Get an Active Gameplay System by Class
 	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",ExpandBoolAsExecs = "Outcome",AdvancedDisplay="Player"),DisplayName="Ω🔴 Try Get Data Widget (from slot)")
 	static UDataWidget* TryGetDataWidget_FromSlot(const UObject* WorldContextObject, FGameplayTag SlotID, APlayerController* Player, bool& Outcome);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",AdvancedDisplay="Player"),DisplayName="Data Widget - Get First from Source")
+	static UDataWidget* DataWidgets_GetFirstFromSource(const UObject* WorldContextObject,APlayerController* Player, UObject* Source, TSubclassOf<UDataWidget> Class);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Slate UI", meta = (WorldContext = "WorldContextObject", DeterminesOutputType="Class",AdvancedDisplay="Player"),DisplayName="Data Widget - Get All from Sources")
+	static TArray<UDataWidget*> DataWidgets_GetFromSources(const UObject* WorldContextObject,APlayerController* Player, TArray<UObject*> Sources, TSubclassOf<UDataWidget> Class);
 	
 	UFUNCTION(BlueprintCallable,Category="Omega|DataList",meta=(DeterminesOutputType="ObjectClass"))
 	static TArray<UObject*> GetSourceAssetsFromDataWidgets(TArray<UDataWidget*> Widgets, TSubclassOf<UObject> ObjectClass);

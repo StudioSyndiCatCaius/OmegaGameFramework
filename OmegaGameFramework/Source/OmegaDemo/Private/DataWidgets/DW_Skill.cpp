@@ -5,7 +5,10 @@
 
 #include "Components/Component_Combatant.h"
 #include "Components/Image.h"
+#include "Components/TextBlock.h"
 #include "DataAssets/DA_DamageType.h"
+#include "Functions/F_CombatantFilter.h"
+#include "Functions/F_CombatantSelector.h"
 #include "Widget/DataList.h"
 
 void UDataWidgetBase_Skill::Native_OnRefreshed(UObject* SourceAsset, UObject* ListOwner)
@@ -16,23 +19,37 @@ void UDataWidgetBase_Skill::Native_OnRefreshed(UObject* SourceAsset, UObject* Li
 	{
 		comb=_c;	
 	}
-	UDataList* dl_attCost=nullptr;
+	UDataList* List_AttributeCosts=nullptr;
 	UImage* imgIcon_DamageType=nullptr;
+	UTextBlock* txtName_DamageType=nullptr;
 	UImage* imgIcon_Attribute=nullptr;
+	UTextBlock* txtName_Attribute=nullptr;
+	UImage* imgIcon_CombatantFilter=nullptr;
+	UTextBlock* txtName_CombatantFilter=nullptr;
+	UImage* imgIcon_CombatantSelector=nullptr;
+	UTextBlock* txtName_CombatantSelector=nullptr;
 	
-	GetDataWidgetBindings(dl_attCost,imgIcon_DamageType,imgIcon_Attribute);
+	GetDataWidgetBindings(List_AttributeCosts,
+		imgIcon_DamageType,
+		txtName_DamageType,
+		imgIcon_Attribute,
+		txtName_Attribute,
+		imgIcon_CombatantFilter,
+		txtName_CombatantFilter,
+		imgIcon_CombatantSelector,
+		txtName_CombatantSelector);
 	
-	if (dl_attCost)
+	if (List_AttributeCosts)
 	{
-		dl_attCost->ClearList();
+		List_AttributeCosts->ClearList();
 	}
 	if (SourceAsset && SourceAsset->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass()))
 	{
 		FOmegaSkillConfig _cfg=IDataInterface_Skill::Execute_Skill_GetConfig(SourceAsset,comb);
 		
-		if (dl_attCost)
+		if (List_AttributeCosts)
 		{
-			dl_attCost->SetListOwner(SourceAsset);
+			List_AttributeCosts->SetListOwner(SourceAsset);
 			TArray<UOmegaAttribute*> attList;
 			_cfg.AttributeUseCost.GetKeys(attList);
 			
@@ -40,17 +57,47 @@ void UDataWidgetBase_Skill::Native_OnRefreshed(UObject* SourceAsset, UObject* Li
 			{
 				if (att)
 				{
-					dl_attCost->AddAssetToList(att,"");
+					List_AttributeCosts->AddAssetToList(att,"");
 				}
 			}
 		}
-		if (imgIcon_DamageType && _cfg.DamageType)
+		if (imgIcon_DamageType && _cfg.Meta_DamageType)
 		{
-			imgIcon_DamageType->SetBrush(_cfg.DamageType->Icon);
+			imgIcon_DamageType->SetBrush(_cfg.Meta_DamageType->Icon);
 		}
-		if (imgIcon_Attribute && _cfg.Attribute)
+		if (txtName_DamageType && _cfg.Meta_DamageType)
 		{
-			imgIcon_Attribute->SetBrush(_cfg.Attribute->Icon);
+			txtName_DamageType->SetText(_cfg.Meta_DamageType->DisplayName);
+		}
+		if (imgIcon_Attribute && _cfg.Meta_Attribute)
+		{
+			imgIcon_Attribute->SetBrush(_cfg.Meta_Attribute->Icon);
+		}
+		if (txtName_Attribute && _cfg.Meta_Attribute)
+		{
+			txtName_Attribute->SetText(_cfg.Meta_Attribute->DisplayName);
+		}
+		if (imgIcon_CombatantFilter && _cfg.TargetFilter)
+		{
+			imgIcon_CombatantFilter->SetBrush(_cfg.TargetFilter->Icon);
+		}
+		if (txtName_CombatantFilter && _cfg.TargetFilter)
+		{
+			txtName_CombatantFilter->SetText(_cfg.TargetFilter->DisplayName);
+		}
+		if (_cfg.TargetSelector)
+		{
+			if (UCombatantSelector* _sel=_cfg.TargetSelector.GetDefaultObject())
+			{
+				if (imgIcon_CombatantSelector)
+				{
+					imgIcon_CombatantSelector->SetBrush(_sel->SelectorIcon);
+				}
+				if (txtName_CombatantSelector)
+				{
+					txtName_CombatantSelector->SetText(_sel->SelectorName);
+				}
+			}
 		}
 	}
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Interfaces/I_Common.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "F_CombatantSelector.generated.h"
@@ -13,14 +14,21 @@ class UCombatantComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantSelectorEvent,UCombatantSelector*, Selector);
 
 UCLASS(Blueprintable,BlueprintType,Abstract,CollapseCategories,meta=(ShowWorldContextPin))
-class OMEGAGAMEFRAMEWORK_API UCombatantSelector : public UObject
+class OMEGAGAMEFRAMEWORK_API UCombatantSelector : public UObject, public IDataInterface_General
 {
 	GENERATED_BODY()
 	bool b_blocktargetUpdate=false;
 	
-	void L_UpdateTargets();
+	
 
 public:
+	void L_UpdateTargets();
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FText SelectorName;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FSlateBrush SelectorIcon;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="General") FText SelectorDescription;
+	
+	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
 	
 	UPROPERTY(BlueprintAssignable) FOnCombatantSelectorEvent OnSelector_TargetsUpdated;
 	UPROPERTY(BlueprintAssignable) FOnCombatantSelectorEvent OnSelector_Finalized;

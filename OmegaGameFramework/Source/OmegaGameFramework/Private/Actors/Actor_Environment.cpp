@@ -2,6 +2,7 @@
 
 
 #include "Actors/Actor_Environment.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/PostProcessComponent.h"
@@ -117,14 +118,10 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 	{
 		SkyBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 		SkyBox->SetCastShadow(false);
-		if(UStaticMesh* _mesh=LoadObject<UStaticMesh>(this, TEXT("/OmegaGameFramework/Meshes/nature/sm_omega_Skybox_Cube.sm_omega_Skybox_Cube")))
-		{
-			SkyBox->SetStaticMesh(_mesh);
-		}
-		if (UMaterialInstance* _mat=LoadObject<UMaterialInstance>(this, TEXT("/OmegaGameFramework/Materials/Instances/HDRI/mi_Omega_Hdri_day.mi_Omega_Hdri_day")))
-		{
-			SkyBox->SetMaterial(0, _mat);
-		}
+		static ConstructorHelpers::FObjectFinder<UStaticMesh> SkyBoxMeshFinder(TEXT("/OmegaGameFramework/Meshes/nature/sm_omega_Skybox_Cube.sm_omega_Skybox_Cube"));
+		if (SkyBoxMeshFinder.Succeeded()) SkyBox->SetStaticMesh(SkyBoxMeshFinder.Object);
+		static ConstructorHelpers::FObjectFinder<UMaterialInstance> SkyBoxMatFinder(TEXT("/OmegaGameFramework/Materials/Instances/HDRI/mi_Omega_Hdri_day.mi_Omega_Hdri_day"));
+		if (SkyBoxMatFinder.Succeeded()) SkyBox->SetMaterial(0, SkyBoxMatFinder.Object);
 		SkyBox->SetVisibility(false);
 		SkyBox->SetComponentTickEnabled(false);
 	}
@@ -140,10 +137,8 @@ AOmegaActorEnvironment::AOmegaActorEnvironment()
 		PostProcess->Settings.bOverride_AmbientCubemapIntensity=true;
 		PostProcess->Settings.AmbientCubemapIntensity=0.15;
 	}
-	if(UTextureCube* c =LoadObject<UTextureCube>(this,TEXT("/Engine/EngineResources/GrayLightTextureCube.GrayLightTextureCube")))
-	{
-		PostProcess->Settings.AmbientCubemap=c;
-	}
+	static ConstructorHelpers::FObjectFinder<UTextureCube> AmbientCubeFinder(TEXT("/Engine/EngineResources/GrayLightTextureCube.GrayLightTextureCube"));
+	if (AmbientCubeFinder.Succeeded()) PostProcess->Settings.AmbientCubemap = AmbientCubeFinder.Object;
 	
 }
 

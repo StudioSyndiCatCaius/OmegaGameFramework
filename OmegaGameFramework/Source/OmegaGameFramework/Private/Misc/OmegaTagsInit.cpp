@@ -23,6 +23,7 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_PAUSE_GAMEPLAY,"PAUSE.Gameplay");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_QUERY,"QUERY");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_BINDING,"BINDING")
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_UTILITY,"UTILITY");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_LIST,"LIST");
 
 // --------------------------------------------------------------------------------------------------------
 // Attribute
@@ -208,8 +209,7 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Enemy_Type_Boss,"Combat.Enemy.Type.Boss");
 // EnemyType
 // --------------------------------------------------------------------------------------------------------
 
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Dynamic_Scalar,"Combat.Dynamic.Scalar");
-UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Dynamic_Asset,"Combat.Dynamic.Asset");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Combat_Dynamic,"Combat.Dynamic");
 
 // --------------------------------------------------------------------------------------------------------
 // Effects
@@ -224,6 +224,15 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_Dead,"EFFECT.Dead");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_SkipTurn,"EFFECT.SkipTurn");
 
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Effect_SCRIPTEDEFFECT,"ScriptedEffect");
+
+// --------------------------------------------------------------------------------------------------------
+// Grid3d
+// --------------------------------------------------------------------------------------------------------
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_GRID3D_MAP,"GRID3D.Map");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_GRID3D_TILE,"GRID3D.Tile");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_GRID3D_OCCUPANT,"GRID3D.Occupant");
+
 
 // --------------------------------------------------------------------------------------------------------
 // STAGE

@@ -19,6 +19,9 @@ class UMenu;
 class UHUDLayer;
 class UPrimaryDataAsset;
 class UOmegaAttribute;
+class UTexture;
+class ULevelSequence;
+class USoundBase;
 class UEquipmentSlot;
 class UOmegaLevelingAsset;
 
@@ -36,6 +39,19 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Types",DisplayName="♾️ Int") TMap<FName,int32> Constant_int;
 	UPROPERTY(EditAnywhere, config, Category = "Types",DisplayName="♾️ Float") TMap<FName,float> Constant_float;
 	UPROPERTY(EditAnywhere, config, Category = "Types",DisplayName="♾️ String") TMap<FName,FString> Constant_string;
+	
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// Assets
+	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Textures")
+	TMap<FName,TSoftObjectPtr<UTexture>> Constant_Textures;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Level Sequences")
+	TMap<FName,TSoftObjectPtr<ULevelSequence>> Constant_Sequences;
+	
+	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Sounds")
+	TMap<FName,TSoftObjectPtr<USoundBase>> Constant_Sounds;
+	
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// Constants
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -51,17 +67,17 @@ public:
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 	// DataAssets
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Data Asset")
+	UPROPERTY(EditAnywhere, config, Category = "Data Assets",DisplayName="♾️ Data Asset")
 	TMap<FName,TSoftObjectPtr<UPrimaryDataAsset>> Constant_DataAsset;
-	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Data Asset (List)")
+	UPROPERTY(EditAnywhere, config, Category = "Data Assets",DisplayName="♾️ Data Asset (List)")
 	TMap<FName,FOmegaList_DataAsset_Soft> Constant_DataAssetList;
-	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Attributes")
+	UPROPERTY(EditAnywhere, config, Category = "Data Assets",DisplayName="♾️ Attributes")
 	TMap<FName,TSoftObjectPtr<UOmegaAttribute>> Constant_Attributes;
-	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Equip Slots")
+	UPROPERTY(EditAnywhere, config, Category = "Data Assets",DisplayName="♾️ Equip Slots")
 	TMap<FName,TSoftObjectPtr<UEquipmentSlot>> Constant_EquipSlots;
-	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ Leveling")
+	UPROPERTY(EditAnywhere, config, Category = "Data Assets",DisplayName="♾️ Leveling")
 	TMap<FName,TSoftObjectPtr<UOmegaLevelingAsset>> Constant_Leveling;
-	UPROPERTY(EditAnywhere, config, Category = "Assets",DisplayName="♾️ DamageTypes")
+	UPROPERTY(EditAnywhere, config, Category = "Data Assets",DisplayName="♾️ DamageTypes")
 	TMap<FName,TSoftObjectPtr<UOmegaDamageType>> Constant_DamageTypes;
 
 	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
