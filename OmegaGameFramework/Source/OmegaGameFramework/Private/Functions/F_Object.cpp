@@ -6,6 +6,9 @@
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Functions/F_Common.h"
 #include "Misc/OmegaUtils_Methods.h"
+#include "Serialization/MemoryReader.h"
+#include "Serialization/MemoryWriter.h"
+#include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Subsystems/Subsystem_Engine.h"
 
 
@@ -169,7 +172,7 @@ UObject* UOmegaObjectFunctions::Duplicate_Object(UObject* object,UObject* NewOut
 	if(object && Class && NewOuter)
 	{
 		UObject* new_obj=DuplicateObject(object,NewOuter);
-		if(new_obj && new_obj->GetClass()==Class)
+		if(new_obj && new_obj->IsA(Class))
 		{
 			return new_obj;
 		}
@@ -360,4 +363,59 @@ int32 UOmegaObjectFunctions::GetNameParam_Int(UObject* Object, uint8 param)
 		return ss->GetObjectNameParam(Object,param).param_int;
 	}
 	return 0;
+}
+
+FOmegaByteBuffer UOmegaObjectFunctions::Object_2_Bytes(UObject* WorldContextObject, UObject* Object)
+{
+	FOmegaByteBuffer Buffer;
+	if (!Object) return Buffer;
+
+	FMemoryWriter MemoryWriter(Buffer.Bytes, true);
+
+	FString ClassPath = Object->GetClass()->GetPathName();
+	MemoryWriter << ClassPath;
+
+	FObjectAndNameAsStringProxyArchive Ar(MemoryWriter, false);
+	Ar.ArIsSaveGame = true;
+	Object->Serialize(Ar);
+
+	return Buffer;
+}
+
+UObject* UOmegaObjectFunctions::Bytes_2_Objects(UObject* WorldContextObject, FOmegaByteBuffer ByteBuffer)
+{
+	if (ByteBuffer.Bytes.IsEmpty()) return nullptr;
+
+	FMemoryReader MemoryReader(ByteBuffer.Bytes, true);
+
+	FString ClassPath;
+	MemoryReader << ClassPath;
+
+	UClass* ObjectClass = LoadClass<UObject>(nullptr, *ClassPath);
+	if (!ObjectClass) return nullptr;
+
+	UObject* Outer = WorldContextObject ? WorldContextObject : GetTransientPackage();
+	UObject* NewObj = NewObject<UObject>(Outer, ObjectClass);
+
+	FObjectAndNameAsStringProxyArchive Ar(MemoryReader, true);
+	Ar.ArIsSaveGame = true;
+	NewObj->Serialize(Ar);
+
+	return NewObj;
+}
+
+bool UOmegaObjectFunctions::Bytes_ApplyToObject(UObject* Target, FOmegaByteBuffer ByteBuffer)
+{
+	if (!Target || ByteBuffer.Bytes.IsEmpty()) return false;
+
+	FMemoryReader MemoryReader(ByteBuffer.Bytes, true);
+
+	FString ClassPath;
+	MemoryReader << ClassPath;
+
+	FObjectAndNameAsStringProxyArchive Ar(MemoryReader, true);
+	Ar.ArIsSaveGame = true;
+	Target->Serialize(Ar);
+
+	return true;
 }

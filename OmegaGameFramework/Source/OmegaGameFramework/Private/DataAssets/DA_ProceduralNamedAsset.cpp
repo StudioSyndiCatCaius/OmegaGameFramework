@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "DataAssets/DA_ProceduralNamedAsset.h"
@@ -25,12 +25,12 @@ UOmegaProceduralNamedAssetBuilder* UOmegaProceduralNamedAsset::GetBuilder() cons
 
 FString UOmegaProceduralNamedAsset::GetNameProceduralValue(int32 index) const
 {
-	TArray<FString> vals = UKismetStringLibrary::ParseIntoArray(this->GetName(), "_");
+	TArray<FString> vals = UKismetStringLibrary::ParseIntoArray(this->GetName(), TEXT("_"));
 	if (vals.Num() > index)
 	{
 		return vals[index];
 	}
-	return "";
+	return TEXT("");
 }
 
 // -- IDataInterface_General ----------------------------------------------------
@@ -120,17 +120,10 @@ FOmegaCustomScriptedEffects UOmegaProceduralNamedAsset::Skill_GetScriptedEffects
 	return FOmegaCustomScriptedEffects{};
 }
 
-float UOmegaProceduralNamedAsset::Skill_CheckUtility_OneTarget_Implementation(UCombatantComponent* Combatant, UCombatantComponent* Target, FGameplayTag Tag)
+float UOmegaProceduralNamedAsset::Skill_CheckUtility_Implementation(UCombatantComponent* Combatant, UCombatantComponent* Target)
 {
 	if (UOmegaProceduralNamedAssetBuilder* b = GetBuilder())
-		return b->Build_Skill_CheckUtility_OneTarget(this, Combatant, Target, Tag);
-	return 0.f;
-}
-
-float UOmegaProceduralNamedAsset::Skill_CheckUtility_Implementation(UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets, FGameplayTag Tag)
-{
-	if (UOmegaProceduralNamedAssetBuilder* b = GetBuilder())
-		return b->Build_Skill_CheckUtility(this, Combatant, Targets, Tag);
+		return b->Build_Skill_CheckUtility(this, Combatant, Target);
 	return 0.f;
 }
 

@@ -106,6 +106,7 @@ void UOmegaDungeonModel_Path::Dungeon_GenerateBegin_Implementation(AOmegaDungeon
 	ModuleSocketDataCache.Reset();
 	CellConnectionMasks.Reset();
 	PlacedCellSockets.Reset();
+	GridMin = FIntVector::ZeroValue;
 }
 
 void UOmegaDungeonModel_Path::AddCellConnection(const FIntVector& CellA, const FIntVector& CellB)
@@ -197,6 +198,7 @@ void UOmegaDungeonModel_Path::Dungeon_GenerateLayout_Implementation(AOmegaDungeo
 	// The walk starts at the grid center (for room to grow), but cells are written shifted so the
 	// Start cell is coord (0,0,0) — placing it at the dungeon actor's world origin.
 	const FIntVector Shift = FIntVector::ZeroValue - MainPath[0];
+	GridMin = Shift; // pre-shift grid spans 0..Size-1, so its shifted corner is exactly Shift
 
 	for(int32 i = 0; i < MainPath.Num(); i++)
 	{
@@ -466,6 +468,43 @@ void UOmegaDungeonModel_Path::Dungeon_GenerateEnd_Implementation(AOmegaDungeon* 
 			}
 		}
 	}
+
+	// Gap and edge passes run after the socket pass so their modules never take part in socket matching.
+	if(Dungeon->GetCellCoords().Num() > 0)
+	{
+		// Gap modules: fill every in-bounds tile of the dungeon grid the layout left unused.
+		if(Modules_Gaps.Num() > 0)
+		{
+			for(int32 Z = 0; Z < Dungeon->Size.Z; Z++)
+			for(int32 Y = 0; Y < Dungeon->Size.Y; Y++)
+			for(int32 X = 0; X < Dungeon->Size.X; X++)
+			{
+				const FIntVector Coord = GridMin + FIntVector(X, Y, Z);
+				if(Dungeon->HasCell(Coord)) { continue; }
+				const FTransform ModuleTransform = FTransform(FRotator(0.f, Dungeon->GetRandomIntInRange(0, 3) * 90.f, 0.f))
+					* Dungeon->GetCellTransform(Coord, CellModuleSize);
+				SpawnCellModule(Modules_Gaps, Dungeon, ModuleTransform);
+			}
+		}
+
+		// Edge modules: EdgeDepth rings of tiles (corners included) extending the tilemap outward from the
+		// dungeon grid, on the same Z layers.
+		if(Modules_Edges.Num() > 0 && EdgeDepth > 0)
+		{
+			for(int32 Z = 0; Z < Dungeon->Size.Z; Z++)
+			for(int32 Y = -EdgeDepth; Y < Dungeon->Size.Y + EdgeDepth; Y++)
+			for(int32 X = -EdgeDepth; X < Dungeon->Size.X + EdgeDepth; X++)
+			{
+				const bool bInsideGrid = X >= 0 && X < Dungeon->Size.X && Y >= 0 && Y < Dungeon->Size.Y;
+				if(bInsideGrid) { continue; }
+				const FIntVector Coord = GridMin + FIntVector(X, Y, Z);
+				const FTransform ModuleTransform = FTransform(FRotator(0.f, Dungeon->GetRandomIntInRange(0, 3) * 90.f, 0.f))
+					* Dungeon->GetCellTransform(Coord, CellModuleSize);
+				SpawnCellModule(Modules_Edges, Dungeon, ModuleTransform);
+			}
+		}
+	}
+
 	ModuleUseCounts.Reset();
 }
 

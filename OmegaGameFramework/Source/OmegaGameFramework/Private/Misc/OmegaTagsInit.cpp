@@ -198,6 +198,10 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_UI_Trig_R,"INPUT.UI.Trigger.R");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_UI_Spec_L,"INPUT.UI.Special.L");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_UI_Spec_R,"INPUT.UI.Special.R");
 
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_DLG_Log,"INPUT.Dialogue.Log");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_DLG_FF,"INPUT.Dialogue.FastForward");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Input_DLG_Autoplay,"INPUT.Dialogue.Autoplay");
+
 // --------------------------------------------------------------------------------------------------------
 // EnemyType
 // --------------------------------------------------------------------------------------------------------
@@ -249,6 +253,16 @@ UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Encounter_Exterior,"ENCOUNTER.Stage.Exterior");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Consumable,"Item.Consumable");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Key,"Item.Key");
 UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Item_Equipment,"Item.Equipment");
+
+// --------------------------------------------------------------------------------------------------------
+// image
+// --------------------------------------------------------------------------------------------------------
+
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Image_Slot_Bkg,"IMAGE.Slot.Background");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Image_Slot_spk_r,"IMAGE.Slot.Speaker.Right");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Image_Slot_spk_c,"IMAGE.Slot.Speaker.Center");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Image_Slot_spk_l,"IMAGE.Slot.Speaker.Left");
+UE_DEFINE_GAMEPLAY_TAG(Tag_Omega_Image_Slot_Frg,"IMAGE.Slot.Foreground");
 
 // --------------------------------------------------------------------------------------------------------
 // Character

@@ -33,11 +33,16 @@ public:
 	
 	UPROPERTY(EditAnywhere, Config, Category="Actors") TSoftClassPtr<AOmegaToolActor> Default_ToolActor;
 	
-	UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
+	
+	UPROPERTY(EditAnywhere, Config, Category="Assets|Character")
+	FString SpeakerPortrait_DefaultPath="/Game/0_Main/Assets/Materials/DlgPo/{label}/";
+	FString SpeakerPortrait_DefaultName="DlgPo_{label}_0";
+
+	//UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
 	TMap<TSoftObjectPtr<UOmegaAttribute>,float> AttributeCost_ScaleByPower;
-	UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
+	//UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
 	TMap<FString,float> AttributeCost_ScaleByType;
-	UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
+	//UPROPERTY(EditAnywhere, Config, Category="🧮PROCEDURAL - Skill") 
 	bool AttributeCost_Truncate=true;
 };
 

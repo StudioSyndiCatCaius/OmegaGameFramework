@@ -102,7 +102,9 @@ struct FOmegaQuestData
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TMap<FGameplayTag,int32> params_int;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") FGameplayTagContainer Tags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TArray<FGuid> active_guids;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Quest") TArray<FGuid> recorded_guids;
 };
+
 // ==============================================================================================================
 // Configs
 // ==============================================================================================================

@@ -12,7 +12,7 @@
 class AOmegaPlayer;
 
 UCLASS()
-class UOmegaPlayerFunctions : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOmegaPlayerFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -96,4 +96,17 @@ public:
 	/** Releases the current input hog from the given PlayerController, restoring normal input routing. */
 	UFUNCTION(BlueprintCallable,Category="Omega|Input|Hog",meta=(WorldContext="WorldContextObject"))
 	static void ObjectHogInput_Clear(APlayerController* player);
+	
+	// =====================================================================================================================
+	// Image
+	// =====================================================================================================================
+	UFUNCTION(BlueprintCallable,Category="Omega|Player",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Global Image - Set")
+	static void Image_Set(UObject* WorldContextObject, UPARAM(meta=(Categories="IMAGE")) FGameplayTag Tag, FSlateBrush Image, APlayerController* Player=nullptr);
+	
+	UFUNCTION(BlueprintCallable,Category="Omega|Player",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Global Image - Clear")
+	static void Image_Clear(UObject* WorldContextObject, UPARAM(meta=(Categories="IMAGE")) FGameplayTag Tag, APlayerController* Player=nullptr);
+	
+	UFUNCTION(BlueprintPure,Category="Omega|Player",meta=(WorldContext="WorldContextObject",AdvancedDisplay="Player"),DisplayName="Global Image - Get")
+	static FSlateBrush Image_Get(UObject* WorldContextObject, UPARAM(meta=(Categories="IMAGE")) FGameplayTag Tag, APlayerController* Player=nullptr);
+	
 };

@@ -71,11 +71,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="♎I|🔥Skill",	DisplayName="🔥Skill - Get Scripted Effects")
 	FOmegaCustomScriptedEffects Skill_GetScriptedEffects(UCombatantComponent* Combatant);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="♎I|🔥Skill", DisplayName="🔥Skill - Check Utility (Single Target)")
-	float Skill_CheckUtility_OneTarget(UCombatantComponent* Combatant, UCombatantComponent* Target,FGameplayTag Tag);
 	
-	UFUNCTION(BlueprintNativeEvent,Category="♎I|🔥Skill", DisplayName="🔥Skill - Check Utility (Multi Target)")
-	float Skill_CheckUtility(UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets,FGameplayTag Tag);
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|🔥Skill", DisplayName="🔥Skill - Check Utility")
+	float Skill_CheckUtility(UCombatantComponent* Combatant, UCombatantComponent* Target);
 	
 	
 	// Skills are given two sequences slots: Charge is typically played first on the instigator. Execution is played second on the Target.

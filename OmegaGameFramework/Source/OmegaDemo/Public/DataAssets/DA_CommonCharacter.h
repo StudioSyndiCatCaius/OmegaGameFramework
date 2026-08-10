@@ -14,6 +14,7 @@
 #include "DataAssets/DA_AssetLib.h"
 #include "Functions/F_Assets.h"
 #include "Functions/F_Component.h"
+#include "Functions/F_Message.h"
 #include "Interfaces/I_Combatant.h"
 #include "DA_CommonCharacter.generated.h"
 
@@ -88,4 +89,6 @@ public:
 	
 	virtual void SetValue_Implementation(FLuaValue Value, const FString& Field = "") override;
 	virtual FOmegaScripted_CombatantModifiers Combatant_GetScriptedModifiers_Implementation() override { return CombatantModifiers; };
+	
+	virtual FOmegaMessageInstigatorConfig Speaker_GetConfig_Implementation() override;
 };

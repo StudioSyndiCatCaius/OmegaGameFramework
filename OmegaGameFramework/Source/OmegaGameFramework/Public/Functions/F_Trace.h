@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MetasoundEnum.h"
 #include "UObject/Object.h"
 #include "Engine/EngineTypes.h"
+#include "Engine/HitResult.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "F_Trace.generated.h"
@@ -63,12 +65,35 @@ public:
 };
 
 
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, meta=(ShowWorldContextPin),Abstract)
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTraceCommon : public UOmegaScriptedTraceLogic
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace",meta=(EditCondition="!bTraceByObjects"))
+	TEnumAsByte<ETraceTypeQuery> TraceChannel = TraceTypeQuery1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
+	bool bTraceByObjects = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace",meta=(EditCondition="bTraceByObjects"))
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
+	bool bTraceComplex = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
+	bool bDebug = false;
+
+};
+
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Trace Types
 // ---------------------------------------------------------------------------------------------------------------------
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew, meta=(ShowWorldContextPin), DisplayName="Line Trace")
-class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Line : public UOmegaScriptedTraceLogic
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Line : public UOmegaScriptedTraceCommon
 {
 	GENERATED_BODY()
 public:
@@ -78,21 +103,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
 	FVector OffsetEnd = FVector(200.f, 0.f, 0.f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	TEnumAsByte<ETraceTypeQuery> TraceChannel = TraceTypeQuery1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bTraceComplex = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bDebug = false;
 
 	virtual FHitResult RunTrace_Implementation(AActor* Instigator, bool& Success) override;
 	virtual TArray<FHitResult> RunTrace_Multi_Implementation(AActor* Instigator, bool& Success) override;
 };
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew, meta=(ShowWorldContextPin), DisplayName="Sphere Trace")
-class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Sphere : public UOmegaScriptedTraceLogic
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Sphere : public UOmegaScriptedTraceCommon
 {
 	GENERATED_BODY()
 public:
@@ -105,21 +123,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
 	float Radius = 32.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	TEnumAsByte<ETraceTypeQuery> TraceChannel = TraceTypeQuery1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bTraceComplex = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bDebug = false;
 
 	virtual FHitResult RunTrace_Implementation(AActor* Instigator, bool& Success) override;
 	virtual TArray<FHitResult> RunTrace_Multi_Implementation(AActor* Instigator, bool& Success) override;
 };
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew, meta=(ShowWorldContextPin), DisplayName="Box Trace")
-class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Box : public UOmegaScriptedTraceLogic
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Box : public UOmegaScriptedTraceCommon
 {
 	GENERATED_BODY()
 public:
@@ -135,21 +145,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
 	FRotator Orientation = FRotator::ZeroRotator;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	TEnumAsByte<ETraceTypeQuery> TraceChannel = TraceTypeQuery1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bTraceComplex = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bDebug = false;
 
 	virtual FHitResult RunTrace_Implementation(AActor* Instigator, bool& Success) override;
 	virtual TArray<FHitResult> RunTrace_Multi_Implementation(AActor* Instigator, bool& Success) override;
 };
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew, meta=(ShowWorldContextPin), DisplayName="Capsule Trace")
-class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Capsule : public UOmegaScriptedTraceLogic
+class OMEGAGAMEFRAMEWORK_API UOmegaScriptedTrace_Capsule : public UOmegaScriptedTraceCommon
 {
 	GENERATED_BODY()
 public:
@@ -164,15 +167,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
 	float HalfHeight = 64.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	TEnumAsByte<ETraceTypeQuery> TraceChannel = TraceTypeQuery1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bTraceComplex = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
-	bool bDebug = false;
 
 	virtual FHitResult RunTrace_Implementation(AActor* Instigator, bool& Success) override;
 	virtual TArray<FHitResult> RunTrace_Multi_Implementation(AActor* Instigator, bool& Success) override;

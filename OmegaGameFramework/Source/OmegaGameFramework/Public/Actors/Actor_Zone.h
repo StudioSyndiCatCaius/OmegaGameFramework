@@ -22,19 +22,6 @@ class USceneComponent;
 class UCapsuleComponent;
 class UBoxComponent;
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API AZoneEntity_Mesh : public AStaticMeshActor
-{
-	GENERATED_BODY()
-
-public:
-	AZoneEntity_Mesh();
-	
-	virtual void BeginPlay() override;
-
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Mesh") UZoneEntityComponent* ZoneEntity;
-
-};
 
 
 
@@ -107,40 +94,6 @@ public:
 	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };
 
-UCLASS(Abstract)
-class OMEGAGAMEFRAMEWORK_API AZoneEntityViewCamera : public APawn
-{
-	GENERATED_BODY()
-
-	AZoneEntityViewCamera();
-	void L_RefreshView();
-	bool L_ActorIsValidViewable(AActor* a) const;
-public:
-
-	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera")
-	TArray<AActor*> ViewFilterActors;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera")
-	TMap<UZoneLegendAsset*,bool> LegendVisibility;
-	
-	UFUNCTION(BlueprintPure,Category="ZoneEntityView")
-	bool IsLegendVisible(UZoneLegendAsset* Legend) const;
-
-	UFUNCTION(BlueprintCallable,Category="ZoneEntityView")
-	void SetLegendVisible(UZoneLegendAsset* Legend, bool bVisible);
-
-	UFUNCTION(BlueprintCallable,Category="ZoneEntityView")
-	void SetViewFilterActorValid(AActor* Actor, bool ValidFilter);
-
-	UFUNCTION(BlueprintCallable,Category="ZoneEntityView")
-	void ClearAllViewFilterActors();
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera") USpringArmComponent* SpringArm;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera") UCameraComponent* CameraComponent;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ZoneEntityViewCamera") USceneCaptureComponent2D* SceneCaptureComponent;
-};
 
 
 // =============================================================================================================

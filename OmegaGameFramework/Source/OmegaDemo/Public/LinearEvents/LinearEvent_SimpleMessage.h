@@ -7,6 +7,7 @@
 #include "Interfaces/I_Common.h"
 #include "Event/OmegaLinearEvent.h"
 #include "Functions/F_SoftProperty.h"
+#include "Functions/F_Message.h"
 #include "Misc/OmegaUtils_Actor.h"
 #include "Nodes/FlowNode.h"
 #include "Styling/SlateBrush.h"
@@ -53,12 +54,15 @@ public:
 };
 
 UCLASS(DisplayName="💬 Message")
-class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IOmegaSoftPropertyInterface, public IDataInterface_MessageContext
+class OMEGADEMO_API UFlowNode_SimpleMessage : public UFlowNode, public IOmegaSoftPropertyInterface
 {
 	GENERATED_BODY()
 
 	bool CanPlayMessage();
 	void getNodeIndexFromList(TArray<UFlowNode*> baseList);
+
+	// Keeps the running event alive; delegate bindings are weak and won't prevent GC.
+	UPROPERTY() ULinearEvent_SimpleMessage* ActiveEvent=nullptr;
 	
 	AActor* local_GetInstigatorActor() const;
 	UObject* local_GetInstigator() const;
@@ -83,7 +87,7 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node",meta=(MultiLine),DisplayName="💬Text")
 	FText Text;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Node",meta=(Categories="Message, Param"))
 	FGameplayTagContainer Tags;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Node")
 	UMaterialInterface* Portrait=nullptr;
@@ -132,6 +136,5 @@ public:
 	
 	UFUNCTION()
 	void LocalFinish(UOmegaLinearEvent* Event, const FString& Flag);
-
-	virtual UOAsset_TransformPreset* GetMessage_TransformPreset_Implementation() override;
+	
 };

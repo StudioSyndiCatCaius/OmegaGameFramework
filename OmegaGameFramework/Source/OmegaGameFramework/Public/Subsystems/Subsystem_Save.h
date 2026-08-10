@@ -17,6 +17,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Types/Struct_ByteContainer.h"
 #include "Types/Struct_SoftParams.h"
 #include "Subsystem_Save.generated.h"
 
@@ -30,6 +31,15 @@ class UOmegaSaveGlobal;
 class UOmegaZoneData;
 class UGamePreference;
 
+
+USTRUCT(BlueprintType)
+struct FOmegaSavedCustomAsset
+{
+	GENERATED_BODY()
+	UPROPERTY(VisibleAnywhere,Category="Save") UPrimaryDataAsset* BaseAsset;
+	UPROPERTY() FOmegaByteBuffer Bytes;
+	
+};
 
 
 // ====================================================================================================
@@ -47,6 +57,7 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSaveSubsystem : public UGameInstanceSubsystem
 	
 	UFUNCTION() bool L_SaveGame(FString SlotName,FGameplayTag SaveCategory, const FString& alt_path);
 	UFUNCTION() void OnPlaytimeUpdate();
+
 	
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
@@ -96,12 +107,22 @@ public:
 	void StartGame(class UOmegaSaveGame* GameData, bool LoadSavedLevel, FGameplayTagContainer Tags,
 	bool NewGame=false, UOAsset_Campaign* NewCampaign=nullptr);
 
+	//###############################################################################################
+	// Custom Assets
+	//###############################################################################################
+	
+	UPrimaryDataAsset* CustomAsset_Create(UPrimaryDataAsset* BaseAsset, FName Name, UOmegaSaveBase* Save);
+	
+	
+	//custom created assets who will have their modified value recached on game save.
+	UPROPERTY() TMap<FName,UPrimaryDataAsset*> TrackedCustomAssets;
 
 private:
 
 	void Local_InitializeSaveObjects();
 	void local_SaveLuaFields(TArray<FString> fields, UOmegaSaveBase* save);
 	void local_LoadLuaFields(TArray<FString> fields, UOmegaSaveBase* save);
+	void Local_ClearTrackedCustomAssets();
 	
 	UPROPERTY()
 	bool Local_JsonSave;
@@ -200,6 +221,7 @@ public:
 };
 
 
+
 // ====================================================================================================
 // Save Object
 // ====================================================================================================
@@ -234,12 +256,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save") TMap<FGameplayTag,FOmegaList_Guids> Lists_Guids;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Save",DisplayName="Json: Named") TMap<FName, FJsonObjectWrapper> Prop_Json;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Save") TMap<FGameplayTag, int32> TagVars_int;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Save") TMap<TSoftObjectPtr<UWorld>, bool> ActiveSublevels;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Preferences") TMap<UGamePreference*, FVector> PreferenceValues;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, SaveGame,Category="Save",DisplayName="Flags (Common Save)") FOmegaBitflagsBase Flags;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Save") FJsonObjectWrapper JsonSaveObject;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Save") FJsonObjectWrapper LuaSavedTable;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Save") TMap<FName,FOmegaSavedCustomAsset> CustomAssets;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Save") FGameplayTag StoryState;
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Save") FGameplayTag SaveCategory;
@@ -257,6 +282,10 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Save")
 	void OnSaveCreated(UGameInstance* GameInstance);
+	
+	// ======================================================================================
+	// Custom Assets
+	// ======================================================================================
 	
 	// ======================================================================================
 	// Json

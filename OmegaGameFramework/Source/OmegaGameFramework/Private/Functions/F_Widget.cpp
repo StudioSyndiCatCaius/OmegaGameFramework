@@ -3,12 +3,15 @@
 
 #include "Functions/F_Widget.h"
 
+#include "Blueprint/SlateBlueprintLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_Player.h"
+#include "Widgets/SWidget.h"
 #include "Widget/DataWidget.h"
 #include "Widget/UI_Widgets.h"
 
@@ -168,61 +171,122 @@ UOmegaSlateTheme* UOmegaWidgetFunctions::GetWidgetSlateTheme(UWidget* Widget)
 	return nullptr;
 }
 
+namespace OmegaWidgetPosition_Private
+{
+	/** Resolve the best available geometry for a UMG widget that has been realized in Slate. */
+	static bool TryGetWidgetGeometry(const UWidget* Widget, FGeometry& OutGeometry)
+	{
+		OutGeometry = FGeometry();
+		if (!IsValid(Widget))
+		{
+			return false;
+		}
+
+		// Prefer an already-realized slate widget. Without one, geometry is uninitialized (0 size / 0 pos).
+		TSharedPtr<SWidget> SlateWidget = Widget->GetCachedWidget();
+		if (!SlateWidget.IsValid())
+		{
+			// Realize the slate representation if possible (safe for widgets already in a tree).
+			SlateWidget = const_cast<UWidget*>(Widget)->TakeWidget();
+		}
+		if (!SlateWidget.IsValid())
+		{
+			return false;
+		}
+
+		// Paint/tick space are more reliable than the legacy cached path on some UE versions / cull cases.
+		OutGeometry = Widget->GetPaintSpaceGeometry();
+		if (OutGeometry.GetLocalSize().IsNearlyZero())
+		{
+			OutGeometry = Widget->GetTickSpaceGeometry();
+		}
+		if (OutGeometry.GetLocalSize().IsNearlyZero())
+		{
+			OutGeometry = Widget->GetCachedGeometry();
+		}
+
+		// User widgets that are constructed but not yet arranged can still prepass for a usable size.
+		if (OutGeometry.GetLocalSize().IsNearlyZero())
+		{
+			if (const UUserWidget* UserWidget = Cast<UUserWidget>(Widget))
+			{
+				const_cast<UUserWidget*>(UserWidget)->ForceLayoutPrepass();
+				OutGeometry = Widget->GetCachedGeometry();
+				if (OutGeometry.GetLocalSize().IsNearlyZero())
+				{
+					OutGeometry = Widget->GetPaintSpaceGeometry();
+				}
+			}
+		}
+
+		// Realized slate widget is enough. Position may still be (0,0) until the first arrange/paint
+		// (do not reject on zero local size — that was failing for valid on-screen widgets).
+		return true;
+	}
+
+	static UObject* ResolveWorldContext(const UWidget* Widget)
+	{
+		if (!IsValid(Widget))
+		{
+			return nullptr;
+		}
+		if (UWorld* World = Widget->GetWorld())
+		{
+			return World;
+		}
+		if (const UUserWidget* UserWidget = Cast<UUserWidget>(Widget))
+		{
+			if (APlayerController* PC = UserWidget->GetOwningPlayer())
+			{
+				return PC;
+			}
+			if (ULocalPlayer* LP = UserWidget->GetOwningLocalPlayer())
+			{
+				return LP;
+			}
+		}
+		return nullptr;
+	}
+}
+
 bool UOmegaWidgetFunctions::GetWidgetScreenPosition(const UWidget* Widget, FVector2D& OutPosition, bool bGetCenter)
 {
-	if (!Widget)
+	OutPosition = FVector2D::ZeroVector;
+
+	FGeometry Geometry;
+	if (!OmegaWidgetPosition_Private::TryGetWidgetGeometry(Widget, Geometry))
 	{
 		return false;
 	}
 
-	const FGeometry& CachedGeometry = Widget->GetCachedGeometry();
-    
-	// Verify the widget has valid geometry (has been laid out)
-	if (CachedGeometry.GetLocalSize().IsNearlyZero())
-	{
-		return false;
-	}
-
-	if (bGetCenter)
-	{
-		const FVector2D LocalCenter = CachedGeometry.GetLocalSize() * 0.5f;
-		OutPosition = CachedGeometry.LocalToAbsolute(LocalCenter);
-	}
-	else
-	{
-		OutPosition = CachedGeometry.GetAbsolutePosition();
-	}
-
+	// Desktop/slate absolute coordinates (not DPI-scaled viewport units).
+	const FVector2D LocalCoord = bGetCenter ? FVector2D(0.5f, 0.5f) : FVector2D::ZeroVector;
+	OutPosition = Geometry.GetAbsolutePositionAtCoordinates(LocalCoord);
 	return true;
 }
 
 bool UOmegaWidgetFunctions::GetWidgetViewportPosition(const UWidget* Widget, FVector2D& OutViewportPosition,
 	bool bGetCenter)
 {
-	if (!Widget)
+	OutViewportPosition = FVector2D::ZeroVector;
+
+	FGeometry Geometry;
+	if (!OmegaWidgetPosition_Private::TryGetWidgetGeometry(Widget, Geometry))
 	{
 		return false;
 	}
 
-	FVector2D AbsolutePosition;
-	if (!GetWidgetScreenPosition(Widget, AbsolutePosition, bGetCenter))
+	UObject* WorldContext = OmegaWidgetPosition_Private::ResolveWorldContext(Widget);
+	if (!WorldContext)
 	{
 		return false;
 	}
 
-	// Get viewport scale to convert from absolute to viewport space
-	const UWorld* World = Widget->GetWorld();
-	if (!World)
-	{
-		return false;
-	}
-
-	const float ViewportScale = UWidgetLayoutLibrary::GetViewportScale(World);
-	if (FMath::IsNearlyZero(ViewportScale))
-	{
-		return false;
-	}
-
-	OutViewportPosition = AbsolutePosition / ViewportScale;
+	// LocalToViewport expects local-space units (pixels), not normalized 0-1 coordinates.
+	const FVector2D LocalCoord = bGetCenter ? (Geometry.GetLocalSize() * 0.5f) : FVector2D::ZeroVector;
+	FVector2D PixelPosition = FVector2D::ZeroVector;
+	// Absolute/desktop → pixel + viewport. Do NOT just divide absolute pos by viewport scale:
+	// absolute coords include the viewport's desktop origin (windowed / multi-monitor).
+	USlateBlueprintLibrary::LocalToViewport(WorldContext, Geometry, LocalCoord, PixelPosition, OutViewportPosition);
 	return true;
 }

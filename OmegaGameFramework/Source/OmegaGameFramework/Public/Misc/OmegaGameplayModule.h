@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "GameplayTagContainer.h"
 #include "OmegaGameMode.h"
+#include "Types/Struct_DamageMeta.h"
 
 #include "OmegaGameplayModule.generated.h"
 
@@ -125,7 +126,7 @@ public:
 	void OnCombatant_Unregistered(UCombatantComponent* Combatant);
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Combatant")
-	void OnCombatant_Damaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
+	void OnCombatant_Damaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta Meta);
 	
 	UFUNCTION(BlueprintImplementableEvent,Category="Combatant")
 	void OnCombatant_Notify(UCombatantComponent* OwningCombatant, FName Notify, const FString& Flag);

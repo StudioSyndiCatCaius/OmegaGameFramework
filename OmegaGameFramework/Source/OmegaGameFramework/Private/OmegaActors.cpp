@@ -8,7 +8,9 @@
 #include "Subsystems/Subsystem_Save.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
+#include "Functions/F_Actor.h"
 #include "Functions/F_BitFlag.h"
+#include "Functions/F_Common.h"
 #include "Functions/F_GlobalParam.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
@@ -23,11 +25,30 @@ SS_Engine=OGF_Subsystems::oEngine(); \
 SS_World=OGF_Subsystems::oWorld(this); \
 SS_GI=OGF_Subsystems::oGameInstance(this); \
 SS_Save=OGF_Subsystems::oSave(this); \
+OmegaActorConfig.Init(this); \
 PreBeginPlay(); \
 OGF_GAME_CORE()->Actor_OnBeginPlay(this); \
 Super::BeginPlay(); \
 PostBeginPlay(); \
 
+
+
+void FOmegaActorBaseConfig::Init(AActor* Actor)
+{
+	if (Actor)
+	{
+		TArray<FGameplayTag> tTarget;
+		TagTargets.GetKeys(tTarget);
+		for (FGameplayTag t : tTarget)
+		{
+			UOmegaActorFunctions::SetActorTagTarget(Actor, t,TagTargets[t].LoadSynchronous());
+		}
+		if (GlobalBindingTag.IsValid())
+		{
+			UOmegaGameFrameworkBPLibrary::SetTaggedActorBinding(Actor,GlobalBindingTag,Actor);
+		}
+	}
+}
 
 void AOmegaActorBASE::SetGuidflagValue(uint8 Flag, bool bValue, TEnumAsByte<EOmegaGlobalParamTarget> Target)
 {

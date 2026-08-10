@@ -11,6 +11,7 @@
 #include "UObject/Interface.h"
 #include "F_Dungeon.generated.h"
 
+class ALevelInstance;
 class UArrowComponent;
 class UBillboardComponent;
 class ULevelStreamingDynamic;
@@ -113,8 +114,9 @@ public:
 	// --- Spawning -----------------------------------------------------------------------------------------------
 	// Spawns a level (module) at the given transform. Cleaned up by DestroyDungeon.
 	// Game worlds (PIE/runtime): streams the level in asynchronously and returns the streaming level.
-	// Editor worlds: duplicates the module's actors directly into the world and returns null — streaming
-	// levels can't be cleanly unloaded from editor worlds and would keep the module's .umap file locked.
+	// Editor worlds: spawns a transient ALevelInstance actor (in an outliner folder named after this
+	// dungeon actor) and returns null — streaming levels can't be cleanly unloaded from editor worlds
+	// and would keep the module's .umap file locked.
 	UFUNCTION(BlueprintCallable,Category="Dungeon|Spawning") ULevelStreamingDynamic* SpawnLevelModule(TSoftObjectPtr<UWorld> Module, FTransform Transform);
 	// Spawns an actor registered to this dungeon. Cleaned up by DestroyDungeon.
 	UFUNCTION(BlueprintCallable,Category="Dungeon|Spawning") AActor* SpawnDungeonActor(TSubclassOf<AActor> Class, FTransform Transform);
@@ -138,19 +140,28 @@ protected:
 	UPROPERTY(Transient) TMap<UOmegaDungeon_MarkerPreset*,int32> MarkerSpawnCounts;
 	// True between the initial generation pass and the deferred finalize (open sockets + GenerateEnd).
 	bool bFinalizePending=false;
-	// Incremented per spawned module; stamped onto duplicated sockets so socket matching can tell
-	// modules apart in editor worlds (where all duplicated actors share one ULevel).
+	// True between the finalize pass and the Finish broadcast: GenerateEnd may spawn MORE module levels
+	// (walls/doors/etc.), and Finish must not fire until those have fully streamed in as well.
+	bool bFinishPending=false;
+	// Incremented per spawned module; stamped onto the module's sockets so socket matching can always
+	// tell module instances apart.
 	int32 ModuleSpawnCounter=0;
 
 	UFUNCTION() void HandleModuleLevelShown();
 	void ProcessMarker(AOmegaDungeon_Marker* Marker);
 	void ProcessMarkersInLevel(ULevel* Level);
+	// Processes the markers of every generated module level. Runs once, right before the Finish
+	// broadcast, so marker-spawned actors (enemies etc.) never appear before the geometry is in place.
+	void ProcessAllMarkers();
 	// Runs once all module levels are loaded: open-socket pass, Dungeon_GenerateEnd, Finish dispatcher.
 	void FinalizeGeneration();
+	// Broadcasts OnDungeonGeneration_Finish once nothing spawned during finalize is still streaming in.
+	void TryBroadcastFinish();
 
 #if WITH_EDITOR
-	// Editor-world module spawn: duplicates the module level's actors into this world.
-	void SpawnLevelModule_Editor(UWorld* ModuleWorld, const FTransform& Transform, int32 ModuleID);
+	// Editor-world module spawn: spawns a transient ALevelInstance for the module and blocks until its
+	// level is loaded, so sockets/markers are immediately available.
+	void SpawnLevelModule_Editor(const TSoftObjectPtr<UWorld>& Module, const FTransform& Transform, int32 ModuleID);
 #endif
 };
 

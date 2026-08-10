@@ -3,6 +3,7 @@
 #include "DataWidgets/DW_Message.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Functions/F_Message.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Types/Struct_Message.h"
 

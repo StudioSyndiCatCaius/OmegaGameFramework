@@ -88,13 +88,23 @@ class OMEGADEMO_API UOmegaDungeonModel_Path : public UOmegaDataAsset, public IDa
 public:
 
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modules") FVector CellModuleSize=FVector(1000,1000,1000);
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Config") FVector CellModuleSize=FVector(1000,1000,1000);
 	//Max socket connections per placed module. Structural connections (path order, leaf branches and
 	//connect-backs) are exempt; the cap limits EXTRA connections between cells that merely touch, and
 	//touching cells beyond it are walled off on both sides. Default 2 keeps a folded path (e.g. 4 cells
 	//in a 2x2) as walled corridors instead of one wide open area. Clamped to at least 2 internally.
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modules") int32 MaxModuleSocketConnections=2;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Config") int32 MaxModuleSocketConnections=2;
+	
+	//How many rings of Edge modules extend outward from the dungeon grid.
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Config") int32 EdgeDepth=1;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 MainPathLength_Min=3;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 MainPathLength_Max=5;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 LeafPaths_Min=1;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 LeafPaths_Max=3;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") TArray<FOmegaDngMdl_Path_LeafData> LeafPaths;
+	
 	//modules used for and main path tiles.
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modules") TArray<FOmegaDngMdl_Path_Module> Modules_Path;
 
@@ -113,12 +123,14 @@ public:
 	//After all paths is drawn and all point tiles (like start/end) are placed, place walls at remaining Dungeon Sockets that don't connect to anything
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modules") TArray<FOmegaDngMdl_Path_Module> Modules_Wall;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 MainPathLength_Min=3;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 MainPathLength_Max=5;
+	//modules placed on the remaining unused tiles of the dungeon grid (in-bounds tiles no path cell occupies).
+	//Spawned at a random 90° rotation, after the wall/door pass — author them without sockets.
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modules") TArray<FOmegaDngMdl_Path_Module> Modules_Gaps;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 LeafPaths_Min=1;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") int32 LeafPaths_Max=3;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Path") TArray<FOmegaDngMdl_Path_LeafData> LeafPaths;
+	//modules spawned around the outside of the dungeon grid, extending the tilemap outward exclusively
+	//with Edge tiles (corners included). Spawned at a random 90° rotation — author them without sockets.
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Modules") TArray<FOmegaDngMdl_Path_Module> Modules_Edges;
+
 
 	// --- IDataInterface_DungeonModel ------------------------------------------------------------------------------
 	virtual void Dungeon_GenerateBegin_Implementation(AOmegaDungeon* Dungeon) override;
@@ -139,6 +151,10 @@ private:
 	// Rotated (world-space direction) socket layout of each already-placed cell, so later cells can
 	// match socket tags against their placed neighbors. Reset in Dungeon_GenerateBegin.
 	TMap<FIntVector,FOmegaDngMdl_ModuleSockets> PlacedCellSockets;
+	// Coord of the dungeon grid's (0,0,0) corner AFTER the origin shift applied during layout (cells are
+	// shifted so the Start cell lands on the dungeon actor's origin). The grid rectangle spans
+	// GridMin .. GridMin+Size-1; the gap/edge passes in Dungeon_GenerateEnd need it.
+	FIntVector GridMin=FIntVector::ZeroValue;
 
 	const FOmegaDngMdl_ModuleSockets& GetModuleSocketData(const TSoftObjectPtr<UWorld>& Module);
 	// Registers a two-way connection between two adjacent cells.

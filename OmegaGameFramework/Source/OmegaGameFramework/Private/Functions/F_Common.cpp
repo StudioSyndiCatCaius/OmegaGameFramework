@@ -481,6 +481,15 @@ void UOmegaGameFrameworkBPLibrary::SetGameplaySystemsActive(const UObject* World
 	}
 }
 
+void UOmegaGameFrameworkBPLibrary::SetGameplaySystemsTagBlocked(const UObject* WorldContextObject,
+	FGameplayTag SystemTag, uint8 BlockFlag, bool bBlocked)
+{
+	if (UOmegaSubsystem_World* w=OGF_Subsystems::oWorld(WorldContextObject))
+	{
+		w->SetSystemTagBlockedFlag(SystemTag, BlockFlag, bBlocked);
+	}
+}
+
 UObject* UOmegaGameFrameworkBPLibrary::GetClassDefaultObject(TSubclassOf<UObject> object)
 {
 	if (!object)
@@ -1064,7 +1073,12 @@ void UOmegaGameFrameworkBPLibrary::SetTaggedActorBinding(const UObject* WorldCon
 {
 	if(WorldContextObject && Actor)
 	{
-		WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->ActorBindings_Tagged.Add(Binding,Actor);
+		if (UOmegaSubsystem_World* ss=WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>())
+		{
+			ClearTaggedActorBinding(WorldContextObject,Binding);
+			ss->ActorBindings_Tagged.Add(Binding,Actor);
+			ss->OnGlobalTagged_Bound.Broadcast(Binding,Actor);
+		}
 	}
 }
 
@@ -1082,6 +1096,24 @@ AActor* UOmegaGameFrameworkBPLibrary::CheckTaggedActorBinding(const UObject* Wor
 	}
 	result=false;
 	return nullptr;
+}
+
+void UOmegaGameFrameworkBPLibrary::ClearTaggedActorBinding(const UObject* WorldContextObject, FGameplayTag Binding)
+{
+	if(WorldContextObject && WorldContextObject->GetWorld())
+	{
+		if(UOmegaSubsystem_World* _sub=WorldContextObject->GetWorld()->GetSubsystem<UOmegaSubsystem_World>())
+		{
+			if (_sub->ActorBindings_Tagged.Contains(Binding))
+			{
+				if(AActor* a=_sub->ActorBindings_Tagged[Binding])
+				{
+					_sub->OnGlobalTagged_Unbound.Broadcast(Binding,a);
+					_sub->ActorBindings_Tagged.Remove(Binding);
+				}
+			}
+		}
+	}
 }
 
 // QUICK ACCESS
@@ -1235,12 +1267,12 @@ void UOmegaGameFrameworkBPLibrary::SetComponentTagActive(UActorComponent* Compon
 }
 
 TArray<AActor*> UOmegaGameFrameworkBPLibrary::GetActorsFromComponents(TArray<UActorComponent*> Components,
-	TSubclassOf<UActorComponent> Class)
+	TSubclassOf<AActor> Class)
 {
 	TArray<AActor*> OutActors;
 	for(const auto* TempComp : Components)
 	{
-		if(TempComp && (!Class || TempComp->GetClass()->IsChildOf(Class)))
+		if(TempComp && (!Class || TempComp->GetOwner()->GetClass()->IsChildOf(Class)))
 		{
 			OutActors.AddUnique(TempComp->GetOwner());
 		}

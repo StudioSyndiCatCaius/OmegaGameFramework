@@ -1,5 +1,7 @@
 ﻿#include "script_BodySlots.h"
 
+#include "Components/SkeletalMeshComponent.h"
+
 USkeletalMesh* UBodySlotScript_SkelMeshFromArray::GetMeshFromIndex_Implementation(
 	FOmegaBodyOptionValue OptionValue) const
 {

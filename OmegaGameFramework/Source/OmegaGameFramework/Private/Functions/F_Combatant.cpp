@@ -10,6 +10,7 @@
 #include "Condition/Condition_Combatant.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "Functions/F_Animation.h"
+#include "Functions/F_CombatantSelector.h"
 #include "GameFramework/Pawn.h"
 #include "Functions/F_Utility.h"
 #include "GameFramework/Character.h"
@@ -336,8 +337,23 @@ TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_Combine(TArra
 	return out;
 }
 
+TArray<FOmegaAttributeModifier> UCombatantFunctions::AttributeMods_GetAllFromObject(UObject* Object)
+{
+	TArray<FOmegaAttributeModifier> out;
+	
+	if (Object && Object->GetClass()->ImplementsInterface(UDataInterface_Combatant::StaticClass()))
+	{
+		out=IDataInterface_Combatant::Execute_GetModifierValues(Object,nullptr);
+		out.Append(IDataInterface_Combatant::Execute_Combatant_GetScriptedModifiers(Object).GatherAttributeModifiers(nullptr));
+
+		out=AttributeMods_Flatten(out);
+	}
+	
+	return out;
+}
+
 void UCombatantFunctions::AttributeMods_GetSingleValue(TArray<FOmegaAttributeModifier> mods, UOmegaAttribute* Attribute,
-	float& Increment, float& Multiplier)
+                                                       float& Increment, float& Multiplier)
 {
 	TArray<FOmegaAttributeModifier> InMods=AttributeMods_Flatten(mods);
 	for (FOmegaAttributeModifier m : InMods)
@@ -448,7 +464,7 @@ bool UCombatantFunctions::CanCombatantUseSkill(UCombatantComponent* Combatant, U
 }
 
 void UCombatantFunctions::GetSkillUtilityScore(UCombatantComponent* Combatant, UPrimaryDataAsset* Skill,
-	TArray<UCombatantComponent*> Targets, FGameplayTag Tag, float& SingleScore,float& SingleScoreAverage, float& MultiTargetScore)
+	TArray<UCombatantComponent*> Targets, float& Score,float& ScoreAverage)
 {
 	if (!Skill || !Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass())) return;
 	if (!IDataInterface_Skill::Execute_CanUseSkill(Skill, Combatant)) return;
@@ -459,65 +475,337 @@ void UCombatantFunctions::GetSkillUtilityScore(UCombatantComponent* Combatant, U
 	{
 		if (Target)
 		{
-			float score=IDataInterface_Skill::Execute_Skill_CheckUtility_OneTarget(Skill, Combatant, Target, Tag);
+			float score=IDataInterface_Skill::Execute_Skill_CheckUtility(Skill, Combatant, Target);
 			targetNum+=1;
-			SingleScore+=score;
+			Score+=score;
 		}
 	}
-	
-	MultiTargetScore=IDataInterface_Skill::Execute_Skill_CheckUtility(Skill, Combatant, Targets, Tag);
-	SingleScoreAverage=SingleScore/targetNum;
+
+	ScoreAverage=Score/targetNum;
 }
 
-UPrimaryDataAsset* UCombatantFunctions::SelectSkillByUtility(UCombatantComponent* Combatant,
-                                                             TArray<UPrimaryDataAsset*> Skills, TArray<UCombatantComponent*> Targets,
-                                                             FGameplayTag Tag, TEnumAsByte<EOmegaSkillUtilityTarget> UtilityTarget, float RandomOffsetRange)
+void UCombatantFunctions::SelectSkillAndTargetsByUtility(UCombatantComponent* Instigator,
+	TArray<UPrimaryDataAsset*> PossibleSkills, TArray<UCombatantComponent*> PossibleTargets,
+	EOmegaSkillUtilityOrder Order, UPrimaryDataAsset*& FinalSkill, TArray<UCombatantComponent*>& FinalTargets,
+	float RandomOffsetRange, bool RegisterFinalAsTargetList)
 {
-	if (Skills.IsEmpty()) return nullptr;
-
-	UPrimaryDataAsset* BestSkill = nullptr;
-	float BestScore = TNumericLimits<float>::Lowest();
-
-	for (UPrimaryDataAsset* Skill : Skills)
+	// Primarily for AI: pick skill + targets via IDataInterface_Skill::Skill_CheckUtility,
+	// then finalize the target set with the skill's TargetSelector.
+	FinalSkill = nullptr;
+	FinalTargets.Reset();
+	if (!Instigator)
 	{
-		if (!Skill || !Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass())) continue;
-		if (!IDataInterface_Skill::Execute_CanUseSkill(Skill, Combatant)) continue;
-		
-		float Score = 0.0f;
+		return;
+	}
 
-		float SingleAverageScore = 0.0f;
-		float MultiTargetScore = 0.0f;
-		GetSkillUtilityScore(Combatant, Skill, Targets, Tag, Score, SingleAverageScore, MultiTargetScore);
-
-		const float SelectedUtilityScore = [&]()
+	const auto ApplyRandom = [RandomOffsetRange](float Score) -> float
+	{
+		if (RandomOffsetRange > 0.f)
 		{
-			switch (UtilityTarget)
+			Score += FMath::FRandRange(-RandomOffsetRange, RandomOffsetRange);
+		}
+		return Score;
+	};
+
+	const auto GetValidTargetsForSkill = [Instigator, &PossibleTargets](UPrimaryDataAsset* Skill) -> TArray<UCombatantComponent*>
+	{
+		TArray<UCombatantComponent*> ValidTargets = PossibleTargets;
+		const FOmegaSkillConfig Config = IDataInterface_Skill::Execute_Skill_GetConfig(Skill, Instigator);
+		if (Config.TargetFilter)
+		{
+			ValidTargets = Config.TargetFilter->FilterCombatants(Instigator, ValidTargets);
+		}
+		ValidTargets.RemoveAll([](const UCombatantComponent* Target) { return !IsValid(Target); });
+		return ValidTargets;
+	};
+
+	const auto IsUsableSkill = [Instigator](UPrimaryDataAsset* Skill) -> bool
+	{
+		return Skill
+			&& Skill->GetClass()->ImplementsInterface(UDataInterface_Skill::StaticClass())
+			&& CanCombatantUseSkill(Instigator, Skill, true);
+	};
+
+	// Per-target utility for a skill (Skill_CheckUtility interface).
+	const auto ScoreTargetForSkill = [Instigator, &ApplyRandom](UPrimaryDataAsset* Skill, UCombatantComponent* Target) -> float
+	{
+		const float Base = IDataInterface_Skill::Execute_Skill_CheckUtility(Skill, Instigator, Target);
+		return ApplyRandom(Base);
+	};
+
+	// Aggregate skill utility over a target list (average of one-target utilities).
+	const auto ScoreSkillOnTargets = [Instigator, &ApplyRandom](UPrimaryDataAsset* Skill, const TArray<UCombatantComponent*>& Targets) -> float
+	{
+		float Sum = 0.f;
+		float Average = 0.f;
+		GetSkillUtilityScore(Instigator, Skill, Targets, Sum, Average);
+		return ApplyRandom(Average);
+	};
+
+	// Rank targets best-first by Skill_CheckUtility for a given skill.
+	const auto RankTargetsForSkill = [&ScoreTargetForSkill](UPrimaryDataAsset* Skill, const TArray<UCombatantComponent*>& Targets) -> TArray<UCombatantComponent*>
+	{
+		struct FScoredTarget
+		{
+			UCombatantComponent* Target = nullptr;
+			float Score = 0.f;
+		};
+
+		TArray<FScoredTarget> Scored;
+		Scored.Reserve(Targets.Num());
+		for (UCombatantComponent* Target : Targets)
+		{
+			Scored.Add({ Target, ScoreTargetForSkill(Skill, Target) });
+		}
+		Scored.Sort([](const FScoredTarget& A, const FScoredTarget& B) { return A.Score > B.Score; });
+
+		TArray<UCombatantComponent*> Ranked;
+		Ranked.Reserve(Scored.Num());
+		for (const FScoredTarget& Entry : Scored)
+		{
+			Ranked.Add(Entry.Target);
+		}
+		return Ranked;
+	};
+
+	// Run the skill's TargetSelector over ranked valid targets (best-first so Single picks top utility).
+	const auto FinalizeTargetsWithSelector = [Instigator](UPrimaryDataAsset* Skill, const TArray<UCombatantComponent*>& RankedTargets) -> TArray<UCombatantComponent*>
+	{
+		if (RankedTargets.IsEmpty())
+		{
+			return {};
+		}
+
+		const FOmegaSkillConfig Config = IDataInterface_Skill::Execute_Skill_GetConfig(Skill, Instigator);
+		if (Config.TargetSelector)
+		{
+			UCombatantSelector* Selector = NewObject<UCombatantSelector>(Instigator, Config.TargetSelector);
+			Selector->Instigator = Instigator;
+			Selector->InputTargets = RankedTargets;
+			Selector->OnSelectorBegin();
+
+			if (Selector->ActiveTargets.IsEmpty())
 			{
-			case SkillUtilTarg_Multi:
-				return MultiTargetScore;
-
-			case SkillUtilTarg_SingleAverage:
-				return SingleAverageScore;
-
-			default:
-				return Score;
+				Selector->SetSelectorTargetActive(RankedTargets[0], true);
 			}
-		}();
 
-		Score = SelectedUtilityScore;
-		
-		
-		Score += FMath::FRandRange(-RandomOffsetRange, RandomOffsetRange);
+			Selector->Refresh();
+			TArray<UCombatantComponent*> Selected = Selector->OnFinalizeTargets(Selector->ActiveTargets);
+			Selected.RemoveAll([](const UCombatantComponent* Target) { return !IsValid(Target); });
+			return Selected;
+		}
 
-		const bool bBetter (Score > BestScore);
-		if (bBetter)
+		// No selector: single best-ranked target.
+		return { RankedTargets[0] };
+	};
+
+	// ---------------------------------------------------------------
+	// Collect usable skills that still have at least one valid target
+	// ---------------------------------------------------------------
+	struct FSkillCandidate
+	{
+		UPrimaryDataAsset* Skill = nullptr;
+		TArray<UCombatantComponent*> ValidTargets;
+	};
+
+	TArray<FSkillCandidate> Candidates;
+	Candidates.Reserve(PossibleSkills.Num());
+	for (UPrimaryDataAsset* Skill : PossibleSkills)
+	{
+		if (!IsUsableSkill(Skill))
 		{
-			BestScore = Score;
-			BestSkill = Skill;
+			continue;
+		}
+		TArray<UCombatantComponent*> ValidTargets = GetValidTargetsForSkill(Skill);
+		if (ValidTargets.IsEmpty())
+		{
+			continue;
+		}
+		Candidates.Add({ Skill, MoveTemp(ValidTargets) });
+	}
+
+	if (Candidates.IsEmpty())
+	{
+		return;
+	}
+
+	// ===============================================================
+	// Order: Skill then Target  (elect skill first, then target order)
+	// ===============================================================
+	if (Order == SkillUtilOrd_TargSkill)
+	{
+		UPrimaryDataAsset* BestSkill = nullptr;
+		TArray<UCombatantComponent*> BestValidTargets;
+		float BestScore = TNumericLimits<float>::Lowest();
+		bool bFound = false;
+
+		for (const FSkillCandidate& Candidate : Candidates)
+		{
+			const float Score = ScoreSkillOnTargets(Candidate.Skill, Candidate.ValidTargets);
+			if (!bFound || Score > BestScore)
+			{
+				bFound = true;
+				BestScore = Score;
+				BestSkill = Candidate.Skill;
+				BestValidTargets = Candidate.ValidTargets;
+			}
+		}
+
+		if (!BestSkill)
+		{
+			return;
+		}
+
+		FinalSkill = BestSkill;
+		const TArray<UCombatantComponent*> Ranked = RankTargetsForSkill(FinalSkill, BestValidTargets);
+		FinalTargets = FinalizeTargetsWithSelector(FinalSkill, Ranked);
+	}
+	// ===============================================================
+	// Order: Target then Skill  (rank targets first, then elect skill)
+	// ===============================================================
+	else // SkillUtilOrd_SkillTarg
+	{
+		// Score each possible target by the best utility any usable skill can achieve on it.
+		struct FGlobalTargetScore
+		{
+			UCombatantComponent* Target = nullptr;
+			float BestScore = TNumericLimits<float>::Lowest();
+			UPrimaryDataAsset* BestSkillForTarget = nullptr;
+		};
+
+		TMap<UCombatantComponent*, FGlobalTargetScore> TargetScores;
+		for (const FSkillCandidate& Candidate : Candidates)
+		{
+			for (UCombatantComponent* Target : Candidate.ValidTargets)
+			{
+				const float Score = ScoreTargetForSkill(Candidate.Skill, Target);
+				FGlobalTargetScore& Entry = TargetScores.FindOrAdd(Target);
+				if (!Entry.Target)
+				{
+					Entry.Target = Target;
+					Entry.BestScore = Score;
+					Entry.BestSkillForTarget = Candidate.Skill;
+				}
+				else if (Score > Entry.BestScore)
+				{
+					Entry.BestScore = Score;
+					Entry.BestSkillForTarget = Candidate.Skill;
+				}
+			}
+		}
+
+		// Global target ranking (best utility-first) — drives later selector input order.
+		TArray<FGlobalTargetScore> RankedGlobal;
+		TargetScores.GenerateValueArray(RankedGlobal);
+		RankedGlobal.Sort([](const FGlobalTargetScore& A, const FGlobalTargetScore& B)
+		{
+			return A.BestScore > B.BestScore;
+		});
+
+		if (RankedGlobal.IsEmpty())
+		{
+			return;
+		}
+
+		// Elect skill: prefer the skill that is strongest on the highest-ranked targets.
+		// Score each skill by utility on its valid targets, weighted so earlier global ranks matter more.
+		UPrimaryDataAsset* BestSkill = nullptr;
+		TArray<UCombatantComponent*> BestValidTargets;
+		float BestSkillScore = TNumericLimits<float>::Lowest();
+		bool bFoundSkill = false;
+
+		// Build a rank lookup for weight.
+		TMap<UCombatantComponent*, int32> GlobalRank;
+		for (int32 i = 0; i < RankedGlobal.Num(); ++i)
+		{
+			GlobalRank.Add(RankedGlobal[i].Target, i);
+		}
+
+		for (const FSkillCandidate& Candidate : Candidates)
+		{
+			float WeightedSum = 0.f;
+			float WeightTotal = 0.f;
+			for (UCombatantComponent* Target : Candidate.ValidTargets)
+			{
+				const int32* RankPtr = GlobalRank.Find(Target);
+				const int32 Rank = RankPtr ? *RankPtr : RankedGlobal.Num();
+				// Higher weight for better-ranked (lower index) global targets.
+				const float Weight = 1.f / static_cast<float>(Rank + 1);
+				const float Util = IDataInterface_Skill::Execute_Skill_CheckUtility(Candidate.Skill, Instigator, Target);
+				WeightedSum += Util * Weight;
+				WeightTotal += Weight;
+			}
+
+			float Score = (WeightTotal > 0.f) ? (WeightedSum / WeightTotal) : 0.f;
+			Score = ApplyRandom(Score);
+
+			if (!bFoundSkill || Score > BestSkillScore)
+			{
+				bFoundSkill = true;
+				BestSkillScore = Score;
+				BestSkill = Candidate.Skill;
+				BestValidTargets = Candidate.ValidTargets;
+			}
+		}
+
+		if (!BestSkill)
+		{
+			return;
+		}
+		FinalSkill = BestSkill;
+
+		// Order this skill's valid targets using the global target ranking (target-first intent).
+		TArray<UCombatantComponent*> RankedForSkill;
+		RankedForSkill.Reserve(BestValidTargets.Num());
+		for (const FGlobalTargetScore& Entry : RankedGlobal)
+		{
+			if (BestValidTargets.Contains(Entry.Target))
+			{
+				RankedForSkill.Add(Entry.Target);
+			}
+		}
+		// Any valid targets missing from global map (shouldn't happen) go last, still utility-ranked.
+		for (UCombatantComponent* Target : BestValidTargets)
+		{
+			RankedForSkill.AddUnique(Target);
+		}
+
+		FinalTargets = FinalizeTargetsWithSelector(FinalSkill, RankedForSkill);
+	}
+
+	if (RegisterFinalAsTargetList && FinalTargets.Num() > 0)
+	{
+		Instigator->SetTargetsRegistered(FinalTargets, true, true);
+	}
+}
+
+
+TArray<UCombatantComponent*> UCombatantFunctions::FilterValidSkillTargets(TScriptInterface<IDataInterface_Skill> Skill,
+                                                                          UCombatantComponent* Instigator, TArray<UCombatantComponent*> Targets)
+{
+	if (Skill.GetObject() && Targets.IsValidIndex(0))
+	{
+		FOmegaSkillConfig SkillConfig=IDataInterface_Skill::Execute_Skill_GetConfig(Skill.GetObject(),Targets[0]);
+		if (SkillConfig.TargetFilter)
+		{
+			return SkillConfig.TargetFilter->FilterCombatants(Instigator,Targets);
 		}
 	}
-	
-	return BestSkill;
+	return TArray<UCombatantComponent*>();
+}
+
+bool UCombatantFunctions::IsValidSkillTarget(TScriptInterface<IDataInterface_Skill> Skill,UCombatantComponent* Instigator, UCombatantComponent* Target)
+{
+	if (Skill.GetObject() && Target)
+	{
+		FOmegaSkillConfig SkillConfig=IDataInterface_Skill::Execute_Skill_GetConfig(Skill.GetObject(),Target);
+		if (SkillConfig.TargetFilter)
+		{
+			TArray Targets = { Target };
+			return SkillConfig.TargetFilter->FilterCombatants(Instigator,Targets).Contains(Target);
+		}
+	}
+	return false;
 }
 
 bool UCombatantFunctions::ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject)
@@ -537,7 +825,7 @@ bool UCombatantFunctions::ConsumeSkillAttributes(UCombatantComponent* Combatant,
 			{
 				if(TempAtt)
 				{
-					Combatant->ApplyAttributeDamage(TempAtt,att_vals[TempAtt],nullptr,nullptr,nullptr,FHitResult());
+					Combatant->ApplyAttributeDamage(TempAtt,att_vals[TempAtt],nullptr,nullptr,FOmegaAttributeDamageMeta());
 				}
 			}
 		}

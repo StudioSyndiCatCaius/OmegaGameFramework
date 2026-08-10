@@ -24,17 +24,17 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOListenTurnManagerDelegate TurnFail;
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOListenTurnManagerDelegate TurnOrderGenerated;
 	
-	UPROPERTY() UTurnBasedManagerComponent* TurnManager;
+	UPROPERTY() TObjectPtr<UTurnBasedManagerComponent> TurnManager;
 
 	UFUNCTION() void L_OnTurnStart(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant);
 	UFUNCTION() void L_OnTurnEnd(UTurnBasedManagerComponent* Component, UCombatantComponent* Combatant);
 	UFUNCTION() void L_OnTurnFail(FString Reason);
 	UFUNCTION() void L_OnTurnOrderGenerated(UTurnBasedManagerComponent* Component);
-	
+
 	virtual void Activate() override;
+	virtual void SetReadyToDestroy() override;
 	
-	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly), Category="Omega|ListenFor", meta = (WorldContext = "WorldContextObject"),DisplayName="👂Listen For - Turn Manager") 
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="Component"), Category="Omega|ListenFor", DisplayName="👂Listen For - Turn Manager") 
 	static UListenFor_TurnManager* ListenFor_TurnManager(UTurnBasedManagerComponent* Component);
 	
 };
-

@@ -10,6 +10,7 @@
 #include "Functions/F_Component.h"
 #include "Functions/F_TagEvent.h"
 #include "GameFramework/Actor.h"
+#include "Types/Struct_DamageMeta.h"
 #include "Misc/GeneralDataObject.h"
 #include "Actor_Destructable.generated.h"
 
@@ -86,7 +87,7 @@ public:
 	FOmegaDestructibleConfig GetConfig() const;
 
 	UFUNCTION()
-	void L_Damaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* _Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
+	void L_Damaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* _Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta Meta);
 	AOmegaDestructible();
 
 	// Replaces the current preset at runtime and re-applies its configuration to the actor.

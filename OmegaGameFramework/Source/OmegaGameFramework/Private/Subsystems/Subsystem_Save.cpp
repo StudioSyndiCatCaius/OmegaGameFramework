@@ -22,6 +22,8 @@
 #include "ImageUtils.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "Functions/F_Object.h"
+#include "Functions/F_Save.h"
 #include "Misc/FileHelper.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -75,6 +77,10 @@ FString UOmegaSaveSubsystem::GetSavePlaytimeString(bool bGlobal, bool bIncludeMi
 void UOmegaSaveSubsystem::Deinitialize()
 {
 	SaveGlobalGame();
+	// The engine subsystem outlives this game instance; leaving custom assets registered there
+	// would keep the dead game instance (and in PIE, the whole play world) referenced through
+	// their outer chain, crashing the editor's stale-reference check on EndPlay.
+	Local_ClearTrackedCustomAssets();
 }
 
 
@@ -109,6 +115,8 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame(int32 Slot, bool& Success, const F
 
 UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame_Named(FString Slot, bool& Success, const FString& alt_path)
 {
+	UOmegaSaveGame* out_save=nullptr;
+	
 	if(alt_path.IsEmpty())
 	{
 		const bool ValidSave = UGameplayStatics::DoesSaveGameExist(Slot, 0);
@@ -122,18 +130,40 @@ UOmegaSaveGame* UOmegaSaveSubsystem::LoadGame_Named(FString Slot, bool& Success,
 			{
 				LocalGameSave->SaveScreenshot = FImageUtils::ImportFileAsTexture2D(ScreenshotPath);
 			}
-			return LocalGameSave;
+			out_save=LocalGameSave;
 		}
 	}
 	else if (USaveGame* _sav=OGF_Save::LoadGame(alt_path,Slot))
 	{
 		if(UOmegaSaveGame* sav_gam=Cast<UOmegaSaveGame>(_sav))
 		{
-			return sav_gam;
+			out_save=sav_gam;
 		}
 	}
 	OGF_GLOBALREFRESH();
-	return nullptr;
+	
+	if (out_save)
+	{
+		//CUSTOM ASSETS - Clear (including engine subsystem entries, so assets from a previous load don't leak)
+		Local_ClearTrackedCustomAssets();
+
+		//CUSTOM ASSETS - Load & Create
+		TArray<FName> custom_asset_names;
+		custom_asset_names.Empty();
+		out_save->CustomAssets.GetKeys(custom_asset_names);
+	
+		for (FName n : custom_asset_names)
+		{
+			FOmegaSavedCustomAsset asset_data=out_save->CustomAssets.FindChecked(n);
+			
+			if (UPrimaryDataAsset* da=CustomAsset_Create(asset_data.BaseAsset,n,out_save))
+			{
+				OGF_Subsystems::oEngine()->SortedAssets.Add(n.ToString(),da);	
+			}
+		}
+	}
+	
+	return out_save;
 }
 
 TArray<UOmegaSaveGame*> UOmegaSaveSubsystem::ListSavedGames(const FString& alt_path, int32 number, bool retain_size)
@@ -201,6 +231,15 @@ void UOmegaSaveSubsystem::WriteSaveDataToActive()
 	ActiveSaveData->ActiveZone = GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->GetWorldManager()->Zone_GetFirstLoaded();
 	ActiveSaveData->ActiveLevelName = UGameplayStatics::GetCurrentLevelName(this);
 	ActiveSaveData->SaveDate = UKismetMathLibrary::Now();
+
+	//CUSTOM ASSETS - Recache modified values of custom created assets
+	for (auto& tracked : TrackedCustomAssets)
+	{
+		if (tracked.Value && ActiveSaveData->CustomAssets.Contains(tracked.Key))
+		{
+			ActiveSaveData->CustomAssets[tracked.Key].Bytes=UOmegaObjectFunctions::Object_2_Bytes(this,tracked.Value);
+		}
+	}
 
 	//Save lua table
 	ActiveSaveData->Lua_SaveTable(this,
@@ -477,6 +516,59 @@ void UOmegaSaveSubsystem::SetSaveTagsOnDataAsset_List(TArray<UPrimaryDataAsset*>
 	{
 		SetSaveTagsOnDataAsset(i,Tags,bHasTags,bGlobal);
 	}
+}
+
+UPrimaryDataAsset* UOmegaSaveSubsystem::CustomAsset_Create(UPrimaryDataAsset* BaseAsset, FName Name,
+	UOmegaSaveBase* Save)
+{
+	if (!BaseAsset || !Save)
+	{
+		return nullptr;
+	}
+	if (UPrimaryDataAsset* newDA=Cast<UPrimaryDataAsset>(UOmegaObjectFunctions::Duplicate_Object(BaseAsset,this,UPrimaryDataAsset::StaticClass())))
+	{
+		//Duplicates inherit RF_Standalone/RF_Transactional from the source content asset. Standalone
+		//objects survive GC after EndPlay (editor stale-reference fatal), and transactional ones get
+		//recorded into the editor undo buffer, which then pins this subsystem and the play world.
+		newDA->ClearFlags(RF_Standalone|RF_Public|RF_Transactional);
+
+		FOmegaSavedCustomAsset asset_data;
+		asset_data.BaseAsset=BaseAsset;
+
+		FOmegaSavedCustomAsset* saved_data=Save->CustomAssets.Find(Name);
+		if (saved_data && saved_data->Bytes.Bytes.Num()>0)
+		{
+			//Asset already exists in this save - restore its saved values onto the new duplicate
+			UOmegaObjectFunctions::Bytes_ApplyToObject(newDA,saved_data->Bytes);
+			asset_data.Bytes=saved_data->Bytes;
+		}
+		else
+		{
+			asset_data.Bytes=UOmegaObjectFunctions::Object_2_Bytes(this,newDA);
+		}
+		Save->CustomAssets.Add(Name,asset_data);
+
+		TrackedCustomAssets.Add(Name,newDA);
+		return newDA;
+	}
+	return nullptr;
+}
+
+void UOmegaSaveSubsystem::Local_ClearTrackedCustomAssets()
+{
+	if (UOmegaSubsystem_Engine* engine_ss=OGF_Subsystems::oEngine())
+	{
+		for (auto& tracked : TrackedCustomAssets)
+		{
+			UObject* const* registered=engine_ss->SortedAssets.Find(tracked.Key.ToString());
+			//only remove entries this subsystem registered, in case something else reused the name
+			if (registered && *registered==tracked.Value)
+			{
+				engine_ss->SortedAssets.Remove(tracked.Key.ToString());
+			}
+		}
+	}
+	TrackedCustomAssets.Empty();
 }
 
 

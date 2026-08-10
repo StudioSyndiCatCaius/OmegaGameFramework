@@ -31,7 +31,7 @@ public:
 
 	// Returns the spawn transform for battler #index belonging to the given faction on this stage.
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Encounter|Stage")
-	FTransform GetTransformForBattler(UPARAM(meta=(Categories="FACTION")) FGameplayTag FactionTag, int32 index);
+	FTransform GetTransformForBattler(UPARAM(meta=(Categories="FACTION")) FGameplayTag FactionTag, int32 index,int32 max_index);
 
 	// Box component defining the valid area of this stage.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Omega|Encounter|Stage") UBoxComponent* Range;
@@ -56,12 +56,16 @@ public:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="Components") USpringArmComponent* comp_spring;
 	// The encounter's dedicated camera component.
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="Components") UCameraComponent* comp_camera;
-
+	
 
 	// Returns the spawn transform for battler #index of the given faction within this instance.
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category="Omega|Encounter|Stage")
-	FTransform GetTransformByFaction(UPARAM(meta=(Categories="FACTION")) FGameplayTag FactionTag, int32 index);
+	FTransform GetTransformByFaction(UPARAM(meta=(Categories="FACTION")) FGameplayTag FactionTag, int32 index, int32 max);
 
+	
+	UFUNCTION(BlueprintPure, BlueprintPure, Category="Omega|Encounter|Stage")
+    FTransform GetTransformByIndex(FTransform RelativeRoot, FVector OffsetPull=FVector(0,1,0), 
+    	float bounds=500, int32 index=0,int32 max=4);
 };
 
 
@@ -167,6 +171,11 @@ public:
 	UFUNCTION(BlueprintPure,Category="Encounter")
 	AOmegaCombatEncounter_Instance* GetCurrent_Encounter() const;
 
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Encounter")
+	//TArray<FGameplayTag> Faction
+	UFUNCTION(BlueprintCallable,Category="Encounter")
+	TArray<ACharacter*> SpawnRandomBattlersFromSource(UOmegaFaction* Faction, FOmegaCommonMeta meta);
+	
 };
 
 // Bundles all configuration options needed to start an encounter (stage, instance class, optional overrides).
@@ -202,9 +211,16 @@ public:
 	UFUNCTION(BlueprintNativeEvent,Category="ΩI|⚔️Encounter",DisplayName="⚔️Encounter - On Begin")
 	bool OnEncounterBegin(UOmegaCombatEncounter_Component* Component);
 
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|⚔️Encounter",DisplayName="⚔️Encounter - On Battler Spawn")
+	int32 OnEncounterBattlerSpawn(UOmegaCombatEncounter_Component* Component,ACharacter* Battler, UCombatantComponent* Combatant);
+	
 	// Returns the configuration (stage, instance class, overrides) for the encounter this source wants to run.
 	UFUNCTION(BlueprintNativeEvent,Category="ΩI|⚔️Encounter",DisplayName="⚔️Encounter - Get Config")
 	FOmegaEncounterConfig Encounter_Config();
+	
+	UFUNCTION(BlueprintNativeEvent,Category="ΩI|⚔️Encounter",DisplayName="⚔️Encounter - Get Random Battlers")
+	bool Encounter_GetRandomBattlers(UOmegaCombatEncounter_Component* Component, UOmegaFaction* Faction, FOmegaCommonMeta meta,
+		TArray<UPrimaryDataAsset*>& Possibles,int32& Possible_Min,int32& Possible_Max);
 
 };
 

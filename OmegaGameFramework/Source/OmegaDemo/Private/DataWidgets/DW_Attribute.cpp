@@ -59,7 +59,7 @@ void UDataWidgetBase_Attribute::local_Update()
 }
 
 void UDataWidgetBase_Attribute::local_OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-                                                         float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
+                                                         float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta DamageMeta)
 {
 	if(Combatant==REF_Combatant && Attribute==REF_attribute)
 	{

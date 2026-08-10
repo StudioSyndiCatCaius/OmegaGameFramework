@@ -14,8 +14,14 @@
 #include "Misc/GeneralDataObject.h"
 #include "Types/Struct_RandomRange.h"
 #include "Engine/HitResult.h"
+#include "Types/Struct_Minimap.h"
 #include "Component_GameplayActor.generated.h"
 
+class UOAsset_Appearance;
+class UOmegaAssetLibrary_SlateBrush;
+class UOmegaAssetLibrary_Sound;
+class UOmegaAssetLibrary_Animation;
+class UOmegaMinimapMeshComponent;
 class UOmegaActorConfig;
 class UOmegaFlowAssetBase;
 class UOmegaZoneData;
@@ -253,6 +259,43 @@ protected:
 	UFUNCTION() void OnActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
 
 	// -------------------------------------------------------------------------------------
+	// Minimap
+	// -------------------------------------------------------------------------------------
+	UPROPERTY() UOmegaMinimapMeshComponent* minimap_mesh_comp=nullptr;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="🗺️Minimap")
+	bool bOverrideMinimapConfig;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="🗺️Minimap",meta=(EditCondition="bOverrideMinimapConfig"))
+	FOmegaMinimapActorConfig MinimapConfig;
+	
+	UFUNCTION(BlueprintPure,Category="Gameplay")
+	FOmegaMinimapActorConfig Minimap_GetConfig() const;
+	
+	UFUNCTION(BlueprintCallable,Category="Gameplay")
+	void Minimap_Update();
+	
+	UFUNCTION(BlueprintPure,Category="Gameplay")
+	UOmegaMinimapMeshComponent* Minimap_GetMesh() const;
+	
+	// -------------------------------------------------------------------------------------
+	// Asset Libraries
+	// -------------------------------------------------------------------------------------
+	
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Libraries")
+	UOAsset_Appearance* AppearanceOverride;
+	
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Libraries")
+	UOmegaAssetLibrary_Animation* Library_Animation=nullptr;
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Libraries")
+	UOmegaAssetLibrary_Sound* Library_Sound=nullptr;
+	//UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Libraries")
+	UOmegaAssetLibrary_SlateBrush* Library_UI=nullptr;
+	
+	
+	// -------------------------------------------------------------------------------------
+	// Subscript
+	// -------------------------------------------------------------------------------------
 
 	// Sets a named boolean value in the subscript temp table.
 	UFUNCTION(BlueprintCallable,Category="Subscript",DisplayName="Subscript - Set Bool") void SetBool(FString param, bool Value);
@@ -272,6 +315,8 @@ protected:
 	// Gets a named vector value from the subscript temp table.
 	UFUNCTION(BlueprintPure,Category="Subscript",DisplayName="Subscript - Get Vector") FVector GetVector(FString param);
 
+	
+	
 };
 
 // Implement on data assets that act as actor identity sources to define lifecycle scripts and hooks for actors using them.

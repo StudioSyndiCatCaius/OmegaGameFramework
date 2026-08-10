@@ -4,6 +4,7 @@
 #include "OmegaSettings.h"
 #include "MetasoundSource.h"
 #include "Functions/F_Physics.h"
+#include "InputCoreTypes.h"
 
 UMetaSoundSource* UOmegaSettings::GetMetaSoundSourceFromPath() const
 {
@@ -29,6 +30,16 @@ UOmegaSettings::UOmegaSettings(const FObjectInitializer& ObjectInitializer)
     
     BlockedSystemsWhenMenusOpen.AddTag(FGameplayTag::RequestGameplayTag("SYSTEM.Exploration"));
     BlockedSystemsWhenMenusOpen.AddTag(FGameplayTag::RequestGameplayTag("SYSTEM.SubExplore"));
+
+	// Virtual cursor: controller face buttons map to mouse clicks (Xbox A / B).
+	if (VirtualCursor_Key_LeftMouse.Num() == 0)
+	{
+		VirtualCursor_Key_LeftMouse.Add(EKeys::Gamepad_FaceButton_Bottom); // A / Cross
+	}
+	if (VirtualCursor_Key_RightMouse.Num() == 0)
+	{
+		VirtualCursor_Key_RightMouse.Add(EKeys::Gamepad_FaceButton_Right); // B / Circle
+	}
 }
 
 

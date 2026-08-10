@@ -93,7 +93,7 @@ public:
 	TScriptInterface<IDataInterface_Environment> Get_Preset() const {if(current_preset){return current_preset;} return nullptr;}
 
 	// Default ambient sound played when the environment is active.
-	UPROPERTY(EditAnywhere,Category="Environment")
+	UPROPERTY(EditAnywhere,Category="Environment",DisplayName="Default Ambient Sound")
 	USoundBase* DefaultAmbiantSound;
 
 	// Returns the BGM asset to play for this environment. Override in Blueprint for dynamic selection.
@@ -103,8 +103,9 @@ public:
 	UPROPERTY(EditAnywhere,Category="Environment|BGM")
 	UOmegaBGM* BGM_to_autoplay;
 	// The BGM slot this environment's music occupies (allows layered music systems).
-	UPROPERTY(EditAnywhere,Category="Environment|BGM")
-	FGameplayTag BGM_Slot;
+
+	UPROPERTY(EditAnywhere,Category="Environment|BGM",meta=(Categories="BGM"))
+	FGameplayTag BGM_Slot=FGameplayTag::RequestGameplayTag("BGM.Field");
 
 	// Root scene component that parents all environment sub-components.
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Environment",AdvancedDisplay) USceneComponent* EnvironmentRoot;

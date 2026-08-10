@@ -111,7 +111,9 @@ bool UEffectScript_DamageFlat::OnEffectApplied_Implementation(UCombatantComponen
 			Target->GetAttributeValue(DamagedAttribute,v_c,v_m);
 			in_amount=Amount*v_m;
 		}
-		Target->ApplyAttributeDamage(DamagedAttribute,in_amount,Instigator,nullptr,DamageType,l_CalcHit(Target,Instigator));
+		FOmegaAttributeDamageMeta DamageMeta=FOmegaAttributeDamageMeta();
+		DamageMeta.Hit=l_CalcHit(Target,Instigator);
+		Target->ApplyAttributeDamage(DamagedAttribute,in_amount,Instigator,DamageType,DamageMeta);
 	}
 	return true;
 }
@@ -160,7 +162,9 @@ bool UEffectScriptBASE_DamagePercent::OnEffectApplied_Implementation(UCombatantC
 			float dmg=UKismetMathLibrary::FClamp(val_inst-val_targ,MinDamage,MaxDamage);
 			dmg=UKismetMathLibrary::RandomFloatInRange(Variance*-1,Variance)*dmg+dmg;
 		
-			Target->ApplyAttributeDamage(DamagedAttribute,dmg,Instigator,nullptr,DamageType,l_CalcHit(Target,Instigator));
+			FOmegaAttributeDamageMeta DamageMeta=FOmegaAttributeDamageMeta();
+			DamageMeta.Hit=l_CalcHit(Target,Instigator);
+			Target->ApplyAttributeDamage(DamagedAttribute,dmg,Instigator,DamageType,DamageMeta);
 		}
 	}
 	return true;

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Functions/F_ScriptedEffects.h"
+#include "Types/Struct_DamageMeta.h"
 #include "script_Effects.generated.h"
 
 

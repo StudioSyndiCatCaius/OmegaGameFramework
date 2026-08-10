@@ -176,9 +176,40 @@ public:
 
 };
 
+// ==============================================================================================================
+// -Menu
+// ==============================================================================================================
+
+UCLASS(DisplayName="HUD",Category="Game")
+class OMEGADEMO_API UFlowNode_HUD : public UFlowNode_SystemClassBASE
+{
+	GENERATED_BODY()
+
+public:
+	UFlowNode_HUD();
+
+	virtual void ExecuteInput(const FName& PinName) override;
+
+#if WITH_EDITOR
+	//virtual FString GetNodeDescription() const override;
+	virtual FString GetNodeCategory() const override { return "Game"; };
+	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override{ OutColor=COLOR_DEMO_FLOW; return true;};
+#endif
+	
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game",DisplayName="⚙HUD")
+	TSubclassOf<UHUDLayer> HUD;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
+	UObject* Context;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Game")
+	FGameplayTagContainer Tags;
+
+};
+
+
 
 // ==============================================================================================================
-// -
+// - Level Transit
 // ==============================================================================================================
 
 UCLASS(DisplayName="Level - Transit Check",Category="Gameplay")
@@ -207,6 +238,32 @@ public:
 	bool bSkipFade;
 };
 
+// ==============================================================================================================
+// - Sublevel
+// ==============================================================================================================
+
+UCLASS(DisplayName="Level - Load Sublevel",Category="Gameplay")
+class OMEGADEMO_API UFlowNode_LoadSublevel : public UFlowNode
+{
+	GENERATED_BODY()
+
+public:
+	UFlowNode_LoadSublevel();
+
+	virtual void ExecuteInput(const FName& PinName) override;
+	
+#if WITH_EDITOR
+	//virtual FString GetNodeDescription() const override;
+	virtual FString GetNodeCategory() const override { return "Gameplay"; };
+	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const override{ OutColor=COLOR_DEMO_FLOW; return true;};
+#endif
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flow")
+	TSoftObjectPtr<UWorld> Level;
+	//TRUE = Will only Load & stream this level instance if it is a valid sublevel of the persistent level
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flow")
+	bool OnlyIfValidSublevel=true;
+};
 
 
 UCLASS(DisplayName="Global Event - Named",Category="Await")

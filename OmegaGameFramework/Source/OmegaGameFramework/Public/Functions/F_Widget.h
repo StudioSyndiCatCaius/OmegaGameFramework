@@ -16,7 +16,7 @@ class UDataWidget;
 class UHUDLayer;
 
 UCLASS()
-class UOmegaWidgetFunctions : public UBlueprintFunctionLibrary
+class OMEGAGAMEFRAMEWORK_API UOmegaWidgetFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -54,16 +54,22 @@ public:
 	static UOmegaSlateTheme* GetWidgetSlateTheme(UWidget* Widget);
 	
 	/**
-	 * Gets the true screen position of a UMG widget.
-	 * 
+	 * Gets the desktop/slate absolute position of a UMG widget (after it has been laid out).
+	 * Prefer calling after the first tick/paint (e.g. Event Tick / after Add to Viewport), not in Construct.
+	 *
 	 * @param Widget         The widget to get the position of
-	 * @param OutPosition    The resulting screen position
+	 * @param OutPosition    Desktop absolute position (top-left, or center if bGetCenter)
 	 * @param bGetCenter     If true, returns the center of the widget; otherwise returns top-left
-	 * @return               True if the position was successfully retrieved
+	 * @return               True if the widget has realized Slate geometry
 	 */
-	UFUNCTION(BlueprintPure,Category="Omega|Widget")
+	UFUNCTION(BlueprintPure, Category="Omega|Widget", meta=(DefaultToSelf="Widget"))
 	static bool GetWidgetScreenPosition(const UWidget* Widget, FVector2D& OutPosition, bool bGetCenter = false);
-	UFUNCTION(BlueprintPure,Category="Omega|Widget")
+
+	/**
+	 * Gets the widget position in viewport/local player space (0,0 = top-left of game viewport).
+	 * Prefer calling after the first tick/paint (e.g. Event Tick / after Add to Viewport), not in Construct.
+	 */
+	UFUNCTION(BlueprintPure, Category="Omega|Widget", meta=(DefaultToSelf="Widget"))
 	static bool GetWidgetViewportPosition(const UWidget* Widget, FVector2D& OutViewportPosition, bool bGetCenter = false);
 };
 

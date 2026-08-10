@@ -208,6 +208,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context"),DisplayName="🧩Gameplay Systems - Set Active (List)")
 	static void SetGameplaySystemsActive(const UObject* WorldContextObject, TArray<TSubclassOf<AOmegaGameplaySystem>> SystemClasses, bool bActive, const FString Flag, UObject* Context);
 
+	/** Sets a bitmask value in `ExtraBlockedSystemFlags` to be TRUE or FALSE. Then updates the system state to make sure any systems that cant be active are shutdown */
+	UFUNCTION(BlueprintCallable, Category="Omega|Gameplay", meta = (WorldContext = "WorldContextObject", AdvancedDisplay="Flag, Context"),DisplayName="🧩Gameplay Systems - Set Tag Blocked")
+	static void SetGameplaySystemsTagBlocked(const UObject* WorldContextObject, FGameplayTag SystemTag, uint8 BlockFlag, bool bBlocked);
+	
 	//###############################################################################
 	// Object
 	//###############################################################################
@@ -351,12 +355,16 @@ public:
 
 
 	/** Registers an Actor under a gameplay-tag-keyed binding (must be under the BINDING tag category). */
-	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Global Binding - SET")
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Tag Binding - SET")
 	static void SetTaggedActorBinding(const UObject* WorldContextObject, UPARAM(meta=(Categories="BINDING")) FGameplayTag Binding, AActor* Actor);
 	/** Returns the actor registered under a gameplay-tag binding. result is false if none is assigned. */
-	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject",ExpandBoolAsExecs="result",DeterminesOutputType="Class"),DisplayName="Actor - Tag Binding - GET")
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject",ExpandBoolAsExecs="result",DeterminesOutputType="Class"),DisplayName="Actor - Tag Binding - Check")
 	static AActor* CheckTaggedActorBinding(const UObject* WorldContextObject, UPARAM(meta=(Categories="BINDING")) FGameplayTag Binding, TSubclassOf<AActor> Class, bool& result);
-
+	
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Actor", meta = (WorldContext = "WorldContextObject"),DisplayName="Actor - Tag Binding - Clear")
+	static void ClearTaggedActorBinding(const UObject* WorldContextObject, UPARAM(meta=(Categories="BINDING")) FGameplayTag Binding);
+	
 	//###############################################################################
 	// Quick Get
 	//###############################################################################
@@ -383,7 +391,7 @@ public:
 	static void FireGlobalEvent(const UObject* WorldContextObject, FName Event, UObject* Context, FOmegaCommonMeta meta);
 	/** Fires a tag-based global event, notifying all registered listeners. Context is optional payload. */
 	UFUNCTION(BlueprintCallable, Category="Omega Gameplay", meta=(WorldContext = "WorldContextObject", AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tagged)")
-	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
+	static void FireTaggedGlobalEvent(const UObject* WorldContextObject, UPARAM(meta=(Categories="EVENT")) FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
 
 	//###############################################################################
 	// Actor
@@ -403,7 +411,7 @@ public:
 
 	/** Returns the owner actors of a list of components, filtered to the given component class. */
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(DeterminesOutputType="Class"))
-	static TArray<AActor*> GetActorsFromComponents(TArray<UActorComponent*> Components,TSubclassOf<UActorComponent> Class=nullptr);
+	static TArray<AActor*> GetActorsFromComponents(TArray<UActorComponent*> Components,TSubclassOf<AActor> Class=nullptr);
 
 	/** Returns the child actors spawned by the given ChildActorComponents, filtered by ActorClass. */
 	UFUNCTION(BlueprintCallable, Category="Omega|Actors",meta=(DeterminesOutputType="ActorClass"))

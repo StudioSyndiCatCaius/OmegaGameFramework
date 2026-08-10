@@ -1,4 +1,4 @@
-// Copyright Studio Syndicat 2021. All Rights Reserved.
+﻿// Copyright Studio Syndicat 2021. All Rights Reserved.
 
 #pragma once
 
@@ -26,8 +26,7 @@ public:
 	virtual bool CanUseSkill_Implementation(UCombatantComponent* Combatant) override;
 	virtual void SetValue_Implementation(FLuaValue Value, const FString& Flag = "") override;
 	virtual FOmegaSkillConfig Skill_GetConfig_Implementation(UCombatantComponent* Combatant) override;
-	virtual float Skill_CheckUtility_Implementation(UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets, FGameplayTag Tag) override;
-	virtual float Skill_CheckUtility_OneTarget_Implementation(UCombatantComponent* Combatant, UCombatantComponent* Target, FGameplayTag Tag) override;
+	virtual float Skill_CheckUtility_Implementation(UCombatantComponent* Combatant, UCombatantComponent* Target) override;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Flags")
 	bool bAppendEffectsDescription;

@@ -2,7 +2,6 @@
 
 **Creator:** Studio SyndiCat
 **Engine Version:** Unreal Engine 5.8
-**External Docs:** https://www.guilded.gg/Studio-SyndiCat
 
 ---
 

@@ -4,12 +4,15 @@
 
 #include "OmegaSettings.h"
 #include "OmegaSettings_Constants.h"
+#include "OmegaSettings_Demo.h"
 #include "Functions/F_Assets.h"
 #include "Actors/Actor_Character.h"
 #include "Components/Component_Combatant.h"
 #include "Components/Component_Leveling.h"
+#include "Functions/F_Common.h"
 #include "Functions/F_Constants.h"
 #include "GameFramework/Character.h"
+#include "Materials/MaterialInstance.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 
@@ -137,5 +140,26 @@ UOAsset_Appearance* UOAsset_CommonCharacter::GetAppearanceAsset_Implementation()
 void UOAsset_CommonCharacter::SetValue_Implementation(FLuaValue Value, const FString& Field)
 {
 	Super::SetValue_Implementation(Value, Field);
-	
+}
+
+FOmegaMessageInstigatorConfig UOAsset_CommonCharacter::Speaker_GetConfig_Implementation()
+{
+	FOmegaMessageInstigatorConfig out;
+	FString lbl=UOmegaGameFrameworkBPLibrary::GetObjectLabel(this);
+	FString default_po_path=GetMutableDefault<UOmegaSettings_Demo>()->SpeakerPortrait_DefaultPath;
+	FString default_po_name=GetMutableDefault<UOmegaSettings_Demo>()->SpeakerPortrait_DefaultName;
+	default_po_name=default_po_name.Replace(TEXT("{label}"),*lbl);
+	default_po_path=default_po_path.Replace(TEXT("{label}"),*lbl);
+	bool result;
+	if (UObject* o=UOmegaGameFrameworkBPLibrary::GetAsset_FromPath(default_po_name,UMaterialInstance::StaticClass(),result,
+		default_po_path))
+	{
+		out.DefaultPortrait.SetResourceObject(o);
+		out.DefaultPortrait.SetImageSize(FVector2D(1000,1000));
+	}
+	else
+	{
+		OGF_Log::LogWarning("No default speaker portrait for "+lbl+" found at : "+default_po_path+"/"+default_po_name);
+	}
+	return out;
 }

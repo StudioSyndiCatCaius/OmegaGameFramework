@@ -26,10 +26,11 @@ AOmegaMinimalCharacter::AOmegaMinimalCharacter()
 	GetMesh()->SetRelativeLocation(FVector(0,0,-90));
 	GetMesh()->SetRelativeRotation(FRotator(0,-90,0));
 
-	StateTree=CreateDefaultSubobject<UStateTreeComponent>(TEXT("State Tree"));
+	//StateTree=CreateDefaultSubobject<UStateTreeComponent>(TEXT("State Tree"));
 	DebugText=CreateOptionalDefaultSubobject<UComponent_DebugText>("DebugText");
-	ActorIdentity=CreateDefaultSubobject<UActorIdentityComponent>("Actor Identity");
 	DebugText->SetupAttachment(RootComponent);
+	
+	ActorIdentity=CreateDefaultSubobject<UActorIdentityComponent>("Actor Identity");
 	
 	if(GetMesh() && GetCapsuleComponent())
 	{

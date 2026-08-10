@@ -9,6 +9,7 @@ class OMEGADEMO_API UCombatantSelector_Single : public UCombatantSelector
 	GENERATED_BODY()
 
 public:
+	UCombatantSelector_Single();
 	
 	UPROPERTY() int32 currentTargetIndex=0;
 	
@@ -29,6 +30,8 @@ class OMEGADEMO_API UCombatantSelector_All : public UCombatantSelector
 	GENERATED_BODY()
 
 public:
+	UCombatantSelector_All();
+	
 	virtual void OnSelectorBegin_Implementation() override;
 	virtual TArray<UCombatantComponent*> OnFinalizeTargets_Implementation(const TArray<UCombatantComponent*>& Targets) const override;
 	
@@ -40,5 +43,7 @@ class OMEGADEMO_API UCombatantSelector_Random : public UCombatantSelector
 	GENERATED_BODY()
 
 public:
+	UCombatantSelector_Random();
+	
 	virtual void OnSelectorBegin_Implementation() override;
 };

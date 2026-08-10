@@ -176,6 +176,15 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 		ActorIdentity->DefaultFlow=DialogueFlow;
 		DialogueFlow=nullptr;
 	}
+#if WITH_EDITOR
+	if (Icon_Faction)
+	{
+		if (TObjectPtr<UTexture2D> ico_def=LoadObject<UTexture2D>(this,TEXT("/OmegaGameFramework/Textures/Kenny/icons/board/flag_square.flag_square")))
+		{
+			Icon_Faction->SetSprite(ico_def);
+		}
+	}
+#endif
 	
 	if(Combatant && Combatant->FactionDataAsset)
 	{
@@ -198,6 +207,10 @@ void AOmegaCharacter::OnConstruction(const FTransform& Transform)
 		}
 		Text_Name->SetText(UOmegaGameFrameworkBPLibrary::GetObjectDisplayName(this,FGameplayTag()));	
 	}
+#if WITH_EDITOR
+	GetCapsuleComponent()->OverlayColor=Combatant->GetFactionColor().ToFColorSRGB();
+#endif
+
 	SetCharacterPreset(Preset);
 	Super::OnConstruction(Transform);
 }

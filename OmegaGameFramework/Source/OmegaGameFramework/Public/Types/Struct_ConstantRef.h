@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataAsset.h"
 #include "UObject/Object.h"
 #include "Struct_ConstantRef.generated.h"
 

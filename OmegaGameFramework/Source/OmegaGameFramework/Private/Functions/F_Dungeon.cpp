@@ -5,12 +5,11 @@
 
 #include "Components/ArrowComponent.h"
 #include "Components/BillboardComponent.h"
-#include "Engine/Brush.h"
 #include "Engine/Level.h"
-#include "Engine/LevelScriptActor.h"
 #include "Engine/LevelStreamingDynamic.h"
 #include "Engine/World.h"
-#include "GameFramework/Info.h"
+#include "LevelInstance/LevelInstanceActor.h"
+#include "LevelInstance/LevelInstanceSubsystem.h"
 
 // ===================================================================================================================
 // Actor - Dungeon
@@ -93,7 +92,23 @@ void AOmegaDungeon::FinalizeGeneration()
 		IDataInterface_DungeonModel::Execute_Dungeon_GenerateEnd(ModelObject, this);
 	}
 
-	OnDungeonGeneration_Finish.Broadcast(this);
+	// The socket pass / GenerateEnd may have spawned MORE module levels (walls/doors/gaps/edges). At
+	// runtime those stream in asynchronously — the dungeon only counts as finished once they're all
+	// visible, otherwise players spawn before the geometry exists and fall through the floor.
+	bFinishPending = true;
+	TryBroadcastFinish();
+}
+
+void AOmegaDungeon::TryBroadcastFinish()
+{
+	if(bFinishPending && PendingLevels.Num() == 0)
+	{
+		bFinishPending = false;
+		// All geometry is in place — markers spawn last so their actors (enemies etc.) can't fall
+		// through not-yet-streamed floors.
+		ProcessAllMarkers();
+		OnDungeonGeneration_Finish.Broadcast(this);
+	}
 }
 
 void AOmegaDungeon::DestroyDungeon()
@@ -125,6 +140,7 @@ void AOmegaDungeon::DestroyDungeon()
 	GeneratedLevels.Empty();
 	PendingLevels.Empty();
 	bFinalizePending = false;
+	bFinishPending = false;
 	ModuleSpawnCounter = 0;
 
 	CellData.Empty();
@@ -136,6 +152,11 @@ void AOmegaDungeon::DestroyDungeon()
 	// which makes saving those module maps fail with a sharing violation (Error Code 32).
 	if(GIsEditor && GetWorld() && !GetWorld()->IsGameWorld())
 	{
+		// Destroying the generated ALevelInstance actors only REQUESTS their unload; complete it now.
+		if(ULevelInstanceSubsystem* LevelInstanceSubsystem = GetWorld()->GetSubsystem<ULevelInstanceSubsystem>())
+		{
+			LevelInstanceSubsystem->Tick();
+		}
 		GetWorld()->FlushLevelStreaming(EFlushLevelStreamingType::Full);
 		CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
 	}
@@ -208,12 +229,25 @@ TArray<AOmegaDungeon_Socket*> AOmegaDungeon::GetAllSockets() const
 			}
 		}
 	}
-	// Editor-world modules are duplicated as plain actors rather than streamed levels.
+	// Editor-world modules are spawned as ALevelInstance actors rather than streamed levels.
 	for(AActor* TempActor : GeneratedActors)
 	{
 		if(AOmegaDungeon_Socket* Socket = Cast<AOmegaDungeon_Socket>(TempActor))
 		{
 			Sockets.Add(Socket);
+		}
+		else if(ALevelInstance* LevelInstance = Cast<ALevelInstance>(TempActor))
+		{
+			if(ULevel* LoadedLevel = LevelInstance->GetLoadedLevel())
+			{
+				for(AActor* LevelActor : LoadedLevel->Actors)
+				{
+					if(AOmegaDungeon_Socket* LevelSocket = Cast<AOmegaDungeon_Socket>(LevelActor))
+					{
+						Sockets.Add(LevelSocket);
+					}
+				}
+			}
 		}
 	}
 	return Sockets;
@@ -275,13 +309,10 @@ ULevelStreamingDynamic* AOmegaDungeon::SpawnLevelModule(TSoftObjectPtr<UWorld> M
 #if WITH_EDITOR
 	// Editor (non-PIE) worlds don't support the full streaming-level lifecycle: "unloaded" module
 	// packages linger and keep an OS file handle on the source .umap, blocking saves of the module maps.
-	// So in-editor the module's actors are duplicated directly into the world instead of streamed.
+	// So in-editor the module is spawned as an ALevelInstance actor instead.
 	if(GIsEditor && !GetWorld()->IsGameWorld())
 	{
-		if(UWorld* ModuleWorld = Module.LoadSynchronous())
-		{
-			SpawnLevelModule_Editor(ModuleWorld, Transform, ModuleID);
-		}
+		SpawnLevelModule_Editor(Module, Transform, ModuleID);
 		return nullptr;
 	}
 #endif
@@ -305,38 +336,39 @@ ULevelStreamingDynamic* AOmegaDungeon::SpawnLevelModule(TSoftObjectPtr<UWorld> M
 }
 
 #if WITH_EDITOR
-void AOmegaDungeon::SpawnLevelModule_Editor(UWorld* ModuleWorld, const FTransform& Transform, int32 ModuleID)
+void AOmegaDungeon::SpawnLevelModule_Editor(const TSoftObjectPtr<UWorld>& Module, const FTransform& Transform, int32 ModuleID)
 {
-	if(!ModuleWorld || !ModuleWorld->PersistentLevel) { return; }
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Owner = this;
+	// Generated content should never be saved into the map.
+	SpawnParams.ObjectFlags |= RF_Transient;
 
-	for(AActor* SourceActor : ModuleWorld->PersistentLevel->Actors)
+	ALevelInstance* LevelInstance = GetWorld()->SpawnActor<ALevelInstance>(ALevelInstance::StaticClass(), Transform, SpawnParams);
+	if(!LevelInstance) { return; }
+
+	LevelInstance->SetActorLabel(FString::Printf(TEXT("%s_%d"), *Module.GetAssetName(), ModuleID));
+	LevelInstance->SetFolderPath(FName(*GetActorLabel()));
+	LevelInstance->SetWorldAsset(Module);
+
+	// Generation runs synchronously in-editor, so block until the instance's level is loaded — sockets
+	// and markers must be at their final world transforms before the next module is placed.
+	if(ULevelInstanceSubsystem* LevelInstanceSubsystem = GetWorld()->GetSubsystem<ULevelInstanceSubsystem>())
 	{
-		// Skip level plumbing: world settings/info actors, brushes, the level blueprint, editor-only actors.
-		if(!IsValid(SourceActor) || SourceActor->IsEditorOnly()
-			|| SourceActor->IsA<AInfo>() || SourceActor->IsA<ABrush>() || SourceActor->IsA<ALevelScriptActor>())
+		LevelInstanceSubsystem->BlockLoadLevelInstance(LevelInstance);
+	}
+
+	RegisterGeneratedActor(LevelInstance);
+
+	if(ULevel* LoadedLevel = LevelInstance->GetLoadedLevel())
+	{
+		// Markers are NOT processed here: they all spawn together in ProcessAllMarkers at the end.
+		for(AActor* LevelActor : LoadedLevel->Actors)
 		{
-			continue;
-		}
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Template = SourceActor;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Owner = this;
-		SpawnParams.ObjectFlags |= RF_Transient;
-
-		AActor* NewActor = GetWorld()->SpawnActor<AActor>(SourceActor->GetClass(), SpawnParams);
-		if(!NewActor) { continue; }
-
-		NewActor->SetActorTransform(SourceActor->GetActorTransform() * Transform);
-		RegisterGeneratedActor(NewActor);
-
-		if(AOmegaDungeon_Socket* Socket = Cast<AOmegaDungeon_Socket>(NewActor))
-		{
-			Socket->GeneratedModuleID = ModuleID;
-		}
-		else if(AOmegaDungeon_Marker* Marker = Cast<AOmegaDungeon_Marker>(NewActor))
-		{
-			ProcessMarker(Marker);
+			if(AOmegaDungeon_Socket* Socket = Cast<AOmegaDungeon_Socket>(LevelActor))
+			{
+				Socket->GeneratedModuleID = ModuleID;
+			}
 		}
 	}
 }
@@ -354,6 +386,12 @@ AActor* AOmegaDungeon::SpawnDungeonActor(TSubclassOf<AActor> Class, FTransform T
 
 	if(AActor* NewActor = GetWorld()->SpawnActor<AActor>(Class, Transform, SpawnParams))
 	{
+#if WITH_EDITOR
+		if(GIsEditor && !GetWorld()->IsGameWorld())
+		{
+			NewActor->SetFolderPath(FName(*GetActorLabel()));
+		}
+#endif
 		RegisterGeneratedActor(NewActor);
 		return NewActor;
 	}
@@ -387,16 +425,23 @@ void AOmegaDungeon::HandleModuleLevelShown()
 		// A level counts as ready only once VISIBLE (added to the world), not merely loaded — the level's
 		// transform is applied on add, so actors of loaded-but-not-shown levels are still at their
 		// authoring-time positions and would break socket matching and marker spawn locations.
+		// (Markers are NOT processed here: they all spawn together in ProcessAllMarkers at the end.)
 		if(Level->IsLevelVisible() && Level->GetLoadedLevel())
 		{
 			PendingLevels.Remove(WeakLevel);
-			ProcessMarkersInLevel(Level->GetLoadedLevel());
 		}
 	}
 
-	if(bFinalizePending && PendingLevels.Num() == 0)
+	if(PendingLevels.Num() == 0)
 	{
-		FinalizeGeneration();
+		if(bFinalizePending)
+		{
+			FinalizeGeneration(); // may spawn more levels; Finish then waits for those via TryBroadcastFinish
+		}
+		else
+		{
+			TryBroadcastFinish();
+		}
 	}
 }
 
@@ -438,6 +483,27 @@ void AOmegaDungeon::ProcessMarkersInLevel(ULevel* Level)
 	for(AActor* TempActor : Level->Actors)
 	{
 		ProcessMarker(Cast<AOmegaDungeon_Marker>(TempActor));
+	}
+}
+
+void AOmegaDungeon::ProcessAllMarkers()
+{
+	for(ULevelStreamingDynamic* TempLevel : GeneratedLevels)
+	{
+		if(IsValid(TempLevel) && TempLevel->IsLevelVisible())
+		{
+			ProcessMarkersInLevel(TempLevel->GetLoadedLevel());
+		}
+	}
+	// Editor-world modules are ALevelInstance actors. Markers spawn new actors into GeneratedActors,
+	// so iterate a snapshot.
+	TArray<AActor*> ActorsSnapshot = GeneratedActors;
+	for(AActor* TempActor : ActorsSnapshot)
+	{
+		if(ALevelInstance* LevelInstance = Cast<ALevelInstance>(TempActor))
+		{
+			ProcessMarkersInLevel(LevelInstance->GetLoadedLevel());
+		}
 	}
 }
 

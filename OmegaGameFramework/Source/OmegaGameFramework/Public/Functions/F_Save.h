@@ -101,6 +101,21 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Omega|Save|DataAssetList",DisplayName="💾Save - Data List - Add Assets",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
 	static void DataList_AddList(const UObject* WorldContextObject,UPARAM(meta = (Categories = "LIST")) FGameplayTag List,TArray<UPrimaryDataAsset*> Assets, bool bInList, bool bGlobal);
+
+	// ======================================================================================
+	// Custom Assets
+	// ======================================================================================
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|StoryState",DisplayName="💾Story States - Set Active",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static void StoryState_SetActive(const UObject* WorldContextObject,UOmegaStoryStateAsset* StoryState, bool bActive, bool bGlobal);
+	
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|StoryState",DisplayName="💾Story States - Set Active (List)",meta=(AdvancedDisplay="bGlobal",WorldContext = "WorldContextObject"))
+	static void StoryStates_SetActive(const UObject* WorldContextObject,TArray<UOmegaStoryStateAsset*> StoryState, bool bActive, bool bGlobal);
+	
+	// ======================================================================================
+	// Custom Assets
+	// ======================================================================================
+	UFUNCTION(BlueprintCallable, Category = "Omega|Save|DataAssetList",DisplayName="💾Custom Assets - Create",meta=(AdvancedDisplay="Save",WorldContext = "WorldContextObject"))
+	static UPrimaryDataAsset* CustomAsset_Create(const UObject* WorldContextObject,UPrimaryDataAsset* BaseAsset, FName Name, bool Overwrite,UOmegaSaveBase* Save=nullptr);
 	
 };
 

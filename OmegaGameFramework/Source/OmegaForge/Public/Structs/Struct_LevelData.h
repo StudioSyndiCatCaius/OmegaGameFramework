@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "LuaValue.h"
+#include "Templates/SubclassOf.h"
 #include "UObject/Object.h"
 #include "Struct_LevelData.generated.h"
 

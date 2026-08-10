@@ -153,7 +153,15 @@ FHitResult UOmegaScriptedTrace_Line::RunTrace_Implementation(AActor* Instigator,
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::LineTraceSingle(Instigator, Start, End, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hit, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::LineTraceSingleForObjects(Instigator, Start, End, ObjectTypes, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::LineTraceSingle(Instigator, Start, End, TraceChannel, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
 	return Hit;
 }
 
@@ -163,7 +171,15 @@ TArray<FHitResult> UOmegaScriptedTrace_Line::RunTrace_Multi_Implementation(AActo
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::LineTraceMulti(Instigator, Start, End, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hits, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::LineTraceMultiForObjects(Instigator, Start, End, ObjectTypes, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::LineTraceMulti(Instigator, Start, End, TraceChannel, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
 	return Hits;
 }
 
@@ -177,7 +193,15 @@ FHitResult UOmegaScriptedTrace_Sphere::RunTrace_Implementation(AActor* Instigato
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::SphereTraceSingle(Instigator, Start, End, Radius, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hit, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::SphereTraceSingleForObjects(Instigator, Start, End, Radius, ObjectTypes, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::SphereTraceSingle(Instigator, Start, End, Radius, TraceChannel, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
 	return Hit;
 }
 
@@ -187,7 +211,15 @@ TArray<FHitResult> UOmegaScriptedTrace_Sphere::RunTrace_Multi_Implementation(AAc
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::SphereTraceMulti(Instigator, Start, End, Radius, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hits, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::SphereTraceMultiForObjects(Instigator, Start, End, Radius, ObjectTypes, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::SphereTraceMulti(Instigator, Start, End, Radius, TraceChannel, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
 	return Hits;
 }
 
@@ -201,7 +233,15 @@ FHitResult UOmegaScriptedTrace_Box::RunTrace_Implementation(AActor* Instigator, 
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::BoxTraceSingle(Instigator, Start, End, HalfSize, Orientation, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hit, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::BoxTraceSingleForObjects(Instigator, Start, End, HalfSize, Orientation, ObjectTypes, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::BoxTraceSingle(Instigator, Start, End, HalfSize, Orientation, TraceChannel, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
 	return Hit;
 }
 
@@ -211,7 +251,15 @@ TArray<FHitResult> UOmegaScriptedTrace_Box::RunTrace_Multi_Implementation(AActor
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::BoxTraceMulti(Instigator, Start, End, HalfSize, Orientation, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hits, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::BoxTraceMultiForObjects(Instigator, Start, End, HalfSize, Orientation, ObjectTypes, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::BoxTraceMulti(Instigator, Start, End, HalfSize, Orientation, TraceChannel, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
 	return Hits;
 }
 
@@ -225,7 +273,15 @@ FHitResult UOmegaScriptedTrace_Capsule::RunTrace_Implementation(AActor* Instigat
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::CapsuleTraceSingle(Instigator, Start, End, Radius, HalfHeight, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hit, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::CapsuleTraceSingleForObjects(Instigator, Start, End, Radius, HalfHeight, ObjectTypes, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::CapsuleTraceSingle(Instigator, Start, End, Radius, HalfHeight, TraceChannel, bTraceComplex, Ignore, DebugType, Hit, true);
+	}
 	return Hit;
 }
 
@@ -235,6 +291,14 @@ TArray<FHitResult> UOmegaScriptedTrace_Capsule::RunTrace_Multi_Implementation(AA
 	const FVector Start = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetStart);
 	const FVector End   = UOmegaMathFunctions::Offset_ActorLocation(Instigator, OffsetEnd);
 	TArray<AActor*> Ignore;
-	Success = UKismetSystemLibrary::CapsuleTraceMulti(Instigator, Start, End, Radius, HalfHeight, TraceChannel, bTraceComplex, Ignore, bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, Hits, true);
+	const EDrawDebugTrace::Type DebugType = bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	if(bTraceByObjects)
+	{
+		Success = UKismetSystemLibrary::CapsuleTraceMultiForObjects(Instigator, Start, End, Radius, HalfHeight, ObjectTypes, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
+	else
+	{
+		Success = UKismetSystemLibrary::CapsuleTraceMulti(Instigator, Start, End, Radius, HalfHeight, TraceChannel, bTraceComplex, Ignore, DebugType, Hits, true);
+	}
 	return Hits;
 }

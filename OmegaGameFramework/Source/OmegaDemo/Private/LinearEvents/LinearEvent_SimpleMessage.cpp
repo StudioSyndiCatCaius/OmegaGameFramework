@@ -154,6 +154,7 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 	UOmegaLinearEventSubsystem* SystemRef = GetWorld()->GetSubsystem<UOmegaLinearEventSubsystem>();
 	
 	ULinearEvent_SimpleMessage* LocalMessage = NewObject<ULinearEvent_SimpleMessage>(GetWorld()->GetGameInstance(), ULinearEvent_SimpleMessage::StaticClass());
+	ActiveEvent = LocalMessage;
 	LocalMessage->EventEnded.AddDynamic(this, &UFlowNode_SimpleMessage::LocalFinish);
 	
 	if(Instigator_Asset.GetObject())
@@ -178,6 +179,7 @@ void UFlowNode_SimpleMessage::ExecuteInput(const FName& PinName)
 		msg_meta.Tags=Tags;
 		msg_meta.key=MessageKey;
 		msg_meta.Flags=Flags;
+		msg_meta.TransformPreset=Position;
 		LocalMessage->meta=msg_meta;
 	
 		
@@ -311,13 +313,10 @@ void UFlowNode_SimpleMessage::PreviewVoice()
 
 void UFlowNode_SimpleMessage::LocalFinish(UOmegaLinearEvent* Event, const FString& Flag)
 {
+	ActiveEvent = nullptr;
 	TriggerFirstOutput(true);
 }
 
-UOAsset_TransformPreset* UFlowNode_SimpleMessage::GetMessage_TransformPreset_Implementation()
-{
-	return Position;
-}
 
 //UOAsset_TransformPreset* UFlowNode_SimpleMessage::GetMessage_TransformPreset_Implementation()
 //{

@@ -7,6 +7,8 @@
 #include "DataAssets/DA_AssetLib.h"
 #include "Functions/F_Math.h"
 #include "Actors/Actor_Spline.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/SplineComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -15,6 +17,7 @@
 #include "MovieSceneObjectBindingID.h"
 #include "MovieSceneSequenceID.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "TimerManager.h"
 
 
 // -----------------------------------------------------------------------

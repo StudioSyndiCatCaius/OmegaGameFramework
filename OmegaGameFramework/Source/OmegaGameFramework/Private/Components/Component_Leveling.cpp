@@ -42,12 +42,16 @@ void UOmegaLevelingAsset::GetXPFromLevel(int32 Level, float& MinLevelXP, float& 
 
 FText UOmegaLevelingAsset::GetTextFromValue(float Value) const
 {
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
-	return UKismetTextLibrary::Conv_FloatToText(Value,RoundingMode,false,true,MinIntegralDigits);
-#else
-	return UKismetTextLibrary::Conv_DoubleToText(Value,RoundingMode,false,true,MinIntegralDigits);
-#endif
-	
+	return ValueConfig.ToText(Value);
+}
+
+float UOmegaLevelingAsset::CorrectXpValue(float Value) const
+{
+	// Truncate to N decimal places (change 2 to whatever you need)
+	constexpr int32 DecimalPlaces = 2;
+    
+	const float Multiplier = FMath::Pow(10.0f, DecimalPlaces);
+	return FMath::TruncToFloat(Value * Multiplier) / Multiplier;
 }
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7

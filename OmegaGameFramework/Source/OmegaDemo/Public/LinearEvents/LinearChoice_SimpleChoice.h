@@ -19,7 +19,7 @@ class OMEGADEMO_API ULinearChoice_SimpleChoice : public UOmegaLinearChoice
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice", meta=(MultiLine))
 	FText ChoiceText;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice",meta=(Categories="Choice"))
 	FGameplayTagContainer Tags;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Choice")
 	FOmegaBitflagsBase Flags;

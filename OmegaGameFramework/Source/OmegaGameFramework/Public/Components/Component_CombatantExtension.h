@@ -7,6 +7,7 @@
 #include "Components/Component_Combatant.h"
 #include "Interfaces/I_Skill.h"
 #include "Interfaces/I_Combatant.h"
+#include "Types/Struct_DamageMeta.h"
 #include "Component_CombatantExtension.generated.h"
 
 
@@ -57,7 +58,7 @@ public:
 
 	// Called when the linked combatant takes attribute damage.
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega")
-	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
+	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta Meta);
 
 	// Called when the linked combatant receives a named notify.
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega")

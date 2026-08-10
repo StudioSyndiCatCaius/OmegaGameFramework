@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -45,8 +45,7 @@ public:
 	virtual FOmegaSkillConfig Skill_GetConfig_Implementation(UCombatantComponent* Combatant) override;
 	virtual FOmegaScriptedAnimationData Skill_GetScriptedAnim_Implementation(UCombatantComponent* Combatant) override;
 	virtual FOmegaCustomScriptedEffects Skill_GetScriptedEffects_Implementation(UCombatantComponent* Combatant) override;
-	virtual float Skill_CheckUtility_OneTarget_Implementation(UCombatantComponent* Combatant, UCombatantComponent* Target, FGameplayTag Tag) override;
-	virtual float Skill_CheckUtility_Implementation(UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets, FGameplayTag Tag) override;
+	virtual float Skill_CheckUtility_Implementation(UCombatantComponent* Combatant, UCombatantComponent* Target) override;
 	virtual ULevelSequence* GetSkill_Sequences_Implementation(UCombatantComponent* Combatant, FName Name) override;
 	virtual UAnimMontage* GetSkill_Montage_Implementation(UCombatantComponent* Combatant, FName Name) override;
 
@@ -110,9 +109,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="ProceduralNamedAsset")
 	FOmegaCustomScriptedEffects Build_Skill_GetScriptedEffects(UOmegaProceduralNamedAsset* Asset, UCombatantComponent* Combatant);
 	UFUNCTION(BlueprintImplementableEvent, Category="ProceduralNamedAsset")
-	float Build_Skill_CheckUtility_OneTarget(UOmegaProceduralNamedAsset* Asset, UCombatantComponent* Combatant, UCombatantComponent* Target, FGameplayTag Tag);
-	UFUNCTION(BlueprintImplementableEvent, Category="ProceduralNamedAsset")
-	float Build_Skill_CheckUtility(UOmegaProceduralNamedAsset* Asset, UCombatantComponent* Combatant, const TArray<UCombatantComponent*>& Targets, FGameplayTag Tag);
+	float Build_Skill_CheckUtility(UOmegaProceduralNamedAsset* Asset, UCombatantComponent* Combatant, UCombatantComponent* Target);
 	UFUNCTION(BlueprintImplementableEvent, Category="ProceduralNamedAsset")
 	ULevelSequence* Build_Skill_GetSequence(UOmegaProceduralNamedAsset* Asset, UCombatantComponent* Combatant, FName Name);
 	UFUNCTION(BlueprintImplementableEvent, Category="ProceduralNamedAsset")

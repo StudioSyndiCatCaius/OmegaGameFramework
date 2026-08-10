@@ -8,6 +8,7 @@
 #include "Interfaces/I_Common.h"
 #include "Misc/OmegaUtils_Structs.h"
 #include "Misc/OmegaUtils_Volume.h"
+#include "Types/Struct_DamageMeta.h"
 #include "Actor_GameplayEffect.generated.h"
 
 class AOmegaGameplayEffect;
@@ -46,7 +47,7 @@ public:
 
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Ω|Gameplay|Effects")
-	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* InstigatorCombatant, UOmegaDamageType* DamageType, FHitResult Hit);
+	void OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* InstigatorCombatant, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta Meta);
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

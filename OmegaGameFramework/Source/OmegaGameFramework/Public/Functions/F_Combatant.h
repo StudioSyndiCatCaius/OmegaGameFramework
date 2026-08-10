@@ -6,6 +6,8 @@
 
 #include "CoreMinimal.h"
 #include "F_ScriptedEffects.h"
+#include "Interfaces/I_Skill.h"
+#include "Types/Struct_DamageMeta.h"
 #include "Misc/GeneralDataObject.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "F_Combatant.generated.h"
@@ -31,6 +33,12 @@ enum EOmegaSkillUtilityTarget : uint8
 	SkillUtilTarg_SingleAverage	UMETA(DisplayName = "Single Target Average"),
 };
 
+UENUM(BlueprintType)
+enum EOmegaSkillUtilityOrder : uint8
+{
+	SkillUtilOrd_TargSkill	UMETA(DisplayName = "Skill then Target"),
+	SkillUtilOrd_SkillTarg	UMETA(DisplayName = "Target then Skill"),
+};
 
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -78,18 +86,6 @@ public:
 	//-----------------------------------------------------------------------------------
 	UFUNCTION(BlueprintPure, Category="Omega|Combatant", meta = (WorldContext = "WorldContextObject")) 
 	static UCombatantComponent* GetPlayerCombatant(const UObject* WorldContextObject, int32 Index);
-
-	//Checks if the combatant has sufficient attributes to use skill
-	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Can Combatant Use Skill?")
-	static bool CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject, bool bCheckAttributeCost=true);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Get Skill Utility Score")
-	static void GetSkillUtilityScore(UCombatantComponent* Combatant, UPrimaryDataAsset* Skill, TArray<UCombatantComponent*> Targets,
-		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, float& SingleScore,float& SingleScoreAverage,float& MultiScore);
-	
-	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Select Skill by Utility")
-	static UPrimaryDataAsset* SelectSkillByUtility(UCombatantComponent* Combatant, TArray<UPrimaryDataAsset*> Skills, TArray<UCombatantComponent*> Targets,
-		UPARAM(meta=(Categories="UTILITY")) FGameplayTag Tag, TEnumAsByte<EOmegaSkillUtilityTarget> UtilityTarget, float RandomOffsetRange);
 	
 	UFUNCTION(BlueprintPure, Category="Omega|Combatant", DisplayName="🤜Combatant - Select Combatant (Highest Attribute Value)")
 	static UCombatantComponent* GetCombatantWithHighestAttributeValue(TArray<UCombatantComponent*> Combatants, UOmegaAttribute* Attribute, bool bUseCurrentValue);
@@ -181,6 +177,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attributes Mods - Combine")
 	static TArray<FOmegaAttributeModifier> AttributeMods_Combine(TArray<FOmegaAttributeModifier> A,TArray<FOmegaAttributeModifier> B,bool Flatten=true);
 	
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attribute Mods - Get All from Object")
+	static TArray<FOmegaAttributeModifier> AttributeMods_GetAllFromObject(UObject* Object);
+	
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attribute Mods - Get Single Values")
 	static void AttributeMods_GetSingleValue(TArray<FOmegaAttributeModifier> mods, UOmegaAttribute* Attribute,float& Increment,float& Multiplier);
 	
@@ -190,8 +189,30 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="❤️Attributes Mods - Compare Single Modifiers")
 	static void CompareSingleAttributeModifiers(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, UObject* ComparedSource, UObject* UncomparedSource, float& NewValue, float& OldValue);
 	
+	//-----------------------------------------------------------------------------------
+	// Skill
+	//-----------------------------------------------------------------------------------
+	//Checks if the combatant has sufficient attributes to use skill
+	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Skill - Can Combatant Use?")
+	static bool CanCombatantUseSkill(UCombatantComponent* Combatant, UObject* SkillObject, bool bCheckAttributeCost=true);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Skill - Get Utility Score")
+	static void GetSkillUtilityScore(UCombatantComponent* Combatant, UPrimaryDataAsset* Skill, TArray<UCombatantComponent*> Targets,
+	                                 float& Score, float& ScoreAverage);
+
+	UFUNCTION(BlueprintPure, Category="Omega|Skills",DisplayName="🤜Combatant - Get Skill & Targets by Utility")
+	static void SelectSkillAndTargetsByUtility(UCombatantComponent* Instigator, TArray<UPrimaryDataAsset*> PossibleSkills, TArray<UCombatantComponent*> PossibleTargets,
+		EOmegaSkillUtilityOrder Order,
+		UPrimaryDataAsset*& FinalSkill, TArray<UCombatantComponent*>& FinalTargets, float RandomOffsetRange,bool RegisterFinalAsTargetList);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Attributes",DisplayName="🤜Skill - Filter Valid Targets")
+	static TArray<UCombatantComponent*> FilterValidSkillTargets(TScriptInterface<IDataInterface_Skill> Skill,UCombatantComponent* Instigator,TArray<UCombatantComponent*> Targets);
+	
+	UFUNCTION(BlueprintPure, Category="Omega|Attributes",DisplayName="🤜Skill - Is Valid Target?")
+	static bool IsValidSkillTarget(TScriptInterface<IDataInterface_Skill> Skill,UCombatantComponent* Instigator,UCombatantComponent* Target);
+	
 	//Consume the amount of attributes required for this skill. Returns FALSE of insufficient.
-	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="🤜Combatant - Consume Skill Attirbute Cost")
+	UFUNCTION(BlueprintCallable, Category="Omega|Attributes",DisplayName="🤜Skill - Consume Attirbute Cost")
 	static bool ConsumeSkillAttributes(UCombatantComponent* Combatant, UObject* SkillObject);
 	
 	//-----------------------------------------------------------------------------------

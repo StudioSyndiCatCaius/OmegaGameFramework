@@ -146,7 +146,6 @@ void FOmegaEditor::StartupModule()
 	OMACRO_REGISTERASSETTYPE(OmegaStoryStateAsset,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaLevelingAsset,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaActorConfig,AssetCategory_Omega);
-	OMACRO_REGISTERASSETTYPE(OmegaCharacterConfig,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaAssetLibrary_Animation,AssetCategory_Omega);
 	OMACRO_REGISTERASSETTYPE(OmegaAssetLibrary_Sound,AssetCategory_Omega);
 

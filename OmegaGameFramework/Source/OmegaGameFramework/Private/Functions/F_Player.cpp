@@ -8,6 +8,7 @@
 #include "Functions/F_Math.h"
 #include "Functions/F_Utility.h"
 #include "GameFramework/PlayerInput.h"
+#include "GenericPlatform/GenericPlatformInputDeviceMapper.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/OmegaUtils_Methods.h"
@@ -17,6 +18,19 @@
 #include "Interfaces/I_StandardInput.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Subsystems/Subsystem_Player.h"
+
+
+APlayerController* _WcGetPlayer(UObject* wc, APlayerController* player)
+{
+	if (player) { return player;}
+	if (wc && wc->GetWorld())
+	{
+		return wc->GetWorld()->GetFirstPlayerController();
+	}
+	
+	return nullptr;
+}
+
 
 FVector UOmegaPlayerFunctions::OffsetScreenPositionToWorld(APlayerController* Player, FVector2D ScreenPosition,
                                                            FVector Offset)
@@ -347,7 +361,8 @@ bool UOmegaPlayerFunctions::SimulateInputAction(APlayerController* Player, FGame
 	if (Keys.IsEmpty()) return false;
 
 	const FKey Key = Keys[0];
-	Player->InputKey(FInputKeyParams(Key, IE_Pressed, 1.0, Key.IsGamepadKey()));
+	// UE 5.8+: FInputKeyParams requires FInputDeviceId.
+	Player->InputKey(FInputKeyParams(Key, IE_Pressed, 1.0, Key.IsGamepadKey(), INPUTDEVICEID_NONE));
 
 	TWeakObjectPtr<APlayerController> WeakPlayer(Player);
 	FTimerHandle TimerHandle;
@@ -356,7 +371,7 @@ bool UOmegaPlayerFunctions::SimulateInputAction(APlayerController* Player, FGame
 		{
 			if (APlayerController* PC = WeakPlayer.Get())
 			{
-				PC->InputKey(FInputKeyParams(Key, IE_Released, 0.0, Key.IsGamepadKey()));
+				PC->InputKey(FInputKeyParams(Key, IE_Released, 0.0, Key.IsGamepadKey(), INPUTDEVICEID_NONE));
 			}
 		}),
 		Duration, false);
@@ -384,5 +399,35 @@ void UOmegaPlayerFunctions::ObjectHogInput_Clear(APlayerController* player)
 			p->ObjectHoggingInput=nullptr;
 		}
 	}
+}
+
+// =====================================================================================================================
+// Image
+// =====================================================================================================================
+
+void UOmegaPlayerFunctions::Image_Set(UObject* WorldContextObject, FGameplayTag Tag, FSlateBrush Image,
+	APlayerController* Player)
+{
+	if (UOmegaSubsystem_Player* ss=OGF_Subsystems::oPlayer(_WcGetPlayer(WorldContextObject,Player)))
+	{
+		ss->Image_Set(Tag,Image);
+	}
+}
+
+void UOmegaPlayerFunctions::Image_Clear(UObject* WorldContextObject, FGameplayTag Tag, APlayerController* Player)
+{
+	if (UOmegaSubsystem_Player* ss=OGF_Subsystems::oPlayer(_WcGetPlayer(WorldContextObject,Player)))
+	{
+		ss->Image_Clear(Tag);
+	}
+}
+
+FSlateBrush UOmegaPlayerFunctions::Image_Get(UObject* WorldContextObject, FGameplayTag Tag, APlayerController* Player)
+{
+	if (UOmegaSubsystem_Player* ss=OGF_Subsystems::oPlayer(_WcGetPlayer(WorldContextObject,Player)))
+	{
+		return ss->Image_Get(Tag);
+	}
+	return FSlateBrush();
 }
 

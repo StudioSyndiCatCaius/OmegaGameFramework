@@ -563,7 +563,13 @@ AActor* UOmegaActorFunctions::GetActorTagTarget(AActor* Actor, FGameplayTag Tag,
 
 void UOmegaActorFunctions::SetActorTagTarget(AActor* Actor, FGameplayTag Tag, AActor* Target)
 {
-	Actor->GetWorld()->GetSubsystem<UOmegaSubsystem_World>()->SetActorTaggedTarget(Actor,Tag,Target);
+	if (Actor)
+	{
+		if (UOmegaSubsystem_World* ss=OGF_Subsystems::oWorld(Actor))
+		{
+			ss->SetActorTaggedTarget(Actor,Tag,Target);
+		}
+	}
 }
 
 

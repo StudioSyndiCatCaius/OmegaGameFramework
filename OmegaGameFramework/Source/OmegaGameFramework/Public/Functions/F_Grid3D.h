@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "F_Trace.h"
 #include "UObject/Object.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "GameFramework/Actor.h"
@@ -61,6 +62,33 @@ public:
 };
 
 
+
+// =====================================================================================================
+// Tilemap Style
+// =====================================================================================================
+
+
+UCLASS()
+class OMEGAGAMEFRAMEWORK_API UOmegaGrid3DStyle : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+public:
+	UOmegaGrid3DStyle();
+	
+	UPROPERTY(EditAnywhere,Category="Grid")
+	UOmegaGrid3DTileType* DefaultTileType;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid")
+	FVector TileOffset;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid")
+	TSubclassOf<AOmegaGrid3D_Tile> TileClass;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid")
+	bool DestroyInvalidTiles;
+	
+};
+
+
+
 // ===============================================================================================================================
 // Tilemap Component
 // ===============================================================================================================================
@@ -93,16 +121,13 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
 	void GenerateTiles();
 	
+	UFUNCTION(BlueprintPure,Category="Grid3D") UOmegaGrid3DStyle* GetMapStyle();
+	
 	UPROPERTY(EditAnywhere,Category="Grid3D")
-	UOmegaGrid3DTileType* DefaultTileType;
+	UOmegaGrid3DStyle* MapStyle;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3D")
 	FIntVector GridSize;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3D")
-	FVector TileOffset;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3D")
-	TSubclassOf<AOmegaGrid3D_Tile> TileClass;
-	
 	/*
 	 * if true, this will not be its own gridmap, but rather, will be an addon to another Gridmap.
 	 */
@@ -116,6 +141,9 @@ public:
 	UFUNCTION(BlueprintPure,Category="Grid3D")
 	UOmegaGrid3D_Map* GetHostGridmap();
 
+	// Called by tiles when destroyed so they are unregistered from this map.
+	void Notify_TileDestroyed(AOmegaGrid3D_Tile* Tile);
+
 	// Get Coordinate & Vector
 	UFUNCTION(BlueprintPure,Category="Grid3D")
 	FIntVector GetCoordinateFromVector(FVector Vector);
@@ -123,15 +151,15 @@ public:
 	FVector GetVectorFromCoordinate(FIntVector Coordinate);
 	
 	// Get Tile
-	UFUNCTION(BlueprintCallable,Category="Grid3D")
-	TArray<AOmegaGrid3D_Tile*> GetTiles();
+	UFUNCTION(BlueprintCallable,Category="Grid3D",meta=(AdvancedDisplay="bIncludeInvalid"))
+	TArray<AOmegaGrid3D_Tile*> GetTiles(bool bIncludeInvalid=false);
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
-	TArray<AOmegaGrid3D_Tile*> GetTilesFromCoordinates(TArray<FIntVector> Coordinates);
+	TArray<AOmegaGrid3D_Tile*> GetTilesFromCoordinates(TArray<FIntVector> Coordinates,bool bIncludeInvalid=false);
 	UFUNCTION(BlueprintPure,Category="Grid3D")
-	AOmegaGrid3D_Tile* GetTileFromVector(FVector Vector);
+	AOmegaGrid3D_Tile* GetTileFromVector(FVector Vector,bool bIncludeInvalid=false);
 	UFUNCTION(BlueprintPure,Category="Grid3D")
-	AOmegaGrid3D_Tile* GetTileFromCoordinate(FIntVector Coordinate);
+	AOmegaGrid3D_Tile* GetTileFromCoordinate(FIntVector Coordinate,bool bIncludeInvalid=false);
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D",DisplayName="Get Tile w/ Occupant (Component)")
 	AOmegaGrid3D_Tile* GetTile_OfOccupant_Comp(UOmegaGrid3D_Occupant* Occupant);
@@ -156,14 +184,32 @@ public:
 	UOmegaGrid3D_Map* GridmapComponent;
 };
 
+
+
 // =====================================================================================================
 // Tile Occupant Component
 // =====================================================================================================
 
+UINTERFACE(MinimalAPI, DisplayName="♎Modifier - Grid 3D Occupant",BlueprintType) class UModifierInterface_Grid3DOccupant : public UInterface { GENERATED_BODY() };
+class OMEGAGAMEFRAMEWORK_API IModifierInterface_Grid3DOccupant
+{
+	GENERATED_BODY()
+
+public:
+	
+	UFUNCTION(BlueprintNativeEvent,Category="♎I|Grid3D Occupant")
+	FGameplayTagContainer Grid3DOccupant_AppendedTags();
+};
+
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrid3DOccupantDelegate, UOmegaGrid3D_Occupant*, Occupant);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrid3DOccupantMotionDelegate, UOmegaGrid3D_Occupant*, Occupant, bool, Rotation);
+// Fired per other occupant when shared occupancy begins/ends on a tile (enter/exit, including when this occupant moves).
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnGrid3DOccupantSharedOccupancy, UOmegaGrid3D_Occupant*, Occupant, UOmegaGrid3D_Occupant*, OtherOccupant, AOmegaGrid3D_Tile*, Tile);
 
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FOnGrid3DTileQuery, AOmegaGrid3D_Tile*, Tile);
 DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FOnGrid3DOccupantTileQuery, UOmegaGrid3D_Occupant*, Occupant,AOmegaGrid3D_Tile*, Tile);
+
 
 UCLASS(ClassGroup=("Omega Game Framework"), meta=(BlueprintSpawnableComponent))
 class OMEGAGAMEFRAMEWORK_API UOmegaGrid3D_Occupant : public UActorComponent
@@ -185,16 +231,23 @@ public:
 	UOmegaGrid3D_Occupant();
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant")
 	FVector TileOffset;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant")
 	bool AutoSnapToTile;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant")
+	bool CanSnapToInvalidTiles;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant")
 	float AutoSnapDistance=200;
 	UFUNCTION(BlueprintCallable,Category="Gird3D Occupant")
 	bool SnapToNearestTile();
+	
+	//Registers the owning actor as a Occupant modifer
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant")
+	bool RegisterOwnerAsModifier;
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
 	void SetTile(AOmegaGrid3D_Tile* Tile, bool bClearPrevious=true, bool bSnap=true);
@@ -202,9 +255,25 @@ public:
 	AOmegaGrid3D_Tile* GetTile();
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D")
-	AOmegaGrid3D_Tile* GetTileAtOffset(FIntVector Offset, bool RotationRelative);
+	AOmegaGrid3D_Tile* GetTileAtOffset(FIntVector Offset, bool RotationRelative,bool bIncludeInvalid=false);
 	
-	//Movement -------------
+	
+	UPROPERTY(BlueprintAssignable) FOnGrid3DOccupantSharedOccupancy OnOccupancyShareBegin;
+	UPROPERTY(BlueprintAssignable) FOnGrid3DOccupantSharedOccupancy OnOccupancyShareEnd;
+	
+	// ------------------------------------------------------
+	// Modifier
+	// ------------------------------------------------------
+	
+	UPROPERTY(VisibleAnywhere,Category="Grid3d Occupant")
+	TArray<UObject*> OccupantModifiers;
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3d Occupant")
+	bool Modifier_Register(UObject* modifier, bool is_registered);
+	
+	// ------------------------------------------------------
+	// Movement
+	// ------------------------------------------------------
 	
 	bool bMoving=false;
 	bool bRotating=false;
@@ -227,7 +296,8 @@ public:
 	*/
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant|Mover")
 	bool BumpOnInvalidMove;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Grid3d Occupant|Mover",meta=(EditCondition="BumpOnInvalidMove"))
+	float BumpPositionLerp=0.5f;
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3d Occupant|Mover")
 	bool Input_Move(FIntVector Direction, bool RotationRelative);
@@ -238,6 +308,17 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Grid3d Occupant|Mover")
 	bool IsMovingOrRotating(bool& Moving,bool& Rotating);
 	
+	// ------------------------------------------------------
+	// Tags
+	// ------------------------------------------------------
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Grid3d Occupant",meta=(Categories="GRID3D.Occupant"))
+	FGameplayTagContainer OccupantTags;
+	
+	UFUNCTION(BlueprintPure,Category="Grid3d Occupant|Tags")
+	FGameplayTagContainer Tags_Get();
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3d Occupant|Tags")
+	void Tags_Set(UPARAM(meta=(Categories="GRID3D.Occupant")) FGameplayTagContainer Tags, bool bActive);
 };
 
 // =====================================================================================================
@@ -306,8 +387,24 @@ class OMEGAGAMEFRAMEWORK_API AOmegaGrid3D_Tile : public AActor
 public:
 	UPROPERTY() FIntVector grid_coordinate;
 	UPROPERTY() UOmegaGrid3D_Map* Owning_Gridmap;
+
+	virtual void Destroyed() override;
+	
+	UFUNCTION(BlueprintNativeEvent,Category="Grid3D Tile")
+	bool CanTileSpawn(FIntVector Coord, UOmegaGrid3D_Map* Gridmap);
+
+	// Destroys this tile at runtime. Destroyed tiles are unregistered from their gridmap and excluded from all tile queries.
+	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
+	void DestroyTile();
 	
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGrid3DTileTagEdit OnTileTagChanged;
+	
+	UPROPERTY(BlueprintReadOnly,Category="Grid3D Tile") bool IsTileValid=true;
+
+	// Invalid tiles are hidden and excluded from tile queries by default (movement, coordinate lookups),
+	// but can still hold occupants.
+	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
+	void SetTileValid(bool bValid);
 	
 	UPROPERTY(EditAnywhere,Category="Grid3D Tile")
 	UOmegaGrid3DTileType* TileType;
@@ -342,12 +439,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	TArray<UOmegaGrid3D_Occupant*> GetOccupants() const;
-	
-	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
-	UOmegaGrid3D_Occupant* GetFirstOccupant() const;
-	
-	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",meta=(DeterminesOutputType="Class",ExpandEnumAsExecs="Result"))
-    AActor* GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, bool& Result);
+
+	UFUNCTION(BlueprintCallable,Category="Grid3D Tile",meta=(DeterminesOutputType="Class",ExpandEnumAsExecs="Result"),DisplayName="Get First Occupant")
+    AActor* GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, bool& Result,
+    	FOnGrid3DOccupantTileQuery OptionalFilter);
 	
 	UFUNCTION(BlueprintCallable,Category="Grid3D Tile")
 	bool HasOccupant(UOmegaGrid3D_Occupant* Occupant) const;
@@ -357,6 +452,17 @@ public:
 	
 	UFUNCTION(BlueprintPure,Category="Grid3d Tile")
 	FIntVector GetTileCoordinate();
+	
+	//continually checks all nearby tiles outwards until a valid one is found
+	UFUNCTION(BlueprintCallable,Category="Grid3d Tile")
+	AOmegaGrid3D_Tile* GetNearestValidTile(FOnGrid3DTileQuery OptionalFilter);
+	
+	UFUNCTION(BlueprintCallable,Category="Grid3d Tile")
+	TArray<AOmegaGrid3D_Tile*> GetAllValidTilesInRange(int32 range, FOnGrid3DTileQuery OptionalFilter);
+	
+	UFUNCTION(BlueprintPure,Category="Grid3d Tile")
+	int32 GetDistanceToTile(AOmegaGrid3D_Tile* TargetTile);
+	
 };
 
 

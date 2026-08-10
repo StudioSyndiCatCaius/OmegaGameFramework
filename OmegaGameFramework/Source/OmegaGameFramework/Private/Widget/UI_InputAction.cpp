@@ -62,7 +62,7 @@ void UOmegaUI_InputAction::NativeConstruct()
 	Super::NativeConstruct();
 	if (UOmegaSubsystem_Player* ss=OGF_Subsystems::oPlayer(GetOwningPlayer()))
 	{
-		ss->OnInputDeviceChanged.AddDynamic(this,&UOmegaUI_InputAction::L_OnInputDeviceChange);
+		ss->OnInputDeviceChanged.AddUniqueDynamic(this,&UOmegaUI_InputAction::L_OnInputDeviceChange);
 		L_OnInputDeviceChange(ss->IsUsingGamepad());
 		UOmegaPlayerFunctions::SetInputActionTargetActive(GetOwningPlayer(),this,true);	
 	}

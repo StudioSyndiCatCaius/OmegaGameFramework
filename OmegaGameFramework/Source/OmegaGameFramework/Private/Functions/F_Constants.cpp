@@ -138,6 +138,17 @@ TArray<UPrimaryDataAsset*> UOmegaFunctions_Constants::DataAssetList(FName Name, 
 	return out;
 }
 
+UPrimaryDataAsset* UOmegaFunctions_Constants::DataAssetListIndex(FName Name, int32 index,
+	TSubclassOf<UPrimaryDataAsset> Class)
+{
+	TArray<UPrimaryDataAsset*> aList=UOmegaFunctions_Constants::DataAssetList(Name,Class);
+	if(aList.IsValidIndex(index) && (!Class || aList[index]->GetClass()->IsChildOf(Class)))
+	{
+		return aList[index];
+	}
+	return nullptr;
+}
+
 UTexture* UOmegaFunctions_Constants::Texture(FName Name)
 {
 	if (UTexture* da=GetMutableDefault<UOmegaSettings_Constants>()->Constant_Textures.FindOrAdd(Name).LoadSynchronous())

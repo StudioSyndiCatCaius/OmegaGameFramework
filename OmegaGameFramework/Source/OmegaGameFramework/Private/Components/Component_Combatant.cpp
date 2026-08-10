@@ -5,6 +5,7 @@
 
 #include "OmegaSettings.h"
 #include "OmegaGameManager.h"
+#include "StateTreeTypes.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -160,6 +161,24 @@ void UCombatantComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Countdown timed tags; drop entries once duration reaches 0.
+	if (TimedTags.Num() > 0)
+	{
+		TArray<FGameplayTag> ExpiredTags;
+		for (TPair<FGameplayTag, float>& Pair : TimedTags)
+		{
+			Pair.Value -= DeltaTime;
+			if (Pair.Value <= 0.f)
+			{
+				ExpiredTags.Add(Pair.Key);
+			}
+		}
+		for (const FGameplayTag& Tag : ExpiredTags)
+		{
+			TimedTags.Remove(Tag);
+		}
+	}
+
 	if (bAutorunAbilitySelector)
 	{
 		// Iterate abilities_granted directly to avoid the TArray allocation that GetActiveAbilities() would make.
@@ -266,6 +285,13 @@ void UCombatantComponent::ChangeAttributeSet(UOmegaAttributeSet* NewSet, bool Re
 FGameplayTagContainer UCombatantComponent::GetCombatantTags()
 {
 	FGameplayTagContainer out=CombatantTags;
+	for (const TPair<FGameplayTag, float>& Pair : TimedTags)
+	{
+		if (Pair.Key.IsValid() && Pair.Value > 0.f)
+		{
+			out.AddTag(Pair.Key);
+		}
+	}
 	for (auto* m : GetAllModifiers())
 	{
 		if (m)
@@ -583,7 +609,7 @@ TArray<AOmegaAbility*> UCombatantComponent::GetGrantedAbilitiesWithTags(FGamepla
 ////////////////////////////////////
 	////////// -- ATTRIBUTES -- //////////
 	///////////////////////////////////
-float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, UOmegaDamageType* DamageType, FHitResult Hit)
+float UCombatantComponent::ApplyAttributeDamage(UOmegaAttribute* Attribute, float BaseDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta Meta)
 {
 	
 	if(Attribute)
@@ -602,17 +628,15 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 			LocalDamageType = DamageType;
 		}
 	
-		UObject* LocalContext = nullptr;
-		if(Context)
-		{
-			LocalContext = Context;
-		}
-	
+
 		GetAttributeValue(Attribute, CurrentValue, MaxVal);		//Set correct attribute values
 		float FinalDamage = BaseDamage;
 
-		//Apply Damage Modifiers
-		FinalDamage=L_ModifyDamage(Attribute,Instigator,FinalDamage,DamageType,Context);
+		if (!Meta.ForceNoMod)
+		{
+			//Apply Damage Modifiers
+			FinalDamage=L_ModifyDamage(Attribute,Instigator,FinalDamage,DamageType,Meta.Context);	
+		}
 
 		//--------------------- FINISH AND APPLY ---------------------///
 	
@@ -621,7 +645,7 @@ float UCombatantComponent::ApplyAttributeDamage(class UOmegaAttribute* Attribute
 
 		//FINALIZE
 		L_GetEntityData()->Attributes.Add(Attribute, CurrentValue);
-		OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, LocalDamageType, Hit);
+		OnDamaged.Broadcast(this, Attribute, FinalDamage, Instigator, LocalDamageType, Meta);
 		Update();
 		return FinalDamage;
 	}
@@ -736,15 +760,43 @@ void UCombatantComponent::AddSkills(TArray<UPrimaryDataAsset*> skill_list, bool 
 	}
 }
 
+void UCombatantComponent::SetTimedTagDuration(FGameplayTag Tag, float Duration, bool bAdd)
+{
+	if (!Tag.IsValid())
+	{
+		return;
+	}
+
+	float NewDuration = Duration;
+	if (bAdd)
+	{
+		if (const float* Existing = TimedTags.Find(Tag))
+		{
+			NewDuration = *Existing + Duration;
+		}
+	}
+
+	if (NewDuration > 0.f)
+	{
+		TimedTags.Add(Tag, NewDuration);
+	}
+	else
+	{
+		TimedTags.Remove(Tag);
+	}
+}
+
 void UCombatantComponent::SetCombatantTagsActive(FGameplayTagContainer GameplayTags, bool TagsActive)
 {
 	if(TagsActive)
 	{
 		CombatantTags.AppendTags(GameplayTags);
+		OnCombatantTagsEdited.Broadcast(this,GameplayTags,true);
 	}
 	else
 	{
 		CombatantTags.RemoveTags(GameplayTags);
+		OnCombatantTagsEdited.Broadcast(this,GameplayTags,false);
 	}
 }
 
@@ -753,10 +805,12 @@ void UCombatantComponent::SetTagsActive(FGameplayTagContainer GameplayTags, bool
 	if(TagsActive)
 	{
 		L_GetEntityData()->Tags.AppendTags(GameplayTags);
+		OnEntityTagsEdited.Broadcast(this,GameplayTags,true);
 	}
 	else
 	{
 		L_GetEntityData()->Tags.RemoveTags(GameplayTags);
+		OnEntityTagsEdited.Broadcast(this,GameplayTags,false);
 	}
 }
 
@@ -1492,7 +1546,6 @@ FText UCombatantComponent::GetFactionName()
 
 FLinearColor UCombatantComponent::GetFactionColor()
 {
-	
 	if(FactionDataAsset)
 	{
 		return FactionDataAsset->FactionColor;

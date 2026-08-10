@@ -159,9 +159,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnNewLevel OnNewLevel;
 	
-	// ────────────────────────────────────────────────────────────────────
-	// Load
-	// ────────────────────────────────────────────────────────────────────
+	//=========================================================================
+	// LOAD
+	//=========================================================================
 	UFUNCTION(BlueprintCallable,Category="Omega|Load")
 	void SetLoadStateString(FString LoadState);
 	
@@ -169,9 +169,9 @@ public:
 	
 	float f_loadStringCooldown=0.0;
 	
-	// ────────────────────────────────────────────────────────────────────
+	//=========================================================================
 	// BGM
-	// ────────────────────────────────────────────────────────────────────
+	//=========================================================================
 	void L_InitBgmComponent();
 	
 	UPROPERTY(BlueprintReadOnly,Category="Components") UAudioComponent* BgmPlayer;
@@ -193,24 +193,24 @@ public:
 	UFUNCTION() void BGM_Pause(bool bPaused);
 	UFUNCTION() void BGM_Lock(bool bLocked);
 	
-	//################################################################
+	//=========================================================================
 	// MODS
-	//################################################################
+	//=========================================================================
 	
 	UPROPERTY() TArray<UOmegaMod*> mods_loaded;
 	
-	//################################################################
+	//=========================================================================
 	// Preferences
-	//################################################################
+	//=========================================================================
 	
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnPreferenceValueUpdated OnPreferenceValueUpdated;
 	
 	FVector Pref_Get(UGamePreference* pref) const;
 	void Pref_Set(UGamePreference* pref, FVector Value) const;
 	
-	//################################################################
+	//=========================================================================
 	// Global Event
-	//################################################################
+	//=========================================================================
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGlobalEvent OnGlobalEvent;
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnTaggedGlobalEvent OnTaggedGlobalEvent;
 	
@@ -219,6 +219,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Omega|Game Manager", meta=(AdvancedDisplay="Context"),DisplayName="Fire Global Event (Tag)")
 	void FireTaggedGlobalEvent(FGameplayTag Event, UObject* Context, FOmegaCommonMeta meta);
+	
+	
+	
 	
 	// ------------------------------------------------------
 	// Machina

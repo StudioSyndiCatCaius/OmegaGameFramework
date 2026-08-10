@@ -39,6 +39,9 @@ public:
 	};
 	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override {};
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Tag")
+	bool isAIControlled;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Faction")
 	TObjectPtr<UMaterialInterface> Utility_Material;
 	

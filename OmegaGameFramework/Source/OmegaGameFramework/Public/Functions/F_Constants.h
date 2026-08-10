@@ -97,6 +97,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Class",DeterminesOutputType="Class"),DisplayName="♾️Constant - Data Asset (List)")
 	static TArray<UPrimaryDataAsset*> DataAssetList(UPARAM(meta = (GetOptions = "opts_daList")) FName Name, TSubclassOf<UPrimaryDataAsset> Class);
 	
+	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Class",DeterminesOutputType="Class"),DisplayName="♾️Constant - Data Asset (List Index)")
+    static UPrimaryDataAsset* DataAssetListIndex(UPARAM(meta = (GetOptions = "opts_daList")) FName Name,int32 index,TSubclassOf<UPrimaryDataAsset> Class);
+	
 	UFUNCTION(BlueprintPure, Category = "Omega|Constants",meta=(AdvancedDisplay="Fallback"),DisplayName="♾️Constant - Attribute")
 	static UOmegaAttribute* Attribute(UPARAM(meta = (GetOptions = "opts_att")) FName Name);
 		

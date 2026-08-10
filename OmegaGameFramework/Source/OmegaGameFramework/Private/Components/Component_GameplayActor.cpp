@@ -14,6 +14,9 @@
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
 #include "TimerManager.h"
+#include "DataAssets/DA_Appearance.h"
+#include "Engine/StaticMesh.h"
+#include "Functions/F_Minimap.h"
 
 const uint8 SUBSCRIPT_EVENT_BEGINPLAY=0;
 const uint8 SUBSCRIPT_EVENT_ENDPLAY=1;
@@ -315,6 +318,10 @@ void UGameplayActorComponent::BeginPlay()
 	else
 	{
 	}
+	
+	//do minimap
+	Minimap_Update();
+	
 	Subscripts.EventCall(SUBSCRIPT_EVENT_BEGINPLAY,this);
 }
 
@@ -367,6 +374,78 @@ void UGameplayActorComponent::OnActorHit(AActor* SelfActor, AActor* OtherActor, 
 {
 	Subscripts.EventCall(SUBSCRIPT_EVENT_HIT,this,OtherActor,FGameplayTag(),Hit);
 }
+
+FOmegaMinimapActorConfig UGameplayActorComponent::Minimap_GetConfig() const
+{
+	if (bOverrideMinimapConfig) { return MinimapConfig; }
+	if (const UOmegaSettings* set=GetDefault<UOmegaSettings>())
+	{
+		if (const AActor* owner=GetOwner())
+		{
+			UClass* owner_class=owner->GetClass();
+			UClass* best_class=nullptr;
+			const FOmegaMinimapActorConfig* best_config=nullptr;
+			for (const TPair<TSoftClassPtr<AActor>,FOmegaMinimapActorConfig>& pair : set->MinimapActorConfig_PerClass)
+			{
+				UClass* config_class=pair.Key.Get();
+				if (!config_class) { config_class=pair.Key.LoadSynchronous(); }
+				if (config_class && owner_class->IsChildOf(config_class))
+				{
+					// Ancestors of a single class form a linear chain, so IsChildOf totally orders the
+					// matches - keep the most-derived one (e.g. APawn over AActor for an ACharacter).
+					if (!best_class || config_class->IsChildOf(best_class))
+					{
+						best_class=config_class;
+						best_config=&pair.Value;
+					}
+				}
+			}
+			if (best_config) { return *best_config; }
+		}
+		return set->MinimapActorConfig_Default;
+	}
+	return FOmegaMinimapActorConfig();
+}
+
+void UGameplayActorComponent::Minimap_Update()
+{
+	FOmegaMinimapActorConfig mm_config=Minimap_GetConfig();
+	if (mm_config.UseMinimapMesh)
+	{
+		if (UOmegaMinimapMeshComponent* mc=Cast<UOmegaMinimapMeshComponent>(
+			GetOwner()->AddComponentByClass(UOmegaMinimapMeshComponent::StaticClass(),false,mm_config.MeshOffset,false)))
+		{
+			minimap_mesh_comp=mc;
+			if (UStaticMesh* mm_sm=mm_config.MinimapMesh.LoadSynchronous())
+			{
+				minimap_mesh_comp->SetStaticMesh(mm_sm);	
+				for (auto soft_mat : mm_config.MinimapMeshMaterials)
+				{
+					int32 mat_index=mm_config.MinimapMeshMaterials.Find(soft_mat);
+					if (UMaterialInterface* mat=soft_mat.LoadSynchronous())
+					{
+						minimap_mesh_comp->SetMaterial(mat_index, mat);
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		if (minimap_mesh_comp)
+		{
+			minimap_mesh_comp->DestroyComponent();
+			minimap_mesh_comp=nullptr;
+		}
+	}
+}
+
+UOmegaMinimapMeshComponent* UGameplayActorComponent::Minimap_GetMesh() const
+{
+	if (minimap_mesh_comp) { return minimap_mesh_comp; }
+	return nullptr;
+}
+
 
 void UGameplayActorComponent::SetBool(FString param, bool Value)
 {

@@ -108,6 +108,7 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		GetWorld()->GetTimerManager().ClearTimer(InputBlockTimer);
 		bIsOpen = false;
 		PrivateInputBlocked = true;
+		MenuClosed(TempTags, Flag);
 		
 		if (WrapperActor)
 		{
@@ -115,7 +116,6 @@ void UMenu::CloseMenu(FGameplayTagContainer Tags, UObject* Context, const FStrin
 		}
 		
 		TempTags = Tags;
-		MenuClosed(TempTags, Flag);
 		OnClosed.Broadcast(TempTags, Context, Flag);
 
 		//Handle Subsystem

@@ -1,5 +1,24 @@
 ﻿#include "script_CombatantSelector.h"
 
+#include "Engine/Texture2D.h"
+#include "UObject/ConstructorHelpers.h"
+
+#define MAK_ICO(nam) \
+{ \
+static ConstructorHelpers::FObjectFinder<UTexture2D> IcoFinder( \
+TEXT("/OmegaGameFramework/Textures/icons/" #nam "." #nam)); \
+if (IcoFinder.Succeeded()) \
+{ \
+SelectorIcon.SetResourceObject(IcoFinder.Object); \
+} \
+}
+
+UCombatantSelector_Single::UCombatantSelector_Single()
+{
+	SelectorName=FText::FromString("Single");
+	MAK_ICO(T_ico_selector_one);
+}
+
 void UCombatantSelector_Single::CycleTarget(int32 amount)
 {
 	if (InputTargets.Num() == 0) return;
@@ -34,6 +53,12 @@ bool UCombatantSelector_Single::IsTargetValid_Implementation(UCombatantComponent
 	return false;
 }
 
+UCombatantSelector_All::UCombatantSelector_All()
+{
+	SelectorName=FText::FromString("All");
+	MAK_ICO(T_ico_selector_all);
+}
+
 void UCombatantSelector_All::OnSelectorBegin_Implementation()
 {
 	ActiveTargets=InputTargets;
@@ -43,6 +68,12 @@ TArray<UCombatantComponent*> UCombatantSelector_All::OnFinalizeTargets_Implement
 	const TArray<UCombatantComponent*>& Targets) const
 {
 	return InputTargets;
+}
+
+UCombatantSelector_Random::UCombatantSelector_Random()
+{
+	SelectorName=FText::FromString("Random");
+	MAK_ICO(T_ico_selector_random);
 }
 
 void UCombatantSelector_Random::OnSelectorBegin_Implementation()

@@ -18,6 +18,7 @@
 #include "Interfaces/I_StandardInput.h"
 #include "Misc/OmegaUtils_Enums.h"
 #include "Misc/OmegaUtils_Structs.h"
+#include "Types/Struct_DamageMeta.h"
 #include "Component_Combatant.generated.h"
 
 class APawn;
@@ -39,9 +40,10 @@ class UInputComponent;
 class UEnhancedInputComponent;
 class UInputAction;
 
+
 /// DELEGATES
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCombatantDelegate, UCombatantComponent*, Combatant);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FOmegaAttributeDamageMeta, Meta);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatantDataAssetChanged, UCombatantComponent*, Combatant, UPrimaryDataAsset*, NewAsset,UPrimaryDataAsset*, OldAsset);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnFactionChanged, UCombatantComponent*, component, UOmegaFaction*, NewFaction, UOmegaFaction*, OldFaction);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTargetAdded, UCombatantComponent*, component, UCombatantComponent*, Target, bool, bAdded);
@@ -55,6 +57,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatant_EquipChange, UCombat
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCombatant_XpChange, UCombatantComponent*, Combatant, UOmegaLevelingAsset*, Type, float, old_xp,float, new_xp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCombatant_LevelChange, UCombatantComponent*, Combatant, UOmegaLevelingAsset*, Type, int32, old_level,int32, new_level);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatant_TagsEdit, UCombatantComponent*, Combatant, FGameplayTagContainer, Tags, bool, bAdded);
 
 
 #define  UFUNC_EQUIP_C(Name) UFUNCTION(BlueprintCallable, Category="Equipment", DisplayName="Equipment - ")
@@ -71,6 +74,7 @@ class OMEGAGAMEFRAMEWORK_API UCombatantComponent : public UOmegaComponent, publi
 																			public IDataInterface_General, public IDataInterface_InputAction
 {
 	GENERATED_BODY()
+	
 
 	float L_ModifyDamage(UOmegaAttribute* Attribute,UCombatantComponent* Instigator,float BaseDamage,UOmegaDamageType* DamageType,UObject* Context);
 	void L_CacheAttributeMods();
@@ -272,7 +276,7 @@ public:
 
 	// Applies BaseDamage to Attribute, applying modifiers and clamping to valid range. Returns the final damage dealt.
 	UFUNCTION(BlueprintCallable, Category = "Attributes", meta = (AdvancedDisplay = "Instigator, Context, DamageType, Hit"))
-	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UObject* Context, UOmegaDamageType* DamageType, FHitResult Hit);
+	float ApplyAttributeDamage(class UOmegaAttribute* Attribute, float BaseDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta Meta);
 
 	// Returns the current and maximum values of Attribute on this combatant.
 	UFUNCTION(BlueprintPure, Category = "Attributes",DisplayName="Attribute - Get Value")
@@ -374,6 +378,16 @@ public:
 	// TAGS
 	// ------------------------------------------------------------------------------------------
 
+	UPROPERTY(BlueprintAssignable) FOnCombatant_TagsEdit OnCombatantTagsEdited;
+	UPROPERTY(BlueprintAssignable) FOnCombatant_TagsEdit OnEntityTagsEdited;
+	
+	//Timed tags are included CombatantTags until their duration <=0.0, at which point they are removed
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Tags") TMap<FGameplayTag,float> TimedTags;
+	
+	//sets or adds to the current duration of a Timed Tag.
+	UFUNCTION(BlueprintCallable, Category = "Combatant|Tags")
+	void SetTimedTagDuration(FGameplayTag Tag, float Duration, bool bAdd);
+	
 	// Adds or removes GameplayTags from the combatant's tag container.
 	UFUNCTION(BlueprintCallable, Category = "Combatant|Tags") void SetCombatantTagsActive(FGameplayTagContainer GameplayTags,bool TagsActive);
 	// Adds or removes tags from the combatant's entity data tag container (saved to entity).

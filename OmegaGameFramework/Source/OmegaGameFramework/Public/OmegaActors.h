@@ -19,9 +19,17 @@ struct FOmegaActorBaseConfig
 {
 	GENERATED_BODY()
 public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor",meta=(Categories="EVENT"))
+	FGameplayTag GlobalBindingTag;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor",meta=(Categories="TARGET"))
+	TMap<FGameplayTag, TSoftObjectPtr<AActor>> TagTargets;
 	
 	UPROPERTY() bool BindEvents_World_Message=false;
 	
+	
+	void Init(AActor* Actor);
 };
 
 // Any actors derived from this will automatically have references to all SUBSYSTEMS, and hook calls to the GAME MANAGER.
@@ -37,7 +45,8 @@ public:
 	UPROPERTY() UOmegaSubsystem_World* SS_World=nullptr;
 	UPROPERTY() UOmegaSaveSubsystem* SS_Save=nullptr;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Actor") FGuid GameplayGuid;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor",meta=(ShowOnlyInnerProperties)) FOmegaActorBaseConfig OmegaActorConfig;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor") FGuid GameplayGuid;
 	UFUNCTION(BlueprintCallable, Category="Omega Actor",meta=(AdvancedDisplay="Target"))
 	void SetGuidflagValue(uint8 Flag, bool bValue, TEnumAsByte<EOmegaGlobalParamTarget> Target=EOmegaGlobalParamTarget::SAVE_GAME);
 	UFUNCTION(BlueprintPure, Category="Omega Actor",meta=(AdvancedDisplay="Target"))
@@ -61,7 +70,8 @@ public:
 	UPROPERTY() UOmegaSubsystem_World* SS_World=nullptr;
 	UPROPERTY() UOmegaSaveSubsystem* SS_Save=nullptr;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Actor") FGuid GameplayGuid;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor",meta=(ShowOnlyInnerProperties)) FOmegaActorBaseConfig OmegaActorConfig;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor") FGuid GameplayGuid;
 	
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PreBeginPlay() {};
@@ -81,7 +91,8 @@ public:
 	UPROPERTY() UOmegaSubsystem_World* SS_World=nullptr;
 	UPROPERTY() UOmegaSaveSubsystem* SS_Save=nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Actor") FGuid GameplayGuid;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor",meta=(ShowOnlyInnerProperties),DisplayName="Config") FOmegaActorBaseConfig OmegaActorConfig;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omega Actor") FGuid GameplayGuid;
 	
 	virtual auto OnConstruction(const FTransform& Transform) -> void override;
 	virtual void PreBeginPlay() {};

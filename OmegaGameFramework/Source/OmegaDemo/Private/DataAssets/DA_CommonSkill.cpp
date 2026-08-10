@@ -28,33 +28,11 @@ FOmegaSkillConfig UOAsset_CommonSkill::Skill_GetConfig_Implementation(UCombatant
 }
 
 float UOAsset_CommonSkill::Skill_CheckUtility_Implementation(UCombatantComponent* Combatant,
-	const TArray<UCombatantComponent*>& Targets, FGameplayTag Tag)
+	UCombatantComponent* Target)
 {
-	TArray<UCombatantComponent*> targets=Targets;
-	if (SkillConfig.TargetFilter)
-	{
-		targets=SkillConfig.TargetFilter->FilterCombatants(Combatant,Targets);
-	}
-	float out=0.0;
-	float num=0.0;
-	for (auto* i : targets)
-	{
-		if (i)
-		{
-			float score_total, score_average;
-			UOmegaScriptedEffectFunctions::GetEffects_UtilityScore(Effects, i, Combatant, score_total, score_average);
-			out += score_average;
-			num++;
-		}
-	}
-	return out/num;
-}
-
-float UOAsset_CommonSkill::Skill_CheckUtility_OneTarget_Implementation(UCombatantComponent* Combatant,
-	UCombatantComponent* Target, FGameplayTag Tag)
-{
-	float score_total, score_average;
-	UOmegaScriptedEffectFunctions::GetEffects_UtilityScore(Effects,Target,Combatant,score_total,score_average);
+	float score_total = 0.f;
+	float score_average = 0.f;
+	UOmegaScriptedEffectFunctions::GetEffects_UtilityScore(Effects, Target, Combatant, score_total, score_average);
 	return score_average;
 }
 

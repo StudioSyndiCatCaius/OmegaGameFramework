@@ -17,8 +17,10 @@
 #include "Types/Struct_CombatantConfig.h"
 #include "Types/Struct_InputConfig.h"
 #include "GameFramework/Character.h"
+#include "Types/Struct_Minimap.h"
 #include "OmegaSettings.generated.h"
 
+class UOmegaGrid3DStyle;
 class UOmegaProceduralNamedAssetBuilder;
 class UOmegaPhysicsSurfaceType;
 class AOmegaWorldManager;
@@ -65,6 +67,8 @@ enum class EOmegaInputModeType : uint8
 
 
 
+
+
 UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Omega: Framework"))
 class OMEGAGAMEFRAMEWORK_API UOmegaSettings : public UDeveloperSettings
 {
@@ -94,9 +98,10 @@ public:
 	//These paths will automatically scanned on Init. 
 	UPROPERTY(EditAnywhere, config, Category = "_CORE",AdvancedDisplay)
 	TArray<FString> AutoscanPaths;
+
 	UPROPERTY(EditAnywhere, config, Category = "_CORE",DisplayName="⚛️ Procedural Data Asset Builder")
 	TSoftClassPtr<UOmegaProceduralNamedAssetBuilder> ProceduralDataAssetBuilderClass;
-	
+
 	UPROPERTY()
 	TSoftObjectPtr<UOmegaTextFormater_Collection> DefaultSettings_Text;
 	
@@ -108,9 +113,9 @@ public:
 	UPROPERTY() TMap<FName, float> CustomParams_Float;
 	UPROPERTY() TMap<FName, FString> CustomParams_String;
 	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	// Player
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	UPROPERTY(EditAnywhere, config, Category = "👤Player") TSoftClassPtr<AOmegaDynamicCamera> DynamicCameraClass;
 	UPROPERTY(EditAnywhere, config, Category = "👤Player") FGameplayTagContainer BlockedSystemsWhenMenusOpen;
 	UPROPERTY(EditAnywhere, config, Category = "👤Player",AdvancedDisplay) FGameplayTag InputAction_UI_Confirm=FGameplayTag::RequestGameplayTag("INPUT.UI.Confirm");
@@ -121,6 +126,22 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "👤Player",AdvancedDisplay) bool Input_ReplicateToPlayerPawn=true;
 //	UPROPERTY(EditAnywhere, config, Category = "Player",AdvancedDisplay) bool Input_ReplicateToPlayerComponents=true;
 	UPROPERTY(EditAnywhere, config, Category = "👤Player",AdvancedDisplay) bool Input_ReplicateToGameMode=true;
+	
+	// When true, the player subsystem enables virtual cursor on controller attach.
+	UPROPERTY(EditAnywhere, config, Category = "👤Player|Cursor")
+	bool VirtualCursor_AutoEnable=false;
+	// Cursor speed at full stick: units of 0.1 screens/sec. Default 10 ≈ 1 screen width/height per second.
+	UPROPERTY(EditAnywhere, config, Category = "👤Player|Cursor", meta=(ClampMin="0"))
+	float VirtualCursor_InterpSpeed=10;
+	// Stick deadzone for virtual cursor movement (0–1).
+	UPROPERTY(EditAnywhere, config, Category = "👤Player|Cursor", meta=(ClampMin="0", ClampMax="1"))
+	float VirtualCursor_Deadzone=0.15f;
+	// Controller keys that inject Left Mouse Button (default: Gamepad A / FaceButton_Bottom).
+	UPROPERTY(EditAnywhere, config, Category = "👤Player|Cursor")
+	TArray<FKey> VirtualCursor_Key_LeftMouse;
+	// Controller keys that inject Right Mouse Button (default: Gamepad B / FaceButton_Right).
+	UPROPERTY(EditAnywhere, config, Category = "👤Player|Cursor")
+	TArray<FKey> VirtualCursor_Key_RightMouse;
 	// ---------------------------------------------------------------------------
 	// Gameplay
 	// ---------------------------------------------------------------------------
@@ -153,9 +174,9 @@ public:
 	//If true, then in editor mode the "User Data" save path will redirect to "Gmae Data"/Project Save folder.
 	UPROPERTY(EditAnywhere, config, Category = "💾Save") bool EditorUseProjectSaveForUserSave=true;
 
-    // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    // ---------------------------------------------------------
     // Params
-    // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    // ---------------------------------------------------------
 	UPROPERTY(EditAnywhere, config, Category = "🔹Params", DisplayName="🌎 Global Params - Float")   TArray<FName> GlobalParams_float;
 	UPROPERTY(EditAnywhere, config, Category = "🔹Params", DisplayName="🌎 Global Params - Int32")   TArray<FName> GlobalParams_int32;
 	UPROPERTY(EditAnywhere, config, Category = "🔹Params", DisplayName="🌎 Global Params - String")  TArray<FName> GlobalParams_string;
@@ -168,9 +189,9 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "🔹Params", DisplayName="👤 Entity Params - String") TArray<FName> EntityParams_string;
 	UPROPERTY(EditAnywhere, config, Category = "🔹Params", DisplayName="👤 Entity Params - Bool",AdvancedDisplay)   TArray<FName> EntityParams_bool;
 
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	// Combatant
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="✊Combatant",meta=(ShowOnlyInnerProperties))
 	FOmegaCombatantConfig CombatantConfig_Default;
 	
@@ -187,9 +208,9 @@ public:
 	UPROPERTY(EditAnywhere,config,BlueprintReadOnly,Category="✊Combatant",AdvancedDisplay)
 	TSoftObjectPtr<UPrimaryDataAsset> GlobalEntityIdentity = TSoftObjectPtr<UPrimaryDataAsset>(FSoftObjectPath(TEXT("/OmegaGameFramework/DataAssets/_misc/_GLOBAL._GLOBAL")));
 	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	//Asset Defaults
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 
 	// Root path used in the "Get Sorted Asset" function
 	UPROPERTY(EditAnywhere, config, Category = "Assets")
@@ -248,15 +269,30 @@ public:
 
 	UMetaSoundSource* GetMetaSoundSourceFromPath() const;
 	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
+	//Minimap
+	// ---------------------------------------------------------
+	
+	UPROPERTY(EditAnywhere, config, Category = "🗺️Minimap") 
+	FOmegaMinimapActorConfig MinimapActorConfig_Default;
+	UPROPERTY(EditAnywhere, config, Category = "🗺️Minimap") 
+	TMap<TSoftClassPtr<AActor>,FOmegaMinimapActorConfig> MinimapActorConfig_PerClass; 
+	
+	
+	// ---------------------------------------------------------
+	// Grid3D
+	// ---------------------------------------------------------
+	UPROPERTY(EditAnywhere, config, Category = "Grid3D") TSoftObjectPtr<UOmegaGrid3DStyle> DefaultGridmapStyle;
+	
+	// ---------------------------------------------------------
 	// Patches
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	UPROPERTY(EditAnywhere, config, Category = "🔧Patches") FString PatchRootPath="/Game/5_Patches/";
 	UPROPERTY(EditAnywhere, config, Category = "🔧Patches") FString PatchAssetName="GamePatch";
 	
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	//Mods
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	UPROPERTY(EditAnywhere, config, Category = "📁External GameData")
 	bool bAutogenerateUAsset;
 	
@@ -288,9 +324,9 @@ public:
 	TMap<TSoftClassPtr<AActor>, FString> ActorLabelDefaultOverrides;
 	
 	void OverrideActorLabel(AActor* actor,const FString& string="");
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	//BitFlags
-	// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+	// ---------------------------------------------------------
 	// Map of UClass to BitFlag configuration
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "🚩BitFlags")
 	TMap<TSoftClassPtr<UObject>, FOmegaBitmaskEditorData> ClassBitflagData;

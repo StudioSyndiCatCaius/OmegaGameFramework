@@ -11,12 +11,16 @@ class OMEGAGAMEFRAMEWORK_API AOmegaInvisibleWall : public AStaticMeshActor
 {
 	GENERATED_BODY()
 
+public:
+	AOmegaInvisibleWall();
+
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
-	
+
+	UPROPERTY() UStaticMesh* DefaultMesh = nullptr;
+	UPROPERTY() UMaterialInterface* Material_Blocking = nullptr;
+	UPROPERTY() UMaterialInterface* Material_BlockingFreeCam = nullptr;
 
 public:
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Wall") bool bAllowCamera;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Wall") bool bAllowCamera;
 };

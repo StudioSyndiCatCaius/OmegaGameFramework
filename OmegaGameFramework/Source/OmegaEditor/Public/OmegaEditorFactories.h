@@ -202,16 +202,6 @@ UCLASS() class OMEGAEDITOR_API UOmegaActorConfig_Factory : public UFactory
 OMACRO_ASSETTYPE_HEADERFIELD(OmegaActorConfig,"Actor Config", "Asset Desc here", FColor(50, 50, 50),"Util")
 
 
-//Config Character
-UCLASS() class OMEGAEDITOR_API UOmegaCharacterConfig_Factory : public UFactory
-{
-	GENERATED_UCLASS_BODY()
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;  
-	virtual bool ShouldShowInNewMenu() const override;
-};
-OMACRO_ASSETTYPE_HEADERFIELD(OmegaCharacterConfig,"Character Config", "Asset Desc here", FColor(50, 50, 50),"Util")
-
-
 
 
 

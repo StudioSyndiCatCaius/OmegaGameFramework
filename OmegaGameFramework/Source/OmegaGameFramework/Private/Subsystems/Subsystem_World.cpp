@@ -48,6 +48,7 @@
 #include "Widget/HUDLayer.h"
 #include "Components/PrimitiveComponent.h"
 #include "TimerManager.h"
+#include "Functions/F_Minimap.h"
 #include "Interfaces/I_GameplayState.h"
 #include "Widget/Menu.h"
 
@@ -118,6 +119,21 @@ void UOmegaSubsystem_World::OnWorldBeginPlay(UWorld& InWorld)
 	}
 	
 	UOmegaSettings* _set=GetMutableDefault<UOmegaSettings>();
+	
+	// iterate over game mode
+	if (AOmegaGameMode* GM=Cast<AOmegaGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		if (GM->AutoSpawnMinimapCamera)
+		{
+			TSubclassOf<AOmegaMinimap_Camera> mm_class=AOmegaMinimap_Camera::StaticClass();
+			if (GM->MinimapCamera) { mm_class=GM->MinimapCamera; }
+			AOmegaMinimap_Camera* mm_cam=GetWorld()->SpawnActorDeferred<AOmegaMinimap_Camera>(mm_class,FTransform());
+			WorldManager->minimap_camera=mm_cam;
+			mm_cam->FinishSpawning(FTransform());
+			GM->OnMinimapCameraSpawn(mm_cam);
+		}
+	}
+	
 }
 
 AOmegaGameplaySystem* UOmegaSubsystem_World::ActivateGameplaySystem(TSubclassOf<AOmegaGameplaySystem> Class, UObject* Context, FString Flag,FOmegaCommonMeta meta)
@@ -202,7 +218,14 @@ TArray<AOmegaGameplaySystem*> UOmegaSubsystem_World::GetActiveGameplaySystemsWit
 
 FGameplayTagContainer UOmegaSubsystem_World::GetBlockedSystemTags()
 {
-	FGameplayTagContainer out = FGameplayTagContainer::CreateFromArray(ExtraBlockedSystemTags);
+	FGameplayTagContainer out;
+	for (const TPair<FGameplayTag,int32>& TempFlag : ExtraBlockedSystemFlags)
+	{
+		if (TempFlag.Value != 0)
+		{
+			out.AddTag(TempFlag.Key);
+		}
+	}
 	for(const auto* TempSys : GetActiveGameplaySystems(true))
 	{
 		out.AppendTags(TempSys->BlockSystemTags);
@@ -265,22 +288,28 @@ TArray<AOmegaGameplaySystem*> UOmegaSubsystem_World::GetActiveSystemsWithTags(FG
 	return OutSystems;
 }
 
-void UOmegaSubsystem_World::SetSystemTagsBlocked(FGameplayTagContainer Tags, bool bBlocked)
+void UOmegaSubsystem_World::SetSystemTagBlockedFlag(FGameplayTag Tag, uint8 BlockFlag, bool bBlocked)
 {
+	if(!Tag.IsValid())
+	{
+		return;
+	}
+	//BlockFlag is a bit index into the int32 flag value, so anything past 31 is clamped into range.
+	const int32 FlagMask = 1 << (BlockFlag & 31);
+	int32& FlagValue = ExtraBlockedSystemFlags.FindOrAdd(Tag);
 	if(bBlocked)
 	{
-		for(const FGameplayTag& Tag : Tags)
-		{
-			ExtraBlockedSystemTags.AddUnique(Tag);
-		}
+		FlagValue |= FlagMask;
 	}
 	else
 	{
-		for(const FGameplayTag& Tag : Tags)
-		{
-			ExtraBlockedSystemTags.Remove(Tag);
-		}
+		FlagValue &= ~FlagMask;
 	}
+	if(FlagValue == 0)
+	{
+		ExtraBlockedSystemFlags.Remove(Tag);
+	}
+	Local_RefreshSystemState();
 }
 
 void UOmegaSubsystem_World::Local_RefreshSystemState()
@@ -315,9 +344,9 @@ void UOmegaSubsystem_World::ForceUpdateGameplayState()
 }
 
 void UOmegaSubsystem_World::Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute,
-                                             float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
+                                             float FinalDamage, UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta DamageMeta)
 {
-	OnCombatantDamaged.Broadcast(Combatant, Attribute, FinalDamage, Instigator, DamageType, Hit);
+	OnCombatantDamaged.Broadcast(Combatant, Attribute, FinalDamage, Instigator, DamageType, DamageMeta);
 }
 
 TArray<UCombatantComponent*> UOmegaSubsystem_World::GetAllCombatants()
@@ -399,12 +428,20 @@ void UOmegaSubsystem_World::SetGlobalActorBinding(FName Binding, AActor* Actor)
 	if(Actor)
 	{
 		ActorBindings_Named.Add(Binding, Actor);
+		OnGlobalNamed_Bound.Broadcast(Binding,Actor);
 	}
 }
 
 void UOmegaSubsystem_World::ClearGlobalActorBinding(FName Binding)
 {
-	ActorBindings_Named.Remove(Binding);
+	if (ActorBindings_Named.Contains(Binding))
+	{
+		if (AActor* a=ActorBindings_Named[Binding])
+		{
+			OnGlobalNamed_Unbound.Broadcast(Binding,a);
+			ActorBindings_Named.Remove(Binding);		
+		}
+	}
 }
 
 AActor* UOmegaSubsystem_World::GetGlobalActorBinding(FName Binding)
@@ -871,6 +908,26 @@ void AOmegaWorldManager::BeginPlay()
 		}
 
 		//Resume saved quests after player has been placed
+		if (!SS_Save || !SS_Save->ActiveSaveData)
+		{
+			OGF_Log::Warning("QUEST_RESUME: reached resume block but SS_Save/ActiveSaveData is NULL - nothing can resume");
+		}
+		else
+		{
+			TArray<UOmegaQuest*> _allSavedQuests;
+			SS_Save->ActiveSaveData->quest_data.GetKeys(_allSavedQuests);
+			OGF_Log::LogInfo(FString::Printf(TEXT("QUEST_RESUME: reached resume block | quest_data entries=%d | active=%d"),
+				_allSavedQuests.Num(), Quest_GetActive().Num()));
+			for (UOmegaQuest* _sq : _allSavedQuests)
+			{
+				if (_sq)
+				{
+					const FOmegaQuestData& _sd=SS_Save->ActiveSaveData->quest_data[_sq];
+					OGF_Log::LogInfo(FString::Printf(TEXT("QUEST_RESUME:   '%s' | Status=%d | active_guids=%d"),
+						*_sq->GetName(), static_cast<int32>(_sd.Status), _sd.active_guids.Num()));
+				}
+			}
+		}
 		for (auto* q : Quest_GetActive())
 		{
 			if (q)
@@ -936,6 +993,9 @@ AOmegaQuestInstance* AOmegaWorldManager::Quest_Start(UOmegaQuest* q, bool bOverr
 			new_inst->SetActorLabel("QuestInst__"+q->GetName());
 #endif
 			
+			
+			
+			
 			new_inst->FinishSpawning(FTransform());
 			quest_instances.Add(new_inst);
 			new_inst->AttachToActor(NullActor_Quests,FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
@@ -985,7 +1045,7 @@ bool AOmegaWorldManager::Quest_CanStart(UOmegaQuest* q)
 
 FOmegaQuestData* AOmegaWorldManager::Quest_GetData(UOmegaQuest* q)
 {
-	if (q)
+	if (q && SS_Save)
 	{
 		UOmegaSaveGame* g=SS_Save->ActiveSaveData;
 		if (g)
@@ -1022,6 +1082,9 @@ EOmegaQuestStatus AOmegaWorldManager::Quest_GetStatus(UOmegaQuest* q)
 
 bool AOmegaWorldManager::Quest_Stop(UOmegaQuest* q, bool bFailed)
 {
+	OGF_Log::LogInfo(FString::Printf(TEXT("QUEST_STOP: '%s' | bFailed=%s | statusBefore=%d"),
+		q ? *q->GetName() : TEXT("NULL"), bFailed ? TEXT("true") : TEXT("false"),
+		static_cast<int32>(Quest_GetStatus(q))));
 	if (Quest_GetStatus(q)==QuestStatus_Active)
 	{
 		if (bFailed)
@@ -1459,6 +1522,7 @@ void AOmegaWorldManager::Zone_TransitToLevel(TSoftObjectPtr<UWorld> Level, FGame
 
 void AOmegaWorldManager::Zone_TransitToLevel_Name(FName Level, FGameplayTag SpawnID, bool bSkipFade)
 {
+	if (!SS_GI) { return; }
 	OGF_Log::LogInfo("ZONE - Begining LEVEL Transit ");
 	//if transit state not aleady set, set state as LevelTransit
 	if (SS_GI->Zone_ZoneTransitState==0)

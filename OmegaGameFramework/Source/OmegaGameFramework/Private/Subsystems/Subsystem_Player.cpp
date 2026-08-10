@@ -21,7 +21,9 @@
 #include "Blueprint/SlateBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Functions/F_Player.h"
+#include "GameFramework/PlayerInput.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GenericPlatform/GenericPlatformInputDeviceMapper.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/GameModeBase.h"
 #include "Misc/OmegaUtils_Macros.h"
@@ -32,6 +34,11 @@
 #include "Subsystems/Subsystem_GameManager.h"
 #include "Widget/DataWidget.h"
 #include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "Engine/LocalPlayer.h"
+#include "Framework/Application/SlateApplication.h"
+#include "UnrealClient.h"
+#include "Widgets/SViewport.h"
 
 
 // ================================================================================================================
@@ -54,11 +61,18 @@ void UOmegaSubsystem_Player::Initialize(FSubsystemCollectionBase& Colection)
 	REF_Controller = GetLocalPlayer()->GetPlayerController(GetWorld());
 	//ParentPlayerController->OnDestroyed.AddDynamic(this, &UOmegaPlayerSubsystem::CloseAllMenus);
 	GetHoverCursor();
+	if (OGF_CFG()->VirtualCursor_AutoEnable)
+	{
+		SetVirtualCursorEnabled(true);
+	}
 }
 
 void UOmegaSubsystem_Player::Deinitialize()
 {
-
+	if (virtualcursor_enabled)
+	{
+		SetVirtualCursorEnabled(false);
+	}
 	Super::Deinitialize();
 }
 
@@ -119,6 +133,12 @@ void UOmegaSubsystem_Player::PlayerControllerChanged(APlayerController* NewPlaye
 			RemoveHUDLayer(HudClass,"");
 			AddHUDLayer(HudClass,this,true);
 		}
+
+		// Re-apply virtual cursor after controller swap (show mouse + optional auto-enable).
+		if (virtualcursor_enabled || OGF_CFG()->VirtualCursor_AutoEnable)
+		{
+			SetVirtualCursorEnabled(true);
+		}
 	}
 	OGF_GLOBALREFRESH();
 }
@@ -136,6 +156,10 @@ void UOmegaSubsystem_Player::Input_OnKeyStart(FKey Key)
 		KeysActive.Add(Key);
 		Input_OnKeyEvent(0,Key,0,false);
 	}
+	if (virtualcursor_enabled)
+	{
+		VirtualCursor_HandleKey(Key, true);
+	}
 }
 
 void UOmegaSubsystem_Player::Input_OnKeyEnd(FKey Key)
@@ -144,6 +168,10 @@ void UOmegaSubsystem_Player::Input_OnKeyEnd(FKey Key)
 	{
 		KeysActive.Remove(Key);
 		Input_OnKeyEvent(1,Key,0,false);
+	}
+	if (virtualcursor_enabled)
+	{
+		VirtualCursor_HandleKey(Key, false);
 	}
 }
 
@@ -251,6 +279,7 @@ void UOmegaSubsystem_Player::Tick(float DeltaTime)
 {
 	Tick_DynamicCamera(DeltaTime);
 	Tick_Input(DeltaTime);
+	Tick_VirtualCursor(DeltaTime);
 	if (f_UiNavCooldown>0.0)
 	{
 		f_UiNavCooldown-=DeltaTime;
@@ -677,6 +706,292 @@ void UOmegaSubsystem_Player::Tick_Input(float DeltaTime)
 	}
 }
 
+// ------------------------------------------------------------
+// Virtual Cursor
+// ------------------------------------------------------------
+
+void UOmegaSubsystem_Player::SetVirtualCursorEnabled(bool bEnabled)
+{
+	if (!bEnabled && virtualcursor_enabled)
+	{
+		VirtualCursor_ReleaseInjectedButtons();
+		virtualcursor_pos_valid = false;
+	}
+
+	virtualcursor_enabled = bEnabled;
+
+	if (REF_Controller && virtualcursor_enabled)
+	{
+		REF_Controller->bShowMouseCursor = true;
+		REF_Controller->bEnableClickEvents = true;
+		REF_Controller->bEnableMouseOverEvents = true;
+		// Seed software position so the first stick tick doesn't jump from (0,0).
+		VirtualCursor_SyncPositionFromHardware();
+	}
+}
+
+bool UOmegaSubsystem_Player::VirtualCursor_GetLocalViewportSize(FVector2D& OutSize) const
+{
+	OutSize = FVector2D::ZeroVector;
+	if (!REF_Controller)
+	{
+		return false;
+	}
+
+	if (const ULocalPlayer* LocalPlayer = REF_Controller->GetLocalPlayer())
+	{
+		if (const UGameViewportClient* ViewportClient = LocalPlayer->ViewportClient)
+		{
+			if (TSharedPtr<SViewport> GameViewportWidget = ViewportClient->GetGameViewportWidget())
+			{
+				const FVector2D LocalSize = GameViewportWidget->GetCachedGeometry().GetLocalSize();
+				if (LocalSize.X > 1.f && LocalSize.Y > 1.f)
+				{
+					OutSize = LocalSize;
+					return true;
+				}
+			}
+			if (const FViewport* Viewport = ViewportClient->Viewport)
+			{
+				const FIntPoint Size = Viewport->GetSizeXY();
+				if (Size.X > 1 && Size.Y > 1)
+				{
+					OutSize = FVector2D(static_cast<float>(Size.X), static_cast<float>(Size.Y));
+					return true;
+				}
+			}
+		}
+	}
+
+	int32 SizeX = 0;
+	int32 SizeY = 0;
+	REF_Controller->GetViewportSize(SizeX, SizeY);
+	if (SizeX > 1 && SizeY > 1)
+	{
+		OutSize = FVector2D(static_cast<float>(SizeX), static_cast<float>(SizeY));
+		return true;
+	}
+	return false;
+}
+
+void UOmegaSubsystem_Player::VirtualCursor_SyncPositionFromHardware()
+{
+	FVector2D ViewportSize;
+	if (!VirtualCursor_GetLocalViewportSize(ViewportSize))
+	{
+		virtualcursor_pos_valid = false;
+		return;
+	}
+
+	const float MaxX = FMath::Max(ViewportSize.X - 1.f, 0.f);
+	const float MaxY = FMath::Max(ViewportSize.Y - 1.f, 0.f);
+
+	// Prefer Slate absolute → local (correct with DPI / window offset).
+	if (FSlateApplication::IsInitialized() && REF_Controller)
+	{
+		if (const ULocalPlayer* LocalPlayer = REF_Controller->GetLocalPlayer())
+		{
+			if (const UGameViewportClient* ViewportClient = LocalPlayer->ViewportClient)
+			{
+				if (TSharedPtr<SViewport> GameViewportWidget = ViewportClient->GetGameViewportWidget())
+				{
+					const FGeometry& Geom = GameViewportWidget->GetCachedGeometry();
+					const FVector2D LocalPos = Geom.AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
+					virtualcursor_pos.X = FMath::Clamp(LocalPos.X, 0.f, MaxX);
+					virtualcursor_pos.Y = FMath::Clamp(LocalPos.Y, 0.f, MaxY);
+					virtualcursor_pos_valid = true;
+					return;
+				}
+			}
+		}
+	}
+
+	float MouseX = 0.f;
+	float MouseY = 0.f;
+	if (REF_Controller && REF_Controller->GetMousePosition(MouseX, MouseY))
+	{
+		virtualcursor_pos.X = FMath::Clamp(MouseX, 0.f, MaxX);
+		virtualcursor_pos.Y = FMath::Clamp(MouseY, 0.f, MaxY);
+		virtualcursor_pos_valid = true;
+		return;
+	}
+
+	// Fallback: center of the game window.
+	virtualcursor_pos = ViewportSize * 0.5f;
+	virtualcursor_pos_valid = true;
+}
+
+void UOmegaSubsystem_Player::VirtualCursor_ApplyPositionToHardware()
+{
+	if (!virtualcursor_pos_valid || !REF_Controller)
+	{
+		return;
+	}
+
+	FVector2D ViewportSize;
+	if (!VirtualCursor_GetLocalViewportSize(ViewportSize))
+	{
+		return;
+	}
+
+	const float MaxX = FMath::Max(ViewportSize.X - 1.f, 0.f);
+	const float MaxY = FMath::Max(ViewportSize.Y - 1.f, 0.f);
+	virtualcursor_pos.X = FMath::Clamp(virtualcursor_pos.X, 0.f, MaxX);
+	virtualcursor_pos.Y = FMath::Clamp(virtualcursor_pos.Y, 0.f, MaxY);
+
+	// Push via Slate (absolute desktop space) so the cursor stays inside the window.
+	if (FSlateApplication::IsInitialized())
+	{
+		if (const ULocalPlayer* LocalPlayer = REF_Controller->GetLocalPlayer())
+		{
+			if (const UGameViewportClient* ViewportClient = LocalPlayer->ViewportClient)
+			{
+				if (TSharedPtr<SViewport> GameViewportWidget = ViewportClient->GetGameViewportWidget())
+				{
+					const FGeometry& Geom = GameViewportWidget->GetCachedGeometry();
+					const FVector2D AbsPos = Geom.LocalToAbsolute(virtualcursor_pos);
+					FSlateApplication::Get().SetCursorPos(AbsPos);
+				}
+			}
+		}
+	}
+
+	// Keep PlayerController mouse in sync for traces / click events.
+	REF_Controller->SetMouseLocation(
+		FMath::RoundToInt(virtualcursor_pos.X),
+		FMath::RoundToInt(virtualcursor_pos.Y));
+}
+
+void UOmegaSubsystem_Player::Tick_VirtualCursor(float DeltaTime)
+{
+	if (!virtualcursor_enabled || !REF_Controller || DeltaTime <= 0.f)
+	{
+		return;
+	}
+
+	// Cap dt so a hitch can't fling the cursor across the screen.
+	const float Dt = FMath::Min(DeltaTime, 0.05f);
+
+	FVector2D ViewportSize;
+	if (!VirtualCursor_GetLocalViewportSize(ViewportSize))
+	{
+		return;
+	}
+
+	const UOmegaSettings* Settings = OGF_CFG();
+	const float Deadzone = FMath::Clamp(Settings->VirtualCursor_Deadzone, 0.f, 1.f);
+
+	// Prefer discrete axis keys (-1..1). Left2D can report unstable values on some platforms.
+	const float AxisX = REF_Controller->GetInputAnalogKeyState(EKeys::Gamepad_LeftX);
+	const float AxisY = REF_Controller->GetInputAnalogKeyState(EKeys::Gamepad_LeftY);
+	FVector2D Stick2D(AxisX, AxisY);
+
+	// Optional Left2D fallback if discrete axes are silent.
+	if (Stick2D.SizeSquared() <= FMath::Square(Deadzone))
+	{
+		FVector Stick3D = FVector::ZeroVector;
+		if (UOmegaPlayerFunctions::GetKeyAxis(REF_Controller, EKeys::Gamepad_Left2D, Stick3D, Deadzone))
+		{
+			Stick2D = FVector2D(Stick3D.X, Stick3D.Y);
+		}
+	}
+
+	const float Mag = Stick2D.Size();
+	if (Mag <= Deadzone)
+	{
+		// Stick idle: follow real mouse so both devices stay in sync.
+		VirtualCursor_SyncPositionFromHardware();
+		return;
+	}
+
+	// Unit-circle clamp + deadzone re-scale.
+	if (Mag > 1.f)
+	{
+		Stick2D /= Mag;
+	}
+	else if (Deadzone < 1.f)
+	{
+		const float Rescaled = (Mag - Deadzone) / (1.f - Deadzone);
+		Stick2D *= Rescaled / Mag;
+	}
+
+	// Stick components must stay in [-1, 1] after processing.
+	Stick2D.X = FMath::Clamp(Stick2D.X, -1.f, 1.f);
+	Stick2D.Y = FMath::Clamp(Stick2D.Y, -1.f, 1.f);
+
+	if (!virtualcursor_pos_valid)
+	{
+		VirtualCursor_SyncPositionFromHardware();
+	}
+	if (!virtualcursor_pos_valid)
+	{
+		return;
+	}
+
+	// InterpSpeed units: 0.1 screens/sec at full stick (default 10 ≈ 1 screen/sec).
+	const float ScreensPerSecond = FMath::Max(Settings->VirtualCursor_InterpSpeed, 0.f) * 0.1f;
+	virtualcursor_pos.X += Stick2D.X * ScreensPerSecond * ViewportSize.X * Dt;
+	virtualcursor_pos.Y -= Stick2D.Y * ScreensPerSecond * ViewportSize.Y * Dt; // stick +Y = up
+
+	// Hard clamp to game window / viewport local bounds, then apply.
+	const float MaxX = FMath::Max(ViewportSize.X - 1.f, 0.f);
+	const float MaxY = FMath::Max(ViewportSize.Y - 1.f, 0.f);
+	virtualcursor_pos.X = FMath::Clamp(virtualcursor_pos.X, 0.f, MaxX);
+	virtualcursor_pos.Y = FMath::Clamp(virtualcursor_pos.Y, 0.f, MaxY);
+
+	VirtualCursor_ApplyPositionToHardware();
+}
+
+void UOmegaSubsystem_Player::VirtualCursor_HandleKey(FKey Key, bool bPressed)
+{
+	const UOmegaSettings* Settings = OGF_CFG();
+
+	if (Settings->VirtualCursor_Key_LeftMouse.Contains(Key))
+	{
+		if (bPressed != virtualcursor_LeftMouseHeld)
+		{
+			virtualcursor_LeftMouseHeld = bPressed;
+			VirtualCursor_InjectMouseButton(EKeys::LeftMouseButton, bPressed);
+		}
+	}
+
+	if (Settings->VirtualCursor_Key_RightMouse.Contains(Key))
+	{
+		if (bPressed != virtualcursor_RightMouseHeld)
+		{
+			virtualcursor_RightMouseHeld = bPressed;
+			VirtualCursor_InjectMouseButton(EKeys::RightMouseButton, bPressed);
+		}
+	}
+}
+
+void UOmegaSubsystem_Player::VirtualCursor_InjectMouseButton(FKey MouseButton, bool bPressed)
+{
+	if (!REF_Controller)
+	{
+		return;
+	}
+
+	// UE 5.8+: FInputKeyParams requires FInputDeviceId (4-arg ctor removed).
+	const EInputEvent Event = bPressed ? IE_Pressed : IE_Released;
+	const double Amount = bPressed ? 1.0 : 0.0;
+	REF_Controller->InputKey(FInputKeyParams(MouseButton, Event, Amount, /*bGamepadOverride=*/false, INPUTDEVICEID_NONE));
+}
+
+void UOmegaSubsystem_Player::VirtualCursor_ReleaseInjectedButtons()
+{
+	if (virtualcursor_LeftMouseHeld)
+	{
+		virtualcursor_LeftMouseHeld = false;
+		VirtualCursor_InjectMouseButton(EKeys::LeftMouseButton, false);
+	}
+	if (virtualcursor_RightMouseHeld)
+	{
+		virtualcursor_RightMouseHeld = false;
+		VirtualCursor_InjectMouseButton(EKeys::RightMouseButton, false);
+	}
+}
+
 void UOmegaHoverCursor::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	if(!subsystem_ref)
@@ -712,6 +1027,36 @@ void UOmegaSubsystem_Player::DynaCam_SnapToCurrent()
 			DynaCam_Interp(cam_source,cam_master,0.0);
 		}
 	}
+}
+
+//=========================================================================
+// IMAGE
+//=========================================================================
+
+void UOmegaSubsystem_Player::Image_Set(FGameplayTag Tag, FSlateBrush Image)
+{
+	Image_Clear(Tag);
+	GlobalImages.Add(Tag, Image);
+	OnImageChanged.Broadcast(REF_Controller, Tag, Image);
+}
+
+void UOmegaSubsystem_Player::Image_Clear(FGameplayTag Tag)
+{
+	if (GlobalImages.Contains(Tag))
+	{
+		OnImageRemoved.Broadcast(REF_Controller, Tag, GlobalImages[Tag]);
+		GlobalImages.Remove(Tag);	
+	}
+}
+
+FSlateBrush UOmegaSubsystem_Player::Image_Get(FGameplayTag Tag)
+{
+	FSlateBrush _out;
+	if (GlobalImages.Contains(Tag))
+	{
+		_out = GlobalImages[Tag];
+	}
+	return _out;
 }
 
 

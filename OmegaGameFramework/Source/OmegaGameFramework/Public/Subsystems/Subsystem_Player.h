@@ -70,6 +70,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FClearHoveredWidgets);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputModeChanged, UOmegaInputMode*, NewMode);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInputDeviceChangedDelegate, bool, bIsUsingGamepad);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPlayerImageDelegate,APlayerController*,Player,FGameplayTag,Tag,FSlateBrush,Image);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDataWidgetSubsystemEvent,UDataWidget*, Widget, uint8, Event);
 
 UCLASS(DisplayName="Omega Subsystem: Player")
@@ -92,14 +94,10 @@ class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_Player : public ULocalPlayerSubsyst
 	void Input_OnKeyEvent(uint8 event,FKey key, float dt, bool bAxisKey);
 	
 public:
-	UPROPERTY() UObject* ObjectHoggingInput;
-	FInputKeyBinding KeyBind_Start;
-	FInputKeyBinding KeyBind_Stop;
 	
 	UPROPERTY() TMap<FGameplayTag, UDataWidget*> SlottedDataWidgets;
-	UPROPERTY() TArray<TWeakObjectPtr<UObject>> InputTargets;
 	
-	virtual void L_TryRegisterInputTarget(UObject* target);
+
 	
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override { return ETickableTickType::Always; }
@@ -114,6 +112,10 @@ public:
 	
 	//0=select | 1=hover | 2=unhover
 	UPROPERTY() FDataWidgetSubsystemEvent DataWidgetSubsystemEvent; 
+	
+	//=========================================================================
+	// Menu
+	//=========================================================================
 	
 	UFUNCTION(BlueprintCallable, Category = "Ω|Widget|Menu", meta = (DeterminesOutputType = "MenuClass", AdvancedDisplay = "Context, Flag, AutoFocus, Flag"))
 	class UMenu* OpenMenu(class TSubclassOf<UMenu> MenuClass, UObject* Context, FGameplayTagContainer Tags, const FString& Flag, bool AutoFocus=true,FOmegaCommonMeta meta=FOmegaCommonMeta());
@@ -196,7 +198,9 @@ public:
 	UPROPERTY()
 	FClearHoveredWidgets ClearHoveredWidgets;
 
-	// -- Data Widgets -- //a
+	//=========================================================================
+	// Data Widgets
+	//=========================================================================
 
 	UFUNCTION(BlueprintCallable,Category="Widget")
 	void SetCurrentHoverWidget(UDataWidget* Widget);
@@ -207,43 +211,41 @@ public:
 	UFUNCTION(BlueprintPure,Category="Widgets")
 	UDataWidget* GetCurrentHoverWidget() const;
 
-	// -----------
+	//=========================================================================
 	// Hover Cursor
-
-public:
+	//=========================================================================
 	
 	UFUNCTION(BlueprintPure, Category="Omega|HoverCursor")
 	UOmegaHoverCursor* GetHoverCursor();
 	
-	// -- Input -- //
-	UPROPERTY(BlueprintReadOnly, Category="Omega|Input")
-	UOmegaInputMode* CurrentInputMode;
+	//=========================================================================
+	// INPUT
+	//=========================================================================
+
+	FInputKeyBinding KeyBind_Start;
+	FInputKeyBinding KeyBind_Stop;
 	
-	UFUNCTION(BlueprintCallable, Category="Omega|Input")
-	void SetCustomInputMode(UOmegaInputMode* InputMode);
-
-	UPROPERTY(BlueprintAssignable, Category="Omega")
-	FOnInputModeChanged OnInputModeChanged;
-
-	UPROPERTY(BlueprintAssignable, Category="Omega|Input")
-	FInputDeviceChangedDelegate OnInputDeviceChanged;
-
-
-
-	UFUNCTION(BlueprintPure, Category="Omega|Input")
-	bool IsUsingGamepad() const
-	{
-		return bUsingGamepad;
-	}
-private:
-	UPROPERTY()
+	UPROPERTY() UObject* ObjectHoggingInput;
+	UPROPERTY() TArray<TWeakObjectPtr<UObject>> InputTargets;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Omega|Input") UOmegaInputMode* CurrentInputMode;
+	
+	UPROPERTY(BlueprintAssignable, Category="Omega") FOnInputModeChanged OnInputModeChanged;
+	UPROPERTY(BlueprintAssignable, Category="Omega") FInputDeviceChangedDelegate OnInputDeviceChanged;
+	
+	virtual void L_TryRegisterInputTarget(UObject* target);
+	
+	UFUNCTION(BlueprintCallable, Category="Omega|Input") void SetCustomInputMode(UOmegaInputMode* InputMode);
+	UFUNCTION(BlueprintPure, Category="Omega|Input") bool IsUsingGamepad() const { return bUsingGamepad; }
 	bool bUsingGamepad;
+	
+private:
 	
 	void Tick_Input(float DeltaTime);
 	
-	// ================================================================================================================
+	//=========================================================================
 	// Dynamic Camera
-	// ================================================================================================================
+	//=========================================================================
 public:
 	float last_delta;
 	float time_SinceLastCheck;
@@ -266,6 +268,53 @@ public:
 	void DynaCam_SetOverride(AOmegaDynamicCamera* Camera, bool bSnapTo);
 	void DynaCam_ClearOverride();
 	void DynaCam_SnapToCurrent();
+	
+	//=========================================================================
+	// IMAGE
+	//=========================================================================
+	
+	void Image_Set(FGameplayTag Tag, FSlateBrush Image);
+	void Image_Clear(FGameplayTag Tag);
+	FSlateBrush Image_Get(FGameplayTag Tag);
+	
+	
+	UPROPERTY() FOnPlayerImageDelegate OnImageChanged;
+	UPROPERTY() FOnPlayerImageDelegate OnImageRemoved;
+	
+	UPROPERTY() TMap<FGameplayTag,FSlateBrush> GlobalImages;
+
+	//=========================================================================
+	// Virtual Cursor
+	//=========================================================================
+	
+	/** Enables controller-driven mouse cursor (left stick move, mapped face buttons click). */
+	UFUNCTION(BlueprintCallable, Category="Omega|VirtualCursor")
+	void SetVirtualCursorEnabled(bool bEnabled);
+
+	UFUNCTION(BlueprintPure, Category="Omega|VirtualCursor")
+	bool IsVirtualCursorEnabled() const { return virtualcursor_enabled; }
+	
+	UPROPERTY(BlueprintReadOnly, Category="Omega|VirtualCursor")
+	bool virtualcursor_enabled = false;
+
+private:
+	void Tick_VirtualCursor(float DeltaTime);
+	void VirtualCursor_HandleKey(FKey Key, bool bPressed);
+	void VirtualCursor_InjectMouseButton(FKey MouseButton, bool bPressed);
+	void VirtualCursor_ReleaseInjectedButtons();
+	/** Seed software position from the real mouse / viewport center. */
+	void VirtualCursor_SyncPositionFromHardware();
+	/** Push software position to OS/Slate cursor (viewport-local → absolute). */
+	void VirtualCursor_ApplyPositionToHardware();
+	/** Viewport size in the same local space as virtualcursor_pos. */
+	bool VirtualCursor_GetLocalViewportSize(FVector2D& OutSize) const;
+
+	bool virtualcursor_LeftMouseHeld = false;
+	bool virtualcursor_RightMouseHeld = false;
+	/** Software cursor in game-viewport local pixels (avoids GetMousePos read-back bugs). */
+	FVector2D virtualcursor_pos = FVector2D::ZeroVector;
+	bool virtualcursor_pos_valid = false;
+	
 };
 
 UCLASS()

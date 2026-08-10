@@ -7,6 +7,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Selectors/Selector_DataAsset.h"
 #include "Selectors/Selector_Object.h"
+#include "Types/Struct_ByteContainer.h"
 
 #include "F_Object.generated.h"
 
@@ -194,4 +195,18 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Omega|NameParam",DisplayName="Name Param - Get (Int)")
 	static int32 GetNameParam_Int(UObject* Object, uint8 param);
 	
+	// ----------------------------------------------------------------------------------------------
+	// Byte Buffer
+	// ---------------------------------------------------------------------------------------------
+	/** Serializes an object's class and SaveGame-flagged properties into a byte buffer. */
+	UFUNCTION(BlueprintCallable,Category="Omega|ByteBuffer",meta=(WorldContext="WorldContextObject"),DisplayName="Object to Bytes")
+	static FOmegaByteBuffer Object_2_Bytes(UObject* WorldContextObject, UObject* Object);
+
+	/** Reconstructs an object from a byte buffer created by "Object to Bytes". Returns null if the buffer is empty or the class cannot be loaded. */
+	UFUNCTION(BlueprintCallable,Category="Omega|ByteBuffer",meta=(WorldContext="WorldContextObject"),DisplayName="Bytes to Object")
+	static UObject* Bytes_2_Objects(UObject* WorldContextObject, FOmegaByteBuffer ByteBuffer);
+
+	/** Applies SaveGame-flagged property values from a byte buffer (created by "Object to Bytes") onto an existing object. */
+	UFUNCTION(BlueprintCallable,Category="Omega|ByteBuffer",DisplayName="Bytes to Object (Apply)")
+	static bool Bytes_ApplyToObject(UObject* Target, FOmegaByteBuffer ByteBuffer);
 };

@@ -82,7 +82,7 @@ FOmegaDestructibleConfig AOmegaDestructible::GetConfig() const
 
 
 void AOmegaDestructible::L_Damaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage,
-                                   class UCombatantComponent* _Instigator, UOmegaDamageType* DamageType, FHitResult Hit)
+                                   class UCombatantComponent* _Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta Meta)
 {
 	if (_cachedConfig.bDeathOnHealth0 && !dead)
 	{

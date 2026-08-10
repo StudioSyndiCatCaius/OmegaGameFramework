@@ -8,8 +8,11 @@
 #include "Statics/OMEGA_File.h"
 #include "Subsystems/Subsystem_Save.h"
 #include "HAL/PlatformProcess.h"
+#include "UObject/UObjectGlobals.h"
 #include "Misc/App.h"
 #include "Engine/World.h"
+#include "Functions/F_Object.h"
+#include "Subsystems/Subsystem_GameManager.h"
 
 UOmegaSaveBase* _getEntitySaveObj(const UObject* context,bool bGlobal)
 {
@@ -251,4 +254,41 @@ void UOmegaSaveFunctions::DataList_AddList(const UObject* WorldContextObject,FGa
 	{
 		DataList_Add(WorldContextObject,List,a,bInList,bGlobal);
 	};
+}
+
+void UOmegaSaveFunctions::StoryState_SetActive(const UObject* WorldContextObject, UOmegaStoryStateAsset* StoryState,
+	bool bActive, bool bGlobal)
+{
+	if (UOmegaSaveSubsystem* subsys=OGF_Subsystems::oSave(WorldContextObject))
+	{
+		subsys->SetStoryStateActive(StoryState,bActive,bGlobal);
+	}
+}
+
+void UOmegaSaveFunctions::StoryStates_SetActive(const UObject* WorldContextObject,
+	TArray<UOmegaStoryStateAsset*> StoryState,bool bActive, bool bGlobal)
+{
+	for (auto* ss : StoryState)
+	{
+		StoryState_SetActive(WorldContextObject,ss,bActive,bGlobal);
+	}
+}
+
+UPrimaryDataAsset* UOmegaSaveFunctions::CustomAsset_Create(const UObject* WorldContextObject,
+                                                           UPrimaryDataAsset* BaseAsset, FName Name, bool Overwrite, UOmegaSaveBase* Save)
+{
+	UOmegaSaveBase* _sav=nullptr;
+	if (Save)
+	{
+		_sav=Save;
+	}
+	else
+	{
+		_sav=_getEntitySaveObj(WorldContextObject,false);
+	}
+	if (_sav)
+	{
+		return OGF_Subsystems::oSave(WorldContextObject)->CustomAsset_Create(BaseAsset,Name,_sav);	
+	}
+	return nullptr;
 }

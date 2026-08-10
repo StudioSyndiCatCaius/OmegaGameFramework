@@ -6,33 +6,59 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
+#include "UObject/ConstructorHelpers.h"
 
+AOmegaInvisibleWall::AOmegaInvisibleWall()
+{
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	if (CubeFinder.Succeeded())
+	{
+		DefaultMesh = CubeFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> BlockingMatFinder(
+		TEXT("/OmegaGameFramework/Materials/Instances/VolumeDisplay/m_VolumeDisplay_Blocking.m_VolumeDisplay_Blocking"));
+	if (BlockingMatFinder.Succeeded())
+	{
+		Material_Blocking = BlockingMatFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> FreeCamMatFinder(
+		TEXT("/OmegaGameFramework/Materials/Instances/VolumeDisplay/m_VolumeDisplay_BlockingFreeCam.m_VolumeDisplay_BlockingFreeCam"));
+	if (FreeCamMatFinder.Succeeded())
+	{
+		Material_BlockingFreeCam = FreeCamMatFinder.Object;
+	}
+}
 
 void AOmegaInvisibleWall::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	if (!GetStaticMeshComponent()->GetStaticMesh())
+
+	if (UStaticMeshComponent* MeshComp = GetStaticMeshComponent())
 	{
-		if (UStaticMesh* sm=LoadObject<UStaticMesh>(this, TEXT("/Engine/BasicShapes/Cube.Cube")))
+		if (!MeshComp->GetStaticMesh() && DefaultMesh)
 		{
-			GetStaticMeshComponent()->SetStaticMesh(sm);
+			MeshComp->SetStaticMesh(DefaultMesh);
+		}
+
+		if (bAllowCamera)
+		{
+			if (Material_BlockingFreeCam)
+			{
+				MeshComp->SetMaterial(0, Material_BlockingFreeCam);
+			}
+			MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		}
+		else
+		{
+			if (Material_Blocking)
+			{
+				MeshComp->SetMaterial(0, Material_Blocking);
+			}
+			MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
 		}
 	}
-	FString mat_path;
-	if (bAllowCamera)
-	{
-		mat_path = "/OmegaGameFramework/Materials/Instances/VolumeDisplay/m_VolumeDisplay_BlockingFreeCam.m_VolumeDisplay_BlockingFreeCam";
-		GetStaticMeshComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-	}
-	else
-	{
-		mat_path = "/OmegaGameFramework/Materials/Instances/VolumeDisplay/m_VolumeDisplay_Blocking.m_VolumeDisplay_Blocking";
-		GetStaticMeshComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
-	}
-	if (UMaterialInterface* mi=LoadObject<UMaterialInterface>(this, mat_path))
-	{
-		GetStaticMeshComponent()->SetMaterial(0, mi);	
-	}
-	
+
 	SetActorHiddenInGame(true);
 }

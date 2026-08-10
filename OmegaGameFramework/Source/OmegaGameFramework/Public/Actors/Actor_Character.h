@@ -15,15 +15,6 @@ class UBoxComponent;
 class UStateTreeComponent;
 class UAnimInstance;
 
-UCLASS()
-class OMEGAGAMEFRAMEWORK_API UOmegaCharacterConfig : public UOmegaActorConfig
-{
-	GENERATED_BODY()
-public:
-	
-};
-
-
 UINTERFACE(MinimalAPI, DisplayName="♎Data🔴 - 🗿Character",BlueprintType) class UDataInterface_Character : public UInterface { GENERATED_BODY() };
 class OMEGAGAMEFRAMEWORK_API IDataInterface_Character
 {
@@ -65,7 +56,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category="OmegaCharacter") void SetCharacterPreset(TScriptInterface<IDataInterface_Character> _preset);
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (ShowOnlyInnerProperties),Category="Gameplay") UGameplayActorComponent* ActorIdentity;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UStateTreeComponent* StateTree;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="1_Components",AdvancedDisplay) UStateTreeComponent* StateTree;
 	UPROPERTY() UComponent_DebugText* DebugText;
 	
 	UFUNCTION(BlueprintCallable,CallInEditor,Category="OmegaCharacter")
@@ -89,10 +80,7 @@ public:
 	UOmegaAssetLibrary_Sound* Library_Sound;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="OmegaCharacter",AdvancedDisplay)
 	UOmegaAssetLibrary_SlateBrush* Library_Slate;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,AdvancedDisplay, Category="OmegaCharacter")
-	UOmegaCharacterConfig* Config;
-
+	
 	virtual void GetGeneralDataText_Implementation(FGameplayTag Tag, FText& Name, FText& Description, FSlateBrush& iconBrush, FLinearColor& Color, FString& Label, FOmegaObjectGeneralMetaconfig& MetaConfig) override;
 	virtual void GetObjectGameplayTags_Implementation(FGameplayTag& OutCategoryTag, FGameplayTagContainer& OutGameplayTags) override;
 	virtual void GetMetaConfig_Implementation(FOmegaBitflagsBase& bitflags, FGuid& guid, int32& seed, FOmegaClassNamedLists& named_lists);

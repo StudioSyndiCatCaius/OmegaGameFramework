@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "OmegaUtils_Enums.generated.h"
 
-UENUM(Blueprintable,BlueprintType)
+UENUM(BlueprintType)
 enum EOmegaGlobalParamTarget
 {
 	WORLD			UMETA(DisplayName = "🌎World"),
@@ -15,7 +15,7 @@ enum EOmegaGlobalParamTarget
 };
 
 
-UENUM(Blueprintable, BlueprintType)
+UENUM(BlueprintType)
 enum EFactionAffinity
 {
 	NeutralAffinity			UMETA(DisplayName = "Neutral"),
@@ -35,7 +35,7 @@ enum EOmegaStarRank
 	Star0	UMETA(DisplayName = "☆☆☆☆☆"),
 };
 
-UENUM(Blueprintable,BlueprintType)
+UENUM(BlueprintType)
 enum EOmegaComparisonMethod  : uint8
 {
 	Compare_Equal		UMETA(DisplayName = "="),
@@ -45,7 +45,7 @@ enum EOmegaComparisonMethod  : uint8
 	Compare_LessEqual	UMETA(DisplayName = "<="),
 };
 
-UENUM(Blueprintable,BlueprintType)
+UENUM(BlueprintType)
 enum EOmegaComparisonMethodSimple
 {
 	IsGreater		UMETA(DisplayName = ">"),
@@ -128,3 +128,11 @@ enum EBoolType
 	BoolType_NONE     UMETA(DisplayName = "None True"),
 };
 
+UENUM(BlueprintType)
+enum EBattleResult : uint8
+{
+	BattleResult_Victory		UMETA(DisplayName = "Victory"),
+	BattleResult_Defeat			UMETA(DisplayName = "Defeat"),
+	BattleResult_Draw			UMETA(DisplayName = "Draw"),
+	BattleResult_Other			UMETA(DisplayName = "Other"),
+};

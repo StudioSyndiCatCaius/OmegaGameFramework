@@ -3,6 +3,7 @@
 
 #include "Actors/Actor_Quest.h"
 
+#include "Functions/F_Save.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
 
@@ -70,6 +71,11 @@ TArray<UObject*> UOmegaQuestTypeScript::GetActiveTasks_Implementation(AOmegaQues
 
 // ------------------------------------------------------------------------------------------------------------------------
 
+TArray<UObject*> UOmegaQuestTypeScript::GetRecordedTasks_Implementation(AOmegaQuestInstance* Instance)
+{
+	return TArray<UObject*>();
+}
+
 AOmegaQuestInstance::AOmegaQuestInstance()
 {
 	RootComponent=CreateDefaultSubobject<USceneComponent>("Root");
@@ -112,6 +118,7 @@ void AOmegaQuestInstance::StartQuest(bool bOverrideStartData,FOmegaQuestData dat
 	        }
 	        else
 	        {
+	        	UOmegaSaveFunctions::StoryStates_SetActive(this,QuestAsset->ActiveStoryStates,true,false);
         		script_copy->OnQuestStart(this);
         		if (SS_World)
         		{
@@ -141,8 +148,9 @@ void AOmegaQuestInstance::TriggerQuestUpdate()
 
 void AOmegaQuestInstance::StopQuest(bool bFailed)
 {
-	if (!b_ended)
+	if (!b_ended && QuestAsset)
 	{
+		UOmegaSaveFunctions::StoryStates_SetActive(this,QuestAsset->ActiveStoryStates,false,false);
 		b_ended=true;
 		if (script_copy)
         {

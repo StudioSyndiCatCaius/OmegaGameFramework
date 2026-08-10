@@ -74,12 +74,7 @@ FText UOmegaAttribute::GetAttributeValueDisplayText(float value)
 	{
 		return Script->GetDisplayText(value);
 	}
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 7
-	return UKismetTextLibrary::Conv_FloatToText(value,RoundingMode,bAlwaysSign,bUseGrouping,MinIntegralDigits,MaxIntegralDigits,MinFractionalDigits,MaxFractionalDigits);
-#else
-	return UKismetTextLibrary::Conv_DoubleToText(value,RoundingMode,bAlwaysSign,bUseGrouping,MinIntegralDigits,MaxIntegralDigits,MinFractionalDigits,MaxFractionalDigits);
-#endif
-	
+	return ValueConfig.ToText(value);
 }
 
 TArray<UOmegaAttribute*> UOmegaAttributeSet::GetAllAttributes()
@@ -113,15 +108,18 @@ float UOmegaAttributeSet::GetAttributeValue(UOmegaAttribute* Attribute, int32 le
 	if (Attribute)
 	{
 		out=Attribute->GetAttributeValue(level, attLevel, ValueCat);
-		
-		if (Attributes.Contains(Attribute))
+
+		// Merge InheritedSets + local Attributes so child-set configs (ValueScale, curves, etc.) apply.
+		const TMap<UOmegaAttribute*, FOmegaAttributeSetOverride> configs = GetAttributeConfigs();
+		if (const FOmegaAttributeSetOverride* f = configs.Find(Attribute))
 		{
-			FOmegaAttributeSetOverride f= Attributes.FindOrAdd(Attribute);
-			if (f.OverrideProgressionCurve)
+			if (f->OverrideProgressionCurve)
 			{
-				out=f.OverrideProgressionCurve->GetFloatValue(level)*f.ValueScale;
-				b_noScale=f.bIgnoreMasterAttributeLevelScaler;
+				out = f->OverrideProgressionCurve->GetFloatValue(level);
 			}
+			// ValueScale always multiplies the resolved base (curve or attribute default).
+			out *= f->ValueScale;
+			b_noScale = f->bIgnoreMasterAttributeLevelScaler;
 		}
 		
 		if (!b_noScale && MasterAttributeLevelScaler)

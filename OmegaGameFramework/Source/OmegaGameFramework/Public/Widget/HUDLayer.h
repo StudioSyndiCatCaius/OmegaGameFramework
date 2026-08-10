@@ -39,6 +39,9 @@ public:
 
 	//UFUNCTION(BlueprintImplementableEvent, Category="Omega")
 	//void LayerRemoved();
+	
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer") bool AddRemove_OpacityFade;
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer") float AddRemove_OpacityFadeTime=0.2;
 
 	UPROPERTY(EditDefaultsOnly, Category = "HUD Layer")
 	FGameplayTagContainer HUDTags;
@@ -54,6 +57,13 @@ private:
 	UFUNCTION()
 	void Local_RemoveAnimFinished();
 
+	// Opacity-fade fallback (used only when no Appear/Removed animation is set)
+	void StartOpacityFade(bool bFadeOut);
+	void Local_TickOpacityFade();
+
+	UPROPERTY() bool bFadeOutDirection = false;
+	UPROPERTY() float FadeStartTime = 0.f;
+	FTimerHandle FadeTimerHandle;
 
 };
 

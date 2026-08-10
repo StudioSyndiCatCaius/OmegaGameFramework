@@ -9,6 +9,7 @@
 #include "Misc/GeneralDataObject.h"
 #include "Actor_Quest.generated.h"
 
+class UOmegaStoryStateAsset;
 class AOmegaWorldManager;
 class UOmegaQuest;
 
@@ -26,6 +27,9 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Quest")
 	bool Replayable;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Quest")
+	TArray<UOmegaStoryStateAsset*> ActiveStoryStates;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Instanced,Category="Quest",meta=(ExposeOnSpawn))
 	UOmegaQuestTypeScript* QuestScript;
 	
@@ -53,6 +57,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent,Category="Overrides") void OnEndPlay(AOmegaQuestInstance* Instance) const;
 	UFUNCTION(BlueprintNativeEvent,Category="Overrides") bool CanQuestStart() const;
 	UFUNCTION(BlueprintNativeEvent,Category="Quest") TArray<UObject*> GetActiveTasks(AOmegaQuestInstance* Instance) const;
+	UFUNCTION(BlueprintNativeEvent,Category="Quest") TArray<UObject*> GetRecordedTasks(AOmegaQuestInstance* Instance);
 };
 
 

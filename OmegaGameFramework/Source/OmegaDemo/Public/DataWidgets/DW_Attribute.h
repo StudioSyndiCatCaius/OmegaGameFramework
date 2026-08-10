@@ -6,6 +6,7 @@
 #include "Engine/EngineTypes.h"
 #include "Interfaces/I_Widget.h"
 #include "Widget/DataWidget.h"
+#include "Types/Struct_DamageMeta.h"
 #include "DW_Attribute.generated.h"
 
 class UDynamicProgressBar;
@@ -28,7 +29,7 @@ class OMEGADEMO_API UDataWidgetBase_Attribute : public UDataWidget, public IWidg
 	void local_Update();
 
 	UPROPERTY() UCombatantComponent* REF_Combatant;
-	UFUNCTION() void local_OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
+	UFUNCTION() void local_OnAttributeDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta DamageMeta);
 
 public:
 	virtual void Native_OnSourceAssetChanged(UObject* SourceAsset) override;

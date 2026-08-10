@@ -86,6 +86,29 @@ TArray<UObject*> UOmegaQuestType_FlowAsset::GetActiveTasks_Implementation(AOmega
 	return out;
 }
 
+TArray<UObject*> UOmegaQuestType_FlowAsset::GetRecordedTasks_Implementation(AOmegaQuestInstance* Instance)
+{
+	TArray<UObject*> out;
+	if (UFlowAsset* f=Cast<UFlowAsset>(Instance->questContext))
+	{
+		FOmegaQuestData* qdat= L_GetQuestData();
+		for (auto* node : f->GetAllNodes())
+		{
+			if (node && qdat && qdat->recorded_guids.Contains(node->GetGuid()))
+			{
+				FText _desc=UOmegaGameFrameworkBPLibrary::GetObjectDisplayDescription(node,FGameplayTag());
+			
+				if (!_desc.IsEmpty())
+				{
+					out.Add(node);
+				}
+			}
+		}
+	}
+	
+	return out;
+}
+
 bool L_FlowMatched(UOmegaQuestType_FlowAsset* script, UFlowAsset* flow)
 {
 	if (!script || !script->Flow_Asset) { return false; }
@@ -117,7 +140,12 @@ void UOmegaQuestType_FlowAsset::L_OnFlowNodeEnter(UFlowAsset* FlowAsset, UFlowNo
 		{
 			OGF_Log::LogInfo(FString::Printf(TEXT("QUEST_GUID_SAVE:   GUID -> %s"), *g.ToString()));
 		}
-		L_GetQuestData()->active_guids = guids;
+		FOmegaQuestData* qdat=L_GetQuestData();
+		qdat->active_guids = guids;
+		for (FGuid& g : guids)
+		{
+			qdat->recorded_guids.AddUnique(g);
+		}
 	}
 }
 
@@ -125,6 +153,12 @@ void UOmegaQuestType_FlowAsset::L_OnFlowFinish(UFlowAsset* FlowAsset, FName Outp
 {
 	if (L_FlowMatched(this,FlowAsset))
 	{
+		AOmegaQuestInstance* _inst=GetQuestInstance();
+		OGF_Log::LogInfo(FString::Printf(TEXT("QUEST_FLOW_FINISH: matched '%s' | Output=%s | Flag=%s | instance=%s | instValid=%s"),
+			FlowAsset ? *FlowAsset->GetName() : TEXT("NULL"),
+			*Output.ToString(), *Flag,
+			_inst ? *_inst->GetName() : TEXT("NULL"),
+			IsValid(_inst) ? TEXT("true") : TEXT("false")));
 		GetQuestInstance()->StopQuest(false);
 	}
 }

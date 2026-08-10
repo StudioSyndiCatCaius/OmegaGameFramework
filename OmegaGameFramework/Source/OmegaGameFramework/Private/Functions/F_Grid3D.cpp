@@ -10,14 +10,19 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
+#include "OmegaSettings.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
 
+UOmegaGrid3DStyle::UOmegaGrid3DStyle()
+{
+	TileOffset=FVector(100,100,100);
+}
+
 UOmegaGrid3D_Map::UOmegaGrid3D_Map()
 {
 	GridSize=FIntVector(20,20,1);
-	TileOffset=FVector(100,100,100);
 }
 
 void UOmegaGrid3D_Map::BeginPlay()
@@ -96,7 +101,9 @@ void UOmegaGrid3D_Map::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UOmegaGrid3D_Map::DestroyTiles()
 {
-	for(auto* tempTile : REF_Tiles)
+	// Iterate a copy - destroyed tiles remove themselves from REF_Tiles via Notify_TileDestroyed.
+	TArray<AOmegaGrid3D_Tile*> tiles_to_destroy=REF_Tiles;
+	for(auto* tempTile : tiles_to_destroy)
 	{
 		if(tempTile)
 		{
@@ -106,8 +113,15 @@ void UOmegaGrid3D_Map::DestroyTiles()
 	REF_Tiles.Empty();
 }
 
+void UOmegaGrid3D_Map::Notify_TileDestroyed(AOmegaGrid3D_Tile* Tile)
+{
+	REF_Tiles.Remove(Tile);
+}
+
 void UOmegaGrid3D_Map::GenerateTiles()
 {
+	UOmegaGrid3DStyle* _style=GetMapStyle();
+	if (!_style) { return; }
 	UOmegaGrid3D_Map* host=GetHostGridmap();
 	if(host!=this)
 	{
@@ -129,9 +143,9 @@ void UOmegaGrid3D_Map::GenerateTiles()
 
 	DestroyTiles();
 	TSubclassOf<AOmegaGrid3D_Tile> in_tile_class=AOmegaGrid3D_Tile::StaticClass();
-	if(TileClass)
+	if(_style->TileClass)
 	{
-		in_tile_class=TileClass;
+		in_tile_class=_style->TileClass;
 	}
 	TArray<FIntVector> spawn_coords;
 	for (int ix = 0; ix < GridSize.X; ++ix)
@@ -159,20 +173,58 @@ void UOmegaGrid3D_Map::GenerateTiles()
 		newTransform.SetRotation(GetOwner()->GetActorRotation().Quaternion());
 		newTransform.SetScale3D(FVector(1,1,1));
 		new_tile->FinishSpawning(newTransform);
+		// Tiles failing their spawn check are destroyed outright if the style demands it; otherwise
+		// they are kept but marked invalid (hidden, excluded from default tile queries).
+		if (!new_tile->CanTileSpawn(new_coord,this))
+		{
+			if(_style->DestroyInvalidTiles)
+			{
+				new_tile->Destroy();
+				continue;
+			}
+			new_tile->SetTileValid(false);
+		}
 		new_tile->AttachToActor(GetOwner(),FAttachmentTransformRules(EAttachmentRule::KeepWorld,false));
 		REF_Tiles.AddUnique(new_tile);
 	}
 }
 
-TArray<AOmegaGrid3D_Tile*> UOmegaGrid3D_Map::GetTiles()
+UOmegaGrid3DStyle* UOmegaGrid3D_Map::GetMapStyle()
 {
-	return REF_Tiles;
+	if (MapStyle)
+	{
+		return MapStyle;
+	}
+	if (UOmegaGrid3DStyle* s=GetMutableDefault<UOmegaSettings>()->DefaultGridmapStyle.LoadSynchronous())
+	{
+		return s;
+	}
+	return GetMutableDefault<UOmegaGrid3DStyle>();
 }
 
-TArray<AOmegaGrid3D_Tile*> UOmegaGrid3D_Map::GetTilesFromCoordinates(TArray<FIntVector> Coordinates)
+TArray<AOmegaGrid3D_Tile*> UOmegaGrid3D_Map::GetTiles(bool bIncludeInvalid)
+{
+	// Prune tiles destroyed at runtime so they never appear in tile queries (coordinate lookups, occupant movement, etc).
+	REF_Tiles.RemoveAll([](AOmegaGrid3D_Tile* t){ return !IsValid(t) || t->IsActorBeingDestroyed(); });
+	if(bIncludeInvalid)
+	{
+		return REF_Tiles;
+	}
+	TArray<AOmegaGrid3D_Tile*> out;
+	for(auto* tile : REF_Tiles)
+	{
+		if(tile->IsTileValid)
+		{
+			out.Add(tile);
+		}
+	}
+	return out;
+}
+
+TArray<AOmegaGrid3D_Tile*> UOmegaGrid3D_Map::GetTilesFromCoordinates(TArray<FIntVector> Coordinates,bool bIncludeInvalid)
 {
 	TArray<AOmegaGrid3D_Tile*> out;
-	for(auto* tile : GetTiles())
+	for(auto* tile : GetTiles(bIncludeInvalid))
 	{
 		if(tile && Coordinates.Contains(tile->GetTileCoordinate()))
 		{
@@ -184,27 +236,27 @@ TArray<AOmegaGrid3D_Tile*> UOmegaGrid3D_Map::GetTilesFromCoordinates(TArray<FInt
 
 FIntVector UOmegaGrid3D_Map::GetCoordinateFromVector(FVector Vector)
 {
-	FVector local_vector=(Vector-GetOwner()->GetActorLocation())/TileOffset;
+	FVector local_vector=(Vector-GetOwner()->GetActorLocation())/GetMapStyle()->TileOffset;
 	return UKismetMathLibrary::FTruncVector(local_vector);
 }
 
 FVector UOmegaGrid3D_Map::GetVectorFromCoordinate(FIntVector Coordinate)
 {
-	return (UKismetMathLibrary::Conv_IntVectorToVector(Coordinate)*TileOffset)+GetOwner()->GetActorLocation();
+	return (UKismetMathLibrary::Conv_IntVectorToVector(Coordinate)*GetMapStyle()->TileOffset)+GetOwner()->GetActorLocation();
 }
 
-AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTileFromVector(FVector Vector)
+AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTileFromVector(FVector Vector,bool bIncludeInvalid)
 {
-	if(AOmegaGrid3D_Tile* out_tile = GetTileFromCoordinate(GetCoordinateFromVector(Vector)))
+	if(AOmegaGrid3D_Tile* out_tile = GetTileFromCoordinate(GetCoordinateFromVector(Vector),bIncludeInvalid))
 	{
 		return out_tile;
 	}
 	return nullptr;
 }
 
-AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTileFromCoordinate(FIntVector Coordinate)
+AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTileFromCoordinate(FIntVector Coordinate,bool bIncludeInvalid)
 {
-	for(auto* tempTile: GetTiles())
+	for(auto* tempTile: GetTiles(bIncludeInvalid))
 	{
 		if(tempTile && tempTile->GetTileCoordinate()==Coordinate)
 		{
@@ -220,7 +272,8 @@ AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTile_OfOccupant_Comp(UOmegaGrid3D_Occupa
 {
 	if(Occupant)
 	{
-		for (auto* _tile : GetTiles())
+		// Include invalid tiles - they can still hold occupants.
+		for (auto* _tile : GetTiles(true))
 		{
 			for(auto* _occ : _tile->Occupants)
 			{
@@ -241,7 +294,8 @@ AOmegaGrid3D_Tile* UOmegaGrid3D_Map::GetTile_OfOccupant_Actor(AActor* Occupant)
 {
 	if(Occupant)
 	{
-		for (auto* _tile : GetTiles())
+		// Include invalid tiles - they can still hold occupants.
+		for (auto* _tile : GetTiles(true))
 		{
 			for(auto* _occ : _tile->Occupants)
 			{
@@ -268,7 +322,7 @@ AOmegaGridmap3D::AOmegaGridmap3D()
 	PreviewMesh->SetupAttachment(GetRootComponent());
 	PreviewMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PreviewMesh->SetHiddenInGame(true);
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> default_preview_mesh(TEXT("/OmegaGameFramework/Meshes/util/sm_UTIL_GridmapPreview_100x.sm_UTIL_GridmapPreview_100x"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> default_preview_mesh(TEXT("/OmegaGameFramework/Meshes/util/sm_UTIL_GridmapPreview.sm_UTIL_GridmapPreview"));
 	if(default_preview_mesh.Succeeded())
 	{
 		PreviewMesh->SetStaticMesh(default_preview_mesh.Object);
@@ -291,7 +345,7 @@ void AOmegaGridmap3D::OnConstruction(const FTransform& Transform)
 		// Remake preview instances to align with the tile locations. Preview mesh is authored at 100 units,
 		// so instances are scaled to match the tile offset.
 		PreviewMesh->ClearInstances();
-		const FVector instance_scale=GridmapComponent->TileOffset/100.f;
+		const FVector instance_scale=GridmapComponent->GetMapStyle()->TileOffset/100.f;
 		for (int32 ix = 0; ix < GridmapComponent->GridSize.X; ++ix)
 		{
 			for (int32 iy = 0; iy < GridmapComponent->GridSize.Y; ++iy)
@@ -328,6 +382,10 @@ void UOmegaGrid3D_Occupant::BeginPlay()
 			SnapToNearestTile();
 		}));
 	}
+	if (RegisterOwnerAsModifier)
+	{
+		Modifier_Register(GetOwner(),true);
+	}
 }
 
 void UOmegaGrid3D_Occupant::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -340,7 +398,7 @@ void UOmegaGrid3D_Occupant::TickComponent(float DeltaTime, ELevelTick TickType,
 	{
 		motion_alpha+=DeltaTime;
 		// A bump travels half the distance per leg, so each leg runs at half the duration
-		const float leg_duration=FMath::Max(bBumping ? MoveDuration*0.5f : MoveDuration, KINDA_SMALL_NUMBER);
+		const float leg_duration=FMath::Max(bBumping ? MoveDuration*BumpPositionLerp : MoveDuration, KINDA_SMALL_NUMBER);
 		const float t=FMath::Clamp(motion_alpha/leg_duration,0.f,1.f);
 		owner->SetActorLocation(FMath::Lerp(move_from,move_target,t));
 		if(t>=1.f)
@@ -466,6 +524,31 @@ bool UOmegaGrid3D_Occupant::IsMovingOrRotating(bool& Moving, bool& Rotating)
 	return bMoving || bRotating;
 }
 
+FGameplayTagContainer UOmegaGrid3D_Occupant::Tags_Get()
+{
+	FGameplayTagContainer out=OccupantTags;
+	for (auto* Mod : OccupantModifiers)
+	{
+		if (Mod)
+		{
+			out.AppendTags(IModifierInterface_Grid3DOccupant::Execute_Grid3DOccupant_AppendedTags(Mod));
+		}
+	}
+	return out;
+}
+
+void UOmegaGrid3D_Occupant::Tags_Set(FGameplayTagContainer Tags, bool bActive)
+{
+	if (bActive)
+	{
+		OccupantTags.AppendTags(Tags);
+	}
+	else
+	{
+		OccupantTags.RemoveTags(Tags);
+	}
+}
+
 
 bool UOmegaGrid3D_Occupant::SnapToNearestTile()
 {
@@ -489,7 +572,7 @@ bool UOmegaGrid3D_Occupant::SnapToNearestTile()
 	for(UOmegaGrid3D_Map* map : subsystem->REF_Tilemaps)
 	{
 		if(!map) { continue; }
-		for(AOmegaGrid3D_Tile* tile : map->GetTiles())
+		for(AOmegaGrid3D_Tile* tile : map->GetTiles(CanSnapToInvalidTiles))
 		{
 			if(!tile) { continue; }
 			tile_count++;
@@ -531,7 +614,8 @@ AOmegaGrid3D_Tile* UOmegaGrid3D_Occupant::GetTile()
 	{
 		if (TempMap)
 		{
-			for(auto* TempTile : TempMap->GetTiles())
+			// Include invalid tiles - an occupant standing on one must still resolve its tile.
+			for(auto* TempTile : TempMap->GetTiles(true))
 			{
 				if(TempTile && TempTile->Occupants.Contains(this))
 				{
@@ -543,7 +627,7 @@ AOmegaGrid3D_Tile* UOmegaGrid3D_Occupant::GetTile()
 	return nullptr;
 }
 
-AOmegaGrid3D_Tile* UOmegaGrid3D_Occupant::GetTileAtOffset(FIntVector Offset, bool RotationRelative)
+AOmegaGrid3D_Tile* UOmegaGrid3D_Occupant::GetTileAtOffset(FIntVector Offset, bool RotationRelative,bool bIncludeInvalid)
 {
 	AOmegaGrid3D_Tile* current_tile=GetTile();
 	if(!current_tile || !current_tile->GetOwningGridmap())
@@ -556,7 +640,25 @@ AOmegaGrid3D_Tile* UOmegaGrid3D_Occupant::GetTileAtOffset(FIntVector Offset, boo
 		const FVector rotated=GetOwner()->GetActorRotation().RotateVector(FVector(Offset.X,Offset.Y,Offset.Z));
 		dir=FIntVector(FMath::RoundToInt(rotated.X),FMath::RoundToInt(rotated.Y),FMath::RoundToInt(rotated.Z));
 	}
-	return current_tile->GetOwningGridmap()->GetTileFromCoordinate(current_tile->GetTileCoordinate()+dir);
+	return current_tile->GetOwningGridmap()->GetTileFromCoordinate(current_tile->GetTileCoordinate()+dir,bIncludeInvalid);
+}
+
+bool UOmegaGrid3D_Occupant::Modifier_Register(UObject* modifier, bool is_registered)
+{
+	if (modifier && modifier->GetClass()->ImplementsInterface(UModifierInterface_Grid3DOccupant::StaticClass()))
+	{
+		if (is_registered && !OccupantModifiers.Contains(modifier))
+		{
+			OccupantModifiers.AddUnique(modifier);
+			return true;
+		}
+		if (!is_registered && OccupantModifiers.Contains(modifier))
+		{
+			OccupantModifiers.Remove(modifier);
+			return true;
+		}
+	}
+	return false;
 }
 
 void UOmegaGrid3D_Selector::SetSelectedTile(AOmegaGrid3D_Tile* Tile)
@@ -635,6 +737,32 @@ void UOmegaGrid3D_Selector::ClearRegisteredTiles()
 // =====================================================================================================
 
 
+void AOmegaGrid3D_Tile::Destroyed()
+{
+	// Unregister from the owning gridmap no matter how this tile is destroyed, so queries never return it.
+	if(Owning_Gridmap)
+	{
+		Owning_Gridmap->Notify_TileDestroyed(this);
+	}
+	Super::Destroyed();
+}
+
+bool AOmegaGrid3D_Tile::CanTileSpawn_Implementation(FIntVector Coord, UOmegaGrid3D_Map* Gridmap)
+{
+	return true;
+}
+
+void AOmegaGrid3D_Tile::DestroyTile()
+{
+	Destroy();
+}
+
+void AOmegaGrid3D_Tile::SetTileValid(bool bValid)
+{
+	IsTileValid=bValid;
+	SetActorHiddenInGame(!bValid);
+}
+
 void AOmegaGrid3D_Tile::SetTileType(UOmegaGrid3DTileType* Type)
 {
 	if(Type)
@@ -705,15 +833,48 @@ void AOmegaGrid3D_Tile::SetOccupantOnTile(UOmegaGrid3D_Occupant* Occupant, bool 
 			{
 				Occupant->GetTile()->SetOccupantOnTile(Occupant,false,false,false);
 			}
+			// Snapshot existing co-occupants before add so Begin fires against those already present.
+			TArray<UOmegaGrid3D_Occupant*> ExistingOccupants = Occupants;
 			Occupants.AddUnique(Occupant);
-			if(bSnap)
+			if(bSnap && Occupant->GetOwner())
 			{
 				Occupant->GetOwner()->SetActorLocation(GetActorLocation()+Occupant->TileOffset);
+			}
+			for (UOmegaGrid3D_Occupant* Other : ExistingOccupants)
+			{
+				if (!Other || Other == Occupant)
+				{
+					continue;
+				}
+				// Arriving occupant: begin share with each occupant already on this tile.
+				Occupant->OnOccupancyShareBegin.Broadcast(Occupant, Other, this);
+				// Existing occupants: begin share with the new arrival.
+				Other->OnOccupancyShareBegin.Broadcast(Other, Occupant, this);
 			}
 		}
 		if(!bIsOnTile && HasOccupant(Occupant))
 		{
+			// Snapshot co-occupants before remove so End fires for everyone who shared this tile.
+			TArray<UOmegaGrid3D_Occupant*> SharedOccupants;
+			for (UOmegaGrid3D_Occupant* Other : Occupants)
+			{
+				if (Other && Other != Occupant)
+				{
+					SharedOccupants.Add(Other);
+				}
+			}
 			Occupants.Remove(Occupant);
+			for (UOmegaGrid3D_Occupant* Other : SharedOccupants)
+			{
+				if (!Other)
+				{
+					continue;
+				}
+				// Leaving occupant: end share with each occupant remaining on this tile.
+				Occupant->OnOccupancyShareEnd.Broadcast(Occupant, Other, this);
+				// Remaining occupants: end share with the one that left.
+				Other->OnOccupancyShareEnd.Broadcast(Other, Occupant, this);
+			}
 		}
 	}
 }
@@ -723,32 +884,35 @@ TArray<UOmegaGrid3D_Occupant*> AOmegaGrid3D_Tile::GetOccupants() const
 	return Occupants;
 }
 
-UOmegaGrid3D_Occupant* AOmegaGrid3D_Tile::GetFirstOccupant() const
-{
-	for(auto* TempOccupant : GetOccupants())
-	{
-		if(TempOccupant)
-		{
-			return  TempOccupant;
-		}
-	}
-	return nullptr;
-}
-
-AActor* AOmegaGrid3D_Tile::GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class,
-	bool& Result)
+AActor* AOmegaGrid3D_Tile::GetFirstOccupantActorOfClass(TSubclassOf<AActor> Class, bool& Result,
+	FOnGrid3DOccupantTileQuery OptionalFilter)
 {
 	for(auto* oc : GetOccupants())
 	{
 		if(oc && (!Class || oc->GetOwner()->GetClass()->IsChildOf(Class)))
 		{
-			Result=true;
-			return oc->GetOwner();
+			if (OptionalFilter.IsBound())
+			{
+				if (!OptionalFilter.Execute(oc,oc->GetTile()))
+				{
+					Result=false;
+					return nullptr;
+				}
+			}
+			if (!oc->IsBeingDestroyed() && oc->GetOwner())
+			{
+				Result=true;
+				return oc->GetOwner();
+			}
 		}
 	}
 	Result=false;
 	return nullptr;
 }
+
+
+
+
 
 bool AOmegaGrid3D_Tile::HasOccupant(UOmegaGrid3D_Occupant* Occupant) const
 {
@@ -776,6 +940,84 @@ UOmegaGrid3D_Map* AOmegaGrid3D_Tile::GetOwningGridmap()
 FIntVector AOmegaGrid3D_Tile::GetTileCoordinate()
 {
 	return  grid_coordinate;
+}
+
+AOmegaGrid3D_Tile* AOmegaGrid3D_Tile::GetNearestValidTile(FOnGrid3DTileQuery OptionalFilter)
+{
+	UOmegaGrid3D_Map* map = GetOwningGridmap();
+	if(!map)
+	{
+		return nullptr;
+	}
+
+	const FIntVector origin = GetTileCoordinate();
+	AOmegaGrid3D_Tile* nearest = nullptr;
+	int64 nearest_dist_sq = 0;
+
+	// GetTiles(false) already excludes invalid tiles; walk them and keep the closest one
+	// (by coordinate distance) that also passes the optional filter.
+	for(AOmegaGrid3D_Tile* tile : map->GetTiles(false))
+	{
+		if(!tile || tile==this)
+		{
+			continue;
+		}
+		if(OptionalFilter.IsBound() && !OptionalFilter.Execute(tile))
+		{
+			continue;
+		}
+		const FIntVector delta = tile->GetTileCoordinate()-origin;
+		const int64 dist_sq = (int64)delta.X*delta.X + (int64)delta.Y*delta.Y + (int64)delta.Z*delta.Z;
+		if(!nearest || dist_sq<nearest_dist_sq)
+		{
+			nearest=tile;
+			nearest_dist_sq=dist_sq;
+		}
+	}
+
+	return nearest;
+}
+
+TArray<AOmegaGrid3D_Tile*> AOmegaGrid3D_Tile::GetAllValidTilesInRange(int32 range, FOnGrid3DTileQuery OptionalFilter)
+{
+	TArray<AOmegaGrid3D_Tile*> out;
+	UOmegaGrid3D_Map* map = GetOwningGridmap();
+	if(!map || range<0)
+	{
+		return out;
+	}
+
+	// GetTiles(false) already excludes invalid tiles; keep those within grid (Manhattan) distance
+	// of this tile that also pass the optional filter. Matches the 6-directional movement model.
+	for(AOmegaGrid3D_Tile* tile : map->GetTiles(false))
+	{
+		if(!tile || tile==this)
+		{
+			continue;
+		}
+		if(GetDistanceToTile(tile)>range)
+		{
+			continue;
+		}
+		if(OptionalFilter.IsBound() && !OptionalFilter.Execute(tile))
+		{
+			continue;
+		}
+		out.AddUnique(tile);
+	}
+
+	return out;
+}
+
+int32 AOmegaGrid3D_Tile::GetDistanceToTile(AOmegaGrid3D_Tile* TargetTile)
+{
+	if(!TargetTile)
+	{
+		return -1;
+	}
+	// Manhattan distance, matching the axis-aligned (6-directional) movement/pathfinding model.
+	const FIntVector delta = TargetTile->GetTileCoordinate()-GetTileCoordinate();
+	return FMath::Abs(delta.X)+FMath::Abs(delta.Y)+FMath::Abs(delta.Z);
 }
 
 void UOmegaSubsystem_Grid3D::Register_TileMap(UOmegaGrid3D_Map* Tilemap, bool bRegistered)
@@ -957,7 +1199,9 @@ AOmegaGrid3D_Tile* UOmegaGrid3DFunctions::GetGrid3DTileInfo(UObject* Object, TSu
 	}
 	if(tile_out && (!TileClass || tile_out->GetClass()->IsChildOf(TileClass)))
 	{
-		Occupant=tile_out->GetFirstOccupant();
+		Occupant=nullptr;
+		if (tile_out->GetOccupants().Num() > 0)
+			Occupant=tile_out->GetOccupants()[0];
 		result=true;
 		return tile_out;
 	}

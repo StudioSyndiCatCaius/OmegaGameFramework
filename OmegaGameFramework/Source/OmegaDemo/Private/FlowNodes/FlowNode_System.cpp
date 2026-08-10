@@ -11,12 +11,15 @@
 #include "OmegaSettings_Demo.h"
 #include "Components/Component_CombatEncounter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/LevelStreaming.h"
 #include "Misc/OmegaUtils_Macros.h"
 #include "Misc/OmegaUtils_Methods.h"
 #include "Subsystems/Subsystem_World.h"
 #include "Subsystems/Subsystem_Player.h"
 #include "Subsystems/Subsystem_GameManager.h"
 #include "TimerManager.h"
+#include "Functions/F_Common.h"
+#include "Functions/F_Widget.h"
 
 UFlowNode_GameplaySystemBASE::UFlowNode_GameplaySystemBASE()
 {
@@ -193,7 +196,7 @@ UObject* UFlowNode_System_DlgFlow::L_GetContext() const
 
 
 // ==============================================================================================================
-// -
+// - MENU
 // ==============================================================================================================
 
 UObject* UFlowNode_Menu::L_GetContext() const
@@ -269,6 +272,7 @@ TArray<FName> UFlowNode_Menu::L_GetConstants() const
 	return out;
 }
 
+
 #if WITH_EDITOR
 
 FString UFlowNode_Menu::GetNodeDescription() const
@@ -279,6 +283,37 @@ FString UFlowNode_Menu::GetNodeDescription() const
 
 
 #endif
+
+// ==============================================================================================================
+// - HUD
+// ==============================================================================================================
+
+
+
+UFlowNode_HUD::UFlowNode_HUD()
+{
+	InputPins.Empty();
+	InputPins.Add(FFlowPin(TEXT("Add")));
+	InputPins.Add(FFlowPin(TEXT("Remove")));
+}
+
+void UFlowNode_HUD::ExecuteInput(const FName& PinName)
+{
+	Super::ExecuteInput(PinName);
+	if (GetWorld())
+	{
+		if (PinName == TEXT("Add"))
+		{
+			UOmegaWidgetFunctions::SetHUDLayerActive(this,HUD,true,Context,"",GetWorld()->GetFirstPlayerController());
+		}
+		else if (PinName == TEXT("Remove"))
+		{
+			UOmegaWidgetFunctions::SetHUDLayerActive(this,HUD,false,Context,"",GetWorld()->GetFirstPlayerController());
+		}	
+	}
+	TriggerFirstOutput(true);
+}
+
 
 // ==============================================================================================================
 // -
@@ -331,6 +366,62 @@ FString UFlowNode_LevelTransitCheck::GetNodeDescription() const
 	return "Level Check: "+Level.GetAssetName();
 }
 #endif
+
+
+// ==============================================================================================================
+// - Sublevel
+// ==============================================================================================================
+
+UFlowNode_LoadSublevel::UFlowNode_LoadSublevel()
+{
+	InputPins.Empty();
+	InputPins.Add(FFlowPin(TEXT("Load")));
+	InputPins.Add(FFlowPin(TEXT("Unload")));
+}
+
+void UFlowNode_LoadSublevel::ExecuteInput(const FName& PinName)
+{
+	if(Level.IsNull())
+	{
+		return;
+	}
+
+	const bool bLoad = (PinName != TEXT("Unload"));
+
+	// Prefer toggling an existing streaming level already registered in the persistent world.
+	const FName PackageName(*Level.GetLongPackageName());
+	if(ULevelStreaming* StreamingLevel = UGameplayStatics::GetStreamingLevel(this, PackageName))
+	{
+		StreamingLevel->SetShouldBeLoaded(bLoad);
+		StreamingLevel->SetShouldBeVisible(bLoad);
+	}
+	else if(!OnlyIfValidSublevel)
+	{
+		// Not a registered sublevel - dynamically stream it by soft reference.
+		// A valid CallbackTarget is required so the latent streaming action gets ticked.
+		FLatentActionInfo LatentInfo;
+		LatentInfo.CallbackTarget = this;
+		if(bLoad)
+		{
+			UGameplayStatics::LoadStreamLevelBySoftObjectPtr(this, Level, true, false, LatentInfo);
+		}
+		else
+		{
+			UGameplayStatics::UnloadStreamLevelBySoftObjectPtr(this, Level, LatentInfo, false);
+		}
+	}
+
+	// Load intentionally does NOT finish the node; it stays active awaiting Unload.
+	// Unloading ends the node so it is no longer considered active.
+	if(bLoad)
+	{
+		TriggerFirstOutput(false);
+	}
+	else
+	{
+		TriggerFirstOutput(true);
+	}
+}
 
 
 

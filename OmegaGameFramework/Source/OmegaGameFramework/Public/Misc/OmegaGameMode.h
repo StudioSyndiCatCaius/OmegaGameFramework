@@ -10,6 +10,7 @@
 
 #include "OmegaGameMode.generated.h"
 
+class AOmegaMinimap_Camera;
 class UInstanceActorComponent;
 class AOmegaDynamicCamera;
 class UAssetSquadComponent;
@@ -62,6 +63,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="⚙️OMEGA - Systems")
 	FGameplayTagContainer AutoBlockSystemTags;
 	
+	// ----------------------------------------------------------------------------------------
+	// Player
+	// ----------------------------------------------------------------------------------------
+	
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
 	bool bAutoActivateDynamicCamera;
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
@@ -70,11 +75,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player",DisplayName="HUD Layers (Persistent)")
 	TArray<TSubclassOf <UHUDLayer>> HUDLayers_Persistent;
 	
-	//UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
-	//TArray<TSubclassOf <AOmegaPlayerSystem>> PlayerSystems_Auto;
-	//UPROPERTY(EditDefaultsOnly, Category="🎮️OMEGA - Player")
-	//TArray<TSubclassOf <AOmegaPlayerSystem>> PlayerSystems_Persistent;
-
+	
+	// ----------------------------------------------------------------------------------------
+	// Drag-Select
+	// ----------------------------------------------------------------------------------------
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category="🖱️OMEGA - Drag Select")
 	bool CanDragSelect;
@@ -85,6 +89,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="🖱️OMEGA - Drag Select")
 	TArray<TSubclassOf<AActor>> DragSelectableActors;
 
+	// ----------------------------------------------------------------------------------------
+	// Minimap
+	// ----------------------------------------------------------------------------------------
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category="🗺️OMEGA - Minimap")
+	bool AutoSpawnMinimapCamera;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category="🗺️OMEGA - Minimap",meta=(EditCondition="AutoSpawnMinimapCamera"))
+	TSubclassOf<AOmegaMinimap_Camera> MinimapCamera;
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Omega Game Mode")
+	void OnMinimapCameraSpawn(AOmegaMinimap_Camera* Camera);
+	
+	// ----------------------------------------------------------------------------------------
+	//  * Events
+	// ----------------------------------------------------------------------------------------
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Omega Game Mode")
 	void OnLoadEventFinished();

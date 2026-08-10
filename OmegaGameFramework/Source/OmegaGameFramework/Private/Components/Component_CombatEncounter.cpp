@@ -12,6 +12,7 @@
 #include "Components/BoxComponent.h"
 #include "DataAssets/DA_Faction.h"
 #include "Functions/F_Common.h"
+#include "Functions/F_Math.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -28,6 +29,7 @@ AOmegaCombatEncounter_Stage::AOmegaCombatEncounter_Stage()
 	Range->SetLineThickness(7);
 }
 
+
 AOmegaCombatEncounter_Instance::AOmegaCombatEncounter_Instance()
 {
 	RootComponent=CreateDefaultSubobject<USceneComponent>("RootComponent");
@@ -39,7 +41,8 @@ AOmegaCombatEncounter_Instance::AOmegaCombatEncounter_Instance()
 	comp_camera->PostProcessSettings.MotionBlurAmount=0.1f;
 }
 
-FTransform AOmegaCombatEncounter_Instance::GetTransformByFaction_Implementation(FGameplayTag FactionTag, int32 index)
+FTransform AOmegaCombatEncounter_Instance::GetTransformByFaction_Implementation(FGameplayTag FactionTag, int32 index,
+	int32 max)
 {
 	for (UActorComponent* TempComp : K2_GetComponentsByClass(USceneComponent::StaticClass()))
 	{
@@ -54,9 +57,31 @@ FTransform AOmegaCombatEncounter_Instance::GetTransformByFaction_Implementation(
 	return FTransform();
 }
 
+FTransform AOmegaCombatEncounter_Instance::GetTransformByIndex(FTransform RelativeRoot,  FVector OffsetPull, float bounds, int32 index, int32 max)
+{
+	// Evenly place index of max along OffsetPull across [-bounds, +bounds].
+	// Float Lerp endpoints are required: FMath::Lerp(-1,1,alpha) deduces T=int and
+	// truncates every intermediate alpha into 0, stacking all middle slots on the root.
+	const float Alpha = (max > 1)
+		? static_cast<float>(index) / static_cast<float>(max - 1)
+		: 0.5f;
+	const float Along = FMath::Lerp(-bounds, bounds, Alpha);
+	const FVector offset = OffsetPull * Along;
+	const FVector new_loc = UOmegaMathFunctions::Offset_Vector(
+		RelativeRoot.GetLocation(), RelativeRoot.GetRotation().Rotator(), offset);
+
+	FTransform out;
+	out.SetLocation(new_loc);
+	out.SetRotation(RelativeRoot.GetRotation());
+	return out;
+}
 
 
-FTransform AOmegaCombatEncounter_Stage::GetTransformForBattler_Implementation(FGameplayTag FactionTag, int32 index)
+
+
+
+FTransform AOmegaCombatEncounter_Stage::GetTransformForBattler_Implementation(FGameplayTag FactionTag, int32 index,
+	int32 max_index)
 {
 	for (UActorComponent* TempComp : K2_GetComponentsByClass(USceneComponent::StaticClass()))
 	{
@@ -70,8 +95,6 @@ FTransform AOmegaCombatEncounter_Stage::GetTransformForBattler_Implementation(FG
 	}
 	return FTransform();
 }
-
-
 
 void UOmegaCombatEncounter_Component::BeginPlay()
 {
@@ -164,7 +187,12 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter(
 
 AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter_FromSource(UObject* Source)
 {
-	if(Source && Source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
+	if (!Source)
+	{
+		OGF_Log::Error("ENCOUNTER - Failed to Start: Invalid Encounter Source Object");
+		return nullptr;
+	}
+	if(Source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
 	{
 		FOmegaEncounterConfig _config=IDataInterface_CombatEncounter::Execute_Encounter_Config(Source);
 		TSubclassOf<AOmegaCombatEncounter_Instance> EncounterClass=DefaultEncounterClass;
@@ -181,15 +209,18 @@ AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::StartEncounter_
 				IDataInterface_CombatEncounter::Execute_OnEncounterBegin(Source,this);
 				return new_inst;
 			}
+			else
+			{
+				OGF_Log::Error("ENCOUNTER - Failed to Start: Failed to Spawn Encounter Instance");
+				return nullptr;
+			}
 		}
-		else
-		{
-			OGF_Log::Error("ENCOUNTER - Failed to Start: Invalid Encounter Class");
-		}
+		OGF_Log::Error("ENCOUNTER - Failed to Start: Invalid Encounter instance class");
+		return nullptr;
 	}
 	else
 	{
-		OGF_Log::Error("ENCOUNTER - Failed to Start: Invalid Encounter Source");
+		OGF_Log::Error("ENCOUNTER - Failed to Start: Source Object does not use encounter interface");
 	}
 	return nullptr;
 }
@@ -227,7 +258,7 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 			FTransform temp_transform=Transform;
 			if (GetCurrent_Stage() && StageTransformIndex>-1 && Faction)
 			{
-				GetCurrent_Stage()->GetTransformForBattler(Faction->FactionTag,StageTransformIndex);
+				GetCurrent_Stage()->GetTransformForBattler(Faction->FactionTag,StageTransformIndex,-1);
 			}
 			
 			ACharacter* new_char= GetWorld()->SpawnActorDeferred<ACharacter>(in_class,Transform,REF_Instance,nullptr,CollisionMethod);
@@ -249,8 +280,16 @@ ACharacter* UOmegaCombatEncounter_Component::SpawnBattler(UPrimaryDataAsset* Dat
 				{
 					IActorInterface_EncounterBattler::Execute_OnBattlerInit(new_char,this,DataAsset,Faction);
 				}
+				if (encounter_source && encounter_source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
+				{
+					IDataInterface_CombatEncounter::Execute_OnEncounterBattlerSpawn(encounter_source,this,new_char,comb_ref);
+				}
 				//OGF_GAME_CORE()->Encounter_BattlerSpawn(this,new_char);
 				return new_char;
+			}
+			else
+			{
+				OGF_Log::Error("ENCOUNTER - Failed to Spawn Battler: No Combatant Component");
 			}
 			GetWorld()->DestroyActor(new_char);
 		}
@@ -266,6 +305,46 @@ AOmegaCombatEncounter_Stage* UOmegaCombatEncounter_Component::GetCurrent_Stage()
 AOmegaCombatEncounter_Instance* UOmegaCombatEncounter_Component::GetCurrent_Encounter() const
 {
 	return REF_Instance;
+}
+
+TArray<ACharacter*> UOmegaCombatEncounter_Component::SpawnRandomBattlersFromSource(UOmegaFaction* Faction,
+	FOmegaCommonMeta meta)
+{
+	TArray<ACharacter*> out;
+	if (!Faction)
+	{
+		OGF_Log::Error("ENCOUNTER - Failed to Spawn Random Battlers: No Faction");
+		return out;
+	}
+	if (AOmegaCombatEncounter_Instance* enc=GetCurrent_Encounter())
+	{
+		if (encounter_source && encounter_source->GetClass()->ImplementsInterface(UDataInterface_CombatEncounter::StaticClass()))
+		{
+			TArray<UPrimaryDataAsset*> possibles;
+			int32 min=0,max=0;
+			
+			IDataInterface_CombatEncounter::Execute_Encounter_GetRandomBattlers(encounter_source,this,Faction,meta,possibles,min,max);
+			if (possibles.Num()>0)
+			{
+				int32 RandomIndex = FMath::RandRange(0, possibles.Num() - 1);
+				int32 num=FMath::RandRange(min,max);
+				for(int32 i=0;i<num;i++)
+				{
+					UPrimaryDataAsset* temp=possibles[RandomIndex];
+					if (ACharacter* c=SpawnBattler(temp,Faction,enc->GetTransformByFaction(Faction->FactionTag,i,num),-1,ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+					{
+						out.Add(c);
+					}
+				}
+			}
+
+		}	
+	}
+	else
+	{
+		OGF_Log::Error("ENCOUNTER - Failed to Spawn Random Battlers: No Stage");
+	}
+	return out;
 }
 
 FOmegaEncounterConfig UOmegaEncounter_Asset::Encounter_Config_Implementation()

@@ -10,6 +10,8 @@
 #include "Functions/F_Common.h"
 #include "Functions/F_Math.h"
 #include "Functions/F_Player.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 
 
 // Sets default values

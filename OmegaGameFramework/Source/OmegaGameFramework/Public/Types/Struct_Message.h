@@ -9,6 +9,7 @@
 
 #include "Struct_Message.generated.h"
 
+class UOAsset_TransformPreset;
 class UOmegaSubsystem_World;
 
 USTRUCT(BlueprintType, Atomic)
@@ -19,37 +20,14 @@ struct FOmegaGameplayMessageMeta
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FGameplayTagContainer Tags;
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FSlateBrush Brush;
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere,DisplayName="Bitflags") FOmegaBitflagsBase Flags;
+	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) UOAsset_TransformPreset* TransformPreset;
+	
 	//UPROPERTY(BlueprintReadWrite,Instanced,Category="Message", EditAnywhere) TArray<UOmegaObjectTrait*> Traits;
 	UPROPERTY(BlueprintReadWrite, Category="Message", EditAnywhere) FOmegaCommonMeta CommonMeta;
 	
 };
 
 
-
-// ===================================================================================================================
-// INTERFACES
-// ===================================================================================================================
-UINTERFACE(MinimalAPI, BlueprintType, DisplayName="♎Data🔴 - Message Instigator") class UDataInterface_MessageInstigator : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageInstigator
-{
-	GENERATED_BODY()
-public:
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Gameplay|Message")
-	FSlateBrush GetMessageBrush(UOmegaGameplayMessage* Message);
-};
-
-UINTERFACE(MinimalAPI,BlueprintType, DisplayName="♎Data🔴 - Message Context") class UDataInterface_MessageContext : public UInterface { GENERATED_BODY() };
-class OMEGAGAMEFRAMEWORK_API IDataInterface_MessageContext
-{
-	GENERATED_BODY()
-public:
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Gameplay|Message")
-	UOAsset_TransformPreset* GetMessage_TransformPreset();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Gameplay|Message")
-	USoundBase* GetMessage_SoundClip();
-};
 
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOmegaGameplayMessageDelegate,UOmegaGameplayMessage*,Message);

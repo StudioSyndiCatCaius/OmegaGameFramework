@@ -166,7 +166,13 @@ void UFlowNode_LinearChoice::PreEditChange(FProperty* PropertyAboutToChange)
 void UFlowNode_LinearChoice::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-	SubscribeToAssetChanges();
+	// Only reconstruct on real property edits. HarvestNodeConnections() calls PostEditChange()
+	// (no property) on nodes mid-connection; reconstructing then destroys the pin being
+	// connected and crashes AutowireNewNode.
+	if (PropertyChangedEvent.Property)
+	{
+		SubscribeToAssetChanges();
+	}
 }
 
 void UFlowNode_LinearChoice::SubscribeToAssetChanges()

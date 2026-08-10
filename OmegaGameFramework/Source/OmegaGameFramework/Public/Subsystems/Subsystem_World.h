@@ -17,8 +17,11 @@
 #include "Interfaces/I_Interaction.h"
 #include "Types/OmegaActorInstanceMetadata.h"
 #include "Types/Struct_Message.h"
+#include "Types/Struct_DamageMeta.h"
 #include "Subsystem_World.generated.h"
 
+class AOmegaMinimapActor;
+class AOmegaMinimap_Camera;
 class UOmegaCalendarComponent;
 class AOmegaNullActor;
 class UAudioComponent;
@@ -38,6 +41,7 @@ class UCombatantComponent;
 class UOmegaZoneData;
 class UOmegaLevelData;
 class UZoneLegendAsset;
+class UOmegaMessageStageComponent;
 class UZoneEntityComponent;
 
 
@@ -48,7 +52,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorTagEvent, AActor*, Actor, F
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FActorIdentityDelegateRegister, AActor*, Actor, UGameplayActorComponent*, Component, bool, Registered);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatantRegisterDelegate, UCombatantComponent*, Combatant);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCombatantDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FHitResult, Hit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnCombatantDamaged, UCombatantComponent*, Combatant, UOmegaAttribute*, Attribute, float, FinalDamage, class UCombatantComponent*, Instigator, UOmegaDamageType*, DamageType, FOmegaAttributeDamageMeta, DamageMeta);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameplayStateChange, FGameplayTag, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnGameplaySystemActiveStateChange, AOmegaGameplaySystem*, system, UObject*, context, const FString&, flag, bool, bActive);
@@ -69,11 +73,11 @@ struct FOmegaActorGroupData
 
 
 
-// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 // World Manager
-// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -199,6 +203,12 @@ public:
 	TArray<UZoneEntityComponent*> GetRegisteredZoneEntities_OfLegend(UZoneLegendAsset* Legend) const;
 	
 	// ------------------------------------------------------------
+	// Minimap
+	// ------------------------------------------------------------
+	UPROPERTY() AOmegaMinimap_Camera* minimap_camera;
+	
+	
+	// ------------------------------------------------------------
 	// Entities
 	// ------------------------------------------------------------
 	
@@ -210,6 +220,9 @@ public:
 // #####################################################################################################################
 // World Subsystem
 // #####################################################################################################################
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalBindDelegateNamed, FName, Binding,AActor*, Actor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalBindDelegateTagged, FGameplayTag, Binding,AActor*, Actor);
 
 UCLASS(DisplayName="Omega Subsystem: Gameplay")
 class OMEGAGAMEFRAMEWORK_API UOmegaSubsystem_World : public UWorldSubsystem
@@ -226,9 +239,9 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Colection) override;
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// World Manager
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	
 	// Get or spawn the world manager
 	UFUNCTION(BlueprintCallable, Category = "Omega")
@@ -237,9 +250,9 @@ public:
 	UPROPERTY() TWeakObjectPtr<AOmegaWorldManager> WorldManager;
 	
 	
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Gameplay Systems
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="OmegaGameManager|") FJsonObjectWrapper WorldJsonObject;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Omega|Subsystem|Gameplay") FGameplayTagContainer StateTags;
@@ -269,11 +282,13 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "OmegaGameplaySubsystem")
 	TArray<AOmegaGameplaySystem*> GetActiveSystemsWithTags(FGameplayTagContainer Tags);
-
-	UFUNCTION()
-	void SetSystemTagsBlocked(FGameplayTagContainer Tags, bool bBlocked);
 	
-	UPROPERTY() TArray<FGameplayTag> ExtraBlockedSystemTags;
+	//if a system tag != 0, then it is considered BLOCKED and cant activate/must shutdown.
+	UPROPERTY() TMap<FGameplayTag,int32> ExtraBlockedSystemFlags;
+
+	//Sets a single bit (BlockFlag, 0-31) on the tag's entry in ExtraBlockedSystemFlags, then refreshes system states.
+	UFUNCTION(BlueprintCallable, Category = "OmegaGameplaySubsystem")
+	void SetSystemTagBlockedFlag(FGameplayTag Tag, uint8 BlockFlag, bool bBlocked);
 private:
 	
 	//Refreshes system states. will shutdown any systems with blocked tags.
@@ -302,47 +317,53 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Omega")
 	FOnCombatantDamaged OnCombatantDamaged;
 	UFUNCTION()
-	void Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FHitResult Hit);
+	void Native_OnDamaged(UCombatantComponent* Combatant, UOmegaAttribute* Attribute, float FinalDamage, class UCombatantComponent* Instigator, UOmegaDamageType* DamageType, FOmegaAttributeDamageMeta DamageMeta);
 	
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Quest
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnOmegaQuestDelegate OnQuest_Start;
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnOmegaQuestDelegate OnQuest_End;
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnOmegaQuestDelegate OnQuest_Updated;
 	
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// ZONE
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	
 	UPROPERTY(BlueprintAssignable, Category="Omega") FZonePointDelegate OnZone_PlayerSpawnAtPoint;
 	
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Messages
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGameplayMessage OnGameplayMessage_Begin;
 	UPROPERTY(BlueprintAssignable, Category="Omega") FOnGameplayMessage OnGameplayMessage_End;
 	
 	UPROPERTY() TArray<UOmegaGameplayMessage*> ActiveMessages;
+	UPROPERTY() TMap<FGameplayTag,UOmegaMessageStageComponent*> message_stages;
 	
 	UOmegaGameplayMessage* Message_Send(UObject* Instigator, FText Text, FGameplayTag CategoryTag, FOmegaGameplayMessageMeta meta);
 	bool Message_End(UOmegaGameplayMessage* Message);
 	UOmegaGameplayMessage* Message_GetFirstOfCategory(FGameplayTag CategoryTag);
 	void L_MessageDelegateEvent(UOmegaGameplayMessage* Message);
 
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Gameplay State Modifier
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	UPROPERTY() TArray<UObject*> GameplayModifier_Registered;
 	
 	UFUNCTION(BlueprintCallable, Category="Omega")
 	void GameplayModifier_Register(UObject* Object, bool bIsRegistered);
 	
 	
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Actor - Global Bindings
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
+	
+	UPROPERTY(BlueprintAssignable) FGlobalBindDelegateNamed OnGlobalNamed_Bound;
+	UPROPERTY(BlueprintAssignable) FGlobalBindDelegateNamed OnGlobalNamed_Unbound;
+	UPROPERTY(BlueprintAssignable) FGlobalBindDelegateTagged OnGlobalTagged_Bound;
+	UPROPERTY(BlueprintAssignable) FGlobalBindDelegateTagged OnGlobalTagged_Unbound;
 
 	UPROPERTY() TMap<FName, AActor*> ActorBindings_Named;
 	UPROPERTY() TMap<FGameplayTag, AActor*> ActorBindings_Tagged;
@@ -355,9 +376,9 @@ public:
 	AActor* GetGlobalActorBinding(FName Binding);
 
 
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Actor - Soft Param
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	
 	UPROPERTY() TArray<UGameplayActorComponent*> REF_ActorIdComps;
 	UPROPERTY() TMap<FGameplayTag, FOmegaActorGroupData> actorGroups;
@@ -392,9 +413,9 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Actor Identity Subsystem")
 	AActor* GetFirstActorIfIdentity(UPrimaryDataAsset* Identity,TSubclassOf<AActor> FilterClass=nullptr);
 
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Actor - Interaction
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 
 	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Interaction")
 	bool CanInteract(AActor* Instigator, AActor* TargetActor, FGameplayTag Tag, FOmegaCommonMeta Context);
@@ -402,9 +423,9 @@ public:
 	UFUNCTION(BlueprintCallable,Category="ActorSubsystem|Interaction")
 	void PerformInteraction(AActor* Instigator, AActor* TargetActor, FGameplayTag Tag, FOmegaCommonMeta Context);
 
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	// Actor - Groups
-	// ────────────────────────────────────────────────────────────────────
+	// --------------------------------------------------------------------
 	UFUNCTION(BlueprintPure,Category="ActorSubsystem|Groups")
 	bool IsActorInGroup(FGameplayTag GroupTag, AActor* Actor) const;
 	

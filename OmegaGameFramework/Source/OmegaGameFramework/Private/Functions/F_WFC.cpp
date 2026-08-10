@@ -398,7 +398,7 @@ void UWFCScript_MainPath::OnGenerationBegin_Implementation(AOmegaWfcSpawner* Spa
 	}
 
 	// Perpendicular turn direction (random left or right relative to InwardDir)
-	FIntVector PerpDir = Rand.RandBool()
+	FIntVector PerpDir = (Rand.RandRange(0, 1) != 0)
 		? FIntVector(-InwardDir.Y,  InwardDir.X, 0)
 		: FIntVector( InwardDir.Y, -InwardDir.X, 0);
 
